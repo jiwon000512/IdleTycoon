@@ -1,0 +1,36 @@
+# 기본: 텍스트는 자동 정규화(LF 저장)
+* text=auto
+
+# Unity YAML 자산은 텍스트로 취급하고 unityyamlmerge 대상으로 표시
+*.unity text merge=unityyamlmerge eol=lf
+*.prefab text merge=unityyamlmerge eol=lf
+*.asset text merge=unityyamlmerge eol=lf
+*.meta text merge=unityyamlmerge eol=lf
+*.mat text merge=unityyamlmerge eol=lf
+*.anim text merge=unityyamlmerge eol=lf
+*.controller text merge=unityyamlmerge eol=lf
+*.overrideController text merge=unityyamlmerge eol=lf
+*.physicsMaterial2D text merge=unityyamlmerge eol=lf
+*.inputactions text eol=lf
+*.asmdef text eol=lf
+*.json text eol=lf
+*.cs text diff=csharp
+*.md text
+
+# 바이너리
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.psd binary
+*.ttf binary
+*.otf binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.fbx binary
+*.dll binary
+*.so binary
+*.a binary
+*.aar binary
+*.jar binary
