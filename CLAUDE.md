@@ -50,7 +50,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 ## 코드 규칙
 
 - 식별자는 영어, 주석·문서·커밋 메시지는 한국어.
-- 표기는 Unity 6판 C# 스타일 가이드 + `기획/프로그래밍-규약.md`: 4칸, Allman 중괄호, private `m_camelCase`, static `s_`, 상수 `k_PascalCase`, 이벤트 발생 `On...`, 핸들러 `Subject_EventName`, 접근 제한자 항상 명시, `var`는 타입이 보일 때만. 예상된 실패는 `Result`/`TryXxx`, 버그는 예외.
+- 표기는 Unity 6판 C# 스타일 가이드 + `기획/프로그래밍-규약.md`: 4칸, Allman 중괄호, private `m_camelCase`, static `s_`, 상수 `k_PascalCase`, 이벤트 발생 `On...`, 핸들러 `Subject_EventName`, 접근 제한자 항상 명시, `var`는 타입이 보일 때만. 예상된 실패는 `Result`/`TryXxx`, 버그는 예외. 주석·로그는 최소한으로, 요청되지 않은 방어 장치·옵션은 넣지 않는다.
 - 네임스페이스 = 폴더 = 어셈블리 (`ZooTycoon.Core / .Data / .Game / .UI / .Editor`).
 - 게임 규칙은 Core 서비스에만. MonoBehaviour는 생명주기 훅에서 서비스를 호출하는 얇은 어댑터. `static` 가변 상태·싱글턴·`Find...` 금지. 의존은 생성자로, 조립은 `GameBootstrap`에서만.
 - UI는 MVP. View는 표시 메서드와 입력 이벤트만, Presenter가 모델 이벤트를 구독해 View를 갱신한다. UI는 모델을 직접 바꾸지 않는다.
