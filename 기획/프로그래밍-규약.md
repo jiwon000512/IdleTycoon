@@ -42,7 +42,7 @@
 | `[SerializeField]` 필드 | private 규칙 그대로 `m_` | `[SerializeField] private Button m_gachaButton;` |
 | 지역 변수·매개변수 | 카멜 명사. 한 글자는 루프 인덱스·수식만 | `elapsedSeconds`, `i` |
 | 이벤트 | 파스칼 동사구. 전: 현재분사, 후: 과거형 | `OpeningPopup`, `CoinsChanged`, `AnimalPulled` |
-| EventBus 이벤트 타입 | 이벤트와 같은 이름의 불변 타입(접미어 없음) | `readonly struct AnimalPulled` |
+| EventManager 이벤트 타입 | 이벤트와 같은 이름의 `readonly struct`(접미어 없음). 도메인별 `Events/<도메인>/` 폴더 | `readonly struct AnimalPulled` |
 | 이벤트 발생 메서드 | `On` + 이벤트명, `private`/`protected` | `OnCoinsChanged(coins)` |
 | 이벤트 핸들러(구독 메서드) | `주체_이벤트명` | `GachaService_AnimalPulled(...)` |
 | 코루틴 | 동사구 + `Routine` | `PlayPullEffectRoutine()` |
@@ -115,8 +115,9 @@
 - 델리게이트는 `System.Action`/`Action<T>`. `EventHandler`·커스텀 델리게이트는 쓰지 않는다.
 - 선언: `public event Action<int> CoinsChanged;`. 매개변수 3개를 넘으면 불변 인자 타입 하나로 묶는다.
 - 발생은 소유 클래스 안에서만, `private void OnCoinsChanged(int coins) => CoinsChanged?.Invoke(coins);`
-- 구독은 반드시 쌍으로 해제: MonoBehaviour는 `OnEnable`/`OnDisable`, 순수 C#은 `IDisposable.Dispose`. 익명 람다 구독은 해제할 수 없으므로 금지(EventBus 토큰 반환 방식은 예외).
-- EventBus(전역 알림)와 C# event(소유자→직접 구독자)의 구분: 같은 어셈블리·직접 참조 관계면 C# event, 계층을 넘거나 구독자가 여럿이면 EventBus.
+- 구독은 반드시 쌍으로 해제: MonoBehaviour는 `OnEnable`/`OnDisable`, 순수 C#은 `IDisposable.Dispose`. 익명 람다 구독은 해제할 수 없으므로 금지(EventManager 토큰 반환 방식은 예외).
+- EventManager(Game·UI 계층 전역 알림)와 C# event(소유자→직접 구독자)의 구분: 직접 참조 관계면 C# event, 발행자와 구독자가 서로 몰라야 하거나 구독자가 여럿이면 EventManager. Core 계층은 EventManager를 쓸 수 없으므로 C# event만 쓴다.
+- 이벤트는 타입으로 식별한다(enum 키·문자열 키 금지). 페이로드가 곧 타입이라 캐스트가 없다. 도메인 구분은 폴더·네임스페이스로 하고, 수명이 짧은 도메인이 생기면 전역 대신 그 도메인이 소유하는 인스턴스를 둔다.
 - 이벤트 안에서 다시 같은 이벤트를 발생시키지 않는다(재진입 금지).
 
 ## 8. 주석과 문서
@@ -147,7 +148,7 @@
 - 기본 구현(예: `Resources` 테이블 소스, 파일 저장소)을 바꿔야 하면 그 Manager에 `Configure(...)`를 두고 부트스트랩 시작 지점에서 호출한다. 호출 순서 가드는 두지 않는다.
 - 호출자는 `OnDestroy`·종료 중에 Manager를 쓰지 않는다. 베이스는 종료를 감지하지 않는다.
 - 접근 허용 범위: `Game`·`UI` 계층과 GameKit 내부. `Core`·`Data`는 어셈블리 경계로 접근이 불가능하며, 게임 규칙 서비스는 Manager를 직접 참조하지 않고 필요한 인터페이스(`ISaveStorage`, `ITableSource`)를 생성자로 받는다. Manager는 그 인터페이스 구현을 제공하는 파사드다.
-- Manager에 게임 규칙을 넣지 않는다. Manager는 순수 C# 클래스(`EventBus`, `TableRepository`, `SaveService`, `Scheduler`)를 감싸고 Unity 수명주기만 더한다. 테스트는 감싸인 순수 클래스로 한다.
+- Manager에 게임 규칙을 넣지 않는다. 로직이 순수 C#로 분리될 가치가 있으면(테이블·저장·스케줄러) Core 클래스를 감싸고, 그렇지 않으면(EventManager) Manager 안에 직접 둔다. 테스트는 분리된 순수 클래스로 한다.
 - 이름은 `역할 + Manager`: `UIManager`, `TableManager`, `DataManager`, `EventManager`, `PoolManager`. 이 접미어는 GameKit 파사드 전용이다.
 
 ## 11. 테스트
