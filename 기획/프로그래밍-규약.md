@@ -140,6 +140,7 @@
 - 코루틴은 연출에만. 시작 핸들을 필드에 보관하고 `OnDisable`에서 `StopCoroutine`.
 - `Find`, `FindObjectOfType`, `SendMessage`, `Invoke("문자열")` 금지.
 - 프리팹·씬의 인스펙터 참조는 `[SerializeField] private` + 프로퍼티. 런타임 생성 객체 참조는 코드로 주입.
+- 저장: 게임 상태(세이브)는 GameKit `DataManager`(JSON 파일, 원자적 교체). 기기 설정(볼륨·언어 같은 값 한두 개)만 `PlayerPrefs`.
 
 ## 10. GameKit Manager 규약
 
