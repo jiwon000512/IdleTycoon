@@ -1,7 +1,7 @@
 # 동물원 타이쿤 (Project Tycoon)
 
 1인 개발 모바일 방치형 경영 타이쿤. Unity로 만들어 Android(우선)·iOS 출시가 목표.
-기획서: `기획/동물원-타이쿤-기획서.md` (현재 v0.5). 데이터 테이블 규칙: `기획/데이터-테이블-규칙.md`. 코드 규칙: `기획/코드-규칙.md`.
+기획서: `기획/동물원-타이쿤-기획서.md` (현재 v0.5). 데이터 테이블 규칙: `기획/데이터-테이블-규칙.md`. 코드 규칙: `기획/코드-규칙.md`. 프로그래밍 규약: `기획/프로그래밍-규약.md`.
 초기 세팅 절차의 원본은 Claude 스킬 `~/.claude/skills/unity-project-setup/`(GitHub jiwon000512/Claude_UnitySkill). 저장소의 `기획/유니티-프로젝트-초기-세팅-가이드.md`는 안내만.
 원격 저장소: https://github.com/jiwon000512/IdleTycoon (main). 저장소 루트는 `C:\project\Tycoon`.
 기획과 개발을 병행하며 기획서는 결정이 바뀔 때마다 버전을 올린다.
@@ -39,7 +39,8 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 | 화면 | 세로 고정(Portrait only), 기준 해상도 1080×1920, CanvasScaler Scale With Screen Size |
 | 숫자 | `double` + K/M/B 표기. 수입 틱 0.1~0.25초, 표시 숫자만 보간 |
 | 저장 | 로컬 JSON 1파일 (`Application.persistentDataPath`), 마지막 저장 시각 UTC. 시간 조작 방어는 첫 버전에 없음 |
-| 코드 구조 | asmdef 6개로 계층 강제 · UI는 MVP(View MonoBehaviour + Presenter 순수 C#) · 수동 컴포지션 루트(`GameBootstrap`) + 생성자 주입 · 순수 C# event + 동기 틱. 상세 `기획/코드-규칙.md` |
+| 코드 구조 | asmdef 6개로 계층 강제 · UI는 MVP(View MonoBehaviour + Presenter 순수 C#) · 게임 규칙은 수동 컴포지션 루트(`GameBootstrap`) + 생성자 주입 · 순수 C# event + 동기 틱. 상세 `기획/코드-규칙.md` |
+| 공통 기반 | GameKit UPM 패키지(`com.jiwon.gamekit`, 저장소 `C:\project\UnityGameKit`, GitHub jiwon000512/UnityGameKit 예정). `MonoSingleton<T>` 기반 Manager(UI·Table·Data·Event·Pool)는 lazy 자기 초기화, Game·UI 계층에서만 접근. 규약 `기획/프로그래밍-규약.md` 10장 |
 | 데이터 | JSON 단일 원본(`Assets/Resources/Data/*.json`, 테이블당 1파일) + Newtonsoft.Json. ScriptableObject 사용 안 함. 에셋은 ID 규칙 경로로 참조. 형식·검증 규칙은 `기획/데이터-테이블-규칙.md` |
 | 빌드 | Android IL2CPP, ARM64. 제품명/회사명/패키지 ID는 아직 임시(DefaultCompany) — 스토어 등록 전 변경 |
 | 제외 패키지 | Visual Scripting, Timeline, Multiplayer Center, SpriteShape, Aseprite, PSD Importer, 2D Animation, Tilemap Extras (필요해지면 다시 추가) |
@@ -49,7 +50,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 ## 코드 규칙
 
 - 식별자는 영어, 주석·문서·커밋 메시지는 한국어.
-- C#: 4칸 들여쓰기, 여는 중괄호 새 줄, private 필드 `_camelCase`, 상수 `PascalCase`. `.editorconfig` 참고.
+- 표기는 Unity 6판 C# 스타일 가이드 + `기획/프로그래밍-규약.md`: 4칸, Allman 중괄호, private `m_camelCase`, static `s_`, 상수 `k_PascalCase`, 이벤트 발생 `On...`, 핸들러 `Subject_EventName`, 접근 제한자 항상 명시, `var`는 타입이 보일 때만. 예상된 실패는 `Result`/`TryXxx`, 버그는 예외.
 - 네임스페이스 = 폴더 = 어셈블리 (`ZooTycoon.Core / .Data / .Game / .UI / .Editor`).
 - 게임 규칙은 Core 서비스에만. MonoBehaviour는 생명주기 훅에서 서비스를 호출하는 얇은 어댑터. `static` 가변 상태·싱글턴·`Find...` 금지. 의존은 생성자로, 조립은 `GameBootstrap`에서만.
 - UI는 MVP. View는 표시 메서드와 입력 이벤트만, Presenter가 모델 이벤트를 구독해 View를 갱신한다. UI는 모델을 직접 바꾸지 않는다.

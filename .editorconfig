@@ -10,17 +10,96 @@ indent_size = 4
 
 [*.cs]
 indent_size = 4
+max_line_length = 120
+
+# 중괄호: Allman (모든 여는 중괄호 새 줄), 한 줄 본문도 중괄호 유지
 csharp_new_line_before_open_brace = all
-csharp_prefer_braces = true:suggestion
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_prefer_braces = true:warning
+
+# using: System 먼저, 네임스페이스 밖에
 dotnet_sort_system_directives_first = true
-# 필드 네이밍: private는 _camelCase
-dotnet_naming_rule.private_fields_underscore.symbols = private_fields
-dotnet_naming_rule.private_fields_underscore.style = underscore_camel
-dotnet_naming_rule.private_fields_underscore.severity = suggestion
+csharp_using_directive_placement = outside_namespace:warning
+
+# 접근 제한자 항상 명시
+dotnet_style_require_accessibility_modifiers = always:warning
+
+# var: 타입이 우변에서 보일 때만
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# 표현식 본문: 한 줄 프로퍼티·접근자만
+csharp_style_expression_bodied_methods = false:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_style_expression_bodied_accessors = when_on_single_line:suggestion
+
+# 공백
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_call_name_and_opening_parenthesis = false
+csharp_space_between_method_declaration_name_and_open_parenthesis = false
+csharp_space_between_parentheses = false
+csharp_space_after_comma = true
+csharp_space_around_binary_operators = before_and_after
+
+# ---- 네이밍 (Unity 6판 스타일 가이드 + 팀 결정) ----
+# 인터페이스 I 접두
+dotnet_naming_rule.interfaces_prefix_i.symbols = interfaces
+dotnet_naming_rule.interfaces_prefix_i.style = prefix_i_pascal
+dotnet_naming_rule.interfaces_prefix_i.severity = warning
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_style.prefix_i_pascal.capitalization = pascal_case
+dotnet_naming_style.prefix_i_pascal.required_prefix = I
+
+# const / static readonly 상수: k_PascalCase
+dotnet_naming_rule.constants_k_prefix.symbols = constants
+dotnet_naming_rule.constants_k_prefix.style = k_pascal
+dotnet_naming_rule.constants_k_prefix.severity = warning
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.required_modifiers = const
+dotnet_naming_style.k_pascal.capitalization = pascal_case
+dotnet_naming_style.k_pascal.required_prefix = k_
+
+dotnet_naming_rule.static_readonly_k_prefix.symbols = static_readonly_fields
+dotnet_naming_rule.static_readonly_k_prefix.style = k_pascal
+dotnet_naming_rule.static_readonly_k_prefix.severity = suggestion
+dotnet_naming_symbols.static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.static_readonly_fields.required_modifiers = static, readonly
+
+# private static 필드: s_camelCase
+dotnet_naming_rule.private_static_s_prefix.symbols = private_static_fields
+dotnet_naming_rule.private_static_s_prefix.style = s_camel
+dotnet_naming_rule.private_static_s_prefix.severity = warning
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private, internal, protected
+dotnet_naming_symbols.private_static_fields.required_modifiers = static
+dotnet_naming_style.s_camel.capitalization = camel_case
+dotnet_naming_style.s_camel.required_prefix = s_
+
+# private 인스턴스 필드: m_camelCase
+dotnet_naming_rule.private_fields_m_prefix.symbols = private_fields
+dotnet_naming_rule.private_fields_m_prefix.style = m_camel
+dotnet_naming_rule.private_fields_m_prefix.severity = warning
 dotnet_naming_symbols.private_fields.applicable_kinds = field
-dotnet_naming_symbols.private_fields.applicable_accessibilities = private
-dotnet_naming_style.underscore_camel.capitalization = camel_case
-dotnet_naming_style.underscore_camel.required_prefix = _
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, internal, protected
+dotnet_naming_style.m_camel.capitalization = camel_case
+dotnet_naming_style.m_camel.required_prefix = m_
+
+# 타입·메서드·프로퍼티·이벤트: PascalCase
+dotnet_naming_rule.members_pascal.symbols = members
+dotnet_naming_rule.members_pascal.style = pascal
+dotnet_naming_rule.members_pascal.severity = warning
+dotnet_naming_symbols.members.applicable_kinds = class, struct, enum, method, property, event, delegate
+dotnet_naming_style.pascal.capitalization = pascal_case
+
+# 지역 변수·매개변수: camelCase
+dotnet_naming_rule.locals_camel.symbols = locals
+dotnet_naming_rule.locals_camel.style = camel
+dotnet_naming_rule.locals_camel.severity = warning
+dotnet_naming_symbols.locals.applicable_kinds = parameter, local
+dotnet_naming_style.camel.capitalization = camel_case
 
 [*.{json,asmdef,yml,yaml}]
 indent_size = 2
