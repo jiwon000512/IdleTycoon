@@ -1,7 +1,7 @@
 # 동물원 타이쿤 (Project Tycoon)
 
 1인 개발 모바일 방치형 경영 타이쿤. Unity로 만들어 Android(우선)·iOS 출시가 목표.
-기획서: `기획/동물원-타이쿤-기획서.md` (현재 v0.5). 데이터 테이블 규칙: `기획/데이터-테이블-규칙.md`. 코드 규칙: `기획/코드-규칙.md`. 프로그래밍 규약: `기획/프로그래밍-규약.md`.
+기획서: `기획/동물원-타이쿤-기획서.md` (현재 v0.6). **세션 시작 시 `기획/진행상황.md`를 먼저 읽고, 세션 끝에 갱신한다.** 데이터 테이블 규칙: `기획/데이터-테이블-규칙.md`. 코드 규칙: `기획/코드-규칙.md`. 프로그래밍 규약: `기획/프로그래밍-규약.md`.
 초기 세팅 절차의 원본은 Claude 스킬 `~/.claude/skills/unity-project-setup/`(GitHub jiwon000512/Claude_UnitySkill). 저장소의 `기획/유니티-프로젝트-초기-세팅-가이드.md`는 안내만.
 원격 저장소: https://github.com/jiwon000512/IdleTycoon (main). 저장소 루트는 `C:\project\Tycoon`.
 기획과 개발을 병행하며 기획서는 결정이 바뀔 때마다 버전을 올린다.
@@ -41,7 +41,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 | 저장 | 로컬 JSON 1파일 (`Application.persistentDataPath`), 마지막 저장 시각 UTC. 시간 조작 방어는 첫 버전에 없음 |
 | 코드 구조 | asmdef 6개로 계층 강제 · UI는 MVP(View MonoBehaviour + Presenter 순수 C#) · 게임 규칙은 수동 컴포지션 루트(`GameBootstrap`) + 생성자 주입 · 순수 C# event + 동기 틱. 상세 `기획/코드-규칙.md` |
 | 공통 기반 | GameKit UPM 패키지(`com.jiwon.gamekit`, 저장소 `C:\project\UnityGameKit`, GitHub jiwon000512/UnityGameKit). `MonoSingleton<T>` 기반 Manager(UI·Table·Data·Event·Pool)는 lazy 자기 초기화, Game·UI 계층에서만 접근. 규약 `기획/프로그래밍-규약.md` 10장 |
-| 데이터 | JSON 단일 원본(`Assets/Resources/Data/*.json`, 테이블당 1파일) + Newtonsoft.Json. ScriptableObject 사용 안 함. 에셋은 ID 규칙 경로로 참조. 형식·검증 규칙은 `기획/데이터-테이블-규칙.md` |
+| 데이터 | JSON 단일 원본(`Assets/Resources/Data/*.json`, 테이블당 1파일) + Newtonsoft.Json. ScriptableObject 사용 안 함. 에셋은 JSON 경로 칼럼(`animals.sprite` 등)으로 참조하고, 더미 리소스를 먼저 만들어 두면 사용자가 같은 경로로 실제 리소스를 교체. 형식·검증 규칙은 `기획/데이터-테이블-규칙.md` |
 | 빌드 | Android IL2CPP, ARM64. 제품명/회사명/패키지 ID는 아직 임시(DefaultCompany) — 스토어 등록 전 변경 |
 | 제외 패키지 | Visual Scripting, Timeline, Multiplayer Center, SpriteShape, Aseprite, PSD Importer, 2D Animation, Tilemap Extras (필요해지면 다시 추가) |
 | 유지 패키지 | `com.unity.pipeline`은 Unity CLI가 에디터에 연결할 때 쓰므로 지우지 않는다 |
@@ -54,7 +54,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 - 네임스페이스 = 폴더 = 어셈블리 (`ZooTycoon.Core / .Data / .Game / .UI / .Editor`).
 - 게임 규칙은 Core 서비스에만. MonoBehaviour는 생명주기 훅에서 서비스를 호출하는 얇은 어댑터. `static` 가변 상태·싱글턴·`Find...` 금지. 의존은 생성자로, 조립은 `GameBootstrap`에서만.
 - UI는 MVP. View는 표시 메서드와 입력 이벤트만, Presenter가 모델 이벤트를 구독해 View를 갱신한다. UI는 모델을 직접 바꾸지 않는다.
-- 작업 단위마다 ① 설계(`기획/설계/NN-*.md`: 코드 설계 + QA 계획)를 사용자와 확정 → ② Unity CLI를 최대한 써서 한 번에 구현 → ③ QA 계획대로 검증(컴파일 0·콘솔 0·테스트 통과·플레이 캡처) → ④ 결과 보고. 구현 중에는 사용자를 기다리지 않는다. 전체 규칙·체크리스트·첫 버전 클래스 지도는 `기획/코드-규칙.md`.
+- 기능 하나 = 세션 하나. ① 설계(`기획/설계/NN-*.md`: 코드 설계 + QA 계획)를 사용자와 확정 → ② Unity CLI를 최대한 써서 한 번에 구현(스크립트·씬·프리팹·게임오브젝트·더미 리소스까지) → ③ QA 계획대로 검증(컴파일 0·콘솔 0·테스트 통과·플레이 캡처) → ④ 결과 보고 후 `기획/진행상황.md` 갱신. 구현 중에는 사용자를 기다리지 않는다. 전체 규칙·체크리스트·첫 버전 클래스 지도는 `기획/코드-규칙.md`.
 - 기획서의 숫자는 코드에 하드코딩하지 않고 `game_config.json` 등 JSON 테이블에 둔다. 레코드 클래스에는 기획서 표 번호(예: 6.3)를 주석에 남긴다.
 - JSON 테이블을 고칠 때는 `기획/데이터-테이블-규칙.md` 6장 절차를 따른다(기획서 먼저 → JSON → 검증 테스트). 파일 전체를 유효한 JSON으로 다시 쓴다.
 
