@@ -2,7 +2,7 @@
 
 1인 개발 모바일 방치형 경영 타이쿤. Unity로 만들어 Android(우선)·iOS 출시가 목표.
 기획서: `기획/동물원-타이쿤-기획서.md` (현재 v0.5). 데이터 테이블 규칙: `기획/데이터-테이블-규칙.md`.
-초기 세팅 결정과 절차(다음 프로젝트 재사용용): `기획/유니티-프로젝트-초기-세팅-가이드.md`. 실행본 스킬: `~/.claude/skills/unity-project-setup/`.
+초기 세팅 절차의 원본은 Claude 스킬 `~/.claude/skills/unity-project-setup/`(GitHub jiwon000512/claude-skills). 저장소의 `기획/유니티-프로젝트-초기-세팅-가이드.md`는 안내만.
 원격 저장소: https://github.com/jiwon000512/IdleTycoon (main). 저장소 루트는 `C:\project\Tycoon`.
 기획과 개발을 병행하며 기획서는 결정이 바뀔 때마다 버전을 올린다.
 
