@@ -40,7 +40,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 | 숫자 | `double` + K/M/B 표기. 수입 틱 0.1~0.25초, 표시 숫자만 보간 |
 | 저장 | 로컬 JSON 1파일 (`Application.persistentDataPath`), 마지막 저장 시각 UTC. 시간 조작 방어는 첫 버전에 없음 |
 | 코드 구조 | asmdef 6개로 계층 강제 · UI는 MVP(View MonoBehaviour + Presenter 순수 C#) · 게임 규칙은 수동 컴포지션 루트(`GameBootstrap`) + 생성자 주입 · 순수 C# event + 동기 틱. 상세 `기획/코드-규칙.md` |
-| 공통 기반 | GameKit UPM 패키지(`com.jiwon.gamekit`, 저장소 `C:\project\UnityGameKit`, GitHub jiwon000512/UnityGameKit 예정). `MonoSingleton<T>` 기반 Manager(UI·Table·Data·Event·Pool)는 lazy 자기 초기화, Game·UI 계층에서만 접근. 규약 `기획/프로그래밍-규약.md` 10장 |
+| 공통 기반 | GameKit UPM 패키지(`com.jiwon.gamekit`, 저장소 `C:\project\UnityGameKit`, GitHub jiwon000512/UnityGameKit). `MonoSingleton<T>` 기반 Manager(UI·Table·Data·Event·Pool)는 lazy 자기 초기화, Game·UI 계층에서만 접근. 규약 `기획/프로그래밍-규약.md` 10장 |
 | 데이터 | JSON 단일 원본(`Assets/Resources/Data/*.json`, 테이블당 1파일) + Newtonsoft.Json. ScriptableObject 사용 안 함. 에셋은 ID 규칙 경로로 참조. 형식·검증 규칙은 `기획/데이터-테이블-규칙.md` |
 | 빌드 | Android IL2CPP, ARM64. 제품명/회사명/패키지 ID는 아직 임시(DefaultCompany) — 스토어 등록 전 변경 |
 | 제외 패키지 | Visual Scripting, Timeline, Multiplayer Center, SpriteShape, Aseprite, PSD Importer, 2D Animation, Tilemap Extras (필요해지면 다시 추가) |
