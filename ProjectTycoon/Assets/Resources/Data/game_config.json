@@ -3,7 +3,7 @@
   "version": 1,
   "notes": [
     "기획서 6.2~6.4의 수식 상수와 시작 상태. 전부 시작값이며 프로토타입에서 튠한다.",
-    "gacha.costBasis 와 animalLevel.maxLevelDuplicate 는 기획서 10장 미결 항목 — 현재는 기획서 가정값."
+    "레벨 상한 없음(기획서 v0.6). gacha.costBasis는 totalPulls로 확정."
   ],
   "start": {
     "coins": 300
@@ -18,12 +18,7 @@
     "costBasis": "totalPulls"
   },
   "animalLevel": {
-    "maxLevel": 10,
-    "incomeBonusPerLevel": 0.5,
-    "maxLevelDuplicate": {
-      "mode": "refundCoins",
-      "refundSeconds": 60
-    }
+    "incomeBonusPerLevel": 0.5
   },
   "promotion": {
     "maxStage": 10,

@@ -2,7 +2,7 @@
   "table": "animals",
   "version": 1,
   "notes": [
-    "기획서 6.1 동물 8종. 이름은 예시(기획서 10장 미결) — 확정 시 name만 바꾼다.",
+    "기획서 6.1 동물 8종. 이름 확정(v0.6).",
     "스프라이트는 Resources/Sprites/Animals/{id}.png 로 ID 규칙으로 찾는다.",
     "gachaWeight는 같은 등급 안에서의 상대 가중치. 등급 간 확률은 grades.json의 gachaWeight."
   ],
