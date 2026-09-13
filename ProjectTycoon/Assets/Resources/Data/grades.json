@@ -1,0 +1,30 @@
+{
+  "table": "grades",
+  "version": 1,
+  "notes": [
+    "기획서 6.1 등급 확률 일반 70% / 희귀 27% / 전설 3%. gachaWeight 합으로 나눈 값이 확률."
+  ],
+  "rows": [
+    {
+      "id": "common",
+      "name": "일반",
+      "gachaWeight": 70,
+      "colorHex": "#9E9E9E",
+      "sortOrder": 1
+    },
+    {
+      "id": "rare",
+      "name": "희귀",
+      "gachaWeight": 27,
+      "colorHex": "#42A5F5",
+      "sortOrder": 2
+    },
+    {
+      "id": "legendary",
+      "name": "전설",
+      "gachaWeight": 3,
+      "colorHex": "#FFB300",
+      "sortOrder": 3
+    }
+  ]
+}

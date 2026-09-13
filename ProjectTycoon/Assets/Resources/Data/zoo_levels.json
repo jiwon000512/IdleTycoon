@@ -1,0 +1,51 @@
+{
+  "table": "zoo_levels",
+  "version": 1,
+  "notes": [
+    "기획서 6.4 동물원 레벨. requiredTotalCoins는 누적 획득 코인. cageCount는 그 레벨에서 열린 우리 총수."
+  ],
+  "rows": [
+    {
+      "level": 1,
+      "requiredTotalCoins": 0,
+      "cageCount": 3,
+      "unlocksPromotion": false
+    },
+    {
+      "level": 2,
+      "requiredTotalCoins": 2000,
+      "cageCount": 4,
+      "unlocksPromotion": false
+    },
+    {
+      "level": 3,
+      "requiredTotalCoins": 8000,
+      "cageCount": 5,
+      "unlocksPromotion": true
+    },
+    {
+      "level": 4,
+      "requiredTotalCoins": 25000,
+      "cageCount": 6,
+      "unlocksPromotion": false
+    },
+    {
+      "level": 5,
+      "requiredTotalCoins": 70000,
+      "cageCount": 7,
+      "unlocksPromotion": false
+    },
+    {
+      "level": 6,
+      "requiredTotalCoins": 200000,
+      "cageCount": 8,
+      "unlocksPromotion": false
+    },
+    {
+      "level": 7,
+      "requiredTotalCoins": 500000,
+      "cageCount": 9,
+      "unlocksPromotion": false
+    }
+  ]
+}

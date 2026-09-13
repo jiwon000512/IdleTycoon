@@ -1,0 +1,38 @@
+{
+  "table": "game_config",
+  "version": 1,
+  "notes": [
+    "기획서 6.2~6.4의 수식 상수와 시작 상태. 전부 시작값이며 프로토타입에서 튠한다.",
+    "gacha.costBasis 와 animalLevel.maxLevelDuplicate 는 기획서 10장 미결 항목 — 현재는 기획서 가정값."
+  ],
+  "start": {
+    "coins": 300
+  },
+  "cageGrid": {
+    "columns": 3,
+    "rows": 3
+  },
+  "gacha": {
+    "baseCost": 100,
+    "costGrowth": 1.12,
+    "costBasis": "totalPulls"
+  },
+  "animalLevel": {
+    "maxLevel": 10,
+    "incomeBonusPerLevel": 0.5,
+    "maxLevelDuplicate": {
+      "mode": "refundCoins",
+      "refundSeconds": 60
+    }
+  },
+  "promotion": {
+    "maxStage": 10,
+    "multiplierPerStage": 0.1,
+    "baseCost": 500,
+    "costGrowth": 1.8,
+    "visitorsPerStage": 1
+  },
+  "offline": {
+    "maxSeconds": 28800
+  }
+}
