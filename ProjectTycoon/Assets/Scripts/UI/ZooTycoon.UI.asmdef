@@ -1,0 +1,14 @@
+{
+  "name": "ZooTycoon.UI",
+  "rootNamespace": "ZooTycoon.UI",
+  "references": [ "ZooTycoon.Core", "ZooTycoon.Game", "UnityEngine.UI", "Unity.TextMeshPro" ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,14 @@
+{
+  "name": "ZooTycoon.Data",
+  "rootNamespace": "ZooTycoon.Data",
+  "references": [ "ZooTycoon.Core" ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [ "Newtonsoft.Json.dll" ],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

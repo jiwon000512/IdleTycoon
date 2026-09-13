@@ -1,7 +1,7 @@
 # 동물원 타이쿤 (Project Tycoon)
 
 1인 개발 모바일 방치형 경영 타이쿤. Unity로 만들어 Android(우선)·iOS 출시가 목표.
-기획서: `기획/동물원-타이쿤-기획서.md` (현재 v0.5). 데이터 테이블 규칙: `기획/데이터-테이블-규칙.md`.
+기획서: `기획/동물원-타이쿤-기획서.md` (현재 v0.5). 데이터 테이블 규칙: `기획/데이터-테이블-규칙.md`. 코드 규칙: `기획/코드-규칙.md`.
 초기 세팅 절차의 원본은 Claude 스킬 `~/.claude/skills/unity-project-setup/`(GitHub jiwon000512/Claude_UnitySkill). 저장소의 `기획/유니티-프로젝트-초기-세팅-가이드.md`는 안내만.
 원격 저장소: https://github.com/jiwon000512/IdleTycoon (main). 저장소 루트는 `C:\project\Tycoon`.
 기획과 개발을 병행하며 기획서는 결정이 바뀔 때마다 버전을 올린다.
@@ -27,8 +27,7 @@ Tycoon/
       └─ Tests/EditMode/     Core 로직 유닛 테스트 (Unity Test Framework)
 ```
 
-Assets 바로 아래에 종류별 폴더를 둔다. 어셈블리 정의(asmdef)는 쓰지 않는다(기본 Assembly-CSharp 하나).
-`Core/`는 UnityEngine을 참조하지 않는다는 규칙만 지키면 된다. 빈 폴더는 `.gitkeep`으로 유지(Unity는 점으로 시작하는 파일을 무시).
+Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tests/EditMode는 asmdef 하나씩(`ZooTycoon.Core/.Data/.Game/.UI/.Editor/.Tests.EditMode`)이며 의존은 UI→Game→Data→Core 아래로만 흐른다. Core·Data는 UnityEngine을 참조할 수 없다(`noEngineReferences`). 빈 폴더는 `.gitkeep`으로 유지(Unity는 점으로 시작하는 파일을 무시).
 
 ## 기술 결정
 
@@ -40,17 +39,21 @@ Assets 바로 아래에 종류별 폴더를 둔다. 어셈블리 정의(asmdef)�
 | 화면 | 세로 고정(Portrait only), 기준 해상도 1080×1920, CanvasScaler Scale With Screen Size |
 | 숫자 | `double` + K/M/B 표기. 수입 틱 0.1~0.25초, 표시 숫자만 보간 |
 | 저장 | 로컬 JSON 1파일 (`Application.persistentDataPath`), 마지막 저장 시각 UTC. 시간 조작 방어는 첫 버전에 없음 |
+| 코드 구조 | asmdef 6개로 계층 강제 · UI는 MVP(View MonoBehaviour + Presenter 순수 C#) · 수동 컴포지션 루트(`GameBootstrap`) + 생성자 주입 · 순수 C# event + 동기 틱. 상세 `기획/코드-규칙.md` |
 | 데이터 | JSON 단일 원본(`Assets/Resources/Data/*.json`, 테이블당 1파일) + Newtonsoft.Json. ScriptableObject 사용 안 함. 에셋은 ID 규칙 경로로 참조. 형식·검증 규칙은 `기획/데이터-테이블-규칙.md` |
 | 빌드 | Android IL2CPP, ARM64. 제품명/회사명/패키지 ID는 아직 임시(DefaultCompany) — 스토어 등록 전 변경 |
 | 제외 패키지 | Visual Scripting, Timeline, Multiplayer Center, SpriteShape, Aseprite, PSD Importer, 2D Animation, Tilemap Extras (필요해지면 다시 추가) |
 | 유지 패키지 | `com.unity.pipeline`은 Unity CLI가 에디터에 연결할 때 쓰므로 지우지 않는다 |
+| 추가 패키지 | `com.unity.nuget.newtonsoft-json` 3.2.2 (Data 계층 JSON 파싱). TMP Essential Resources 임포트됨(`Assets/TextMesh Pro`) |
 
 ## 코드 규칙
 
 - 식별자는 영어, 주석·문서·커밋 메시지는 한국어.
 - C#: 4칸 들여쓰기, 여는 중괄호 새 줄, private 필드 `_camelCase`, 상수 `PascalCase`. `.editorconfig` 참고.
-- 네임스페이스 `ZooTycoon.Core / .Data / .Game / .UI`.
-- MonoBehaviour는 얇게. 규칙과 수식은 Core에 두고 Tests/EditMode에서 검증한다.
+- 네임스페이스 = 폴더 = 어셈블리 (`ZooTycoon.Core / .Data / .Game / .UI / .Editor`).
+- 게임 규칙은 Core 서비스에만. MonoBehaviour는 생명주기 훅에서 서비스를 호출하는 얇은 어댑터. `static` 가변 상태·싱글턴·`Find...` 금지. 의존은 생성자로, 조립은 `GameBootstrap`에서만.
+- UI는 MVP. View는 표시 메서드와 입력 이벤트만, Presenter가 모델 이벤트를 구독해 View를 갱신한다. UI는 모델을 직접 바꾸지 않는다.
+- 기능을 만들기 전에 설계 목록(계층/클래스/책임/의존)을 먼저 적어 확인받는다. 완료 기준은 컴파일 0·콘솔 오류 0·테스트 통과. 전체 규칙·체크리스트·첫 버전 클래스 지도는 `기획/코드-규칙.md`.
 - 기획서의 숫자는 코드에 하드코딩하지 않고 `game_config.json` 등 JSON 테이블에 둔다. 레코드 클래스에는 기획서 표 번호(예: 6.3)를 주석에 남긴다.
 - JSON 테이블을 고칠 때는 `기획/데이터-테이블-규칙.md` 6장 절차를 따른다(기획서 먼저 → JSON → 검증 테스트). 파일 전체를 유효한 JSON으로 다시 쓴다.
 
@@ -59,6 +62,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. 어셈블리 정의(asmdef)�
 - 개발 순서: 메인 루프(가차 → 배치 → 초당 수입 → 재투자/홍보 → 오프라인 수익 → 저장)를 먼저 완성하고 재미를 확인한 뒤 컨텐츠를 붙인다. 기획서 5장·9장 우선순위를 따른다.
 - 기획을 바꾸는 결정은 먼저 사용자에게 객관식으로 하나씩 묻고, 확정되면 기획서 「확정 결정」표와 변경 이력에 반영한다.
 - Unity 에디터가 열려 있으면 Unity CLI(unity-cli 스킬)로 씬·프리팹을 조작할 수 있다. 닫혀 있을 때는 텍스트 자산(.asset/.unity/.meta) 직접 편집이 가능하나 새 폴더/파일에는 .meta를 함께 만든다.
+- Unity CLI 요령: 연결 확인은 `unity pipeline list`. 여러 줄 C#은 `run_script --file --entry`(eval은 using 불가). Git Bash에서 계층 경로를 쓰기 전에 `export MSYS_NO_PATHCONV=1`. UI 확인은 플레이 모드에서 `capture_game_view --source screen`. 스크립트 작성 후 `recompile` → `editor_status.compiling=false` 대기 → `console_status` 오류 0 확인.
 - 커밋은 사용자가 요청할 때만. 메시지는 한국어 한 줄 요약 + 필요 시 본문.
 
 ## 유용한 명령
