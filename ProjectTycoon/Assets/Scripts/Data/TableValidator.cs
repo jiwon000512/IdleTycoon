@@ -1,0 +1,227 @@
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using ZooTycoon.Core;
+
+namespace ZooTycoon.Data
+{
+    // 데이터-테이블-규칙 7장. 봉투(table·version)는 EditMode 테스트가 검사한다(설계 01 D2).
+    public static class TableValidator
+    {
+        private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
+        private static readonly Regex k_AnimalIdPattern = new Regex("^a[0-9]{2}$");
+        private static readonly string[] k_CostBasisValues = { "totalPulls", "zooLevel" };
+
+        public static IReadOnlyList<string> Validate(GameTables tables)
+        {
+            List<string> errors = new List<string>();
+
+            ValidateGrades(tables, errors);
+            ValidateAnimals(tables, errors);
+            ValidateZooLevels(tables, errors);
+            ValidateStrings(tables, errors);
+            ValidateConfig(tables, errors);
+
+            return errors;
+        }
+
+        private static void ValidateGrades(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+            HashSet<int> sortOrders = new HashSet<int>();
+            int weightSum = 0;
+
+            foreach (GradeRecord grade in tables.Grades)
+            {
+                CheckId("grades", grade.Id, k_IdPattern, ids, errors);
+                CheckSortOrder("grades", grade.SortOrder, sortOrders, errors);
+
+                if (grade.GachaWeight < 0)
+                {
+                    errors.Add($"grades '{grade.Id}': gachaWeight가 0 미만이다.");
+                }
+
+                weightSum += grade.GachaWeight;
+            }
+
+            if (weightSum <= 0)
+            {
+                errors.Add("grades: gachaWeight 합이 0 이하다.");
+            }
+        }
+
+        private static void ValidateAnimals(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+            HashSet<int> sortOrders = new HashSet<int>();
+            HashSet<string> usedGrades = new HashSet<string>();
+
+            foreach (AnimalRecord animal in tables.Animals)
+            {
+                CheckId("animals", animal.Id, k_IdPattern, ids, errors);
+                CheckSortOrder("animals", animal.SortOrder, sortOrders, errors);
+
+                if (animal.Id != null && !k_AnimalIdPattern.IsMatch(animal.Id))
+                {
+                    errors.Add($"animals '{animal.Id}': 동물 ID는 a + 두 자리 번호여야 한다.");
+                }
+
+                if (!tables.HasGrade(animal.Grade))
+                {
+                    errors.Add($"animals '{animal.Id}': grade '{animal.Grade}'가 grades에 없다.");
+                }
+                else
+                {
+                    usedGrades.Add(animal.Grade);
+                }
+
+                if (animal.BaseIncomePerSecond <= 0d)
+                {
+                    errors.Add($"animals '{animal.Id}': baseIncomePerSecond가 0 이하다.");
+                }
+
+                if (animal.GachaWeight < 1)
+                {
+                    errors.Add($"animals '{animal.Id}': gachaWeight가 1 미만이다.");
+                }
+
+                if (string.IsNullOrEmpty(animal.Sprite))
+                {
+                    errors.Add($"animals '{animal.Id}': sprite 경로가 비어 있다.");
+                }
+            }
+
+            foreach (GradeRecord grade in tables.Grades)
+            {
+                if (!usedGrades.Contains(grade.Id))
+                {
+                    errors.Add($"animals: 등급 '{grade.Id}'에 속한 동물이 없다.");
+                }
+            }
+        }
+
+        private static void ValidateZooLevels(GameTables tables, List<string> errors)
+        {
+            IReadOnlyList<ZooLevelRecord> levels = tables.ZooLevels;
+            int promotionUnlocks = 0;
+
+            for (int i = 0; i < levels.Count; i++)
+            {
+                ZooLevelRecord level = levels[i];
+
+                if (level.Level != i + 1)
+                {
+                    errors.Add($"zoo_levels[{i}]: level이 1부터 연속이 아니다(값 {level.Level}).");
+                }
+
+                if (level.UnlocksPromotion)
+                {
+                    promotionUnlocks++;
+                }
+
+                if (i == 0)
+                {
+                    if (level.RequiredTotalCoins != 0d)
+                    {
+                        errors.Add("zoo_levels: 첫 레벨의 requiredTotalCoins가 0이 아니다.");
+                    }
+
+                    continue;
+                }
+
+                if (level.RequiredTotalCoins <= levels[i - 1].RequiredTotalCoins)
+                {
+                    errors.Add($"zoo_levels[{i}]: requiredTotalCoins가 단조 증가하지 않는다.");
+                }
+
+                if (level.CageCount <= levels[i - 1].CageCount)
+                {
+                    errors.Add($"zoo_levels[{i}]: cageCount가 단조 증가하지 않는다.");
+                }
+            }
+
+            if (promotionUnlocks != 1)
+            {
+                errors.Add($"zoo_levels: unlocksPromotion이 true인 레벨이 {promotionUnlocks}개다(1개여야 함).");
+            }
+
+            int gridCapacity = tables.Config.CageGrid.Columns * tables.Config.CageGrid.Rows;
+            if (levels.Count > 0 && levels[levels.Count - 1].CageCount > gridCapacity)
+            {
+                errors.Add($"zoo_levels: 마지막 cageCount가 격자 칸 수 {gridCapacity}를 넘는다.");
+            }
+        }
+
+        private static void ValidateStrings(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+
+            foreach (StringRecord row in tables.StringRows)
+            {
+                CheckId("strings", row.Id, k_IdPattern, ids, errors);
+
+                if (string.IsNullOrEmpty(row.Ko))
+                {
+                    errors.Add($"strings '{row.Id}': ko가 비어 있다.");
+                }
+            }
+        }
+
+        private static void ValidateConfig(GameTables tables, List<string> errors)
+        {
+            GameConfig config = tables.Config;
+
+            if (config.Gacha.BaseCost <= 0 || config.Promotion.BaseCost <= 0)
+            {
+                errors.Add("game_config: baseCost가 0 이하다.");
+            }
+
+            if (config.Gacha.CostGrowth <= 1d || config.Promotion.CostGrowth <= 1d)
+            {
+                errors.Add("game_config: costGrowth가 1 이하다.");
+            }
+
+            if (Array.IndexOf(k_CostBasisValues, config.Gacha.CostBasis) < 0)
+            {
+                errors.Add($"game_config: gacha.costBasis '{config.Gacha.CostBasis}'가 허용 값이 아니다.");
+            }
+
+            if (config.AnimalLevel.IncomeBonusPerLevel < 0d)
+            {
+                errors.Add("game_config: animalLevel.incomeBonusPerLevel이 0 미만이다.");
+            }
+
+            if (config.Offline.MaxSeconds <= 0)
+            {
+                errors.Add("game_config: offline.maxSeconds가 0 이하다.");
+            }
+
+            if (config.Start.Coins < config.Gacha.BaseCost)
+            {
+                errors.Add("game_config: start.coins가 첫 뽑기 비용보다 적다.");
+            }
+        }
+
+        private static void CheckId(string table, string id, Regex pattern, HashSet<string> seen, List<string> errors)
+        {
+            if (id == null || !pattern.IsMatch(id))
+            {
+                errors.Add($"{table}: id '{id}'가 ID 패턴에 맞지 않는다.");
+                return;
+            }
+
+            if (!seen.Add(id))
+            {
+                errors.Add($"{table}: id '{id}'가 중복이다.");
+            }
+        }
+
+        private static void CheckSortOrder(string table, int sortOrder, HashSet<int> seen, List<string> errors)
+        {
+            if (!seen.Add(sortOrder))
+            {
+                errors.Add($"{table}: sortOrder {sortOrder}가 중복이다.");
+            }
+        }
+    }
+}
