@@ -6,31 +6,19 @@ namespace ZooTycoon.Tests
     // 기획서 6.4 동물원 레벨 표
     public sealed class ZooLevelServiceTests
     {
-        [TestCase(0d, 1, 3)]
-        [TestCase(1_999d, 1, 3)]
-        [TestCase(2_000d, 2, 4)]
-        [TestCase(8_000d, 3, 5)]
-        [TestCase(25_000d, 4, 6)]
-        [TestCase(70_000d, 5, 7)]
-        [TestCase(200_000d, 6, 8)]
-        [TestCase(500_000d, 7, 9)]
-        public void Level_ByTotalCoinsEarned_MatchesTable(double totalEarned, int expectedLevel, int expectedCages)
+        [TestCase(0d, 1)]
+        [TestCase(1_999d, 1)]
+        [TestCase(2_000d, 2)]
+        [TestCase(8_000d, 3)]
+        [TestCase(25_000d, 4)]
+        [TestCase(70_000d, 5)]
+        [TestCase(200_000d, 6)]
+        [TestCase(500_000d, 7)]
+        public void Level_ByTotalCoinsEarned_MatchesTable(double totalEarned, int expectedLevel)
         {
             ZooLevelService service = ServiceWith(totalEarned);
 
             Assert.That(service.Level, Is.EqualTo(expectedLevel));
-            Assert.That(service.CageCount, Is.EqualTo(expectedCages));
-        }
-
-        [TestCase(0d, false)]
-        [TestCase(2_000d, false)]
-        [TestCase(8_000d, true)]
-        [TestCase(500_000d, true)]
-        public void IsPromotionUnlocked_FromLevel3_IsTrue(double totalEarned, bool expected)
-        {
-            ZooLevelService service = ServiceWith(totalEarned);
-
-            Assert.That(service.IsPromotionUnlocked, Is.EqualTo(expected));
         }
 
         [Test]

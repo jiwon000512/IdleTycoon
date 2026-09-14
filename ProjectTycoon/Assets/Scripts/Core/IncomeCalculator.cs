@@ -14,13 +14,8 @@ namespace ZooTycoon.Core
             return 1d + tables.Config.Promotion.MultiplierPerStage * state.PromotionStage;
         }
 
-        public static double TotalIncomePerSecond(ZooState state, GameTables tables)
-        {
-            return TotalIncomePerSecond(state, tables, PromotionMultiplier(state, tables));
-        }
-
         // 기획서 6.2: 총 수입 = Σ(보유 종 수입) × 홍보 배수
-        public static double TotalIncomePerSecond(ZooState state, GameTables tables, double promotionMultiplier)
+        public static double TotalIncomePerSecond(ZooState state, GameTables tables)
         {
             double bonusPerLevel = tables.Config.AnimalLevel.IncomeBonusPerLevel;
             double total = 0d;
@@ -32,7 +27,7 @@ namespace ZooTycoon.Core
                 total += AnimalIncome(baseIncome, owned.Level, bonusPerLevel);
             }
 
-            return total * promotionMultiplier;
+            return total * PromotionMultiplier(state, tables);
         }
     }
 }

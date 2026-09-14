@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using ZooTycoon.Core;
@@ -10,7 +9,6 @@ namespace ZooTycoon.Data
     {
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
         private static readonly Regex k_AnimalIdPattern = new Regex("^a[0-9]{2}$");
-        private static readonly string[] k_CostBasisValues = { "totalPulls", "zooLevel" };
 
         public static IReadOnlyList<string> Validate(GameTables tables)
         {
@@ -173,11 +171,6 @@ namespace ZooTycoon.Data
             if (config.Gacha.CostGrowth <= 1d || config.Promotion.CostGrowth <= 1d)
             {
                 errors.Add("game_config: costGrowth가 1 이하다.");
-            }
-
-            if (Array.IndexOf(k_CostBasisValues, config.Gacha.CostBasis) < 0)
-            {
-                errors.Add($"game_config: gacha.costBasis '{config.Gacha.CostBasis}'가 허용 값이 아니다.");
             }
 
             if (config.AnimalLevel.IncomeBonusPerLevel < 0d)

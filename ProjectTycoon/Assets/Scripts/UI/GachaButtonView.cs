@@ -17,12 +17,12 @@ namespace ZooTycoon.UI
 
         private void OnEnable()
         {
-            m_button.onClick.AddListener(Button_Clicked);
+            m_button.onClick.AddListener(OnClicked);
         }
 
         private void OnDisable()
         {
-            m_button.onClick.RemoveListener(Button_Clicked);
+            m_button.onClick.RemoveListener(OnClicked);
         }
 
         public void SetLabel(string text)
@@ -43,11 +43,6 @@ namespace ZooTycoon.UI
         public void SetInteractable(bool interactable)
         {
             m_button.interactable = interactable;
-        }
-
-        private void Button_Clicked()
-        {
-            OnClicked();
         }
 
         private void OnClicked()

@@ -24,7 +24,7 @@ namespace ZooTycoon.Tests
         {
             ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
             double notified = 0d;
-            state.CoinsChanged += coins => notified = coins;
+            state.CoinsChanged += () => notified = state.Coins;
 
             state.AddCoins(50d);
 

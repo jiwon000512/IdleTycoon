@@ -19,7 +19,6 @@ namespace ZooTycoon.Core
         {
             public int BaseCost { get; set; }
             public double CostGrowth { get; set; }
-            public string CostBasis { get; set; }
         }
 
         public sealed class AnimalLevelConfig

@@ -40,7 +40,7 @@ namespace ZooTycoon.UI
             m_zooLevelService.ZooLevelReached -= ZooLevelService_ZooLevelReached;
         }
 
-        private void State_CoinsChanged(double coins)
+        private void State_CoinsChanged()
         {
             RefreshCoins();
         }

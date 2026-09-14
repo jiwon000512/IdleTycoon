@@ -9,40 +9,10 @@ namespace ZooTycoon.Core
         private int m_level;
 
         public int Level => m_level;
-        public int CageCount => RecordOf(m_level).CageCount;
 
-        public bool IsPromotionUnlocked
-        {
-            get
-            {
-                for (int i = 0; i < m_tables.ZooLevels.Count; i++)
-                {
-                    ZooLevelRecord record = m_tables.ZooLevels[i];
-                    if (record.UnlocksPromotion && record.Level <= m_level)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-        }
-
-        public double? NextThreshold
-        {
-            get
-            {
-                for (int i = 0; i < m_tables.ZooLevels.Count; i++)
-                {
-                    if (m_tables.ZooLevels[i].Level == m_level + 1)
-                    {
-                        return m_tables.ZooLevels[i].RequiredTotalCoins;
-                    }
-                }
-
-                return null;
-            }
-        }
+        // zoo_levels는 검증기가 level == 인덱스 + 1을 보장한다
+        public double? NextThreshold =>
+            m_level < m_tables.ZooLevels.Count ? m_tables.ZooLevels[m_level].RequiredTotalCoins : (double?)null;
 
         public event Action<int> ZooLevelReached;
 
@@ -83,19 +53,6 @@ namespace ZooTycoon.Core
             }
 
             return level;
-        }
-
-        private ZooLevelRecord RecordOf(int level)
-        {
-            for (int i = 0; i < m_tables.ZooLevels.Count; i++)
-            {
-                if (m_tables.ZooLevels[i].Level == level)
-                {
-                    return m_tables.ZooLevels[i];
-                }
-            }
-
-            throw new InvalidOperationException($"동물원 레벨 {level}이 zoo_levels.json에 없다.");
         }
     }
 }

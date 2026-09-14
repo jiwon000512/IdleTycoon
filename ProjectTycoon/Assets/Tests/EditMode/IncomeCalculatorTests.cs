@@ -43,7 +43,7 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void TotalIncomePerSecond_SumsOwnedAnimalsTimesMultiplier()
+        public void TotalIncomePerSecond_SumsOwnedAnimals()
         {
             GameTables tables = TestTables.Build();
             ZooState state = ZooState.CreateNew(tables.Config);
@@ -52,10 +52,10 @@ namespace ZooTycoon.Tests
             state.LevelUpAnimal("a05");
             state.LevelUpAnimal("a05");
 
-            double income = IncomeCalculator.TotalIncomePerSecond(state, tables, 2d);
+            double income = IncomeCalculator.TotalIncomePerSecond(state, tables);
 
-            // 토끼 1마리 = 1, 여우 3마리 = 10 → (1 + 10) × 2
-            Assert.That(income, Is.EqualTo(22d).Within(1e-9d));
+            // 토끼 1마리 = 1, 여우 3마리 = 10 → (1 + 10) × 홍보 배수 1
+            Assert.That(income, Is.EqualTo(11d).Within(1e-9d));
         }
     }
 }

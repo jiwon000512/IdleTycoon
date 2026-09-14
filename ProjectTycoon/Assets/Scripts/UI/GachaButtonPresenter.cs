@@ -46,7 +46,7 @@ namespace ZooTycoon.UI
             m_gachaService.TryPull(out _);
         }
 
-        private void State_CoinsChanged(double coins)
+        private void State_CoinsChanged()
         {
             Refresh();
         }
