@@ -183,6 +183,11 @@ namespace ZooTycoon.Data
                 errors.Add("game_config: offline.maxSeconds가 0 이하다.");
             }
 
+            if (config.Income.TickSeconds <= 0d)
+            {
+                errors.Add("game_config: income.tickSeconds가 0 이하다.");
+            }
+
             if (config.Start.Coins < config.Gacha.BaseCost)
             {
                 errors.Add("game_config: start.coins가 첫 뽑기 비용보다 적다.");

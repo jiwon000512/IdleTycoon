@@ -13,6 +13,7 @@
     { "id": "topbar_progress_max", "ko": "MAX" },
     { "id": "gacha_button_label", "ko": "뽑기" },
     { "id": "gacha_button_cost", "ko": "{0}" },
+    { "id": "gacha_button_wait", "ko": "{0}초 후" },
     { "id": "gacha_grade_probability", "ko": "{0} {1}%" },
     { "id": "gacha_probability_separator", "ko": " · " },
     { "id": "gacha_result_new", "ko": "새 동물!" },

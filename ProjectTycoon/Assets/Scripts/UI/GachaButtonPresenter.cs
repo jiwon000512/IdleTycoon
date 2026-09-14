@@ -12,6 +12,7 @@ namespace ZooTycoon.UI
         private const string k_CostKey = "gacha_button_cost";
         private const string k_GradeProbabilityKey = "gacha_grade_probability";
         private const string k_SeparatorKey = "gacha_probability_separator";
+        private const string k_WaitKey = "gacha_button_wait";
 
         private readonly GachaButtonView m_view;
         private readonly GachaService m_gachaService;
@@ -56,11 +57,16 @@ namespace ZooTycoon.UI
             Refresh();
         }
 
-        // 기획서 4장: 비용 상시 표시, 코인 부족 시 비활성
+        // 기획서 4장: 비용 상시 표시, 코인 부족 시 비활성 + 남은 시간(수입 0이면 표시 없음)
         private void Refresh()
         {
             m_view.SetCost(m_tables.Strings.Format(k_CostKey, BigNumberFormatter.Format(m_gachaService.CurrentCost)));
             m_view.SetInteractable(m_gachaService.CanPull);
+
+            double wait = m_gachaService.SecondsUntilAffordable;
+            m_view.SetWait(wait > 0d && !double.IsPositiveInfinity(wait)
+                ? m_tables.Strings.Format(k_WaitKey, (int)Math.Ceiling(wait))
+                : string.Empty);
         }
 
         // 기획서 6.1: 등급 확률 한 줄

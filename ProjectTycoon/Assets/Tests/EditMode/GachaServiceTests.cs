@@ -102,6 +102,42 @@ namespace ZooTycoon.Tests
             Assert.That(service.CanPull, Is.False);
         }
 
+        [Test]
+        public void SecondsUntilAffordable_AfterThreeStartingPulls_IsShortfallOverIncome()
+        {
+            GameTables tables = TestTables.Build();
+            ZooState state = ZooState.CreateNew(tables.Config);
+            GachaService service = NewService(tables, state, k_RollRabbit, k_RollGoat, k_RollTurtle);
+
+            service.TryPull(out _);
+            service.TryPull(out _);
+            service.TryPull(out _);
+
+            // 코인 13, 비용 140, 수입 3/초
+            Assert.That(service.SecondsUntilAffordable, Is.EqualTo(127d / 3d).Within(1e-9d));
+        }
+
+        [Test]
+        public void SecondsUntilAffordable_WhenAffordable_IsZero()
+        {
+            GameTables tables = TestTables.Build();
+            ZooState state = ZooState.CreateNew(tables.Config);
+            GachaService service = NewService(tables, state, k_RollRabbit);
+
+            Assert.That(service.SecondsUntilAffordable, Is.EqualTo(0d));
+        }
+
+        [Test]
+        public void SecondsUntilAffordable_WithNoIncome_IsInfinity()
+        {
+            GameTables tables = TestTables.Build();
+            ZooState state = ZooState.CreateNew(tables.Config);
+            state.TrySpendCoins(state.Coins - 99d);
+            GachaService service = NewService(tables, state, k_RollRabbit);
+
+            Assert.That(double.IsPositiveInfinity(service.SecondsUntilAffordable), Is.True);
+        }
+
         private static GachaService NewService(GameTables tables, ZooState state, params double[] rolls)
         {
             return new GachaService(tables, state, new SequenceRandom(rolls));

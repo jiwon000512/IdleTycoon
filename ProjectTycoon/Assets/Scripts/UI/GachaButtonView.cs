@@ -12,6 +12,7 @@ namespace ZooTycoon.UI
         [SerializeField] private TMP_Text m_labelText;
         [SerializeField] private TMP_Text m_costText;
         [SerializeField] private TMP_Text m_probabilityText;
+        [SerializeField] private TMP_Text m_waitText;
 
         public event Action Clicked;
 
@@ -38,6 +39,11 @@ namespace ZooTycoon.UI
         public void SetProbabilities(string text)
         {
             m_probabilityText.text = text;
+        }
+
+        public void SetWait(string text)
+        {
+            m_waitText.text = text;
         }
 
         public void SetInteractable(bool interactable)

@@ -12,6 +12,10 @@ namespace ZooTycoon.Core
         public double CurrentCost => GachaCostCalculator.Cost(m_tables.Config.Gacha, m_state.PullCount);
         public bool CanPull => m_state.Coins >= CurrentCost;
 
+        // 기획서 4장: 코인 부족 시 남은 시간 = 부족분 ÷ 초당 수입. 수입이 0이면 무한대
+        public double SecondsUntilAffordable =>
+            CanPull ? 0d : (CurrentCost - m_state.Coins) / IncomeCalculator.TotalIncomePerSecond(m_state, m_tables);
+
         public event Action<PullResult> AnimalPulled;
 
         public GachaService(GameTables tables, ZooState state, IRandom random)

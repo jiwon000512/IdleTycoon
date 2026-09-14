@@ -9,6 +9,7 @@ namespace ZooTycoon.Core
         public AnimalLevelConfig AnimalLevel { get; set; }
         public PromotionConfig Promotion { get; set; }
         public OfflineConfig Offline { get; set; }
+        public IncomeConfig Income { get; set; }
 
         public sealed class StartConfig
         {
@@ -38,6 +39,12 @@ namespace ZooTycoon.Core
         public sealed class OfflineConfig
         {
             public int MaxSeconds { get; set; }
+        }
+
+        // 설계 04 P2: 수입 틱 간격(초)
+        public sealed class IncomeConfig
+        {
+            public double TickSeconds { get; set; }
         }
     }
 }
