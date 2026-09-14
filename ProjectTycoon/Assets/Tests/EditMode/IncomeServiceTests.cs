@@ -37,15 +37,15 @@ namespace ZooTycoon.Tests
         {
             GameTables tables = TestTables.Build();
             ZooState state = ZooState.CreateNew(tables.Config);
-            state.AddAnimal("a08");
+            state.AddAnimal("a01");
             ZooLevelService zooLevel = new ZooLevelService(tables, state);
             IncomeService service = new IncomeService(state, tables, zooLevel);
             int reached = 0;
             zooLevel.ZooLevelReached += level => reached = level;
 
-            service.Tick(70d);
+            service.Tick(2_000d);
 
-            Assert.That(state.TotalCoinsEarned, Is.EqualTo(2_100d));
+            Assert.That(state.TotalCoinsEarned, Is.EqualTo(2_000d));
             Assert.That(reached, Is.EqualTo(2));
         }
     }

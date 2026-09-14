@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: af34230b63c340d4db4fb1e1beeb1a98
+guid: 56a69e708fe4eb846a938a14c955c43d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1145723561845952355
-    second: a02_goat_0
+      213: -5875212304094909008
+    second: Wombat_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 7
   spritePivot: {x: 0.5, y: 0}
-  spritePixelsToUnits: 128
+  spritePixelsToUnits: 300
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: a02_goat_0
+      name: Wombat_0
       rect:
         serializedVersion: 2
-        x: 11
-        y: 11
-        width: 234
-        height: 234
+        x: 89
+        y: 208
+        width: 1130
+        height: 994
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 36f8f9a528d66ef00800000000000000
-      internalID: 1145723561845952355
+      spriteID: 0bd2b62a98d077ea0800000000000000
+      internalID: -5875212304094909008
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      a02_goat_0: 1145723561845952355
+      Wombat_0: -5875212304094909008
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

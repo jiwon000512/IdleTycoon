@@ -18,7 +18,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>(table);
 
             Assert.That(file.Table, Is.EqualTo(table));
-            Assert.That(file.Version, Is.EqualTo(1));
+            Assert.That(file.Version, Is.EqualTo(table == "animals" ? 2 : 1));
         }
 
         [Test]
@@ -54,6 +54,17 @@ namespace ZooTycoon.Tests
         {
             List<AnimalRecord> animals = TestTables.LoadRows<AnimalRecord>("animals");
             animals[0].Grade = "nosuchgrade";
+
+            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(animals: animals));
+
+            Assert.That(errors, Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenIdleSecondsMinExceedsMax_ReportsError()
+        {
+            List<AnimalRecord> animals = TestTables.LoadRows<AnimalRecord>("animals");
+            animals[0].IdleSecondsMin = animals[0].IdleSecondsMax + 1d;
 
             IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(animals: animals));
 

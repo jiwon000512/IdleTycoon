@@ -1,4 +1,6 @@
+using System.Linq;
 using UnityEngine;
+using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
@@ -17,11 +19,22 @@ namespace ZooTycoon.World
             m_camera.SetBounds(CameraBounds());
         }
 
-        public void SpawnAnimal(Sprite sprite, int cageIndex)
+        public void SpawnAnimal(AnimalRecord record, int cageIndex)
         {
             CageView cage = m_cages[cageIndex];
             AnimalActor actor = Instantiate(m_animalPrefab, cage.RandomWalkPoint(), Quaternion.identity, cage.transform);
-            actor.Initialize(sprite, cage, m_camera.BillboardRotation);
+            actor.Initialize(
+                record,
+                LoadFrames(record.IdleSheet ?? record.Sprite),
+                LoadFrames(record.MoveSheet ?? record.Sprite),
+                cage,
+                m_camera.BillboardRotation);
+        }
+
+        // 설계 05 P5: 시트가 없으면 sprite 1장이 프레임 1개. 격자 슬라이스 이름(_0, _1 …) 순으로 정렬
+        private static Sprite[] LoadFrames(string path)
+        {
+            return Resources.LoadAll<Sprite>(path).OrderBy(s => s.name).ToArray();
         }
 
         // 설계 03 A3: 팬 범위(XZ) = 모든 우리를 감싸는 사각형 + 여유

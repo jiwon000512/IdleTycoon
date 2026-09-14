@@ -3,23 +3,21 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 기획서 6.1 뽑기 확률 표
+    // 기획서 6.1(v0.11): 웜뱃 1종. 동물이 있는 등급만 확률에 들어간다
     public sealed class GachaTableTests
     {
-        [TestCase("a01", 0.175d)]
-        [TestCase("a05", 0.09d)]
-        [TestCase("a08", 0.03d)]
-        public void ProbabilityOf_ByAnimal_MatchesTable(string animalId, double expected)
+        [Test]
+        public void ProbabilityOf_OnlyAnimal_IsOne()
         {
             GachaTable table = new GachaTable(TestTables.Build());
 
-            Assert.That(table.ProbabilityOf(animalId), Is.EqualTo(expected).Within(1e-9d));
+            Assert.That(table.ProbabilityOf("a01"), Is.EqualTo(1d).Within(1e-9d));
         }
 
-        [TestCase("common", 0.70d)]
-        [TestCase("rare", 0.27d)]
-        [TestCase("legendary", 0.03d)]
-        public void GradeProbability_ByGrade_MatchesTable(string gradeId, double expected)
+        [TestCase("common", 1d)]
+        [TestCase("rare", 0d)]
+        [TestCase("legendary", 0d)]
+        public void GradeProbability_OnlyGradesWithAnimals_ShareOne(string gradeId, double expected)
         {
             GachaTable table = new GachaTable(TestTables.Build());
 
@@ -41,17 +39,14 @@ namespace ZooTycoon.Tests
             Assert.That(sum, Is.EqualTo(1d).Within(1e-9d));
         }
 
-        [TestCase(0d, "a01")]
-        [TestCase(0.1749d, "a01")]
-        [TestCase(0.1751d, "a02")]
-        [TestCase(0.9699d, "a07")]
-        [TestCase(0.9701d, "a08")]
-        [TestCase(0.9999d, "a08")]
-        public void Pick_ByRoll_FollowsCumulativeRanges(double roll, string expectedAnimalId)
+        [TestCase(0d)]
+        [TestCase(0.5d)]
+        [TestCase(0.9999d)]
+        public void Pick_AnyRoll_ReturnsOnlyAnimal(double roll)
         {
             GachaTable table = new GachaTable(TestTables.Build());
 
-            Assert.That(table.Pick(roll).Id, Is.EqualTo(expectedAnimalId));
+            Assert.That(table.Pick(roll).Id, Is.EqualTo("a01"));
         }
     }
 }

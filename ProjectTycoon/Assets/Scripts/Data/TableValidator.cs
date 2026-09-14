@@ -52,7 +52,6 @@ namespace ZooTycoon.Data
         {
             HashSet<string> ids = new HashSet<string>();
             HashSet<int> sortOrders = new HashSet<int>();
-            HashSet<string> usedGrades = new HashSet<string>();
 
             foreach (AnimalRecord animal in tables.Animals)
             {
@@ -67,10 +66,6 @@ namespace ZooTycoon.Data
                 if (!tables.HasGrade(animal.Grade))
                 {
                     errors.Add($"animals '{animal.Id}': grade '{animal.Grade}'가 grades에 없다.");
-                }
-                else
-                {
-                    usedGrades.Add(animal.Grade);
                 }
 
                 if (animal.BaseIncomePerSecond <= 0d)
@@ -87,13 +82,15 @@ namespace ZooTycoon.Data
                 {
                     errors.Add($"animals '{animal.Id}': sprite 경로가 비어 있다.");
                 }
-            }
 
-            foreach (GradeRecord grade in tables.Grades)
-            {
-                if (!usedGrades.Contains(grade.Id))
+                if (animal.FrameRate <= 0d || animal.Scale <= 0d || animal.MoveSpeed <= 0d)
                 {
-                    errors.Add($"animals: 등급 '{grade.Id}'에 속한 동물이 없다.");
+                    errors.Add($"animals '{animal.Id}': frameRate·scale·moveSpeed는 0보다 커야 한다.");
+                }
+
+                if (animal.IdleSecondsMin < 0d || animal.IdleSecondsMax < animal.IdleSecondsMin)
+                {
+                    errors.Add($"animals '{animal.Id}': 0 ≤ idleSecondsMin ≤ idleSecondsMax여야 한다.");
                 }
             }
         }

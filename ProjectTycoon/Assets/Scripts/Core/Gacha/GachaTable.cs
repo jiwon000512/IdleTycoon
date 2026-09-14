@@ -14,14 +14,19 @@ namespace ZooTycoon.Core
 
         public GachaTable(GameTables tables)
         {
-            int gradeWeightSum = tables.Grades.Sum(g => g.GachaWeight);
+            // 기획서 6.1(v0.11): 동물이 있는 등급만 확률에 넣는다. 빈 등급은 0
             Dictionary<string, int> animalWeightSumByGrade = tables.Animals
                 .GroupBy(a => a.Grade)
                 .ToDictionary(g => g.Key, g => g.Sum(a => a.GachaWeight), StringComparer.Ordinal);
+            int gradeWeightSum = tables.Grades
+                .Where(g => animalWeightSumByGrade.ContainsKey(g.Id))
+                .Sum(g => g.GachaWeight);
 
             foreach (GradeRecord grade in tables.Grades)
             {
-                m_probabilityByGrade[grade.Id] = (double)grade.GachaWeight / gradeWeightSum;
+                m_probabilityByGrade[grade.Id] = animalWeightSumByGrade.ContainsKey(grade.Id)
+                    ? (double)grade.GachaWeight / gradeWeightSum
+                    : 0d;
             }
 
             m_animals = tables.Animals.OrderBy(a => a.SortOrder).ToList();

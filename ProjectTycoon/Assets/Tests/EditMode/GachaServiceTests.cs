@@ -3,7 +3,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 기획서 3장 핵심 루프 1~2, 6.3, 6.4(시작 코인 350)
+    // 기획서 3장 핵심 루프 1~2, 6.3, 6.4(시작 코인 350). 종이 웜뱃 하나라 어떤 난수도 a01
     public sealed class GachaServiceTests
     {
         private const double k_RollRabbit = 0.1d;
@@ -113,8 +113,8 @@ namespace ZooTycoon.Tests
             service.TryPull(out _);
             service.TryPull(out _);
 
-            // 코인 13, 비용 140, 수입 3/초
-            Assert.That(service.SecondsUntilAffordable, Is.EqualTo(127d / 3d).Within(1e-9d));
+            // 코인 13, 비용 140, 웜뱃 3마리 = 2/초
+            Assert.That(service.SecondsUntilAffordable, Is.EqualTo(127d / 2d).Within(1e-9d));
         }
 
         [Test]

@@ -48,14 +48,13 @@ namespace ZooTycoon.Tests
             GameTables tables = TestTables.Build();
             ZooState state = ZooState.CreateNew(tables.Config);
             state.AddAnimal("a01");
-            state.AddAnimal("a05");
-            state.LevelUpAnimal("a05");
-            state.LevelUpAnimal("a05");
+            state.LevelUpAnimal("a01");
+            state.LevelUpAnimal("a01");
 
             double income = IncomeCalculator.TotalIncomePerSecond(state, tables);
 
-            // 토끼 1마리 = 1, 여우 3마리 = 10 → (1 + 10) × 홍보 배수 1
-            Assert.That(income, Is.EqualTo(11d).Within(1e-9d));
+            // 웜뱃 3마리 = 1 × (1 + 0.5 × 2) = 2 → × 홍보 배수 1
+            Assert.That(income, Is.EqualTo(2d).Within(1e-9d));
         }
     }
 }

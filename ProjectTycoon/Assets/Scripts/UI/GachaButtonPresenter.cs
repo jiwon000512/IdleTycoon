@@ -69,10 +69,11 @@ namespace ZooTycoon.UI
                 : string.Empty);
         }
 
-        // 기획서 6.1: 등급 확률 한 줄
+        // 기획서 6.1: 등급 확률 한 줄. 동물이 없는 등급(확률 0)은 숨긴다
         private string BuildProbabilityLine()
         {
             IEnumerable<string> parts = m_tables.Grades
+                .Where(g => m_gachaService.Table.GradeProbability(g.Id) > 0d)
                 .OrderBy(g => g.SortOrder)
                 .Select(g => m_tables.Strings.Format(
                     k_GradeProbabilityKey,

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
@@ -46,12 +45,12 @@ namespace ZooTycoon.World
                     continue;
                 }
 
-                Sprite sprite = Resources.Load<Sprite>(m_tables.GetAnimal(owned.AnimalId).Sprite);
+                AnimalRecord record = m_tables.GetAnimal(owned.AnimalId);
                 int cageIndex = i % m_view.CageCount;
 
                 for (int n = spawned; n < owned.Level; n++)
                 {
-                    m_view.SpawnAnimal(sprite, cageIndex);
+                    m_view.SpawnAnimal(record, cageIndex);
                 }
 
                 m_spawnedByAnimal[owned.AnimalId] = owned.Level;

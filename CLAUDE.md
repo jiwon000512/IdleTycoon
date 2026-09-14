@@ -22,7 +22,7 @@ Tycoon/
       │  ├─ World/   2D 월드 (우리, 동물 개체 이동, 관광객, 카메라 팬) — 기획서 v0.9, 설계 03에서 asmdef 확정
       │  └─ Editor/  에디터 전용 도구 (Editor 폴더라 빌드에서 제외됨)
       ├─ Resources/Data/     JSON 테이블 4개 (animals, grades, zoo_levels, game_config)
-      ├─ Resources/Sprites/Animals/  동물 스프라이트 — 파일명 = 동물 ID (Resources.Load)
+      ├─ Resources/Sprites/Animals/<종>/  동물 아트: 정지 1장 + idle·move 시트. 경로는 animals.json 칼럼. 임포트 규칙은 데이터-테이블-규칙 5장
       ├─ Prefabs/, Prefabs/UI/
       ├─ Sprites/UI/, Fonts/, Audio/
       └─ Tests/EditMode/     Core 로직 유닛 테스트 (Unity Test Framework)
