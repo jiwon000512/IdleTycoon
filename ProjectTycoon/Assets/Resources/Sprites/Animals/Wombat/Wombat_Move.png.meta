@@ -72,7 +72,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 295.45456
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -93,7 +93,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -137,19 +137,19 @@ TextureImporter:
       name: Wombat_Move_0
       rect:
         serializedVersion: 2
-        x: 12
-        y: 114
-        width: 355
-        height: 510
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 13
+        y: 0
+        width: 337
+        height: 724
+      alignment: 9
+      pivot: {x: 0.49851632, y: 0.33563536}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 97adb7fd5f7817ba0800000000000000
+      spriteID: d12789d47d108574a9e908cf7e4ad962
       internalID: -6092939330769397127
       vertices: []
       indices: 
@@ -159,19 +159,19 @@ TextureImporter:
       name: Wombat_Move_1
       rect:
         serializedVersion: 2
-        x: 381
-        y: 38
-        width: 334
-        height: 470
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 380
+        y: 0
+        width: 337
+        height: 724
+      alignment: 9
+      pivot: {x: 0.49851632, y: 0.33563536}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: d885802c4842045d0800000000000000
+      spriteID: 4f1efbbe7e1033f4e9ce20e3f28e141e
       internalID: -3080421992511809395
       vertices: []
       indices: 
@@ -181,19 +181,19 @@ TextureImporter:
       name: Wombat_Move_2
       rect:
         serializedVersion: 2
-        x: 687
-        y: 241
-        width: 392
-        height: 389
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 740
+        y: 0
+        width: 337
+        height: 724
+      alignment: 9
+      pivot: {x: 0.49851632, y: 0.33563536}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: cac9054dbbca8bf10800000000000000
+      spriteID: bb7f78827058efd4c8150955004931d8
       internalID: 2285766733611441324
       vertices: []
       indices: 
@@ -203,108 +203,20 @@ TextureImporter:
       name: Wombat_Move_3
       rect:
         serializedVersion: 2
-        x: 1091
-        y: 184
-        width: 346
-        height: 319
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 1097
+        y: 0
+        width: 337
+        height: 724
+      alignment: 9
+      pivot: {x: 0.49851632, y: 0.33563536}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 0dd7a042be8e67860800000000000000
+      spriteID: 66f140ba5f77b5c41ab43378217521b4
       internalID: 7527459923815988688
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Wombat_Move_4
-      rect:
-        serializedVersion: 2
-        x: 1442
-        y: 79
-        width: 532
-        height: 551
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 4d5794043d411c4c0800000000000000
-      internalID: -4269108074221308460
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Wombat_Move_5
-      rect:
-        serializedVersion: 2
-        x: 1823
-        y: 241
-        width: 336
-        height: 267
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 516a4e80808bc4bd0800000000000000
-      internalID: -2644536536524872171
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Wombat_Move_6
-      rect:
-        serializedVersion: 2
-        x: 869
-        y: 69
-        width: 329
-        height: 74
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2040fa3932355fe50800000000000000
-      internalID: 6842466621126018050
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Wombat_Move_7
-      rect:
-        serializedVersion: 2
-        x: 1333
-        y: 106
-        width: 13
-        height: 9
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 05e633bf856c0e580800000000000000
-      internalID: -8799815586408075696
       vertices: []
       indices: 
       edges: []
@@ -313,7 +225,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 9c80e04e4a51cf548a6713724e4c138e
     internalID: 0
     vertices: []
     indices: 
@@ -327,10 +239,6 @@ TextureImporter:
       Wombat_Move_1: -3080421992511809395
       Wombat_Move_2: 2285766733611441324
       Wombat_Move_3: 7527459923815988688
-      Wombat_Move_4: -4269108074221308460
-      Wombat_Move_5: -2644536536524872171
-      Wombat_Move_6: 6842466621126018050
-      Wombat_Move_7: -8799815586408075696
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
