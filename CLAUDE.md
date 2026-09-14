@@ -37,7 +37,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 | 엔진 | Unity 6000.3.24f1, URP 2D Renderer |
 | UI | uGUI(Canvas) + TextMeshPro. UI Toolkit 사용 안 함 |
 | 입력 | Input System 패키지 (`Assets/Settings/InputSystem_Actions.inputactions`). 첫 버전은 uGUI 버튼 탭만 |
-| 화면 | 세로 고정(Portrait only), 기준 해상도 1080×1920, CanvasScaler Scale With Screen Size. 월드는 **원근 카메라(55° 내려다봄, FOV 60)가 보는 XZ 평면** 위의 SpriteRenderer: 땅·잔디는 눕힌 타일, 동물·관광객은 카메라를 향해 세운 카드 + 눕힌 그림자. 팬은 초점(XZ)을 옮김. 깊이는 카메라 거리 정렬(기획서 v0.9, 설계 03 6장) |
+| 화면 | 세로 고정(Portrait only), 기준 해상도 1080×1920, CanvasScaler Scale With Screen Size. 월드는 **원근 카메라(55° 내려다봄, FOV 60)가 보는 XZ 평면** 위의 SpriteRenderer: 땅·잔디는 눕힌 타일, 동물·관광객은 카메라를 향해 세운 카드 + 눕힌 그림자. 팬은 초점(XZ)을 옮김. 깊이는 월드 Z축 정렬(URP 2D Renderer Custom Axis Z, 정렬점 Pivot=발끝. 설계 06 C5) |
 | 숫자 | `double` + K/M/B 표기. 수입 틱 1초(`game_config.income.tickSeconds`), 표시 보간 없음 |
 | 저장 | 로컬 JSON 1파일 (`Application.persistentDataPath`), 마지막 저장 시각 UTC. 시간 조작 방어는 첫 버전에 없음 |
 | 코드 구조 | asmdef 6개로 계층 강제 · UI는 MVP(View MonoBehaviour + Presenter 순수 C#) · 게임 상태·서비스는 `GameManager`(MonoSingleton, `Init()`·수입 틱)가 만들고, 씬 스크립트(`MainScene`)가 그 씬의 View·Presenter만 조립 · 서비스·Presenter는 생성자 주입 · 순수 C# event + 동기 틱. 상세 `기획/코드-규칙.md` |

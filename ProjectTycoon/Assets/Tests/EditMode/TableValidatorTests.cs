@@ -12,6 +12,7 @@ namespace ZooTycoon.Tests
         [TestCase("animals")]
         [TestCase("grades")]
         [TestCase("zoo_levels")]
+        [TestCase("visitors")]
         [TestCase("strings")]
         public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table)
         {
@@ -27,7 +28,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>("game_config");
 
             Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(4));
+            Assert.That(file.Version, Is.EqualTo(5));
         }
 
         [Test]
@@ -101,6 +102,36 @@ namespace ZooTycoon.Tests
         {
             GameConfig config = TestTables.LoadConfig();
             config.Start.Coins = config.Gacha.BaseCost - 1;
+
+            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(config: config));
+
+            Assert.That(errors, Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenVisitorViewSecondsMinExceedsMax_ReportsError()
+        {
+            List<VisitorRecord> visitors = TestTables.LoadRows<VisitorRecord>("visitors");
+            visitors[0].ViewSecondsMin = visitors[0].ViewSecondsMax + 1d;
+
+            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(visitors: visitors));
+
+            Assert.That(errors, Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenVisitorsEmpty_ReportsError()
+        {
+            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(visitors: new List<VisitorRecord>()));
+
+            Assert.That(errors, Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenVisitorMaxCountZero_ReportsError()
+        {
+            GameConfig config = TestTables.LoadConfig();
+            config.Visitors.MaxCount = 0;
 
             IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(config: config));
 

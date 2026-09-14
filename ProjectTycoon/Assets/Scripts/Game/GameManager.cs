@@ -62,6 +62,7 @@ namespace ZooTycoon.Game
                 tableManager.Load<AnimalRecord>("animals"),
                 tableManager.Load<GradeRecord>("grades"),
                 tableManager.Load<ZooLevelRecord>("zoo_levels"),
+                tableManager.Load<VisitorRecord>("visitors"),
                 tableManager.Load<StringRecord>("strings"),
                 tableManager.LoadConfig<GameConfig>("game_config"));
         }

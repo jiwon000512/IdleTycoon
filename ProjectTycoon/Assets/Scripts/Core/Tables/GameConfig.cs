@@ -1,6 +1,6 @@
 namespace ZooTycoon.Core
 {
-    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4
+    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 5)
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class GameConfig
     {
@@ -10,6 +10,7 @@ namespace ZooTycoon.Core
         public PromotionConfig Promotion { get; set; }
         public OfflineConfig Offline { get; set; }
         public IncomeConfig Income { get; set; }
+        public VisitorsConfig Visitors { get; set; }
 
         public sealed class StartConfig
         {
@@ -33,7 +34,6 @@ namespace ZooTycoon.Core
             public double MultiplierPerStage { get; set; }
             public int BaseCost { get; set; }
             public double CostGrowth { get; set; }
-            public int VisitorsPerStage { get; set; }
         }
 
         public sealed class OfflineConfig
@@ -45,6 +45,13 @@ namespace ZooTycoon.Core
         public sealed class IncomeConfig
         {
             public double TickSeconds { get; set; }
+        }
+
+        // 설계 06 P1: 관광객 수 = f(초당 수입). 기획서 6.4(v0.14)
+        public sealed class VisitorsConfig
+        {
+            public int MaxCount { get; set; }
+            public double IncomeUnit { get; set; }
         }
     }
 }

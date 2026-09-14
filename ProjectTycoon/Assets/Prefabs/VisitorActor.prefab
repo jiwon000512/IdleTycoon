@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &435258651753092954
+--- !u!1 &1940132916063375010
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,74 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5126943414061465475}
-  - component: {fileID: 5061031677558634661}
+  - component: {fileID: 5297769074807805396}
+  - component: {fileID: 7065983528514948457}
+  - component: {fileID: 2280365670206967019}
+  m_Layer: 0
+  m_Name: VisitorActor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5297769074807805396
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1940132916063375010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4198795853096948962}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7065983528514948457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1940132916063375010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc203875aba9b4c40b214986b3b5bd8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.SpriteAnimator
+  m_renderer: {fileID: 7562962589610297695}
+--- !u!114 &2280365670206967019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1940132916063375010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cac491cf1b582444b8b5c1ce0005215e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.VisitorActor
+  m_modelRoot: {fileID: 4198795853096948962}
+  m_spriteRenderer: {fileID: 7562962589610297695}
+  m_shadowRenderer: {fileID: 4019478867071325084}
+  m_animator: {fileID: 7065983528514948457}
+  m_coinPrefab: {fileID: 7514188495375028674, guid: 7e45d723b8f7bf241a56d4293794eb7c, type: 3}
+  m_entryMargin: 1.5
+  m_viewInset: 1
+--- !u!1 &3981977567390892676
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1570495517896084997}
+  - component: {fileID: 7562962589610297695}
   m_Layer: 0
   m_Name: Sprite
   m_TagString: Untagged
@@ -17,29 +83,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5126943414061465475
+--- !u!4 &1570495517896084997
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 435258651753092954}
+  m_GameObject: {fileID: 3981977567390892676}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1502798454782091786}
+  m_Father: {fileID: 4198795853096948962}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &5061031677558634661
+--- !u!212 &7562962589610297695
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 435258651753092954}
+  m_GameObject: {fileID: 3981977567390892676}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -91,7 +157,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 1
---- !u!1 &1579991790667401451
+--- !u!1 &6623675611832898993
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -99,70 +165,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6764203455298197522}
-  - component: {fileID: 2290189438076550283}
-  - component: {fileID: 8933330920723841034}
-  m_Layer: 0
-  m_Name: AnimalActor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6764203455298197522
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1579991790667401451}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1502798454782091786}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2290189438076550283
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1579991790667401451}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c6ce912f7fa1d24fbf1f7d264e0fed7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.AnimalActor
-  m_modelRoot: {fileID: 1502798454782091786}
-  m_spriteRenderer: {fileID: 5061031677558634661}
-  m_shadowRenderer: {fileID: 6667225540849399337}
-  m_animator: {fileID: 8933330920723841034}
---- !u!114 &8933330920723841034
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1579991790667401451}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc203875aba9b4c40b214986b3b5bd8d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.SpriteAnimator
-  m_renderer: {fileID: 5061031677558634661}
---- !u!1 &8124088403939012874
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1502798454782091786}
+  - component: {fileID: 4198795853096948962}
   m_Layer: 0
   m_Name: ModelRoot
   m_TagString: Untagged
@@ -170,24 +173,24 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1502798454782091786
+--- !u!4 &4198795853096948962
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8124088403939012874}
+  m_GameObject: {fileID: 6623675611832898993}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5126943414061465475}
-  - {fileID: 8185199546983857632}
-  m_Father: {fileID: 6764203455298197522}
+  - {fileID: 1570495517896084997}
+  - {fileID: 4280569688420652529}
+  m_Father: {fileID: 5297769074807805396}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &9068731775352986572
+--- !u!1 &7089484097017428054
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -195,8 +198,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8185199546983857632}
-  - component: {fileID: 6667225540849399337}
+  - component: {fileID: 4280569688420652529}
+  - component: {fileID: 4019478867071325084}
   m_Layer: 0
   m_Name: Shadow
   m_TagString: Untagged
@@ -204,29 +207,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8185199546983857632
+--- !u!4 &4280569688420652529
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9068731775352986572}
+  m_GameObject: {fileID: 7089484097017428054}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.02, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1502798454782091786}
+  m_Father: {fileID: 4198795853096948962}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &6667225540849399337
+--- !u!212 &4019478867071325084
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9068731775352986572}
+  m_GameObject: {fileID: 7089484097017428054}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0

@@ -9,6 +9,7 @@ namespace ZooTycoon.Data
     {
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
         private static readonly Regex k_AnimalIdPattern = new Regex("^a[0-9]{2}$");
+        private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
 
         public static IReadOnlyList<string> Validate(GameTables tables)
         {
@@ -17,6 +18,7 @@ namespace ZooTycoon.Data
             ValidateGrades(tables, errors);
             ValidateAnimals(tables, errors);
             ValidateZooLevels(tables, errors);
+            ValidateVisitors(tables, errors);
             ValidateStrings(tables, errors);
             ValidateConfig(tables, errors);
 
@@ -141,6 +143,48 @@ namespace ZooTycoon.Data
             }
         }
 
+        private static void ValidateVisitors(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+            HashSet<int> sortOrders = new HashSet<int>();
+
+            if (tables.Visitors.Count == 0)
+            {
+                errors.Add("visitors: 행이 하나도 없다.");
+            }
+
+            foreach (VisitorRecord visitor in tables.Visitors)
+            {
+                CheckId("visitors", visitor.Id, k_IdPattern, ids, errors);
+                CheckSortOrder("visitors", visitor.SortOrder, sortOrders, errors);
+
+                if (visitor.Id != null && !k_VisitorIdPattern.IsMatch(visitor.Id))
+                {
+                    errors.Add($"visitors '{visitor.Id}': 관광객 ID는 v + 두 자리 번호여야 한다.");
+                }
+
+                if (string.IsNullOrEmpty(visitor.Sprite))
+                {
+                    errors.Add($"visitors '{visitor.Id}': sprite 경로가 비어 있다.");
+                }
+
+                if (visitor.Weight < 1)
+                {
+                    errors.Add($"visitors '{visitor.Id}': weight가 1 미만이다.");
+                }
+
+                if (visitor.FrameRate <= 0d || visitor.Scale <= 0d || visitor.MoveSpeed <= 0d)
+                {
+                    errors.Add($"visitors '{visitor.Id}': frameRate·scale·moveSpeed는 0보다 커야 한다.");
+                }
+
+                if (visitor.ViewSecondsMin < 0d || visitor.ViewSecondsMax < visitor.ViewSecondsMin)
+                {
+                    errors.Add($"visitors '{visitor.Id}': 0 ≤ viewSecondsMin ≤ viewSecondsMax여야 한다.");
+                }
+            }
+        }
+
         private static void ValidateStrings(GameTables tables, List<string> errors)
         {
             HashSet<string> ids = new HashSet<string>();
@@ -188,6 +232,11 @@ namespace ZooTycoon.Data
             if (config.Start.Coins < config.Gacha.BaseCost)
             {
                 errors.Add("game_config: start.coins가 첫 뽑기 비용보다 적다.");
+            }
+
+            if (config.Visitors.MaxCount < 1 || config.Visitors.IncomeUnit <= 0d)
+            {
+                errors.Add("game_config: visitors.maxCount는 1 이상, incomeUnit은 0보다 커야 한다.");
             }
         }
 

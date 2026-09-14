@@ -9,6 +9,7 @@ namespace ZooTycoon.Game
     public sealed class MainScene : MonoBehaviour
     {
         [SerializeField] private WorldView m_worldView;
+        [SerializeField] private VisitorSpawner m_visitorSpawner;
 
         private TopBarPresenter m_topBarPresenter;
         private WorldPresenter m_worldPresenter;
@@ -24,7 +25,7 @@ namespace ZooTycoon.Game
             GachaButtonView gachaButtonView = UIManager.Instance.Open<GachaButtonView>();
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.ZooLevel, game.Tables);
-            m_worldPresenter = new WorldPresenter(m_worldView, game.State, game.Tables);
+            m_worldPresenter = new WorldPresenter(m_worldView, m_visitorSpawner, game.State, game.Tables);
             m_gachaButtonPresenter = new GachaButtonPresenter(gachaButtonView, game.Gacha, game.State, game.Tables);
             m_gachaResultPresenter = new GachaResultPresenter(game.Gacha, game.Tables);
         }
