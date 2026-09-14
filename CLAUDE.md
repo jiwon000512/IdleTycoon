@@ -70,5 +70,5 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 
 ```bash
 # 에디터 열기 (Unity CLI)
-unity project open ProjectTycoon
+unity projects open ProjectTycoon
 ```
