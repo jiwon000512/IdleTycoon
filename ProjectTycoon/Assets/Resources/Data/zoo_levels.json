@@ -2,7 +2,8 @@
   "table": "zoo_levels",
   "version": 1,
   "notes": [
-    "기획서 6.4 동물원 레벨. requiredTotalCoins는 누적 획득 코인. cageCount는 그 레벨에서 열린 우리 총수."
+    "기획서 6.4 동물원 레벨. requiredTotalCoins는 누적 획득 코인. cageCount는 그 레벨에서 열린 우리 총수.",
+    "cageCount는 기능 06(우리 해금·맵 확장)에서 재정의한다. 설계 03 시점에는 우리가 하나뿐이라 미사용."
   ],
   "rows": [
     {

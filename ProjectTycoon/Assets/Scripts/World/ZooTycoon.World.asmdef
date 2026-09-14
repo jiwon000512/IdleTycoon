@@ -1,0 +1,14 @@
+{
+  "name": "ZooTycoon.World",
+  "rootNamespace": "ZooTycoon.World",
+  "references": [ "ZooTycoon.Core", "Unity.InputSystem" ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

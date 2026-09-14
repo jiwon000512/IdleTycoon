@@ -10,6 +10,13 @@
     { "id": "topbar_income", "ko": "초당 {0}" },
     { "id": "topbar_level", "ko": "Lv.{0}" },
     { "id": "topbar_progress", "ko": "{0}/{1}" },
-    { "id": "topbar_progress_max", "ko": "MAX" }
+    { "id": "topbar_progress_max", "ko": "MAX" },
+    { "id": "gacha_button_label", "ko": "뽑기" },
+    { "id": "gacha_button_cost", "ko": "{0}" },
+    { "id": "gacha_grade_probability", "ko": "{0} {1}%" },
+    { "id": "gacha_probability_separator", "ko": " · " },
+    { "id": "gacha_result_new", "ko": "새 동물!" },
+    { "id": "gacha_result_level_up", "ko": "한 마리 더! {0}마리" },
+    { "id": "gacha_result_detail", "ko": "{0} · 초당 {1}" }
   ]
 }

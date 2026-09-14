@@ -13,12 +13,13 @@ Tycoon/
 ├─ 기획/                 기획서(.md). 결정·숫자·범위는 여기가 단일 출처
 └─ ProjectTycoon/        Unity 프로젝트 (Unity 6000.3.24f1, URP 2D)
    └─ Assets/
-      ├─ Scenes/Main.unity   단일 씬 (세로 고정 1080×1920, 카메라 이동 없음)
+      ├─ Scenes/Main.unity   단일 씬 (세로 고정 1080×1920, XZ 평면 월드 + 55° 원근 카메라 팬, HUD는 uGUI 오버레이)
       ├─ Scripts/
       │  ├─ Core/    순수 C# 게임 로직 (UnityEngine 의존 금지: 수입 계산·가차 확률·비용 곡선·오프라인 계산·세이브 모델)
       │  ├─ Data/    JSON 테이블에 대응하는 C# 레코드·로더·검증기 (UnityEngine 비의존)
       │  ├─ Game/    MonoBehaviour 계층 (GameManager, 틱, 저장/로드, 씬 부트스트랩)
-      │  ├─ UI/      uGUI 뷰·팝업 (상단 바, 우리 격자, 가차 버튼, 홍보/도감 팝업, 오프라인 팝업)
+      │  ├─ UI/      uGUI HUD·팝업 (상단 바, 가차 버튼, 결과 카드, 홍보/도감 팝업, 오프라인 팝업)
+      │  ├─ World/   2D 월드 (우리, 동물 개체 이동, 관광객, 카메라 팬) — 기획서 v0.9, 설계 03에서 asmdef 확정
       │  └─ Editor/  에디터 전용 도구 (Editor 폴더라 빌드에서 제외됨)
       ├─ Resources/Data/     JSON 테이블 4개 (animals, grades, zoo_levels, game_config)
       ├─ Resources/Sprites/Animals/  동물 스프라이트 — 파일명 = 동물 ID (Resources.Load)
@@ -36,7 +37,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 | 엔진 | Unity 6000.3.24f1, URP 2D Renderer |
 | UI | uGUI(Canvas) + TextMeshPro. UI Toolkit 사용 안 함 |
 | 입력 | Input System 패키지 (`Assets/Settings/InputSystem_Actions.inputactions`). 첫 버전은 uGUI 버튼 탭만 |
-| 화면 | 세로 고정(Portrait only), 기준 해상도 1080×1920, CanvasScaler Scale With Screen Size |
+| 화면 | 세로 고정(Portrait only), 기준 해상도 1080×1920, CanvasScaler Scale With Screen Size. 월드는 **원근 카메라(55° 내려다봄, FOV 60)가 보는 XZ 평면** 위의 SpriteRenderer: 땅·잔디는 눕힌 타일, 동물·관광객은 카메라를 향해 세운 카드 + 눕힌 그림자. 팬은 초점(XZ)을 옮김. 깊이는 카메라 거리 정렬(기획서 v0.9, 설계 03 6장) |
 | 숫자 | `double` + K/M/B 표기. 수입 틱 0.1~0.25초, 표시 숫자만 보간 |
 | 저장 | 로컬 JSON 1파일 (`Application.persistentDataPath`), 마지막 저장 시각 UTC. 시간 조작 방어는 첫 버전에 없음 |
 | 코드 구조 | asmdef 6개로 계층 강제 · UI는 MVP(View MonoBehaviour + Presenter 순수 C#) · 게임 규칙은 수동 컴포지션 루트(`GameBootstrap`) + 생성자 주입 · 순수 C# event + 동기 틱. 상세 `기획/코드-규칙.md` |
@@ -54,7 +55,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 - 네임스페이스 = 폴더 = 어셈블리 (`ZooTycoon.Core / .Data / .Game / .UI / .Editor`).
 - 게임 규칙은 Core 서비스에만. MonoBehaviour는 생명주기 훅에서 서비스를 호출하는 얇은 어댑터. `static` 가변 상태·싱글턴·`Find...` 금지. 의존은 생성자로, 조립은 `GameBootstrap`에서만.
 - UI는 MVP. View는 표시 메서드와 입력 이벤트만, Presenter가 모델 이벤트를 구독해 View를 갱신한다. UI는 모델을 직접 바꾸지 않는다.
-- 기능 하나 = 세션 하나. ① 설계(`기획/설계/NN-*.md`: 코드 설계 + QA 계획)를 사용자와 확정 → ② Unity CLI를 최대한 써서 한 번에 구현(스크립트·씬·프리팹·게임오브젝트·더미 리소스까지) → ③ QA 계획대로 검증(컴파일 0·콘솔 0·테스트 통과·플레이 캡처) → ④ 결과 보고 후 `기획/진행상황.md` 갱신. 구현 중에는 사용자를 기다리지 않는다. 전체 규칙·체크리스트·첫 버전 클래스 지도는 `기획/코드-규칙.md`.
+- 기능 하나 = 세션 하나. ① 설계(`기획/설계/NN-*.md`: 코드 설계 + QA 계획)를 사용자와 확정 → ② Unity CLI를 최대한 써서 한 번에 구현(스크립트·씬·프리팹·게임오브젝트·더미 리소스까지), 컴파일 0·콘솔 0 확인 → ③ **QA는 사용자가 직접**(EditMode 테스트 실행·플레이 확인). 에이전트는 플레이 모드·`run_tests`를 돌리지 않는다 → ④ 테스트 방법(순서·기대값)을 정리해 보고하고 `기획/진행상황.md` 갱신. 구현 중에는 사용자를 기다리지 않는다. 전체 규칙·체크리스트·첫 버전 클래스 지도는 `기획/코드-규칙.md`.
 - 기획서의 숫자는 코드에 하드코딩하지 않고 `game_config.json` 등 JSON 테이블에 둔다. 레코드 클래스에는 기획서 표 번호(예: 6.3)를 주석에 남긴다.
 - JSON 테이블을 고칠 때는 `기획/데이터-테이블-규칙.md` 6장 절차를 따른다(기획서 먼저 → JSON → 검증 테스트). 파일 전체를 유효한 JSON으로 다시 쓴다.
 

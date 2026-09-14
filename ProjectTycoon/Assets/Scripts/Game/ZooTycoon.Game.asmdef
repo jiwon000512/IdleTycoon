@@ -1,7 +1,7 @@
 {
   "name": "ZooTycoon.Game",
   "rootNamespace": "ZooTycoon.Game",
-  "references": [ "ZooTycoon.Core", "ZooTycoon.Data", "ZooTycoon.UI", "GameKit.Core", "GameKit.Unity", "UnityEngine.UI", "Unity.InputSystem" ],
+  "references": [ "ZooTycoon.Core", "ZooTycoon.Data", "ZooTycoon.UI", "ZooTycoon.World", "GameKit.Core", "GameKit.Unity", "UnityEngine.UI", "Unity.InputSystem" ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

@@ -1,9 +1,10 @@
+using System;
 using NUnit.Framework;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 기획서 6.4 시작 상태
+    // 기획서 6.4 시작 상태, 3장 등장, 6.2 마리 수
     public sealed class ZooStateTests
     {
         [Test]
@@ -11,10 +12,9 @@ namespace ZooTycoon.Tests
         {
             ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
 
-            Assert.That(state.Coins, Is.EqualTo(300d));
+            Assert.That(state.Coins, Is.EqualTo(350d));
             Assert.That(state.TotalCoinsEarned, Is.EqualTo(0d));
-            Assert.That(state.PlacedAnimals, Is.Empty);
-            Assert.That(state.WaitingRoom, Is.Empty);
+            Assert.That(state.OwnedAnimals, Is.Empty);
             Assert.That(state.PullCount, Is.EqualTo(0));
             Assert.That(state.PromotionStage, Is.EqualTo(0));
         }
@@ -28,9 +28,9 @@ namespace ZooTycoon.Tests
 
             state.AddCoins(50d);
 
-            Assert.That(state.Coins, Is.EqualTo(350d));
+            Assert.That(state.Coins, Is.EqualTo(400d));
             Assert.That(state.TotalCoinsEarned, Is.EqualTo(50d));
-            Assert.That(notified, Is.EqualTo(350d));
+            Assert.That(notified, Is.EqualTo(400d));
         }
 
         [Test]
@@ -41,7 +41,7 @@ namespace ZooTycoon.Tests
             bool spent = state.TrySpendCoins(100d);
 
             Assert.That(spent, Is.True);
-            Assert.That(state.Coins, Is.EqualTo(200d));
+            Assert.That(state.Coins, Is.EqualTo(250d));
             Assert.That(state.TotalCoinsEarned, Is.EqualTo(0d));
         }
 
@@ -50,10 +50,74 @@ namespace ZooTycoon.Tests
         {
             ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
 
-            bool spent = state.TrySpendCoins(301d);
+            bool spent = state.TrySpendCoins(351d);
 
             Assert.That(spent, Is.False);
-            Assert.That(state.Coins, Is.EqualTo(300d));
+            Assert.That(state.Coins, Is.EqualTo(350d));
+        }
+
+        [Test]
+        public void RecordPull_IncrementsPullCount()
+        {
+            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+
+            state.RecordPull();
+
+            Assert.That(state.PullCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void AddAnimal_StartsAtOne()
+        {
+            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+
+            state.AddAnimal("a01");
+
+            Assert.That(state.OwnedAnimals.Count, Is.EqualTo(1));
+            Assert.That(state.OwnedAnimals[0].Level, Is.EqualTo(1));
+            Assert.That(state.Owns("a01"), Is.True);
+        }
+
+        [Test]
+        public void AddAnimal_WhenAlreadyOwned_Throws()
+        {
+            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+            state.AddAnimal("a01");
+
+            Assert.That(() => state.AddAnimal("a01"), Throws.InstanceOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void LevelUpAnimal_ReturnsNewCount()
+        {
+            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+            state.AddAnimal("a01");
+
+            int level = state.LevelUpAnimal("a01");
+
+            Assert.That(level, Is.EqualTo(2));
+            Assert.That(state.OwnedAnimals[0].Level, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void LevelUpAnimal_WhenNotOwned_Throws()
+        {
+            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+
+            Assert.That(() => state.LevelUpAnimal("a01"), Throws.InstanceOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void AddAnimal_And_LevelUpAnimal_RaiseAnimalsChanged()
+        {
+            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+            int raised = 0;
+            state.AnimalsChanged += () => raised++;
+
+            state.AddAnimal("a01");
+            state.LevelUpAnimal("a01");
+
+            Assert.That(raised, Is.EqualTo(2));
         }
     }
 }

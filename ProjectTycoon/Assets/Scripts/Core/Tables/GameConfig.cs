@@ -5,7 +5,6 @@ namespace ZooTycoon.Core
     public sealed class GameConfig
     {
         public StartConfig Start { get; set; }
-        public CageGridConfig CageGrid { get; set; }
         public GachaConfig Gacha { get; set; }
         public AnimalLevelConfig AnimalLevel { get; set; }
         public PromotionConfig Promotion { get; set; }
@@ -14,12 +13,6 @@ namespace ZooTycoon.Core
         public sealed class StartConfig
         {
             public int Coins { get; set; }
-        }
-
-        public sealed class CageGridConfig
-        {
-            public int Columns { get; set; }
-            public int Rows { get; set; }
         }
 
         public sealed class GachaConfig

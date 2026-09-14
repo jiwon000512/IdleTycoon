@@ -19,17 +19,17 @@ namespace ZooTycoon.Core
             return TotalIncomePerSecond(state, tables, PromotionMultiplier(state, tables));
         }
 
-        // 기획서 6.2: 총 수입 = Σ(배치된 동물 수입) × 홍보 배수. 대기실 동물은 0
+        // 기획서 6.2: 총 수입 = Σ(보유 종 수입) × 홍보 배수
         public static double TotalIncomePerSecond(ZooState state, GameTables tables, double promotionMultiplier)
         {
             double bonusPerLevel = tables.Config.AnimalLevel.IncomeBonusPerLevel;
             double total = 0d;
 
-            for (int i = 0; i < state.PlacedAnimals.Count; i++)
+            for (int i = 0; i < state.OwnedAnimals.Count; i++)
             {
-                PlacedAnimal placed = state.PlacedAnimals[i];
-                double baseIncome = tables.GetAnimal(placed.AnimalId).BaseIncomePerSecond;
-                total += AnimalIncome(baseIncome, placed.Level, bonusPerLevel);
+                OwnedAnimal owned = state.OwnedAnimals[i];
+                double baseIncome = tables.GetAnimal(owned.AnimalId).BaseIncomePerSecond;
+                total += AnimalIncome(baseIncome, owned.Level, bonusPerLevel);
             }
 
             return total * promotionMultiplier;

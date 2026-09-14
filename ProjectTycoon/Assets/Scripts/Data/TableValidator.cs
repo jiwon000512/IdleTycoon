@@ -144,12 +144,6 @@ namespace ZooTycoon.Data
             {
                 errors.Add($"zoo_levels: unlocksPromotion이 true인 레벨이 {promotionUnlocks}개다(1개여야 함).");
             }
-
-            int gridCapacity = tables.Config.CageGrid.Columns * tables.Config.CageGrid.Rows;
-            if (levels.Count > 0 && levels[levels.Count - 1].CageCount > gridCapacity)
-            {
-                errors.Add($"zoo_levels: 마지막 cageCount가 격자 칸 수 {gridCapacity}를 넘는다.");
-            }
         }
 
         private static void ValidateStrings(GameTables tables, List<string> errors)

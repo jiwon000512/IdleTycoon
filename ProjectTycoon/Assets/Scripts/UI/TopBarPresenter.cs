@@ -25,6 +25,7 @@ namespace ZooTycoon.UI
             m_tables = tables;
 
             m_state.CoinsChanged += State_CoinsChanged;
+            m_state.AnimalsChanged += State_AnimalsChanged;
             m_zooLevelService.ZooLevelReached += ZooLevelService_ZooLevelReached;
 
             RefreshCoins();
@@ -35,12 +36,18 @@ namespace ZooTycoon.UI
         public void Dispose()
         {
             m_state.CoinsChanged -= State_CoinsChanged;
+            m_state.AnimalsChanged -= State_AnimalsChanged;
             m_zooLevelService.ZooLevelReached -= ZooLevelService_ZooLevelReached;
         }
 
         private void State_CoinsChanged(double coins)
         {
             RefreshCoins();
+        }
+
+        private void State_AnimalsChanged()
+        {
+            RefreshIncome();
         }
 
         private void ZooLevelService_ZooLevelReached(int level)
