@@ -15,16 +15,18 @@ namespace ZooTycoon.Core
         public IReadOnlyList<GradeRecord> Grades { get; }
         public IReadOnlyList<ZooLevelRecord> ZooLevels { get; }
         public IReadOnlyList<VisitorRecord> Visitors { get; }
+        public IReadOnlyList<FacilityRecord> Facilities { get; }
         public IReadOnlyList<StringRecord> StringRows { get; }
         public StringTable Strings { get; }
         public GameConfig Config { get; }
 
-        // 규칙 예외: 테이블 집합체라 생성자 매개변수가 6개다(코드-규칙 3장 상한). 나눌 축이 없다.
+        // 규칙 예외: 테이블 집합체라 생성자 매개변수가 7개다(코드-규칙 3장 상한). 나눌 축이 없다.
         public GameTables(
             IReadOnlyList<AnimalRecord> animals,
             IReadOnlyList<GradeRecord> grades,
             IReadOnlyList<ZooLevelRecord> zooLevels,
             IReadOnlyList<VisitorRecord> visitors,
+            IReadOnlyList<FacilityRecord> facilities,
             IReadOnlyList<StringRecord> strings,
             GameConfig config)
         {
@@ -32,6 +34,7 @@ namespace ZooTycoon.Core
             Grades = grades;
             ZooLevels = zooLevels;
             Visitors = visitors;
+            Facilities = facilities;
             StringRows = strings;
             Strings = new StringTable(strings);
             Config = config;

@@ -48,16 +48,12 @@ namespace ZooTycoon.World
             Spawn();
         }
 
-        // 설계 06 P4: 동물이 있는 우리가 있으면 그중 하나를 골라 구경하고, 없으면 아무 우리 앞을 지나간다
+        // 설계 06 P4·07 P8: 우리는 하나. 동물이 있으면 구경하고 없으면 지나간다(Visitor가 판단)
         // 규칙 예외: 연출 난수는 UnityEngine.Random을 쓴다(프로그래밍-규약 5장)
         private void Spawn()
         {
-            List<CageView> withAnimals = m_world.CagesWithAnimals();
-            IReadOnlyList<CageView> candidates = withAnimals.Count > 0 ? withAnimals : m_world.Cages;
-            CageView cage = candidates[Random.Range(0, candidates.Count)];
-
             Visitor visitor = Instantiate(m_prefab, transform);
-            visitor.Initialize(PickRecord(), cage, m_world.Frames, m_world.BillboardRotation);
+            visitor.Initialize(PickRecord(), m_world.Cage, m_world.Frames, m_world.BillboardRotation);
             visitor.Exited += Visitor_Exited;
             m_alive.Add(visitor);
         }

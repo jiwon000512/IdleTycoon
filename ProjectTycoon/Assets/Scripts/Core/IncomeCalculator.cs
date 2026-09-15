@@ -8,13 +8,27 @@ namespace ZooTycoon.Core
             return baseIncomePerSecond * (1d + incomeBonusPerAnimal * (count - 1));
         }
 
-        // 기획서 6.4: 홍보 배수 = 1 + 단계당 배수 × 단계
-        public static double PromotionMultiplier(ZooState state, GameTables tables)
+        // 기획서 6.4: 시설 하나의 배수 = 1 + 단계당 배수 × 단계
+        public static double FacilityMultiplier(FacilityRecord facility, int stage)
         {
-            return 1d + tables.Config.Promotion.MultiplierPerStage * state.PromotionStage;
+            return 1d + facility.MultiplierPerStage * stage;
         }
 
-        // 기획서 6.2: 총 수입 = Σ(보유 종 수입) × 홍보 배수
+        // 기획서 6.4: 시설 배수 = Π(시설 하나의 배수)
+        public static double FacilityMultiplier(ZooState state, GameTables tables)
+        {
+            double multiplier = 1d;
+
+            for (int i = 0; i < tables.Facilities.Count; i++)
+            {
+                FacilityRecord facility = tables.Facilities[i];
+                multiplier *= FacilityMultiplier(facility, state.GetFacilityStage(facility.Id));
+            }
+
+            return multiplier;
+        }
+
+        // 기획서 6.2: 총 수입 = Σ(보유 종 수입) × 시설 배수
         public static double TotalIncomePerSecond(ZooState state, GameTables tables)
         {
             double bonusPerAnimal = tables.Config.AnimalCount.IncomeBonusPerAnimal;
@@ -27,7 +41,7 @@ namespace ZooTycoon.Core
                 total += AnimalIncome(baseIncome, owned.Count, bonusPerAnimal);
             }
 
-            return total * PromotionMultiplier(state, tables);
+            return total * FacilityMultiplier(state, tables);
         }
     }
 }

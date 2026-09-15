@@ -18,6 +18,14 @@
     { "id": "gacha_probability_separator", "ko": " · " },
     { "id": "gacha_result_new", "ko": "새 동물!" },
     { "id": "gacha_result_duplicate", "ko": "한 마리 더! {0}마리" },
-    { "id": "gacha_result_detail", "ko": "{0} · 초당 {1}" }
+    { "id": "gacha_result_detail", "ko": "{0} · 초당 {1}" },
+    { "id": "facility_button_label", "ko": "꾸미기" },
+    { "id": "facility_popup_title", "ko": "우리 꾸미기" },
+    { "id": "facility_popup_close", "ko": "닫기" },
+    { "id": "facility_row_stage", "ko": "{0}/{1}" },
+    { "id": "facility_row_effect", "ko": "수입 ×{0}" },
+    { "id": "facility_row_cost", "ko": "{0}" },
+    { "id": "facility_row_locked", "ko": "Lv.{0} 해금" },
+    { "id": "facility_row_max", "ko": "MAX" }
   ]
 }

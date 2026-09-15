@@ -13,13 +13,14 @@ namespace ZooTycoon.Tests
         [TestCase("grades")]
         [TestCase("zoo_levels")]
         [TestCase("visitors")]
+        [TestCase("facilities")]
         [TestCase("strings")]
         public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table)
         {
             TableFile<object> file = TestTables.LoadFile<object>(table);
 
             Assert.That(file.Table, Is.EqualTo(table));
-            Assert.That(file.Version, Is.EqualTo(table == "animals" ? 2 : 1));
+            Assert.That(file.Version, Is.EqualTo(table == "animals" || table == "zoo_levels" ? 2 : 1));
         }
 
         [Test]
@@ -28,7 +29,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>("game_config");
 
             Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(6));
+            Assert.That(file.Version, Is.EqualTo(7));
         }
 
         [Test]
@@ -84,15 +85,31 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void Validate_WhenNoLevelUnlocksPromotion_ReportsError()
+        public void Validate_WhenFacilitiesEmpty_ReportsError()
         {
-            List<ZooLevelRecord> levels = TestTables.LoadRows<ZooLevelRecord>("zoo_levels");
-            foreach (ZooLevelRecord level in levels)
-            {
-                level.UnlocksPromotion = false;
-            }
+            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(facilities: new List<FacilityRecord>()));
 
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(zooLevels: levels));
+            Assert.That(errors, Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenFacilityMaxStageIsZero_ReportsError()
+        {
+            List<FacilityRecord> facilities = TestTables.LoadRows<FacilityRecord>("facilities");
+            facilities[0].MaxStage = 0;
+
+            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(facilities: facilities));
+
+            Assert.That(errors, Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenFacilityUnlockLevelIsNotAZooLevel_ReportsError()
+        {
+            List<FacilityRecord> facilities = TestTables.LoadRows<FacilityRecord>("facilities");
+            facilities[0].UnlockLevel = 99;
+
+            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(facilities: facilities));
 
             Assert.That(errors, Is.Not.Empty);
         }

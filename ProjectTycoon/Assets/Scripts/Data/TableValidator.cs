@@ -11,6 +11,7 @@ namespace ZooTycoon.Data
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
         private static readonly Regex k_AnimalIdPattern = new Regex("^a[0-9]{2}$");
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
+        private static readonly Regex k_FacilityIdPattern = new Regex("^f[0-9]{2}$");
 
         public static IReadOnlyList<string> Validate(GameTables tables)
         {
@@ -20,6 +21,7 @@ namespace ZooTycoon.Data
             ValidateAnimals(tables, errors);
             ValidateZooLevels(tables, errors);
             ValidateVisitors(tables, errors);
+            ValidateFacilities(tables, errors);
             ValidateStrings(tables, errors);
             ValidateConfig(tables, errors);
 
@@ -101,7 +103,6 @@ namespace ZooTycoon.Data
         private static void ValidateZooLevels(GameTables tables, List<string> errors)
         {
             IReadOnlyList<ZooLevelRecord> levels = tables.ZooLevels;
-            int promotionUnlocks = 0;
 
             for (int i = 0; i < levels.Count; i++)
             {
@@ -110,11 +111,6 @@ namespace ZooTycoon.Data
                 if (level.Level != i + 1)
                 {
                     errors.Add($"zoo_levels[{i}]: level이 1부터 연속이 아니다(값 {level.Level}).");
-                }
-
-                if (level.UnlocksPromotion)
-                {
-                    promotionUnlocks++;
                 }
 
                 if (i == 0)
@@ -131,16 +127,6 @@ namespace ZooTycoon.Data
                 {
                     errors.Add($"zoo_levels[{i}]: requiredTotalCoins가 단조 증가하지 않는다.");
                 }
-
-                if (level.CageCount <= levels[i - 1].CageCount)
-                {
-                    errors.Add($"zoo_levels[{i}]: cageCount가 단조 증가하지 않는다.");
-                }
-            }
-
-            if (promotionUnlocks != 1)
-            {
-                errors.Add($"zoo_levels: unlocksPromotion이 true인 레벨이 {promotionUnlocks}개다(1개여야 함).");
             }
         }
 
@@ -186,6 +172,49 @@ namespace ZooTycoon.Data
             }
         }
 
+        // 데이터-테이블-규칙 7장 facilities (v1.10)
+        private static void ValidateFacilities(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+            HashSet<int> sortOrders = new HashSet<int>();
+
+            if (tables.Facilities.Count == 0)
+            {
+                errors.Add("facilities: 행이 하나도 없다.");
+            }
+
+            foreach (FacilityRecord facility in tables.Facilities)
+            {
+                CheckId("facilities", facility.Id, k_IdPattern, ids, errors);
+                CheckSortOrder("facilities", facility.SortOrder, sortOrders, errors);
+
+                if (facility.Id != null && !k_FacilityIdPattern.IsMatch(facility.Id))
+                {
+                    errors.Add($"facilities '{facility.Id}': 시설 ID는 f + 두 자리 번호여야 한다.");
+                }
+
+                if (string.IsNullOrEmpty(facility.Sprite))
+                {
+                    errors.Add($"facilities '{facility.Id}': sprite 경로가 비어 있다.");
+                }
+
+                if (facility.UnlockLevel < 1 || facility.UnlockLevel > tables.ZooLevels.Count)
+                {
+                    errors.Add($"facilities '{facility.Id}': unlockLevel {facility.UnlockLevel}이 zoo_levels에 없다.");
+                }
+
+                if (facility.MaxStage < 1 || facility.MultiplierPerStage <= 0d)
+                {
+                    errors.Add($"facilities '{facility.Id}': maxStage는 1 이상, multiplierPerStage는 0보다 커야 한다.");
+                }
+
+                if (facility.BaseCost <= 0 || facility.CostGrowth <= 1d)
+                {
+                    errors.Add($"facilities '{facility.Id}': baseCost는 0보다 크고 costGrowth는 1보다 커야 한다.");
+                }
+            }
+        }
+
         private static void ValidateStrings(GameTables tables, List<string> errors)
         {
             HashSet<string> ids = new HashSet<string>();
@@ -205,14 +234,14 @@ namespace ZooTycoon.Data
         {
             GameConfig config = tables.Config;
 
-            if (config.Gacha.BaseCost <= 0 || config.Promotion.BaseCost <= 0)
+            if (config.Gacha.BaseCost <= 0)
             {
-                errors.Add("game_config: baseCost가 0 이하다.");
+                errors.Add("game_config: gacha.baseCost가 0 이하다.");
             }
 
-            if (config.Gacha.CostGrowth <= 1d || config.Promotion.CostGrowth <= 1d)
+            if (config.Gacha.CostGrowth <= 1d)
             {
-                errors.Add("game_config: costGrowth가 1 이하다.");
+                errors.Add("game_config: gacha.costGrowth가 1 이하다.");
             }
 
             if (config.AnimalCount.IncomeBonusPerAnimal < 0d)

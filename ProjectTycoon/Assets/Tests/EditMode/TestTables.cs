@@ -33,6 +33,7 @@ namespace ZooTycoon.Tests
             IReadOnlyList<GradeRecord> grades = null,
             IReadOnlyList<ZooLevelRecord> zooLevels = null,
             IReadOnlyList<VisitorRecord> visitors = null,
+            IReadOnlyList<FacilityRecord> facilities = null,
             IReadOnlyList<StringRecord> strings = null,
             GameConfig config = null)
         {
@@ -41,6 +42,7 @@ namespace ZooTycoon.Tests
                 grades ?? LoadRows<GradeRecord>("grades"),
                 zooLevels ?? LoadRows<ZooLevelRecord>("zoo_levels"),
                 visitors ?? LoadRows<VisitorRecord>("visitors"),
+                facilities ?? LoadRows<FacilityRecord>("facilities"),
                 strings ?? LoadRows<StringRecord>("strings"),
                 config ?? LoadConfig());
         }
