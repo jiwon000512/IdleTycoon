@@ -4,14 +4,14 @@ namespace ZooTycoon.Core
     {
         public AnimalRecord Animal { get; }
         public PullOutcome Outcome { get; }
-        public int Level { get; }
+        public int Count { get; }
         public double Cost { get; }
 
-        public PullResult(AnimalRecord animal, PullOutcome outcome, int level, double cost)
+        public PullResult(AnimalRecord animal, PullOutcome outcome, int count, double cost)
         {
             Animal = animal;
             Outcome = outcome;
-            Level = level;
+            Count = count;
             Cost = cost;
         }
     }

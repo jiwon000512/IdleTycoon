@@ -28,7 +28,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>("game_config");
 
             Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(5));
+            Assert.That(file.Version, Is.EqualTo(6));
         }
 
         [Test]

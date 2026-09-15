@@ -11,6 +11,9 @@ namespace ZooTycoon.World
         [Tooltip("우리 앞 길 타일. 관광객은 이 타일의 경계 안을 걷는다(설계 06 P5)")]
         [SerializeField] private SpriteRenderer m_path;
 
+        // 이 우리에 스폰된 동물 수. WorldView가 올린다(설계 06 P10)
+        public int AnimalCount { get; set; }
+
         public Rect WorldBounds => ToXZ(m_ground.bounds);
 
         public Rect PathBounds => ToXZ(m_path.bounds);

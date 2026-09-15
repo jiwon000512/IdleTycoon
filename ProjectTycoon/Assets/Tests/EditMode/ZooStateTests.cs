@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework;
 using ZooTycoon.Core;
 
@@ -67,55 +66,40 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void AddAnimal_StartsAtOne()
+        public void AddAnimal_FirstTime_StartsAtOne()
         {
             ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
 
-            state.AddAnimal("a01");
+            int count = state.AddAnimal("a01");
 
+            Assert.That(count, Is.EqualTo(1));
             Assert.That(state.OwnedAnimals.Count, Is.EqualTo(1));
-            Assert.That(state.OwnedAnimals[0].Level, Is.EqualTo(1));
+            Assert.That(state.OwnedAnimals[0].Count, Is.EqualTo(1));
             Assert.That(state.Owns("a01"), Is.True);
         }
 
         [Test]
-        public void AddAnimal_WhenAlreadyOwned_Throws()
+        public void AddAnimal_WhenAlreadyOwned_AddsOneHead()
         {
             ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
             state.AddAnimal("a01");
 
-            Assert.That(() => state.AddAnimal("a01"), Throws.InstanceOf<InvalidOperationException>());
+            int count = state.AddAnimal("a01");
+
+            Assert.That(count, Is.EqualTo(2));
+            Assert.That(state.OwnedAnimals.Count, Is.EqualTo(1));
+            Assert.That(state.OwnedAnimals[0].Count, Is.EqualTo(2));
         }
 
         [Test]
-        public void LevelUpAnimal_ReturnsNewCount()
-        {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
-            state.AddAnimal("a01");
-
-            int level = state.LevelUpAnimal("a01");
-
-            Assert.That(level, Is.EqualTo(2));
-            Assert.That(state.OwnedAnimals[0].Level, Is.EqualTo(2));
-        }
-
-        [Test]
-        public void LevelUpAnimal_WhenNotOwned_Throws()
-        {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
-
-            Assert.That(() => state.LevelUpAnimal("a01"), Throws.InstanceOf<InvalidOperationException>());
-        }
-
-        [Test]
-        public void AddAnimal_And_LevelUpAnimal_RaiseAnimalsChanged()
+        public void AddAnimal_RaisesAnimalsChangedEveryTime()
         {
             ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
             int raised = 0;
             state.AnimalsChanged += () => raised++;
 
             state.AddAnimal("a01");
-            state.LevelUpAnimal("a01");
+            state.AddAnimal("a01");
 
             Assert.That(raised, Is.EqualTo(2));
         }

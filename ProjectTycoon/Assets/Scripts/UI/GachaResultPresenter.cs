@@ -1,5 +1,4 @@
 using System;
-using GameKit.UI;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
@@ -7,14 +6,16 @@ namespace ZooTycoon.UI
     public sealed class GachaResultPresenter : IDisposable
     {
         private const string k_NewKey = "gacha_result_new";
-        private const string k_LevelUpKey = "gacha_result_level_up";
+        private const string k_DuplicateKey = "gacha_result_duplicate";
         private const string k_DetailKey = "gacha_result_detail";
 
+        private readonly GachaResultView m_view;
         private readonly GachaService m_gachaService;
         private readonly GameTables m_tables;
 
-        public GachaResultPresenter(GachaService gachaService, GameTables tables)
+        public GachaResultPresenter(GachaResultView view, GachaService gachaService, GameTables tables)
         {
+            m_view = view;
             m_gachaService = gachaService;
             m_tables = tables;
 
@@ -30,21 +31,16 @@ namespace ZooTycoon.UI
         private void GachaService_AnimalPulled(PullResult result)
         {
             StringTable strings = m_tables.Strings;
-            string title = result.Outcome == PullOutcome.Placed
+            GradeRecord grade = m_tables.GetGrade(result.Animal.Grade);
+            string title = result.Outcome == PullOutcome.NewSpecies
                 ? strings.Get(k_NewKey)
-                : strings.Format(k_LevelUpKey, result.Level);
+                : strings.Format(k_DuplicateKey, result.Count);
 
             double income = IncomeCalculator.AnimalIncome(
-                result.Animal.BaseIncomePerSecond, result.Level, m_tables.Config.AnimalLevel.IncomeBonusPerLevel);
-            string detail = strings.Format(
-                k_DetailKey, m_tables.GetGrade(result.Animal.Grade).Name, BigNumberFormatter.Format(income));
+                result.Animal.BaseIncomePerSecond, result.Count, m_tables.Config.AnimalCount.IncomeBonusPerAnimal);
+            string detail = strings.Format(k_DetailKey, grade.Name, BigNumberFormatter.Format(income));
 
-            GachaResultView view = UIManager.Instance.Open<GachaResultView>();
-            view.Show(
-                AnimalVisuals.SpriteOf(result.Animal),
-                AnimalVisuals.GradeColorOf(m_tables, result.Animal),
-                title,
-                detail);
+            m_view.Show(result.Animal.Sprite, grade.ColorHex, title, detail);
         }
     }
 }

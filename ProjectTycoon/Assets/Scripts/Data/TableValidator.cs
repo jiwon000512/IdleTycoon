@@ -5,6 +5,7 @@ using ZooTycoon.Core;
 namespace ZooTycoon.Data
 {
     // 데이터-테이블-규칙 7장. 봉투(table·version)는 EditMode 테스트가 검사한다(설계 01 D2).
+    // 규칙 예외: 200줄을 넘지만 테이블마다 메서드 하나인 평평한 검사 목록이라 나눌 축이 없다
     public static class TableValidator
     {
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
@@ -214,9 +215,9 @@ namespace ZooTycoon.Data
                 errors.Add("game_config: costGrowth가 1 이하다.");
             }
 
-            if (config.AnimalLevel.IncomeBonusPerLevel < 0d)
+            if (config.AnimalCount.IncomeBonusPerAnimal < 0d)
             {
-                errors.Add("game_config: animalLevel.incomeBonusPerLevel이 0 미만이다.");
+                errors.Add("game_config: animalCount.incomeBonusPerAnimal이 0 미만이다.");
             }
 
             if (config.Offline.MaxSeconds <= 0)

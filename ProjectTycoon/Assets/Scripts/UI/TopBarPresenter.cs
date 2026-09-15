@@ -15,17 +15,21 @@ namespace ZooTycoon.UI
         private readonly TopBarView m_view;
         private readonly ZooState m_state;
         private readonly ZooLevelService m_zooLevelService;
+        private readonly IncomeService m_income;
         private readonly GameTables m_tables;
 
-        public TopBarPresenter(TopBarView view, ZooState state, ZooLevelService zooLevelService, GameTables tables)
+        // 규칙 예외: 상단 바는 코인·수입·레벨 세 모델을 한 줄에 모으는 화면이라 생성자 매개변수가 5개다
+        public TopBarPresenter(
+            TopBarView view, ZooState state, ZooLevelService zooLevelService, IncomeService income, GameTables tables)
         {
             m_view = view;
             m_state = state;
             m_zooLevelService = zooLevelService;
+            m_income = income;
             m_tables = tables;
 
             m_state.CoinsChanged += State_CoinsChanged;
-            m_state.AnimalsChanged += State_AnimalsChanged;
+            m_income.IncomeChanged += Income_IncomeChanged;
             m_zooLevelService.ZooLevelReached += ZooLevelService_ZooLevelReached;
 
             RefreshCoins();
@@ -36,7 +40,7 @@ namespace ZooTycoon.UI
         public void Dispose()
         {
             m_state.CoinsChanged -= State_CoinsChanged;
-            m_state.AnimalsChanged -= State_AnimalsChanged;
+            m_income.IncomeChanged -= Income_IncomeChanged;
             m_zooLevelService.ZooLevelReached -= ZooLevelService_ZooLevelReached;
         }
 
@@ -45,7 +49,7 @@ namespace ZooTycoon.UI
             RefreshCoins();
         }
 
-        private void State_AnimalsChanged()
+        private void Income_IncomeChanged()
         {
             RefreshIncome();
         }
@@ -63,8 +67,7 @@ namespace ZooTycoon.UI
 
         private void RefreshIncome()
         {
-            double income = IncomeCalculator.TotalIncomePerSecond(m_state, m_tables);
-            m_view.SetIncome(m_tables.Strings.Format(k_IncomeKey, BigNumberFormatter.Format(income)));
+            m_view.SetIncome(m_tables.Strings.Format(k_IncomeKey, BigNumberFormatter.Format(m_income.IncomePerSecond)));
         }
 
         private void RefreshZooLevel()

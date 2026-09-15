@@ -48,5 +48,22 @@ namespace ZooTycoon.Tests
             Assert.That(state.TotalCoinsEarned, Is.EqualTo(2_000d));
             Assert.That(reached, Is.EqualTo(2));
         }
+
+        [Test]
+        public void IncomePerSecond_WhenAnimalsChange_RecalculatesAndNotifies()
+        {
+            GameTables tables = TestTables.Build();
+            ZooState state = ZooState.CreateNew(tables.Config);
+            IncomeService service = new IncomeService(state, tables, new ZooLevelService(tables, state));
+            double notified = -1d;
+            service.IncomeChanged += () => notified = service.IncomePerSecond;
+
+            state.AddAnimal("a01");
+            state.AddAnimal("a01");
+
+            // 웜뱃 2마리 = 1 × (1 + 0.5) = 1.5
+            Assert.That(service.IncomePerSecond, Is.EqualTo(1.5d).Within(1e-9d));
+            Assert.That(notified, Is.EqualTo(1.5d).Within(1e-9d));
+        }
     }
 }

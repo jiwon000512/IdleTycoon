@@ -3,12 +3,13 @@ namespace ZooTycoon.Core
     public sealed class OwnedAnimal
     {
         public string AnimalId { get; }
-        public int Level { get; internal set; }
+        // 기획서 6.2: 마리 수. 중복 뽑기 1회당 +1
+        public int Count { get; internal set; }
 
-        public OwnedAnimal(string animalId, int level)
+        public OwnedAnimal(string animalId, int count)
         {
             AnimalId = animalId;
-            Level = level;
+            Count = count;
         }
     }
 }

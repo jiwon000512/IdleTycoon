@@ -7,12 +7,12 @@ namespace ZooTycoon.World
     // 설계 06 P6: 살아 있는 관광객이 TargetCount보다 적으면 간격을 두고 한 명씩 채운다
     public sealed class VisitorSpawner : MonoBehaviour
     {
-        [SerializeField] private VisitorActor m_prefab;
+        [SerializeField] private Visitor m_prefab;
         [SerializeField] private WorldView m_world;
         [Tooltip("관광객을 한 명씩 추가하는 간격(초)")]
         [SerializeField] private float m_spawnInterval = 1.5f;
 
-        private readonly List<VisitorActor> m_alive = new List<VisitorActor>();
+        private readonly List<Visitor> m_alive = new List<Visitor>();
         private IReadOnlyList<VisitorRecord> m_records;
         private int m_weightSum;
         private float m_cooldown;
@@ -53,19 +53,11 @@ namespace ZooTycoon.World
         private void Spawn()
         {
             List<CageView> withAnimals = m_world.CagesWithAnimals();
-            bool views = withAnimals.Count > 0;
-            IReadOnlyList<CageView> candidates = views ? withAnimals : m_world.Cages;
+            IReadOnlyList<CageView> candidates = withAnimals.Count > 0 ? withAnimals : m_world.Cages;
             CageView cage = candidates[Random.Range(0, candidates.Count)];
-            VisitorRecord record = PickRecord();
 
-            VisitorActor visitor = Instantiate(m_prefab, transform);
-            visitor.Initialize(
-                record,
-                WorldView.LoadFrames(record.IdleSheet ?? record.Sprite),
-                WorldView.LoadFrames(record.MoveSheet ?? record.Sprite),
-                cage,
-                views,
-                m_world.BillboardRotation);
+            Visitor visitor = Instantiate(m_prefab, transform);
+            visitor.Initialize(PickRecord(), cage, m_world.Frames, m_world.BillboardRotation);
             visitor.Exited += Visitor_Exited;
             m_alive.Add(visitor);
         }
@@ -87,7 +79,7 @@ namespace ZooTycoon.World
             return m_records[m_records.Count - 1];
         }
 
-        private void Visitor_Exited(VisitorActor visitor)
+        private void Visitor_Exited(Visitor visitor)
         {
             visitor.Exited -= Visitor_Exited;
             m_alive.Remove(visitor);

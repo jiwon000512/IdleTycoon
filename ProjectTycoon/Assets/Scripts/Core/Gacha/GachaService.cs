@@ -7,6 +7,7 @@ namespace ZooTycoon.Core
         private readonly GameTables m_tables;
         private readonly ZooState m_state;
         private readonly IRandom m_random;
+        private readonly IncomeService m_income;
 
         public GachaTable Table { get; }
         public double CurrentCost => GachaCostCalculator.Cost(m_tables.Config.Gacha, m_state.PullCount);
@@ -14,15 +15,16 @@ namespace ZooTycoon.Core
 
         // 기획서 4장: 코인 부족 시 남은 시간 = 부족분 ÷ 초당 수입. 수입이 0이면 무한대
         public double SecondsUntilAffordable =>
-            CanPull ? 0d : (CurrentCost - m_state.Coins) / IncomeCalculator.TotalIncomePerSecond(m_state, m_tables);
+            CanPull ? 0d : (CurrentCost - m_state.Coins) / m_income.IncomePerSecond;
 
         public event Action<PullResult> AnimalPulled;
 
-        public GachaService(GameTables tables, ZooState state, IRandom random)
+        public GachaService(GameTables tables, ZooState state, IRandom random, IncomeService income)
         {
             m_tables = tables;
             m_state = state;
             m_random = random;
+            m_income = income;
             Table = new GachaTable(tables);
         }
 
@@ -39,22 +41,10 @@ namespace ZooTycoon.Core
 
             m_state.RecordPull();
             AnimalRecord animal = Table.Pick(m_random.NextDouble());
-            PullOutcome outcome;
-            int level;
+            PullOutcome outcome = m_state.Owns(animal.Id) ? PullOutcome.Duplicate : PullOutcome.NewSpecies;
+            int count = m_state.AddAnimal(animal.Id);
 
-            if (m_state.Owns(animal.Id))
-            {
-                level = m_state.LevelUpAnimal(animal.Id);
-                outcome = PullOutcome.LevelUp;
-            }
-            else
-            {
-                m_state.AddAnimal(animal.Id);
-                outcome = PullOutcome.Placed;
-                level = 1;
-            }
-
-            result = new PullResult(animal, outcome, level, cost);
+            result = new PullResult(animal, outcome, count, cost);
             OnAnimalPulled(result);
             return true;
         }

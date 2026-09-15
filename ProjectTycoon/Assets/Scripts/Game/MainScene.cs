@@ -9,7 +9,6 @@ namespace ZooTycoon.Game
     public sealed class MainScene : MonoBehaviour
     {
         [SerializeField] private WorldView m_worldView;
-        [SerializeField] private VisitorSpawner m_visitorSpawner;
 
         private TopBarPresenter m_topBarPresenter;
         private WorldPresenter m_worldPresenter;
@@ -21,13 +20,15 @@ namespace ZooTycoon.Game
             GameManager game = GameManager.Instance;
             game.Init();
 
-            TopBarView topBarView = UIManager.Instance.Open<TopBarView>();
-            GachaButtonView gachaButtonView = UIManager.Instance.Open<GachaButtonView>();
+            UIManager ui = UIManager.Instance;
+            TopBarView topBarView = ui.Open<TopBarView>();
+            GachaButtonView gachaButtonView = ui.Open<GachaButtonView>();
+            GachaResultView gachaResultView = ui.GetView<GachaResultView>();
 
-            m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.ZooLevel, game.Tables);
-            m_worldPresenter = new WorldPresenter(m_worldView, m_visitorSpawner, game.State, game.Tables);
+            m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.ZooLevel, game.Income, game.Tables);
+            m_worldPresenter = new WorldPresenter(m_worldView, game.State, game.Income, game.Tables);
             m_gachaButtonPresenter = new GachaButtonPresenter(gachaButtonView, game.Gacha, game.State, game.Tables);
-            m_gachaResultPresenter = new GachaResultPresenter(game.Gacha, game.Tables);
+            m_gachaResultPresenter = new GachaResultPresenter(gachaResultView, game.Gacha, game.Tables);
         }
 
         private void OnDestroy()

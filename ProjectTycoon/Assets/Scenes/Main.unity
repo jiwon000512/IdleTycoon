@@ -154,6 +154,7 @@ MonoBehaviour:
   - {fileID: 441927682}
   - {fileID: 752543132}
   m_animalPrefab: {fileID: 2290189438076550283, guid: 8af2ebc3ea6a1ee48ade3fb783f38b68, type: 3}
+  m_visitors: {fileID: 19269924}
   m_camera: {fileID: 519420033}
   m_panMargin: 2
 --- !u!4 &19269923
@@ -1568,7 +1569,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.Game::ZooTycoon.Game.GameBootstrap
   m_worldView: {fileID: 19269922}
-  m_visitorSpawner: {fileID: 19269924}
 --- !u!4 &904481660
 Transform:
   m_ObjectHideFlags: 0

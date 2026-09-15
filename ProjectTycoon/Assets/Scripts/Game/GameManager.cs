@@ -11,16 +11,22 @@ namespace ZooTycoon.Game
     // 규칙 예외: 게임 상태·서비스를 씬 사이에서 유지하는 싱글턴(설계 04 D2). 게임 규칙은 Core 서비스에 있고 여기서는 생성·보관·틱 호출만 한다
     public sealed class GameManager : MonoSingleton<GameManager>
     {
-        private IncomeService m_income;
         private float m_tickElapsed;
 
         public GameTables Tables { get; private set; }
         public ZooState State { get; private set; }
         public ZooLevelService ZooLevel { get; private set; }
+        public IncomeService Income { get; private set; }
         public GachaService Gacha { get; private set; }
 
+        // 씬을 다시 열어도 상태는 한 번만 만든다(싱글턴이 씬 사이에서 살아남는 이유)
         public void Init()
         {
+            if (State != null)
+            {
+                return;
+            }
+
             Tables = LoadTables();
             IReadOnlyList<string> errors = TableValidator.Validate(Tables);
 
@@ -31,14 +37,14 @@ namespace ZooTycoon.Game
 
             State = ZooState.CreateNew(Tables.Config);
             ZooLevel = new ZooLevelService(Tables, State);
-            Gacha = new GachaService(Tables, State, new SystemRandom());
-            m_income = new IncomeService(State, Tables, ZooLevel);
+            Income = new IncomeService(State, Tables, ZooLevel);
+            Gacha = new GachaService(Tables, State, new SystemRandom(), Income);
         }
 
         // 설계 04 P2: game_config.income.tickSeconds마다 한 번 적립
         private void Update()
         {
-            if (m_income == null)
+            if (Income == null)
             {
                 return;
             }
@@ -50,7 +56,7 @@ namespace ZooTycoon.Game
                 return;
             }
 
-            m_income.Tick(m_tickElapsed);
+            Income.Tick(m_tickElapsed);
             m_tickElapsed = 0f;
         }
 

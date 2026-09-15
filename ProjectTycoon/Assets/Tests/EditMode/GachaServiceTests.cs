@@ -38,8 +38,8 @@ namespace ZooTycoon.Tests
 
             Assert.That(pulled, Is.True);
             Assert.That(result.Animal.Id, Is.EqualTo("a01"));
-            Assert.That(result.Outcome, Is.EqualTo(PullOutcome.Placed));
-            Assert.That(result.Level, Is.EqualTo(1));
+            Assert.That(result.Outcome, Is.EqualTo(PullOutcome.NewSpecies));
+            Assert.That(result.Count, Is.EqualTo(1));
             Assert.That(result.Cost, Is.EqualTo(100d));
             Assert.That(state.Coins, Is.EqualTo(250d));
             Assert.That(state.PullCount, Is.EqualTo(1));
@@ -67,10 +67,10 @@ namespace ZooTycoon.Tests
             service.TryPull(out _);
             service.TryPull(out PullResult second);
 
-            Assert.That(second.Outcome, Is.EqualTo(PullOutcome.LevelUp));
-            Assert.That(second.Level, Is.EqualTo(2));
+            Assert.That(second.Outcome, Is.EqualTo(PullOutcome.Duplicate));
+            Assert.That(second.Count, Is.EqualTo(2));
             Assert.That(state.OwnedAnimals.Count, Is.EqualTo(1));
-            Assert.That(state.OwnedAnimals[0].Level, Is.EqualTo(2));
+            Assert.That(state.OwnedAnimals[0].Count, Is.EqualTo(2));
         }
 
         [Test]
@@ -140,7 +140,8 @@ namespace ZooTycoon.Tests
 
         private static GachaService NewService(GameTables tables, ZooState state, params double[] rolls)
         {
-            return new GachaService(tables, state, new SequenceRandom(rolls));
+            IncomeService income = new IncomeService(state, tables, new ZooLevelService(tables, state));
+            return new GachaService(tables, state, new SequenceRandom(rolls), income);
         }
     }
 }

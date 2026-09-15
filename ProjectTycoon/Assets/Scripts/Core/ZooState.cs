@@ -56,31 +56,20 @@ namespace ZooTycoon.Core
             return Find(animalId) != null;
         }
 
-        // 기획서 3장: 새 종은 우리에 한 마리로 시작
-        public void AddAnimal(string animalId)
-        {
-            if (Owns(animalId))
-            {
-                throw new InvalidOperationException($"동물 '{animalId}'는 이미 보유 중이다. LevelUpAnimal을 써야 한다.");
-            }
-
-            m_ownedAnimals.Add(new OwnedAnimal(animalId, 1));
-            OnAnimalsChanged();
-        }
-
-        // 기획서 6.2: 중복 1회당 한 마리 추가(Level = 마리 수), 상한 없음
-        public int LevelUpAnimal(string animalId)
+        // 기획서 3장·6.2: 새 종은 한 마리로 시작, 이미 있으면 한 마리 추가(상한 없음). 마리 수를 돌려준다
+        public int AddAnimal(string animalId)
         {
             OwnedAnimal animal = Find(animalId);
 
             if (animal == null)
             {
-                throw new InvalidOperationException($"동물 '{animalId}'를 보유하고 있지 않다. AddAnimal을 써야 한다.");
+                animal = new OwnedAnimal(animalId, 0);
+                m_ownedAnimals.Add(animal);
             }
 
-            animal.Level++;
+            animal.Count++;
             OnAnimalsChanged();
-            return animal.Level;
+            return animal.Count;
         }
 
         private OwnedAnimal Find(string animalId)

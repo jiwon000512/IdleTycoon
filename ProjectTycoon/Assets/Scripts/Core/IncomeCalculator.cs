@@ -2,10 +2,10 @@ namespace ZooTycoon.Core
 {
     public static class IncomeCalculator
     {
-        // 기획서 6.2: 초당 수입 = 기본 × (1 + 보너스 × (레벨 − 1))
-        public static double AnimalIncome(double baseIncomePerSecond, int level, double incomeBonusPerLevel)
+        // 기획서 6.2: 종의 초당 수입 = 기본 × (1 + 보너스 × (마리 수 − 1))
+        public static double AnimalIncome(double baseIncomePerSecond, int count, double incomeBonusPerAnimal)
         {
-            return baseIncomePerSecond * (1d + incomeBonusPerLevel * (level - 1));
+            return baseIncomePerSecond * (1d + incomeBonusPerAnimal * (count - 1));
         }
 
         // 기획서 6.4: 홍보 배수 = 1 + 단계당 배수 × 단계
@@ -17,14 +17,14 @@ namespace ZooTycoon.Core
         // 기획서 6.2: 총 수입 = Σ(보유 종 수입) × 홍보 배수
         public static double TotalIncomePerSecond(ZooState state, GameTables tables)
         {
-            double bonusPerLevel = tables.Config.AnimalLevel.IncomeBonusPerLevel;
+            double bonusPerAnimal = tables.Config.AnimalCount.IncomeBonusPerAnimal;
             double total = 0d;
 
             for (int i = 0; i < state.OwnedAnimals.Count; i++)
             {
                 OwnedAnimal owned = state.OwnedAnimals[i];
                 double baseIncome = tables.GetAnimal(owned.AnimalId).BaseIncomePerSecond;
-                total += AnimalIncome(baseIncome, owned.Level, bonusPerLevel);
+                total += AnimalIncome(baseIncome, owned.Count, bonusPerAnimal);
             }
 
             return total * PromotionMultiplier(state, tables);

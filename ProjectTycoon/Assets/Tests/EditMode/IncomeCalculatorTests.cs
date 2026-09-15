@@ -9,9 +9,9 @@ namespace ZooTycoon.Tests
         [TestCase(1, 1.0d)]
         [TestCase(10, 5.5d)]
         [TestCase(20, 10.5d)]
-        public void AnimalIncome_ByLevel_MatchesMultiplier(int level, double expectedMultiplier)
+        public void AnimalIncome_ByCount_MatchesMultiplier(int count, double expectedMultiplier)
         {
-            double income = IncomeCalculator.AnimalIncome(1d, level, 0.5d);
+            double income = IncomeCalculator.AnimalIncome(1d, count, 0.5d);
 
             Assert.That(income, Is.EqualTo(expectedMultiplier).Within(1e-9d));
         }
@@ -48,8 +48,8 @@ namespace ZooTycoon.Tests
             GameTables tables = TestTables.Build();
             ZooState state = ZooState.CreateNew(tables.Config);
             state.AddAnimal("a01");
-            state.LevelUpAnimal("a01");
-            state.LevelUpAnimal("a01");
+            state.AddAnimal("a01");
+            state.AddAnimal("a01");
 
             double income = IncomeCalculator.TotalIncomePerSecond(state, tables);
 

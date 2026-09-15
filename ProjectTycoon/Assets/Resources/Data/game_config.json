@@ -1,6 +1,6 @@
 {
   "table": "game_config",
-  "version": 5,
+  "version": 6,
   "notes": [
     "기획서 6.2~6.4의 수식 상수와 시작 상태. 전부 시작값이며 프로토타입에서 튠한다.",
     "레벨 상한 없음(기획서 v0.6). 가차 비용 기준은 누적 뽑기 횟수(기획서 확정 결정).",
@@ -8,7 +8,8 @@
     "version 2 (기획서 v0.9, 설계 03): 우리 격자가 사라져 cageGrid 섹션 삭제.",
     "version 3: gacha.costBasis 삭제. 구현이 하나뿐이라 설정이 아니다.",
     "version 4 (설계 04): income.tickSeconds 추가. 수입 적립 틱 간격(초).",
-    "version 5 (설계 06, 기획서 v0.14): visitors 추가(관광객 수 = min(maxCount, 1 + floor(log2(1 + 수입/incomeUnit))), 수입 0이면 0). promotion.visitorsPerStage 삭제(관광객은 수입으로만 결정)."
+    "version 5 (설계 06, 기획서 v0.14): visitors 추가(관광객 수 = min(maxCount, 1 + floor(log2(1 + 수입/incomeUnit))), 수입 0이면 0). promotion.visitorsPerStage 삭제(관광객은 수입으로만 결정).",
+    "version 6 (구조 정리, 기획서 v0.15): animalLevel.incomeBonusPerLevel → animalCount.incomeBonusPerAnimal. 값 동일. 중복 = 마리 추가라 '레벨'이라는 이름을 버렸다."
   ],
   "start": {
     "coins": 350
@@ -17,8 +18,8 @@
     "baseCost": 100,
     "costGrowth": 1.12
   },
-  "animalLevel": {
-    "incomeBonusPerLevel": 0.5
+  "animalCount": {
+    "incomeBonusPerAnimal": 0.5
   },
   "promotion": {
     "maxStage": 10,
