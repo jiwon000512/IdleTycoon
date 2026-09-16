@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c5a602120a191234fb366b9a6f1d34f9
+guid: db0051fe476580f41a107dfdaab9ee7e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7932798033344189819
-    second: grass_0
+      213: -5481397758034731329
+    second: fence_post_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -40,17 +40,17 @@ TextureImporter:
     filterMode: 0
     aniso: 1
     mipBias: 0
-    wrapU: 0
-    wrapV: 0
-    wrapW: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
   spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 0
-  alignment: 0
-  spritePivot: {x: 0.5, y: 0.5}
+  alignment: 9
+  spritePivot: {x: 0.5, y: 0}
   spritePixelsToUnits: 64
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
@@ -75,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: grass_0
+      name: fence_post_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 64
-        height: 64
+        width: 4
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b75d56418c5f61e60800000000000000
-      internalID: 7932798033344189819
+      spriteID: fbe97bfd7c92ee3b0800000000000000
+      internalID: -5481397758034731329
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      grass_0: 7932798033344189819
+      fence_post_0: -5481397758034731329
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

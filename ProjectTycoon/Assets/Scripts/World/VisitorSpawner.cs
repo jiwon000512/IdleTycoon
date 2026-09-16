@@ -48,12 +48,12 @@ namespace ZooTycoon.World
             Spawn();
         }
 
-        // 설계 06 P4·07 P8: 우리는 하나. 동물이 있으면 구경하고 없으면 지나간다(Visitor가 판단)
+        // 설계 06 P4·07 P8: 존은 첫 존(z01) 하나(08까지). 동물이 있으면 구경하고 없으면 지나간다(Visitor가 판단)
         // 규칙 예외: 연출 난수는 UnityEngine.Random을 쓴다(프로그래밍-규약 5장)
         private void Spawn()
         {
             Visitor visitor = Instantiate(m_prefab, transform);
-            visitor.Initialize(PickRecord(), m_world.Cage, m_world.Frames);
+            visitor.Initialize(PickRecord(), m_world.Zone, m_world.Frames);
             visitor.Exited += Visitor_Exited;
             m_alive.Add(visitor);
         }

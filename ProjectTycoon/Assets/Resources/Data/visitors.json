@@ -15,7 +15,7 @@
       "idleSheet": null,
       "moveSheet": "Sprites/Visitors/Visitor/Visitor_Move",
       "frameRate": 6,
-      "scale": 1.0,
+      "scale": 0.6,
       "moveSpeed": 1.5,
       "viewSecondsMin": 2.0,
       "viewSecondsMax": 4.0,

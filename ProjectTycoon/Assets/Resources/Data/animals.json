@@ -16,7 +16,7 @@
       "idleSheet": "Sprites/Animals/Wombat/Wombat_Idle",
       "moveSheet": "Sprites/Animals/Wombat/Wombat_Move",
       "frameRate": 8,
-      "scale": 1.0,
+      "scale": 0.6,
       "moveSpeed": 1.2,
       "idleSecondsMin": 1.0,
       "idleSecondsMax": 3.0,

@@ -5,7 +5,7 @@ using Random = UnityEngine.Random;
 
 namespace ZooTycoon.World
 {
-    // 설계 06 P3: 입장(WalkState) → 구경(WaitState, 코인) → 퇴장(WalkState) → 파괴. 동물이 없는 우리면 그냥 지나간다
+    // 설계 06 P3: 입장(WalkState) → 구경(WaitState, 코인) → 퇴장(WalkState) → 파괴. 동물이 없는 존이면 그냥 지나간다
     public sealed class Visitor : Unit
     {
         [SerializeField] private CoinPopup m_coinPrefab;
@@ -15,7 +15,7 @@ namespace ZooTycoon.World
         [SerializeField] private float m_viewInset = 1f;
 
         private VisitorRecord m_record;
-        private Vector2 m_cageCenter;
+        private Vector2 m_zoneCenter;
         private Vector2 m_exit;
         private WalkState m_enter;
         private WaitState m_view;
@@ -24,14 +24,14 @@ namespace ZooTycoon.World
         public event Action<Visitor> Exited;
 
         // 규칙 예외: 연출 난수는 UnityEngine.Random을 쓴다(프로그래밍-규약 5장)
-        public void Initialize(VisitorRecord record, CageView cage, FrameCache frames)
+        public void Initialize(VisitorRecord record, ZoneView zone, FrameCache frames)
         {
             m_record = record;
-            m_cageCenter = cage.Center;
+            m_zoneCenter = zone.Center;
             Setup(record, frames);
 
-            bool views = cage.AnimalCount > 0;
-            Rect path = cage.PathBounds;
+            bool views = zone.AnimalCount > 0;
+            Rect path = zone.PathBounds;
             bool leftToRight = Random.value < 0.5f;
             float z = Random.Range(path.yMin, path.yMax);
             float startX = leftToRight ? path.xMin - m_entryMargin : path.xMax + m_entryMargin;
@@ -48,12 +48,12 @@ namespace ZooTycoon.World
             ChangeState(m_enter);
         }
 
-        // 설계 06 P8: 우리를 보고 서서 머리 위에 코인
+        // 설계 06 P8: 존을 보고 서서 머리 위에 코인
         private void EnterView()
         {
             m_view.SetSeconds(Random.Range((float)m_record.ViewSecondsMin, (float)m_record.ViewSecondsMax));
             ChangeState(m_view);
-            Face(m_cageCenter);
+            Face(m_zoneCenter);
 
             Vector3 head = transform.position + Vector3.up * Height;
             Instantiate(m_coinPrefab, head, Quaternion.identity, transform.parent);

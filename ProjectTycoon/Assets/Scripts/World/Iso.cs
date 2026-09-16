@@ -6,8 +6,8 @@ namespace ZooTycoon.World
     // 논리 +X는 화면 오른쪽 위, +Z는 화면 왼쪽 위. 논리 1유닛의 화면 폭 = 2 × k_X
     public static class Iso
     {
-        public const float k_X = 0.70710678f;
-        public const float k_Y = 0.35355339f;
+        public const float k_X = 0.5f;
+        public const float k_Y = 0.25f;
 
         public static Vector3 ToScreen(Vector2 logical)
         {
