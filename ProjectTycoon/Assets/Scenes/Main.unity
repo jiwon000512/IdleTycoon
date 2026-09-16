@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be2cd8a1d1e90724196dca64843dfc37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.WorldView
-  m_branch: {fileID: 1272160516}
+  m_branchPrefab: {fileID: 8018213967004442573, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
   m_animalPrefab: {fileID: 2290189438076550283, guid: 8af2ebc3ea6a1ee48ade3fb783f38b68, type: 3}
   m_facilityPrefab: {fileID: 3485705183710604151, guid: e06f2c7682ae70641abe4d7395804b65, type: 3}
   m_visitors: {fileID: 19269924}
@@ -167,8 +167,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1272160517}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &19269924
@@ -551,79 +550,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1272160515
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 19269923}
-    m_Modifications:
-    - target: {fileID: 4374388640974548207, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_Name
-      value: Branch01
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
---- !u!114 &1272160516 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8018213967004442573, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-  m_PrefabInstance: {fileID: 1272160515}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5351a143bf4eb5d4094ede0b7b0c7c20, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.BranchView
---- !u!4 &1272160517 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5712517586096482425, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-  m_PrefabInstance: {fileID: 1272160515}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

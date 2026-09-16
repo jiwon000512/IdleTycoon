@@ -12,7 +12,7 @@ namespace ZooTycoon.World
 
         [Tooltip("시작 초점(화면 XY)")]
         [SerializeField] private Vector2 m_focus;
-        [Tooltip("초점이 머물 수 있는 범위(화면 XY). WorldView가 우리 배치로부터 계산해 넣는다")]
+        [Tooltip("초점이 머물 수 있는 범위(화면 XY). WorldManager가 지점 사각형으로부터 계산해 넣는다")]
         [SerializeField] private Rect m_bounds;
 
         private Camera m_camera;

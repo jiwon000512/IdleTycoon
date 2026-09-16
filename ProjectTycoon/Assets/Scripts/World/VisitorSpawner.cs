@@ -8,7 +8,6 @@ namespace ZooTycoon.World
     public sealed class VisitorSpawner : MonoBehaviour
     {
         [SerializeField] private Visitor m_prefab;
-        [SerializeField] private WorldView m_world;
         [Tooltip("관광객을 한 명씩 추가하는 간격(초)")]
         [SerializeField] private float m_spawnInterval = 1.5f;
 
@@ -53,7 +52,8 @@ namespace ZooTycoon.World
         private void Spawn()
         {
             Visitor visitor = Instantiate(m_prefab, transform);
-            visitor.Initialize(PickRecord(), m_world.Zone, m_world.Frames);
+            WorldManager world = WorldManager.Instance;
+            visitor.Initialize(PickRecord(), world.Zone, world.Frames);
             visitor.Exited += Visitor_Exited;
             m_alive.Add(visitor);
         }
