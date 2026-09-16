@@ -183,7 +183,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.VisitorSpawner
   m_prefab: {fileID: 2280365670206967019, guid: 7cc92b28c64de234f9ddab361306286b, type: 3}
-  m_world: {fileID: 19269922}
   m_spawnInterval: 1.5
 --- !u!1 &519420028
 GameObject:
@@ -267,7 +266,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.4, g: 0.62, b: 0.3, a: 1}
+  m_BackGroundColor: {r: 0.43137255, g: 0.6784314, b: 0.3372549, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -534,7 +533,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49ecc965a3b7d4e43b59d0a2235b0682, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.Game::ZooTycoon.Game.GameBootstrap
-  m_worldView: {fileID: 19269922}
 --- !u!4 &904481660
 Transform:
   m_ObjectHideFlags: 0

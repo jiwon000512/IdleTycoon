@@ -16,8 +16,6 @@ namespace ZooTycoon.World
         [SerializeField] private Facility m_facilityPrefab;
         [SerializeField] private VisitorSpawner m_visitors;
         [SerializeField] private WorldCameraController m_camera;
-        [Tooltip("지점 바깥으로 카메라 초점이 나갈 수 있는 여유(화면 유닛)")]
-        [SerializeField] private float m_panMargin = 2f;
 
         private readonly Dictionary<string, int> m_spawnedByAnimal = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly HashSet<string> m_shownFacilities = new HashSet<string>(StringComparer.Ordinal);
@@ -50,7 +48,7 @@ namespace ZooTycoon.World
             m_tables = tables;
 
             m_visitors.Initialize(tables.Visitors);
-            m_camera.SetBounds(CameraBounds());
+            m_camera.SetBounds(Iso.ToScreenBounds(Branch.MapArea));
             m_state.AnimalsChanged += State_AnimalsChanged;
             m_state.FacilitiesChanged += State_FacilitiesChanged;
             m_income.IncomeChanged += Income_IncomeChanged;
@@ -132,16 +130,6 @@ namespace ZooTycoon.World
         private void SyncVisitors()
         {
             m_visitors.TargetCount = VisitorCalculator.Count(m_income.IncomePerSecond, m_tables.Config.Visitors);
-        }
-
-        // 설계 03 A3: 팬 범위(화면 XY) = 지점 사각형의 화면 경계 + 여유
-        private Rect CameraBounds()
-        {
-            Rect screen = Iso.ToScreenBounds(Branch.MapArea);
-
-            return Rect.MinMaxRect(
-                screen.xMin - m_panMargin, screen.yMin - m_panMargin,
-                screen.xMax + m_panMargin, screen.yMax + m_panMargin);
         }
     }
 }
