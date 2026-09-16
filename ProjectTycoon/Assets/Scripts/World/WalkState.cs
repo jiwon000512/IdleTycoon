@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 목표 지점까지 걷고, 도착하면 알린다
+    // 목표 지점(논리 XZ)까지 걷고, 도착하면 알린다
     public sealed class WalkState : UnitState
     {
         private readonly Unit m_unit;
         private readonly Action m_arrived;
-        private Vector3 m_target;
+        private Vector2 m_target;
 
         public WalkState(Unit unit, Action arrived)
         {
@@ -16,14 +16,14 @@ namespace ZooTycoon.World
             m_arrived = arrived;
         }
 
-        public void SetTarget(Vector3 target)
+        public void SetTarget(Vector2 target)
         {
             m_target = target;
         }
 
         public override void Enter()
         {
-            m_unit.Face(m_target.x);
+            m_unit.Face(m_target);
             m_unit.PlayMove();
         }
 

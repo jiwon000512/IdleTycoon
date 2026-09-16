@@ -11,13 +11,14 @@ namespace ZooTycoon.World
         private WaitState m_idle;
         private WalkState m_move;
 
-        public void Initialize(AnimalRecord record, CageView cage, FrameCache frames, Quaternion billboard)
+        public void Initialize(AnimalRecord record, CageView cage, FrameCache frames)
         {
             m_record = record;
             m_cage = cage;
             m_idle = new WaitState(this, EnterMove);
             m_move = new WalkState(this, EnterIdle);
-            Setup(record, frames, billboard);
+            Setup(record, frames);
+            SetLogical(cage.RandomWalkPoint());
             EnterIdle();
         }
 

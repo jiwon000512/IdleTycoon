@@ -9,14 +9,14 @@ namespace ZooTycoon.World
     public sealed class Visitor : Unit
     {
         [SerializeField] private CoinPopup m_coinPrefab;
-        [Tooltip("길 타일 바깥에서 나타나고 사라지는 거리(유닛)")]
+        [Tooltip("길 바깥에서 나타나고 사라지는 거리(유닛)")]
         [SerializeField] private float m_entryMargin = 1.5f;
-        [Tooltip("구경 지점이 길 타일 양 끝에서 안쪽으로 들어오는 거리(유닛)")]
+        [Tooltip("구경 지점이 길 양 끝에서 안쪽으로 들어오는 거리(유닛)")]
         [SerializeField] private float m_viewInset = 1f;
 
         private VisitorRecord m_record;
-        private float m_cageCenterX;
-        private Vector3 m_exit;
+        private Vector2 m_cageCenter;
+        private Vector2 m_exit;
         private WalkState m_enter;
         private WaitState m_view;
         private WalkState m_leave;
@@ -24,11 +24,11 @@ namespace ZooTycoon.World
         public event Action<Visitor> Exited;
 
         // 규칙 예외: 연출 난수는 UnityEngine.Random을 쓴다(프로그래밍-규약 5장)
-        public void Initialize(VisitorRecord record, CageView cage, FrameCache frames, Quaternion billboard)
+        public void Initialize(VisitorRecord record, CageView cage, FrameCache frames)
         {
             m_record = record;
-            m_cageCenterX = cage.transform.position.x;
-            Setup(record, frames, billboard);
+            m_cageCenter = cage.Center;
+            Setup(record, frames);
 
             bool views = cage.AnimalCount > 0;
             Rect path = cage.PathBounds;
@@ -36,10 +36,10 @@ namespace ZooTycoon.World
             float z = Random.Range(path.yMin, path.yMax);
             float startX = leftToRight ? path.xMin - m_entryMargin : path.xMax + m_entryMargin;
             float exitX = leftToRight ? path.xMax + m_entryMargin : path.xMin - m_entryMargin;
-            Vector3 viewPoint = new Vector3(Random.Range(path.xMin + m_viewInset, path.xMax - m_viewInset), 0f, z);
+            Vector2 viewPoint = new Vector2(Random.Range(path.xMin + m_viewInset, path.xMax - m_viewInset), z);
 
-            transform.position = new Vector3(startX, 0f, z);
-            m_exit = new Vector3(exitX, 0f, z);
+            SetLogical(new Vector2(startX, z));
+            m_exit = new Vector2(exitX, z);
             m_enter = new WalkState(this, views ? EnterView : (Action)Exit);
             m_view = new WaitState(this, EnterLeave);
             m_leave = new WalkState(this, Exit);
@@ -53,11 +53,10 @@ namespace ZooTycoon.World
         {
             m_view.SetSeconds(Random.Range((float)m_record.ViewSecondsMin, (float)m_record.ViewSecondsMax));
             ChangeState(m_view);
-            Face(m_cageCenterX);
+            Face(m_cageCenter);
 
-            Vector3 head = transform.position + Billboard * Vector3.up * Height;
-            CoinPopup coin = Instantiate(m_coinPrefab, head, Quaternion.identity, transform.parent);
-            coin.Initialize(Billboard);
+            Vector3 head = transform.position + Vector3.up * Height;
+            Instantiate(m_coinPrefab, head, Quaternion.identity, transform.parent);
         }
 
         private void EnterLeave()

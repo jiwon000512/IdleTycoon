@@ -53,7 +53,7 @@ namespace ZooTycoon.World
         private void Spawn()
         {
             Visitor visitor = Instantiate(m_prefab, transform);
-            visitor.Initialize(PickRecord(), m_world.Cage, m_world.Frames, m_world.BillboardRotation);
+            visitor.Initialize(PickRecord(), m_world.Cage, m_world.Frames);
             visitor.Exited += Visitor_Exited;
             m_alive.Add(visitor);
         }
