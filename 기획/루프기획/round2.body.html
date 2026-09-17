@@ -1,0 +1,168 @@
+<header class="hero">
+  <div class="eyebrow">ZOO TYCOON · LOOP CONCEPTS · ROUND 2 · 2026-09-16</div>
+  <h1>메인 루프 기획 2회차 — 남은 여섯을 엮다</h1>
+  <p class="lede">1회차에서 남은 여섯(1 혈통 도감 · 2 소원 게시판 · 3 사육사 덱 · 5 탐험대 · 6 구조 보호소 · 8 후원자 편지)을 조합하고 심화해 열 개를 다시 냈다. 끌린다고 한 <b>소원 게시판(2)</b>을 먼저 한 단계 더 설계해 공통 척추로 삼고, 그 위에 나머지를 어떻게 얹느냐로 변주했다. 4·7·9·10은 메인 후보에서 빼고 미니 콘텐츠 후보로만 남긴다.</p>
+  <div class="meta"><span>기획 10 · 장면 40장</span><span>척추: 소원 게시판</span><span>1회차 → 2회차</span></div>
+</header>
+
+<h2 id="wish"><span class="n">0</span>공통 척추 — 소원 게시판 설계 초안</h2>
+<p class="sub">1회차에서 끌린 이유를 살리려면 "메뉴 퀘스트가 아니라 캐릭터가 말한다"는 형식과 "거절해도 손해 없다"는 원칙이 지켜져야 한다. 아래는 열 개 변주가 공유하는 규칙이다.</p>
+<div class="cols">
+  <div class="box"><h3>소원의 종류 (테이블 한 장)</h3><ul>
+    <li><b>즉시형</b>: 지금 가능한 것(벤치 놓기, 탭 케어 1회). 세션 안에 끝난다 → 3분 루프.</li>
+    <li><b>시간형</b>: 기다려야 하는 것(새끼 1마리, 8마리 채우기). 남은 시간이 약속이 된다 → 3일 루프.</li>
+    <li><b>조건형</b>: 상태 조합(흰 웜뱃 + 벤치, 두 종 동시 보유). 도감·변이·시설을 목표로 바꾼다.</li>
+    <li><b>특별형</b>: 변주마다 다르다 — 구조 요청(6), 탐험 의뢰(5), 혈통 주문(1·8).</li>
+  </ul></div>
+  <div class="box"><h3>생성 규칙</h3><ul>
+    <li>게시판 슬롯 3~5. 새 소원은 관광객이 관람을 마칠 때 확률로 남긴다(화면에서 말풍선 → 게시판에 저장).</li>
+    <li>생성기는 현재 상태를 읽어 <b>"지금 가능한 것 2 : 시간 걸리는 것 2 : 어려운 것 1"</b> 비율을 유지한다.</li>
+    <li>수락은 동시에 3개까지. 거절·만료는 벌칙 없음. 만료된 소원은 다른 관광객이 다시 낼 수 있다.</li>
+    <li>보상은 코인 대신 <b>티켓·보전 포인트·의상 조각·단골</b> — 소원이 "코인 외 재화"의 출구다.</li>
+  </ul></div>
+</div>
+<div class="cols">
+  <div class="box"><h3>단골 → 후원자 사다리</h3><ul>
+    <li>소원 성취 시 그 관광객은 <b>단골</b>(이름 획득, 재방문). 단골 N명이 새 관광객 종류·시설을 연다.</li>
+    <li>단골의 소원을 3회 성취하면 <b>후원자</b>: 월 후원금 + 편지. 후원자 수가 2호점 조건.</li>
+    <li>사다리 자체가 도감이자 장기 목표(장부 24명).</li>
+  </ul></div>
+  <div class="box risk"><h3>지켜야 할 것</h3><ul>
+    <li>소원 문구는 짧게(12자 안). 문구 양이 콘텐츠 비용이므로 템플릿 + 이름 치환.</li>
+    <li>소원이 자연 플레이와 어긋나면 잡일 — 생성기는 반드시 "지금 할 수 있는 것"을 포함.</li>
+    <li>말풍선은 화면에 동시에 2개까지. 팝업 클릭 지옥(Zoo Park Story 불만)을 피한다.</li>
+  </ul></div>
+</div>
+
+<!-- R1 -->
+<h2 id="r01"><span class="n">01</span>소원 → 혈통 (2 + 1)</h2>
+<p class="pitch">소원이 <b>번식의 목표</b>를 정한다. "흰 웜뱃 보고 싶어요"가 게시판에 오르면 변이 보장 카운터와 남은 시간이 나란히 보이고, 성취 순간 관광객 앞에서 방생·포인트가 터진다. 코인은 확장, 포인트는 종·의상.</p>
+<figure class="strip"><img src="__r01__" alt="소원 → 혈통"><figcaption>① 소원이 번식을 가리킴 → ② 번식·변이·보장 카운터 → ③ 성취 + 방생 → ④ 포인트로 다음 종, 새 소원.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>새끼 팝, 변이 NEW, 성취 순간 코인 분수</li><li><b>3분</b>어느 소원을 잡을지, 방생할지</li><li><b>3일</b>보장 카운터·시간형 소원 만료</li><li><b>돌아오는 이유</b>"흰 웜뱃 소원 1일 남음"</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>1회차 1번(혈통)에 목표 제공자를 붙였다. 도감의 빈 칸이 "누군가의 부탁"이 되어 자이가르닉 + 관계 동인이 겹친다.</li><li>Zoo 2·Pocket Frogs의 번식 수집에는 "왜 지금 이 색인가"가 없다. 여기선 소원이 순서를 준다.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>08 + 변이·pity·방생 + 소원 테이블·게시판 팝업. <span class="pill mid">중간</span></li><li>소원이 확률(변이)에 걸리면 좌절 → 보장 카운터를 소원 기한 안에 맞춰 생성.</li></ul></div>
+</div>
+
+<!-- R2 -->
+<h2 id="r02"><span class="n">02</span>단골 장부 (2 + 8)</h2>
+<p class="pitch">소원을 내는 관광객에게 <b>이름</b>이 있다. 성취하면 단골이 되어 편지가 오고, 세 번 성취하면 후원자가 되어 월 후원금을 낸다. 장부 24명을 채우는 것이 동물원의 역사이자 장기 목표.</p>
+<figure class="strip"><img src="__r02__" alt="단골 장부"><figcaption>① 이름 있는 소원 → ② 성취 → 단골 → 첫 편지(이름 짓기 부탁) → ③ 단골이 후원자로 → ④ 장부 완성 = 기념관.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>봉투 열기, 관광객이 뛰며 코인</li><li><b>3분</b>누구의 소원을 먼저</li><li><b>3일</b>단골의 다음 소원(2일 뒤), 후원 정산</li><li><b>돌아오는 이유</b>새 편지·다음 소원 도착</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>1회차 2번과 8번을 하나의 사다리로 묶었다. Animal Restaurant 손님 편지 + Hay Day 주문이 <b>관계 단계</b>(손님 → 단골 → 후원자)로 이어지는 형태는 참고작에 없다.</li><li>후원금 = 무과금 우회 수입(고양이 오피스 빵공장 격)이면서 서사.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>관광객 개체에 이름·단계 저장, 편지 문구, 장부 UI. <span class="pill mid">중간</span></li><li>관광객 종류 스프라이트 3종+ 필요. 문구는 템플릿 + 이름.</li></ul></div>
+</div>
+
+<!-- R3 -->
+<h2 id="r03"><span class="n">03</span>후원 탐험 (8 + 5 + 1)</h2>
+<p class="pitch">후원자의 부탁이 <b>탐험 의뢰</b>가 된다. "어릴 적 본 카피바라를 다시 보고 싶어요" → 후원금이 탐험 자금 → 사육사와 동행 동물이 알을 들고 귀환 → 부화하면 후원자가 보러 와 월 후원을 약속한다.</p>
+<figure class="strip"><img src="__r03__" alt="후원 탐험"><figcaption>① 부탁 = 탐험 의뢰 → ② 출발(동행 동물) → ③ 부화, 혈통 시작 → ④ 후원자가 보러 온다.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>출발·귀환 연출, 부화 팝</li><li><b>3분</b>어느 부탁을 탐험으로 풀지, 동행 선택</li><li><b>3일</b>탐험 3시간 → 부화 → 후원자 방문 → 다음 부탁</li><li><b>돌아오는 이유</b>귀환 시각, 부화 시각</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>새 종 획득이 "돈 내고 사기"가 아니라 <b>누군가의 기억을 되찾아 주는 일</b>. Fallout Shelter 탐험 로그에 관계가 붙었다.</li><li>후원자·탐험·번식이 한 줄기라 시스템 셋이 서로 이유가 된다.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>탐험지 테이블·타이머·일지 + 후원자. <span class="pill mid">중간</span>~<span class="pill hi">높음</span></li><li>종이 적을 때(웜뱃 1종) 탐험 보상이 빈약 → 종 3개 이후에 켜는 기능.</li></ul></div>
+</div>
+
+<!-- R4 -->
+<h2 id="r04"><span class="n">04</span>구조 게시판 (6 + 2 + 8)</h2>
+<p class="pitch">게시판에 <b>[구조] 칸</b>이 있다. "도로에서 다친 웜뱃을 봤어요"를 받으면 임시 우리에서 회복시키고, 방사하면 명성, 정착시키면 번식 부모. 신고한 관광객은 단골이 되고, 명성이 수의사 후원자를 연다.</p>
+<figure class="strip"><img src="__r04__" alt="구조 게시판"><figcaption>① 구조 요청이 게시판 특별 칸에 → ② 회복 케어(관광객이 지켜보며 기부) → ③ 방사(명성) / 정착 → ④ 명성이 새 요청·후원자를 연다.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>케어 탭 하트, 방사 순간 숲으로</li><li><b>3분</b>받을까, 방사할까 정착할까</li><li><b>3일</b>회복 2~3일, 명성 레벨</li><li><b>돌아오는 이유</b>회복 게이지, 새 구조 요청</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>1회차 6번(보호소)을 <b>동물원의 일부</b>로 축소했다. 전시 동물원 판타지를 유지하면서 "돌봄 서사"를 게시판 한 칸으로 넣는다.</li><li>구조 동물이 정착하면 새 종 입주 경로가 하나 더 생겨 상점 의존을 줄인다.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>임시 우리(존 1개 예약)·회복 상태·명성. <span class="pill mid">중간</span></li><li>다친 표현 아트(붕대 오버레이) 종당 1.</li></ul></div>
+</div>
+
+<!-- R5 -->
+<h2 id="r05"><span class="n">05</span>사육사가 소원을 받아온다 (3 + 2)</h2>
+<p class="pitch">소원은 <b>사육사가 관광객에게서 받아온다</b>. 사육사의 특기(접객·번식·시설·희귀)가 게시판에 오르는 소원의 종류와 보상을 정하고, 성취가 사육사 경험치가 되어 오프라인 상한·자동화가 열린다. 사육사가 늘수록 소원 폭이 넓어진다.</p>
+<figure class="strip"><img src="__r05__" alt="사육사 소원"><figcaption>① 사육사가 소원 3개를 받아옴 → ② 특기가 소원 종류를 정함 → ③ 성취 → 사육사 경험치 → ④ 사육사 2명 = 소원 폭.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>사육사가 게시판으로 걸어가 붙이는 연출</li><li><b>3분</b>어느 사육사를 담당으로, 어느 소원을</li><li><b>3일</b>사육사 레벨·합류(동물원 Lv), 세트</li><li><b>돌아오는 이유</b>사육사가 받아둔 새 소원</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>1회차 3번(덱)의 "카드 뽑기" 문제를 없앴다. 사육사는 동물원 레벨로 합류하고 <b>소원 성취로 자란다</b>.</li><li>Idle Miner 매니저는 숫자 배율인데, 여기선 매니저가 <b>목표의 종류</b>를 바꾼다.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>사육사 테이블·배치·경험치 + 소원. <span class="pill mid">중간</span></li><li>사육사 스프라이트 1종 + 팔레트. 특기 종류가 적으면 차이가 안 보임(최소 4종).</li></ul></div>
+</div>
+
+<!-- R6 -->
+<h2 id="r06"><span class="n">06</span>동물원 원정대 (5 + 3 + 1)</h2>
+<p class="pitch">사육사가 <b>원정 대장</b>, 동물이 <b>동행</b>. 원정지마다 성공 확률이 보이고 실패는 없다(보상만 다름). 흰 동물을 데려가면 흰 알이 나오는 식으로 혈통이 원정으로 이어진다. 홈은 원정 중에도 돈다.</p>
+<figure class="strip"><img src="__r06__" alt="원정대"><figcaption>① 원정대 편성(대장·동행) → ② 원정 중 홈은 돌아간다 → ③ 귀환·일지·변이 알 → ④ 혈통이 이어진다.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>편성 카드, 일지 넘기기, 부화</li><li><b>3분</b>누구를 데려갈지(동행 보너스 계산)</li><li><b>3일</b>원정지 해금, 대장 레벨, 흰 혈통 2종</li><li><b>돌아오는 이유</b>귀환 알림, 부화</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>동물이 "전시품"에서 <b>동료</b>가 된다. 방치형 동물원에서 동물이 능동 역할을 갖는 안은 이것뿐.</li><li>혈통(변이 유전)이 원정 결과에 연결되어 "흰 동물을 키울 이유"가 하나 더.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>원정·사육사·혈통 셋 — 2회차 중 가장 큼. <span class="pill hi">높음</span></li><li>동행 동물이 존을 비우면 수입이 준다 → 동행은 "복제 카드"로(실제 개체는 남음).</li></ul></div>
+</div>
+
+<!-- R7 -->
+<h2 id="r07"><span class="n">07</span>혈통 후원 (8 + 1 + 우두머리)</h2>
+<p class="pitch">후원자가 <b>혈통을 주문</b>한다. "금빛 웜뱃이 있다면 사진집에 싣고 싶어요" → 번식 프로그램(부모 변이·만족도로 확률↑) → 탄생 → 이름을 지어 존 대표(우두머리) → 후원자가 사진집에 싣고 입간판에 걸린다.</p>
+<figure class="strip"><img src="__r07__" alt="혈통 후원"><figcaption>① 후원자의 혈통 주문 → ② 번식 프로그램(보장·부모 변이·만족도) → ③ 탄생 → 이름 → 존 대표 → ④ 사진집·입간판.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>변이 탄생 연출, 이름 입력</li><li><b>3분</b>어느 부모를 남길지(변이 부모 유지)</li><li><b>3일</b>보장 12회, 후원 예약 성취</li><li><b>돌아오는 이유</b>주문이 걸린 번식 결과</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>1회차 1번에 "누구를 위해"와 "이름 있는 개체"를 붙였다. 1회차 7번(머지)의 우두머리 애착만 떼어 왔다.</li><li>"부모 변이 유지 → 확률↑"가 방생 결정에 무게를 준다(흰 부모는 방생하지 않는다).</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>변이 유전 규칙 + 이름 저장 + 후원자. <span class="pill mid">중간</span></li><li>변이 색이 적으면 주문이 금방 바닥 → 종당 3색.</li></ul></div>
+</div>
+
+<!-- R8 -->
+<h2 id="r08"><span class="n">08</span>통합안 — 소원 척추 위에 넷 (2 + 1 + 3 + 8)</h2>
+<p class="pitch">가장 넓은 안. <b>소원이 D1 튜토리얼</b>, 번식·변이가 소원의 재료(D3), 사육사가 소원 폭과 자동화를 넓히고(D7), 후원자 장부가 2호점 조건(D30). 리셋 없음, 1호점 수입 유지.</p>
+<figure class="strip"><img src="__r08__" alt="통합안"><figcaption>D1 소원이 튜토리얼 → D3 번식·변이가 소원의 재료 → D7 사육사 합류 → D30 후원자 장부와 2호점.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>새끼 팝·성취 코인·봉투</li><li><b>3분</b>소원 선택 + 방생/구매 하나</li><li><b>3일</b>보장 카운터·사육사 레벨·편지</li><li><b>돌아오는 이유</b>소원 시간, 후원 정산, 2호점 조건</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>조사의 "세 겹 루프"를 D1/D3/D7/D30에 맞춰 <b>기능을 켜는 순서</b>로 배치했다. 고양이 오피스의 "구역 → 회사 → 직원" 사다리에 대응하는 우리 사다리는 "소원 → 혈통 → 사육사 → 후원자".</li><li>레퍼런스와 다른 점: 목표(소원)와 성장(번식)과 관계(후원자)가 같은 관광객에서 나온다.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>넷 다 — 출시 범위가 커진다. <span class="pill hi">높음</span> 단, 켜는 순서대로 만들면 08~11 로드맵과 겹친다.</li><li>기능 넷이 "같은 자리"를 다투지 않는지: 소원(목표)·혈통(경제)·사육사(자동화)·후원자(서사) — 자리가 다르다.</li></ul></div>
+</div>
+
+<!-- R9 -->
+<h2 id="r09"><span class="n">09</span>리모델링 의뢰 (2 + 시설·만족도)</h2>
+<p class="pitch">소원 중 <b>시설·꾸미기 의뢰</b>를 중심에 둔다. "쉴 곳이 없어요"에 벤치를 놓으면 존 만족도 ★가 오르고, ★가 번식·기부·셀카를 연다. 소원은 ★가 낮은 존을 가리켜 다음 할 일을 알려준다. 07 시설을 살리는 안.</p>
+<figure class="strip"><img src="__r09__" alt="리모델링 의뢰"><figcaption>① 소원 = 리모델링 의뢰 → ② 시설을 놓으면 ★ → ③ ★★★ = 셀카·기부·단골 → ④ 존마다 다른 얼굴.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>시설 설치 연출, ★ 오르는 팝</li><li><b>3분</b>어느 존을 먼저 꾸밀지</li><li><b>3일</b>존 ★★★ 완성, 단골</li><li><b>돌아오는 이유</b>새 리모델링 소원</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Planet Zoo 복지 → 관람객 반응을 방치형 ★ 하나로 압축. 시설이 "수입 배수 버튼"에서 <b>동물원의 얼굴</b>이 된다.</li><li>"존이 다 똑같다" 불만(Idle Zoo Park)에 대한 직접 답.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>07 시설에 ★ 계산 + 소원. <span class="pill lo">낮음</span>~<span class="pill mid">중간</span></li><li>시설 아트가 종류마다 필요(4종은 이미 더미). 혼자서는 경제 축이 약해 1·2와 묶여야 한다.</li></ul></div>
+</div>
+
+<!-- R10 -->
+<h2 id="r10"><span class="n">10</span>구조 원정대 (6 + 5)</h2>
+<p class="pitch">원정의 목적이 <b>구조</b>다. "강가에 다친 카피바라"를 대장(수의 특기)이 구하러 가고, 돌아와 회복시킨 뒤 방사(명성) 또는 정착(번식 부모). 도감은 "가진 동물"이 아니라 "만난 동물" 기준.</p>
+<figure class="strip"><img src="__r10__" alt="구조 원정대"><figcaption>① 구조 원정 요청 → ② 원정·구조·일지 → ③ 회복 → 방사/정착 → ④ 명성이 원정지·후원자를 연다.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>구조 일지, 케어 탭, 방사</li><li><b>3분</b>어느 요청을, 누구를 보낼지</li><li><b>3일</b>원정 + 회복 = 2~3일 리듬</li><li><b>돌아오는 이유</b>귀환·회복 시각</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>1회차 6번과 5번을 합쳐 <b>"동물원 = 야생 구조 기지"</b>. 참고작 없음. 정착 동물이 번식 부모가 되어 기존 루프로 합류.</li><li>"만난 동물 도감"은 소유하지 않은 종도 채워 도감 수명이 길다.</li></ul></div>
+  <div class="box risk"><h3>적합 · 비용</h3><ul><li>원정·회복·명성. <span class="pill mid">중간</span>~<span class="pill hi">높음</span></li><li>전시 동물원과 구조 기지 사이에서 정체성이 흔들릴 수 있음 → 구조는 존 하나 + 게시판 칸으로 제한(4번 안)이 안전.</li></ul></div>
+</div>
+
+<h2 id="matrix">비교표</h2>
+<div class="tbl"><table>
+<tr><th>#</th><th>기획</th><th>조합</th><th>핵심 결정</th><th>3초</th><th>3일</th><th>차별성</th><th>비용</th><th>단독 성립</th><th>비고</th></tr>
+<tr><td>1</td><td>소원 → 혈통</td><td>2+1</td><td>어느 소원·방생</td><td>★★★</td><td>★★</td><td>★★</td><td><span class="pill mid">중간</span></td><td>○</td><td>가장 작은 완결 루프</td></tr>
+<tr><td>2</td><td>단골 장부</td><td>2+8</td><td>누구의 소원 먼저</td><td>★★</td><td>★★★</td><td>★★★</td><td><span class="pill mid">중간</span></td><td>△</td><td>서사·장기 목표. 경제는 1 필요</td></tr>
+<tr><td>3</td><td>후원 탐험</td><td>8+5+1</td><td>어느 부탁을 탐험으로</td><td>★★</td><td>★★★</td><td>★★★</td><td><span class="pill hi">높음</span></td><td>△</td><td>종 3개 이후</td></tr>
+<tr><td>4</td><td>구조 게시판</td><td>6+2+8</td><td>받을까·방사/정착</td><td>★★</td><td>★★</td><td>★★★</td><td><span class="pill mid">중간</span></td><td>△</td><td>보호소를 한 칸으로</td></tr>
+<tr><td>5</td><td>사육사 소원</td><td>3+2</td><td>담당·소원</td><td>★★</td><td>★★</td><td>★★</td><td><span class="pill mid">중간</span></td><td>△</td><td>자동화 축</td></tr>
+<tr><td>6</td><td>원정대</td><td>5+3+1</td><td>동행 편성</td><td>★★</td><td>★★★</td><td>★★★</td><td><span class="pill hi">높음</span></td><td>○</td><td>동물이 동료</td></tr>
+<tr><td>7</td><td>혈통 후원</td><td>8+1+이름</td><td>부모를 남길지</td><td>★★★</td><td>★★</td><td>★★</td><td><span class="pill mid">중간</span></td><td>○</td><td>애착 축</td></tr>
+<tr><td>8</td><td>통합안</td><td>2+1+3+8</td><td>단계별</td><td>★★★</td><td>★★★</td><td>★★★</td><td><span class="pill hi">높음</span></td><td>○</td><td>D1~D30 사다리</td></tr>
+<tr><td>9</td><td>리모델링 의뢰</td><td>2+시설</td><td>어느 존을 꾸밀지</td><td>★★</td><td>★★</td><td>★★</td><td><span class="pill lo">낮음</span></td><td>×</td><td>1·2와 묶여야</td></tr>
+<tr><td>10</td><td>구조 원정대</td><td>6+5</td><td>요청·대장</td><td>★★</td><td>★★</td><td>★★★</td><td><span class="pill hi">높음</span></td><td>○</td><td>정체성 위험</td></tr>
+</table></div>
+<div class="callout">
+  <h3>내 읽기</h3>
+  <ul>
+    <li>열 개는 사실 <b>한 게임의 층</b>으로 읽힌다: 1(경제) → 2·9(목표) → 5·7(자동화·애착) → 3·4·6·10(중기 콘텐츠) → 8(전체 사다리). 서로 배타적인 것은 3·6·10(탐험/원정 계열 중 하나)과 4·10(구조 계열 중 하나)뿐이다.</li>
+    <li>가장 작은 출시 가능 조합은 <b>1 + 2 + 9</b>: 소원 게시판(목표) + 혈통(경제·수집) + 시설 ★(존의 얼굴). 셋 다 중간 이하 비용이고 08~11 로드맵과 겹친다.</li>
+    <li>차별성 최상위는 6(동물이 동료)과 10(구조 기지)인데 둘 다 비용이 높고 정체성을 바꾼다. 하나를 <b>출시 후 첫 대형 업데이트</b>로 두는 게 맞아 보인다.</li>
+  </ul>
+</div>
+
+<h2 id="next">다음 회차를 위해</h2>
+<div class="callout">
+  <ol>
+    <li>이 열 개 중 지울 것.</li>
+    <li>"가장 작은 출시 조합"(1+2+9)에 동의하는지, 아니면 8(통합)을 출시 범위로 볼지.</li>
+    <li>3회차 주제 후보: ㉠ 선택한 조합의 <b>D1 첫 15분</b>을 장면 10개로 ㉡ 소원 템플릿 30개 초안 ㉢ 탐험/원정/구조 계열 중 하나를 골라 심화 10개 ㉣ 미니 콘텐츠(4·7·9·10 회차1)를 메인에 붙이는 방식 10개.</li>
+  </ol>
+</div>
+<footer>1회차 https://claude.ai/artifact/8ruu5inx3UcvPkGg6Cdde6 · 조사 https://claude.ai/artifact/9ZUFbSKqpgvYf3e6QeU3pY · 장면 합성 기획/루프기획/panels.py + specs2.json</footer>

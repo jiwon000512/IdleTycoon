@@ -1,0 +1,224 @@
+<title>루프 기획 1회차</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=DotGothic16&display=swap">
+<style>
+:root{--bg:#F3F6EF;--surface:#FFFFFF;--surface-2:#E7EEE2;--text:#1F2A22;--muted:#5C6B60;--line:#CFD9CC;--fence:#7A4A2E;--accent:#7A4A2E;--rec:#2F7A4F;--rec-soft:#DCEDE1;--dirt-soft:#F1E6CE;--warn:#A63D2F;--warn-soft:#F5E0DC;--blue:#2E5E8A;--blue-soft:#DCE8F3;--coin:#B8782A;--coin-soft:#F5E8D3;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141A15;--surface:#1C2420;--surface-2:#242F29;--text:#E5EBE4;--muted:#9BAA9E;--line:#34423A;--accent:#D9A377;--rec:#6CC48F;--rec-soft:#1F3A2B;--dirt-soft:#3A3122;--warn:#E3826F;--warn-soft:#3F2320;--blue:#8FB8E0;--blue-soft:#1E2F40;--coin:#E2AA5C;--coin-soft:#3A2D1A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141A15;--surface:#1C2420;--surface-2:#242F29;--text:#E5EBE4;--muted:#9BAA9E;--line:#34423A;--accent:#D9A377;--rec:#6CC48F;--rec-soft:#1F3A2B;--dirt-soft:#3A3122;--warn:#E3826F;--warn-soft:#3F2320;--blue:#8FB8E0;--blue-soft:#1E2F40;--coin:#E2AA5C;--coin-soft:#3A2D1A;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans KR","Noto Sans KR",system-ui,sans-serif;font-size:15px;line-height:1.65;padding-block:0 80px;padding-inline:20px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:36px}
+@media (max-width:860px){.wrap{grid-template-columns:1fr;gap:0}nav.toc{display:none}}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;padding-top:52px;font-size:13px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:3px 0 3px 12px;border-left:2px solid var(--line)}
+nav.toc a:hover{color:var(--accent);border-left-color:var(--accent)}
+nav.toc .grp{margin:16px 0 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+main{min-width:0}
+header.hero{padding:52px 0 24px;border-bottom:2px solid var(--fence);margin-bottom:10px}
+.eyebrow{font-family:"DotGothic16","IBM Plex Mono",monospace;font-size:13px;letter-spacing:.1em;color:var(--accent)}
+h1{font-family:"Gowun Dodum","IBM Plex Sans KR",sans-serif;font-weight:400;font-size:clamp(28px,4vw,40px);line-height:1.22;margin:8px 0 12px;text-wrap:balance}
+.lede{font-size:16px;max-width:68ch;margin:0 0 14px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+h2{font-family:"Gowun Dodum","IBM Plex Sans KR",sans-serif;font-weight:400;font-size:26px;margin:56px 0 4px;scroll-margin-top:24px}
+h2 .n{color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:14px;margin-right:10px}
+.pitch{font-size:16px;color:var(--text);max-width:72ch;margin:0 0 12px}
+h3{font-size:15px;font-weight:600;margin:18px 0 6px}
+p{max-width:72ch;margin:0 0 12px}ul,ol{max-width:72ch;padding-left:22px;margin:0 0 12px}li{margin:3px 0}
+.sub{color:var(--muted);font-size:14px;max-width:72ch;margin-bottom:14px}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--surface-2);padding:1px 5px;border-radius:3px}
+.strip{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:12px 0 10px}
+.strip img{display:block;width:100%;height:auto;image-rendering:pixelated}
+.strip figcaption{font-size:13px;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0 12px}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:14px}
+.box h3{margin:0 0 6px}
+.box ul,.box ol{margin:0;padding-left:18px}
+.box.diff{border-left:3px solid var(--blue)}
+.box.risk{border-left:3px solid var(--warn)}
+.tbl{overflow-x:auto;margin:12px 0 20px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+th,td{padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;line-height:1.6;white-space:nowrap;margin-right:3px}
+.pill.lo{background:var(--rec-soft);color:var(--rec)}.pill.mid{background:var(--coin-soft);color:var(--coin)}.pill.hi{background:var(--warn-soft);color:var(--warn)}
+.pill.tag{background:var(--blue-soft);color:var(--blue)}.pill.gray{background:var(--surface-2);color:var(--muted)}
+.loop{list-style:none;padding:0;margin:8px 0 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:760px){.loop{grid-template-columns:1fr 1fr}}
+.loop li{background:var(--dirt-soft);border-radius:6px;padding:8px 10px;font-size:13.5px}
+.loop li b{display:block;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);margin-bottom:2px}
+.callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--fence);border-radius:6px;padding:12px 16px;margin:12px 0 18px;max-width:80ch}
+.callout h3{margin:0 0 6px}
+footer{margin-top:60px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+</style>
+<div class="wrap">
+<nav class="toc" aria-label="목차">
+  <div class="grp">1회차</div>
+  <a href="#how">읽는 법</a>
+  <a href="#c01">1 혈통 도감</a>
+  <a href="#c02">2 소원 게시판</a>
+  <a href="#c03">3 사육사 덱</a>
+  <a href="#c04">4 동물원의 하루</a>
+  <a href="#c05">5 탐험대</a>
+  <a href="#c06">6 구조 보호소</a>
+  <a href="#c07">7 머지 우리</a>
+  <a href="#c08">8 후원자 편지</a>
+  <a href="#c09">9 사계절 달력</a>
+  <a href="#c10">10 사진 의뢰</a>
+  <a href="#matrix">비교표</a>
+  <a href="#next">다음 회차</a>
+</nav>
+<main>
+<header class="hero">
+  <div class="eyebrow">ZOO TYCOON · LOOP CONCEPTS · ROUND 1 · 2026-09-16</div>
+  <h1>메인 루프 기획 1회차 — 열 가지 동물원</h1>
+  <p class="lede">조사(검증된 게임·도파민·리텐션·동물원 장치)를 바탕으로 메인 루프를 열 가지로 찍어냈다. 기준 골격(존 → 종 입주 → 번식 → 수입 → 재투자)을 지키되, 각 기획은 <b>"매 세션 플레이어가 무엇을 기다리고 무엇을 결정하는가"</b>를 다르게 잡았고 다른 장르의 재미를 붙인 것도 있다. 장면은 전부 현재 게임 에셋(웜뱃·타일·울타리·숲·관광객·코인·시설 더미)으로 합성했고, 없는 것(사육사·카드·편지·변이색)은 더미로 그렸다.</p>
+  <div class="meta"><span>기획 10 · 장면 40장</span><span>조사 아티팩트 → 후보 15 → 루프 10</span><span>기획서 v0.22 기준</span></div>
+</header>
+
+<div class="callout" id="how">
+  <h3>각 기획을 읽는 법</h3>
+  <ul>
+    <li><b>장면 4장</b> = 루프 한 바퀴. ①에서 ④로 돌고 ④가 다시 ①의 이유가 된다.</li>
+    <li><b>세 겹 루프</b>: 3초(손이 하는 것) · 3분(한 세션의 결정) · 3일(돌아오는 이유).</li>
+    <li><b>차별점</b>은 "어느 레퍼런스에서 가져왔고, 무엇이 다른가"를 적었다. 레퍼런스가 없는 조합이면 그렇게 썼다.</li>
+    <li><b>골격 적합</b>: 지금 구조(존·종·번식·코스튬·관광객·지점)에 얹으면 무엇이 바뀌는지. 비용 <span class="pill lo">낮음</span> 데이터·기존 시스템 <span class="pill mid">중간</span> 새 상태·UI <span class="pill hi">높음</span> 새 시뮬·아트 다수.</li>
+  </ul>
+</div>
+
+<!-- 1 -->
+<h2 id="c01"><span class="n">01</span>혈통 도감 — 번식이 곧 수집</h2>
+<p class="pitch">번식으로 늘어난 마리 수가 아니라 <b>"어떤 색이 태어났는가"</b>가 목표다. 변이는 확률 + 보장 카운터로 나오고, 존이 차면 잉여 개체를 방생해 보전 포인트를 얻어 새 종·의상을 산다. 코인은 확장, 포인트는 수집.</p>
+<figure class="strip"><img src="__c01__" alt="혈통 도감 루프"><figcaption>① 입주·첫 번식 → ② 색 변이 탄생(보장 카운터 노출) → ③ 가득 참 → 방생 → ④ 포인트로 새 종·의상. 흰 웜뱃은 팔레트 스왑 더미.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>새끼 팝·하트·코인 분수. 변이면 "NEW" 도장</li><li><b>3분</b>방생할까 기다릴까, 포인트로 종·의상 중 무엇을 살까</li><li><b>3일</b>보장 카운터가 차는 날, 도감 페이지 완성</li><li><b>돌아오는 이유</b>"이번엔 무슨 색이 나왔지" + 상한 찼으니 방생하러</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Pocket Frogs·Zoo 2의 번식 수집을 가져오되 <b>존당 1종 + 상한</b>이라 유전 조합이 폭발하지 않는다(아트 = 팔레트 스왑).</li><li>Planet Zoo의 방생 → 보전 크레딧을 방치형에 옮겨 "상한 = 벽"을 "상한 = 순환"으로 바꾼다. 방치형 동물원 중 이 순환을 가진 게임을 찾지 못했다.</li><li>가차 없음. 새 종은 포인트로 산다 → 무작위성은 변이에만.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>08 존·입주·번식에 변이 판정·pity·방생 3개 추가. <span class="pill lo">낮음</span></li><li>재화가 둘(코인·포인트)이 된다 → Q30.</li><li>변이 종류가 적으면 3일 루프가 짧다. 종당 2~3 팔레트는 있어야.</li></ul></div>
+</div>
+
+<!-- 2 -->
+<h2 id="c02"><span class="n">02</span>소원 게시판 — 관광객이 목표를 준다</h2>
+<p class="pitch">메뉴의 퀘스트 대신 <b>관광객이 말풍선으로 소원을 남기고</b> 게시판에 쌓인다. 고르면 시간 제한 목표가 되고, 이루면 그 관광객이 단골이 된다. 단골 수가 견학단·후원자 같은 새 관광객 종류를 연다.</p>
+<figure class="strip"><img src="__c02__" alt="소원 게시판 루프"><figcaption>① 말풍선 소원 → ② 게시판에서 수락(거절 손해 없음) → ③ 이뤄지는 순간(관광객 앞에서 티켓·코인) → ④ 단골이 늘어 새 종류 해금.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>말풍선 탭, 성취 순간 관광객이 뛰며 코인</li><li><b>3분</b>소원 5개 중 3개 고르기 — 지금 할 수 있는 것과 시간 걸리는 것</li><li><b>3일</b>단골 20명 → 견학단, 어려운 소원(변이 보기)은 며칠짜리</li><li><b>돌아오는 이유</b>수락한 소원의 남은 시간(약속 메커닉)</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Hay Day 주문 게시판 + Neko Atsume "누가 다녀갔나"의 결합. 방치형 타이쿤의 일일 퀘스트는 메뉴 텍스트인데, 여기선 <b>화면 위 캐릭터가 목표를 말한다</b>.</li><li>소원이 우리 시스템(번식·시설·변이·의상)을 전부 목표로 바꿔주므로 튜토리얼과 일일 퀘스트를 하나로 대체한다.</li><li>거절·미달성에 벌칙이 없어 다크패턴을 피한다.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>소원 템플릿 테이블(조건·보상·시간) + 게시판 팝업 + 단골 카운터. <span class="pill mid">중간</span></li><li>소원 생성 규칙이 현재 진행 상태를 읽어야 "가능한 것"만 낸다 — 규칙 설계가 핵심.</li><li>관광객이 말을 하면 "귀여움"이 올라가지만 문구 양이 콘텐츠 비용.</li></ul></div>
+</div>
+
+<!-- 3 -->
+<h2 id="c03"><span class="n">03</span>사육사 덱 — 사람이 수집 대상</h2>
+<p class="pitch">동물은 경제, <b>사육사 카드가 수집·성장 축</b>. 특기(번식·청소·관광객)와 좋아하는 종이 있어 존과 궁합을 맞추고, 세트를 모으면 시너지. 사육사가 오프라인 상한과 자동화를 늘린다.</p>
+<figure class="strip"><img src="__c03__" alt="사육사 덱 루프"><figcaption>① 카드 획득 → ② 존 배치(궁합) → ③ 대신 일함(자동 수거·오프라인 상한↑) → ④ 세트 시너지. 사육사는 관광객 실루엣 더미.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>카드 뒤집기, 배치하면 사육사가 존으로 걸어감</li><li><b>3분</b>어느 사육사를 어느 존에 — 궁합 퍼즐</li><li><b>3일</b>세트 완성, 사육사 레벨업으로 상한 8 → 12 → 24h</li><li><b>돌아오는 이유</b>사육사가 일해둔 결과(자동 수거된 새끼·코인)</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Idle Miner 매니저 + Idle Heroes 덱을 동물원에. 동물원 방치형은 대개 동물이 카드인데 여기선 <b>사람이 카드, 동물은 살아 있는 경제</b>라 동물을 "뽑는" 어색함이 없다.</li><li>사육사 카드는 사람 스프라이트 1종 + 팔레트로 만들 수 있어 동물 아트보다 싸다.</li><li>Kolibri가 말한 "어느 업그레이드가 최선인지"의 선택이 궁합으로 남는다.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>사육사 테이블·배치 상태·카드 UI·세트 규칙. <span class="pill mid">중간</span>~<span class="pill hi">높음</span></li><li>카드 획득 수단이 가차면 "가차 폐기" 결정과 충돌 → 동물원 레벨·소원·포인트로 해금.</li><li>자동화를 너무 일찍 주면 할 일이 사라진다(리텐션 조사 #14).</li></ul></div>
+</div>
+
+<!-- 4 -->
+<h2 id="c04"><span class="n">04</span>동물원의 하루 — 시간대가 세션을 정한다</h2>
+<p class="pitch">실시간 시계로 <b>아침(먹이)·낮(관람 피크)·밤(번식·성장)</b>이 돈다. 새끼는 밤에 만들어져 아침에 태어나므로 "아침에 확인"이 습관이 되고, 낮엔 관광객이 몰려 수입이 오른다. 세션마다 할 일이 다르다.</p>
+<figure class="strip"><img src="__c04__" alt="동물원의 하루 루프"><figcaption>① 아침 먹이 탭(오늘 번식 +) → ② 낮 관람 피크(수입 ×) → ③ 밤 번식 진행(화면 틴트) → ④ 다음 아침 복귀 선물(새끼 + 코인).</figcaption></figure>
+<ul class="loop"><li><b>3초</b>먹이 탭 하트, 낮 코인 분수, 밤 색조</li><li><b>3분</b>아침엔 먹이·방생, 낮엔 홍보·시설, 밤엔 볼 것만</li><li><b>3일</b>"밤 ×2"를 아는 순간 자기 전 접속이 습관. 주말 낮 이벤트</li><li><b>돌아오는 이유</b>아침 새끼 확인, 낮 피크 놓치기 싫음</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Neko Atsume(닫아야 온다)·Hay Day 타이머의 약속 메커닉을 <b>세계의 시계</b>로 바꿨다. 타이머 UI 대신 하늘색이 알려준다.</li><li>고양이 오피스의 "야간 스킵 광고"를 뒤집어 밤이 손해가 아니라 번식 보너스가 되게 했다(한국 오프라인 불만 회피).</li><li>고정 리듬이라 하루 3회(아침·낮·밤) 세션 설계가 명확하다 — 벤치마크 5회와도 맞는다.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>시간대 배율 테이블 + 화면 틴트 + 먹이 탭. <span class="pill lo">낮음</span></li><li>야간 근무자·시차 유저에겐 불리 → "내 동물원 시계" 오프셋 설정 필요.</li><li>낮 피크를 못 보는 직장인이 손해로 느끼면 역효과 → 피크는 보너스, 밤은 기본.</li></ul></div>
+</div>
+
+<!-- 5 -->
+<h2 id="c05"><span class="n">05</span>탐험대 — 새 종을 사지 않고 찾아온다</h2>
+<p class="pitch">홈 동물원의 수입은 <b>탐험 자금</b>이 된다. 사육사와 동물 한 마리를 골라 타이머 탐험을 보내면 알·장식·이야기 한 줄을 들고 돌아온다. 새 종은 상점이 아니라 탐험 일지에서 나온다.</p>
+<figure class="strip"><img src="__c05__" alt="탐험대 루프"><figcaption>① 홈이 자금을 번다 → ② 사육사 + 동행 동물 출발(2시간 30분) → ③ 탐험 일지(텍스트 로그) → ④ 알 부화 → 새 존 입주.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>출발 연출, 귀환 시 일지 카드 넘기기</li><li><b>3분</b>어디로, 누구를, 동행 동물은(동행 보너스)</li><li><b>3일</b>탐험지 해금(Lv), 알 부화 대기, 도감이 채워지는 경로</li><li><b>돌아오는 이유</b>탐험 귀환 시각 = 약속. 늦어도 결과는 그대로</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Fallout Shelter의 황무지 탐험(텍스트 로그)을 동물원에. 방치형 동물원의 종 획득은 "돈 내고 사기" 아니면 가차인데, 여기선 <b>이야기 있는 획득</b>이다.</li><li>동행 동물이 결과에 영향을 주어 이미 있는 동물이 새 쓸모를 갖는다.</li><li>홈 수입 → 탐험 → 새 종 → 홈 수입의 순환이 "지점 확장" 없이도 중기 목표를 만든다.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>탐험지 테이블·타이머 상태·일지 문구·부화. <span class="pill mid">중간</span></li><li>텍스트 양이 콘텐츠 비용(탐험지당 문장 10~20개).</li><li>홈 화면이 비는 동안(사육사 부재) 할 일이 줄 수 있다 → 탐험 중에도 홈 루프 유지.</li></ul></div>
+</div>
+
+<!-- 6 -->
+<h2 id="c06"><span class="n">06</span>구조 보호소 — 소유가 아니라 돌봄</h2>
+<p class="pitch">동물원이 <b>보호소</b>다. 다친 동물의 구조 요청이 오고, 시간과 탭 케어로 회복시켜 야생으로 보내거나(명성) 정착시켜 번식 부모로 삼는다. 명성은 절대 줄지 않고 새 구조 요청과 후원자를 연다.</p>
+<figure class="strip"><img src="__c06__" alt="구조 보호소 루프"><figcaption>① 구조 요청 카드(거절 불이익 없음) → ② 회복 게이지 + 하루 2회 탭 → ③ 방사(명성) 또는 정착(번식 부모) → ④ 명성 레벨이 해금.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>케어 탭 하트, 방사 순간 숲으로 걸어가는 동물</li><li><b>3분</b>받을까 말까(임시 우리 자리), 방사할까 정착시킬까</li><li><b>3일</b>회복 3일, 명성 레벨업, 새 종 구조 요청</li><li><b>돌아오는 이유</b>회복 게이지 확인, 새 요청 도착</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>동물원 게임에서 반복되는 "동물을 소유하고 전시한다"의 죄책감을 <b>구조·방사 서사</b>로 뒤집는다. Planet Zoo 보전 크레딧과 Zoo Tycoon 2013 보호 캠페인이 있지만 핵심 루프로 삼은 방치형은 없다.</li><li>타마고치 효과(돌봄)를 실패 없이: 안 오면 회복이 늦어질 뿐.</li><li>"정착 = 번식 부모"로 기존 번식 루프와 자연스럽게 이어진다.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>구조 요청 테이블·회복 상태·명성. <span class="pill mid">중간</span></li><li>다친 동물 표현(붕대 오버레이) 아트 1종/종.</li><li>"전시 동물원" 판타지를 원하는 유저와 갈릴 수 있음 → 보호소는 존 하나로 시작.</li></ul></div>
+</div>
+
+<!-- 7 -->
+<h2 id="c07"><span class="n">07</span>머지 우리 — 슬롯이 결정을 만든다</h2>
+<p class="pitch">존은 <b>슬롯이 있는 머지 보드</b>. 새끼 3마리를 합치면 성체(수입 ×2), 성체 3마리를 합치면 우두머리(×5, 이름). 슬롯이 차면 "기다려서 합칠까, 방생할까, 확장할까"가 매 세션의 결정이다.</p>
+<figure class="strip"><img src="__c07__" alt="머지 우리 루프"><figcaption>① 새끼가 계속 태어나 슬롯이 찬다 → ② 새끼 3 → 성체 → ③ 성체 3 → 우두머리(금빛 더미) → ④ 슬롯 관리 선택.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>합치기 드래그·팝·코인 분수(머지의 검증된 손맛)</li><li><b>3분</b>슬롯 8칸을 무엇으로 채울지</li><li><b>3일</b>우두머리 하나 만들기(새끼 9마리), 이름 짓기</li><li><b>돌아오는 이유</b>새끼가 쌓여 있음 = 합칠 거리</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Merge Dragons의 체인(5합)을 <b>번식이 재료를 공급</b>하는 형태로. 머지 게임은 재료를 사거나 캐지만 여기선 동물이 낳는다.</li><li>"마리 수 = 수입"이던 방치형 공식이 "구성 = 수입"이 되어 같은 8마리도 가치가 다르다.</li><li>우두머리 = 이름·코스튬·쇼의 주인공(애착 축).</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>개체에 단계(새끼·성체·우두머리) + 드래그 입력 + 슬롯. <span class="pill mid">중간</span>~<span class="pill hi">높음</span></li><li>"번식으로 늘어난다"의 감정(마리 수)과 "합쳐서 줄어든다"가 충돌할 수 있다 → 합쳐도 마리 수는 유지하고 크기만 커지는 연출로 완화.</li><li>드래그 UI는 우리 탭 중심 조작에 새 입력.</li></ul></div>
+</div>
+
+<!-- 8 -->
+<h2 id="c08"><span class="n">08</span>후원자 편지 — 관광객이 이야기가 된다</h2>
+<p class="pitch">관람을 마친 관광객 중 일부가 <b>편지와 기부</b>를 남기고 후원자가 된다. 후원자마다 부탁(변이 보기·벤치·새끼 사진)이 있고, 들어주면 다음 편지가 온다. 후원금은 입장 수입과 별개의 두 번째 수입.</p>
+<figure class="strip"><img src="__c08__" alt="후원자 편지 루프"><figcaption>① 관람 후 기부 + 편지 → ② 후원자 앨범(부탁 목록) → ③ 부탁을 들어주면 이야기가 이어짐(이름 짓기 선택) → ④ 후원금이 두 번째 수입.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>편지 봉투 열기, 기부 코인</li><li><b>3분</b>어느 부탁을 먼저 들어줄지</li><li><b>3일</b>후원자 앨범 완성(24명), 편지 연작</li><li><b>돌아오는 이유</b>새 편지 도착, 월 후원금 정산</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Animal Restaurant의 손님 편지 + Planet Zoo 기부. 방치형 동물원에서 관광객은 장식인데 여기선 <b>이름과 사연이 있는 수집 대상</b>.</li><li>편지가 자연스럽게 튜토리얼·목표·애착(이름 짓기)을 겸한다.</li><li>후원금 = 무과금 우회로(고양이 오피스 빵공장 격)로 후반 비용 곡선 완화.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>후원자 테이블·편지 문구·앨범 UI. <span class="pill mid">중간</span></li><li>글이 많다 = 번역·문구 비용. 편지는 짧게(1~2문장).</li><li>관광객 종류 스프라이트가 늘어야 후원자가 구별된다(3종 이상).</li></ul></div>
+</div>
+
+<!-- 9 -->
+<h2 id="c09"><span class="n">09</span>사계절 달력 — 이벤트가 아니라 핵심</h2>
+<p class="pitch">현실 7일 = 한 계절. <b>종마다 번식기</b>가 있어 봄엔 웜뱃, 겨울엔 흰 변이가 잘 나오고 여름은 관광 성수기, 가을은 방생 포인트 ×2. 달력이 곧 장기 루프이고 시즌 이벤트는 달력 위에 얹는다.</p>
+<figure class="strip"><img src="__c09__" alt="사계절 달력 루프"><figcaption>① 봄 번식기(×2) → ② 여름 성수기(수입 ×1.5) → ③ 가을 방생 ×2 → ④ 겨울 변이 ×3 + 다음 봄 예고. 계절은 화면 틴트 더미.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>계절 팔레트·눈·벚꽃, 계절 관광객</li><li><b>3분</b>이번 계절에 맞는 행동(번식기 종에 집중·가을엔 방생)</li><li><b>3일</b>계절 전환(7일), "다음 봄엔 카피바라 번식기"</li><li><b>돌아오는 이유</b>계절이 바뀌기 전에 해둘 것</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Zoo 2·고양이와 스프의 시즌 이벤트는 "가끔"인데, 여기선 <b>28일 주기가 기본 루프</b>라 라이브옵스 없이도 세계가 변한다 — 1인 개발의 케이던스 문제에 대한 구조적 답.</li><li>종별 번식기가 "어느 종을 언제 키울지"라는 의미 있는 선택을 만든다.</li><li>계절 팔레트 = 잔디 텍스처 4종이면 되어 아트 비용이 낮다.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>계절 상태·배율 테이블·팔레트 교체. <span class="pill lo">낮음</span>~<span class="pill mid">중간</span></li><li>7일 주기면 한 계절을 통째로 놓치는 유저가 생긴다 → 계절 길이는 튜닝 값.</li><li>"지금 계절엔 내 종이 손해"로 읽히지 않게 비번식기도 기본값(패널티 없음).</li></ul></div>
+</div>
+
+<!-- 10 -->
+<h2 id="c10"><span class="n">10</span>사진 의뢰 — 보는 재미를 목표로</h2>
+<p class="pitch">관광객·후원자가 <b>사진 의뢰</b>를 낸다: "하품하는 웜뱃", "새끼와 부모 한 장면", "흰 웜뱃 + 벤치". 사진 모드에서 장면을 기다려 찍으면 구도·순간·의상으로 평가되고 앨범에 쌓이며, 입간판에 걸린 사진이 관광객을 부른다.</p>
+<figure class="strip"><img src="__c10__" alt="사진 의뢰 루프"><figcaption>① 의뢰 3개(난이도) → ② 사진 모드(UI 숨김, 프레임)에서 순간을 기다림 → ③ 앨범·평가·공유 → ④ 입간판 사진 → 관광객 +.</figcaption></figure>
+<ul class="loop"><li><b>3초</b>셔터 탭, 평가 별이 차오름</li><li><b>3분</b>어떤 의뢰를 노릴지, 장면이 나올 때까지 지켜보기</li><li><b>3일</b>희귀 순간 도감(40컷), 어려운 의뢰(변이 + 시설)</li><li><b>돌아오는 이유</b>새 의뢰, 아직 못 찍은 순간</li></ul>
+<div class="cols">
+  <div class="box diff"><h3>차별점</h3><ul><li>Pokémon Snap의 "찍는 재미"를 방치형에. 조사 결론 1순위였던 <b>"동물을 보는 즐거움"을 그 자체로 루프</b>로 만든 유일한 안. 방치 중에 손을 쓸 이유가 생긴다.</li><li>사진 = 공유 PNG = UA 비용 0(카피바라 Go 공유 유입 13%).</li><li>의상·시설·변이가 전부 "사진 소재"가 되어 기존 시스템의 가치를 올린다.</li></ul></div>
+  <div class="box risk"><h3>골격 적합 · 비용 · 리스크</h3><ul><li>사진 모드(UI 숨김·캡처)·의뢰 테이블·평가 규칙(장면 인식은 상태값 조합으로). <span class="pill mid">중간</span></li><li>"하품" 같은 순간은 동물 애니 종류가 늘어야 한다(종당 idle 변형 2~3개).</li><li>기다리는 시간이 지루하지 않게 순간 발생 확률과 알림이 필요.</li></ul></div>
+</div>
+
+<h2 id="matrix">비교표</h2>
+<p class="sub">별은 조사 근거의 강도와 우리 골격 적합성에 대한 내 판단이지 측정값이 아니다. "핵심 결정"은 그 기획에서 매 세션 플레이어가 내리는 결정.</p>
+<div class="tbl"><table>
+<tr><th>#</th><th>기획</th><th>핵심 결정</th><th>3초</th><th>3일</th><th>차별성</th><th>아트</th><th>코드</th><th>골격 적합</th><th>어울리는 조합</th></tr>
+<tr><td>1</td><td>혈통 도감</td><td>방생할까 기다릴까</td><td>★★★</td><td>★★</td><td>★★</td><td><span class="pill lo">낮음</span></td><td><span class="pill lo">낮음</span></td><td>★★★</td><td>4·9·10</td></tr>
+<tr><td>2</td><td>소원 게시판</td><td>어느 소원을 수락</td><td>★★</td><td>★★★</td><td>★★</td><td><span class="pill lo">낮음</span></td><td><span class="pill mid">중간</span></td><td>★★★</td><td>1·8·10</td></tr>
+<tr><td>3</td><td>사육사 덱</td><td>누구를 어디에</td><td>★★</td><td>★★★</td><td>★★</td><td><span class="pill mid">중간</span></td><td><span class="pill hi">높음</span></td><td>★★</td><td>5·6</td></tr>
+<tr><td>4</td><td>동물원의 하루</td><td>지금 시간대에 맞는 일</td><td>★★</td><td>★★</td><td>★★★</td><td><span class="pill lo">낮음</span></td><td><span class="pill lo">낮음</span></td><td>★★★</td><td>1·9</td></tr>
+<tr><td>5</td><td>탐험대</td><td>어디로 누구를</td><td>★★</td><td>★★★</td><td>★★★</td><td><span class="pill mid">중간</span></td><td><span class="pill mid">중간</span></td><td>★★</td><td>3·6</td></tr>
+<tr><td>6</td><td>구조 보호소</td><td>방사 vs 정착</td><td>★★</td><td>★★</td><td>★★★</td><td><span class="pill mid">중간</span></td><td><span class="pill mid">중간</span></td><td>★★</td><td>1·8</td></tr>
+<tr><td>7</td><td>머지 우리</td><td>슬롯을 무엇으로</td><td>★★★</td><td>★★</td><td>★★</td><td><span class="pill mid">중간</span></td><td><span class="pill hi">높음</span></td><td>★</td><td>단독</td></tr>
+<tr><td>8</td><td>후원자 편지</td><td>어느 부탁을 먼저</td><td>★</td><td>★★★</td><td>★★</td><td><span class="pill mid">중간</span></td><td><span class="pill mid">중간</span></td><td>★★</td><td>2·6·10</td></tr>
+<tr><td>9</td><td>사계절 달력</td><td>이 계절에 무엇을</td><td>★★</td><td>★★★</td><td>★★★</td><td><span class="pill lo">낮음</span></td><td><span class="pill lo">낮음</span></td><td>★★★</td><td>1·4</td></tr>
+<tr><td>10</td><td>사진 의뢰</td><td>어떤 순간을 노릴지</td><td>★★★</td><td>★★</td><td>★★★</td><td><span class="pill mid">중간</span></td><td><span class="pill mid">중간</span></td><td>★★</td><td>1·2·8</td></tr>
+</table></div>
+<div class="callout">
+  <h3>내 읽기</h3>
+  <ul>
+    <li><b>골격을 거의 안 바꾸고 바로 얹을 수 있는 것</b>: 1 혈통 도감, 4 동물원의 하루, 9 사계절 달력. 셋은 서로 겹치지 않아 <b>1 + 4 + 9</b>가 한 게임 안에 공존할 수 있다(번식 수집 × 하루 리듬 × 28일 계절).</li>
+    <li><b>목표를 캐릭터가 주는 계열</b>: 2 소원 게시판, 8 후원자 편지, 10 사진 의뢰. 셋 중 하나만 고르는 게 맞다(같은 자리를 차지). 2가 가장 범용, 10이 가장 차별적.</li>
+    <li><b>큰 방향 전환</b>: 3 사육사 덱, 5 탐험대, 6 구조 보호소, 7 머지. 이 넷은 "우리 게임이 무엇인가"를 바꾼다. 2회차에서 각각을 중심에 둔 변주를 더 파볼 가치가 있다.</li>
+  </ul>
+</div>
+
+<h2 id="next">다음 회차를 위해</h2>
+<div class="callout">
+  <h3>물어볼 것</h3>
+  <ol>
+    <li>열 개 중 <b>"이 방향은 아니다"</b>가 있으면 먼저 지운다(예: 머지의 드래그, 보호소의 톤).</li>
+    <li>"목표를 주는 캐릭터" 계열(2·8·10) 중 끌리는 것 하나.</li>
+    <li>2회차 주제 후보: ㉠ 우두머리·공연(존의 주인공을 키우는 루프) ㉡ 지점 간 교환·동물원 네트워크 ㉢ 관광객 동선·동물원 설계 퍼즐 ㉣ 밤의 동물원(야행성 종·조명) ㉤ 후원 광고 세계관(광고를 게임 안 사건으로) ㉥ 1·4·9 결합안의 상세 — 원하는 것을 고르거나 다른 축을 주시면 그쪽으로 10개.</li>
+  </ol>
+</div>
+<footer>조사 아티팩트 https://claude.ai/artifact/9ZUFbSKqpgvYf3e6QeU3pY · 장면 합성 스크립트 scratchpad/concepts/panels.py · 에셋: 현재 프로젝트 + 더미(사육사·카드·편지·변이색·계절 틴트)</footer>
+</main>
+</div>
