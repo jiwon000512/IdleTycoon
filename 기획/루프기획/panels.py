@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # 루프 기획 장면 합성기: 현재 에셋으로 메인 루프 장면 띠(패널 4장)를 만든다. 장면 = 존 하나 + 길 고리 + 잔디 + 숲 일부, 위에 개념별 오버레이
-# 사용: python panels.py <출력 폴더> [specs.json]   (1회차 specs.json · 2회차 specs2.json · 3회차 specs3.json)
+# 사용: python panels.py <출력 폴더> [specs.json]   (1회차 specs.json · 2회차 specs2.json · 3회차 specs3.json · 4회차 specs4.json)
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np, os, sys, json, re, math
 A = 'C:/project/Tycoon/ProjectTycoon/Assets/'
@@ -45,12 +45,15 @@ GOLDEN = recolor(WOMBAT, lambda c: c * 0.5 + np.array([236, 196, 90]) * 0.5)
 KEEPER = flat(VISITOR, (96, 140, 92))        # 사육사(플레이어) 더미: 녹색 실루엣
 HELPER = flat(VISITOR, (86, 118, 168))       # 고용 사육사(봇) 더미: 파란 실루엣
 SIL = flat(WOMBAT, (58, 54, 66))             # 야생 실루엣(흑백 출현) 더미
+def hat(img, color):
+    a = img.copy(); top = np.where(a[..., 3].any(1))[0][0]; band = a[top:top + 7]; band[..., :3] = np.where(band[..., 3:4] > 0, np.array(color, np.uint8), band[..., :3]); return a
+HATS = {'v_r': hat(VISITOR, (226, 84, 72)), 'v_y': hat(VISITOR, (244, 204, 72)), 'v_b': hat(VISITOR, (84, 140, 220))}
 def shape(w, h, fn):
     im = Image.new('RGBA', (w, h), (0, 0, 0, 0)); fn(ImageDraw.Draw(im)); return np.asarray(im)
 STUMP = shape(22, 14, lambda d: (d.ellipse([0, 4, 21, 13], fill=(110, 72, 40), outline=INK), d.ellipse([3, 1, 18, 9], fill=(196, 156, 104), outline=INK)))
 TROUGH = shape(30, 16, lambda d: (d.rectangle([0, 5, 29, 15], fill=(120, 80, 45), outline=INK), d.rectangle([3, 0, 26, 8], fill=(232, 190, 84), outline=INK)))
 ACTORS = {'w': WOMBAT, 'b': BABY, 'al': ALBINO, 'go': GOLDEN, 'v': VISITOR, 'k': KEEPER, 'kb': HELPER, 'sil': SIL, 'sign': SIGN, 'bench': BENCH, 'shop': SHOP, 'ftree': FTREE, 'lock': LOCK,
-          'tree': TREE, 'tree_s': TREE_S, 'bush': BUSH, 'stump': STUMP, 'trough': TROUGH}
+          'tree': TREE, 'tree_s': TREE_S, 'bush': BUSH, 'stump': STUMP, 'trough': TROUGH, **HATS}
 DROPS = {
     'egg': shape(10, 12, lambda d: d.ellipse([0, 0, 9, 11], fill=(250, 246, 232), outline=INK)),
     'fur': shape(12, 9, lambda d: (d.polygon([(0, 8), (3, 0), (6, 8)], fill=(150, 100, 60)), d.polygon([(5, 8), (8, 1), (11, 8)], fill=(120, 80, 45)))),
@@ -59,7 +62,8 @@ DROPS = {
     'feed': shape(9, 9, lambda d: d.ellipse([0, 0, 8, 8], fill=(240, 150, 60), outline=INK)),
     'rock': shape(11, 9, lambda d: d.ellipse([0, 0, 10, 8], fill=(150, 150, 150), outline=INK)),
 }
-TILES = {'water': (96, 156, 204), 'rock': (160, 158, 150), 'bamboo': (126, 178, 96), 'mud': (118, 86, 60), 'burrow': (64, 48, 40)}
+TILES = {'water': (96, 156, 204), 'rock': (160, 158, 150), 'bamboo': (126, 178, 96), 'mud': (118, 86, 60), 'burrow': (64, 48, 40),
+         'grass1': (150, 170, 96), 'grass2': (118, 176, 88), 'grass3': (84, 150, 70), 'trail': (170, 140, 100), 'roof': (70, 62, 84), 'glass': (170, 214, 226), 'lit': (250, 226, 130)}
 def sx(x, z): return OX + int(32 * (x - z))
 def sy(x, z): return OY - int(16 * (x + z))
 
@@ -141,6 +145,16 @@ def draw_arc(im, x0, y0, x1, y1, lift=60):
         t = i / n; pts.append(((1 - t) ** 2 * x0 + 2 * (1 - t) * t * cx + t * t * x1, (1 - t) ** 2 * y0 + 2 * (1 - t) * t * cy + t * t * y1))
     for (px, py) in pts[:-1]: d.ellipse([px - 2, py - 2, px + 2, py + 2], fill=(255, 255, 255), outline=INK)
     (ax, ay), (bx, by) = pts[-2], pts[-1]; draw_arrow(im, ax, ay, bx, by)
+def draw_dash(im, x0, z0, x1, z1, color=(232, 96, 120), lift=14):
+    d = ImageDraw.Draw(im, 'RGBA'); ax, ay, bx, by = sx(x0, z0), sy(x0, z0) - lift, sx(x1, z1), sy(x1, z1) - lift
+    n = max(2, int(math.hypot(bx - ax, by - ay) / 9))
+    for i in range(0, n, 2):
+        t0, t1 = i / n, min(1, (i + 1) / n); d.line([ax + (bx - ax) * t0, ay + (by - ay) * t0, ax + (bx - ax) * t1, ay + (by - ay) * t1], fill=tuple(color), width=3)
+    ang = math.atan2(by - ay, bx - ax)
+    d.polygon([(bx, by), (bx - 9 * math.cos(ang - 0.5), by - 9 * math.sin(ang - 0.5)), (bx - 9 * math.cos(ang + 0.5), by - 9 * math.sin(ang + 0.5))], fill=tuple(color))
+def draw_zonetint(im, color, alpha, x0=0, z0=0, x1=6, z1=8):
+    ov = Image.new('RGBA', im.size, (0, 0, 0, 0)); d = ImageDraw.Draw(ov)
+    d.polygon([(sx(x0, z0), sy(x0, z0)), (sx(x1, z0), sy(x1, z0)), (sx(x1, z1), sy(x1, z1)), (sx(x0, z1), sy(x0, z1))], fill=tuple(color) + (int(255 * alpha),)); return Image.alpha_composite(im, ov)
 def draw_frame(im, x, y, w, h):
     d = ImageDraw.Draw(im, 'RGBA'); L = 10
     for (cx, cy, dx, dy) in ((x, y, 1, 1), (x + w, y, -1, 1), (x, y + h, 1, -1), (x + w, y + h, -1, -1)):
@@ -189,6 +203,10 @@ def panel(spec):
         im0 = Image.fromarray(cv)
         for (x, z, kind) in spec['tiles']: draw_tile(im0, x, z, kind)
         cv = np.asarray(im0).copy()
+    if 'zonetint' in spec:
+        im0 = Image.fromarray(cv)
+        for z in spec['zonetint']: im0 = draw_zonetint(im0, *z)
+        cv = np.asarray(im0).copy()
     for (x, z, kind, n) in spec.get('drops', []):
         rng = np.random.default_rng(int(abs(x * 31 + z * 17 + n * 7)))
         for i in range(n): blit(cv, DROPS[kind], 5, 0, sx(x, z) + int(rng.integers(-18, 19)), sy(x, z) + int(rng.integers(-9, 10)))
@@ -201,6 +219,7 @@ def panel(spec):
     for (x, z, n) in spec.get('coins', []): draw_coins(cv, sx(x, z), sy(x, z) - 30, n)
     im = Image.fromarray(cv)
     if 'tint' in spec: im = tint(im, *spec['tint'])
+    for a in spec.get('dashes', []): draw_dash(im, *a)
     for (x, z, n) in spec.get('hearts', []): draw_hearts(im, sx(x, z), sy(x, z) - 36, n)
     for (x, z, t, *c) in spec.get('plus', []): draw_plus(im, sx(x, z) - 10, sy(x, z) - 48, t, *c)
     for (x, z, r, l) in spec.get('bars', []): draw_gauge(im, sx(x, z) - 36, sy(x, z) - 54, 72, r, l)
@@ -216,6 +235,9 @@ def panel(spec):
     for (x, y, t, *rest) in spec.get('labels', []): draw_text(im, x, y, t, *rest)
     for (x, y, *rest) in spec.get('hand', []): draw_hand(im, x, y, *rest)
     if 'ribbon' in spec: ribbon(im, spec['ribbon'])
+    if 'rain' in spec:
+        d = ImageDraw.Draw(im, 'RGBA'); rng = np.random.default_rng(5)
+        for _ in range(90): x, y = int(rng.integers(0, W)), int(rng.integers(0, H)); d.line([x, y, x - 3, y + 9], fill=(210, 228, 250, 200), width=1)
     if 'snow' in spec:
         d = ImageDraw.Draw(im, 'RGBA'); rng = np.random.default_rng(3)
         for _ in range(60): x, y = rng.integers(0, W), rng.integers(0, H); d.ellipse([x, y, x + 2, y + 2], fill=(255, 255, 255, 220))
