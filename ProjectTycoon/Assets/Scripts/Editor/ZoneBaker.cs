@@ -4,10 +4,12 @@ using ZooTycoon.World;
 
 namespace ZooTycoon.Editor
 {
-    // Zone.prefab의 자식을 통째로 다시 굽는다: 울타리 29칸(앞·뒤 6, 왼·오 8, 뒤 모서리 기둥) + 흙↔길 경계선 28조각. 존 6×8, 로컬 논리 (-3,-4)~(3,4)
+    // Zone.prefab의 자식을 통째로 다시 굽는다: 굴 입구 1장 + 흙↔길 경계선 28조각. 존 6×8, 로컬 논리 (-3,-4)~(3,4)
+    // 2026-09-18: 울타리 → 굴(사업가 웜뱃). 굴 그림은 단계별 3장(burrow_1~3), 단계 기준은 미정이라 1단계를 굽는다
     public static class ZoneBaker
     {
         const int k_EdgeOrder = -950;
+        const string k_BurrowPath = "Assets/Sprites/World/Burrow/burrow_1.png";
 
         [MenuItem("ZooTycoon/Bake/Zone")]
         public static void Bake()
@@ -17,8 +19,7 @@ namespace ZooTycoon.Editor
 
         public static string Run()
         {
-            Sprite fence = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/World/fence.png");
-            Sprite post = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/World/fence_post.png");
+            Sprite burrow = AssetDatabase.LoadAssetAtPath<Sprite>(k_BurrowPath);
             Sprite edge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/World/edge.png");
             GameObject root = PrefabUtility.LoadPrefabContents("Assets/Prefabs/Zone.prefab");
             for (int i = root.transform.childCount - 1; i >= 0; i--)
@@ -27,23 +28,13 @@ namespace ZooTycoon.Editor
             }
 
             Rect g = new Rect(-3f, -4f, 6f, 8f);
-            int n = 0;
-            for (float x = g.xMin; x < g.xMax; x += 1f)
-            {
-                Add(root.transform, "FenceFront" + n, new Vector2(x, g.yMin), fence, false, 0);
-                Add(root.transform, "FenceBack" + n, new Vector2(x, g.yMax), fence, false, 0);
-                n++;
-            }
-            n = 0;
-            for (float z = g.yMin; z < g.yMax; z += 1f)
-            {
-                Add(root.transform, "FenceLeft" + n, new Vector2(g.xMin, z), fence, true, 0);
-                Add(root.transform, "FenceRight" + n, new Vector2(g.xMax, z), fence, true, 0);
-                n++;
-            }
-            Add(root.transform, "FenceCornerPost", new Vector2(g.xMax, g.yMax), post, false, 0);
 
-            n = 0;
+            // 굴 밑면은 2:1 마름모라 피벗(하단 중앙 = 밑면 앞 모서리)을 존 중심에서 폭의 1/4만큼 아래에 두면
+            // 밑면 중심이 존 중심과 겹친다. 굴이 존보다 작아 둘레에 흙 바닥이 드러난다(굴 사이 간격)
+            Add(root.transform, "Burrow", Vector2.zero, burrow, false, 0);
+            root.transform.Find("Burrow").localPosition = new Vector3(0f, -burrow.bounds.size.x * 0.25f, 0f);
+
+            int n = 0;
             for (float x = g.xMin; x < g.xMax; x += 1f)
             {
                 Add(root.transform, "EdgeFront" + n, new Vector2(x, g.yMin), edge, false, k_EdgeOrder);
