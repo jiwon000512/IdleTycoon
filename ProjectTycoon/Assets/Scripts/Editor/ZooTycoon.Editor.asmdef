@@ -1,7 +1,7 @@
 {
   "name": "ZooTycoon.Editor",
   "rootNamespace": "ZooTycoon.Editor",
-  "references": [ "ZooTycoon.Core", "ZooTycoon.Data", "ZooTycoon.Game", "ZooTycoon.UI" ],
+  "references": [ "ZooTycoon.Core", "ZooTycoon.Data", "ZooTycoon.Game", "ZooTycoon.UI", "ZooTycoon.World" ],
   "includePlatforms": [ "Editor" ],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
