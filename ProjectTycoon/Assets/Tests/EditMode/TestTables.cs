@@ -29,7 +29,6 @@ namespace ZooTycoon.Tests
         }
 
         public static GameTables Build(
-            IReadOnlyList<AnimalRecord> animals = null,
             IReadOnlyList<ZooLevelRecord> zooLevels = null,
             IReadOnlyList<VisitorRecord> visitors = null,
             IReadOnlyList<BreadRecord> breads = null,
@@ -38,7 +37,6 @@ namespace ZooTycoon.Tests
             GameConfig config = null)
         {
             return new GameTables(
-                animals ?? LoadRows<AnimalRecord>("animals"),
                 zooLevels ?? LoadRows<ZooLevelRecord>("zoo_levels"),
                 visitors ?? LoadRows<VisitorRecord>("visitors"),
                 breads ?? LoadRows<BreadRecord>("breads"),

@@ -1,6 +1,6 @@
 {
   "table": "game_config",
-  "version": 10,
+  "version": 11,
   "notes": [
     "기획서 6.2~6.4의 수식 상수와 시작 상태. 전부 시작값이며 프로토타입에서 튠한다.",
     "레벨 상한 없음(기획서 v0.6).",
@@ -12,23 +12,17 @@
     "version 7 (설계 07, 기획서 v0.16): promotion 삭제. 홍보는 facilities.json의 첫 행(f01)이고 수식·비용도 그 행에 있다.",
     "version 8 (2026-09-18, 사업가 웜뱃 전환): 뽑기·시설 삭제로 gacha 섹션 제거. facilities.json·grades.json 삭제.",
     "version 9 (설계 08 v0.5, 2026-09-18): shop 추가. 빵집 시뮬 시간(초)·수량. 진열대까지 걷는 시간 = enterSeconds + 층 × rowWalkSeconds.",
-    "version 10 (설계 08 v0.6, 2026-09-18): shop.wombatWalkSeconds 추가. 오븐 탭 → 웜뱃이 걸어가 굽기 시작(편도 = wombatWalkSeconds + 오븐 줄 × rowWalkSeconds), 비운 동안 계산 멈춤."
+    "version 10 (설계 08 v0.6, 2026-09-18): shop.wombatWalkSeconds 추가. 오븐 탭 → 웜뱃이 걸어가 굽기 시작(편도 = wombatWalkSeconds + 오븐 줄 × rowWalkSeconds), 비운 동안 계산 멈춤.",
+    "version 11 (2026-09-18, 연출 점검 1차 정리): animalCount·visitors 섹션 삭제. 동물 수입·지상 관광객이 사라졌다. income.tickSeconds는 규칙 틱 간격으로 남는다."
   ],
   "start": {
     "coins": 350
-  },
-  "animalCount": {
-    "incomeBonusPerAnimal": 0.5
   },
   "offline": {
     "maxSeconds": 28800
   },
   "income": {
     "tickSeconds": 1
-  },
-  "visitors": {
-    "maxCount": 12,
-    "incomeUnit": 1
   },
   "shop": {
     "arrivalSeconds": 4,

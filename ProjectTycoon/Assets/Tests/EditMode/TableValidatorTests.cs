@@ -9,10 +9,9 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("animals", 3)]
         [TestCase("zoo_levels", 2)]
         [TestCase("visitors", 1)]
-        [TestCase("strings", 3)]
+        [TestCase("strings", 4)]
         [TestCase("breads", 1)]
         [TestCase("shop_upgrades", 1)]
         public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table, int version)
@@ -29,7 +28,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>("game_config");
 
             Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(10));
+            Assert.That(file.Version, Is.EqualTo(11));
         }
 
         [Test]
@@ -38,28 +37,6 @@ namespace ZooTycoon.Tests
             IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build());
 
             Assert.That(errors, Is.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenAnimalIdDuplicated_ReportsError()
-        {
-            List<AnimalRecord> animals = TestTables.LoadRows<AnimalRecord>("animals");
-            animals.Add(animals[0]);
-
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(animals: animals));
-
-            Assert.That(errors, Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenIdleSecondsMinExceedsMax_ReportsError()
-        {
-            List<AnimalRecord> animals = TestTables.LoadRows<AnimalRecord>("animals");
-            animals[0].IdleSecondsMin = animals[0].IdleSecondsMax + 1d;
-
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(animals: animals));
-
-            Assert.That(errors, Is.Not.Empty);
         }
 
         [Test]
@@ -99,17 +76,6 @@ namespace ZooTycoon.Tests
         public void Validate_WhenVisitorsEmpty_ReportsError()
         {
             IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(visitors: new List<VisitorRecord>()));
-
-            Assert.That(errors, Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenVisitorMaxCountZero_ReportsError()
-        {
-            GameConfig config = TestTables.LoadConfig();
-            config.Visitors.MaxCount = 0;
-
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(config: config));
 
             Assert.That(errors, Is.Not.Empty);
         }

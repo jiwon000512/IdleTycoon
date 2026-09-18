@@ -129,7 +129,6 @@ GameObject:
   m_Component:
   - component: {fileID: 19269923}
   - component: {fileID: 19269922}
-  - component: {fileID: 19269924}
   m_Layer: 0
   m_Name: World
   m_TagString: Untagged
@@ -150,8 +149,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.WorldView
   m_branchPrefab: {fileID: 8018213967004442573, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
-  m_animalPrefab: {fileID: 2290189438076550283, guid: 8af2ebc3ea6a1ee48ade3fb783f38b68, type: 3}
-  m_visitors: {fileID: 19269924}
   m_camera: {fileID: 519420033}
   m_shopPrefab: {fileID: 3832975021042575414, guid: 54489519bab15ab4eaade689f269211f, type: 3}
 --- !u!4 &19269923
@@ -169,20 +166,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &19269924
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19269921}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb34b251192da5944bddf4ffb69dcd58, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.VisitorSpawner
-  m_prefab: {fileID: 2280365670206967019, guid: 7cc92b28c64de234f9ddab361306286b, type: 3}
-  m_spawnInterval: 1.5
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

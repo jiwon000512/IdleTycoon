@@ -369,9 +369,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.BakePopupView
   m_titleText: {fileID: 8188490652817107210}
   m_closeButton: {fileID: 434450682003608225}
-  m_closeText: {fileID: 3963579345528907344}
+  m_closeText: {fileID: 8912260642138950531}
   m_rowTemplate: {fileID: 1706788529881551428}
---- !u!1 &3825330645289622603
+--- !u!1 &3772960798249502855
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -379,9 +379,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2543386954314322440}
-  - component: {fileID: 2718505499804899233}
-  - component: {fileID: 3963579345528907344}
+  - component: {fileID: 4029507401697087244}
+  - component: {fileID: 2594376913142322937}
+  - component: {fileID: 8912260642138950531}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -389,13 +389,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &2543386954314322440
+--- !u!224 &4029507401697087244
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3825330645289622603}
+  m_GameObject: {fileID: 3772960798249502855}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -408,21 +408,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &2718505499804899233
+--- !u!222 &2594376913142322937
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3825330645289622603}
+  m_GameObject: {fileID: 3772960798249502855}
   m_CullTransparentMesh: 1
---- !u!114 &3963579345528907344
+--- !u!114 &8912260642138950531
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3825330645289622603}
+  m_GameObject: {fileID: 3772960798249502855}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
@@ -540,7 +540,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2543386954314322440}
+  - {fileID: 4029507401697087244}
   m_Father: {fileID: 1904503571918561738}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}

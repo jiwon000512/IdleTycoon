@@ -12,8 +12,6 @@ namespace ZooTycoon.World
         [Tooltip("존 앞 길(로컬 논리 XZ). 관광객은 이 안을 X로 가로지른다(설계 06 P5)")]
         [SerializeField] private Rect m_pathArea;
 
-        // 이 존에 스폰된 동물 수. WorldManager가 올린다(설계 06 P10)
-        public int AnimalCount { get; set; }
 
         public Vector2 Center => m_center;
 

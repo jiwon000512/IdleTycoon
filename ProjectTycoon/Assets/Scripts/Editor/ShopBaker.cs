@@ -16,7 +16,8 @@ namespace ZooTycoon.Editor
         const string k_SpriteDir = "Assets/Sprites/World/Shop/";
         const string k_BreadDir = "Assets/Resources/Sprites/Shop/Breads/";
         const string k_PrefabDir = "Assets/Prefabs/Shop/";
-        const string k_VisitorPrefabPath = "Assets/Prefabs/Visitor.prefab";
+        const string k_ShadowPath = "Assets/Sprites/World/shadow.png";
+        const string k_CoinPrefabPath = "Assets/Prefabs/CoinPopup.prefab";
         const string k_HudPath = "Assets/Resources/UI/ShopHudView.prefab";
         const string k_BakePopupPath = "Assets/Resources/UI/BakePopupView.prefab";
         const string k_UpgradePopupPath = "Assets/Resources/UI/UpgradePopupView.prefab";
@@ -206,19 +207,16 @@ namespace ZooTycoon.Editor
 
         // ---------- 손님 · 가게 ----------
 
-        // 관광객 프리팹의 몸체(ModelRoot·Sprite·Shadow·Animator)를 그대로 쓰고 말풍선을 붙인다
+        // 손님 몸체: 루트(SpriteAnimator) → ModelRoot(크기) → Sprite + Shadow(납작한 타원). 외형은 visitors.json 행이 실행 중에 채운다
         static ShopCustomer BakeCustomer()
         {
-            GameObject source = AssetDatabase.LoadAssetAtPath<GameObject>(k_VisitorPrefabPath);
-            GameObject root = Object.Instantiate(source);
-            root.name = "ShopCustomer";
-            SerializedObject visitor = new SerializedObject(root.GetComponent<Visitor>());
-            Object modelRoot = visitor.FindProperty("m_modelRoot").objectReferenceValue;
-            Object sprite = visitor.FindProperty("m_spriteRenderer").objectReferenceValue;
-            Object shadow = visitor.FindProperty("m_shadowRenderer").objectReferenceValue;
-            Object animator = visitor.FindProperty("m_animator").objectReferenceValue;
-            Object coin = visitor.FindProperty("m_coinPrefab").objectReferenceValue;
-            Object.DestroyImmediate(root.GetComponent<Visitor>());
+            GameObject root = new GameObject("ShopCustomer");
+            GameObject model = Child(root.transform, "ModelRoot", Vector3.zero);
+            SpriteRenderer sprite = Renderer(model.transform, "Sprite", null, Vector3.zero, 0);
+            SpriteRenderer shadow = Renderer(model.transform, "Shadow", AssetDatabase.LoadAssetAtPath<Sprite>(k_ShadowPath), Vector3.zero, -900);
+            shadow.color = new Color(0f, 0f, 0f, 0.35f);
+            SpriteAnimator animator = root.AddComponent<SpriteAnimator>();
+            Set(animator, "m_renderer", sprite);
 
             SpriteRenderer bubble = Renderer(root.transform, "Bubble", Load("bubble"), new Vector3(0f, 0.8f, 0f), 50);
             bubble.transform.localScale = Vector3.one * 0.8f;
@@ -226,11 +224,11 @@ namespace ZooTycoon.Editor
             icon.transform.localScale = Vector3.one * 0.9f;
 
             ShopCustomer customer = root.AddComponent<ShopCustomer>();
-            Set(customer, "m_modelRoot", modelRoot);
+            Set(customer, "m_modelRoot", model.transform);
             Set(customer, "m_spriteRenderer", sprite);
             Set(customer, "m_shadowRenderer", shadow);
             Set(customer, "m_animator", animator);
-            Set(customer, "m_coinPrefab", coin);
+            Set(customer, "m_coinPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             Set(customer, "m_bubble", bubble);
             Set(customer, "m_bubbleIcon", icon);
             Set(customer, "m_angrySprite", Load("angry"));

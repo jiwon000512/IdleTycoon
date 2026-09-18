@@ -8,7 +8,6 @@ namespace ZooTycoon.Data
     public static class TableValidator
     {
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
-        private static readonly Regex k_AnimalIdPattern = new Regex("^a[0-9]{2}$");
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
         private static readonly Regex k_BreadIdPattern = new Regex("^b[0-9]{2}$");
         private static readonly string[] k_ShopUpgradeIds =
@@ -18,7 +17,6 @@ namespace ZooTycoon.Data
         {
             List<string> errors = new List<string>();
 
-            ValidateAnimals(tables, errors);
             ValidateZooLevels(tables, errors);
             ValidateVisitors(tables, errors);
             ValidateBreads(tables, errors);
@@ -27,43 +25,6 @@ namespace ZooTycoon.Data
             ValidateConfig(tables, errors);
 
             return errors;
-        }
-
-        private static void ValidateAnimals(GameTables tables, List<string> errors)
-        {
-            HashSet<string> ids = new HashSet<string>();
-            HashSet<int> sortOrders = new HashSet<int>();
-
-            foreach (AnimalRecord animal in tables.Animals)
-            {
-                CheckId("animals", animal.Id, k_IdPattern, ids, errors);
-                CheckSortOrder("animals", animal.SortOrder, sortOrders, errors);
-
-                if (animal.Id != null && !k_AnimalIdPattern.IsMatch(animal.Id))
-                {
-                    errors.Add($"animals '{animal.Id}': 동물 ID는 a + 두 자리 번호여야 한다.");
-                }
-
-                if (animal.BaseIncomePerSecond <= 0d)
-                {
-                    errors.Add($"animals '{animal.Id}': baseIncomePerSecond가 0 이하다.");
-                }
-
-                if (string.IsNullOrEmpty(animal.Sprite))
-                {
-                    errors.Add($"animals '{animal.Id}': sprite 경로가 비어 있다.");
-                }
-
-                if (animal.FrameRate <= 0d || animal.Scale <= 0d || animal.MoveSpeed <= 0d)
-                {
-                    errors.Add($"animals '{animal.Id}': frameRate·scale·moveSpeed는 0보다 커야 한다.");
-                }
-
-                if (animal.IdleSecondsMin < 0d || animal.IdleSecondsMax < animal.IdleSecondsMin)
-                {
-                    errors.Add($"animals '{animal.Id}': 0 ≤ idleSecondsMin ≤ idleSecondsMax여야 한다.");
-                }
-            }
         }
 
         private static void ValidateZooLevels(GameTables tables, List<string> errors)
@@ -217,11 +178,6 @@ namespace ZooTycoon.Data
                 errors.Add("game_config: start.coins가 0 미만이다.");
             }
 
-            if (config.AnimalCount.IncomeBonusPerAnimal < 0d)
-            {
-                errors.Add("game_config: animalCount.incomeBonusPerAnimal이 0 미만이다.");
-            }
-
             if (config.Offline.MaxSeconds <= 0)
             {
                 errors.Add("game_config: offline.maxSeconds가 0 이하다.");
@@ -230,11 +186,6 @@ namespace ZooTycoon.Data
             if (config.Income.TickSeconds <= 0d)
             {
                 errors.Add("game_config: income.tickSeconds가 0 이하다.");
-            }
-
-            if (config.Visitors.MaxCount < 1 || config.Visitors.IncomeUnit <= 0d)
-            {
-                errors.Add("game_config: visitors.maxCount는 1 이상, incomeUnit은 0보다 커야 한다.");
             }
 
             GameConfig.ShopConfig shop = config.Shop;

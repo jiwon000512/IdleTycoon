@@ -3,7 +3,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 기획서 6.4 시작 상태, 3장 등장, 6.2 마리 수
+    // 기획서 6.4 시작 상태, 코인
     public sealed class ZooStateTests
     {
         [Test]
@@ -13,7 +13,6 @@ namespace ZooTycoon.Tests
 
             Assert.That(state.Coins, Is.EqualTo(350d));
             Assert.That(state.TotalCoinsEarned, Is.EqualTo(0d));
-            Assert.That(state.OwnedAnimals, Is.Empty);
         }
 
         [Test]
@@ -51,45 +50,6 @@ namespace ZooTycoon.Tests
 
             Assert.That(spent, Is.False);
             Assert.That(state.Coins, Is.EqualTo(350d));
-        }
-
-        [Test]
-        public void AddAnimal_FirstTime_StartsAtOne()
-        {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
-
-            int count = state.AddAnimal("a01");
-
-            Assert.That(count, Is.EqualTo(1));
-            Assert.That(state.OwnedAnimals.Count, Is.EqualTo(1));
-            Assert.That(state.OwnedAnimals[0].Count, Is.EqualTo(1));
-            Assert.That(state.Owns("a01"), Is.True);
-        }
-
-        [Test]
-        public void AddAnimal_WhenAlreadyOwned_AddsOneHead()
-        {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
-            state.AddAnimal("a01");
-
-            int count = state.AddAnimal("a01");
-
-            Assert.That(count, Is.EqualTo(2));
-            Assert.That(state.OwnedAnimals.Count, Is.EqualTo(1));
-            Assert.That(state.OwnedAnimals[0].Count, Is.EqualTo(2));
-        }
-
-        [Test]
-        public void AddAnimal_RaisesAnimalsChangedEveryTime()
-        {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
-            int raised = 0;
-            state.AnimalsChanged += () => raised++;
-
-            state.AddAnimal("a01");
-            state.AddAnimal("a01");
-
-            Assert.That(raised, Is.EqualTo(2));
         }
     }
 }

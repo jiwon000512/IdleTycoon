@@ -7,18 +7,12 @@ namespace ZooTycoon.UI
     public sealed class TopBarView : UIView
     {
         [SerializeField] private TMP_Text m_coinsText;
-        [SerializeField] private TMP_Text m_incomeText;
         [SerializeField] private TMP_Text m_zooLevelText;
         [SerializeField] private TMP_Text m_progressText;
 
         public void SetCoins(string text)
         {
             m_coinsText.text = text;
-        }
-
-        public void SetIncome(string text)
-        {
-            m_incomeText.text = text;
         }
 
         public void SetZooLevel(string text)

@@ -16,7 +16,6 @@ namespace ZooTycoon.Game
         public GameTables Tables { get; private set; }
         public ZooState State { get; private set; }
         public ZooLevelService ZooLevel { get; private set; }
-        public IncomeService Income { get; private set; }
         public Navigation Navigation { get; private set; }
         public ShopSim Shop { get; private set; }
 
@@ -38,15 +37,14 @@ namespace ZooTycoon.Game
 
             State = ZooState.CreateNew(Tables.Config);
             ZooLevel = new ZooLevelService(Tables, State);
-            Income = new IncomeService(State, Tables, ZooLevel);
             Navigation = new Navigation();
             Shop = new ShopSim(State, Tables, new SystemRandom());
         }
 
-        // 설계 04 P2: game_config.income.tickSeconds마다 한 번 적립
+        // 설계 04 P2: game_config.income.tickSeconds마다 규칙 한 틱. 동물원 레벨은 누적 코인으로 판정
         private void Update()
         {
-            if (Income == null)
+            if (Shop == null)
             {
                 return;
             }
@@ -58,8 +56,8 @@ namespace ZooTycoon.Game
                 return;
             }
 
-            Income.Tick(m_tickElapsed);
             Shop.Tick(m_tickElapsed);
+            ZooLevel.Refresh();
             m_tickElapsed = 0f;
         }
 
@@ -68,7 +66,6 @@ namespace ZooTycoon.Game
             TableManager tableManager = TableManager.Instance;
 
             return new GameTables(
-                tableManager.Load<AnimalRecord>("animals"),
                 tableManager.Load<ZooLevelRecord>("zoo_levels"),
                 tableManager.Load<VisitorRecord>("visitors"),
                 tableManager.Load<BreadRecord>("breads"),
