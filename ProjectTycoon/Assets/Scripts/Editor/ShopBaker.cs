@@ -16,7 +16,6 @@ namespace ZooTycoon.Editor
         const string k_SpriteDir = "Assets/Sprites/World/Shop/";
         const string k_BreadDir = "Assets/Resources/Sprites/Shop/Breads/";
         const string k_PrefabDir = "Assets/Prefabs/Shop/";
-        const string k_WombatPath = "Assets/Resources/Sprites/Animals/Wombat/Wombat.png";
         const string k_VisitorPrefabPath = "Assets/Prefabs/Visitor.prefab";
         const string k_HudPath = "Assets/Resources/UI/ShopHudView.prefab";
         const string k_BakePopupPath = "Assets/Resources/UI/BakePopupView.prefab";
@@ -65,7 +64,7 @@ namespace ZooTycoon.Editor
                 Import(k_SpriteDir + name + ".png", top);
             }
 
-            foreach (string name in new[] { "shelf", "oven", "counter", "bubble", "angry" })
+            foreach (string name in new[] { "shelf", "oven", "counter", "bubble", "angry", "wombat_front", "wombat_back" })
             {
                 Import(k_SpriteDir + name + ".png", bottom);
             }
@@ -148,8 +147,11 @@ namespace ZooTycoon.Editor
             SetFloat(counter, "m_height", 2.6f);
             Set(counter, "m_queueHead", Child(root.transform, "QueueHead", new Vector3(0f, -0.55f, 0f)).transform);
             Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -1.55f, 0f), 0);
-            SpriteRenderer wombat = Renderer(root.transform, "Wombat", AssetDatabase.LoadAssetAtPath<Sprite>(k_WombatPath), new Vector3(0f, -2.45f, 0f), 0);
-            wombat.transform.localScale = Vector3.one * 0.28f;
+            // 웜뱃 정면·뒷모습: 한 칸 2px(PPU 64), 42칸
+            SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -2.45f, 0f), 0);
+            Set(counter, "m_wombat", wombat);
+            Set(counter, "m_wombatFront", Load("wombat_front"));
+            Set(counter, "m_wombatBack", Load("wombat_back"));
             return Save(root, counter, "ShopCounter");
         }
 

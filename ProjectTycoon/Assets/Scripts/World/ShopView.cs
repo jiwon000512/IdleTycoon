@@ -57,6 +57,7 @@ namespace ZooTycoon.World
             m_shop.OvenChanged += Shop_OvenChanged;
             m_shop.LayoutChanged += Shop_LayoutChanged;
             m_shop.UpgradesChanged += Shop_UpgradesChanged;
+            m_shop.QueueChanged += Shop_QueueChanged;
         }
 
         public Vector2 ShelfSpot(int slot)
@@ -90,6 +91,7 @@ namespace ZooTycoon.World
                 m_shop.OvenChanged -= Shop_OvenChanged;
                 m_shop.LayoutChanged -= Shop_LayoutChanged;
                 m_shop.UpgradesChanged -= Shop_UpgradesChanged;
+                m_shop.QueueChanged -= Shop_QueueChanged;
             }
         }
 
@@ -106,6 +108,11 @@ namespace ZooTycoon.World
         private void Shop_UpgradesChanged()
         {
             RefreshShelves();
+        }
+
+        private void Shop_QueueChanged()
+        {
+            m_counter.SetServing(m_shop.Queue.Count > 0);
         }
 
         private void Shop_LayoutChanged()
@@ -153,6 +160,7 @@ namespace ZooTycoon.World
             }
 
             m_height = y;
+            m_counter.SetServing(m_shop.Queue.Count > 0);
             RefreshShelves();
 
             for (int i = 0; i < m_ovenRows.Count * 2; i++)
