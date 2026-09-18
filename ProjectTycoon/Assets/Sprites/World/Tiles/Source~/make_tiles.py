@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # top-down 텍스처 → 픽셀 격자 정규화 → 화면 공간 2:1 압축 → 마름모 타일 18장 시트(+ 미리보기)
-# 사용: make_tiles.py <원본.png> <출력폴더> <시트이름> [G=96] [팔레트문턱=0.0005] [--key-white] [--drop=0.3 --seed=1]
+# 사용: make_tiles.py <원본.png> <출력폴더> <시트이름> [G=96] [팔레트문턱=0.0005] [--key-white] [--drop=0.3 --seed=1] [--k=1]
+# --k: 한 칸의 화면 크기 배수. 칸은 화면에서 2k×k px(아이소 2:1). 시트 크기를 유지하려면 G = 96 ÷ k. 굴 계열(한 칸 4px 폭)은 --k=2, G=48
 # 투명 배경을 살린다(RGBA). RGB 원본은 --key-white로 흰 배경(모서리에서 이어진 부분만)을 투명으로 만든다.
 # --drop은 돌 덩어리(연결 성분)를 그 비율만큼 지워 성긴 변형을 만든다
 from PIL import Image
@@ -62,8 +63,9 @@ if 'drop' in opts:
     print('components', n, 'dropped', int(kill.sum()))
 print('coverage', round(float(sa.mean()), 3))
 # 화면 공간 텍스처(텍셀 2×1)
-tex = np.repeat(small, 2, axis=1); ta = np.repeat(sa, 2, axis=1)
-TW, THh = 2 * G, G
+K = int(opts.get('k', '1'))
+tex = np.repeat(np.repeat(small, 2 * K, axis=1), K, axis=0); ta = np.repeat(np.repeat(sa, 2 * K, axis=1), K, axis=0)
+TW, THh = 2 * K * G, K * G
 def tile(d, s_):
     cx, cy = 32 * d, 16 * s_
     im = np.zeros((32, 64, 4), np.uint8)

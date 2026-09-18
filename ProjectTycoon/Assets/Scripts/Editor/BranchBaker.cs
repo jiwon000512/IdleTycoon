@@ -23,7 +23,7 @@ namespace ZooTycoon.Editor
         public static string Run()
         {
             Tile[] grass = LoadTiles("Grass");
-            Tile[] dirt = LoadTiles("Dirt");
+            Tile[] yard = LoadTiles("Yard");
             Tile[] path = LoadTiles("Path");
             Sprite edge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/World/edge.png");
             Sprite period = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/World/Tiles/grass_period.png");
@@ -91,7 +91,7 @@ namespace ZooTycoon.Editor
                     int n = r * 3 + c;
                     int zx = 2 + c * 8;
                     int zz = 2 + r * 10;
-                    Fill(floor, dirt, zx, zz, 6, 8);
+                    Fill(floor, yard, zx, zz, 6, 8);
                     GameObject inst = (GameObject)PrefabUtility.InstantiatePrefab(zonePrefab, root.transform);
                     inst.name = "z" + (n + 1).ToString("00");
                     ZoneView z = inst.GetComponent<ZoneView>();
