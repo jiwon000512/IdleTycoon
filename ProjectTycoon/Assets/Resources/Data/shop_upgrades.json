@@ -1,0 +1,43 @@
+{
+  "table": "shop_upgrades",
+  "version": 1,
+  "notes": [
+    "설계 08 v0.5 빵집 업그레이드. 비용 = baseCost × costGrowth^단계, 효과 = effectPerLevel × 단계.",
+    "oven_count: 오븐 +1대/단계(game_config.shop.ovenCount에서 시작). oven_speed·checkout_speed: 속도 배수 +effect. shelf_capacity: 빵 칸 용량 +effect.",
+    "id는 코드 상수(ShopSim.k_*)와 같아야 한다. 값은 전부 시작값."
+  ],
+  "rows": [
+    {
+      "id": "oven_count",
+      "name": "오븐 추가",
+      "baseCost": 300,
+      "costGrowth": 3,
+      "maxLevel": 3,
+      "effectPerLevel": 1
+    },
+    {
+      "id": "oven_speed",
+      "name": "굽기 속도",
+      "baseCost": 100,
+      "costGrowth": 1.6,
+      "maxLevel": 10,
+      "effectPerLevel": 0.2
+    },
+    {
+      "id": "shelf_capacity",
+      "name": "진열대 넓히기",
+      "baseCost": 80,
+      "costGrowth": 1.5,
+      "maxLevel": 10,
+      "effectPerLevel": 4
+    },
+    {
+      "id": "checkout_speed",
+      "name": "계산 속도",
+      "baseCost": 120,
+      "costGrowth": 1.6,
+      "maxLevel": 10,
+      "effectPerLevel": 0.2
+    }
+  ]
+}

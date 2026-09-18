@@ -17,6 +17,8 @@ namespace ZooTycoon.Game
         public ZooState State { get; private set; }
         public ZooLevelService ZooLevel { get; private set; }
         public IncomeService Income { get; private set; }
+        public Navigation Navigation { get; private set; }
+        public ShopSim Shop { get; private set; }
 
         // 씬을 다시 열어도 상태는 한 번만 만든다(싱글턴이 씬 사이에서 살아남는 이유)
         public void Init()
@@ -37,6 +39,8 @@ namespace ZooTycoon.Game
             State = ZooState.CreateNew(Tables.Config);
             ZooLevel = new ZooLevelService(Tables, State);
             Income = new IncomeService(State, Tables, ZooLevel);
+            Navigation = new Navigation();
+            Shop = new ShopSim(State, Tables, new SystemRandom());
         }
 
         // 설계 04 P2: game_config.income.tickSeconds마다 한 번 적립
@@ -55,6 +59,7 @@ namespace ZooTycoon.Game
             }
 
             Income.Tick(m_tickElapsed);
+            Shop.Tick(m_tickElapsed);
             m_tickElapsed = 0f;
         }
 
@@ -66,6 +71,8 @@ namespace ZooTycoon.Game
                 tableManager.Load<AnimalRecord>("animals"),
                 tableManager.Load<ZooLevelRecord>("zoo_levels"),
                 tableManager.Load<VisitorRecord>("visitors"),
+                tableManager.Load<BreadRecord>("breads"),
+                tableManager.Load<ShopUpgradeRecord>("shop_upgrades"),
                 tableManager.Load<StringRecord>("strings"),
                 tableManager.LoadConfig<GameConfig>("game_config"));
         }

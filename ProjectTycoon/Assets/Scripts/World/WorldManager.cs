@@ -15,16 +15,25 @@ namespace ZooTycoon.World
         [SerializeField] private Animal m_animalPrefab;
         [SerializeField] private VisitorSpawner m_visitors;
         [SerializeField] private WorldCameraController m_camera;
+        [Tooltip("빵집 프리팹(설계 08 v0.5). 지점과 겹치지 않는 먼 곳에 실행 중 생성한다")]
+        [SerializeField] private ShopView m_shopPrefab;
 
         private readonly Dictionary<string, int> m_spawnedByAnimal = new Dictionary<string, int>(StringComparer.Ordinal);
         private ZooState m_state;
         private IncomeService m_income;
         private GameTables m_tables;
         private BranchView m_branch;
+        private Navigation m_navigation;
+        private ShopView m_shopView;
+
+        private static readonly Vector3 k_ShopOrigin = new Vector3(1000f, 0f, 0f);
 
         // 설계 07-3: 08(존·입주)까지는 첫 존(z01)만 쓴다
         public ZoneView Zone => Branch.Zones[0];
         public FrameCache Frames { get; } = new FrameCache();
+
+        // 설계 08 v0.5: 가게 화면에서 오븐을 눌렀다(오븐 번호). MainScene이 굽기 팝업을 연다
+        public event Action<int> OvenTapped;
 
         private BranchView Branch
         {
@@ -39,16 +48,23 @@ namespace ZooTycoon.World
             }
         }
 
-        public void Initialize(ZooState state, IncomeService income, GameTables tables)
+        public void Initialize(ZooState state, IncomeService income, GameTables tables, Navigation navigation, ShopSim shop)
         {
             m_state = state;
             m_income = income;
             m_tables = tables;
+            m_navigation = navigation;
+            m_shopView = Instantiate(m_shopPrefab, k_ShopOrigin, Quaternion.identity, transform);
+            m_shopView.Bind(shop, Frames);
+            m_shopView.GetComponent<ShopCustomerSpawner>().Initialize(shop, m_shopView, tables, Frames);
+            m_shopView.Expanded += ShopView_Expanded;
 
             m_visitors.Initialize(tables.Visitors);
             m_camera.SetBounds(Iso.ToScreenBounds(Branch.MapArea));
             m_state.AnimalsChanged += State_AnimalsChanged;
             m_income.IncomeChanged += Income_IncomeChanged;
+            m_navigation.Changed += Navigation_Changed;
+            m_camera.Tapped += Camera_Tapped;
             SyncAnimals();
             SyncVisitors();
         }
@@ -59,6 +75,9 @@ namespace ZooTycoon.World
             {
                 m_state.AnimalsChanged -= State_AnimalsChanged;
                 m_income.IncomeChanged -= Income_IncomeChanged;
+                m_navigation.Changed -= Navigation_Changed;
+                m_camera.Tapped -= Camera_Tapped;
+                m_shopView.Expanded -= ShopView_Expanded;
             }
 
             base.OnDestroy();
@@ -72,6 +91,52 @@ namespace ZooTycoon.World
         private void Income_IncomeChanged()
         {
             SyncVisitors();
+        }
+
+        // 설계 08: 지상에서 첫 굴(z01)을 누르면 빵집으로(다른 굴은 12). 가게에서는 오븐 탭
+        private void Camera_Tapped(Vector3 world)
+        {
+            if (m_navigation.Current == GameScreen.Overworld)
+            {
+                if (Zone.Contains(Iso.ToLogical(world)))
+                {
+                    m_navigation.EnterShop();
+                }
+
+                return;
+            }
+
+            int oven = m_shopView.OvenAt(world);
+
+            if (oven >= 0)
+            {
+                OnOvenTapped(oven);
+            }
+        }
+
+        private void Navigation_Changed()
+        {
+            if (m_navigation.Current == GameScreen.Shop)
+            {
+                m_camera.EnterShop(m_shopView.Bounds, m_shopView.Top);
+                return;
+            }
+
+            m_camera.ExitShop();
+        }
+
+        // 굴을 넓히면 새 층을 보여 준다
+        private void ShopView_Expanded(Vector2 focus)
+        {
+            if (m_navigation.Current == GameScreen.Shop)
+            {
+                m_camera.ShowShop(m_shopView.Bounds, focus);
+            }
+        }
+
+        private void OnOvenTapped(int oven)
+        {
+            OvenTapped?.Invoke(oven);
         }
 
         // 설계 03 P7: 종별 마리 수만큼 개체가 있도록 부족분을 스폰한다

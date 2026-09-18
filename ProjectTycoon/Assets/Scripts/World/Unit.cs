@@ -40,7 +40,19 @@ namespace ZooTycoon.World
         public void SetLogical(Vector2 logical)
         {
             Logical = logical;
-            transform.position = Iso.ToScreen(logical);
+            transform.position = ToScreen(logical);
+        }
+
+        // 지상은 쿼터뷰 변환. 가게 안(설계 08)은 논리 좌표가 곧 화면 좌표라 재정의한다
+        protected virtual Vector3 ToScreen(Vector2 logical)
+        {
+            return Iso.ToScreen(logical);
+        }
+
+        // 설계 08: 가게 손님은 Core가 정한 시간 안에 도착하도록 구간마다 속도를 바꾼다
+        protected void SetMoveSpeed(float speed)
+        {
+            m_moveSpeed = speed;
         }
 
         protected void ChangeState(UnitState state)
@@ -62,7 +74,7 @@ namespace ZooTycoon.World
         // 카드는 방향 1개 + 좌우 반전(기획서 2장 시점). 화면 x로 판정한다
         internal void Face(Vector2 target)
         {
-            m_spriteRenderer.flipX = Iso.ToScreen(target).x < transform.position.x;
+            m_spriteRenderer.flipX = ToScreen(target).x < transform.position.x;
         }
 
         // 목표로 한 걸음 옮기고, 도착했으면 true

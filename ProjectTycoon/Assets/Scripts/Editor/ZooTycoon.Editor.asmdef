@@ -1,7 +1,7 @@
 {
   "name": "ZooTycoon.Editor",
   "rootNamespace": "ZooTycoon.Editor",
-  "references": [ "ZooTycoon.Core", "ZooTycoon.Data", "ZooTycoon.Game", "ZooTycoon.UI", "ZooTycoon.World", "Unity.2D.Sprite.Editor" ],
+  "references": [ "ZooTycoon.Core", "ZooTycoon.Data", "ZooTycoon.Game", "ZooTycoon.UI", "ZooTycoon.World", "Unity.2D.Sprite.Editor", "GameKit.Unity", "UnityEngine.UI", "Unity.TextMeshPro" ],
   "includePlatforms": [ "Editor" ],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

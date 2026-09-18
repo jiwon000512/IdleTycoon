@@ -10,6 +10,9 @@ namespace ZooTycoon.Data
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
         private static readonly Regex k_AnimalIdPattern = new Regex("^a[0-9]{2}$");
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
+        private static readonly Regex k_BreadIdPattern = new Regex("^b[0-9]{2}$");
+        private static readonly string[] k_ShopUpgradeIds =
+            { ShopSim.k_OvenCount, ShopSim.k_OvenSpeed, ShopSim.k_ShelfCapacity, ShopSim.k_CheckoutSpeed };
 
         public static IReadOnlyList<string> Validate(GameTables tables)
         {
@@ -18,6 +21,8 @@ namespace ZooTycoon.Data
             ValidateAnimals(tables, errors);
             ValidateZooLevels(tables, errors);
             ValidateVisitors(tables, errors);
+            ValidateBreads(tables, errors);
+            ValidateShopUpgrades(tables, errors);
             ValidateStrings(tables, errors);
             ValidateConfig(tables, errors);
 
@@ -133,6 +138,61 @@ namespace ZooTycoon.Data
             }
         }
 
+        // 설계 08 v0.5
+        private static void ValidateBreads(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+
+            if (tables.Breads.Count == 0)
+            {
+                errors.Add("breads: 행이 하나도 없다.");
+            }
+
+            foreach (BreadRecord bread in tables.Breads)
+            {
+                CheckId("breads", bread.Id, k_IdPattern, ids, errors);
+
+                if (bread.Id != null && !k_BreadIdPattern.IsMatch(bread.Id))
+                {
+                    errors.Add($"breads '{bread.Id}': 빵 ID는 b + 두 자리 번호여야 한다.");
+                }
+
+                if (string.IsNullOrEmpty(bread.Sprite))
+                {
+                    errors.Add($"breads '{bread.Id}': sprite 경로가 비어 있다.");
+                }
+
+                if (bread.BakeSeconds <= 0d || bread.BatchSize < 1 || bread.Price <= 0d || bread.Weight < 1 || bread.UnlockCost < 0d)
+                {
+                    errors.Add($"breads '{bread.Id}': bakeSeconds·price는 0보다, batchSize·weight는 1 이상, unlockCost는 0 이상이어야 한다.");
+                }
+            }
+        }
+
+        // 설계 08 v0.5: ShopSim이 부르는 id 4개가 모두 있어야 한다
+        private static void ValidateShopUpgrades(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+
+            foreach (ShopUpgradeRecord upgrade in tables.ShopUpgrades)
+            {
+                CheckId("shop_upgrades", upgrade.Id, k_IdPattern, ids, errors);
+
+                if (upgrade.BaseCost <= 0d || upgrade.CostGrowth < 1d || upgrade.MaxLevel < 1 || upgrade.EffectPerLevel <= 0d)
+                {
+                    errors.Add($"shop_upgrades '{upgrade.Id}': baseCost·effectPerLevel은 0보다, costGrowth·maxLevel은 1 이상이어야 한다.");
+                }
+            }
+
+            foreach (string id in k_ShopUpgradeIds)
+            {
+                if (!ids.Contains(id))
+                {
+                    errors.Add($"shop_upgrades: '{id}' 행이 없다.");
+                }
+            }
+        }
+
         private static void ValidateStrings(GameTables tables, List<string> errors)
         {
             HashSet<string> ids = new HashSet<string>();
@@ -175,6 +235,14 @@ namespace ZooTycoon.Data
             if (config.Visitors.MaxCount < 1 || config.Visitors.IncomeUnit <= 0d)
             {
                 errors.Add("game_config: visitors.maxCount는 1 이상, incomeUnit은 0보다 커야 한다.");
+            }
+
+            GameConfig.ShopConfig shop = config.Shop;
+
+            if (shop.ArrivalSeconds <= 0d || shop.CheckoutSeconds <= 0d || shop.EnterSeconds < 0d || shop.RowWalkSeconds < 0d
+                || shop.ToQueueSeconds < 0d || shop.PatienceSeconds < 0d || shop.MaxCustomers < 1 || shop.ShelfCapacity < 1 || shop.OvenCount < 1)
+            {
+                errors.Add("game_config: shop의 arrivalSeconds·checkoutSeconds는 0보다, 다른 시간은 0 이상, maxCustomers·shelfCapacity·ovenCount는 1 이상이어야 한다.");
             }
         }
 

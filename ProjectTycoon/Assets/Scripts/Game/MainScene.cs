@@ -9,20 +9,51 @@ namespace ZooTycoon.Game
     public sealed class MainScene : MonoBehaviour
     {
         private TopBarPresenter m_topBarPresenter;
+        private ShopHudPresenter m_shopHudPresenter;
+        private BakePopupPresenter m_bakePopupPresenter;
+        private UpgradePopupPresenter m_upgradePopupPresenter;
 
         private void Awake()
         {
             GameManager game = GameManager.Instance;
             game.Init();
 
-            TopBarView topBarView = UIManager.Instance.Open<TopBarView>();
+            UIManager ui = UIManager.Instance;
+            TopBarView topBarView = ui.Open<TopBarView>();
+            ShopHudView shopHudView = ui.Open<ShopHudView>();
+            BakePopupView bakePopupView = ui.Open<BakePopupView>();
+            UpgradePopupView upgradePopupView = ui.Open<UpgradePopupView>();
+
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.ZooLevel, game.Income, game.Tables);
-            WorldManager.Instance.Initialize(game.State, game.Income, game.Tables);
+            m_bakePopupPresenter = new BakePopupPresenter(bakePopupView, game.Shop, game.Tables);
+            m_upgradePopupPresenter = new UpgradePopupPresenter(upgradePopupView, game.Shop, game.State, game.Tables);
+            m_shopHudPresenter = new ShopHudPresenter(shopHudView, game.Navigation, m_upgradePopupPresenter, game.Tables);
+
+            WorldManager world = WorldManager.Instance;
+            world.Initialize(game.State, game.Income, game.Tables, game.Navigation, game.Shop);
+            world.OvenTapped += World_OvenTapped;
         }
 
         private void OnDestroy()
         {
             m_topBarPresenter?.Dispose();
+            m_shopHudPresenter?.Dispose();
+            m_bakePopupPresenter?.Dispose();
+            m_upgradePopupPresenter?.Dispose();
+
+            if (WorldManager.HasInstance)
+            {
+                WorldManager.Instance.OvenTapped -= World_OvenTapped;
+            }
+        }
+
+        // 설계 08 v0.5: World와 UI를 잇는 자리. 빈 오븐만 굽기 팝업을 연다
+        private void World_OvenTapped(int oven)
+        {
+            if (GameManager.Instance.Shop.Ovens[oven].IsEmpty)
+            {
+                m_bakePopupPresenter.Show(oven);
+            }
         }
     }
 }

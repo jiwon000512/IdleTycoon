@@ -19,6 +19,12 @@ namespace ZooTycoon.World
 
         public Rect PathBounds => new Rect(m_pathArea.x + m_center.x, m_pathArea.y + m_center.y, m_pathArea.width, m_pathArea.height);
 
+        // 존 바닥(6×8 타일, 설계 07-3). 굴 탭 판정에 쓴다
+        public bool Contains(Vector2 logical)
+        {
+            return Mathf.Abs(logical.x - m_center.x) <= 3f && Mathf.Abs(logical.y - m_center.y) <= 4f;
+        }
+
         private void Awake()
         {
             transform.position = Iso.ToScreen(m_center);

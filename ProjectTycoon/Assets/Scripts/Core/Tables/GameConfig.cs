@@ -1,6 +1,6 @@
 namespace ZooTycoon.Core
 {
-    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 8: 뽑기 삭제로 gacha 섹션 제거)
+    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 9: 설계 08 빵집 shop 섹션)
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class GameConfig
     {
@@ -9,6 +9,7 @@ namespace ZooTycoon.Core
         public OfflineConfig Offline { get; set; }
         public IncomeConfig Income { get; set; }
         public VisitorsConfig Visitors { get; set; }
+        public ShopConfig Shop { get; set; }
 
         public sealed class StartConfig
         {
@@ -36,6 +37,20 @@ namespace ZooTycoon.Core
         {
             public int MaxCount { get; set; }
             public double IncomeUnit { get; set; }
+        }
+
+        // 설계 08 v0.5: 빵집 시뮬 시간(초)·수량의 시작값
+        public sealed class ShopConfig
+        {
+            public double ArrivalSeconds { get; set; }
+            public int MaxCustomers { get; set; }
+            public double EnterSeconds { get; set; }
+            public double RowWalkSeconds { get; set; }
+            public double ToQueueSeconds { get; set; }
+            public double PatienceSeconds { get; set; }
+            public double CheckoutSeconds { get; set; }
+            public int ShelfCapacity { get; set; }
+            public int OvenCount { get; set; }
         }
     }
 }

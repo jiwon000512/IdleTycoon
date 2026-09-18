@@ -11,6 +11,8 @@ namespace ZooTycoon.Core
         public IReadOnlyList<AnimalRecord> Animals { get; }
         public IReadOnlyList<ZooLevelRecord> ZooLevels { get; }
         public IReadOnlyList<VisitorRecord> Visitors { get; }
+        public IReadOnlyList<BreadRecord> Breads { get; }
+        public IReadOnlyList<ShopUpgradeRecord> ShopUpgrades { get; }
         public IReadOnlyList<StringRecord> StringRows { get; }
         public StringTable Strings { get; }
         public GameConfig Config { get; }
@@ -19,12 +21,16 @@ namespace ZooTycoon.Core
             IReadOnlyList<AnimalRecord> animals,
             IReadOnlyList<ZooLevelRecord> zooLevels,
             IReadOnlyList<VisitorRecord> visitors,
+            IReadOnlyList<BreadRecord> breads,
+            IReadOnlyList<ShopUpgradeRecord> shopUpgrades,
             IReadOnlyList<StringRecord> strings,
             GameConfig config)
         {
             Animals = animals;
             ZooLevels = zooLevels;
             Visitors = visitors;
+            Breads = breads;
+            ShopUpgrades = shopUpgrades;
             StringRows = strings;
             Strings = new StringTable(strings);
             Config = config;
