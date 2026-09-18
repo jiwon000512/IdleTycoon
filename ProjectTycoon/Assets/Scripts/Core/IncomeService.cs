@@ -2,7 +2,7 @@ using System;
 
 namespace ZooTycoon.Core
 {
-    // 초당 수입의 단일 소유자. 입력(동물, 시설 단계)이 바뀔 때만 다시 계산하고 IncomeChanged로 알린다
+    // 초당 수입의 단일 소유자. 입력(동물)이 바뀔 때만 다시 계산하고 IncomeChanged로 알린다
     public sealed class IncomeService
     {
         private readonly ZooState m_state;
@@ -19,7 +19,6 @@ namespace ZooTycoon.Core
             m_tables = tables;
             m_zooLevelService = zooLevelService;
             m_state.AnimalsChanged += State_AnimalsChanged;
-            m_state.FacilitiesChanged += State_FacilitiesChanged;
             IncomePerSecond = IncomeCalculator.TotalIncomePerSecond(m_state, m_tables);
         }
 
@@ -31,16 +30,6 @@ namespace ZooTycoon.Core
         }
 
         private void State_AnimalsChanged()
-        {
-            Recalculate();
-        }
-
-        private void State_FacilitiesChanged()
-        {
-            Recalculate();
-        }
-
-        private void Recalculate()
         {
             IncomePerSecond = IncomeCalculator.TotalIncomePerSecond(m_state, m_tables);
             IncomeChanged?.Invoke();

@@ -25,37 +25,6 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void FacilityMultiplier_WithNoStage_IsOne()
-        {
-            GameTables tables = TestTables.Build();
-            ZooState state = ZooState.CreateNew(tables.Config);
-
-            Assert.That(IncomeCalculator.FacilityMultiplier(state, tables), Is.EqualTo(1d));
-        }
-
-        // 기획서 6.4: 홍보 10단계 = ×2.0, 벤치 5단계 = ×1.25, 둘 다면 곱 2.5
-        [Test]
-        public void FacilityMultiplier_MultipliesEachFacility()
-        {
-            GameTables tables = TestTables.Build();
-            ZooState state = ZooState.CreateNew(tables.Config);
-
-            for (int i = 0; i < 10; i++)
-            {
-                state.UpgradeFacility("f01");
-            }
-
-            Assert.That(IncomeCalculator.FacilityMultiplier(state, tables), Is.EqualTo(2d).Within(1e-9d));
-
-            for (int i = 0; i < 5; i++)
-            {
-                state.UpgradeFacility("f02");
-            }
-
-            Assert.That(IncomeCalculator.FacilityMultiplier(state, tables), Is.EqualTo(2.5d).Within(1e-9d));
-        }
-
-        [Test]
         public void TotalIncomePerSecond_WithNoPlacedAnimal_IsZero()
         {
             GameTables tables = TestTables.Build();
@@ -75,7 +44,7 @@ namespace ZooTycoon.Tests
 
             double income = IncomeCalculator.TotalIncomePerSecond(state, tables);
 
-            // 웜뱃 3마리 = 1 × (1 + 0.5 × 2) = 2 → × 시설 배수 1
+            // 웜뱃 3마리 = 1 × (1 + 0.5 × 2) = 2
             Assert.That(income, Is.EqualTo(2d).Within(1e-9d));
         }
     }

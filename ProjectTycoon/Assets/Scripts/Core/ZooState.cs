@@ -6,23 +6,20 @@ namespace ZooTycoon.Core
     public sealed class ZooState
     {
         private readonly List<OwnedAnimal> m_ownedAnimals = new List<OwnedAnimal>();
-        private readonly Dictionary<string, int> m_facilityStages = new Dictionary<string, int>(StringComparer.Ordinal);
 
         public double Coins { get; private set; }
         public double TotalCoinsEarned { get; private set; }
-        public int PullCount { get; private set; }
         public IReadOnlyList<OwnedAnimal> OwnedAnimals => m_ownedAnimals;
 
         public event Action CoinsChanged;
         public event Action AnimalsChanged;
-        public event Action FacilitiesChanged;
 
         private ZooState(double coins)
         {
             Coins = coins;
         }
 
-        // 기획서 6.4: 시작 상태 — 코인 350, 동물 0, 시설 전부 0단계
+        // 기획서 6.4: 시작 상태 — 코인 350, 동물 0
         public static ZooState CreateNew(GameConfig config)
         {
             return new ZooState(config.Start.Coins);
@@ -47,11 +44,6 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        public void RecordPull()
-        {
-            PullCount++;
-        }
-
         public bool Owns(string animalId)
         {
             return Find(animalId) != null;
@@ -73,20 +65,6 @@ namespace ZooTycoon.Core
             return animal.Count;
         }
 
-        // 기획서 6.4 시설: 안 산 시설은 0단계
-        public int GetFacilityStage(string facilityId)
-        {
-            return m_facilityStages.TryGetValue(facilityId, out int stage) ? stage : 0;
-        }
-
-        public int UpgradeFacility(string facilityId)
-        {
-            int stage = GetFacilityStage(facilityId) + 1;
-            m_facilityStages[facilityId] = stage;
-            OnFacilitiesChanged();
-            return stage;
-        }
-
         private OwnedAnimal Find(string animalId)
         {
             return m_ownedAnimals.Find(a => a.AnimalId == animalId);
@@ -100,11 +78,6 @@ namespace ZooTycoon.Core
         private void OnAnimalsChanged()
         {
             AnimalsChanged?.Invoke();
-        }
-
-        private void OnFacilitiesChanged()
-        {
-            FacilitiesChanged?.Invoke();
         }
     }
 }

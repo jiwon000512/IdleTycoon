@@ -13,12 +13,10 @@ namespace ZooTycoon.World
         [Tooltip("지점 프리팹. 씬에는 두지 않고 실행 중에 생성한다(설계 07-3)")]
         [SerializeField] private BranchView m_branchPrefab;
         [SerializeField] private Animal m_animalPrefab;
-        [SerializeField] private Facility m_facilityPrefab;
         [SerializeField] private VisitorSpawner m_visitors;
         [SerializeField] private WorldCameraController m_camera;
 
         private readonly Dictionary<string, int> m_spawnedByAnimal = new Dictionary<string, int>(StringComparer.Ordinal);
-        private readonly HashSet<string> m_shownFacilities = new HashSet<string>(StringComparer.Ordinal);
         private ZooState m_state;
         private IncomeService m_income;
         private GameTables m_tables;
@@ -50,10 +48,8 @@ namespace ZooTycoon.World
             m_visitors.Initialize(tables.Visitors);
             m_camera.SetBounds(Iso.ToScreenBounds(Branch.MapArea));
             m_state.AnimalsChanged += State_AnimalsChanged;
-            m_state.FacilitiesChanged += State_FacilitiesChanged;
             m_income.IncomeChanged += Income_IncomeChanged;
             SyncAnimals();
-            SyncFacilities();
             SyncVisitors();
         }
 
@@ -62,7 +58,6 @@ namespace ZooTycoon.World
             if (m_state != null)
             {
                 m_state.AnimalsChanged -= State_AnimalsChanged;
-                m_state.FacilitiesChanged -= State_FacilitiesChanged;
                 m_income.IncomeChanged -= Income_IncomeChanged;
             }
 
@@ -72,11 +67,6 @@ namespace ZooTycoon.World
         private void State_AnimalsChanged()
         {
             SyncAnimals();
-        }
-
-        private void State_FacilitiesChanged()
-        {
-            SyncFacilities();
         }
 
         private void Income_IncomeChanged()
@@ -107,22 +97,6 @@ namespace ZooTycoon.World
                 }
 
                 m_spawnedByAnimal[owned.AnimalId] = owned.Count;
-            }
-        }
-
-        // 설계 07 P6: 1단계 이상인 시설을 존 자식으로 슬롯 자리에 한 번 세운다
-        private void SyncFacilities()
-        {
-            for (int i = 0; i < m_tables.Facilities.Count; i++)
-            {
-                FacilityRecord record = m_tables.Facilities[i];
-
-                if (m_state.GetFacilityStage(record.Id) > 0 && m_shownFacilities.Add(record.Id))
-                {
-                    Vector2 logical = Zone.Center + new Vector2((float)record.SlotX, (float)record.SlotZ);
-                    Facility facility = Instantiate(m_facilityPrefab, Iso.ToScreen(logical), Quaternion.identity, Zone.transform);
-                    facility.Initialize(Resources.Load<Sprite>(record.Sprite));
-                }
             }
         }
 

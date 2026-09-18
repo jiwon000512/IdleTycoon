@@ -5,52 +5,23 @@ using ZooTycoon.Core;
 namespace ZooTycoon.Data
 {
     // 데이터-테이블-규칙 7장. 봉투(table·version)는 EditMode 테스트가 검사한다(설계 01 D2).
-    // 규칙 예외: 200줄을 넘지만 테이블마다 메서드 하나인 평평한 검사 목록이라 나눌 축이 없다
     public static class TableValidator
     {
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
         private static readonly Regex k_AnimalIdPattern = new Regex("^a[0-9]{2}$");
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
-        private static readonly Regex k_FacilityIdPattern = new Regex("^f[0-9]{2}$");
 
         public static IReadOnlyList<string> Validate(GameTables tables)
         {
             List<string> errors = new List<string>();
 
-            ValidateGrades(tables, errors);
             ValidateAnimals(tables, errors);
             ValidateZooLevels(tables, errors);
             ValidateVisitors(tables, errors);
-            ValidateFacilities(tables, errors);
             ValidateStrings(tables, errors);
             ValidateConfig(tables, errors);
 
             return errors;
-        }
-
-        private static void ValidateGrades(GameTables tables, List<string> errors)
-        {
-            HashSet<string> ids = new HashSet<string>();
-            HashSet<int> sortOrders = new HashSet<int>();
-            int weightSum = 0;
-
-            foreach (GradeRecord grade in tables.Grades)
-            {
-                CheckId("grades", grade.Id, k_IdPattern, ids, errors);
-                CheckSortOrder("grades", grade.SortOrder, sortOrders, errors);
-
-                if (grade.GachaWeight < 0)
-                {
-                    errors.Add($"grades '{grade.Id}': gachaWeight가 0 미만이다.");
-                }
-
-                weightSum += grade.GachaWeight;
-            }
-
-            if (weightSum <= 0)
-            {
-                errors.Add("grades: gachaWeight 합이 0 이하다.");
-            }
         }
 
         private static void ValidateAnimals(GameTables tables, List<string> errors)
@@ -68,19 +39,9 @@ namespace ZooTycoon.Data
                     errors.Add($"animals '{animal.Id}': 동물 ID는 a + 두 자리 번호여야 한다.");
                 }
 
-                if (!tables.HasGrade(animal.Grade))
-                {
-                    errors.Add($"animals '{animal.Id}': grade '{animal.Grade}'가 grades에 없다.");
-                }
-
                 if (animal.BaseIncomePerSecond <= 0d)
                 {
                     errors.Add($"animals '{animal.Id}': baseIncomePerSecond가 0 이하다.");
-                }
-
-                if (animal.GachaWeight < 1)
-                {
-                    errors.Add($"animals '{animal.Id}': gachaWeight가 1 미만이다.");
                 }
 
                 if (string.IsNullOrEmpty(animal.Sprite))
@@ -172,49 +133,6 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 데이터-테이블-규칙 7장 facilities (v1.10)
-        private static void ValidateFacilities(GameTables tables, List<string> errors)
-        {
-            HashSet<string> ids = new HashSet<string>();
-            HashSet<int> sortOrders = new HashSet<int>();
-
-            if (tables.Facilities.Count == 0)
-            {
-                errors.Add("facilities: 행이 하나도 없다.");
-            }
-
-            foreach (FacilityRecord facility in tables.Facilities)
-            {
-                CheckId("facilities", facility.Id, k_IdPattern, ids, errors);
-                CheckSortOrder("facilities", facility.SortOrder, sortOrders, errors);
-
-                if (facility.Id != null && !k_FacilityIdPattern.IsMatch(facility.Id))
-                {
-                    errors.Add($"facilities '{facility.Id}': 시설 ID는 f + 두 자리 번호여야 한다.");
-                }
-
-                if (string.IsNullOrEmpty(facility.Sprite))
-                {
-                    errors.Add($"facilities '{facility.Id}': sprite 경로가 비어 있다.");
-                }
-
-                if (facility.UnlockLevel < 1 || facility.UnlockLevel > tables.ZooLevels.Count)
-                {
-                    errors.Add($"facilities '{facility.Id}': unlockLevel {facility.UnlockLevel}이 zoo_levels에 없다.");
-                }
-
-                if (facility.MaxStage < 1 || facility.MultiplierPerStage <= 0d)
-                {
-                    errors.Add($"facilities '{facility.Id}': maxStage는 1 이상, multiplierPerStage는 0보다 커야 한다.");
-                }
-
-                if (facility.BaseCost <= 0 || facility.CostGrowth <= 1d)
-                {
-                    errors.Add($"facilities '{facility.Id}': baseCost는 0보다 크고 costGrowth는 1보다 커야 한다.");
-                }
-            }
-        }
-
         private static void ValidateStrings(GameTables tables, List<string> errors)
         {
             HashSet<string> ids = new HashSet<string>();
@@ -234,14 +152,9 @@ namespace ZooTycoon.Data
         {
             GameConfig config = tables.Config;
 
-            if (config.Gacha.BaseCost <= 0)
+            if (config.Start.Coins < 0)
             {
-                errors.Add("game_config: gacha.baseCost가 0 이하다.");
-            }
-
-            if (config.Gacha.CostGrowth <= 1d)
-            {
-                errors.Add("game_config: gacha.costGrowth가 1 이하다.");
+                errors.Add("game_config: start.coins가 0 미만이다.");
             }
 
             if (config.AnimalCount.IncomeBonusPerAnimal < 0d)
@@ -257,11 +170,6 @@ namespace ZooTycoon.Data
             if (config.Income.TickSeconds <= 0d)
             {
                 errors.Add("game_config: income.tickSeconds가 0 이하다.");
-            }
-
-            if (config.Start.Coins < config.Gacha.BaseCost)
-            {
-                errors.Add("game_config: start.coins가 첫 뽑기 비용보다 적다.");
             }
 
             if (config.Visitors.MaxCount < 1 || config.Visitors.IncomeUnit <= 0d)

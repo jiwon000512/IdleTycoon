@@ -9,18 +9,16 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("animals")]
-        [TestCase("grades")]
-        [TestCase("zoo_levels")]
-        [TestCase("visitors")]
-        [TestCase("facilities")]
-        [TestCase("strings")]
-        public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table)
+        [TestCase("animals", 3)]
+        [TestCase("zoo_levels", 2)]
+        [TestCase("visitors", 1)]
+        [TestCase("strings", 2)]
+        public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile<object>(table);
 
             Assert.That(file.Table, Is.EqualTo(table));
-            Assert.That(file.Version, Is.EqualTo(table == "animals" || table == "zoo_levels" ? 2 : 1));
+            Assert.That(file.Version, Is.EqualTo(version));
         }
 
         [Test]
@@ -29,7 +27,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>("game_config");
 
             Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(7));
+            Assert.That(file.Version, Is.EqualTo(8));
         }
 
         [Test]
@@ -45,17 +43,6 @@ namespace ZooTycoon.Tests
         {
             List<AnimalRecord> animals = TestTables.LoadRows<AnimalRecord>("animals");
             animals.Add(animals[0]);
-
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(animals: animals));
-
-            Assert.That(errors, Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenAnimalGradeMissing_ReportsError()
-        {
-            List<AnimalRecord> animals = TestTables.LoadRows<AnimalRecord>("animals");
-            animals[0].Grade = "nosuchgrade";
 
             IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(animals: animals));
 
@@ -85,40 +72,10 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void Validate_WhenFacilitiesEmpty_ReportsError()
-        {
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(facilities: new List<FacilityRecord>()));
-
-            Assert.That(errors, Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenFacilityMaxStageIsZero_ReportsError()
-        {
-            List<FacilityRecord> facilities = TestTables.LoadRows<FacilityRecord>("facilities");
-            facilities[0].MaxStage = 0;
-
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(facilities: facilities));
-
-            Assert.That(errors, Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenFacilityUnlockLevelIsNotAZooLevel_ReportsError()
-        {
-            List<FacilityRecord> facilities = TestTables.LoadRows<FacilityRecord>("facilities");
-            facilities[0].UnlockLevel = 99;
-
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(facilities: facilities));
-
-            Assert.That(errors, Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenStartCoinsBelowFirstPullCost_ReportsError()
+        public void Validate_WhenStartCoinsNegative_ReportsError()
         {
             GameConfig config = TestTables.LoadConfig();
-            config.Start.Coins = config.Gacha.BaseCost - 1;
+            config.Start.Coins = -1;
 
             IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(config: config));
 

@@ -30,19 +30,15 @@ namespace ZooTycoon.Tests
 
         public static GameTables Build(
             IReadOnlyList<AnimalRecord> animals = null,
-            IReadOnlyList<GradeRecord> grades = null,
             IReadOnlyList<ZooLevelRecord> zooLevels = null,
             IReadOnlyList<VisitorRecord> visitors = null,
-            IReadOnlyList<FacilityRecord> facilities = null,
             IReadOnlyList<StringRecord> strings = null,
             GameConfig config = null)
         {
             return new GameTables(
                 animals ?? LoadRows<AnimalRecord>("animals"),
-                grades ?? LoadRows<GradeRecord>("grades"),
                 zooLevels ?? LoadRows<ZooLevelRecord>("zoo_levels"),
                 visitors ?? LoadRows<VisitorRecord>("visitors"),
-                facilities ?? LoadRows<FacilityRecord>("facilities"),
                 strings ?? LoadRows<StringRecord>("strings"),
                 config ?? LoadConfig());
         }

@@ -1,17 +1,16 @@
 {
   "table": "animals",
-  "version": 2,
+  "version": 3,
   "notes": [
-    "기획서 6.1(v0.11). 실제 아트가 준비된 종부터 한 종씩 추가한다. 등급 확률은 동물이 있는 등급만 정규화.",
+    "기획서 6.1(v0.11). 실제 아트가 준비된 종부터 한 종씩 추가한다.",
     "sprite·idleSheet·moveSheet는 Resources/ 기준 경로(확장자 없음). 시트가 null이면 sprite 1장을 프레임 1개로 쓴다.",
     "version 2 (설계 05): idleSheet·moveSheet·frameRate·scale·moveSpeed·idleSecondsMin·idleSecondsMax 추가. 값은 전부 시작값.",
-    "gachaWeight는 같은 등급 안에서의 상대 가중치. 등급 간 확률은 grades.json의 gachaWeight."
+    "version 3 (2026-09-18, 사업가 웜뱃 전환): 뽑기 삭제로 grade·gachaWeight·variantId 제거."
   ],
   "rows": [
     {
       "id": "a01",
       "name": "웜뱃",
-      "grade": "common",
       "sprite": "Sprites/Animals/Wombat/Wombat",
       "idleSheet": "Sprites/Animals/Wombat/Wombat_Idle",
       "moveSheet": "Sprites/Animals/Wombat/Wombat_Move",
@@ -21,8 +20,6 @@
       "idleSecondsMin": 1.0,
       "idleSecondsMax": 3.0,
       "baseIncomePerSecond": 1.0,
-      "gachaWeight": 1,
-      "variantId": null,
       "sortOrder": 1
     }
   ]

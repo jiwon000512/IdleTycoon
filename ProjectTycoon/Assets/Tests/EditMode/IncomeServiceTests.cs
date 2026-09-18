@@ -3,7 +3,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 기획서 3장 루프 3·5, 6.2, 6.4
+    // 기획서 3장 루프 3·5, 6.2
     public sealed class IncomeServiceTests
     {
         [Test]
@@ -47,23 +47,6 @@ namespace ZooTycoon.Tests
 
             Assert.That(state.TotalCoinsEarned, Is.EqualTo(2_000d));
             Assert.That(reached, Is.EqualTo(2));
-        }
-
-        [Test]
-        public void IncomePerSecond_WhenFacilityUpgraded_RecalculatesAndNotifies()
-        {
-            GameTables tables = TestTables.Build();
-            ZooState state = ZooState.CreateNew(tables.Config);
-            state.AddAnimal("a01");
-            IncomeService service = new IncomeService(state, tables, new ZooLevelService(tables, state));
-            int notified = 0;
-            service.IncomeChanged += () => notified++;
-
-            state.UpgradeFacility("f01");
-
-            // 웜뱃 1마리 1/초 × 홍보 1단계 1.1
-            Assert.That(service.IncomePerSecond, Is.EqualTo(1.1d).Within(1e-9d));
-            Assert.That(notified, Is.EqualTo(1));
         }
 
         [Test]

@@ -9,36 +9,20 @@ namespace ZooTycoon.Game
     public sealed class MainScene : MonoBehaviour
     {
         private TopBarPresenter m_topBarPresenter;
-        private GachaButtonPresenter m_gachaButtonPresenter;
-        private GachaResultPresenter m_gachaResultPresenter;
-        private FacilityPopupPresenter m_facilityPopupPresenter;
 
         private void Awake()
         {
             GameManager game = GameManager.Instance;
             game.Init();
 
-            UIManager ui = UIManager.Instance;
-            TopBarView topBarView = ui.Open<TopBarView>();
-            GachaButtonView gachaButtonView = ui.Open<GachaButtonView>();
-            GachaResultView gachaResultView = ui.GetView<GachaResultView>();
-            FacilityButtonView facilityButtonView = ui.Open<FacilityButtonView>();
-            FacilityPopupView facilityPopupView = ui.GetView<FacilityPopupView>();
-
+            TopBarView topBarView = UIManager.Instance.Open<TopBarView>();
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.ZooLevel, game.Income, game.Tables);
             WorldManager.Instance.Initialize(game.State, game.Income, game.Tables);
-            m_gachaButtonPresenter = new GachaButtonPresenter(gachaButtonView, game.Gacha, game.State, game.Tables);
-            m_gachaResultPresenter = new GachaResultPresenter(gachaResultView, game.Gacha, game.Tables);
-            m_facilityPopupPresenter = new FacilityPopupPresenter(
-                facilityButtonView, facilityPopupView, game.Facility, game.State, game.ZooLevel, game.Tables);
         }
 
         private void OnDestroy()
         {
             m_topBarPresenter?.Dispose();
-            m_gachaButtonPresenter?.Dispose();
-            m_gachaResultPresenter?.Dispose();
-            m_facilityPopupPresenter?.Dispose();
         }
     }
 }

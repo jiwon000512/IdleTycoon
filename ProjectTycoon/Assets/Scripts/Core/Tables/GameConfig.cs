@@ -1,11 +1,10 @@
 namespace ZooTycoon.Core
 {
-    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 7)
+    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 8: 뽑기 삭제로 gacha 섹션 제거)
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class GameConfig
     {
         public StartConfig Start { get; set; }
-        public GachaConfig Gacha { get; set; }
         public AnimalCountConfig AnimalCount { get; set; }
         public OfflineConfig Offline { get; set; }
         public IncomeConfig Income { get; set; }
@@ -14,12 +13,6 @@ namespace ZooTycoon.Core
         public sealed class StartConfig
         {
             public int Coins { get; set; }
-        }
-
-        public sealed class GachaConfig
-        {
-            public int BaseCost { get; set; }
-            public double CostGrowth { get; set; }
         }
 
         public sealed class AnimalCountConfig
