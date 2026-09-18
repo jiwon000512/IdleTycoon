@@ -1,6 +1,6 @@
 namespace ZooTycoon.Core
 {
-    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 9: 설계 08 빵집 shop 섹션)
+    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 10: 설계 08 v0.6 shop.wombatWalkSeconds)
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class GameConfig
     {
@@ -51,6 +51,8 @@ namespace ZooTycoon.Core
             public double CheckoutSeconds { get; set; }
             public int ShelfCapacity { get; set; }
             public int OvenCount { get; set; }
+            // v0.6: 웜뱃이 계산대에서 첫 오븐 줄까지 걷는 시간(편도). 줄마다 RowWalkSeconds를 더한다
+            public double WombatWalkSeconds { get; set; }
         }
     }
 }

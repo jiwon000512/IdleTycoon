@@ -240,7 +240,7 @@ namespace ZooTycoon.Data
             GameConfig.ShopConfig shop = config.Shop;
 
             if (shop.ArrivalSeconds <= 0d || shop.CheckoutSeconds <= 0d || shop.EnterSeconds < 0d || shop.RowWalkSeconds < 0d
-                || shop.ToQueueSeconds < 0d || shop.PatienceSeconds < 0d || shop.MaxCustomers < 1 || shop.ShelfCapacity < 1 || shop.OvenCount < 1)
+                || shop.ToQueueSeconds < 0d || shop.PatienceSeconds < 0d || shop.WombatWalkSeconds < 0d || shop.MaxCustomers < 1 || shop.ShelfCapacity < 1 || shop.OvenCount < 1)
             {
                 errors.Add("game_config: shop의 arrivalSeconds·checkoutSeconds는 0보다, 다른 시간은 0 이상, maxCustomers·shelfCapacity·ovenCount는 1 이상이어야 한다.");
             }

@@ -25,6 +25,8 @@ namespace ZooTycoon.World
         [SerializeField] private float m_doorDepth = 1.5f;
         [Tooltip("계산을 마친 손님이 올라가는 통로 x(유닛)")]
         [SerializeField] private float m_exitLaneX = 0.7f;
+        [Tooltip("웜뱃이 굽기 심부름 때 서는 자리: 오븐 위로 이만큼(유닛)")]
+        [SerializeField] private float m_ovenStandOffset = 1.35f;
         [Tooltip("새 층을 팠을 때 흙빛에서 밝아지는 시간(초)")]
         [SerializeField] private float m_digSeconds = 0.6f;
 
@@ -58,6 +60,8 @@ namespace ZooTycoon.World
             m_shop.LayoutChanged += Shop_LayoutChanged;
             m_shop.UpgradesChanged += Shop_UpgradesChanged;
             m_shop.QueueChanged += Shop_QueueChanged;
+            m_shop.WombatLeft += Shop_WombatLeft;
+            m_shop.WombatAtOven += Shop_WombatAtOven;
         }
 
         public Vector2 ShelfSpot(int slot)
@@ -92,6 +96,8 @@ namespace ZooTycoon.World
                 m_shop.LayoutChanged -= Shop_LayoutChanged;
                 m_shop.UpgradesChanged -= Shop_UpgradesChanged;
                 m_shop.QueueChanged -= Shop_QueueChanged;
+                m_shop.WombatLeft -= Shop_WombatLeft;
+                m_shop.WombatAtOven -= Shop_WombatAtOven;
             }
         }
 
@@ -113,6 +119,18 @@ namespace ZooTycoon.World
         private void Shop_QueueChanged()
         {
             m_counter.SetServing(m_shop.Queue.Count > 0);
+        }
+
+        // v0.6: 오븐까지 걸어가고, 도착하면(굽기 시작) 같은 시간 걸려 계산대로 돌아온다
+        private void Shop_WombatLeft(int ovenIndex, double seconds)
+        {
+            Vector3 stand = Oven(ovenIndex).transform.position + Vector3.up * m_ovenStandOffset;
+            m_counter.Wombat.WalkTo(stand, (float)seconds);
+        }
+
+        private void Shop_WombatAtOven(int ovenIndex, double seconds)
+        {
+            m_counter.Wombat.WalkHome((float)seconds);
         }
 
         private void Shop_LayoutChanged()

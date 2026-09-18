@@ -4,14 +4,18 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 설계 08 v0.5 검증 3~9. 1초 틱, 실제 JSON 값(도착 4 · 걷기 1.5+층×0.8 · 줄까지 1 · 인내 6 · 계산 1.5 · 식빵 8초 6개 10코인)
+    // 설계 08 v0.5 검증 3~9, v0.6 9-1. 1초 틱, 실제 JSON 값(도착 4 · 걷기 1.5+층×0.8 · 줄까지 1 · 인내 6 · 계산 1.5 · 식빵 8초 6개 10코인).
+    // 웜뱃 심부름 걷기는 기본 0초로 두고(굽기 타이밍을 v0.5와 같게) 심부름 테스트에서만 켠다
     public sealed class ShopSimTests
     {
         private ZooState m_state;
+        private GameConfig.ShopConfig m_config;
 
         private ShopSim Create(Action<GameConfig.ShopConfig> tweak = null, params double[] rolls)
         {
             GameConfig config = TestTables.LoadConfig();
+            m_config = config.Shop;
+            config.Shop.WombatWalkSeconds = 0d;
             tweak?.Invoke(config.Shop);
             GameTables tables = TestTables.Build(config: config);
             m_state = ZooState.CreateNew(config);
@@ -205,6 +209,75 @@ namespace ZooTycoon.Tests
 
             Assert.That(shop.Stock("b01"), Is.EqualTo(6));
             Assert.That(shop.ShelfCapacity, Is.EqualTo(12));
+        }
+
+        [Test]
+        public void Errand_BakingStartsOnArrivalAndBlocksAnotherBake()
+        {
+            ShopSim shop = Create(c =>
+            {
+                c.MaxCustomers = 0;
+                c.WombatWalkSeconds = 2d;
+            });
+            shop.TryUpgrade(ShopSim.k_OvenCount);
+
+            Assert.That(shop.TryBake(0, "b01"), Is.True);
+            Assert.That(shop.WombatAtCounter, Is.False);
+            Assert.That(shop.TryBake(1, "b01"), Is.False);
+
+            shop.Tick(1d);
+            Assert.That(shop.Ovens[0].Started, Is.False);
+            Assert.That(shop.Ovens[0].Remaining, Is.EqualTo(8d));
+
+            shop.Tick(1d);
+            Assert.That(shop.Ovens[0].Started, Is.True);
+            Assert.That(shop.Ovens[0].Remaining, Is.EqualTo(7d));
+
+            shop.Tick(1d);
+            Assert.That(shop.WombatAtCounter, Is.False);
+            shop.Tick(1d);
+            Assert.That(shop.WombatAtCounter, Is.True);
+            Assert.That(shop.TryBake(1, "b01"), Is.True);
+        }
+
+        [Test]
+        public void Errand_PausesCheckoutUntilWombatReturns()
+        {
+            ShopSim shop = Create();
+            shop.TryBake(0, "b01");
+            Ticks(shop, 9);
+            Assert.That(shop.Queue.Count, Is.EqualTo(2));
+
+            m_config.WombatWalkSeconds = 3d;
+            shop.TryUpgrade(ShopSim.k_OvenCount);
+            shop.TryBake(1, "b01");
+            double coins = m_state.Coins;
+
+            Ticks(shop, 5);
+            Assert.That(m_state.Coins, Is.EqualTo(coins));
+
+            shop.Tick(1d);
+            Assert.That(shop.WombatAtCounter, Is.True);
+            Assert.That(m_state.Coins, Is.EqualTo(coins + 10d));
+        }
+
+        [Test]
+        public void Errand_WalkTimeGrowsWithOvenRow()
+        {
+            ShopSim shop = Create(c =>
+            {
+                c.MaxCustomers = 0;
+                c.WombatWalkSeconds = 1d;
+            });
+            m_state.AddCoins(100000d);
+            shop.TryUpgrade(ShopSim.k_OvenCount);
+            shop.TryUpgrade(ShopSim.k_OvenCount);
+            double seconds = 0d;
+            shop.WombatLeft += (oven, s) => seconds = s;
+
+            shop.TryBake(2, "b01");
+
+            Assert.That(seconds, Is.EqualTo(1.8d).Within(1e-9));
         }
     }
 }

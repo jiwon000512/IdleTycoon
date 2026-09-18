@@ -1,5 +1,6 @@
 using UnityEngine;
 using GameKit.UI;
+using ZooTycoon.Core;
 using ZooTycoon.UI;
 using ZooTycoon.World;
 
@@ -47,10 +48,12 @@ namespace ZooTycoon.Game
             }
         }
 
-        // 설계 08 v0.5: World와 UI를 잇는 자리. 빈 오븐만 굽기 팝업을 연다
+        // 설계 08: World와 UI를 잇는 자리. 빈 오븐이고 웜뱃이 계산대에 있을 때만 굽기 팝업을 연다(v0.6 심부름은 한 번에 하나)
         private void World_OvenTapped(int oven)
         {
-            if (GameManager.Instance.Shop.Ovens[oven].IsEmpty)
+            ShopSim shop = GameManager.Instance.Shop;
+
+            if (shop.Ovens[oven].IsEmpty && shop.WombatAtCounter)
             {
                 m_bakePopupPresenter.Show(oven);
             }

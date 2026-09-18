@@ -55,6 +55,7 @@ MonoBehaviour:
   m_queueSpacing: 0.55
   m_doorDepth: 1.5
   m_exitLaneX: 0.7
+  m_ovenStandOffset: 1.35
   m_digSeconds: 0.6
 --- !u!114 &864861439378456402
 MonoBehaviour:

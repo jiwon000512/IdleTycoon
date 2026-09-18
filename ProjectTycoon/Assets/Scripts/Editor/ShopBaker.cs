@@ -71,9 +71,12 @@ namespace ZooTycoon.Editor
                 Import(k_SpriteDir + name + ".png", bottom);
             }
 
-            foreach (string name in new[] { "wombat_front", "wombat_front_1", "wombat_front_2", "wombat_front_3", "wombat_back", "wombat_back_1", "wombat_back_2", "wombat_back_3" })
+            foreach (string side in new[] { "front", "back" })
             {
-                Import(k_SpriteDir + name + ".png", bottom, k_UnitPpu);
+                foreach (string suffix in new[] { "", "_1", "_2", "_3", "_walk_0", "_walk_1", "_walk_2", "_walk_3" })
+                {
+                    Import(k_SpriteDir + "wombat_" + side + suffix + ".png", bottom, k_UnitPpu);
+                }
             }
 
             Import(k_SpriteDir + "bar_bg.png", new Vector2(0f, 0.5f));
@@ -158,9 +161,14 @@ namespace ZooTycoon.Editor
             SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -2.45f, 0f), 0);
             SpriteAnimator animator = wombat.gameObject.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", wombat);
-            Set(counter, "m_wombat", animator);
-            SetSprites(counter, "m_frontFrames", Breath("wombat_front"));
-            SetSprites(counter, "m_backFrames", Breath("wombat_back"));
+            // 걷기(v0.6): 딛기 → 왼발 → 딛기 → 오른발(Source~/make_walk_frames.py)
+            ShopWombat mover = wombat.gameObject.AddComponent<ShopWombat>();
+            Set(mover, "m_animator", animator);
+            SetSprites(mover, "m_frontIdle", Frames("wombat_front", "", "_1", "_2", "_3"));
+            SetSprites(mover, "m_backIdle", Frames("wombat_back", "", "_1", "_2", "_3"));
+            SetSprites(mover, "m_frontWalk", Frames("wombat_front", "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
+            SetSprites(mover, "m_backWalk", Frames("wombat_back", "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
+            Set(counter, "m_wombat", mover);
             return Save(root, counter, "ShopCounter");
         }
 
@@ -393,9 +401,9 @@ namespace ZooTycoon.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        static Sprite[] Breath(string name)
+        static Sprite[] Frames(string name, params string[] suffixes)
         {
-            return new[] { Load(name), Load(name + "_1"), Load(name + "_2"), Load(name + "_3") };
+            return System.Array.ConvertAll(suffixes, suffix => Load(name + suffix));
         }
 
         static void SetSprites(Object target, string field, Sprite[] sprites)

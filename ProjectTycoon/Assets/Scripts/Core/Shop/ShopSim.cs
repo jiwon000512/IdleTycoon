@@ -24,6 +24,9 @@ namespace ZooTycoon.Core
         private readonly List<Customer> m_queue = new List<Customer>();
         private double m_arrivalElapsed;
         private int m_nextCustomerId;
+        private int m_errandOven = -1;
+        private bool m_errandReturning;
+        private double m_errandTimer;
 
         public IReadOnlyList<BreadRecord> UnlockedBreads => m_unlocked;
         public IReadOnlyList<Oven> Ovens => m_ovens;
@@ -33,6 +36,8 @@ namespace ZooTycoon.Core
         public int OvenRows => (m_ovens.Count + 1) / 2;
         public int ShelfCapacity => m_config.ShelfCapacity + (int)Effect(k_ShelfCapacity);
         public BreadRecord NextBread => m_unlocked.Count < m_tables.Breads.Count ? m_tables.Breads[m_unlocked.Count] : null;
+        // v0.6: 웜뱃이 계산대에 있나(심부름 중이면 계산이 멈춘다)
+        public bool WombatAtCounter => m_errandOven < 0;
 
         public event Action<Customer> CustomerArrived;
         public event Action<Customer> CustomerPicked;
@@ -43,6 +48,10 @@ namespace ZooTycoon.Core
         public event Action<int> OvenChanged;
         public event Action LayoutChanged;
         public event Action UpgradesChanged;
+        // v0.6 웜뱃 심부름: (오븐, 걸리는 초)
+        public event Action<int, double> WombatLeft;
+        public event Action<int, double> WombatAtOven;
+        public event Action WombatReturned;
 
         // 첫 손님은 첫 틱에 온다
         public ShopSim(ZooState state, GameTables tables, IRandom random)
@@ -83,9 +92,10 @@ namespace ZooTycoon.Core
             return UpgradeLevel(upgradeId) >= GetUpgrade(upgradeId).MaxLevel;
         }
 
-        // 순서: 오븐(재고 보충) → 손님 단계 → 계산 → 도착
+        // 순서: 웜뱃 심부름 → 오븐(재고 보충) → 손님 단계 → 계산 → 도착
         public void Tick(double dt)
         {
+            TickErrand(dt);
             TickOvens(dt);
             TickCustomers(dt);
             TickCheckout(dt);
@@ -97,14 +107,19 @@ namespace ZooTycoon.Core
             Oven oven = m_ovens[ovenIndex];
             BreadRecord bread = m_unlocked.Find(b => b.Id == breadId);
 
-            if (!oven.IsEmpty || bread == null)
+            if (!oven.IsEmpty || bread == null || !WombatAtCounter)
             {
                 return false;
             }
 
             oven.Bread = bread;
+            oven.Started = false;
             oven.Remaining = bread.BakeSeconds;
+            m_errandOven = ovenIndex;
+            m_errandReturning = false;
+            m_errandTimer = ErrandSeconds(ovenIndex);
             OnOvenChanged(ovenIndex);
+            OnWombatLeft(ovenIndex, m_errandTimer);
             return true;
         }
 
@@ -149,6 +164,40 @@ namespace ZooTycoon.Core
             m_stock[bread.Id] = 0;
         }
 
+        // v0.6: 오븐까지 걸어가 굽기를 시작하고 같은 시간 걸려 돌아온다
+        private void TickErrand(double dt)
+        {
+            if (WombatAtCounter)
+            {
+                return;
+            }
+
+            m_errandTimer -= dt;
+
+            if (m_errandTimer > 0d)
+            {
+                return;
+            }
+
+            if (!m_errandReturning)
+            {
+                m_errandReturning = true;
+                m_errandTimer = ErrandSeconds(m_errandOven);
+                m_ovens[m_errandOven].Started = true;
+                OnOvenChanged(m_errandOven);
+                OnWombatAtOven(m_errandOven, m_errandTimer);
+                return;
+            }
+
+            m_errandOven = -1;
+            OnWombatReturned();
+        }
+
+        private double ErrandSeconds(int ovenIndex)
+        {
+            return m_config.WombatWalkSeconds + ovenIndex / 2 * m_config.RowWalkSeconds;
+        }
+
         // 다 구운 빵은 오븐에서 기다리다 진열대에 자리가 나는 만큼 옮겨진다(설계 08 결정 3)
         private void TickOvens(double dt)
         {
@@ -156,7 +205,7 @@ namespace ZooTycoon.Core
             {
                 Oven oven = m_ovens[i];
 
-                if (oven.IsEmpty)
+                if (oven.IsEmpty || !oven.Started)
                 {
                     continue;
                 }
@@ -184,6 +233,7 @@ namespace ZooTycoon.Core
                 if (oven.Remaining <= 0d && oven.Ready == 0)
                 {
                     oven.Bread = null;
+                    oven.Started = false;
                 }
 
                 OnOvenChanged(i);
@@ -262,7 +312,7 @@ namespace ZooTycoon.Core
         // 줄 머리만 계산한다. 남은 작업량은 다음 손님에게 넘긴다
         private void TickCheckout(double dt)
         {
-            if (m_queue.Count == 0)
+            if (m_queue.Count == 0 || !WombatAtCounter)
             {
                 return;
             }
@@ -389,6 +439,21 @@ namespace ZooTycoon.Core
         private void OnUpgradesChanged()
         {
             UpgradesChanged?.Invoke();
+        }
+
+        private void OnWombatLeft(int ovenIndex, double seconds)
+        {
+            WombatLeft?.Invoke(ovenIndex, seconds);
+        }
+
+        private void OnWombatAtOven(int ovenIndex, double seconds)
+        {
+            WombatAtOven?.Invoke(ovenIndex, seconds);
+        }
+
+        private void OnWombatReturned()
+        {
+            WombatReturned?.Invoke();
         }
     }
 }
