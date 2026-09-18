@@ -21,6 +21,8 @@ namespace ZooTycoon.Editor
         const string k_BakePopupPath = "Assets/Resources/UI/BakePopupView.prefab";
         const string k_UpgradePopupPath = "Assets/Resources/UI/UpgradePopupView.prefab";
         const float k_Ppu = 64f;
+        // 가게 유닛(웜뱃·손님) 기본 크기: 한 칸 2px, PPU 80 = 42칸 캐릭터 약 1.05유닛. 스케일은 1로 두고 크기는 PPU로 정한다
+        const float k_UnitPpu = 80f;
         const float k_TopBarHeight = 160f;
         const int k_BackgroundOrder = -2000;
 
@@ -64,9 +66,14 @@ namespace ZooTycoon.Editor
                 Import(k_SpriteDir + name + ".png", top);
             }
 
-            foreach (string name in new[] { "shelf", "oven", "counter", "bubble", "angry", "wombat_front", "wombat_back" })
+            foreach (string name in new[] { "shelf", "oven", "counter", "bubble", "angry" })
             {
                 Import(k_SpriteDir + name + ".png", bottom);
+            }
+
+            foreach (string name in new[] { "wombat_front", "wombat_back" })
+            {
+                Import(k_SpriteDir + name + ".png", bottom, k_UnitPpu);
             }
 
             Import(k_SpriteDir + "bar_bg.png", new Vector2(0f, 0.5f));
@@ -78,13 +85,13 @@ namespace ZooTycoon.Editor
             }
         }
 
-        static void Import(string path, Vector2 pivot)
+        static void Import(string path, Vector2 pivot, float ppu = k_Ppu)
         {
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             TextureImporter ti = (TextureImporter)AssetImporter.GetAtPath(path);
             ti.textureType = TextureImporterType.Sprite;
             ti.spriteImportMode = SpriteImportMode.Single;
-            ti.spritePixelsPerUnit = k_Ppu;
+            ti.spritePixelsPerUnit = ppu;
             ti.filterMode = FilterMode.Point;
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.mipmapEnabled = false;
@@ -147,7 +154,7 @@ namespace ZooTycoon.Editor
             SetFloat(counter, "m_height", 2.6f);
             Set(counter, "m_queueHead", Child(root.transform, "QueueHead", new Vector3(0f, -0.55f, 0f)).transform);
             Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -1.55f, 0f), 0);
-            // 웜뱃 정면·뒷모습: 한 칸 2px(PPU 64), 42칸
+            // 웜뱃 정면·뒷모습: 가게 유닛 기본 크기(k_UnitPpu), 스케일 1
             SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -2.45f, 0f), 0);
             Set(counter, "m_wombat", wombat);
             Set(counter, "m_wombatFront", Load("wombat_front"));
@@ -238,7 +245,10 @@ namespace ZooTycoon.Editor
         // 전체 화면 루트: 위 한 줄(뒤로·가게 이름), 아래 업그레이드 버튼
         static void BakeHud()
         {
-            GameObject root = new GameObject("ShopHudView", typeof(RectTransform), typeof(ShopHudView));
+            // 뷰는 꺼 둔 채 붙인다. 켜진 채 붙이면 참조를 잇기 전에 Awake가 돌아 null 예외가 난다
+            GameObject root = new GameObject("ShopHudView", typeof(RectTransform));
+            root.SetActive(false);
+            root.AddComponent<ShopHudView>();
             Stretch(root.GetComponent<RectTransform>());
 
             GameObject top = new GameObject("Top", typeof(RectTransform));
@@ -277,6 +287,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_backText", backText);
             Set(view, "m_upgradeButton", upgrade);
             Set(view, "m_upgradeText", upgradeText);
+            root.SetActive(true);
             PrefabUtility.SaveAsPrefabAsset(root, k_HudPath);
             Object.DestroyImmediate(root);
         }
@@ -284,7 +295,9 @@ namespace ZooTycoon.Editor
         // 어두운 전체 화면(뒤 월드 탭을 막는다) + 가운데 패널: 제목 · 줄 목록 · 닫기
         static void BakePopup<T>(string path) where T : ListPopupView
         {
-            GameObject root = new GameObject(typeof(T).Name, typeof(RectTransform), typeof(Image), typeof(T));
+            GameObject root = new GameObject(typeof(T).Name, typeof(RectTransform), typeof(Image));
+            root.SetActive(false);
+            root.AddComponent<T>();
             Stretch(root.GetComponent<RectTransform>());
             root.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.55f);
 
@@ -320,6 +333,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_closeButton", close);
             Set(view, "m_closeText", closeText);
             Set(view, "m_rowTemplate", row);
+            root.SetActive(true);
             PrefabUtility.SaveAsPrefabAsset(root, path);
             Object.DestroyImmediate(root);
         }
