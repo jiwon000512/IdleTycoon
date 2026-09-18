@@ -71,7 +71,7 @@ namespace ZooTycoon.Editor
                 Import(k_SpriteDir + name + ".png", bottom);
             }
 
-            foreach (string name in new[] { "wombat_front", "wombat_back" })
+            foreach (string name in new[] { "wombat_front", "wombat_front_1", "wombat_front_2", "wombat_front_3", "wombat_back", "wombat_back_1", "wombat_back_2", "wombat_back_3" })
             {
                 Import(k_SpriteDir + name + ".png", bottom, k_UnitPpu);
             }
@@ -154,11 +154,13 @@ namespace ZooTycoon.Editor
             SetFloat(counter, "m_height", 2.6f);
             Set(counter, "m_queueHead", Child(root.transform, "QueueHead", new Vector3(0f, -0.55f, 0f)).transform);
             Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -1.55f, 0f), 0);
-            // 웜뱃 정면·뒷모습: 가게 유닛 기본 크기(k_UnitPpu), 스케일 1
+            // 웜뱃 정면·뒷모습: 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 0 → 1 → 2 → 3(Source~/make_breath_frames.py)
             SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -2.45f, 0f), 0);
-            Set(counter, "m_wombat", wombat);
-            Set(counter, "m_wombatFront", Load("wombat_front"));
-            Set(counter, "m_wombatBack", Load("wombat_back"));
+            SpriteAnimator animator = wombat.gameObject.AddComponent<SpriteAnimator>();
+            Set(animator, "m_renderer", wombat);
+            Set(counter, "m_wombat", animator);
+            SetSprites(counter, "m_frontFrames", Breath("wombat_front"));
+            SetSprites(counter, "m_backFrames", Breath("wombat_back"));
             return Save(root, counter, "ShopCounter");
         }
 
@@ -388,6 +390,25 @@ namespace ZooTycoon.Editor
         {
             SerializedObject so = new SerializedObject(target);
             so.FindProperty(field).objectReferenceValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static Sprite[] Breath(string name)
+        {
+            return new[] { Load(name), Load(name + "_1"), Load(name + "_2"), Load(name + "_3") };
+        }
+
+        static void SetSprites(Object target, string field, Sprite[] sprites)
+        {
+            SerializedObject so = new SerializedObject(target);
+            SerializedProperty array = so.FindProperty(field);
+            array.arraySize = sprites.Length;
+
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                array.GetArrayElementAtIndex(i).objectReferenceValue = sprites[i];
+            }
+
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
