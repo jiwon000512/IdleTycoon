@@ -16,7 +16,11 @@ namespace ZooTycoon.World
 
         private Sprite[] m_idleFrames;
         private Sprite[] m_moveFrames;
-        private float m_frameRate;
+        private Sprite[] m_backIdleFrames;
+        private Sprite[] m_backMoveFrames;
+        private float m_idleFrameRate;
+        private float m_moveFrameRate;
+        private bool m_facingBack;
         private float m_moveSpeed;
         private UnitState m_state;
 
@@ -31,7 +35,10 @@ namespace ZooTycoon.World
         {
             m_idleFrames = frames.Get(record.IdleSheet ?? record.Sprite);
             m_moveFrames = frames.Get(record.MoveSheet ?? record.Sprite);
-            m_frameRate = (float)record.FrameRate;
+            m_backIdleFrames = record.BackIdleSheet != null ? frames.Get(record.BackIdleSheet) : m_idleFrames;
+            m_backMoveFrames = record.BackMoveSheet != null ? frames.Get(record.BackMoveSheet) : m_moveFrames;
+            m_idleFrameRate = (float)record.IdleFrameRate;
+            m_moveFrameRate = (float)record.MoveFrameRate;
             m_moveSpeed = (float)record.MoveSpeed;
             m_modelRoot.localScale = Vector3.one * (float)record.Scale;
             m_shadowRenderer.transform.localScale = new Vector3(1f, Iso.k_Y / Iso.k_X, 1f);
@@ -63,18 +70,24 @@ namespace ZooTycoon.World
 
         internal void PlayIdle()
         {
-            m_animator.Play(m_idleFrames, m_frameRate);
+            m_animator.Play(m_facingBack ? m_backIdleFrames : m_idleFrames, m_idleFrameRate);
         }
 
         internal void PlayMove()
         {
-            m_animator.Play(m_moveFrames, m_frameRate);
+            m_animator.Play(m_facingBack ? m_backMoveFrames : m_moveFrames, m_moveFrameRate);
         }
 
-        // 카드는 방향 1개 + 좌우 반전(기획서 2장 시점). 화면 x로 판정한다
+        // 좌우는 반전, 위로 가면 뒷모습·아래로 가면 앞모습. 옆으로만 가면 직전 방향을 유지한다. 화면 좌표로 판정한다
         internal void Face(Vector2 target)
         {
-            m_spriteRenderer.flipX = ToScreen(target).x < transform.position.x;
+            Vector3 delta = ToScreen(target) - transform.position;
+            m_spriteRenderer.flipX = delta.x < 0f;
+
+            if (Mathf.Abs(delta.y) > k_ArriveDistance)
+            {
+                m_facingBack = delta.y > 0f;
+            }
         }
 
         // 목표로 한 걸음 옮기고, 도착했으면 true

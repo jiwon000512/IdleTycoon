@@ -32,6 +32,8 @@ namespace ZooTycoon.World
             SetLogical(start);
             Destination = start;
             ChangeState(m_idle);
+            // 말풍선은 머리 위(외형마다 키가 다르다)
+            m_bubble.transform.localPosition = new Vector3(0f, Height, 0f);
         }
 
         // seconds > 0이면 그 시간에 도착하도록 속도를 맞춘다(Core가 센 시간). 0이면 기본 걸음

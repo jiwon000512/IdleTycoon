@@ -6,7 +6,10 @@ namespace ZooTycoon.Core
         string Sprite { get; }
         string IdleSheet { get; }
         string MoveSheet { get; }
-        double FrameRate { get; }
+        string BackIdleSheet { get; }
+        string BackMoveSheet { get; }
+        double IdleFrameRate { get; }
+        double MoveFrameRate { get; }
         double Scale { get; }
         double MoveSpeed { get; }
     }

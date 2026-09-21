@@ -1,13 +1,19 @@
 fileFormatVersion: 2
-guid: 79b064e4d19b96f4f97b9c2fbad2550a
+guid: 11b809413b22d0b4b9c2550141f4e59e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6342011261569357091
-    second: Visitor_Move_0
+      213: 5560098342527635369
+    second: Rabbit_BackMove_0
   - first:
-      213: -5115529385043375081
-    second: Visitor_Move_1
+      213: 106240305607021008
+    second: Rabbit_BackMove_1
+  - first:
+      213: -5131046935992213675
+    second: Rabbit_BackMove_2
+  - first:
+      213: 4662988980018473735
+    second: Rabbit_BackMove_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -40,7 +46,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -51,10 +57,10 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 0
+  spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 300
+  spritePixelsToUnits: 80
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -116,14 +122,14 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Visitor_Move_0
+      name: Rabbit_BackMove_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 240
-        height: 360
-      alignment: 9
+        width: 60
+        height: 78
+      alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -131,21 +137,21 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c9d39a18932cc0941b87789ef25d3008
-      internalID: -6342011261569357091
+      spriteID: f443cea52c52f0347ba991ab77483e67
+      internalID: 5560098342527635369
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Visitor_Move_1
+      name: Rabbit_BackMove_1
       rect:
         serializedVersion: 2
-        x: 240
+        x: 60
         y: 0
-        width: 240
-        height: 360
-      alignment: 9
+        width: 60
+        height: 78
+      alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -153,8 +159,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 21d7b9c5a7bed4845b7ec8a875e92e30
-      internalID: -5115529385043375081
+      spriteID: 2699430b6d873be48b5a21f2c557d0f1
+      internalID: 106240305607021008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackMove_2
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 0
+        width: 60
+        height: 78
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 16aa99ca9f068b040acbf5e6330b4087
+      internalID: -5131046935992213675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackMove_3
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 0
+        width: 60
+        height: 78
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e926abb8291d5e44b83fb2297b2d129
+      internalID: 4662988980018473735
       vertices: []
       indices: 
       edges: []
@@ -163,7 +213,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: c5803d54b456fcf448d717482f0682d1
+    spriteID: 84d967e8e213d574e9c2fc7bc7403178
     internalID: 0
     vertices: []
     indices: 
@@ -173,8 +223,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Visitor_Move_0: -6342011261569357091
-      Visitor_Move_1: -5115529385043375081
+      Rabbit_BackMove_0: 5560098342527635369
+      Rabbit_BackMove_1: 106240305607021008
+      Rabbit_BackMove_2: -5131046935992213675
+      Rabbit_BackMove_3: 4662988980018473735
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

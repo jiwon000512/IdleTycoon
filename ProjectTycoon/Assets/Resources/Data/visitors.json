@@ -1,21 +1,24 @@
 {
   "table": "visitors",
-  "version": 1,
+  "version": 2,
   "notes": [
-    "기획서 4장 관광객(v0.14). 관광객은 연출이며 수는 game_config.visitors와 초당 수입에서 계산한다.",
-    "스폰마다 weight 가중치로 한 종류를 고른다. 실제 실루엣 아트가 오면 행을 늘린다.",
-    "sprite·idleSheet·moveSheet는 Resources/ 기준 경로(확장자 없음). 시트가 null이면 sprite 1장을 프레임 1개로 쓴다.",
-    "viewSecondsMin~Max는 우리 앞에서 멈춰 구경하는 시간(초). 값은 전부 시작값."
+    "기획서 4장 관광객(v0.14). v1.14부터 빵집 손님 외형 전용: 손님이 들어올 때마다 한 행을 고른다.",
+    "sprite·idleSheet·moveSheet·backIdleSheet·backMoveSheet는 Resources/ 기준 경로(확장자 없음). idle·move 시트가 null이면 sprite 1장, back 시트가 null이면 앞모습 시트를 쓴다.",
+    "version 2 (2026-09-21): 토끼 손님. 뒷모습 시트 2칸 추가(위로 걸으면 뒷모습), frameRate를 idleFrameRate·moveFrameRate로 나눔(웜뱃과 같은 2.5·8). 시트는 Shop/Source~/make_visitor_sheets.py, 슬라이스는 ZooTycoon/Bake/Import Visitor Sheets.",
+    "viewSecondsMin~Max·weight는 지상 관광객이 쓰던 값으로 지금은 읽지 않는다(손님 개명 때 정리). 값은 전부 시작값."
   ],
   "rows": [
     {
       "id": "v01",
-      "name": "관광객",
-      "sprite": "Sprites/Visitors/Visitor/Visitor",
-      "idleSheet": null,
-      "moveSheet": "Sprites/Visitors/Visitor/Visitor_Move",
-      "frameRate": 6,
-      "scale": 0.6,
+      "name": "토끼",
+      "sprite": "Sprites/Visitors/Rabbit/Rabbit",
+      "idleSheet": "Sprites/Visitors/Rabbit/Rabbit_Idle",
+      "moveSheet": "Sprites/Visitors/Rabbit/Rabbit_Move",
+      "backIdleSheet": "Sprites/Visitors/Rabbit/Rabbit_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/Rabbit/Rabbit_BackMove",
+      "idleFrameRate": 2.5,
+      "moveFrameRate": 8,
+      "scale": 1,
       "moveSpeed": 1.5,
       "viewSecondsMin": 2.0,
       "viewSecondsMax": 4.0,

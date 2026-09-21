@@ -87,9 +87,9 @@ namespace ZooTycoon.Data
                     errors.Add($"visitors '{visitor.Id}': weight가 1 미만이다.");
                 }
 
-                if (visitor.FrameRate <= 0d || visitor.Scale <= 0d || visitor.MoveSpeed <= 0d)
+                if (visitor.IdleFrameRate <= 0d || visitor.MoveFrameRate <= 0d || visitor.Scale <= 0d || visitor.MoveSpeed <= 0d)
                 {
-                    errors.Add($"visitors '{visitor.Id}': frameRate·scale·moveSpeed는 0보다 커야 한다.");
+                    errors.Add($"visitors '{visitor.Id}': idleFrameRate·moveFrameRate·scale·moveSpeed는 0보다 커야 한다.");
                 }
 
                 if (visitor.ViewSecondsMin < 0d || visitor.ViewSecondsMax < visitor.ViewSecondsMin)

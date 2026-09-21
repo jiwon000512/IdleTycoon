@@ -5,7 +5,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 데이터-테이블-규칙 7장: visitors의 sprite·idleSheet·moveSheet 경로에 파일이 있어야 한다
+    // 데이터-테이블-규칙 7장: visitors의 sprite·시트 4개 경로에 파일이 있어야 한다
     public sealed class VisitorSpriteFileTests
     {
         private const string k_ResourcesPath = "Assets/Resources";
@@ -15,7 +15,7 @@ namespace ZooTycoon.Tests
         {
             foreach (VisitorRecord visitor in TestTables.LoadRows<VisitorRecord>("visitors"))
             {
-                foreach (string path in new[] { visitor.Sprite, visitor.IdleSheet, visitor.MoveSheet })
+                foreach (string path in new[] { visitor.Sprite, visitor.IdleSheet, visitor.MoveSheet, visitor.BackIdleSheet, visitor.BackMoveSheet })
                 {
                     if (path == null)
                     {

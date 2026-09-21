@@ -1,10 +1,19 @@
 fileFormatVersion: 2
-guid: 3fb3f020cebd196438329766b9bdb42f
+guid: dbe167b8a3f25d341820496f65891946
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4487843579408341158
-    second: Visitor_0
+      213: -2048419558392916260
+    second: Rabbit_BackIdle_0
+  - first:
+      213: -2046034200715015508
+    second: Rabbit_BackIdle_1
+  - first:
+      213: 1332837058535047214
+    second: Rabbit_BackIdle_2
+  - first:
+      213: 4466144829037360575
+    second: Rabbit_BackIdle_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +46,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,12 +55,12 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 0
-  alignment: 9
-  spritePivot: {x: 0.5, y: 0}
-  spritePixelsToUnits: 300
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 80
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -113,23 +122,89 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Visitor_0
+      name: Rabbit_BackIdle_0
       rect:
         serializedVersion: 2
-        x: 59
+        x: 0
         y: 0
-        width: 123
-        height: 352
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 60
+        height: 78
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a5729d9ca0af7b1c0800000000000000
-      internalID: -4487843579408341158
+      spriteID: c2616803cf67a9840ad601b2c5408603
+      internalID: -2048419558392916260
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackIdle_1
+      rect:
+        serializedVersion: 2
+        x: 60
+        y: 0
+        width: 60
+        height: 78
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 21513f6936dbf6547a29867210386e12
+      internalID: -2046034200715015508
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackIdle_2
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 0
+        width: 60
+        height: 78
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c2b8f2f1203c9b84f9120bbefd9ffe6c
+      internalID: 1332837058535047214
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackIdle_3
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 0
+        width: 60
+        height: 78
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9bcae4b6ad062374d88d86ceca913334
+      internalID: 4466144829037360575
       vertices: []
       indices: 
       edges: []
@@ -138,7 +213,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 32276c1d58e48ce42940765e5cf9e41b
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +223,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Visitor_0: -4487843579408341158
+      Rabbit_BackIdle_0: -2048419558392916260
+      Rabbit_BackIdle_1: -2046034200715015508
+      Rabbit_BackIdle_2: 1332837058535047214
+      Rabbit_BackIdle_3: 4466144829037360575
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
