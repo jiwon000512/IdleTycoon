@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 9a21bcfcc5aa0a64ab3381ca51348cdd
+guid: 2a04eaff99d9d49468a763f209e6e67e
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Galmuri14
+  - Galmuri9Bitmap
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

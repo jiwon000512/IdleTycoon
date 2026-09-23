@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f6cde2c94718c074eafbffe7738be6b7
+guid: 93296b7ff180230479c247ad189c348e
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Galmuri11
+  - Galmuri11Bitmap
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

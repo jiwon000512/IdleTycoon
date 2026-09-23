@@ -16,7 +16,7 @@ namespace ZooTycoon.Editor
         const string k_PrefabDir = "Assets/Prefabs/Shop/";
         const string k_ShadowPath = "Assets/Sprites/World/shadow.png";
         const string k_CoinPrefabPath = "Assets/Prefabs/CoinPopup.prefab";
-        const string k_FontPath = "Assets/Fonts/Galmuri/Galmuri9.asset";
+        const string k_FontPath = "Assets/Fonts/Galmuri/Galmuri11-Bold.asset";
         const float k_TagPpu = 40f;
         const float k_Ppu = 80f;
         // 가게 유닛(웜뱃·손님) 기본 크기: 한 칸 2px, PPU 80 = 42칸 캐릭터 약 1.05유닛. 스케일은 1로 두고 크기는 PPU로 정한다
@@ -306,7 +306,7 @@ namespace ZooTycoon.Editor
             bg.size = new Vector2(2.1f, 0.35f);
             TextMeshPro text = WorldText(tag.transform, "Text", Vector3.zero, 4);
             text.rectTransform.sizeDelta = new Vector2(2.1f, 0.35f);
-            text.fontSize = 2.25f;
+            text.fontSize = 2.75f;
             text.color = new Color32(0xF4, 0xDF, 0xBF, 255);
             tag.SetActive(false);
             return (tag, text);
@@ -318,7 +318,7 @@ namespace ZooTycoon.Editor
             TextMeshPro text = go.AddComponent<TextMeshPro>();
             text.rectTransform.sizeDelta = new Vector2(2f, 0.6f);
             text.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(k_FontPath);
-            text.fontSize = 2.25f;
+            text.fontSize = 2.75f;
             text.alignment = TextAlignmentOptions.Center;
             text.enableWordWrapping = false;
             text.overflowMode = TextOverflowModes.Overflow;

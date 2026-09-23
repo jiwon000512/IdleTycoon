@@ -16,7 +16,7 @@ namespace ZooTycoon.Editor
         const string k_UiDir = "Assets/Resources/UI/";
 
         static readonly Color k_Ink = new Color32(0x2E, 0x23, 0x20, 255);
-        static readonly Color k_Muted = new Color32(0x7A, 0x6A, 0x60, 255);
+        static readonly Color k_Muted = new Color32(0x5C, 0x4C, 0x42, 255);
         static readonly Color k_Cream = new Color32(0xFB, 0xF4, 0xE6, 255);
         static readonly Color k_TopBar = new Color32(0x2F, 0x4A, 0x3E, 255);
         static readonly Color k_Dim = new Color32(0x3A, 0x24, 0x22, 115);
@@ -56,7 +56,7 @@ namespace ZooTycoon.Editor
         static void BakeShopHud()
         {
             GameObject root = Root("ShopHudView");
-            Button back = ButtonUi(root.transform, "BackButton", "btn_secondary", 56 * U, 20 * U, out TextMeshProUGUI backText, "Galmuri11", 11, k_Ink);
+            Button back = ButtonUi(root.transform, "BackButton", "btn_secondary", 56 * U, 20 * U, out TextMeshProUGUI backText, "Galmuri11-Bold", 11, k_Ink);
             RectTransform backRect = back.GetComponent<RectTransform>();
             Anchor(backRect, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
             backRect.anchoredPosition = new Vector2(4 * U, -(24 * U));
@@ -127,8 +127,8 @@ namespace ZooTycoon.Editor
             Anchor(icon, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
             icon.anchoredPosition = new Vector2(0f, -(4 * U));
             icon.sizeDelta = new Vector2(26 * U, 22 * U);
-            TextMeshProUGUI label = Text(chip.transform, "Label", "Galmuri9", 9, k_Ink, TextAlignmentOptions.Bottom);
-            Stretch(label.rectTransform, new Vector4(2 * U, 15 * U, 2 * U, 0f));
+            TextMeshProUGUI label = Text(chip.transform, "Label", "Galmuri11-Bold", 11, k_Ink, TextAlignmentOptions.Bottom);
+            Stretch(label.rectTransform, new Vector4(2 * U, 14 * U, 2 * U, 0f));
             TextMeshProUGUI sub = Text(chip.transform, "Sub", "Galmuri9", 9, k_Muted, TextAlignmentOptions.Bottom);
             Stretch(sub.rectTransform, new Vector4(2 * U, 4 * U, 2 * U, 0f));
 
@@ -144,7 +144,7 @@ namespace ZooTycoon.Editor
             Button row = ButtonUi(rowList, "RowTemplate", "row", 0f, 28 * U, out _, null, 0, k_Ink);
             row.gameObject.AddComponent<CanvasGroup>();
             row.gameObject.AddComponent<LayoutElement>().preferredHeight = 28 * U;
-            TextMeshProUGUI name = Text(row.transform, "Name", "Galmuri11", 11, k_Ink, TextAlignmentOptions.TopLeft);
+            TextMeshProUGUI name = Text(row.transform, "Name", "Galmuri11-Bold", 11, k_Ink, TextAlignmentOptions.TopLeft);
             Stretch(name.rectTransform, new Vector4(8 * U, 0f, 60 * U, 3 * U));
             TextMeshProUGUI effect = Text(row.transform, "Effect", "Galmuri9", 9, k_Muted, TextAlignmentOptions.BottomLeft);
             Stretch(effect.rectTransform, new Vector4(8 * U, 3 * U, 60 * U, 0f));
