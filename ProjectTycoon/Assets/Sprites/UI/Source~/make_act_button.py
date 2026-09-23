@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # 상호작용 버튼 + 행동 아이콘 실제 아트(시안 B 흙 테 + 크림 판, 2026-09-23 사용자 선택). AI 없이 칸 단위로 그린다.
-# 1 px = 1 UI px(PPU 25). 버튼 44: 조이스틱 받침과 같은 흙 테 + 크림 판. 아이콘 18: 버튼 행동(actions.json manual)만 — 꺼내기·열기·파기.
+# 1 px = 1 UI px(PPU 25). 버튼 44: 조이스틱 받침과 같은 흙 테 + 크림 판. 아이콘 18: 버튼 행동(actions.json manual)만 — 열기·파기(꺼내기는 2026-09-23 auto로 바뀌어 아이콘 삭제).
 # 비활성은 코드 틴트(버튼 × 0.65, 아이콘 40%)라 따로 그리지 않는다. 칠한 뒤 바깥 1칸 진갈색 외곽선.
 # 사용: make_act_button.py (이 폴더에서) → ../btn_act.png, Resources/Sprites/Actions/<id>.png → 메뉴 ZooTycoon/Bake/Import UI Sprites → Bake/UI
 import os
@@ -11,32 +11,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 INK = (0x34, 0x20, 0x20)
 CREAM, LIGHT, TAN = (0xFB, 0xF4, 0xE6), (0xF0, 0xE4, 0xD8), (0xD9, 0xC8, 0xB4)
 RIM, RIM_L = (0xC8, 0xAA, 0x96), (0xE2, 0xCC, 0xB8)
-CRUST, CRUST_D, BUN_L = (0xD8, 0x86, 0x44), (0xB0, 0x62, 0x34), (0xF2, 0xC9, 0x8A)
 WOOD, WOOD_D = (0xC9, 0x9A, 0x6B), (0xA0, 0x72, 0x4C)
 STEEL, STEEL_D = (0xD8, 0xD2, 0xCC), (0xA8, 0xA0, 0x98)
-
-TAKE_OUT = [  # 식빵 + 위 화살표
-    "..................",
-    "........cc........",
-    ".......cccc.......",
-    "......cccccc......",
-    ".....cccccccc.....",
-    ".......cccc.......",
-    ".......cccc.......",
-    "..................",
-    ".....oooooooo.....",
-    "....oyyyyyyyyo....",
-    "...oyyyyyyyyyyo...",
-    "...oyyyyyyyyyyo...",
-    "....oyyyyyyyyo....",
-    "....oyyyyyyyyo....",
-    "....oyyyyyyyyo....",
-    "....dddddddddd....",
-    "..................",
-    "..................",
-]
-PAL = {'c': CREAM, 'o': CRUST, 'y': BUN_L, 'd': CRUST_D}
-
 
 def disc(n, r, dx=0, dy=0):
     y, x = np.mgrid[0:n, 0:n] - (n - 1) / 2
@@ -64,15 +40,6 @@ def button():
     return outline(a)
 
 
-def take_out():
-    a = np.zeros((18, 18, 4), np.uint8)
-    for y, row in enumerate(TAKE_OUT):
-        for x, ch in enumerate(row):
-            if ch != '.':
-                a[y, x] = PAL[ch] + (255,)
-    return outline(a)
-
-
 def open_():  # 돋보기
     im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
     d.line([(10, 10), (15, 15)], fill=WOOD_D + (255,), width=3)
@@ -93,5 +60,5 @@ def dig():  # 삽
 
 
 Image.fromarray(button()).save('../btn_act.png')
-for action_id, draw in [('take_out', take_out), ('open', open_), ('dig', dig)]:
+for action_id, draw in [('open', open_), ('dig', dig)]:
     Image.fromarray(draw()).save(f'../../../Resources/Sprites/Actions/{action_id}.png')

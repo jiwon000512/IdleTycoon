@@ -11,6 +11,8 @@ namespace ZooTycoon.Tests
         private const int k_H = 96;
         private const int k_E = 80;
         private const int k_R = 12;
+        // 입구 줄 바닥 윗변 = 아치 구멍 가운데(k_E − 53 + 53 × 0.55 올림)
+        private const int k_FloorTop = 57;
 
         private static BurrowShape.Result Build(params Cell[] cells)
         {
@@ -62,13 +64,17 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void EntranceRow_OnlyFunnelBelowHoleIsFloor()
+        public void EntranceRow_FlatFloorBelowHoleCenter_CornersRounded()
         {
             BurrowShape.Result r = Build(new Cell(-1, 0), new Cell(0, 0), new Cell(-1, 1), new Cell(0, 1));
 
             Assert.That(At(r, 0, 10), Is.False);
-            Assert.That(At(r, 0, 60), Is.True);
-            Assert.That(At(r, -130, 60), Is.False);
+            Assert.That(At(r, 0, k_FloorTop - 1), Is.False);
+            Assert.That(At(r, 0, k_FloorTop), Is.True);
+            Assert.That(At(r, -100, k_FloorTop), Is.True);
+            Assert.That(At(r, 100, k_FloorTop), Is.True);
+            Assert.That(At(r, -k_W, k_FloorTop), Is.False);
+            Assert.That(At(r, k_W - 1, k_FloorTop), Is.False);
             Assert.That(At(r, -130, k_E - 1), Is.True);
             Assert.That(At(r, 0, k_E), Is.True);
         }

@@ -10,7 +10,7 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("visitors", 6)]
-        [TestCase("strings", 10)]
+        [TestCase("strings", 11)]
         [TestCase("breads", 1)]
         [TestCase("shop_upgrades", 4)]
         [TestCase("actions", 1)]

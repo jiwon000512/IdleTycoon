@@ -124,12 +124,11 @@ namespace ZooTycoon.Tests
             m_config.MaxCustomers = before;
         }
 
-        // 꺼내기는 버튼, 채우기는 진열대 range에 들어가면 저절로(설계 09 v0.4)
+        // 꺼내기는 오븐 range에, 채우기는 진열대 range에 들어가면 저절로(설계 09 v0.4, 2026-09-23 꺼내기도 auto)
         private void CarryToShelf(ShopSim shop, Cell ovenCell, string breadId)
         {
             WalkTo(shop, OvenStand(shop, ovenCell));
-            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionTakeOut));
-            Assert.That(shop.TryInteract(), Is.True);
+            Assert.That(shop.CarriedCount, Is.GreaterThan(0));
             WalkTo(shop, ShelfStand(shop, shop.ShelfCell(breadId)));
         }
 
@@ -332,7 +331,7 @@ namespace ZooTycoon.Tests
             Assert.That(Vector2.Distance(second.Position, shop.Layout.QueueSlots[0]), Is.LessThan(0.01f));
         }
 
-        // 설계 09: 다 구운 빵은 저절로 진열되지 않고, 꺼내면 오븐이 비어 다시 구울 수 있다
+        // 설계 09: 다 구운 빵은 저절로 진열되지 않고, 오븐 앞에 가면 꺼내져 오븐이 비어 다시 구울 수 있다
         [Test]
         public void TakeOut_EmptiesOvenAndAllowsBakeAgain()
         {
@@ -346,7 +345,6 @@ namespace ZooTycoon.Tests
             Assert.That(shop.TryBake(0, "b01"), Is.False);
 
             WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
-            Assert.That(shop.TryInteract(), Is.True);
             Assert.That(shop.CarriedCount, Is.EqualTo(6));
             Assert.That(shop.Carried.Id, Is.EqualTo("b01"));
             Assert.That(shop.Ovens[0].IsEmpty, Is.True);
@@ -562,7 +560,6 @@ namespace ZooTycoon.Tests
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
             WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
-            Assert.That(shop.TryInteract(), Is.True);
             Run(shop, 0.1d);
 
             Assert.That(shop.Target.Value.Kind, Is.EqualTo(InteractKind.Oven));
@@ -590,16 +587,19 @@ namespace ZooTycoon.Tests
             Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionOpen));
         }
 
-        // 설계 09 v0.4 검증 4: take_out을 auto로 바꾸면 오븐 range에 들어가기만 해도 꺼낸다
+        // 설계 09 v0.4 검증 4(2026-09-23 기본이 auto로 바뀜): take_out을 manual로 바꾸면 오븐 앞에 서도 버튼을 눌러야 꺼낸다
         [Test]
-        public void TakeOut_Auto_OnEnteringOvenRange()
+        public void TakeOut_Manual_OnlyOnButton()
         {
-            ShopSim shop = Create(c => c.MaxCustomers = 0, new Dictionary<string, string> { ["take_out"] = ActionRecord.k_Auto });
+            ShopSim shop = Create(c => c.MaxCustomers = 0, new Dictionary<string, string> { ["take_out"] = ActionRecord.k_Manual });
             shop.TryBake(0, "b01");
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
             WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+            Assert.That(shop.CarriedCount, Is.EqualTo(0));
+            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionTakeOut));
 
+            Assert.That(shop.TryInteract(), Is.True);
             Assert.That(shop.CarriedCount, Is.EqualTo(6));
             Assert.That(shop.Ovens[0].IsEmpty, Is.True);
             Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionOpen));

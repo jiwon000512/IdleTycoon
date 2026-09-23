@@ -1,6 +1,6 @@
 {
   "table": "strings",
-  "version": 10,
+  "version": 11,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -12,7 +12,8 @@
     "version 7 (2026-09-23, 굴 격자 설계 v0.5): 잠긴 진열대·오븐 키(sheet_locked_*·tag_unlock·tag_oven) 삭제, 굴 파기·빈 자리 시트 키(sheet_dig_*·sheet_slot_*·row_dig*·tag_dig·tag_slot) 추가, row_unlock 문구 변경.",
     "version 8 (2026-09-23, 손님 동선 설계 v0.2): emote_happy(결제 뒤 머리 위 하트) 추가.",
     "version 9 (2026-09-23, 설계 09 웜뱃 조작): 지상 폐기로 shop_back, 심부름 폐기로 sheet_oven_errand 삭제. 상호작용 버튼은 아이콘이라 새 키 없음.",
-    "version 10 (2026-09-23, 상단 HUD 시안 C): 가게 이름 줄을 없애 shop_title_bakery 삭제."
+    "version 10 (2026-09-23, 상단 HUD 시안 C): 가게 이름 줄을 없애 shop_title_bakery 삭제.",
+    "version 11 (2026-09-23): 빈 자리 글자 태그를 없애 tag_slot 삭제(사용자 「게임과 맞지 않음」)."
   ],
   "rows": [
     { "id": "topbar_coins", "ko": "{0}" },
@@ -40,7 +41,6 @@
     { "id": "row_dig", "ko": "여기 파기" },
     { "id": "row_dig_effect", "ko": "굴이 넓어진다" },
     { "id": "tag_dig", "ko": "파기 {0}" },
-    { "id": "tag_slot", "ko": "빈 자리" },
     { "id": "emote_happy", "ko": "♥" }
   ]
 }

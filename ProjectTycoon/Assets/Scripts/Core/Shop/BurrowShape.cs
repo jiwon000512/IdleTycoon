@@ -5,11 +5,10 @@ namespace ZooTycoon.Core
 {
     // 굴 격자 설계 v0.5 3장: 파낸 칸의 합집합에서 굴 바닥 마스크를 만든다(한 칸 = 1픽셀, y는 아래로).
     // 격자 꼭짓점마다 둘레 네 칸을 보고 바깥 모서리(파낸 칸 1개)는 반지름 r로 깎고, 안쪽 모서리(안 판 칸 1개)는 r로 메운다.
-    // 입구 줄은 구멍 중간부터 아래로 벌어지는 4분의 1 타원(옛 entrance.png와 같은 식)
+    // 입구 줄은 아치 구멍 가운데 높이부터 줄 폭 전체가 바닥(2026-09-23: 윗변을 다른 면처럼 평평하게, 모서리도 r로 깎는다)
     public static class BurrowShape
     {
-        // 입구 아치 그림(arch.png) 크기(칸). 아트 사실이라 상수
-        private const int k_ArchWidth = 64;
+        // 입구 아치 그림(arch.png) 높이(칸). 아트 사실이라 상수
         private const int k_ArchHeight = 53;
 
         public sealed class Result
@@ -46,18 +45,19 @@ namespace ZooTycoon.Core
             int width = (maxCol - minCol + 1) * cellWidth + margin * 2;
             int height = RowTop(maxRow + 1, cellHeight, entranceHeight) + margin * 2;
             bool[,] mask = new bool[width, height];
+            int floorTop = EntranceFloorTop(entranceHeight);
 
             foreach (Cell cell in cells)
             {
                 int x0 = cell.Col * cellWidth - originX;
-                int y0 = RowTop(cell.Row, cellHeight, entranceHeight) - originY;
-                int h = cell.Row == 0 ? entranceHeight : cellHeight;
+                int y0 = (cell.Row == 0 ? floorTop : RowTop(cell.Row, cellHeight, entranceHeight)) - originY;
+                int h = cell.Row == 0 ? entranceHeight - floorTop : cellHeight;
 
                 for (int y = y0; y < y0 + h; y++)
                 {
                     for (int x = x0; x < x0 + cellWidth; x++)
                     {
-                        mask[x, y] = cell.Row != 0 || Funnel(x + originX, y + originY, cellWidth, entranceHeight);
+                        mask[x, y] = true;
                     }
                 }
             }
@@ -81,27 +81,17 @@ namespace ZooTycoon.Core
             return row <= 0 ? 0 : entranceHeight + (row - 1) * cellHeight;
         }
 
-        // 입구 줄 안 픽셀이 굴 바닥인가. 구멍 중간(top)부터 아래로 벌어져 줄 밑변에서 두 칸 폭이 된다
-        private static bool Funnel(int x, int y, int cellWidth, int entranceHeight)
+        // 입구 줄 바닥 윗변(칸, 줄 윗변 기준) = 아치 구멍 가운데. 아치는 이 선 위에 걸쳐 구멍 아래쪽이 바닥으로 이어진다
+        private static int EntranceFloorTop(int entranceHeight)
         {
-            double top = entranceHeight - k_ArchHeight + k_ArchHeight * 0.55;
-
-            if (y < top)
-            {
-                return false;
-            }
-
-            double t = (y - top) / (entranceHeight - 1 - top);
-            double inner = k_ArchWidth * 0.42;
-            double half = inner + (cellWidth - inner) * Math.Sqrt(Math.Max(0d, 1d - (1d - t) * (1d - t)));
-            return Math.Abs(x + 0.5) < half;
+            return (int)Math.Ceiling(entranceHeight - k_ArchHeight + k_ArchHeight * 0.55);
         }
 
         // 꼭짓점 (col, row)의 왼쪽 위 = (col−1, row−1) … 오른쪽 아래 = (col, row). 파낸 칸이 1개면 그 칸의 모서리를 깎고, 3개면 빠진 칸 모서리를 메운다
         private static void RoundVertex(bool[,] mask, HashSet<Cell> cells, int col, int row, int cellWidth, int cellHeight, int entranceHeight, int radius, int originX, int originY)
         {
             int vx = col * cellWidth - originX;
-            int vy = RowTop(row, cellHeight, entranceHeight) - originY;
+            int vy = (row == 0 ? EntranceFloorTop(entranceHeight) : RowTop(row, cellHeight, entranceHeight)) - originY;
             int dug = 0;
             int missingX = 0, missingY = 0, dugX = 0, dugY = 0;
 

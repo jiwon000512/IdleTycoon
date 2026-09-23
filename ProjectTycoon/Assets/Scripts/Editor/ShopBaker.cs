@@ -60,7 +60,7 @@ namespace ZooTycoon.Editor
             OvenView oven = BakeOven();
             CounterView counter = BakeCounter();
             MarkerView digTag = BakeDigTag();
-            MarkerView slotMarker = BakeSlotMarker();
+            SpriteRenderer slotMarker = BakeSlotMarker();
             BakeCoinPopup();
             ShopCustomer customer = BakeCustomer();
             BakeShop(shelf, oven, counter, digTag, slotMarker, customer);
@@ -260,16 +260,14 @@ namespace ZooTycoon.Editor
             return Save(root, view, "DigTag");
         }
 
-        // 빈 자리: 점선 발자국(탭 영역) + 위에 「빈 자리」 태그
-        static MarkerView BakeSlotMarker()
+        // 빈 자리: 점선 발자국만(2026-09-23 「빈 자리」 글자 태그 삭제)
+        static SpriteRenderer BakeSlotMarker()
         {
             GameObject root = new GameObject("SlotMarker");
-            SpriteRenderer body = Renderer(root.transform, "Body", Load("slot_empty"), Vector3.zero, k_MarkerOrder);
-            (_, TextMeshPro text) = Tag(root.transform, 0.65f);
-            MarkerView view = root.AddComponent<MarkerView>();
-            Set(view, "m_body", body);
-            Set(view, "m_text", text);
-            return Save(root, view, "SlotMarker");
+            SpriteRenderer body = root.AddComponent<SpriteRenderer>();
+            body.sprite = Load("slot_empty");
+            body.sortingOrder = k_MarkerOrder;
+            return Save(root, body, "SlotMarker");
         }
 
         // ---------- 손님 · 가게 ----------
@@ -327,7 +325,7 @@ namespace ZooTycoon.Editor
         }
 
         // Shop 루트: 흙 배경(무한 벽 타일) + 굴 그림(실행 중 생성) + 입구 아치
-        static void BakeShop(ShelfView shelf, OvenView oven, CounterView counter, MarkerView digTag, MarkerView slotMarker, ShopCustomer customer)
+        static void BakeShop(ShelfView shelf, OvenView oven, CounterView counter, MarkerView digTag, SpriteRenderer slotMarker, ShopCustomer customer)
         {
             GameObject root = new GameObject("Shop");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);

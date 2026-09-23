@@ -15,7 +15,8 @@ namespace ZooTycoon.World
         [SerializeField] private OvenView m_ovenPrefab;
         [SerializeField] private CounterView m_counterPrefab;
         [SerializeField] private MarkerView m_digTagPrefab;
-        [SerializeField] private MarkerView m_slotMarkerPrefab;
+        [Tooltip("빈 자리 점선 칸(2026-09-23부터 글자 태그 없음)")]
+        [SerializeField] private SpriteRenderer m_slotMarkerPrefab;
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
         [Tooltip("바닥·벽 타일 한 주기(한 칸 = 1px, 읽기 가능)")]
@@ -29,7 +30,7 @@ namespace ZooTycoon.World
 
         private readonly Dictionary<Cell, ShelfView> m_shelves = new Dictionary<Cell, ShelfView>();
         private readonly List<OvenView> m_ovens = new List<OvenView>();
-        private readonly Dictionary<Cell, MarkerView> m_slotMarkers = new Dictionary<Cell, MarkerView>();
+        private readonly Dictionary<Cell, SpriteRenderer> m_slotMarkers = new Dictionary<Cell, SpriteRenderer>();
         private readonly Dictionary<Cell, MarkerView> m_digTags = new Dictionary<Cell, MarkerView>();
         private CounterView m_counter;
         private ShopSim m_shop;
@@ -121,7 +122,7 @@ namespace ZooTycoon.World
                     m_ovens[target.Index].Bounce();
                     break;
                 case InteractKind.EmptySlot:
-                    m_slotMarkers[target.Cell].Bounce();
+                    StartCoroutine(Fx.Bounce(m_slotMarkers[target.Cell].transform));
                     break;
                 case InteractKind.Dig:
                     m_digTags[target.Cell].Bounce();
@@ -367,21 +368,21 @@ namespace ZooTycoon.World
                 }
             }
 
-            foreach (MarkerView marker in m_slotMarkers.Values)
+            foreach (SpriteRenderer marker in m_slotMarkers.Values)
             {
                 marker.gameObject.SetActive(false);
             }
 
             foreach (Cell cell in m_shop.EmptySlots)
             {
-                if (!m_slotMarkers.TryGetValue(cell, out MarkerView marker))
+                if (!m_slotMarkers.TryGetValue(cell, out SpriteRenderer marker))
                 {
                     marker = Instantiate(m_slotMarkerPrefab, transform);
                     marker.transform.position = CellCenter(cell) + Vector2.down * 0.3f;
                     m_slotMarkers[cell] = marker;
                 }
 
-                marker.Show(m_tables.Strings.Get("tag_slot"));
+                marker.gameObject.SetActive(true);
             }
 
             RefreshShelves();

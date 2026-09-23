@@ -45,6 +45,8 @@ namespace ZooTycoon.World
         private int m_shownCarry;
         private int m_lastCount;
         private BreadRecord m_lastCarried;
+        // 꺼내기는 오븐 사건 바로 뒤에 들기 사건이 온다(ShopSim.TakeOut). 꺼내기가 auto라 대상이 아닌 오븐에서도 꺼낸다
+        private int m_lastOven;
 
         public void Bind(ShopSim shop, ShopView view, FrameCache frames)
         {
@@ -52,6 +54,7 @@ namespace ZooTycoon.World
             m_view = view;
             m_frames = frames;
             m_shop.CarryChanged += Shop_CarryChanged;
+            m_shop.OvenChanged += Shop_OvenChanged;
             ShowCarry();
             Update();
         }
@@ -61,6 +64,7 @@ namespace ZooTycoon.World
             if (m_shop != null)
             {
                 m_shop.CarryChanged -= Shop_CarryChanged;
+                m_shop.OvenChanged -= Shop_OvenChanged;
             }
         }
 
@@ -130,12 +134,10 @@ namespace ZooTycoon.World
         {
             int count = m_shop.CarriedCount;
             BreadRecord bread = count > m_lastCount ? m_shop.Carried : m_lastCarried;
-            Interactable? target = m_shop.Target;
 
-            if (count > m_lastCount && target.HasValue && target.Value.Kind == InteractKind.Oven)
+            if (count > m_lastCount)
             {
-                // 꺼내기는 대상 오븐에서만 한다(manual)
-                StartCoroutine(FlyRoutine(Icon(bread), m_view.OvenBreadPosition(target.Value.Index), () => m_carry[Mathf.Min(count, m_carry.Length) - 1].transform.position, ShowCarry));
+                StartCoroutine(FlyRoutine(Icon(bread), m_view.OvenBreadPosition(m_lastOven), () => m_carry[Mathf.Min(count, m_carry.Length) - 1].transform.position, ShowCarry));
             }
             else
             {
@@ -150,6 +152,11 @@ namespace ZooTycoon.World
 
             m_lastCount = count;
             m_lastCarried = m_shop.Carried;
+        }
+
+        private void Shop_OvenChanged(int index)
+        {
+            m_lastOven = index;
         }
 
         private Sprite Icon(BreadRecord bread)

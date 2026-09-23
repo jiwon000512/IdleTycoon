@@ -325,7 +325,7 @@ MonoBehaviour:
   m_ovenPrefab: {fileID: 8192886140390090411, guid: ae374a5bb7498b84abd9a7ca91702508, type: 3}
   m_counterPrefab: {fileID: 5878910152373518893, guid: d224b4d083fc57a49abc30ca4678f06b, type: 3}
   m_digTagPrefab: {fileID: 2695013931679785543, guid: 97aa13a92e14cdf42beedaa907855fa1, type: 3}
-  m_slotMarkerPrefab: {fileID: 1057193816453974118, guid: 9f7d5f9f56dd9f647ace1cd89ffd7d0a, type: 3}
+  m_slotMarkerPrefab: {fileID: 1917222459852495190, guid: 9f7d5f9f56dd9f647ace1cd89ffd7d0a, type: 3}
   m_burrow: {fileID: 6005301527074928383}
   m_floorTile: {fileID: 2800000, guid: cbe2c1fb1b307594393261131b9a1129, type: 3}
   m_wallTile: {fileID: 2800000, guid: 882915a7e11f7f64f99f73a3c756154c, type: 3}
