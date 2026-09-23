@@ -36,6 +36,7 @@ namespace ZooTycoon.World
         private CounterView m_counter;
         private ShopSim m_shop;
         private FrameCache m_frames;
+        private GameTables m_tables;
         private float m_height;
 
         // 새로 판 층의 가운데(카메라가 보여 줄 곳)
@@ -47,10 +48,11 @@ namespace ZooTycoon.World
         public Vector2 Door => (Vector2)transform.position + new Vector2(0f, -m_doorDepth);
         public float ExitLaneX => transform.position.x + m_exitLaneX;
 
-        public void Bind(ShopSim shop, FrameCache frames)
+        public void Bind(ShopSim shop, FrameCache frames, GameTables tables)
         {
             m_shop = shop;
             m_frames = frames;
+            m_tables = tables;
             m_entrance = Instantiate(m_entrancePrefab, transform);
             m_counter = Instantiate(m_counterPrefab, transform);
             Build();
@@ -74,17 +76,49 @@ namespace ZooTycoon.World
             return m_counter.QueueHead + Vector2.up * (m_queueSpacing * index);
         }
 
-        public int OvenAt(Vector3 world)
+        // 사물 터치 기획: 탭 위치의 사물. 잠긴 진열대·오븐도 맞힌다
+        public ShopTarget? HitTest(Vector3 world)
         {
-            for (int i = 0; i < m_shop.Ovens.Count; i++)
+            for (int slot = 0; slot < m_shelfRows.Count * 2; slot++)
             {
-                if (Oven(i).Contains(world))
+                if (m_shelfRows[slot / 2].Get(slot % 2).Contains(world))
                 {
-                    return i;
+                    return new ShopTarget(slot < m_shop.UnlockedBreads.Count ? ShopTargetKind.Shelf : ShopTargetKind.LockedShelf, slot);
                 }
             }
 
-            return -1;
+            for (int i = 0; i < m_ovenRows.Count * 2; i++)
+            {
+                if (Oven(i).Contains(world))
+                {
+                    return new ShopTarget(i < m_shop.Ovens.Count ? ShopTargetKind.Oven : ShopTargetKind.LockedOven, i);
+                }
+            }
+
+            if (m_counter.Contains(world))
+            {
+                return new ShopTarget(ShopTargetKind.Counter, 0);
+            }
+
+            return null;
+        }
+
+        public void Bounce(ShopTarget target)
+        {
+            switch (target.Kind)
+            {
+                case ShopTargetKind.Shelf:
+                case ShopTargetKind.LockedShelf:
+                    m_shelfRows[target.Index / 2].Get(target.Index % 2).Bounce();
+                    break;
+                case ShopTargetKind.Oven:
+                case ShopTargetKind.LockedOven:
+                    Oven(target.Index).Bounce();
+                    break;
+                default:
+                    m_counter.Bounce();
+                    break;
+            }
         }
 
         private void OnDestroy()
@@ -114,6 +148,11 @@ namespace ZooTycoon.World
         private void Shop_UpgradesChanged()
         {
             RefreshShelves();
+
+            for (int i = 0; i < m_ovenRows.Count * 2; i++)
+            {
+                RefreshOven(i);
+            }
         }
 
         private void Shop_QueueChanged()
@@ -232,7 +271,10 @@ namespace ZooTycoon.World
 
                 if (slot >= m_shop.UnlockedBreads.Count)
                 {
-                    shelf.ShowLocked();
+                    // 다음 빵 자리(첫 잠긴 칸)에만 굴 넓히기 태그
+                    BreadRecord next = m_shop.NextBread;
+                    bool nextSlot = slot == m_shop.UnlockedBreads.Count && next != null;
+                    shelf.ShowLocked(nextSlot ? m_tables.Strings.Format("tag_unlock", Cost(next.UnlockCost)) : null);
                     continue;
                 }
 
@@ -244,10 +286,12 @@ namespace ZooTycoon.World
         private void RefreshOven(int index)
         {
             OvenView view = Oven(index);
+            view.SetLook(m_shop.OvenLookUpgraded);
 
             if (index >= m_shop.Ovens.Count)
             {
-                view.ShowLocked();
+                bool nextOven = index == m_shop.Ovens.Count && !m_shop.IsMaxed(ShopSim.k_OvenCount);
+                view.ShowLocked(nextOven ? m_tables.Strings.Format("tag_oven", Cost(m_shop.UpgradeCost(ShopSim.k_OvenCount))) : null);
                 return;
             }
 
@@ -266,6 +310,11 @@ namespace ZooTycoon.World
         private OvenView Oven(int index)
         {
             return m_ovenRows[index / 2].Get(index % 2);
+        }
+
+        private static string Cost(double cost)
+        {
+            return cost.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private Sprite Icon(BreadRecord bread)

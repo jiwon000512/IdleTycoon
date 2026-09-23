@@ -1,10 +1,12 @@
 {
   "table": "shop_upgrades",
-  "version": 1,
+  "version": 3,
   "notes": [
     "설계 08 v0.5 빵집 업그레이드. 비용 = baseCost × costGrowth^단계, 효과 = effectPerLevel × 단계.",
     "oven_count: 오븐 +1대/단계(game_config.shop.ovenCount에서 시작). oven_speed·checkout_speed: 속도 배수 +effect. shelf_capacity: 빵 칸 용량 +effect.",
-    "id는 코드 상수(ShopSim.k_*)와 같아야 한다. 값은 전부 시작값."
+    "id는 코드 상수(ShopSim.k_*)와 같아야 한다. 값은 전부 시작값.",
+    "version 2 (2026-09-23): lookLevel 추가. 이 단계부터 소품 외형이 바뀐다(0 = 안 바뀜). oven_speed 5 = 흙 돔 오븐 → 벽돌 오븐(Sprites/World/Shop/oven_2.png).",
+    "version 3 (2026-09-23, 사물 터치): target(어느 사물 시트에서 파는지: shelf·oven·counter), effectFormat(효과 전후 문구, {0} 현재 {1} 다음. 값은 ShopSim.UpgradeValue)."
   ],
   "rows": [
     {
@@ -13,7 +15,10 @@
       "baseCost": 300,
       "costGrowth": 3,
       "maxLevel": 3,
-      "effectPerLevel": 1
+      "effectPerLevel": 1,
+      "lookLevel": 0,
+      "target": "oven",
+      "effectFormat": "오븐 {0} → {1}"
     },
     {
       "id": "oven_speed",
@@ -21,7 +26,10 @@
       "baseCost": 100,
       "costGrowth": 1.6,
       "maxLevel": 10,
-      "effectPerLevel": 0.2
+      "effectPerLevel": 0.2,
+      "lookLevel": 5,
+      "target": "oven",
+      "effectFormat": "속도 ×{0} → ×{1}"
     },
     {
       "id": "shelf_capacity",
@@ -29,7 +37,10 @@
       "baseCost": 80,
       "costGrowth": 1.5,
       "maxLevel": 10,
-      "effectPerLevel": 4
+      "effectPerLevel": 4,
+      "lookLevel": 0,
+      "target": "shelf",
+      "effectFormat": "용량 {0} → {1}"
     },
     {
       "id": "checkout_speed",
@@ -37,7 +48,10 @@
       "baseCost": 120,
       "costGrowth": 1.6,
       "maxLevel": 10,
-      "effectPerLevel": 0.2
+      "effectPerLevel": 0.2,
+      "lookLevel": 0,
+      "target": "counter",
+      "effectFormat": "속도 ×{0} → ×{1}"
     }
   ]
 }

@@ -82,6 +82,7 @@ MonoBehaviour:
   m_height: 2.6
   m_queueHead: {fileID: 5918905820312883539}
   m_wombat: {fileID: 6966855856106456036}
+  m_body: {fileID: 9100660517652985611}
 --- !u!1 &2320341588006841354
 GameObject:
   m_ObjectHideFlags: 0
@@ -168,7 +169,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 6.75, y: 2.59375}
+  m_Size: {x: 6.75, y: 2.6}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -259,7 +260,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2.75, y: 0.6875}
+  m_Size: {x: 2.1, y: 0.725}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1

@@ -1,0 +1,182 @@
+{
+ "btn_primary": {
+  "w": 38,
+  "h": 14,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ]
+ },
+ "btn_primary_pressed": {
+  "w": 36,
+  "h": 14,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ]
+ },
+ "btn_primary_disabled": {
+  "w": 38,
+  "h": 14,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ]
+ },
+ "btn_secondary": {
+  "w": 38,
+  "h": 14,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ]
+ },
+ "btn_secondary_pressed": {
+  "w": 36,
+  "h": 14,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ]
+ },
+ "btn_secondary_disabled": {
+  "w": 38,
+  "h": 14,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ]
+ },
+ "btn_close": {
+  "w": 19,
+  "h": 19,
+  "border": null
+ },
+ "pill_topbar": {
+  "w": 34,
+  "h": 16,
+  "border": [
+   15,
+   4,
+   4,
+   4
+  ]
+ },
+ "tag_cost": {
+  "w": 40,
+  "h": 17,
+  "border": [
+   6,
+   5,
+   6,
+   5
+  ]
+ },
+ "icon_coin": {
+  "w": 12,
+  "h": 12,
+  "border": null
+ },
+ "icon_lock": {
+  "w": 11,
+  "h": 14,
+  "border": null
+ },
+ "icon_close": {
+  "w": 12,
+  "h": 13,
+  "border": null
+ },
+ "icon_down": {
+  "w": 11,
+  "h": 13,
+  "border": null
+ },
+ "icon_star": {
+  "w": 12,
+  "h": 13,
+  "border": null
+ },
+ "icon_up": {
+  "w": 11,
+  "h": 13,
+  "border": null
+ },
+ "icon_clock": {
+  "w": 12,
+  "h": 13,
+  "border": null
+ },
+ "icon_check": {
+  "w": 12,
+  "h": 11,
+  "border": null
+ },
+ "sheet_frame": {
+  "w": 64,
+  "h": 40,
+  "border": [
+   8,
+   8,
+   8,
+   8
+  ]
+ },
+ "chip": {
+  "w": 44,
+  "h": 48,
+  "border": [
+   6,
+   6,
+   6,
+   6
+  ]
+ },
+ "chip_hi": {
+  "w": 44,
+  "h": 48,
+  "border": [
+   6,
+   6,
+   6,
+   6
+  ]
+ },
+ "row": {
+  "w": 96,
+  "h": 18,
+  "border": [
+   6,
+   5,
+   6,
+   5
+  ]
+ },
+ "pill_cost": {
+  "w": 30,
+  "h": 12,
+  "border": [
+   13,
+   3,
+   3,
+   3
+  ]
+ },
+ "white": {
+  "w": 4,
+  "h": 4,
+  "border": null
+ }
+}

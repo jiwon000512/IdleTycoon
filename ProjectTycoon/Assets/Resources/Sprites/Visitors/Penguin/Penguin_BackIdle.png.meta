@@ -127,7 +127,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bcb00b55a36c86c4db54f91068ecbd89
+      spriteID: 8d2ec3af3c54d7543b82d498a6bdfc3e
       internalID: 9026382352810368405
       vertices: []
       indices: 
@@ -147,9 +147,9 @@ TextureImporter:
       name: Penguin_BackIdle_1
       rect:
         serializedVersion: 2
-        x: 88
+        x: 104
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0edbad8c99efd374181f43f4bd084d97
+      spriteID: e680fc8fc471a54408c96f67a0d4c30b
       internalID: 3473334314194531436
       vertices: []
       indices: 
@@ -169,9 +169,9 @@ TextureImporter:
       name: Penguin_BackIdle_2
       rect:
         serializedVersion: 2
-        x: 176
+        x: 208
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4c2506276674223448ed090c1cf7ffd9
+      spriteID: 7f2b802083883df4ca8e3f17ee209289
       internalID: -8499946012970580301
       vertices: []
       indices: 
@@ -191,9 +191,9 @@ TextureImporter:
       name: Penguin_BackIdle_3
       rect:
         serializedVersion: 2
-        x: 264
+        x: 312
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c6c4f3f93aeed2a429b7f283c572ba03
+      spriteID: 27a6d0a204ac2034bb7da1945897edad
       internalID: 7748157917901819459
       vertices: []
       indices: 

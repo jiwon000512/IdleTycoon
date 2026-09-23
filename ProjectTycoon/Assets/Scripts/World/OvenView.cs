@@ -11,6 +11,21 @@ namespace ZooTycoon.World
         [SerializeField] private GameObject m_bar;
         [SerializeField] private Transform m_barFill;
         [SerializeField] private TextMeshPro m_readyText;
+        [SerializeField] private Sprite m_baseBody;
+        [SerializeField] private Sprite m_upgradedBody;
+        [Tooltip("잠긴 오븐 위 비용 태그(사물 터치 기획)")]
+        [SerializeField] private GameObject m_tag;
+        [SerializeField] private TextMeshPro m_tagText;
+
+        public void SetLook(bool upgraded)
+        {
+            m_body.sprite = upgraded ? m_upgradedBody : m_baseBody;
+        }
+
+        public void Bounce()
+        {
+            StartCoroutine(Fx.Bounce(m_body.transform));
+        }
 
         public bool Contains(Vector3 world)
         {
@@ -32,15 +47,19 @@ namespace ZooTycoon.World
         public void ShowEmpty()
         {
             m_body.color = Color.white;
+            m_tag.SetActive(false);
             m_icon.enabled = false;
             m_bar.SetActive(false);
             m_readyText.enabled = false;
         }
 
-        public void ShowLocked()
+        // tag가 null이면 태그 없이 흐리게만(오븐 추가가 최대일 때)
+        public void ShowLocked(string tag)
         {
             ShowEmpty();
             m_body.color = new Color(1f, 1f, 1f, 0.3f);
+            m_tag.SetActive(tag != null);
+            m_tagText.text = tag ?? "";
         }
     }
 }

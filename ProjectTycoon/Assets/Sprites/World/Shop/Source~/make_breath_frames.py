@@ -22,9 +22,9 @@ SPEC = {
     'penguin_front': {'dir': '', 'low': 27, 'ear': 0, 'ears': []},
     'penguin_back': {'dir': '', 'low': 27, 'ear': 0, 'ears': []},
     # 여우·고슴도치(2026-09-23). 여우는 뾰족귀(0~5행)가 한 박자 늦게, 고슴도치는 귀가 가시에 묻혀 없음
-    'fox_front': {'dir': '', 'low': 33, 'ear': 5, 'ears': [(2, 13), (20, 30)]},
+    'fox_front': {'dir': '', 'low': 33, 'ear': 5, 'ears': [(11, 22), (29, 39)]},
     'hedgehog_front': {'dir': '', 'low': 22, 'ear': 0, 'ears': []},
-    'fox_back': {'dir': '', 'low': 33, 'ear': 5, 'ears': [(2, 13), (20, 30)]},
+    'fox_back': {'dir': '', 'low': 33, 'ear': 5, 'ears': [(11, 22), (29, 39)]},
     'hedgehog_back': {'dir': '', 'low': 22, 'ear': 0, 'ears': []},
 }
 

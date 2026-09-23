@@ -75,6 +75,29 @@ namespace ZooTycoon.Core
             return m_stock[breadId];
         }
 
+        // 오븐 외형 2단계(shop_upgrades.oven_speed.lookLevel 이상)
+        public bool OvenLookUpgraded
+        {
+            get
+            {
+                ShopUpgradeRecord record = GetUpgrade(k_OvenSpeed);
+                return record.LookLevel > 0 && UpgradeLevel(k_OvenSpeed) >= record.LookLevel;
+            }
+        }
+
+        // 사물 시트 효과 전후 표시용: 그 단계일 때의 게임 값(진열대 용량·오븐 수·속도 배수)
+        public double UpgradeValue(string upgradeId, int level)
+        {
+            double effect = GetUpgrade(upgradeId).EffectPerLevel * level;
+
+            switch (upgradeId)
+            {
+                case k_ShelfCapacity: return m_config.ShelfCapacity + effect;
+                case k_OvenCount: return m_config.OvenCount + effect;
+                default: return 1d + effect;
+            }
+        }
+
         public int UpgradeLevel(string upgradeId)
         {
             m_levels.TryGetValue(upgradeId, out int level);

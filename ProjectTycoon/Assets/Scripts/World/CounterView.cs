@@ -7,9 +7,21 @@ namespace ZooTycoon.World
     {
         [SerializeField] private Transform m_queueHead;
         [SerializeField] private ShopWombat m_wombat;
+        [SerializeField] private SpriteRenderer m_body;
 
         public Vector2 QueueHead => m_queueHead.position;
         public ShopWombat Wombat => m_wombat;
+
+        public bool Contains(Vector3 world)
+        {
+            Bounds bounds = m_body.bounds;
+            return world.x >= bounds.min.x && world.x <= bounds.max.x && world.y >= bounds.min.y && world.y <= bounds.max.y;
+        }
+
+        public void Bounce()
+        {
+            StartCoroutine(Fx.Bounce(m_body.transform));
+        }
 
         public void SetServing(bool serving)
         {

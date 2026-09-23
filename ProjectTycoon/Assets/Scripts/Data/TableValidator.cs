@@ -143,6 +143,21 @@ namespace ZooTycoon.Data
                 {
                     errors.Add($"shop_upgrades '{upgrade.Id}': baseCost·effectPerLevel은 0보다, costGrowth·maxLevel은 1 이상이어야 한다.");
                 }
+
+                if (upgrade.Target != "shelf" && upgrade.Target != "oven" && upgrade.Target != "counter")
+                {
+                    errors.Add($"shop_upgrades '{upgrade.Id}': target은 shelf·oven·counter 중 하나여야 한다.");
+                }
+
+                if (string.IsNullOrEmpty(upgrade.EffectFormat))
+                {
+                    errors.Add($"shop_upgrades '{upgrade.Id}': effectFormat이 비어 있다.");
+                }
+
+                if (upgrade.LookLevel < 0 || upgrade.LookLevel > upgrade.MaxLevel)
+                {
+                    errors.Add($"shop_upgrades '{upgrade.Id}': lookLevel은 0 이상 maxLevel 이하여야 한다.");
+                }
             }
 
             foreach (string id in k_ShopUpgradeIds)
@@ -194,6 +209,11 @@ namespace ZooTycoon.Data
                 || shop.ToQueueSeconds < 0d || shop.PatienceSeconds < 0d || shop.WombatWalkSeconds < 0d || shop.MaxCustomers < 1 || shop.ShelfCapacity < 1 || shop.OvenCount < 1)
             {
                 errors.Add("game_config: shop의 arrivalSeconds·checkoutSeconds는 0보다, 다른 시간은 0 이상, maxCustomers·shelfCapacity·ovenCount는 1 이상이어야 한다.");
+            }
+
+            if (shop.PatienceWarnSeconds < 0d || shop.PatienceWarnSeconds > shop.PatienceSeconds)
+            {
+                errors.Add("game_config: shop.patienceWarnSeconds는 0 이상 patienceSeconds 이하여야 한다.");
             }
         }
 

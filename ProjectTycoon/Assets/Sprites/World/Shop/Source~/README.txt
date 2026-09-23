@@ -13,3 +13,10 @@
 - {fox,hedgehog}_front_raw.png: 굴을 결 참조로 준 시안(여우 A·고슴도치 B). make_pixel.py --px=2 --cells=45 / --cells=38.
 - {fox,hedgehog}_back_raw_{a,b,c}.png: 앞모습을 참조로 뽑은 뒷모습 3장. 둘 다 B를 골라 앞모습 팔레트로 통일. 실루엣이 앞과 칸 단위로 같아 breath/walk 설정을 공유.
 - 여우: low 33, foot 42, 발 (9,14)·(19,24), 귀 0~5행 (2,13)·(20,30), 걷기 갸웃은 tip 3. 고슴도치: low 22, foot 35, 발 (10,15)·(21,26), 귀 없음.
+
+빵집 소품·배경 (2026-09-23)
+- shop_raw/: Codex 원본 24장(항목별 a·b·c) + 고른 후처리본. 선택: 바닥 B·입구 A·진열대 A·오븐 A(+B는 굽기 속도 5단계부터 oven_2)·계산대 B·빵 A/B/A.
+- make_arch.py: arch_a_px에서 구멍 덩어리만 골라 1.7배 + 테두리 3칸 → arch_hole.png. make_bubble.py: 말풍선·화남. make_shop_sections.py: 구역 배경 4장(둥근 방 벽). compose.py: 시안 목업.
+- 계산대는 counter_b_th의 20~32열을 두 번 끼워 84칸. 모든 소품 PPU 80(ShopBaker.k_Ppu).
+- fix_fox.py (2026-09-23): fox_{front,back}_unpadded.png → 왼쪽 9칸 여백(몸 중심 = 피벗), 뒷모습 꼬리를 3칸 안쪽 + 외곽선을 몸 위에 다시 그려 앞으로. 시트 칸 폭 88 → 104.
+- fix_fox_tail.py: 뒷모습 꼬리를 베지어 곡선(허리 아래 가운데 → 오른쪽 위)으로 다시 그려 몸 위에 얹음. 1차 시도(fix_fox.py의 꼬리 옮기기)는 "아직 이상하다"로 반려.

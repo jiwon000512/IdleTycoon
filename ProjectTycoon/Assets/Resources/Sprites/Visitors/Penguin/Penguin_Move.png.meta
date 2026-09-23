@@ -127,7 +127,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7bcbfa286dfc4354687dcf96d148ef03
+      spriteID: a841208104165d143836f0860a4ff1f0
       internalID: -1959514587799669810
       vertices: []
       indices: 
@@ -147,9 +147,9 @@ TextureImporter:
       name: Penguin_Move_1
       rect:
         serializedVersion: 2
-        x: 88
+        x: 104
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e16e8dda7befc9149957045af11bd982
+      spriteID: 682b918c1dffeea42916726f7e87ec8a
       internalID: -9054401109089231825
       vertices: []
       indices: 
@@ -169,9 +169,9 @@ TextureImporter:
       name: Penguin_Move_2
       rect:
         serializedVersion: 2
-        x: 176
+        x: 208
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 022cbfba20aba6c409c4bfbbd5215270
+      spriteID: f173e70aeec8f5044afb29520ff4029c
       internalID: 8353487946802272902
       vertices: []
       indices: 
@@ -191,9 +191,9 @@ TextureImporter:
       name: Penguin_Move_3
       rect:
         serializedVersion: 2
-        x: 264
+        x: 312
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 227ad90e8e3a91144864eb6e79a2ca95
+      spriteID: f4bd815fee95c33488639f1abb5279b2
       internalID: 656939039084629493
       vertices: []
       indices: 

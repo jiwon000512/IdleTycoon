@@ -127,7 +127,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 88
+        width: 104
         height: 90
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2a26bddf967d16e408d651aeb2953ebe
+      spriteID: 9c3f69acd3b80f340a39200c8b078155
       internalID: 420991283195186980
       vertices: []
       indices: 
@@ -147,9 +147,9 @@ TextureImporter:
       name: Fox_Idle_1
       rect:
         serializedVersion: 2
-        x: 88
+        x: 104
         y: 0
-        width: 88
+        width: 104
         height: 90
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ff998709457c30241bd3ae725ac9d74f
+      spriteID: 6583980df3b208648960469f7c12eda3
       internalID: 6499369822132175386
       vertices: []
       indices: 
@@ -169,9 +169,9 @@ TextureImporter:
       name: Fox_Idle_2
       rect:
         serializedVersion: 2
-        x: 176
+        x: 208
         y: 0
-        width: 88
+        width: 104
         height: 90
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2e78e646e23e8b345b20f8373a275fc4
+      spriteID: 7544667f34b50a34ab600389e021c36d
       internalID: 5975362707896055044
       vertices: []
       indices: 
@@ -191,9 +191,9 @@ TextureImporter:
       name: Fox_Idle_3
       rect:
         serializedVersion: 2
-        x: 264
+        x: 312
         y: 0
-        width: 88
+        width: 104
         height: 90
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6f32f03752287e44d90fc02783245653
+      spriteID: 33c6bfec36feb00458345c1ee68e98f6
       internalID: 3500553189013071025
       vertices: []
       indices: 

@@ -8,9 +8,17 @@ namespace ZooTycoon.World
     // 입구 → 옆으로 → 빵 칸 앞 / 빵 칸 → 가운데 / 줄 칸 / 계산대 → 오른쪽 통로 → 입구
     public sealed class ShopCustomerSpawner : MonoBehaviour
     {
+        private const string k_CoinKey = "coin_popup";
+        // 연출 1차: 같은 진열대 대기자는 가운데 쪽으로 이만큼씩 옆에(최대 k_WaitMax명), 코인 팝업은 줄 오른쪽 옆에
+        private const float k_WaitOffset = 0.5f;
+        private const int k_WaitMax = 2;
+        private const float k_CoinSideOffset = 0.7f;
+
         [SerializeField] private ShopCustomer m_prefab;
 
         private readonly Dictionary<int, ShopCustomer> m_units = new Dictionary<int, ShopCustomer>();
+        // 손님별 대기 자리 번호(같은 진열대에서 가장 작은 빈 번호). 앞 사람이 떠나도 뒤 사람은 그대로
+        private readonly Dictionary<int, int> m_waitIndex = new Dictionary<int, int>();
         private ShopSim m_shop;
         private ShopView m_view;
         private GameTables m_tables;
@@ -50,10 +58,31 @@ namespace ZooTycoon.World
             IReadOnlyList<VisitorRecord> looks = m_tables.Visitors;
             VisitorRecord look = looks[Random.Range(0, looks.Count)];
             ShopCustomer unit = Instantiate(m_prefab, transform);
-            unit.Initialize(look, m_frames, m_frames.Get(customer.Bread.Sprite)[0], m_view.Door);
+            unit.Initialize(customer, (float)m_tables.Config.Shop.PatienceWarnSeconds, look, m_frames, m_frames.Get(customer.Bread.Sprite)[0], m_view.Door);
             m_units[customer.Id] = unit;
 
             Vector2 spot = m_view.ShelfSpot(customer.Slot);
+            bool[] used = new bool[k_WaitMax + 1];
+
+            foreach (Customer other in m_shop.Customers)
+            {
+                if (other != customer && other.Slot == customer.Slot && (other.Phase == CustomerPhase.ToShelf || other.Phase == CustomerPhase.AtShelf)
+                    && m_waitIndex.TryGetValue(other.Id, out int index) && index < used.Length)
+                {
+                    used[index] = true;
+                }
+            }
+
+            int wait = 0;
+
+            while (wait < k_WaitMax && used[wait])
+            {
+                wait++;
+            }
+
+            m_waitIndex[customer.Id] = wait;
+            float toCenter = spot.x < m_view.transform.position.x ? 1f : -1f;
+            spot.x += toCenter * k_WaitOffset * wait;
             unit.Walk(new[] { new Vector2(spot.x, m_view.Door.y), spot }, (float)customer.Timer);
         }
 
@@ -81,7 +110,7 @@ namespace ZooTycoon.World
         private void Shop_CustomerPaid(Customer customer, double coins)
         {
             ShopCustomer unit = Take(customer);
-            unit.PopCoin();
+            unit.PopCoin(m_tables.Strings.Format(k_CoinKey, coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture)), k_CoinSideOffset);
             float lane = m_view.ExitLaneX;
             Leave(unit, new[] { new Vector2(lane, unit.Logical.y), new Vector2(lane, m_view.Door.y), m_view.Door });
         }
@@ -97,6 +126,7 @@ namespace ZooTycoon.World
         {
             ShopCustomer unit = m_units[customer.Id];
             m_units.Remove(customer.Id);
+            m_waitIndex.Remove(customer.Id);
             return unit;
         }
 

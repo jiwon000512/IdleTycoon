@@ -52,7 +52,7 @@ MonoBehaviour:
   m_width: 6.75
   m_topPadding: 2
   m_bottomPadding: 1.2
-  m_queueSpacing: 0.55
+  m_queueSpacing: 0.8
   m_doorDepth: 1.5
   m_exitLaneX: 0.7
   m_ovenStandOffset: 1.35

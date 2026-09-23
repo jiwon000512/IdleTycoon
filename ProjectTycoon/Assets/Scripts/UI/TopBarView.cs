@@ -1,28 +1,49 @@
+using System;
 using UnityEngine;
 using TMPro;
 using GameKit.UI;
 
 namespace ZooTycoon.UI
 {
+    // 연출 1차: 상단 바는 코인만. 값이 바뀌면 0.25초 동안 숫자가 오른다(첫 표시는 즉시)
     public sealed class TopBarView : UIView
     {
+        private const float k_CountSeconds = 0.25f;
+
         [SerializeField] private TMP_Text m_coinsText;
-        [SerializeField] private TMP_Text m_zooLevelText;
-        [SerializeField] private TMP_Text m_progressText;
 
-        public void SetCoins(string text)
+        private Func<double, string> m_format;
+        private double m_from;
+        private double m_target;
+        private double m_shown;
+        private float m_t = 1f;
+        private bool m_first = true;
+
+        public void SetCoins(double target, Func<double, string> format)
         {
-            m_coinsText.text = text;
+            m_format = format;
+            m_from = m_first ? target : m_shown;
+            m_target = target;
+            m_t = m_first ? 1f : 0f;
+            m_first = false;
+            Apply();
         }
 
-        public void SetZooLevel(string text)
+        private void Update()
         {
-            m_zooLevelText.text = text;
+            if (m_t >= 1f)
+            {
+                return;
+            }
+
+            m_t = Mathf.Min(1f, m_t + Time.deltaTime / k_CountSeconds);
+            Apply();
         }
 
-        public void SetProgress(string text)
+        private void Apply()
         {
-            m_progressText.text = text;
+            m_shown = m_from + (m_target - m_from) * m_t;
+            m_coinsText.text = m_format(m_shown);
         }
     }
 }

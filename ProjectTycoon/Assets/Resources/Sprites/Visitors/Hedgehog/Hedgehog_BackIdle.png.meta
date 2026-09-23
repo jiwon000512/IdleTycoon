@@ -127,7 +127,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 88
+        width: 104
         height: 76
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 03b26e4dbebf59c4abf7eaf5a36c665b
+      spriteID: 832b8e97cc6bdc546a3ee50561cb1381
       internalID: 2356504134928385265
       vertices: []
       indices: 
@@ -147,9 +147,9 @@ TextureImporter:
       name: Hedgehog_BackIdle_1
       rect:
         serializedVersion: 2
-        x: 88
+        x: 104
         y: 0
-        width: 88
+        width: 104
         height: 76
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: cc8fb52ba4f2e9e4786ceceb6dfa3820
+      spriteID: d1f308b1ac3234a4488343e80ecd7177
       internalID: 7916921745492628573
       vertices: []
       indices: 
@@ -169,9 +169,9 @@ TextureImporter:
       name: Hedgehog_BackIdle_2
       rect:
         serializedVersion: 2
-        x: 176
+        x: 208
         y: 0
-        width: 88
+        width: 104
         height: 76
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f8dfa6df18d44a6449721ad79eb31d0c
+      spriteID: c50e026e31b3f674983182418a65aebb
       internalID: -8117637619790499333
       vertices: []
       indices: 
@@ -191,9 +191,9 @@ TextureImporter:
       name: Hedgehog_BackIdle_3
       rect:
         serializedVersion: 2
-        x: 264
+        x: 312
         y: 0
-        width: 88
+        width: 104
         height: 76
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ef337d4fb8b0c9642b3fd9a190baeadb
+      spriteID: b25863604b8833d4e91516c27eb0e69d
       internalID: 6341125108552226072
       vertices: []
       indices: 

@@ -34,6 +34,8 @@ namespace ZooTycoon.Core
             public double RowWalkSeconds { get; set; }
             public double ToQueueSeconds { get; set; }
             public double PatienceSeconds { get; set; }
+            // 연출 1차: 남은 인내가 이만큼이면 말풍선이 흔들린다(version 12)
+            public double PatienceWarnSeconds { get; set; }
             public double CheckoutSeconds { get; set; }
             public int ShelfCapacity { get; set; }
             public int OvenCount { get; set; }

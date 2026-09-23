@@ -127,7 +127,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 74809f3d0dcdc7540a25dfbed7f3a58e
+      spriteID: e9f380b879f99a44b8caa19b0637a3ad
       internalID: 834378481882993209
       vertices: []
       indices: 
@@ -147,9 +147,9 @@ TextureImporter:
       name: Penguin_BackMove_1
       rect:
         serializedVersion: 2
-        x: 88
+        x: 104
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 390ca7ae24da2da4bb1e5e5d93b89387
+      spriteID: f40c85758096a1041aad278a1169d8ed
       internalID: 8799221763112383087
       vertices: []
       indices: 
@@ -169,9 +169,9 @@ TextureImporter:
       name: Penguin_BackMove_2
       rect:
         serializedVersion: 2
-        x: 176
+        x: 208
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e8ed0ae64d8542143841d79bf2f34a79
+      spriteID: 0aec9332b68f8884aa2ad1954bb4f004
       internalID: 7911245899828298436
       vertices: []
       indices: 
@@ -191,9 +191,9 @@ TextureImporter:
       name: Penguin_BackMove_3
       rect:
         serializedVersion: 2
-        x: 264
+        x: 312
         y: 0
-        width: 88
+        width: 104
         height: 72
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e606b91f46807e142a30908ab8edf8e0
+      spriteID: add1c38a80484684e86aaa4afbc971d8
       internalID: -8885847328573981920
       vertices: []
       indices: 

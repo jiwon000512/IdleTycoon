@@ -97,7 +97,7 @@ namespace ZooTycoon.World
             return Vector2.Distance(Logical, target) <= k_ArriveDistance;
         }
 
-        private void Update()
+        protected virtual void Update()
         {
             m_state?.Update(Time.deltaTime);
         }

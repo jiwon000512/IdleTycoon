@@ -25,8 +25,8 @@ namespace ZooTycoon.World
         public ZoneView Zone => Branch.Zones[0];
         public FrameCache Frames { get; } = new FrameCache();
 
-        // 설계 08 v0.5: 가게 화면에서 오븐을 눌렀다(오븐 번호). MainScene이 굽기 팝업을 연다
-        public event Action<int> OvenTapped;
+        // 사물 터치 기획: 가게 화면에서 사물을 눌렀다. MainScene이 사물 시트를 연다
+        public event Action<ShopTarget> TargetTapped;
 
         private BranchView Branch
         {
@@ -45,7 +45,7 @@ namespace ZooTycoon.World
         {
             m_navigation = navigation;
             m_shopView = Instantiate(m_shopPrefab, k_ShopOrigin, Quaternion.identity, transform);
-            m_shopView.Bind(shop, Frames);
+            m_shopView.Bind(shop, Frames, tables);
             m_shopView.GetComponent<ShopCustomerSpawner>().Initialize(shop, m_shopView, tables, Frames);
             m_shopView.Expanded += ShopView_Expanded;
 
@@ -79,11 +79,12 @@ namespace ZooTycoon.World
                 return;
             }
 
-            int oven = m_shopView.OvenAt(world);
+            ShopTarget? target = m_shopView.HitTest(world);
 
-            if (oven >= 0)
+            if (target.HasValue)
             {
-                OnOvenTapped(oven);
+                m_shopView.Bounce(target.Value);
+                OnTargetTapped(target.Value);
             }
         }
 
@@ -107,9 +108,9 @@ namespace ZooTycoon.World
             }
         }
 
-        private void OnOvenTapped(int oven)
+        private void OnTargetTapped(ShopTarget target)
         {
-            OvenTapped?.Invoke(oven);
+            TargetTapped?.Invoke(target);
         }
     }
 }

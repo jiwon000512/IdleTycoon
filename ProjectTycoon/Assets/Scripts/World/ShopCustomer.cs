@@ -13,7 +13,12 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_bubbleIcon;
         [SerializeField] private Sprite m_angrySprite;
 
+        private const float k_ShakeAmount = 0.03f;
+        private const float k_ShakeSpeed = 40f;
+
         private readonly Queue<Vector2> m_path = new Queue<Vector2>();
+        private Customer m_customer;
+        private float m_warnSeconds;
         private VisitorRecord m_look;
         private WalkState m_walk;
         private WaitState m_idle;
@@ -21,8 +26,10 @@ namespace ZooTycoon.World
 
         public Vector2 Destination { get; private set; }
 
-        public void Initialize(VisitorRecord look, FrameCache frames, Sprite want, Vector2 start)
+        public void Initialize(Customer customer, float warnSeconds, VisitorRecord look, FrameCache frames, Sprite want, Vector2 start)
         {
+            m_customer = customer;
+            m_warnSeconds = warnSeconds;
             m_look = look;
             Setup(look, frames);
             m_walk = new WalkState(this, Walk_Arrived);
@@ -68,9 +75,20 @@ namespace ZooTycoon.World
             m_bubbleIcon.enabled = false;
         }
 
-        public void PopCoin()
+        // 연출 1차: 줄 옆(sideOffset)으로 비켜 띄워 뒷 손님에 묻히지 않게
+        public void PopCoin(string amount, float sideOffset)
         {
-            Instantiate(m_coinPrefab, m_bubble.transform.position, Quaternion.identity, transform.parent);
+            CoinPopup popup = Instantiate(m_coinPrefab, m_bubble.transform.position + Vector3.right * sideOffset, Quaternion.identity, transform.parent);
+            popup.Show(amount);
+        }
+
+        // 연출 1차: 빈 진열대 앞에서 남은 인내가 warnSeconds 이하면 말풍선이 좌우로 흔들린다
+        protected override void Update()
+        {
+            base.Update();
+            bool warn = m_customer.Phase == CustomerPhase.AtShelf && m_customer.Timer <= m_warnSeconds;
+            float x = warn ? Mathf.Sin(Time.time * k_ShakeSpeed) * k_ShakeAmount : 0f;
+            m_bubble.transform.localPosition = new Vector3(x, Height, 0f);
         }
 
         protected override Vector3 ToScreen(Vector2 logical)

@@ -12,7 +12,7 @@ namespace ZooTycoon.Tests
         {
             StringTable table = TestTables.Build().Strings;
 
-            Assert.That(table.Get("topbar_progress_max"), Is.EqualTo("MAX"));
+            Assert.That(table.Get("sheet_oven_empty"), Is.EqualTo("비어 있음"));
         }
 
         [Test]
@@ -20,7 +20,7 @@ namespace ZooTycoon.Tests
         {
             StringTable table = TestTables.Build().Strings;
 
-            Assert.That(table.Format("topbar_progress", "0", "2,000"), Is.EqualTo("0/2,000"));
+            Assert.That(table.Format("coin_popup", "10"), Is.EqualTo("+10"));
         }
 
         [Test]

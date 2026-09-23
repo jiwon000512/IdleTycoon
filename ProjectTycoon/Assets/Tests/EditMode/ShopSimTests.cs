@@ -22,6 +22,17 @@ namespace ZooTycoon.Tests
             return new ShopSim(m_state, tables, new SequenceRandom(rolls.Length > 0 ? rolls : new double[100]));
         }
 
+        [Test]
+        public void UpgradeValue_ByUpgradeAndLevel_MatchesConfigPlusEffect()
+        {
+            ShopSim shop = Create();
+
+            Assert.That(shop.UpgradeValue(ShopSim.k_ShelfCapacity, 0), Is.EqualTo(8d));
+            Assert.That(shop.UpgradeValue(ShopSim.k_ShelfCapacity, 1), Is.EqualTo(12d));
+            Assert.That(shop.UpgradeValue(ShopSim.k_OvenCount, 2), Is.EqualTo(3d));
+            Assert.That(shop.UpgradeValue(ShopSim.k_OvenSpeed, 2), Is.EqualTo(1.4d).Within(1e-9));
+        }
+
         private static void Ticks(ShopSim shop, int count)
         {
             for (int i = 0; i < count; i++)
