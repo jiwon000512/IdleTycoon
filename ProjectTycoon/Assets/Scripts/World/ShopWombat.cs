@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ZooTycoon.World
 {
     // 설계 08 v0.6: 가게 웜뱃. 계산대에서는 숨쉬기(기다릴 때 정면, 계산 중 뒷모습),
-    // 굽기 심부름 때는 받은 시간 안에 오븐까지 걸어갔다 온다(아래로 = 정면 걷기, 위로 = 뒷모습 걷기). 시간은 ShopSim이 센다
+    // 굽기 심부름 때는 받은 시간 안에 칸 경로를 따라 오븐까지 걸어갔다 온다(아래로 = 정면 걷기, 위로 = 뒷모습 걷기). 시간은 ShopSim이 센다
     public sealed class ShopWombat : MonoBehaviour
     {
         [SerializeField] private SpriteAnimator m_animator;
@@ -17,6 +18,7 @@ namespace ZooTycoon.World
         [Tooltip("걷기 초당 프레임")]
         [SerializeField] private float m_walkFrameRate = 8f;
 
+        private readonly Queue<Vector3> m_path = new Queue<Vector3>();
         private Vector3 m_homeLocal;
         private Vector3 m_target;
         private float m_speed;
@@ -44,18 +46,46 @@ namespace ZooTycoon.World
             }
         }
 
-        public void WalkTo(Vector3 target, float seconds, Action arrived = null)
+        // 굴 격자 설계 v0.5: 점들을 차례로 지나 seconds 안에 끝점에 닿도록 속도를 맞춘다
+        public void WalkPath(IReadOnlyList<Vector2> points, float seconds, Action arrived = null)
         {
-            m_target = target;
-            m_speed = Vector3.Distance(transform.position, target) / Mathf.Max(seconds, 0.01f);
-            m_walking = true;
+            m_path.Clear();
+            float length = 0f;
+            Vector3 from = transform.position;
+
+            foreach (Vector2 point in points)
+            {
+                Vector3 p = new Vector3(point.x, point.y, from.z);
+                m_path.Enqueue(p);
+                length += Vector3.Distance(from, p);
+                from = p;
+            }
+
+            m_speed = length / Mathf.Max(seconds, 0.01f);
             m_arrived = arrived;
-            Play(target.y < transform.position.y ? m_frontWalk : m_backWalk, m_walkFrameRate);
+            NextTarget();
         }
 
-        public void WalkHome(float seconds)
+        public void WalkHome(IReadOnlyList<Vector2> points, float seconds)
         {
-            WalkTo(Home, seconds, () => transform.localPosition = m_homeLocal);
+            WalkPath(points, seconds, () => transform.localPosition = m_homeLocal);
+        }
+
+        private void NextTarget()
+        {
+            if (m_path.Count == 0)
+            {
+                m_walking = false;
+                PlayIdle();
+                Action arrived = m_arrived;
+                m_arrived = null;
+                arrived?.Invoke();
+                return;
+            }
+
+            m_target = m_path.Dequeue();
+            m_walking = true;
+            Play(m_target.y < transform.position.y ? m_frontWalk : m_backWalk, m_walkFrameRate);
         }
 
         private void Update()
@@ -67,16 +97,10 @@ namespace ZooTycoon.World
 
             transform.position = Vector3.MoveTowards(transform.position, m_target, m_speed * Time.deltaTime);
 
-            if (transform.position != m_target)
+            if (transform.position == m_target)
             {
-                return;
+                NextTarget();
             }
-
-            m_walking = false;
-            PlayIdle();
-            Action arrived = m_arrived;
-            m_arrived = null;
-            arrived?.Invoke();
         }
 
         private void PlayIdle()

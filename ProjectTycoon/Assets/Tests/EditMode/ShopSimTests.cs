@@ -4,7 +4,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 설계 08 v0.5 검증 3~9, v0.6 9-1. 1초 틱, 실제 JSON 값(도착 4 · 걷기 1.5+층×0.8 · 줄까지 1 · 인내 6 · 계산 1.5 · 식빵 8초 6개 10코인).
+    // 설계 08 v0.5 검증 3~9, v0.6 9-1, 굴 격자 설계 v0.5 검증 3. 1초 틱, 실제 JSON 값(도착 4 · 걷기 1.5 + 칸 경로 ÷ 3 · 줄까지 1 · 인내 6 · 계산 1.5 · 식빵 8초 6개 10코인).
     // 웜뱃 심부름 걷기는 기본 0초로 두고(굽기 타이밍을 v0.5와 같게) 심부름 테스트에서만 켠다
     public sealed class ShopSimTests
     {
@@ -67,21 +67,38 @@ namespace ZooTycoon.Tests
             Assert.That(shop.Customers.Count, Is.EqualTo(8));
         }
 
+        // 세 번째 빵을 왼쪽으로 판 칸(−2,1)에 놓으면 입구(−1,0) → (−1,1) → (−2,1): 2.4 + 3.375 − 2.4(마지막 세로) = 3.375 ÷ 3 = 1.125
         [Test]
-        public void Arrival_WalkTimeGrowsWithShelfRow()
+        public void Arrival_WalkTimeGrowsWithDistance()
         {
             ShopSim shop = Create(null, 0.99d);
             m_state.AddCoins(10000d);
-            shop.TryUnlockNextBread();
-            shop.TryUnlockNextBread();
+            shop.TryUnlockNextBread(new Cell(0, 1));
+            shop.Grid.TryDig(new Cell(-2, 1));
+            shop.TryUnlockNextBread(new Cell(-2, 1));
             Customer customer = null;
             shop.CustomerArrived += c => customer = c;
 
             shop.Tick(1d);
 
             Assert.That(customer.Bread.Id, Is.EqualTo("b03"));
-            Assert.That(customer.Slot, Is.EqualTo(2));
-            Assert.That(customer.Timer, Is.EqualTo(2.3d).Within(1e-9));
+            Assert.That(customer.Cell, Is.EqualTo(new Cell(-2, 1)));
+            Assert.That(customer.Timer, Is.EqualTo(2.625d).Within(1e-9));
+        }
+
+        // 빈 자리가 없으면 해금 못 한다. 파고 나면 그 칸에
+        [Test]
+        public void Unlock_NeedsEmptySlot()
+        {
+            ShopSim shop = Create();
+            m_state.AddCoins(10000d);
+
+            Assert.That(shop.TryUnlockNextBread(new Cell(-1, 1)), Is.False);
+            Assert.That(shop.TryUnlockNextBread(new Cell(0, 2)), Is.False);
+            Assert.That(shop.TryUnlockNextBread(new Cell(1, 1)), Is.False);
+            Assert.That(shop.Grid.TryDig(new Cell(1, 1)), Is.True);
+            Assert.That(shop.TryUnlockNextBread(new Cell(1, 1)), Is.True);
+            Assert.That(shop.Shelves[new Cell(1, 1)].Id, Is.EqualTo("b02"));
         }
 
         [Test]
@@ -169,43 +186,48 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void Unlock_FollowsTableOrderAndAddsRowOnThirdBread()
+        public void Unlock_FollowsTableOrderAndFillsSlots()
         {
             ShopSim shop = Create();
             int layoutChanged = 0;
             shop.LayoutChanged += () => layoutChanged++;
 
-            Assert.That(shop.TryUnlockNextBread(), Is.False);
+            Assert.That(shop.TryUnlockNextBread(new Cell(0, 1)), Is.False);
 
             m_state.AddCoins(10000d);
-            Assert.That(shop.TryUnlockNextBread(), Is.True);
+            Assert.That(shop.TryUnlockNextBread(new Cell(0, 1)), Is.True);
             Assert.That(shop.UnlockedBreads[1].Id, Is.EqualTo("b02"));
-            Assert.That(shop.ShelfRows, Is.EqualTo(1));
+            Assert.That(shop.TryUnlockNextBread(new Cell(0, 1)), Is.False);
 
-            Assert.That(shop.TryUnlockNextBread(), Is.True);
-            Assert.That(shop.ShelfRows, Is.EqualTo(2));
+            Assert.That(shop.TryUnlockNextBread(new Cell(0, 3)), Is.True);
+            Assert.That(shop.Shelves[new Cell(0, 3)].Id, Is.EqualTo("b03"));
             Assert.That(shop.NextBread, Is.Null);
-            Assert.That(shop.TryUnlockNextBread(), Is.False);
+            Assert.That(shop.TryUnlockNextBread(new Cell(0, 3)), Is.False);
             Assert.That(layoutChanged, Is.EqualTo(2));
+            Assert.That(shop.EmptySlots, Is.Empty);
         }
 
         [Test]
-        public void Upgrade_OvenCount_AddsOvenAndChargesGrowingCost()
+        public void AddOven_NeedsEmptySlotAndChargesGrowingCost()
         {
             ShopSim shop = Create();
 
-            Assert.That(shop.TryUpgrade(ShopSim.k_OvenCount), Is.True);
+            Assert.That(shop.TryAddOven(new Cell(-1, 3)), Is.False);
+            Assert.That(shop.TryAddOven(new Cell(0, 3)), Is.True);
             Assert.That(shop.Ovens.Count, Is.EqualTo(2));
+            Assert.That(shop.Ovens[1].Cell, Is.EqualTo(new Cell(0, 3)));
+            Assert.That(shop.OvenAt(new Cell(0, 3)), Is.EqualTo(1));
             Assert.That(m_state.Coins, Is.EqualTo(50d));
             Assert.That(shop.UpgradeCost(ShopSim.k_OvenCount), Is.EqualTo(900d));
-            Assert.That(shop.TryUpgrade(ShopSim.k_OvenCount), Is.False);
+            Assert.That(shop.TryAddOven(new Cell(0, 1)), Is.False);
 
             m_state.AddCoins(100000d);
-            shop.TryUpgrade(ShopSim.k_OvenCount);
-            shop.TryUpgrade(ShopSim.k_OvenCount);
-            Assert.That(shop.OvenRows, Is.EqualTo(2));
+            Assert.That(shop.TryAddOven(new Cell(0, 1)), Is.True);
+            shop.Grid.TryDig(new Cell(1, 3));
+            Assert.That(shop.TryAddOven(new Cell(1, 3)), Is.True);
             Assert.That(shop.IsMaxed(ShopSim.k_OvenCount), Is.True);
-            Assert.That(shop.TryUpgrade(ShopSim.k_OvenCount), Is.False);
+            shop.Grid.TryDig(new Cell(1, 1));
+            Assert.That(shop.TryAddOven(new Cell(1, 1)), Is.False);
         }
 
         [Test]
@@ -230,7 +252,7 @@ namespace ZooTycoon.Tests
                 c.MaxCustomers = 0;
                 c.WombatWalkSeconds = 2d;
             });
-            shop.TryUpgrade(ShopSim.k_OvenCount);
+            shop.TryAddOven(new Cell(0, 3));
 
             Assert.That(shop.TryBake(0, "b01"), Is.True);
             Assert.That(shop.WombatAtCounter, Is.False);
@@ -260,7 +282,7 @@ namespace ZooTycoon.Tests
             Assert.That(shop.Queue.Count, Is.EqualTo(2));
 
             m_config.WombatWalkSeconds = 3d;
-            shop.TryUpgrade(ShopSim.k_OvenCount);
+            shop.TryAddOven(new Cell(0, 3));
             shop.TryBake(1, "b01");
             double coins = m_state.Coins;
 
@@ -272,8 +294,9 @@ namespace ZooTycoon.Tests
             Assert.That(m_state.Coins, Is.EqualTo(coins + 10d));
         }
 
+        // 오븐을 오른쪽으로 판 칸(1,3)에 두면 계산대(0,2) → (0,3) → (1,3): 2.4 + 3.375 − 2.4 = 3.375 ÷ 3 = 1.125
         [Test]
-        public void Errand_WalkTimeGrowsWithOvenRow()
+        public void Errand_WalkTimeGrowsWithDistance()
         {
             ShopSim shop = Create(c =>
             {
@@ -281,14 +304,14 @@ namespace ZooTycoon.Tests
                 c.WombatWalkSeconds = 1d;
             });
             m_state.AddCoins(100000d);
-            shop.TryUpgrade(ShopSim.k_OvenCount);
-            shop.TryUpgrade(ShopSim.k_OvenCount);
+            shop.Grid.TryDig(new Cell(1, 3));
+            shop.TryAddOven(new Cell(1, 3));
             double seconds = 0d;
             shop.WombatLeft += (oven, s) => seconds = s;
 
-            shop.TryBake(2, "b01");
+            shop.TryBake(1, "b01");
 
-            Assert.That(seconds, Is.EqualTo(1.8d).Within(1e-9));
+            Assert.That(seconds, Is.EqualTo(2.125d).Within(1e-9));
         }
     }
 }

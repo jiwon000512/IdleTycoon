@@ -13,15 +13,16 @@ namespace ZooTycoon.Core
     {
         public int Id { get; }
         public BreadRecord Bread { get; }
-        public int Slot { get; }
+        // 굴 격자 설계 v0.5: 가려는 진열대의 칸
+        public Cell Cell { get; }
         public CustomerPhase Phase { get; internal set; }
         public double Timer { get; internal set; }
 
-        internal Customer(int id, BreadRecord bread, int slot, double timer)
+        internal Customer(int id, BreadRecord bread, Cell cell, double timer)
         {
             Id = id;
             Bread = bread;
-            Slot = slot;
+            Cell = cell;
             Phase = CustomerPhase.ToShelf;
             Timer = timer;
         }

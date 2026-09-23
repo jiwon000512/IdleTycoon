@@ -5,12 +5,12 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 설계 08 v0.5: ShopSim 손님 이벤트 → 손님 개체 생성·이동·퇴장. 걷는 시간은 Core가 센 값을 그대로 쓴다
-    // 입구 → 옆으로 → 빵 칸 앞 / 빵 칸 → 가운데 / 줄 칸 / 계산대 → 오른쪽 통로 → 입구
+    // 굴 격자 설계 v0.5: 입구 → (칸 경로) → 빵 자리 / 빵 자리 → 가운데(같은 줄로 곧장, 안 되면 칸 경로) / 줄 칸 / 계산대 → 오른쪽 통로 → 입구
     public sealed class ShopCustomerSpawner : MonoBehaviour
     {
         private const string k_CoinKey = "coin_popup";
-        // 연출 1차: 같은 진열대 대기자는 가운데 쪽으로 이만큼씩 옆에(최대 k_WaitMax명), 코인 팝업은 줄 오른쪽 옆에
-        private const float k_WaitOffset = 0.5f;
+        // 연출 1차: 같은 진열대 대기자는 오른쪽으로 이만큼씩 옆에(최대 k_WaitMax명), 코인 팝업은 줄 오른쪽 옆에
+        private const float k_WaitOffset = 0.45f;
         private const int k_WaitMax = 2;
         private const float k_CoinSideOffset = 0.7f;
 
@@ -36,7 +36,6 @@ namespace ZooTycoon.World
             m_shop.QueueChanged += Shop_QueueChanged;
             m_shop.CustomerPaid += Shop_CustomerPaid;
             m_shop.CustomerGaveUp += Shop_CustomerGaveUp;
-            m_shop.LayoutChanged += Shop_QueueChanged;
         }
 
         private void OnDestroy()
@@ -48,7 +47,6 @@ namespace ZooTycoon.World
                 m_shop.QueueChanged -= Shop_QueueChanged;
                 m_shop.CustomerPaid -= Shop_CustomerPaid;
                 m_shop.CustomerGaveUp -= Shop_CustomerGaveUp;
-                m_shop.LayoutChanged -= Shop_QueueChanged;
             }
         }
 
@@ -61,12 +59,12 @@ namespace ZooTycoon.World
             unit.Initialize(customer, (float)m_tables.Config.Shop.PatienceWarnSeconds, look, m_frames, m_frames.Get(customer.Bread.Sprite)[0], m_view.Door);
             m_units[customer.Id] = unit;
 
-            Vector2 spot = m_view.ShelfSpot(customer.Slot);
+            Vector2 spot = m_view.ShelfSpot(customer.Cell);
             bool[] used = new bool[k_WaitMax + 1];
 
             foreach (Customer other in m_shop.Customers)
             {
-                if (other != customer && other.Slot == customer.Slot && (other.Phase == CustomerPhase.ToShelf || other.Phase == CustomerPhase.AtShelf)
+                if (other != customer && other.Cell.Equals(customer.Cell) && (other.Phase == CustomerPhase.ToShelf || other.Phase == CustomerPhase.AtShelf)
                     && m_waitIndex.TryGetValue(other.Id, out int index) && index < used.Length)
                 {
                     used[index] = true;
@@ -81,16 +79,31 @@ namespace ZooTycoon.World
             }
 
             m_waitIndex[customer.Id] = wait;
-            float toCenter = spot.x < m_view.transform.position.x ? 1f : -1f;
-            spot.x += toCenter * k_WaitOffset * wait;
-            unit.Walk(new[] { new Vector2(spot.x, m_view.Door.y), spot }, (float)customer.Timer);
+            spot.x += k_WaitOffset * wait;
+            // 입구 줄을 옆으로 걸어 첫 칸 열에 맞춘 뒤 경로를 따른다
+            List<Vector2> route = m_view.Route(m_shop.Grid.EntranceNear(customer.Cell), customer.Cell, spot);
+            route.Insert(0, new Vector2(route[0].x, m_view.Door.y));
+            unit.Walk(route, (float)customer.Timer);
         }
 
         private void Shop_CustomerPicked(Customer customer)
         {
             ShopCustomer unit = m_units[customer.Id];
             unit.HideBubble();
-            unit.Walk(new[] { new Vector2(m_view.transform.position.x, unit.Logical.y) }, (float)m_tables.Config.Shop.ToQueueSeconds);
+            Vector2 center = new Vector2(m_view.transform.position.x, unit.Logical.y);
+            List<Vector2> route;
+
+            if (m_view.StraightToCenter(customer.Cell))
+            {
+                route = new List<Vector2> { center };
+            }
+            else
+            {
+                route = m_view.Route(customer.Cell, m_shop.Grid.CounterNear(customer.Cell), center);
+                route[route.Count - 1] = new Vector2(center.x, route[route.Count - 2].y);
+            }
+
+            unit.Walk(route, (float)customer.Timer);
         }
 
         private void Shop_QueueChanged()
@@ -115,11 +128,12 @@ namespace ZooTycoon.World
             Leave(unit, new[] { new Vector2(lane, unit.Logical.y), new Vector2(lane, m_view.Door.y), m_view.Door });
         }
 
+        // 포기: 온 길을 되짚어 입구로
         private void Shop_CustomerGaveUp(Customer customer)
         {
             ShopCustomer unit = Take(customer);
             unit.ShowAngry();
-            Leave(unit, new[] { new Vector2(unit.Logical.x, m_view.Door.y), m_view.Door });
+            Leave(unit, m_view.Route(customer.Cell, m_shop.Grid.EntranceNear(customer.Cell), m_view.Door));
         }
 
         private ShopCustomer Take(Customer customer)
@@ -130,7 +144,7 @@ namespace ZooTycoon.World
             return unit;
         }
 
-        private static void Leave(ShopCustomer unit, Vector2[] path)
+        private static void Leave(ShopCustomer unit, IReadOnlyList<Vector2> path)
         {
             unit.Walk(path, 0f, () => Destroy(unit.gameObject));
         }

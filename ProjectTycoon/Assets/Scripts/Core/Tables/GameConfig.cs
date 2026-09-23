@@ -31,7 +31,6 @@ namespace ZooTycoon.Core
             public double ArrivalSeconds { get; set; }
             public int MaxCustomers { get; set; }
             public double EnterSeconds { get; set; }
-            public double RowWalkSeconds { get; set; }
             public double ToQueueSeconds { get; set; }
             public double PatienceSeconds { get; set; }
             // 연출 1차: 남은 인내가 이만큼이면 말풍선이 흔들린다(version 12)
@@ -39,8 +38,15 @@ namespace ZooTycoon.Core
             public double CheckoutSeconds { get; set; }
             public int ShelfCapacity { get; set; }
             public int OvenCount { get; set; }
-            // v0.6: 웜뱃이 계산대에서 첫 오븐 줄까지 걷는 시간(편도). 줄마다 RowWalkSeconds를 더한다
+            // v0.6: 웜뱃이 계산대에서 바로 아래 칸 오븐까지 걷는 시간(편도). 더 먼 칸은 walkSpeed로 더한다
             public double WombatWalkSeconds { get; set; }
+            // 굴 격자 설계 v0.5(version 13): 칸 크기(유닛)·입구 줄 높이·걷는 속도(유닛/초)·파기 비용
+            public double CellWidth { get; set; }
+            public double CellHeight { get; set; }
+            public double EntranceHeight { get; set; }
+            public double WalkSpeed { get; set; }
+            public double DigBaseCost { get; set; }
+            public double DigCostGrowth { get; set; }
         }
     }
 }

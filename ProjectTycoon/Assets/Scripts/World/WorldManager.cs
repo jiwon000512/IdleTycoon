@@ -52,6 +52,7 @@ namespace ZooTycoon.World
             m_camera.SetBounds(Iso.ToScreenBounds(Branch.MapArea));
             m_navigation.Changed += Navigation_Changed;
             m_camera.Tapped += Camera_Tapped;
+            m_camera.Dragged += Camera_Dragged;
         }
 
         protected override void OnDestroy()
@@ -60,6 +61,7 @@ namespace ZooTycoon.World
             {
                 m_navigation.Changed -= Navigation_Changed;
                 m_camera.Tapped -= Camera_Tapped;
+                m_camera.Dragged -= Camera_Dragged;
                 m_shopView.Expanded -= ShopView_Expanded;
             }
 
@@ -88,6 +90,15 @@ namespace ZooTycoon.World
             }
         }
 
+        // 굴 격자 설계 D4: 가게에서 끌면 그 방향의 팔 수 있는 칸에 비용 태그
+        private void Camera_Dragged(Vector2Int direction)
+        {
+            if (m_navigation.Current == GameScreen.Shop)
+            {
+                m_shopView.ShowDigTags(direction.x, direction.y);
+            }
+        }
+
         private void Navigation_Changed()
         {
             if (m_navigation.Current == GameScreen.Shop)
@@ -99,7 +110,7 @@ namespace ZooTycoon.World
             m_camera.ExitShop();
         }
 
-        // 굴을 넓히면 새 층을 보여 준다
+        // 굴을 넓히면 새 칸을 보여 준다
         private void ShopView_Expanded(Vector2 focus)
         {
             if (m_navigation.Current == GameScreen.Shop)

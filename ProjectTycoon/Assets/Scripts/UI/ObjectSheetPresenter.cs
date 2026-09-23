@@ -8,24 +8,28 @@ namespace ZooTycoon.UI
     public enum SheetTargetKind
     {
         Shelf,
-        LockedShelf,
         Oven,
-        LockedOven,
         Counter,
+        EmptySlot,
+        Dig,
     }
 
     // 사물 터치 기획(2026-09-23): 탭한 사물에 맞춰 시트 내용을 만든다. 규칙은 ShopSim에서 읽기만 하고, 구매·굽기는 Try*로 부탁한다.
-    // 열린 동안 재고·오븐·업그레이드·코인·웜뱃 이벤트로 갱신한다
+    // 열린 동안 재고·오븐·업그레이드·코인·웜뱃 이벤트로 갱신한다. 굴 격자 설계 v0.5: 빈 자리(진열대·오븐 놓기)·굴 파기 시트 추가
     public sealed class ObjectSheetPresenter : IDisposable
     {
         private readonly ObjectSheetView m_view;
         private readonly ShopSim m_shop;
         private readonly ZooState m_state;
         private readonly GameTables m_tables;
+        private const string k_UnlockAction = "unlock";
+        private const string k_DigAction = "dig";
+
         private readonly List<string> m_rowActions = new List<string>();
         private readonly List<string> m_chipBreads = new List<string>();
 
         private SheetTargetKind m_kind;
+        private Cell m_cell;
         private int m_index;
 
         public ObjectSheetPresenter(ObjectSheetView view, ShopSim shop, ZooState state, GameTables tables)
@@ -63,9 +67,10 @@ namespace ZooTycoon.UI
             m_state.CoinsChanged -= Shop_Refresh;
         }
 
-        public void Show(SheetTargetKind kind, int index)
+        public void Show(SheetTargetKind kind, Cell cell, int index)
         {
             m_kind = kind;
+            m_cell = cell;
             m_index = index;
             Refresh();
             m_view.Open();
@@ -88,16 +93,35 @@ namespace ZooTycoon.UI
             {
                 case SheetTargetKind.Shelf:
                 {
-                    BreadRecord bread = m_shop.UnlockedBreads[m_index];
+                    BreadRecord bread = m_shop.Shelves[m_cell];
                     m_view.SetHeader(s.Format("sheet_shelf_title", bread.Name), s.Format("sheet_shelf_status", m_shop.Stock(bread.Id), m_shop.ShelfCapacity));
                     AddUpgradeRows(rows, "shelf");
+
+                    // 빈 자리가 없어 다음 빵을 못 놓을 때만 안내 행
+                    if (m_shop.NextBread != null && !HasEmptySlot())
+                    {
+                        AddUnlockRow(rows, SheetRowState.Blocked, s.Get("row_unlock_blocked"));
+                    }
+
                     break;
                 }
-                case SheetTargetKind.LockedShelf:
+                case SheetTargetKind.EmptySlot:
+                    m_view.SetHeader(s.Get("sheet_slot_title"), s.Get("sheet_slot_status"));
+                    AddUnlockRow(rows, null, null);
+                    AddUpgradeRows(rows, "slot");
+                    break;
+                case SheetTargetKind.Dig:
                 {
-                    BreadRecord next = m_shop.NextBread;
-                    m_view.SetHeader(s.Get("sheet_locked_shelf_title"), next != null ? s.Format("sheet_locked_shelf_status", next.Name) : "");
-                    AddUnlockRow(rows);
+                    double cost = m_shop.Grid.DigCost;
+                    m_view.SetHeader(s.Get("sheet_dig_title"), s.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
+                    rows.Add(new SheetRow
+                    {
+                        Name = s.Get("row_dig"),
+                        Effect = s.Get("row_dig_effect"),
+                        Cost = BigNumberFormatter.Format(cost),
+                        State = m_state.Coins >= cost ? SheetRowState.Enabled : SheetRowState.Poor,
+                    });
+                    m_rowActions.Add(k_DigAction);
                     break;
                 }
                 case SheetTargetKind.Oven:
@@ -128,10 +152,6 @@ namespace ZooTycoon.UI
                     AddUpgradeRows(rows, "oven");
                     break;
                 }
-                case SheetTargetKind.LockedOven:
-                    m_view.SetHeader(s.Get("sheet_locked_oven_title"), "");
-                    AddUpgradeRows(rows, "oven", ShopSim.k_OvenCount);
-                    break;
                 case SheetTargetKind.Counter:
                     m_view.SetHeader(s.Get("sheet_counter_title"), s.Format("sheet_counter_status", m_shop.Queue.Count));
                     AddUpgradeRows(rows, "counter");
@@ -191,7 +211,8 @@ namespace ZooTycoon.UI
             return string.Format(CultureInfo.InvariantCulture, upgrade.EffectFormat, m_shop.UpgradeValue(upgrade.Id, fromLevel), m_shop.UpgradeValue(upgrade.Id, toLevel));
         }
 
-        private void AddUnlockRow(List<SheetRow> rows)
+        // 다음 빵 진열대 행. state·effect를 주면 그대로(안내용), 아니면 코인에 따라
+        private void AddUnlockRow(List<SheetRow> rows, SheetRowState? state, string effect)
         {
             BreadRecord next = m_shop.NextBread;
 
@@ -203,11 +224,21 @@ namespace ZooTycoon.UI
             rows.Add(new SheetRow
             {
                 Name = m_tables.Strings.Format("row_unlock", next.Name),
-                Effect = m_tables.Strings.Get("row_unlock_effect"),
+                Effect = effect ?? m_tables.Strings.Get("row_unlock_effect"),
                 Cost = BigNumberFormatter.Format(next.UnlockCost),
-                State = m_state.Coins >= next.UnlockCost ? SheetRowState.Enabled : SheetRowState.Poor,
+                State = state ?? (m_state.Coins >= next.UnlockCost ? SheetRowState.Enabled : SheetRowState.Poor),
             });
-            m_rowActions.Add(null);
+            m_rowActions.Add(k_UnlockAction);
+        }
+
+        private bool HasEmptySlot()
+        {
+            foreach (Cell _ in m_shop.EmptySlots)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private void View_ChipClicked(int index)
@@ -222,14 +253,30 @@ namespace ZooTycoon.UI
 
         private void View_RowClicked(int index)
         {
-            string upgradeId = m_rowActions[index];
-            bool bought = upgradeId == null ? m_shop.TryUnlockNextBread() : m_shop.TryUpgrade(upgradeId);
+            string action = m_rowActions[index];
+            bool bought;
+
+            switch (action)
+            {
+                case k_UnlockAction:
+                    bought = m_shop.TryUnlockNextBread(m_cell);
+                    break;
+                case k_DigAction:
+                    bought = m_shop.Grid.TryDig(m_cell);
+                    break;
+                case ShopSim.k_OvenCount:
+                    bought = m_shop.TryAddOven(m_cell);
+                    break;
+                default:
+                    bought = m_shop.TryUpgrade(action);
+                    break;
+            }
 
             if (bought)
             {
                 m_view.FlashRow(index);
 
-                if (m_kind == SheetTargetKind.LockedShelf || m_kind == SheetTargetKind.LockedOven)
+                if (m_kind == SheetTargetKind.EmptySlot || m_kind == SheetTargetKind.Dig)
                 {
                     m_view.Close();
                 }

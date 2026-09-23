@@ -1,6 +1,6 @@
 {
   "table": "game_config",
-  "version": 12,
+  "version": 13,
   "notes": [
     "기획서 6.2~6.4의 수식 상수와 시작 상태. 전부 시작값이며 프로토타입에서 튠한다.",
     "레벨 상한 없음(기획서 v0.6).",
@@ -14,7 +14,8 @@
     "version 9 (설계 08 v0.5, 2026-09-18): shop 추가. 빵집 시뮬 시간(초)·수량. 진열대까지 걷는 시간 = enterSeconds + 층 × rowWalkSeconds.",
     "version 10 (설계 08 v0.6, 2026-09-18): shop.wombatWalkSeconds 추가. 오븐 탭 → 웜뱃이 걸어가 굽기 시작(편도 = wombatWalkSeconds + 오븐 줄 × rowWalkSeconds), 비운 동안 계산 멈춤.",
     "version 11 (2026-09-18, 연출 점검 1차 정리): animalCount·visitors 섹션 삭제. 동물 수입·지상 관광객이 사라졌다. income.tickSeconds는 규칙 틱 간격으로 남는다.",
-    "version 12 (2026-09-23, 연출 1차): shop.patienceWarnSeconds 추가(남은 인내가 이 값 이하면 말풍선이 흔들림)."
+    "version 12 (2026-09-23, 연출 1차): shop.patienceWarnSeconds 추가(남은 인내가 이 값 이하면 말풍선이 흔들림).",
+    "version 13 (2026-09-23, 굴 격자 설계 v0.5): shop.rowWalkSeconds 삭제 → walkSpeed(유닛/초). 굴은 칸(cellWidth × cellHeight, 입구 줄은 entranceHeight)의 격자이고 걷기 = 칸 경로 길이 ÷ walkSpeed(방에 들어서는 마지막 세로 한 칸은 enter·toQueue·wombatWalk 시간에 포함). 파기 비용 = digBaseCost × digCostGrowth^(판 칸 수)."
   ],
   "start": {
     "coins": 350
@@ -29,13 +30,18 @@
     "arrivalSeconds": 4,
     "maxCustomers": 8,
     "enterSeconds": 1.5,
-    "rowWalkSeconds": 0.8,
     "toQueueSeconds": 1.0,
     "patienceSeconds": 6,
     "patienceWarnSeconds": 2,
     "checkoutSeconds": 1.5,
     "shelfCapacity": 8,
     "ovenCount": 1,
-    "wombatWalkSeconds": 1.0
+    "wombatWalkSeconds": 1.0,
+    "cellWidth": 3.375,
+    "cellHeight": 2.4,
+    "entranceHeight": 2.0,
+    "walkSpeed": 3.0,
+    "digBaseCost": 150,
+    "digCostGrowth": 1.4
   }
 }

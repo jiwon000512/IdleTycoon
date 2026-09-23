@@ -11,9 +11,9 @@ namespace ZooTycoon.Tests
     {
         [TestCase("zoo_levels", 2)]
         [TestCase("visitors", 4)]
-        [TestCase("strings", 6)]
+        [TestCase("strings", 7)]
         [TestCase("breads", 1)]
-        [TestCase("shop_upgrades", 3)]
+        [TestCase("shop_upgrades", 4)]
         public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile<object>(table);
@@ -28,7 +28,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>("game_config");
 
             Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(12));
+            Assert.That(file.Version, Is.EqualTo(13));
         }
 
         [Test]

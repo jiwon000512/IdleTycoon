@@ -4,6 +4,8 @@ namespace ZooTycoon.Core
     // v0.6: 굽기는 웜뱃이 오븐에 도착해야 시작한다(Started)
     public sealed class Oven
     {
+        // 굴 격자 설계 v0.5: 놓인 칸
+        public Cell Cell { get; internal set; }
         public BreadRecord Bread { get; internal set; }
         public bool Started { get; internal set; }
         public double Remaining { get; internal set; }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 설계 08 v0.5: 진열대 한 칸. 빵 아이콘 + 재고/용량. 아직 해금 안 된 칸은 비워 흐리게
+    // 설계 08 v0.5: 진열대 하나. 빵 아이콘 + 재고/용량. 굴 격자 설계 v0.5: 잠긴 칸은 없다(빈 자리는 MarkerView)
     public sealed class ShelfView : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer m_body;
@@ -11,9 +11,6 @@ namespace ZooTycoon.World
         [SerializeField] private TextMeshPro m_stockText;
         [Tooltip("손님이 서는 자리")]
         [SerializeField] private Transform m_standPoint;
-        [Tooltip("잠긴 칸 위 비용 태그(사물 터치 기획)")]
-        [SerializeField] private GameObject m_tag;
-        [SerializeField] private TextMeshPro m_tagText;
 
         // 연출 1차: 재고 0이면 숫자가 깜빡인다
         private const float k_BlinkSeconds = 0.6f;
@@ -41,7 +38,6 @@ namespace ZooTycoon.World
             m_stockText.text = $"{stock}/{capacity}";
             m_stockText.color = stock == 0 ? new Color(0.75f, 0.2f, 0.15f) : new Color(0.23f, 0.14f, 0.09f);
             m_empty = stock == 0;
-            m_tag.SetActive(false);
         }
 
         private void Update()
@@ -54,17 +50,6 @@ namespace ZooTycoon.World
             Color color = m_stockText.color;
             color.a = Mathf.Repeat(Time.time, k_BlinkSeconds) < k_BlinkSeconds * 0.5f ? 1f : 0.35f;
             m_stockText.color = color;
-        }
-
-        // tag가 null이면 태그 없이 흐리게만(해금할 빵이 더 없을 때)
-        public void ShowLocked(string tag)
-        {
-            m_body.color = new Color(1f, 1f, 1f, 0.35f);
-            m_icon.enabled = false;
-            m_stockText.enabled = false;
-            m_empty = false;
-            m_tag.SetActive(tag != null);
-            m_tagText.text = tag ?? "";
         }
     }
 }

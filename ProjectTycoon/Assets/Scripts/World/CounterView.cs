@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 설계 08: 계산대 구역. 줄 머리 자리에서 위로 줄이 이어진다. 웜뱃은 이 구역의 자식이고 심부름 때 구역 밖으로 걸어갔다 온다(v0.6)
-    public sealed class CounterView : ShopSection
+    // 설계 08: 계산대. 피벗은 계산대 줄 윗변 가운데. 줄 머리 자리에서 위로 줄이 이어진다. 웜뱃은 자식이고 심부름 때 밖으로 걸어갔다 온다(v0.6)
+    public sealed class CounterView : MonoBehaviour
     {
         [SerializeField] private Transform m_queueHead;
         [SerializeField] private ShopWombat m_wombat;

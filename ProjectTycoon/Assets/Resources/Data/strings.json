@@ -1,6 +1,6 @@
 {
   "table": "strings",
-  "version": 6,
+  "version": 7,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -8,7 +8,8 @@
     "version 3 (설계 08 v0.5): 빵집 업그레이드·굽기 팝업 키 추가.",
     "version 4 (2026-09-18): topbar_income 삭제(동물 수입 삭제).",
     "version 5 (2026-09-23, 연출 1차): topbar_level·topbar_progress·topbar_progress_max 삭제(상단 바는 코인만), coin_popup·oven_busy_* 추가.",
-    "version 6 (2026-09-23, 사물 터치 시트): 업그레이드 버튼·팝업 2개 키 삭제(shop_upgrade·popup_close·bake_*·upgrade_*·unlock_row·oven_busy_*), 사물 시트 키(sheet_*·chip_*·row_*·tag_*) 추가."
+    "version 6 (2026-09-23, 사물 터치 시트): 업그레이드 버튼·팝업 2개 키 삭제(shop_upgrade·popup_close·bake_*·upgrade_*·unlock_row·oven_busy_*), 사물 시트 키(sheet_*·chip_*·row_*·tag_*) 추가.",
+    "version 7 (2026-09-23, 굴 격자 설계 v0.5): 잠긴 진열대·오븐 키(sheet_locked_*·tag_unlock·tag_oven) 삭제, 굴 파기·빈 자리 시트 키(sheet_dig_*·sheet_slot_*·row_dig*·tag_dig·tag_slot) 추가, row_unlock 문구 변경."
   ],
   "rows": [
     { "id": "topbar_coins", "ko": "{0}" },
@@ -17,24 +18,28 @@
     { "id": "coin_popup", "ko": "+{0}" },
     { "id": "sheet_shelf_title", "ko": "{0} 진열대" },
     { "id": "sheet_shelf_status", "ko": "재고 {0}/{1}" },
-    { "id": "sheet_locked_shelf_title", "ko": "빈 진열대" },
-    { "id": "sheet_locked_shelf_status", "ko": "다음 빵: {0}" },
     { "id": "sheet_oven_title", "ko": "오븐 {0}" },
     { "id": "sheet_oven_empty", "ko": "비어 있음" },
     { "id": "sheet_oven_baking", "ko": "{0} 굽는 중 · {1}초" },
     { "id": "sheet_oven_full", "ko": "진열대 가득" },
     { "id": "sheet_oven_errand", "ko": "심부름 중" },
-    { "id": "sheet_locked_oven_title", "ko": "오븐 자리" },
     { "id": "sheet_counter_title", "ko": "계산대" },
     { "id": "sheet_counter_status", "ko": "손님 {0}명 대기" },
     { "id": "chip_bread", "ko": "{0}" },
     { "id": "chip_bread_sub", "ko": "×{0} · {1}초" },
-    { "id": "chip_locked_sub", "ko": "굴 넓히기" },
+    { "id": "chip_locked_sub", "ko": "빈 자리에 진열대" },
     { "id": "row_upgrade", "ko": "{0} Lv.{1}" },
     { "id": "row_max", "ko": "MAX" },
-    { "id": "row_unlock", "ko": "굴 넓히기 · {0}" },
-    { "id": "row_unlock_effect", "ko": "새 빵 + 진열대 한 칸" },
-    { "id": "tag_unlock", "ko": "굴 넓히기 {0}" },
-    { "id": "tag_oven", "ko": "오븐 추가 {0}" }
+    { "id": "row_unlock", "ko": "진열대 · {0}" },
+    { "id": "row_unlock_effect", "ko": "새 빵을 판다" },
+    { "id": "row_unlock_blocked", "ko": "먼저 굴을 넓혀요" },
+    { "id": "sheet_slot_title", "ko": "빈 자리" },
+    { "id": "sheet_slot_status", "ko": "진열대나 오븐을 놓는다" },
+    { "id": "sheet_dig_title", "ko": "굴 파기" },
+    { "id": "sheet_dig_status", "ko": "판 칸 {0}" },
+    { "id": "row_dig", "ko": "여기 파기" },
+    { "id": "row_dig_effect", "ko": "굴이 넓어진다" },
+    { "id": "tag_dig", "ko": "파기 {0}" },
+    { "id": "tag_slot", "ko": "빈 자리" }
   ]
 }

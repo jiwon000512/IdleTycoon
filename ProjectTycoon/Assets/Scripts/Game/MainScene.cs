@@ -55,7 +55,7 @@ namespace ZooTycoon.Game
         // World의 대상 종류를 UI의 종류로(같은 순서). UI는 World를 참조하지 않는다
         private void World_TargetTapped(ShopTarget target)
         {
-            m_sheetPresenter.Show((SheetTargetKind)(int)target.Kind, target.Index);
+            m_sheetPresenter.Show((SheetTargetKind)(int)target.Kind, target.Cell, target.Index);
         }
 
         private void Navigation_Changed()
