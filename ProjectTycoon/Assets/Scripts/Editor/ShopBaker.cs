@@ -23,6 +23,7 @@ namespace ZooTycoon.Editor
         // 가게 유닛(웜뱃·손님) 기본 크기: 한 칸 2px, PPU 80 = 42칸 캐릭터 약 1.05유닛. 스케일은 1로 두고 크기는 PPU로 정한다
         const float k_UnitPpu = 80f;
         const int k_TimerFrames = 16;
+        const int k_SmokeFrames = 12;
         const int k_BackdropOrder = -2100;
         const int k_BurrowOrder = -2000;
         const int k_ArchOrder = -1995;
@@ -93,6 +94,12 @@ namespace ZooTycoon.Editor
                 Import(k_SpriteDir + TimerFrame(i) + ".png", center);
             }
 
+            // 오븐 연출: 불빛은 몸통과 같은 크기·하단 가운데, 연기는 하단 가운데 = 굴뚝 입구
+            foreach (string name in FxFrames())
+            {
+                Import(k_SpriteDir + name + ".png", bottom);
+            }
+
             Import(k_SpriteDir + "slot_empty.png", center, k_TagPpu);
             // 타일: 굴 그림이 픽셀을 읽고, 흙 배경은 Tiled로 깐다(왼쪽 위 피벗)
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
@@ -153,9 +160,15 @@ namespace ZooTycoon.Editor
             GameObject go = new GameObject("Oven");
             go.AddComponent<SortingGroup>();
             SpriteRenderer body = Renderer(go.transform, "Body", Load("oven"), Vector3.zero, 0);
-            // 아이콘은 오븐 아궁이 안
-            SpriteRenderer icon = Renderer(go.transform, "Icon", null, new Vector3(0f, 0.35f, 0f), 1);
-            icon.transform.localScale = Vector3.one * 0.8f;
+            // 오븐 연출: 아궁이 불빛은 몸통 바로 위, 굴뚝 연기는 그 위·타이머 뒤. 연기 높이는 OvenView.SetLook이 흙/벽돌에 맞춘다
+            SpriteRenderer fire = Renderer(go.transform, "Fire", null, Vector3.zero, 1);
+            fire.enabled = false;
+            SpriteAnimator fireAnimator = fire.gameObject.AddComponent<SpriteAnimator>();
+            Set(fireAnimator, "m_renderer", fire);
+            SpriteRenderer smoke = Renderer(go.transform, "Smoke", null, new Vector3(0f, 1.25f, 0f), 2);
+            smoke.enabled = false;
+            SpriteAnimator smokeAnimator = smoke.gameObject.AddComponent<SpriteAnimator>();
+            Set(smokeAnimator, "m_renderer", smoke);
             // 굽기 타이머(20칸 원): 오븐 윗변(1.3) 위 3칸 띄움
             Sprite[] timerFrames = new Sprite[k_TimerFrames];
 
@@ -164,13 +177,20 @@ namespace ZooTycoon.Editor
                 timerFrames[i] = Load(TimerFrame(i));
             }
 
-            SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, 1.62f, 0f), 2);
+            SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, 1.62f, 0f), 3);
             TextMeshPro ready = WorldText(go.transform, "Ready", new Vector3(0f, 1.45f, 0f), 4);
 
             OvenView view = go.AddComponent<OvenView>();
             Set(view, "m_body", body);
-            Set(view, "m_icon", icon);
             Set(view, "m_timer", timer);
+            Set(view, "m_fire", fire);
+            Set(view, "m_fireAnimator", fireAnimator);
+            SetSprites(view, "m_baseFire", Frames("oven_fire", "_0", "_1", "_2", "_3"));
+            SetSprites(view, "m_upgradedFire", Frames("oven_2_fire", "_0", "_1", "_2", "_3"));
+            Set(view, "m_smoke", smoke);
+            Set(view, "m_smokeAnimator", smokeAnimator);
+            SetSprites(view, "m_graySmoke", Frames("smoke_gray", SmokeSuffixes()));
+            SetSprites(view, "m_whiteSmoke", Frames("smoke_white", SmokeSuffixes()));
             SetSprites(view, "m_timerFrames", timerFrames);
             Set(view, "m_readyText", ready);
             Set(view, "m_baseBody", Load("oven"));
@@ -384,6 +404,38 @@ namespace ZooTycoon.Editor
         static string TimerFrame(int i)
         {
             return "oven_timer_" + i.ToString("00");
+        }
+
+        // 연기 12프레임 이름 뒤붙이(_00~_11)
+        static string[] SmokeSuffixes()
+        {
+            string[] suffixes = new string[k_SmokeFrames];
+
+            for (int i = 0; i < k_SmokeFrames; i++)
+            {
+                suffixes[i] = "_" + i.ToString("00");
+            }
+
+            return suffixes;
+        }
+
+        static System.Collections.Generic.IEnumerable<string> FxFrames()
+        {
+            foreach (string oven in new[] { "oven_fire", "oven_2_fire" })
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    yield return oven + "_" + i;
+                }
+            }
+
+            foreach (string smoke in new[] { "smoke_gray", "smoke_white" })
+            {
+                foreach (string suffix in SmokeSuffixes())
+                {
+                    yield return smoke + suffix;
+                }
+            }
         }
 
         static Sprite[] Frames(string name, params string[] suffixes)

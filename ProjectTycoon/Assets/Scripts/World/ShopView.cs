@@ -352,7 +352,7 @@ namespace ZooTycoon.World
             }
 
             float progress = 1f - (float)(oven.Remaining / oven.Bread.BakeSeconds);
-            view.ShowBaking(Icon(oven.Bread), progress, oven.Ready);
+            view.ShowBaking(progress, oven.Ready);
         }
 
         private static string Cost(double cost)

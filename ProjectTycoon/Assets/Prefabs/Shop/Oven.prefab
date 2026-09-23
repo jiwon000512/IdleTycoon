@@ -1,5 +1,110 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &400219196625808798
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 936675202585341259}
+  - component: {fileID: 4254624305248185377}
+  - component: {fileID: 1038106443828888252}
+  m_Layer: 0
+  m_Name: Smoke
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &936675202585341259
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400219196625808798}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.25, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4988720705356598986}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &4254624305248185377
+SpriteRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400219196625808798}
+  m_Enabled: 0
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 2
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 1, y: 1}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 0
+  m_SpriteSortPoint: 0
+--- !u!114 &1038106443828888252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400219196625808798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc203875aba9b4c40b214986b3b5bd8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.SpriteAnimator
+  m_renderer: {fileID: 4254624305248185377}
 --- !u!1 &1079349312530152579
 GameObject:
   m_ObjectHideFlags: 0
@@ -181,7 +286,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 7095847115099759731}
   m_maskType: 0
---- !u!1 &3788509130882906457
+--- !u!1 &1992624549912798646
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -189,39 +294,40 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 788863064577419945}
-  - component: {fileID: 4308810579545234933}
+  - component: {fileID: 163356896689394826}
+  - component: {fileID: 4937789978623752993}
+  - component: {fileID: 6007525880213349968}
   m_Layer: 0
-  m_Name: Icon
+  m_Name: Fire
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &788863064577419945
+--- !u!4 &163356896689394826
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3788509130882906457}
+  m_GameObject: {fileID: 1992624549912798646}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.35, z: 0}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4988720705356598986}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &4308810579545234933
+--- !u!212 &4937789978623752993
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3788509130882906457}
-  m_Enabled: 1
+  m_GameObject: {fileID: 1992624549912798646}
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -272,6 +378,19 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
+--- !u!114 &6007525880213349968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1992624549912798646}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc203875aba9b4c40b214986b3b5bd8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.SpriteAnimator
+  m_renderer: {fileID: 4937789978623752993}
 --- !u!1 &4766738520373257437
 GameObject:
   m_ObjectHideFlags: 0
@@ -395,7 +514,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3604052222063631347}
-  - {fileID: 788863064577419945}
+  - {fileID: 163356896689394826}
+  - {fileID: 936675202585341259}
   - {fileID: 8199355279071211850}
   - {fileID: 871022014270983011}
   m_Father: {fileID: 0}
@@ -426,7 +546,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.OvenView
   m_body: {fileID: 6090556835215390061}
-  m_icon: {fileID: 4308810579545234933}
   m_timer: {fileID: 2753016098611487348}
   m_timerFrames:
   - {fileID: 21300000, guid: dde7b22cb3758b1438787be4e55b5bdb, type: 3}
@@ -448,6 +567,49 @@ MonoBehaviour:
   m_readyText: {fileID: 3118358079404054014}
   m_baseBody: {fileID: 21300000, guid: 43047affed36862478ec26e8982b63db, type: 3}
   m_upgradedBody: {fileID: 21300000, guid: 0d25595758af5b848b832e855ce1cc7f, type: 3}
+  m_fire: {fileID: 4937789978623752993}
+  m_fireAnimator: {fileID: 6007525880213349968}
+  m_baseFire:
+  - {fileID: 21300000, guid: 1a90774f622547f4691072bcaa7c9165, type: 3}
+  - {fileID: 21300000, guid: 95a45e5e21ec1ad4f854a5013511b3bc, type: 3}
+  - {fileID: 21300000, guid: dcae1e3fdb1921a4aab4a63774e462ad, type: 3}
+  - {fileID: 21300000, guid: 561dda55095a95b4784294e31219a627, type: 3}
+  m_upgradedFire:
+  - {fileID: 21300000, guid: 25487a8618e1b6c4e8aca1561f84ee98, type: 3}
+  - {fileID: 21300000, guid: 293bbb32885c4ea45ba7b0e797ab942f, type: 3}
+  - {fileID: 21300000, guid: cc96b24affe837845a30372d94d83b45, type: 3}
+  - {fileID: 21300000, guid: e1100ee653b49c44a910e3288e59267c, type: 3}
+  m_smoke: {fileID: 4254624305248185377}
+  m_smokeAnimator: {fileID: 1038106443828888252}
+  m_graySmoke:
+  - {fileID: 21300000, guid: 6f1733cc9db2b364089da19aa31c6f18, type: 3}
+  - {fileID: 21300000, guid: 78f8b540b43d71b40b3e149e34ca083c, type: 3}
+  - {fileID: 21300000, guid: ac2790ca5ff7ea443956bb884ba1d1de, type: 3}
+  - {fileID: 21300000, guid: 451fe679c44e90c41980dc23f3d582ae, type: 3}
+  - {fileID: 21300000, guid: 07b1dd1a9f83bc94cbb88bae84f33800, type: 3}
+  - {fileID: 21300000, guid: 0ee163b6ffe871d4795a5951730a50d2, type: 3}
+  - {fileID: 21300000, guid: 22717b81823177245a83b3f1be7c30f1, type: 3}
+  - {fileID: 21300000, guid: 9dec812386b16c545a3d2c20034bb336, type: 3}
+  - {fileID: 21300000, guid: 39523dce19b59c34b8cf586ec98cde3b, type: 3}
+  - {fileID: 21300000, guid: c319fa0c13151d04189adf181660e3dc, type: 3}
+  - {fileID: 21300000, guid: 9ba6a5b584523ae468d8c4a9ddd4fbf5, type: 3}
+  - {fileID: 21300000, guid: 50b2e4b9c720330488d8899ef2c0fc11, type: 3}
+  m_whiteSmoke:
+  - {fileID: 21300000, guid: d5b23515eb774a24986d485e76aac278, type: 3}
+  - {fileID: 21300000, guid: 1465d5eab6b8f064da22e90b6c105a43, type: 3}
+  - {fileID: 21300000, guid: 4393b5083606f914e9ee2aed1ea436b3, type: 3}
+  - {fileID: 21300000, guid: 824e854380a17234298974f120e5763b, type: 3}
+  - {fileID: 21300000, guid: 580814938cafc914fbcce993fb419dc1, type: 3}
+  - {fileID: 21300000, guid: bbd1d50922645f0419aac80e720d2190, type: 3}
+  - {fileID: 21300000, guid: 98383206fe542be4b985157bc502497d, type: 3}
+  - {fileID: 21300000, guid: 237b46b420439a54da01a1eb857c1954, type: 3}
+  - {fileID: 21300000, guid: 761eae12ffb8d7a41ba8ef163a4719ae, type: 3}
+  - {fileID: 21300000, guid: 5895ca43ee82039459cb2d9d7f668b5e, type: 3}
+  - {fileID: 21300000, guid: 9aefccfc7982a3643ac94cc0cc2c7fdf, type: 3}
+  - {fileID: 21300000, guid: f91403851f6562d499df2acf95ade9e1, type: 3}
+  m_baseChimney: 1.25
+  m_upgradedChimney: 1.425
+  m_fxFrameRate: 8
 --- !u!1 &8781566724408670436
 GameObject:
   m_ObjectHideFlags: 0
@@ -527,7 +689,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: dde7b22cb3758b1438787be4e55b5bdb, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
