@@ -8,18 +8,15 @@ namespace ZooTycoon.UI
     // v0.4: 버튼 아이콘은 행동 표(actions.json)의 icon. 대상이나 그 행동이 바뀔 때(TargetChanged)만 갱신한다
     public sealed class ShopHudPresenter : IDisposable
     {
-        private const string k_TitleKey = "shop_title_bakery";
-
         private readonly ShopHudView m_view;
         private readonly ShopSim m_shop;
 
         public event Action<Interactable> SheetRequested;
 
-        public ShopHudPresenter(ShopHudView view, ShopSim shop, GameTables tables)
+        public ShopHudPresenter(ShopHudView view, ShopSim shop)
         {
             m_view = view;
             m_shop = shop;
-            m_view.SetTitle(tables.Strings.Get(k_TitleKey));
             m_view.JoystickMoved += View_JoystickMoved;
             m_view.InteractClicked += View_InteractClicked;
             m_shop.TargetChanged += Shop_TargetChanged;

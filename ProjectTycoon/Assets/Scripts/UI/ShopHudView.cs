@@ -2,17 +2,15 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using GameKit.UI;
 
 namespace ZooTycoon.UI
 {
-    // 설계 08 → 설계 09: 가게 HUD = 가게 이름 + 조이스틱 + 상호작용 버튼(글자 없이 행동 아이콘. v0.4: 아이콘 경로는 actions.json)
+    // 설계 08 → 설계 09: 가게 HUD = 조이스틱 + 상호작용 버튼(글자 없이 행동 아이콘. v0.4: 아이콘 경로는 actions.json). 가게 이름은 상단 HUD 시안 C에서 뺐다
     public sealed class ShopHudView : UIView
     {
         private static readonly Color k_DisabledIcon = new Color(1f, 1f, 1f, 0.4f);
 
-        [SerializeField] private TMP_Text m_titleText;
         [SerializeField] private Joystick m_joystick;
         [SerializeField] private Button m_interactButton;
         [SerializeField] private Image m_interactIcon;
@@ -26,11 +24,6 @@ namespace ZooTycoon.UI
         {
             m_interactButton.onClick.AddListener(InteractButton_Clicked);
             m_joystick.Moved += Joystick_Moved;
-        }
-
-        public void SetTitle(string title)
-        {
-            m_titleText.text = title;
         }
 
         // iconPath: Resources/ 기준. null이면 아이콘은 그대로 두고 흐리게만

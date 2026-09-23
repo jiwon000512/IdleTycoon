@@ -4,7 +4,7 @@
 # 사용: make_ui.py (이 폴더에서). 슬라이스 임포트는 에디터 메뉴 ZooTycoon/Bake/Import UI Sprites
 import os, json
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from collections import deque
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -12,7 +12,8 @@ OUT = '../'
 PAL = [(0x34,0x20,0x20),(0xF0,0xE4,0xD8),(0xFB,0xF4,0xE6),(0xD9,0xC8,0xB4),(0xD8,0x78,0x48),(0xF0,0xA0,0x70),(0xB8,0x5E,0x38),
        (0xF2,0xC1,0x4E),(0x3E,0x7A,0x4C),(0xA6,0x4B,0x3C),(0x2E,0x23,0x20),(0x7A,0x6A,0x60),(0x2F,0x4A,0x3E),(0xC9,0x9A,0x6B),(0x8E,0x6E,0x5C),(0x9A,0x8A,0x7C)]
 P = np.array(PAL)
-slices = {}
+# 다른 스크립트(make_joystick·make_act_button)가 넣은 항목을 지우지 않게 기존 표에 덮어쓴다
+slices = json.load(open(f'{OUT}ui_slices.json', encoding='utf-8'))
 
 
 def load(name):
@@ -65,7 +66,7 @@ def crop_rows(a, keep_top, keep_bottom, height):
     return np.concatenate([top, middle, bottom], axis=0)
 
 
-# ---------- 버튼 A: 주·보조 3상태, 닫기, 상단 바 pill, 태그 ----------
+# ---------- 버튼 A: 주·보조 3상태, 닫기, (옛 상단 바 pill: 시안 C로 안 씀, 자리만 건너뜀), 태그 ----------
 btn = snap(load('buttons_a_px'))
 names = ['btn_primary', 'btn_primary_pressed', 'btn_primary_disabled', 'btn_secondary', 'btn_secondary_pressed', 'btn_secondary_disabled', 'btn_close', 'pill_topbar', 'tag_cost']
 for (x0, y0, x1, y1), n in zip(components(btn), names):
@@ -75,7 +76,7 @@ for (x0, y0, x1, y1), n in zip(components(btn), names):
     elif n == 'btn_close':
         save(n, part)
     elif n == 'pill_topbar':
-        save(n, part, border=(15, 4, 4, 4))         # 왼쪽 코인 부분 고정, 오른쪽으로 늘림
+        continue                                    # 상단 HUD 시안 C(2026-09-23)부터 pill_hud를 쓴다
     else:
         save(n, part, border=(6, 5, 6, 5))
 
@@ -96,6 +97,11 @@ save('row', row, border=(6, 5, 6, 5))
 pill = trim(snap(load('part_pill_px')))            # 30×12: 비용 pill(코인 왼쪽 고정)
 save('pill_cost', pill, border=(13, 3, 3, 3))
 
+# 상단 HUD 코인 캡슐(2026-09-23, 시안 C): 흰 둥근 사각 16×16, 모서리 반지름 4. 색·알파는 Image.color(진갈색 140/255)
+cap = Image.new('RGBA', (16, 16))
+ImageDraw.Draw(cap).rounded_rectangle((0, 0, 15, 15), radius=4, fill=(255, 255, 255, 255))
+save('pill_hud', np.array(cap), border=(5, 5, 5, 5))
+
 # 딤(시트 뒤)·단색 사각(상단 바 배경)은 흰 1×1: 색은 Image.color
 save('white', np.full((4, 4, 4), 255, np.uint8))
 
@@ -104,7 +110,6 @@ save('white', np.full((4, 4, 4), 255, np.uint8))
 GOLD, ORANGE, CREAM, WHITE = (0xF2, 0xC1, 0x4E), (0xD8, 0x78, 0x48), (0xF0, 0xE4, 0xD8), (0xFB, 0xF4, 0xE6)
 PAW_L = ['.x..x.', 'x....x', '..xx..', '.xxxx.', '.xxxx.']   # 발가락 넷(바깥 둘이 한 칸 아래) + 패드
 for name, (x0, y0, x1, y1), recolor, paw, (px, py), hi in [
-        ('pill_topbar', (4, 4, 11, 11), [ORANGE, CREAM, WHITE], PAW_L, (5, 6), (5, 5)),
         ('icon_coin', (1, 1, 10, 9), [], PAW_L, (3, 3), (3, 2))]:
     a = np.array(Image.open(f'{OUT}{name}.png').convert('RGBA'))
     box = a[y0:y1 + 1, x0:x1 + 1]

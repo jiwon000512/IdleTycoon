@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c0e0ad207c8eaf2458c6fcfadcb867cb
+guid: ade151e772f05b944bf66953a3198d36
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6218622794499308894
-    second: pill_topbar_0
+      213: 4031441839167574213
+    second: pill_hud_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -52,7 +52,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 25
-  spriteBorder: {x: 15, y: 4, z: 4, w: 4}
+  spriteBorder: {x: 5, y: 5, z: 5, w: 5}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -113,12 +113,12 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pill_topbar_0
+      name: pill_hud_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 34
+        width: 16
         height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2a2c8bd148303b9a0800000000000000
-      internalID: -6218622794499308894
+      spriteID: 5c01b344efe82f730800000000000000
+      internalID: 4031441839167574213
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pill_topbar_0: -6218622794499308894
+      pill_hud_0: 4031441839167574213
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -24,7 +24,7 @@ namespace ZooTycoon.Game
             ObjectSheetView sheetView = ui.Open<ObjectSheetView>();
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Tables);
-            m_shopHudPresenter = new ShopHudPresenter(shopHudView, game.Shop, game.Tables);
+            m_shopHudPresenter = new ShopHudPresenter(shopHudView, game.Shop);
             m_sheetPresenter = new ObjectSheetPresenter(sheetView, game.Shop, game.State, game.Tables);
             m_shopHudPresenter.SheetRequested += ShopHud_SheetRequested;
 

@@ -24,7 +24,10 @@ namespace ZooTycoon.Editor
         static readonly Color k_Ink = new Color32(0x2E, 0x23, 0x20, 255);
         static readonly Color k_Muted = new Color32(0x5C, 0x4C, 0x42, 255);
         static readonly Color k_Cream = new Color32(0xFB, 0xF4, 0xE6, 255);
-        static readonly Color k_TopBar = new Color32(0x2F, 0x4A, 0x3E, 255);
+        // 상단 HUD 시안 C(2026-09-23): 반투명 진갈색 캡슐 + 금색 숫자(UI 규칙의 코인색) + 진갈색 그림자
+        static readonly Color k_HudPill = new Color32(0x34, 0x20, 0x20, 140);
+        static readonly Color k_Gold = new Color32(0xF2, 0xC1, 0x4E, 255);
+        static readonly Color k_Shadow = new Color32(0x34, 0x20, 0x20, 255);
         static readonly Color k_Dim = new Color32(0x3A, 0x24, 0x22, 115);
 
         [MenuItem("ZooTycoon/Bake/UI")]
@@ -37,36 +40,50 @@ namespace ZooTycoon.Editor
             Debug.Log("UI prefabs: TopBarView, ShopHudView, ObjectSheetView");
         }
 
-        // ---------- 상단 바: 높이 20, 왼쪽 코인 pill(높이 16) ----------
+        // ---------- 상단 HUD(시안 C): 바 배경 없음, 왼쪽 위 (3,3)에 높이 16 캡슐 = 코인 12 + 숫자. 폭은 숫자에 맞춰 늘어난다 ----------
         static void BakeTopBar()
         {
             GameObject root = Root("TopBarView");
-            RectTransform bar = Panel(root.transform, "Bar", null, k_TopBar);
-            Anchor(bar, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f));
-            bar.sizeDelta = new Vector2(0f, 20 * U);
-            bar.anchoredPosition = Vector2.zero;
+            RectTransform pill = Panel(root.transform, "CoinPill", Sprite("pill_hud"), k_HudPill);
+            pill.GetComponent<Image>().raycastTarget = false;
+            Anchor(pill, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            pill.sizeDelta = new Vector2(0f, 16 * U);
+            pill.anchoredPosition = new Vector2(3 * U, -3 * U);
+            HorizontalLayoutGroup layout = pill.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset((int)(3 * U), (int)(5 * U), 0, 0);
+            layout.spacing = 3 * U;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.childControlWidth = true;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            ContentSizeFitter fitter = pill.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            RectTransform pill = Panel(bar, "CoinPill", Sprite("pill_topbar"), Color.white);
-            Anchor(pill, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
-            pill.sizeDelta = new Vector2(70 * U, 16 * U);
-            pill.anchoredPosition = new Vector2(4 * U, 0f);
-            TextMeshProUGUI coins = Text(pill, "CoinsText", "Galmuri11-Bold", 11, k_Cream, TextAlignmentOptions.MidlineRight);
-            Stretch(coins.rectTransform, new Vector4(17 * U, 0f, 4 * U, 0f));
+            RectTransform icon = Panel(pill, "Coin", Sprite("icon_coin"), Color.white);
+            icon.sizeDelta = new Vector2(12 * U, 12 * U);
+            Image iconImage = icon.GetComponent<Image>();
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+            icon.gameObject.AddComponent<LayoutElement>().preferredWidth = 12 * U;
+
+            // 그림자 글자가 자리(폭)를 잡고, 본 글자는 그 자식으로 1px 왼쪽 위에 올린다(자식이 위에 그려진다)
+            TextMeshProUGUI shadow = Text(pill, "CoinsShadow", "Galmuri11-Bold", 11, k_Shadow, TextAlignmentOptions.MidlineLeft);
+            shadow.rectTransform.sizeDelta = new Vector2(0f, 16 * U);
+            TextMeshProUGUI coins = Text(shadow.rectTransform, "CoinsText", "Galmuri11-Bold", 11, k_Gold, TextAlignmentOptions.MidlineLeft);
+            Stretch(coins.rectTransform, Vector4.zero);
+            coins.rectTransform.anchoredPosition = new Vector2(-1 * U, 1 * U);
 
             TopBarView view = root.AddComponent<TopBarView>();
             Set(view, "m_coinsText", coins);
+            Set(view, "m_coinsShadow", shadow);
             Save(root, "TopBarView");
         }
 
-        // ---------- 가게 HUD(설계 09): 상단 바 아래 가게 이름 + 아래쪽 60% 조이스틱 영역 + 오른쪽 아래 상호작용 버튼(행동 아이콘) ----------
+        // ---------- 가게 HUD(설계 09): 아래쪽 60% 조이스틱 영역 + 오른쪽 아래 상호작용 버튼(행동 아이콘). 가게 이름은 상단 HUD 시안 C에서 뺐다 ----------
         static void BakeShopHud()
         {
             GameObject root = Root("ShopHudView");
-
-            TextMeshProUGUI title = Text(root.transform, "TitleText", "Galmuri14", 14, k_Cream, TextAlignmentOptions.MidlineLeft);
-            Anchor(title.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
-            title.rectTransform.sizeDelta = new Vector2(120 * U, 20 * U);
-            title.rectTransform.anchoredPosition = new Vector2(4 * U, -(24 * U));
 
             // 조이스틱: 투명 영역(누르는 곳) → 받침(쉬는 자리 = 상호작용 버튼과 좌우 대칭) → 손잡이.
             // 영역 피벗과 받침 앵커를 같은 점(아래 가운데)에 둬야 누른 곳 = 받침 위치가 된다
@@ -107,7 +124,6 @@ namespace ZooTycoon.Editor
             icon.GetComponent<Image>().raycastTarget = false;
 
             ShopHudView view = root.AddComponent<ShopHudView>();
-            Set(view, "m_titleText", title);
             Set(view, "m_joystick", joystick);
             Set(view, "m_interactButton", button);
             Set(view, "m_interactIcon", icon.GetComponent<Image>());
