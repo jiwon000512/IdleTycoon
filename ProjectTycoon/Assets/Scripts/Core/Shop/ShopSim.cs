@@ -350,7 +350,7 @@ namespace ZooTycoon.Core
                 m_wombat.Place(free);
             }
 
-            RefreshTarget();
+            // 대상은 다음 Tick에 고른다. 여기서 고르면 LayoutChanged보다 TargetChanged가 먼저 나가 화면에 없는 사물(새 오븐·진열대)을 가리킨다
         }
 
         // 설계 09 3장: 조이스틱 방향으로 걷고, 막히면 X만·Y만 시도해 벽을 따라 미끄러진다. 걸은 뒤 대상을 다시 고른다

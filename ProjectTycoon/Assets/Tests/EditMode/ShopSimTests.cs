@@ -604,5 +604,26 @@ namespace ZooTycoon.Tests
             Assert.That(shop.Ovens[0].IsEmpty, Is.True);
             Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionOpen));
         }
+
+        // 빈 자리 앞에서 오븐을 놓으면 화면이 새 오븐을 만든(LayoutChanged) 뒤에야 대상이 그 오븐으로 바뀐다(2026-09-23 오븐 추가 예외)
+        [Test]
+        public void AddOven_AtTargetSlot_LayoutChangedBeforeTargetChanged()
+        {
+            ShopSim shop = Create(c => c.MaxCustomers = 0);
+            m_state.AddCoins(10000d);
+            Cell slot = new Cell(0, 3);
+            WalkTo(shop, shop.Layout.SlotBase(slot));
+            Assert.That(shop.Target, Is.EqualTo(new Interactable(InteractKind.EmptySlot, slot)));
+            List<string> events = new List<string>();
+            shop.LayoutChanged += () => events.Add("layout");
+            shop.TargetChanged += () => events.Add("target");
+
+            Assert.That(shop.TryAddOven(slot), Is.True);
+            Assert.That(events, Is.EqualTo(new[] { "layout" }));
+
+            Run(shop, k_Dt);
+            Assert.That(events, Is.EqualTo(new[] { "layout", "target" }));
+            Assert.That(shop.Target, Is.EqualTo(new Interactable(InteractKind.Oven, slot, 1)));
+        }
     }
 }
