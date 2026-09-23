@@ -14,6 +14,10 @@ namespace ZooTycoon.Editor
         const string k_SpriteDir = "Assets/Sprites/UI/";
         const string k_FontDir = "Assets/Fonts/Galmuri/";
         const string k_UiDir = "Assets/Resources/UI/";
+        // 가게 HUD 조이스틱 받침·상호작용 버튼: 같은 크기, 화면 가운데를 기준으로 좌우 대칭(가운데 x 거리, 화면 아래에서 가운데 높이)
+        const float k_ControlSize = 44 * U;
+        const float k_ControlOffsetX = 68 * U;
+        const float k_ControlCenterY = 62 * U;
         // 설계 09 v0.4: 행동 아이콘(actions.json icon). 실행 중에는 View가 경로로 읽는다
         const string k_ActionIconDir = "Assets/Resources/Sprites/Actions/";
 
@@ -64,15 +68,16 @@ namespace ZooTycoon.Editor
             title.rectTransform.sizeDelta = new Vector2(120 * U, 20 * U);
             title.rectTransform.anchoredPosition = new Vector2(4 * U, -(24 * U));
 
-            // 조이스틱: 투명 영역(누르는 곳) → 받침(쉬는 자리 = 왼쪽 아래) → 손잡이
+            // 조이스틱: 투명 영역(누르는 곳) → 받침(쉬는 자리 = 상호작용 버튼과 좌우 대칭) → 손잡이.
+            // 영역 피벗과 받침 앵커를 같은 점(아래 가운데)에 둬야 누른 곳 = 받침 위치가 된다
             RectTransform area = Panel(root.transform, "JoystickArea", null, Color.clear);
-            Anchor(area, Vector2.zero, new Vector2(1f, 0.6f), new Vector2(0.5f, 0.5f));
+            Anchor(area, Vector2.zero, new Vector2(1f, 0.6f), new Vector2(0.5f, 0f));
             area.offsetMin = Vector2.zero;
             area.offsetMax = Vector2.zero;
             RectTransform stickBase = Panel(area, "Base", Sprite("joystick_base"), Color.white);
-            Anchor(stickBase, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            stickBase.sizeDelta = new Vector2(44 * U, 44 * U);
-            stickBase.anchoredPosition = new Vector2(-(68 * U), -(60 * U));
+            Anchor(stickBase, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f));
+            stickBase.sizeDelta = new Vector2(k_ControlSize, k_ControlSize);
+            stickBase.anchoredPosition = new Vector2(-k_ControlOffsetX, k_ControlCenterY);
             stickBase.GetComponent<Image>().raycastTarget = false;
             CanvasGroup group = stickBase.gameObject.AddComponent<CanvasGroup>();
             group.blocksRaycasts = false;
@@ -87,9 +92,9 @@ namespace ZooTycoon.Editor
 
             // 상호작용 버튼: 둥근 바탕 + 가운데 아이콘. 눌림·비활성은 색 틴트
             RectTransform buttonRect = Panel(root.transform, "InteractButton", Sprite("btn_act"), Color.white);
-            Anchor(buttonRect, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f));
-            buttonRect.sizeDelta = new Vector2(36 * U, 36 * U);
-            buttonRect.anchoredPosition = new Vector2(-(14 * U), 44 * U);
+            Anchor(buttonRect, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f));
+            buttonRect.sizeDelta = new Vector2(k_ControlSize, k_ControlSize);
+            buttonRect.anchoredPosition = new Vector2(k_ControlOffsetX, k_ControlCenterY);
             Button button = buttonRect.gameObject.AddComponent<Button>();
             ColorBlock colors = button.colors;
             colors.pressedColor = new Color(0.8f, 0.8f, 0.8f);

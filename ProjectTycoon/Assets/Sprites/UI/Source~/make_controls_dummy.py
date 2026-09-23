@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 설계 09 더미: 조이스틱 받침·손잡이, 상호작용 버튼 바탕, 행동 아이콘 4종(꺼내기·채우기·파기·열기).
+# 설계 09 더미: 상호작용 버튼 바탕, 행동 아이콘 4종(꺼내기·채우기·파기·열기).
 # v0.4: 행동 아이콘은 actions.json icon 경로 = Resources/Sprites/Actions/<행동 id>.png(ui_slices.json에 넣지 않는다)
 # 1 px = 1 UI px(화면 4px, PPU 25), UI 규칙 팔레트, 칠한 뒤 바깥 1칸 진갈색 외곽선. 실제 아트는 시안 절차로 같은 경로를 덮어쓴다.
 # 사용: make_controls_dummy.py (이 폴더에서) → ../<이름>.png·ui_slices.json, 아이콘은 Resources/Sprites/Actions → 메뉴 ZooTycoon/Bake/Import UI Sprites
@@ -90,7 +90,5 @@ save_action('take_out', icon_take_out())
 save_action('fill', icon_fill())
 save_action('dig', icon_dig())
 save_action('open', icon_open())
-save('btn_act', circle(36, ORANGE, DARK), slices)
-save('joystick_base', circle(44, LIGHT, TAN), slices)
-save('joystick_knob', circle(20, CREAM), slices)
+save('btn_act', circle(44, ORANGE, DARK), slices)  # 조이스틱 받침과 같은 크기
 json.dump(slices, open('../ui_slices.json', 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, indent=1)

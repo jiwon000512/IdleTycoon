@@ -64,7 +64,7 @@ namespace ZooTycoon.UI
             OnMoved(Vector2.zero);
         }
 
-        // 받침은 영역 가운데에 고정점을 둔다(영역 피벗 = 가운데)
+        // 영역 피벗 기준 좌표. 받침 앵커가 영역 피벗과 같은 점이라 그대로 받침 위치가 된다
         private Vector2 Local(PointerEventData eventData)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(m_area, eventData.position, eventData.pressEventCamera, out Vector2 local);

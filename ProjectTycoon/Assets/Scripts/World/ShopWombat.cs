@@ -4,7 +4,7 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 설계 08 v0.6 · 손님 동선 설계 v0.2 · 설계 09: 가게 웜뱃. 위치·보는 방향은 Core(ShopSim.WombatPosition)를 매 프레임 읽는다.
-    // 걸으면 그 방향의 앞·뒤·옆 걷기, 서면 숨쉬기(계산대 자리에서는 줄 머리가 서 있으면 계산 중 뒷모습, 아니면 정면). 든 빵은 머리 위에 쌓는다
+    // 걸으면 그 방향의 앞·뒤·옆 걷기, 서면 숨쉬기(마지막으로 걸은 방향. 계산대 자리에서 줄 머리가 서 있으면 계산 중 뒷모습). 든 빵은 머리 위에 쌓는다
     public sealed class ShopWombat : MonoBehaviour
     {
         [SerializeField] private SpriteAnimator m_animator;
@@ -57,9 +57,9 @@ namespace ZooTycoon.World
             bool moving = m_shop.WombatMoving;
             Facing facing = m_shop.WombatFacing;
 
-            if (!moving && m_shop.WombatAtCounter)
+            if (!moving && m_shop.WombatAtCounter && Serving)
             {
-                facing = Serving ? Facing.Up : Facing.Down;
+                facing = Facing.Up;
             }
 
             Sprite[] frames;
