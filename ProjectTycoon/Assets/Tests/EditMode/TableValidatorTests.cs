@@ -10,8 +10,8 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("zoo_levels", 2)]
-        [TestCase("visitors", 4)]
-        [TestCase("strings", 7)]
+        [TestCase("visitors", 5)]
+        [TestCase("strings", 8)]
         [TestCase("breads", 1)]
         [TestCase("shop_upgrades", 4)]
         public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table, int version)
@@ -28,7 +28,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>("game_config");
 
             Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(13));
+            Assert.That(file.Version, Is.EqualTo(14));
         }
 
         [Test]
@@ -51,10 +51,10 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void Validate_WhenPatienceWarnExceedsPatience_ReportsError()
+        public void Validate_WhenLookSecondsNotPositive_ReportsError()
         {
             GameConfig config = TestTables.LoadConfig();
-            config.Shop.PatienceWarnSeconds = config.Shop.PatienceSeconds + 1d;
+            config.Shop.LookSeconds = 0d;
 
             IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(config: config));
 

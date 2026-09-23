@@ -1,114 +1,200 @@
-using System;
-using System.Collections.Generic;
+using System.Collections;
+using TMPro;
 using UnityEngine;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 08 v0.5: 빵집 손님 개체. 규칙은 ShopSim(Core)이 갖고, 이 개체는 받은 경로를 받은 시간 안에 걷고 말풍선·코인만 띄운다
-    public sealed class ShopCustomer : Unit
+    // 손님 동선 설계 v0.2: Core 손님(위치·보는 방향·상태)을 매 프레임 그대로 그린다. 걷기·판단은 Core가, 여기서는 그림 고르기와 연출만.
+    // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 「!!」 말풍선, 집은 빵, 하트
+    public sealed class ShopCustomer : MonoBehaviour
     {
+        [SerializeField] private Transform m_modelRoot;
+        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        [SerializeField] private SpriteRenderer m_shadowRenderer;
+        [SerializeField] private SpriteAnimator m_animator;
         [SerializeField] private CoinPopup m_coinPrefab;
+        [Tooltip("「!!」 말풍선. 빵을 못 찾고 떠날 때")]
         [SerializeField] private SpriteRenderer m_bubble;
-        [SerializeField] private SpriteRenderer m_bubbleIcon;
-        [SerializeField] private Sprite m_angrySprite;
+        [Tooltip("집은 빵. 계산할 때까지 머리 위")]
+        [SerializeField] private SpriteRenderer m_carry;
+        [Tooltip("결제 뒤 하트")]
+        [SerializeField] private TextMeshPro m_emote;
+        [Tooltip("톡 뛸 때 솟는 높이(유닛)")]
+        [SerializeField] private float m_hopHeight = 0.15f;
+        [Tooltip("두리번: 좌우를 바꾸는 간격(초)")]
+        [SerializeField] private float m_lookSeconds = 0.5f;
+        [Tooltip("빵이 진열대에서 머리 위로 날아오르는 시간(초)")]
+        [SerializeField] private float m_carryFlySeconds = 0.3f;
+        [Tooltip("하트: 떠오르는 높이(유닛)와 시간(초)")]
+        [SerializeField] private float m_emoteRise = 0.5f;
+        [SerializeField] private float m_emoteSeconds = 0.9f;
+        [Tooltip("코인 팝업을 머리 옆으로 비키는 거리(유닛)")]
+        [SerializeField] private float m_coinSideOffset = 0.7f;
 
-        private const float k_ShakeAmount = 0.03f;
-        private const float k_ShakeSpeed = 40f;
-
-        private readonly Queue<Vector2> m_path = new Queue<Vector2>();
         private Customer m_customer;
-        private float m_warnSeconds;
-        private VisitorRecord m_look;
-        private WalkState m_walk;
-        private WaitState m_idle;
-        private Action m_arrived;
+        private ShopView m_view;
+        private Sprite[] m_frontIdle;
+        private Sprite[] m_frontMove;
+        private Sprite[] m_backIdle;
+        private Sprite[] m_backMove;
+        private Sprite[] m_sideIdle;
+        private Sprite[] m_sideMove;
+        private float m_idleFrameRate;
+        private float m_moveFrameRate;
+        private Sprite[] m_playing;
+        private float m_height;
+        private bool m_carrying;
+        private bool m_flying;
 
-        public Vector2 Destination { get; private set; }
+        private Vector3 HeadOffset => new Vector3(0f, m_height, 0f);
 
-        public void Initialize(Customer customer, float warnSeconds, VisitorRecord look, FrameCache frames, Sprite want, Vector2 start)
+        public void Initialize(Customer customer, VisitorRecord look, FrameCache frames, ShopView view)
         {
             m_customer = customer;
-            m_warnSeconds = warnSeconds;
-            m_look = look;
-            Setup(look, frames);
-            m_walk = new WalkState(this, Walk_Arrived);
-            m_idle = new WaitState(this, () => { });
-            m_idle.SetSeconds(float.MaxValue);
-            m_bubbleIcon.sprite = want;
-            SetLogical(start);
-            Destination = start;
-            ChangeState(m_idle);
-            // 말풍선은 머리 위(외형마다 키가 다르다)
-            m_bubble.transform.localPosition = new Vector3(0f, Height, 0f);
+            m_view = view;
+            m_frontIdle = frames.Get(look.IdleSheet ?? look.Sprite);
+            m_frontMove = frames.Get(look.MoveSheet ?? look.Sprite);
+            m_backIdle = look.BackIdleSheet != null ? frames.Get(look.BackIdleSheet) : m_frontIdle;
+            m_backMove = look.BackMoveSheet != null ? frames.Get(look.BackMoveSheet) : m_frontMove;
+            m_sideIdle = look.SideIdleSheet != null ? frames.Get(look.SideIdleSheet) : m_frontIdle;
+            m_sideMove = look.SideMoveSheet != null ? frames.Get(look.SideMoveSheet) : m_frontMove;
+            m_idleFrameRate = (float)look.IdleFrameRate;
+            m_moveFrameRate = (float)look.MoveFrameRate;
+            m_modelRoot.localScale = Vector3.one * (float)look.Scale;
+            m_shadowRenderer.transform.localScale = new Vector3(1f, Iso.k_Y / Iso.k_X, 1f);
+            m_height = m_frontIdle[0].bounds.size.y * (float)look.Scale;
+            m_bubble.transform.localPosition = HeadOffset;
+            m_bubble.enabled = false;
+            m_carry.enabled = false;
+            m_emote.enabled = false;
+            Update();
         }
 
-        // seconds > 0이면 그 시간에 도착하도록 속도를 맞춘다(Core가 센 시간). 0이면 기본 걸음
-        public void Walk(IReadOnlyList<Vector2> points, float seconds, Action arrived = null)
+        // 집기: 빵 그림이 진열대(from, 월드)에서 머리 위로 날아와 계산할 때까지 떠 있다
+        public void Pick(Sprite bread, Vector3 from)
         {
-            m_path.Clear();
-            float length = 0f;
-            Vector2 from = Logical;
-
-            foreach (Vector2 point in points)
-            {
-                m_path.Enqueue(point);
-                length += Vector2.Distance(from, point);
-                from = point;
-            }
-
-            Destination = from;
-            m_arrived = arrived;
-            SetMoveSpeed(seconds > 0f && length > 0f ? length / seconds : (float)m_look.MoveSpeed);
-            Walk_Arrived();
+            m_carry.sprite = bread;
+            m_carrying = true;
+            StartCoroutine(FlyRoutine(from));
         }
 
-        public void HideBubble()
+        public void Pay(string amount, string heart)
         {
-            m_bubble.gameObject.SetActive(false);
-        }
-
-        public void ShowAngry()
-        {
-            m_bubble.gameObject.SetActive(true);
-            m_bubble.sprite = m_angrySprite;
-            m_bubbleIcon.enabled = false;
-        }
-
-        // 연출 1차: 줄 옆(sideOffset)으로 비켜 띄워 뒷 손님에 묻히지 않게
-        public void PopCoin(string amount, float sideOffset)
-        {
-            CoinPopup popup = Instantiate(m_coinPrefab, m_bubble.transform.position + Vector3.right * sideOffset, Quaternion.identity, transform.parent);
+            m_carrying = false;
+            CoinPopup popup = Instantiate(m_coinPrefab, transform.position + HeadOffset + Vector3.right * m_coinSideOffset, Quaternion.identity, transform.parent);
             popup.Show(amount);
+            m_emote.text = heart;
+            StartCoroutine(EmoteRoutine());
         }
 
-        // 연출 1차: 빈 진열대 앞에서 남은 인내가 warnSeconds 이하면 말풍선이 좌우로 흔들린다
-        protected override void Update()
+        public void GiveUp()
         {
-            base.Update();
-            bool warn = m_customer.Phase == CustomerPhase.AtShelf && m_customer.Timer <= m_warnSeconds;
-            float x = warn ? Mathf.Sin(Time.time * k_ShakeSpeed) * k_ShakeAmount : 0f;
-            m_bubble.transform.localPosition = new Vector3(x, Height, 0f);
+            m_bubble.enabled = true;
         }
 
-        protected override Vector3 ToScreen(Vector2 logical)
+        private void Update()
         {
-            return new Vector3(logical.x, logical.y, 0f);
-        }
+            Vector3 position = m_view.ToWorld(m_customer.Position);
+            float alpha = 1f;
+            CustomerPhase phase = m_customer.Phase;
 
-        private void Walk_Arrived()
-        {
-            if (m_path.Count > 0)
+            // 톡 뛰기: 솟았다 내려앉으며 나올 때 선명해지고 들어갈 때 흐려진다
+            if (phase == CustomerPhase.Entering || phase == CustomerPhase.Exiting)
             {
-                m_walk.SetTarget(m_path.Dequeue());
-                ChangeState(m_walk);
-                return;
+                float t = (float)m_customer.HopProgress;
+                position.y += Mathf.Sin(t * Mathf.PI) * m_hopHeight;
+                alpha = phase == CustomerPhase.Entering ? t : 1f - t;
             }
 
-            ChangeState(m_idle);
-            Action arrived = m_arrived;
-            m_arrived = null;
-            arrived?.Invoke();
+            transform.position = position;
+            SetAlpha(alpha);
+            Facing facing = m_customer.Facing;
+
+            // 두리번: 옆모습으로 좌우를 번갈아 본다
+            if (phase == CustomerPhase.Looking)
+            {
+                facing = Mathf.FloorToInt(Time.time / m_lookSeconds) % 2 == 0 ? Facing.Left : Facing.Right;
+            }
+
+            Show(facing, m_customer.Moving);
+
+            if (!m_flying)
+            {
+                m_carry.transform.localPosition = HeadOffset + Vector3.up * 0.1f;
+            }
+
+            m_carry.enabled = m_carrying;
+        }
+
+        private void Show(Facing facing, bool moving)
+        {
+            Sprite[] frames;
+
+            switch (facing)
+            {
+                case Facing.Up:
+                    frames = moving ? m_backMove : m_backIdle;
+                    break;
+                case Facing.Down:
+                    frames = moving ? m_frontMove : m_frontIdle;
+                    break;
+                default:
+                    frames = moving ? m_sideMove : m_sideIdle;
+                    break;
+            }
+
+            m_spriteRenderer.flipX = facing == Facing.Left;
+
+            // 같은 프레임 배열이면 다시 시작하지 않는다(숨쉬기·걷기가 끊기지 않게)
+            if (m_playing != frames)
+            {
+                m_playing = frames;
+                m_animator.Play(frames, moving ? m_moveFrameRate : m_idleFrameRate);
+            }
+        }
+
+        private void SetAlpha(float alpha)
+        {
+            Color color = m_spriteRenderer.color;
+            color.a = alpha;
+            m_spriteRenderer.color = color;
+            Color shadow = m_shadowRenderer.color;
+            shadow.a = 0.35f * alpha;
+            m_shadowRenderer.color = shadow;
+            Color carry = m_carry.color;
+            carry.a = alpha;
+            m_carry.color = carry;
+        }
+
+        private IEnumerator FlyRoutine(Vector3 from)
+        {
+            m_flying = true;
+
+            for (float t = 0f; t < m_carryFlySeconds; t += Time.deltaTime)
+            {
+                float k = t / m_carryFlySeconds;
+                Vector3 to = transform.position + HeadOffset + Vector3.up * 0.1f;
+                m_carry.transform.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * 0.4f);
+                yield return null;
+            }
+
+            m_flying = false;
+        }
+
+        private IEnumerator EmoteRoutine()
+        {
+            m_emote.enabled = true;
+
+            for (float t = 0f; t < m_emoteSeconds; t += Time.deltaTime)
+            {
+                float k = t / m_emoteSeconds;
+                m_emote.transform.localPosition = HeadOffset + Vector3.up * (0.2f + m_emoteRise * k);
+                m_emote.alpha = 1f - k * k;
+                yield return null;
+            }
+
+            m_emote.enabled = false;
         }
     }
 }

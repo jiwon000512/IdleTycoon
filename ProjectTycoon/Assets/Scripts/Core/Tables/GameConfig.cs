@@ -30,17 +30,17 @@ namespace ZooTycoon.Core
         {
             public double ArrivalSeconds { get; set; }
             public int MaxCustomers { get; set; }
-            public double EnterSeconds { get; set; }
-            public double ToQueueSeconds { get; set; }
+            // 손님 동선 설계 v0.2(version 14): 빈 진열대 앞 두리번 시간 합계. 다 쓰면 「!!」로 나간다
             public double PatienceSeconds { get; set; }
-            // 연출 1차: 남은 인내가 이만큼이면 말풍선이 흔들린다(version 12)
-            public double PatienceWarnSeconds { get; set; }
+            // 한 진열대에서 두리번하는 최대 시간. 지나면 다른 빵을 찾아간다
+            public double LookSeconds { get; set; }
+            // 구멍에서 톡 뛰어 나오기·들어가기, 빵 집기
+            public double HopSeconds { get; set; }
+            public double PickSeconds { get; set; }
             public double CheckoutSeconds { get; set; }
             public int ShelfCapacity { get; set; }
             public int OvenCount { get; set; }
-            // v0.6: 웜뱃이 계산대에서 바로 아래 칸 오븐까지 걷는 시간(편도). 더 먼 칸은 walkSpeed로 더한다
-            public double WombatWalkSeconds { get; set; }
-            // 굴 격자 설계 v0.5(version 13): 칸 크기(유닛)·입구 줄 높이·걷는 속도(유닛/초)·파기 비용
+            // 굴 격자 설계 v0.5(version 13): 칸 크기(유닛)·입구 줄 높이·걷는 속도(유닛/초, 손님·웜뱃. 걷는 시간 = A* 길 ÷ 이 값)·파기 비용
             public double CellWidth { get; set; }
             public double CellHeight { get; set; }
             public double EntranceHeight { get; set; }

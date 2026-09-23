@@ -41,6 +41,12 @@ namespace ZooTycoon.World
             m_readyText.text = $"x{ready}";
         }
 
+        // 손님 동선 설계 v0.2: 진행 막대만 매 프레임(오븐 사건은 초가 바뀔 때만 온다)
+        public void SetProgress(float progress)
+        {
+            m_barFill.localScale = new Vector3(Mathf.Clamp01(progress), 1f, 1f);
+        }
+
         public void ShowEmpty()
         {
             m_body.color = Color.white;

@@ -20,3 +20,9 @@
 - 계산대는 counter_b_th의 20~32열을 두 번 끼워 84칸. 모든 소품 PPU 80(ShopBaker.k_Ppu).
 - fix_fox.py (2026-09-23): fox_{front,back}_unpadded.png → 왼쪽 9칸 여백(몸 중심 = 피벗), 뒷모습 꼬리를 3칸 안쪽 + 외곽선을 몸 위에 다시 그려 앞으로. 시트 칸 폭 88 → 104.
 - fix_fox_tail.py: 뒷모습 꼬리를 베지어 곡선(허리 아래 가운데 → 오른쪽 위)으로 다시 그려 몸 위에 얹음. 1차 시도(fix_fox.py의 꼬리 옮기기)는 "아직 이상하다"로 반려.
+
+옆모습 시안 (2026-09-23, 손님 동선 설계 v0.3 10장)
+- rabbit_side_raw_{a,b,c}.png: rabbit_front_raw.png를 참조로 Codex가 뽑은 오른쪽 보는 옆모습 3장(A 완전 옆 · B 살짝 비스듬 · C 몸은 옆 얼굴은 정면). 프롬프트는 side_prompt_{a,b,c}.txt.
+- rabbit_side_{a,b,c}.png = make_pixel.py --px=2 --cells=42 뒤 앞모습(rabbit_front.png) 5색 팔레트로 가장 가까운 색 맞춤. 비교 페이지 https://claude.ai/artifact/VBBmUmkPzaepNfdyeYL3sR (선택 대기).
+- 게임은 지금 옆모습 자리에 앞모습 사본(더미)을 쓴다: Resources/Sprites/Visitors/<종>/<종>_SideIdle·_SideMove, Sprites/World/Shop/wombat_side*. 고른 결로 5종을 만들어 같은 이름에 덮어쓴다.
+

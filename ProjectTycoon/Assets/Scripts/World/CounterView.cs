@@ -2,14 +2,12 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 설계 08: 계산대. 피벗은 계산대 줄 윗변 가운데. 줄 머리 자리에서 위로 줄이 이어진다. 웜뱃은 자식이고 심부름 때 밖으로 걸어갔다 온다(v0.6)
+    // 설계 08: 계산대. 피벗은 계산대 줄 윗변 가운데. 웜뱃은 자식이고 위치는 Core를 읽는다(손님 동선 설계 v0.2). 줄 자리는 Core ShopLayout
     public sealed class CounterView : MonoBehaviour
     {
-        [SerializeField] private Transform m_queueHead;
         [SerializeField] private ShopWombat m_wombat;
         [SerializeField] private SpriteRenderer m_body;
 
-        public Vector2 QueueHead => m_queueHead.position;
         public ShopWombat Wombat => m_wombat;
 
         public bool Contains(Vector3 world)
@@ -21,11 +19,6 @@ namespace ZooTycoon.World
         public void Bounce()
         {
             StartCoroutine(Fx.Bounce(m_body.transform));
-        }
-
-        public void SetServing(bool serving)
-        {
-            m_wombat.SetServing(serving);
         }
     }
 }

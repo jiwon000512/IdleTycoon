@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace ZooTycoon.Core
 {
     // 설계 08 v0.5: 빵집 규칙의 단일 소유자. 손님 도착 → 진열대 → 줄 → 계산, 오븐 굽기, 업그레이드·빵 해금.
-    // 걷는 시간도 여기서 센다. World는 이벤트를 받아 그 시간에 맞춰 걷기만 한다.
-    // 굴 격자 설계 v0.5: 진열대·오븐은 굴 칸(BurrowGrid)의 자리에 놓이고, 걷기는 칸 경로 길이 ÷ walkSpeed(방에 들어서는 첫 걸음은 enter·toQueue·wombatWalk에 포함)
-    public sealed class ShopSim
+    // 굴 격자 설계 v0.5: 진열대·오븐은 굴 칸의 자리에 놓인다.
+    // 손님 동선 설계 v0.2: 매 프레임 돈다. 손님(행동 트리, ShopSim.Customers.cs)과 웜뱃의 위치·걷는 시간(A* 길 ÷ walkSpeed)도 여기서 정하고 화면은 읽기만 한다
+    public sealed partial class ShopSim
     {
         public const string k_OvenCount = "oven_count";
         public const string k_OvenSpeed = "oven_speed";
@@ -18,35 +19,29 @@ namespace ZooTycoon.Core
         private readonly GameConfig.ShopConfig m_config;
         private readonly IRandom m_random;
         private readonly BurrowGrid m_grid;
+        private readonly ShopLayout m_layout;
         private readonly List<BreadRecord> m_unlocked = new List<BreadRecord>();
         private readonly Dictionary<Cell, BreadRecord> m_shelves = new Dictionary<Cell, BreadRecord>();
         private readonly Dictionary<string, int> m_stock = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly Dictionary<string, int> m_levels = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly List<Oven> m_ovens = new List<Oven>();
-        private readonly List<Customer> m_customers = new List<Customer>();
-        private readonly List<Customer> m_queue = new List<Customer>();
-        private double m_arrivalElapsed;
-        private int m_nextCustomerId;
+        private readonly Mover m_wombat;
         private int m_errandOven = -1;
         private bool m_errandReturning;
-        private double m_errandTimer;
 
         public BurrowGrid Grid => m_grid;
+        public ShopLayout Layout => m_layout;
         public IReadOnlyList<BreadRecord> UnlockedBreads => m_unlocked;
         public IReadOnlyDictionary<Cell, BreadRecord> Shelves => m_shelves;
         public IReadOnlyList<Oven> Ovens => m_ovens;
-        public IReadOnlyList<Customer> Customers => m_customers;
-        public IReadOnlyList<Customer> Queue => m_queue;
         public int ShelfCapacity => m_config.ShelfCapacity + (int)Effect(k_ShelfCapacity);
         public BreadRecord NextBread => m_unlocked.Count < m_tables.Breads.Count ? m_tables.Breads[m_unlocked.Count] : null;
         // v0.6: 웜뱃이 계산대에 있나(심부름 중이면 계산이 멈춘다)
         public bool WombatAtCounter => m_errandOven < 0;
+        public Vector2 WombatPosition => m_wombat.Position;
+        public Facing WombatFacing => m_wombat.Facing;
+        public bool WombatMoving => m_wombat.Moving;
 
-        public event Action<Customer> CustomerArrived;
-        public event Action<Customer> CustomerPicked;
-        public event Action QueueChanged;
-        public event Action<Customer, double> CustomerPaid;
-        public event Action<Customer> CustomerGaveUp;
         public event Action<string> StockChanged;
         public event Action<int> OvenChanged;
         // 굴을 팠거나 자리에 진열대·오븐이 놓였다
@@ -66,11 +61,14 @@ namespace ZooTycoon.Core
             m_random = random;
             m_grid = new BurrowGrid(state, m_config);
             m_grid.Dug += Grid_Dug;
+            m_layout = new ShopLayout(m_config);
             m_arrivalElapsed = m_config.ArrivalSeconds;
 
             // 시작 배치: 왼쪽 열(−1)의 자리 줄 두 곳에 첫 빵과 오븐. 오른쪽 열(0)은 빈 자리
             Unlock(tables.Breads[0], new Cell(-1, 1));
             m_ovens.Add(new Oven { Cell = new Cell(-1, 3) });
+            RebuildLayout();
+            m_wombat = new Mover(m_layout.WombatHome, Facing.Down);
         }
 
         // 자리는 있는데 진열대도 오븐도 없는 칸
@@ -120,12 +118,6 @@ namespace ZooTycoon.Core
             throw new KeyNotFoundException($"빵 '{breadId}'의 진열대가 없다.");
         }
 
-        // 칸 사이 걷는 시간(초). 방에 들어서는 마지막 한 걸음(세로 한 칸)은 enter·toQueue·wombatWalk 시간이 맡는다
-        public double WalkSeconds(Cell from, Cell to)
-        {
-            return Math.Max(0d, m_grid.Distance(from, to) - m_config.CellHeight) / m_config.WalkSpeed;
-        }
-
         public int Stock(string breadId)
         {
             return m_stock[breadId];
@@ -171,7 +163,7 @@ namespace ZooTycoon.Core
             return UpgradeLevel(upgradeId) >= GetUpgrade(upgradeId).MaxLevel;
         }
 
-        // 순서: 웜뱃 심부름 → 오븐(재고 보충) → 손님 단계 → 계산 → 도착
+        // 매 프레임. 순서: 웜뱃 심부름 → 오븐(재고 보충) → 손님 행동 트리 → 계산 → 도착
         public void Tick(double dt)
         {
             TickErrand(dt);
@@ -181,6 +173,7 @@ namespace ZooTycoon.Core
             TickArrival(dt);
         }
 
+        // v0.6: 웜뱃이 오븐 옆까지 걸어가야 굽기가 시작된다
         public bool TryBake(int ovenIndex, string breadId)
         {
             Oven oven = m_ovens[ovenIndex];
@@ -196,9 +189,10 @@ namespace ZooTycoon.Core
             oven.Remaining = bread.BakeSeconds;
             m_errandOven = ovenIndex;
             m_errandReturning = false;
-            m_errandTimer = ErrandSeconds(ovenIndex);
+            Vector2 spot = m_layout.OvenSpot(oven.Cell);
+            double seconds = WalkWombat(spot, Mover.FacingOf(m_layout.OvenBase(oven.Cell) - spot));
             OnOvenChanged(ovenIndex);
-            OnWombatLeft(ovenIndex, m_errandTimer);
+            OnWombatLeft(ovenIndex, seconds);
             return true;
         }
 
@@ -223,6 +217,7 @@ namespace ZooTycoon.Core
             }
 
             m_ovens.Add(new Oven { Cell = cell });
+            RebuildLayout();
             OnLayoutChanged();
             return true;
         }
@@ -238,6 +233,7 @@ namespace ZooTycoon.Core
             }
 
             Unlock(next, cell);
+            RebuildLayout();
             OnLayoutChanged();
             OnUpgradesChanged();
             return true;
@@ -252,10 +248,30 @@ namespace ZooTycoon.Core
 
         private void Grid_Dug(Cell cell)
         {
+            RebuildLayout();
             OnLayoutChanged();
         }
 
-        // v0.6: 오븐까지 걸어가 굽기를 시작하고 같은 시간 걸려 돌아온다
+        // 배치가 바뀌면 걷는 땅·줄 자리·서는 자리를 다시 만들고, 걷는 중인 손님·웜뱃은 새 땅에서 길을 다시 찾는다
+        private void RebuildLayout()
+        {
+            List<Cell> ovenCells = new List<Cell>();
+
+            foreach (Oven oven in m_ovens)
+            {
+                ovenCells.Add(oven.Cell);
+            }
+
+            m_layout.Rebuild(m_grid.Cells, m_shelves.Keys, ovenCells, m_config.MaxCustomers);
+            RepathCustomers();
+
+            if (m_wombat != null && m_wombat.Moving)
+            {
+                WalkWombat(m_wombat.Destination, m_wombat.ArriveFacing);
+            }
+        }
+
+        // v0.6: 오븐까지 걸어가고, 도착하면(굽기 시작) 같은 길로 돌아온다
         private void TickErrand(double dt)
         {
             if (WombatAtCounter)
@@ -263,9 +279,9 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            m_errandTimer -= dt;
+            m_wombat.Advance(m_config.WalkSpeed * dt);
 
-            if (m_errandTimer > 0d)
+            if (m_wombat.Moving)
             {
                 return;
             }
@@ -273,10 +289,9 @@ namespace ZooTycoon.Core
             if (!m_errandReturning)
             {
                 m_errandReturning = true;
-                m_errandTimer = ErrandSeconds(m_errandOven);
                 m_ovens[m_errandOven].Started = true;
                 OnOvenChanged(m_errandOven);
-                OnWombatAtOven(m_errandOven, m_errandTimer);
+                OnWombatAtOven(m_errandOven, WalkWombat(m_layout.WombatHome, Facing.Down));
                 return;
             }
 
@@ -284,12 +299,33 @@ namespace ZooTycoon.Core
             OnWombatReturned();
         }
 
-        private double ErrandSeconds(int ovenIndex)
+        private double WalkWombat(Vector2 target, Facing arrive)
         {
-            return m_config.WombatWalkSeconds + WalkSeconds(m_grid.CounterNear(m_ovens[ovenIndex].Cell), m_ovens[ovenIndex].Cell);
+            Walk(m_wombat, target, arrive);
+            return m_wombat.Remaining / m_config.WalkSpeed;
         }
 
-        // 다 구운 빵은 오븐에서 기다리다 진열대에 자리가 나는 만큼 옮겨진다(설계 08 결정 3)
+        // 걷는 중이면 지금 선분을 마저 걷고 그 끝점에서 새 길을 찾는다. 닿을 수 없으면 곧장(ponytail: 막힌 배치에서만 생김)
+        private void Walk(Mover mover, Vector2 target, Facing arrive)
+        {
+            Vector2 from = mover.NextNode;
+            List<Vector2> path = m_layout.Nav.FindPath(from, target);
+
+            if (path.Count == 0 && Vector2.DistanceSquared(from, target) > 1e-6f)
+            {
+                path.Add(target);
+            }
+
+            if (mover.Moving)
+            {
+                path.Insert(0, from);
+            }
+
+            mover.Follow(path, arrive);
+        }
+
+        // 다 구운 빵은 오븐에서 기다리다 진열대에 자리가 나는 만큼 옮겨진다(설계 08 결정 3).
+        // 오븐 사건은 상태가 바뀌거나 남은 초(올림)가 바뀔 때만 낸다. 진행 막대는 화면이 매 프레임 읽는다
         private void TickOvens(double dt)
         {
             for (int i = 0; i < m_ovens.Count; i++)
@@ -301,8 +337,11 @@ namespace ZooTycoon.Core
                     continue;
                 }
 
+                bool changed = false;
+
                 if (oven.Remaining > 0d)
                 {
+                    double before = Math.Ceiling(oven.Remaining);
                     oven.Remaining -= dt * (1d + Effect(k_OvenSpeed));
 
                     if (oven.Remaining <= 0d)
@@ -310,6 +349,8 @@ namespace ZooTycoon.Core
                         oven.Remaining = 0d;
                         oven.Ready = oven.Bread.BatchSize;
                     }
+
+                    changed = Math.Ceiling(oven.Remaining) != before;
                 }
 
                 int moved = Math.Min(oven.Ready, ShelfCapacity - m_stock[oven.Bread.Id]);
@@ -319,154 +360,21 @@ namespace ZooTycoon.Core
                     oven.Ready -= moved;
                     m_stock[oven.Bread.Id] += moved;
                     OnStockChanged(oven.Bread.Id);
+                    changed = true;
                 }
 
                 if (oven.Remaining <= 0d && oven.Ready == 0)
                 {
                     oven.Bread = null;
                     oven.Started = false;
+                    changed = true;
                 }
 
-                OnOvenChanged(i);
-            }
-        }
-
-        // 도착 순서대로 돌아야 같은 틱에 줄에 서는 손님의 순서가 맞다
-        private void TickCustomers(double dt)
-        {
-            for (int i = 0; i < m_customers.Count; i++)
-            {
-                Customer customer = m_customers[i];
-
-                switch (customer.Phase)
+                if (changed)
                 {
-                    case CustomerPhase.ToShelf:
-                        customer.Timer -= dt;
-
-                        if (customer.Timer <= 0d)
-                        {
-                            customer.Phase = CustomerPhase.AtShelf;
-                            customer.Timer = m_config.PatienceSeconds;
-                            TryPick(customer);
-                        }
-
-                        break;
-
-                    case CustomerPhase.AtShelf:
-                        if (TryPick(customer))
-                        {
-                            break;
-                        }
-
-                        customer.Timer -= dt;
-
-                        if (customer.Timer <= 0d)
-                        {
-                            m_customers.RemoveAt(i);
-                            i--;
-                            OnCustomerGaveUp(customer);
-                        }
-
-                        break;
-
-                    case CustomerPhase.ToQueue:
-                        customer.Timer -= dt;
-
-                        if (customer.Timer <= 0d)
-                        {
-                            customer.Phase = CustomerPhase.Queued;
-                            customer.Timer = m_config.CheckoutSeconds;
-                            m_queue.Add(customer);
-                            OnQueueChanged();
-                        }
-
-                        break;
+                    OnOvenChanged(i);
                 }
             }
-        }
-
-        private bool TryPick(Customer customer)
-        {
-            if (m_stock[customer.Bread.Id] == 0)
-            {
-                return false;
-            }
-
-            m_stock[customer.Bread.Id]--;
-            customer.Phase = CustomerPhase.ToQueue;
-            customer.Timer = m_config.ToQueueSeconds + WalkSeconds(customer.Cell, m_grid.CounterNear(customer.Cell));
-            OnStockChanged(customer.Bread.Id);
-            OnCustomerPicked(customer);
-            return true;
-        }
-
-        // 줄 머리만 계산한다. 남은 작업량은 다음 손님에게 넘긴다
-        private void TickCheckout(double dt)
-        {
-            if (m_queue.Count == 0 || !WombatAtCounter)
-            {
-                return;
-            }
-
-            m_queue[0].Timer -= dt * (1d + Effect(k_CheckoutSpeed));
-
-            while (m_queue.Count > 0 && m_queue[0].Timer <= 0d)
-            {
-                Customer paid = m_queue[0];
-                double overflow = -paid.Timer;
-                m_queue.RemoveAt(0);
-                m_customers.Remove(paid);
-                m_state.AddCoins(paid.Bread.Price);
-                OnCustomerPaid(paid, paid.Bread.Price);
-
-                if (m_queue.Count > 0)
-                {
-                    m_queue[0].Timer -= overflow;
-                }
-
-                OnQueueChanged();
-            }
-        }
-
-        private void TickArrival(double dt)
-        {
-            m_arrivalElapsed = Math.Min(m_arrivalElapsed + dt, m_config.ArrivalSeconds);
-
-            if (m_arrivalElapsed < m_config.ArrivalSeconds || m_customers.Count >= m_config.MaxCustomers)
-            {
-                return;
-            }
-
-            m_arrivalElapsed = 0d;
-            BreadRecord bread = m_unlocked[PickSlot()];
-            Cell cell = ShelfCell(bread.Id);
-            Customer customer = new Customer(++m_nextCustomerId, bread, cell, m_config.EnterSeconds + WalkSeconds(m_grid.EntranceNear(cell), cell));
-            m_customers.Add(customer);
-            OnCustomerArrived(customer);
-        }
-
-        private int PickSlot()
-        {
-            int weightSum = 0;
-
-            for (int i = 0; i < m_unlocked.Count; i++)
-            {
-                weightSum += m_unlocked[i].Weight;
-            }
-
-            double roll = m_random.NextDouble() * weightSum;
-
-            for (int i = 0; i < m_unlocked.Count; i++)
-            {
-                roll -= m_unlocked[i].Weight;
-
-                if (roll < 0d)
-                {
-                    return i;
-                }
-            }
-
-            return m_unlocked.Count - 1;
         }
 
         private double Effect(string upgradeId)
@@ -485,31 +393,6 @@ namespace ZooTycoon.Core
             }
 
             throw new KeyNotFoundException($"업그레이드 ID '{upgradeId}'가 shop_upgrades.json에 없다.");
-        }
-
-        private void OnCustomerArrived(Customer customer)
-        {
-            CustomerArrived?.Invoke(customer);
-        }
-
-        private void OnCustomerPicked(Customer customer)
-        {
-            CustomerPicked?.Invoke(customer);
-        }
-
-        private void OnQueueChanged()
-        {
-            QueueChanged?.Invoke();
-        }
-
-        private void OnCustomerPaid(Customer customer, double coins)
-        {
-            CustomerPaid?.Invoke(customer, coins);
-        }
-
-        private void OnCustomerGaveUp(Customer customer)
-        {
-            CustomerGaveUp?.Invoke(customer);
         }
 
         private void OnStockChanged(string breadId)

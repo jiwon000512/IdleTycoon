@@ -1,30 +1,51 @@
+using System.Collections.Generic;
+using System.Numerics;
+
 namespace ZooTycoon.Core
 {
+    // 손님 동선 설계 v0.2: 화면이 그림을 고르는 상태
     public enum CustomerPhase
     {
-        ToShelf,
-        AtShelf,
+        Entering,
+        Walking,
+        Looking,
+        Picking,
         ToQueue,
         Queued,
+        Leaving,
+        Exiting,
     }
 
-    // 설계 08 v0.5: 빵집 손님 한 명. Timer = 지금 단계의 남은 시간(줄에서는 줄 머리일 때만 계산 시간)
+    // 설계 08 v0.5 · 손님 동선 설계 v0.2: 빵집 손님 한 명. 위치·보는 방향은 Mover가, 할 일은 행동 트리(Brain)가 정한다
     public sealed class Customer
     {
         public int Id { get; }
-        public BreadRecord Bread { get; }
-        // 굴 격자 설계 v0.5: 가려는 진열대의 칸
-        public Cell Cell { get; }
+        // 지금 찾는 빵과 그 진열대 칸
+        public BreadRecord Bread { get; internal set; }
+        public Cell Cell { get; internal set; }
         public CustomerPhase Phase { get; internal set; }
-        public double Timer { get; internal set; }
+        public bool CarriesBread { get; internal set; }
+        public bool Angry { get; internal set; }
+        // 나오기·나가기 톡 뛰기 진행(0~1)
+        public double HopProgress { get; internal set; }
+        public Vector2 Position => Mover.Position;
+        public Facing Facing => Mover.Facing;
+        public bool Moving => Mover.Moving;
 
-        internal Customer(int id, BreadRecord bread, Cell cell, double timer)
+        internal Mover Mover { get; }
+        internal BtNode<Customer> Brain { get; set; }
+        internal HashSet<string> Tried { get; } = new HashSet<string>();
+        internal double Patience { get; set; }
+        internal double Timer { get; set; }
+        internal bool HasSpot { get; set; }
+        internal Vector2 Spot { get; set; }
+        internal bool Paid { get; set; }
+
+        internal Customer(int id, Vector2 position, double patience)
         {
             Id = id;
-            Bread = bread;
-            Cell = cell;
-            Phase = CustomerPhase.ToShelf;
-            Timer = timer;
+            Mover = new Mover(position, Facing.Down);
+            Patience = patience;
         }
     }
 }

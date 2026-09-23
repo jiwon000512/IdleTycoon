@@ -329,15 +329,8 @@ MonoBehaviour:
   m_burrow: {fileID: 6005301527074928383}
   m_floorTile: {fileID: 2800000, guid: cbe2c1fb1b307594393261131b9a1129, type: 3}
   m_wallTile: {fileID: 2800000, guid: 882915a7e11f7f64f99f73a3c756154c, type: 3}
-  m_roundRadius: 12
-  m_queueSpacing: 0.8
-  m_doorDepth: 1.5
-  m_exitLaneX: 0.7
-  m_ovenStandOffset: 1.35
   m_digSeconds: 0.6
   m_digTagSeconds: 2
-  m_shelfDrop: 0.65
-  m_ovenDrop: 0.85
 --- !u!114 &864861439378456402
 MonoBehaviour:
   m_ObjectHideFlags: 0

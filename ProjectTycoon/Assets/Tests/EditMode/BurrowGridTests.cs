@@ -4,7 +4,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 굴 격자 설계 v0.5 검증 1: 시작 8칸, 파기 규칙, 비용, 경로·거리
+    // 굴 격자 설계 v0.5 검증 1: 시작 8칸, 파기 규칙, 비용(길 찾기는 BurrowNavTests)
     public sealed class BurrowGridTests
     {
         private ZooState m_state;
@@ -68,20 +68,6 @@ namespace ZooTycoon.Tests
 
             Assert.That(grid.TryDig(new Cell(1, 1)), Is.False);
             Assert.That(grid.Cells.Count, Is.EqualTo(8));
-        }
-
-        [Test]
-        public void Path_IsShortestAndDistanceUsesCellSizes()
-        {
-            BurrowGrid grid = Create();
-            m_state.AddCoins(1000d);
-            grid.TryDig(new Cell(-2, 3));
-
-            Assert.That(grid.Path(new Cell(0, 0), new Cell(-2, 3)).Count, Is.EqualTo(6));
-            Assert.That(grid.Distance(new Cell(0, 2), new Cell(-1, 3)), Is.EqualTo(2.4d + 3.375d).Within(1e-9));
-            Assert.That(grid.Distance(new Cell(-1, 2), new Cell(-2, 3)), Is.EqualTo(2.4d + 3.375d).Within(1e-9));
-            Assert.That(grid.EntranceNear(new Cell(-2, 3)), Is.EqualTo(new Cell(-1, 0)));
-            Assert.That(grid.CounterNear(new Cell(1, 1)), Is.EqualTo(new Cell(0, 2)));
         }
     }
 }

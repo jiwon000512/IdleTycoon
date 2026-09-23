@@ -41,7 +41,8 @@ namespace ZooTycoon.Game
             Shop = new ShopSim(State, Tables, new SystemRandom());
         }
 
-        // 설계 04 P2: game_config.income.tickSeconds마다 규칙 한 틱. 동물원 레벨은 누적 코인으로 판정
+        // 손님 동선 설계 v0.2: 가게 시뮬은 매 프레임(손님 행동 트리가 단계마다 멈칫하지 않게).
+        // 설계 04 P2: 동물원 레벨 판정만 game_config.income.tickSeconds마다
         private void Update()
         {
             if (Shop == null)
@@ -49,6 +50,7 @@ namespace ZooTycoon.Game
                 return;
             }
 
+            Shop.Tick(Time.deltaTime);
             m_tickElapsed += Time.deltaTime;
 
             if (m_tickElapsed < Tables.Config.Income.TickSeconds)
@@ -56,7 +58,6 @@ namespace ZooTycoon.Game
                 return;
             }
 
-            Shop.Tick(m_tickElapsed);
             ZooLevel.Refresh();
             m_tickElapsed = 0f;
         }

@@ -9,14 +9,10 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_body;
         [SerializeField] private SpriteRenderer m_icon;
         [SerializeField] private TextMeshPro m_stockText;
-        [Tooltip("손님이 서는 자리")]
-        [SerializeField] private Transform m_standPoint;
 
         // 연출 1차: 재고 0이면 숫자가 깜빡인다
         private const float k_BlinkSeconds = 0.6f;
         private bool m_empty;
-
-        public Vector2 StandPoint => m_standPoint.position;
 
         public bool Contains(Vector3 world)
         {

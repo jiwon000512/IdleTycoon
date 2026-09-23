@@ -2,11 +2,12 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEditor;
 using TMPro;
+using ZooTycoon.Core;
 using ZooTycoon.World;
 
 namespace ZooTycoon.Editor
 {
-    // 설계 08 v0.5 · 굴 격자 설계 v0.5: 빵집 프리팹을 통째로 다시 만든다.
+    // 설계 08 v0.5 · 굴 격자 설계 v0.5 · 손님 동선 설계 v0.2: 빵집 프리팹을 통째로 다시 만든다. 사물 자리 숫자는 Core ShopLayout과 같은 값을 쓴다.
     // 사물 프리팹(진열대·오븐·계산대) + 표시(파기 태그·빈 자리) + Shop(ShopView·손님 스포너·흙 배경·굴 그림·입구 아치) + ShopCustomer.
     // 스프라이트는 한 칸 2px·PPU 80(Sprites/World/Shop, Resources/Sprites/Shop/Breads, 원본 Shop/Source~). 굴 그림 재료(타일·빈 자리)는 한 칸 1px·PPU 40
     public static class ShopBaker
@@ -73,7 +74,7 @@ namespace ZooTycoon.Editor
                 Import(k_SpriteDir + name + ".png", bottom);
             }
 
-            foreach (string side in new[] { "front", "back" })
+            foreach (string side in new[] { "front", "back", "side" })
             {
                 foreach (string suffix in new[] { "", "_1", "_2", "_3", "_walk_0", "_walk_1", "_walk_2", "_walk_3" })
                 {
@@ -122,7 +123,7 @@ namespace ZooTycoon.Editor
 
         // ---------- 사물 ----------
 
-        // 진열대 하나. 피벗 = 밑변 가운데. 손님은 오른쪽에 선다
+        // 진열대 하나. 피벗 = 밑변 가운데. 손님이 서는 자리는 Core ShopLayout
         static ShelfView BakeShelf()
         {
             GameObject go = new GameObject("Shelf");
@@ -130,13 +131,11 @@ namespace ZooTycoon.Editor
             SpriteRenderer body = Renderer(go.transform, "Body", Load("shelf"), Vector3.zero, 0);
             SpriteRenderer icon = Renderer(go.transform, "Icon", null, new Vector3(0f, 0.62f, 0f), 1);
             TextMeshPro text = WorldText(go.transform, "Stock", new Vector3(0f, 1.4f, 0f), 2);
-            Transform stand = Child(go.transform, "StandPoint", new Vector3(1.05f, -0.05f, 0f)).transform;
 
             ShelfView view = go.AddComponent<ShelfView>();
             Set(view, "m_body", body);
             Set(view, "m_icon", icon);
             Set(view, "m_stockText", text);
-            Set(view, "m_standPoint", stand);
             return Save(go, view, "Shelf");
         }
 
@@ -170,20 +169,22 @@ namespace ZooTycoon.Editor
         {
             GameObject root = new GameObject("ShopCounter");
             CounterView counter = root.AddComponent<CounterView>();
-            Set(counter, "m_queueHead", Child(root.transform, "QueueHead", new Vector3(0f, -0.55f, 0f)).transform);
-            SpriteRenderer counterBody = Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -1.55f, 0f), 0);
+            SpriteRenderer counterBody = Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -ShopLayout.k_CounterDrop, 0f), 0);
             Set(counter, "m_body", counterBody);
             // 웜뱃 정면·뒷모습: 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 0 → 1 → 2 → 3(Source~/make_breath_frames.py)
-            SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -2.45f, 0f), 0);
+            SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -ShopLayout.k_WombatDrop, 0f), 0);
             SpriteAnimator animator = wombat.gameObject.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", wombat);
             // 걷기(v0.6): 딛기 → 왼발 → 딛기 → 오른발(Source~/make_walk_frames.py)
             ShopWombat mover = wombat.gameObject.AddComponent<ShopWombat>();
             Set(mover, "m_animator", animator);
-            SetSprites(mover, "m_frontIdle", Frames("wombat_front", "", "_1", "_2", "_3"));
-            SetSprites(mover, "m_backIdle", Frames("wombat_back", "", "_1", "_2", "_3"));
-            SetSprites(mover, "m_frontWalk", Frames("wombat_front", "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
-            SetSprites(mover, "m_backWalk", Frames("wombat_back", "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
+            Set(mover, "m_renderer", wombat);
+            // 옆모습(손님 동선 설계 v0.2): 오른쪽 보는 그림, 왼쪽은 뒤집기. 실제 아트 전까지 앞모습 사본(더미)
+            foreach (string side in new[] { "front", "back", "side" })
+            {
+                SetSprites(mover, "m_" + side + "Idle", Frames("wombat_" + side, "", "_1", "_2", "_3"));
+                SetSprites(mover, "m_" + side + "Walk", Frames("wombat_" + side, "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
+            }
             Set(counter, "m_wombat", mover);
             return Save(root, counter, "ShopCounter");
         }
@@ -243,10 +244,13 @@ namespace ZooTycoon.Editor
             SpriteAnimator animator = root.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", sprite);
 
-            // 말풍선 32×36칸(꼬리 4칸), 아이콘은 몸통 가운데(꼬리 0.1 + 몸통 반 0.4)
-            SpriteRenderer bubble = Renderer(root.transform, "Bubble", Load("bubble"), new Vector3(0f, 0.8f, 0f), 50);
-            SpriteRenderer icon = Renderer(bubble.transform, "Icon", null, new Vector3(0f, 0.5f, 0f), 51);
-            icon.transform.localScale = Vector3.one * 0.7f;
+            // 「!!」 말풍선(빵을 못 찾고 떠날 때), 집은 빵, 결제 뒤 하트. 머리 높이는 외형마다 달라 실행 중에 맞춘다
+            SpriteRenderer bubble = Renderer(root.transform, "Bubble", Load("angry"), new Vector3(0f, 0.8f, 0f), 50);
+            SpriteRenderer carry = Renderer(root.transform, "Carry", null, new Vector3(0f, 0.9f, 0f), 51);
+            carry.transform.localScale = Vector3.one * 0.7f;
+            TextMeshPro emote = WorldText(root.transform, "Emote", new Vector3(0f, 1f, 0f), 52);
+            emote.fontSize = 3.5f;
+            emote.color = new Color(0.93f, 0.33f, 0.4f);
 
             ShopCustomer customer = root.AddComponent<ShopCustomer>();
             Set(customer, "m_modelRoot", model.transform);
@@ -255,8 +259,8 @@ namespace ZooTycoon.Editor
             Set(customer, "m_animator", animator);
             Set(customer, "m_coinPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             Set(customer, "m_bubble", bubble);
-            Set(customer, "m_bubbleIcon", icon);
-            Set(customer, "m_angrySprite", Load("angry"));
+            Set(customer, "m_carry", carry);
+            Set(customer, "m_emote", emote);
             return Save(root, customer, "ShopCustomer");
         }
 

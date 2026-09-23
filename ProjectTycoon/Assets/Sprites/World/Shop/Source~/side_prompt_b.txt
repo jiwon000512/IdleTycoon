@@ -1,0 +1,13 @@
+Chunky pixel art game sprite, exactly the same character and art style as the attached reference image.
+Style rules:
+- large blocky pixels on a roughly 40x40 pixel grid, crisp square pixels, no anti-aliasing, no blur
+- thick dark brown outline (about 2 pixels wide) around the whole silhouette, same outline color as the reference
+- the same soft, low-saturation pastel palette as the reference, only 5-7 flat colors, no gradients, no dithering
+- one flat shadow tone on the belly and far legs, one small white highlight stroke on the top of the head
+- cute, round, chubby proportions exactly like the reference: same head size, same long ears, same tiny dot eye, same short stubby legs
+- the camera looks down from about 30 degrees above, the same camera as the reference
+- standing on an invisible flat ground, feet at the very bottom of the body, same height as the reference
+- plain solid white background, no ground, no shadow on the ground, no text, no border, no watermark
+
+Draw the SAME rabbit character from the reference, now turned to face RIGHT in a three-quarter view: the body is turned to the right, the face is turned mostly right but we can still see a little of the far side of the face, the near eye is visible, the long ears point up. Keep it standing still.
+Save the image as rabbit_side_raw_b.png in the current working directory and reply with only the path.

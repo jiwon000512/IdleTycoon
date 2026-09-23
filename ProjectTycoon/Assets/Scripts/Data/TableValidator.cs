@@ -205,21 +205,16 @@ namespace ZooTycoon.Data
 
             GameConfig.ShopConfig shop = config.Shop;
 
-            if (shop.ArrivalSeconds <= 0d || shop.CheckoutSeconds <= 0d || shop.EnterSeconds < 0d
-                || shop.ToQueueSeconds < 0d || shop.PatienceSeconds < 0d || shop.WombatWalkSeconds < 0d || shop.MaxCustomers < 1 || shop.ShelfCapacity < 1 || shop.OvenCount < 1)
+            if (shop.ArrivalSeconds <= 0d || shop.CheckoutSeconds <= 0d || shop.HopSeconds <= 0d || shop.PickSeconds < 0d
+                || shop.PatienceSeconds < 0d || shop.LookSeconds <= 0d || shop.MaxCustomers < 1 || shop.ShelfCapacity < 1 || shop.OvenCount < 1)
             {
-                errors.Add("game_config: shop의 arrivalSeconds·checkoutSeconds는 0보다, 다른 시간은 0 이상, maxCustomers·shelfCapacity·ovenCount는 1 이상이어야 한다.");
+                errors.Add("game_config: shop의 arrivalSeconds·checkoutSeconds·hopSeconds·lookSeconds는 0보다, pickSeconds·patienceSeconds는 0 이상, maxCustomers·shelfCapacity·ovenCount는 1 이상이어야 한다.");
             }
 
             // 굴 격자 설계 v0.5
             if (shop.CellWidth <= 0d || shop.CellHeight <= 0d || shop.EntranceHeight <= 0d || shop.WalkSpeed <= 0d || shop.DigBaseCost <= 0d || shop.DigCostGrowth < 1d)
             {
                 errors.Add("game_config: shop의 cellWidth·cellHeight·entranceHeight·walkSpeed·digBaseCost는 0보다, digCostGrowth는 1 이상이어야 한다.");
-            }
-
-            if (shop.PatienceWarnSeconds < 0d || shop.PatienceWarnSeconds > shop.PatienceSeconds)
-            {
-                errors.Add("game_config: shop.patienceWarnSeconds는 0 이상 patienceSeconds 이하여야 한다.");
             }
         }
 

@@ -1,36 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &842550513742277193
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5918905820312883539}
-  m_Layer: 0
-  m_Name: QueueHead
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5918905820312883539
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 842550513742277193}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.55, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 665803465624617356}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1420349802170192204
 GameObject:
   m_ObjectHideFlags: 0
@@ -61,7 +30,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5918905820312883539}
   - {fileID: 3723177440951671367}
   - {fileID: 1578825850855762086}
   m_Father: {fileID: 0}
@@ -78,7 +46,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78fe686e20eb0374b9649d1f17db9333, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.CounterView
-  m_queueHead: {fileID: 5918905820312883539}
   m_wombat: {fileID: 6966855856106456036}
   m_body: {fileID: 9100660517652985611}
 --- !u!1 &6896213043749306532
@@ -291,6 +258,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.ShopWombat
   m_animator: {fileID: 3418585953230077092}
+  m_renderer: {fileID: 7568272418757224506}
   m_frontIdle:
   - {fileID: 21300000, guid: 510471ceb31adcb469f8d0c42b636898, type: 3}
   - {fileID: 21300000, guid: 467e3baa82c0cd34396da834426f2f5d, type: 3}
@@ -301,6 +269,11 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 71dd3f9c0257c4c4c87d0c0bb1d82242, type: 3}
   - {fileID: 21300000, guid: 99ed3c885d4c0854ea9b9fbc56e3efcb, type: 3}
   - {fileID: 21300000, guid: dc4cc910899ebb84cb5ca7d7abc5f741, type: 3}
+  m_sideIdle:
+  - {fileID: 21300000, guid: 6092560bed145b44e87aa7d5bdfcab46, type: 3}
+  - {fileID: 21300000, guid: 56134321c778a064fbc23508d6e3725e, type: 3}
+  - {fileID: 21300000, guid: f807a8271fab0fb41877c8e302d57197, type: 3}
+  - {fileID: 21300000, guid: d6dffcae1210b9e4d8ea7a3309918ee7, type: 3}
   m_frontWalk:
   - {fileID: 21300000, guid: c8dbdbbbbc910ac4780fbc218c98e8f3, type: 3}
   - {fileID: 21300000, guid: 07825182dacdb4a4fa7ca509dd247f83, type: 3}
@@ -311,5 +284,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: ac439e4df2997ac448bac35961428cfe, type: 3}
   - {fileID: 21300000, guid: 6f34576e0f835874998447c252d2412f, type: 3}
   - {fileID: 21300000, guid: 183e0d43c4fb475479a8c577568bb459, type: 3}
+  m_sideWalk:
+  - {fileID: 21300000, guid: ee757e1c3fbeab84aacad5a9fb12b791, type: 3}
+  - {fileID: 21300000, guid: 43feb1ac278ab2b4fb1fe678362e6054, type: 3}
+  - {fileID: 21300000, guid: a90c8f23e501934449d29c7966439c4f, type: 3}
+  - {fileID: 21300000, guid: 4bf15313ef0afb9449384015c10e4623, type: 3}
   m_idleFrameRate: 2.5
   m_walkFrameRate: 8

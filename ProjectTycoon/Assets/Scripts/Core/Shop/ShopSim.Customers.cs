@@ -1,0 +1,410 @@
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+
+namespace ZooTycoon.Core
+{
+    // 손님 동선 설계 v0.2 5·6·7장: 손님 행동 트리와 잎 행동, 줄·서는 자리
+    public sealed partial class ShopSim
+    {
+        private readonly List<Customer> m_customers = new List<Customer>();
+        private readonly List<Customer> m_queue = new List<Customer>();
+        private double m_arrivalElapsed;
+        private int m_nextCustomerId;
+
+        public IReadOnlyList<Customer> Customers => m_customers;
+        // 빵을 집은 순서. 걸어오는 중인 손님도 들어 있다
+        public IReadOnlyList<Customer> Queue => m_queue;
+
+        public event Action<Customer> CustomerArrived;
+        public event Action<Customer> CustomerPicked;
+        public event Action QueueChanged;
+        public event Action<Customer, double> CustomerPaid;
+        public event Action<Customer> CustomerGaveUp;
+        public event Action<Customer> CustomerExited;
+
+        // 5장 트리. 마디가 진행 상태를 가지므로 손님마다 새로 만든다
+        private BtNode<Customer> BuildBrain()
+        {
+            BtNode<Customer> pick = new BtAction<Customer>(StartPick, TickPick);
+            BtNode<Customer> findOnce = new BtSequence<Customer>(
+                new BtAction<Customer>(null, ChooseBread),
+                new BtAction<Customer>(StartWalkToShelf, TickWalk),
+                new BtSelector<Customer>(
+                    pick,
+                    new BtSequence<Customer>(
+                        new BtAction<Customer>(StartLook, TickLook),
+                        new BtAction<Customer>(StartPick, TickPick))));
+
+            return new BtSelector<Customer>(
+                new BtSequence<Customer>(
+                    new BtAction<Customer>(StartEnter, TickHop),
+                    new BtRepeat<Customer>(c => c.Patience > 0d, findOnce),
+                    new BtAction<Customer>(StartToQueue, TickToQueue),
+                    new BtAction<Customer>(null, TickWaitCheckout),
+                    new BtAction<Customer>(StartLeave, TickWalk),
+                    new BtAction<Customer>(StartExit, TickHop)),
+                new BtSequence<Customer>(
+                    new BtAction<Customer>(StartAngry, TickWalk),
+                    new BtAction<Customer>(StartExit, TickHop)));
+        }
+
+        private void TickCustomers(double dt)
+        {
+            for (int i = 0; i < m_customers.Count; i++)
+            {
+                Customer customer = m_customers[i];
+                customer.Mover.Advance(m_config.WalkSpeed * dt);
+
+                if (customer.Brain.Tick(customer, dt) != BtStatus.Running)
+                {
+                    customer.HasSpot = false;
+                    m_customers.RemoveAt(i);
+                    i--;
+                    OnCustomerExited(customer);
+                }
+            }
+        }
+
+        // 줄 머리가 머리 자리에 선 뒤에만 계산한다. 웜뱃이 심부름 중이면 멈춘다
+        private void TickCheckout(double dt)
+        {
+            if (m_queue.Count == 0 || !WombatAtCounter)
+            {
+                return;
+            }
+
+            Customer head = m_queue[0];
+
+            if (head.Phase != CustomerPhase.Queued || head.Moving)
+            {
+                return;
+            }
+
+            head.Timer -= dt * (1d + Effect(k_CheckoutSpeed));
+
+            if (head.Timer > 0d)
+            {
+                return;
+            }
+
+            m_queue.RemoveAt(0);
+            head.Paid = true;
+            head.CarriesBread = false;
+            m_state.AddCoins(head.Bread.Price);
+            OnCustomerPaid(head, head.Bread.Price);
+
+            for (int i = 0; i < m_queue.Count; i++)
+            {
+                Walk(m_queue[i].Mover, m_layout.QueueSlots[i], m_layout.QueueFacing(i));
+            }
+
+            OnQueueChanged();
+        }
+
+        private void TickArrival(double dt)
+        {
+            m_arrivalElapsed = Math.Min(m_arrivalElapsed + dt, m_config.ArrivalSeconds);
+
+            if (m_arrivalElapsed < m_config.ArrivalSeconds || m_customers.Count >= m_config.MaxCustomers)
+            {
+                return;
+            }
+
+            m_arrivalElapsed = 0d;
+            Customer customer = new Customer(++m_nextCustomerId, m_layout.HoleInside, m_config.PatienceSeconds);
+            customer.Brain = BuildBrain();
+            m_customers.Add(customer);
+            OnCustomerArrived(customer);
+        }
+
+        // 배치가 바뀌면: 줄에 선(서러 가는) 손님은 새 줄 자리로, 걷는 중인 손님은 같은 목적지로 새 길을 찾는다
+        private void RepathCustomers()
+        {
+            foreach (Customer customer in m_customers)
+            {
+                int index = m_queue.IndexOf(customer);
+
+                if (index >= 0)
+                {
+                    Walk(customer.Mover, m_layout.QueueSlots[index], m_layout.QueueFacing(index));
+                }
+                else if (customer.Moving)
+                {
+                    Walk(customer.Mover, customer.Mover.Destination, customer.Mover.ArriveFacing);
+                }
+            }
+        }
+
+        // ---------- 잎 행동 ----------
+
+        // 구멍 안에서 톡 뛰어내려 구멍 아래 바닥에 선다
+        private bool StartEnter(Customer customer)
+        {
+            customer.Phase = CustomerPhase.Entering;
+            customer.Timer = m_config.HopSeconds;
+            customer.HopProgress = 0d;
+            customer.Mover.Place(m_layout.HoleInside);
+            customer.Mover.Facing = Facing.Down;
+            return true;
+        }
+
+        // 나가기: 구멍 아래 바닥에서 톡 뛰어 구멍 안으로
+        private bool StartExit(Customer customer)
+        {
+            customer.Phase = CustomerPhase.Exiting;
+            customer.Timer = m_config.HopSeconds;
+            customer.HopProgress = 0d;
+            customer.Mover.Facing = Facing.Up;
+            return true;
+        }
+
+        private BtStatus TickHop(Customer customer, double dt)
+        {
+            customer.Timer -= dt;
+            double t = Math.Min(1d, 1d - customer.Timer / m_config.HopSeconds);
+            customer.HopProgress = t;
+            bool entering = customer.Phase == CustomerPhase.Entering;
+            Vector2 from = entering ? m_layout.HoleInside : m_layout.HoleFloor;
+            Vector2 to = entering ? m_layout.HoleFloor : m_layout.HoleInside;
+            customer.Mover.Place(Vector2.Lerp(from, to, (float)t));
+            return customer.Timer > 0d ? BtStatus.Running : BtStatus.Success;
+        }
+
+        // 안 가 본 빵 중 가중치 난수. 재고는 보지 않는다(가 봐야 안다). 다 가 봤으면 지금 빵 그대로
+        private BtStatus ChooseBread(Customer customer, double dt)
+        {
+            int weightSum = 0;
+
+            foreach (BreadRecord bread in m_unlocked)
+            {
+                weightSum += customer.Tried.Contains(bread.Id) ? 0 : bread.Weight;
+            }
+
+            if (weightSum == 0)
+            {
+                return customer.Bread != null ? BtStatus.Success : BtStatus.Failure;
+            }
+
+            double roll = m_random.NextDouble() * weightSum;
+            BreadRecord chosen = null;
+
+            foreach (BreadRecord bread in m_unlocked)
+            {
+                if (customer.Tried.Contains(bread.Id))
+                {
+                    continue;
+                }
+
+                chosen = bread;
+                roll -= bread.Weight;
+
+                if (roll < 0d)
+                {
+                    break;
+                }
+            }
+
+            customer.Bread = chosen;
+            customer.Cell = ShelfCell(chosen.Id);
+            customer.Tried.Add(chosen.Id);
+            return BtStatus.Success;
+        }
+
+        // 그 진열대의 빈 서는 자리를 예약하고 걷는다. 이미 그 진열대 자리에 서 있으면 그대로
+        private bool StartWalkToShelf(Customer customer)
+        {
+            customer.Phase = CustomerPhase.Walking;
+
+            if (customer.HasSpot && IsShelfSpot(customer.Cell, customer.Spot))
+            {
+                return true;
+            }
+
+            customer.HasSpot = false;
+            Vector2 spot = FreeSpot(customer.Cell);
+            customer.Spot = spot;
+            customer.HasSpot = true;
+            Walk(customer.Mover, spot, m_layout.ShelfFacing(customer.Cell, spot));
+            return true;
+        }
+
+        private BtStatus TickWalk(Customer customer, double dt)
+        {
+            return customer.Moving ? BtStatus.Running : BtStatus.Success;
+        }
+
+        // 재고가 있으면 하나 집는다(pickSeconds 동안 빵이 머리 위로)
+        private bool StartPick(Customer customer)
+        {
+            if (m_stock[customer.Bread.Id] == 0)
+            {
+                return false;
+            }
+
+            m_stock[customer.Bread.Id]--;
+            customer.Phase = CustomerPhase.Picking;
+            customer.Timer = m_config.PickSeconds;
+            OnStockChanged(customer.Bread.Id);
+            OnCustomerPicked(customer);
+            return true;
+        }
+
+        private BtStatus TickPick(Customer customer, double dt)
+        {
+            customer.Timer -= dt;
+
+            if (customer.Timer > 0d)
+            {
+                return BtStatus.Running;
+            }
+
+            customer.CarriesBread = true;
+            return BtStatus.Success;
+        }
+
+        // 빈 진열대 앞에서 최대 lookSeconds(남은 인내까지) 두리번. 그사이 재고가 생기면 바로 성공
+        private bool StartLook(Customer customer)
+        {
+            if (customer.Patience <= 0d)
+            {
+                return false;
+            }
+
+            customer.Phase = CustomerPhase.Looking;
+            customer.Timer = Math.Min(m_config.LookSeconds, customer.Patience);
+            return true;
+        }
+
+        private BtStatus TickLook(Customer customer, double dt)
+        {
+            if (m_stock[customer.Bread.Id] > 0)
+            {
+                return BtStatus.Success;
+            }
+
+            customer.Timer -= dt;
+            customer.Patience -= dt;
+            return customer.Timer > 0d ? BtStatus.Running : BtStatus.Failure;
+        }
+
+        // 집은 순서대로 줄 번호를 받고 그 자리로 걷는다
+        private bool StartToQueue(Customer customer)
+        {
+            customer.HasSpot = false;
+            customer.Phase = CustomerPhase.ToQueue;
+            customer.Timer = m_config.CheckoutSeconds;
+            m_queue.Add(customer);
+            int index = m_queue.Count - 1;
+            Walk(customer.Mover, m_layout.QueueSlots[index], m_layout.QueueFacing(index));
+            OnQueueChanged();
+            return true;
+        }
+
+        private BtStatus TickToQueue(Customer customer, double dt)
+        {
+            if (customer.Moving)
+            {
+                return BtStatus.Running;
+            }
+
+            customer.Phase = CustomerPhase.Queued;
+            return BtStatus.Success;
+        }
+
+        // 앞사람이 빠지면 한 칸씩 앞으로 걷는다(TickCheckout). 계산이 끝나면 성공
+        private BtStatus TickWaitCheckout(Customer customer, double dt)
+        {
+            return customer.Paid ? BtStatus.Success : BtStatus.Running;
+        }
+
+        private bool StartLeave(Customer customer)
+        {
+            customer.Phase = CustomerPhase.Leaving;
+            Walk(customer.Mover, m_layout.HoleFloor, Facing.Up);
+            return true;
+        }
+
+        // 빵을 못 찾았다: 「!!」 뒤 구멍으로
+        private bool StartAngry(Customer customer)
+        {
+            customer.Angry = true;
+            customer.HasSpot = false;
+            customer.Phase = CustomerPhase.Leaving;
+            Walk(customer.Mover, m_layout.HoleFloor, Facing.Up);
+            OnCustomerGaveUp(customer);
+            return true;
+        }
+
+        // ---------- 서는 자리 ----------
+
+        private Vector2 FreeSpot(Cell cell)
+        {
+            foreach (Vector2 spot in m_layout.ShelfSpots(cell))
+            {
+                if (!SpotTaken(spot))
+                {
+                    return spot;
+                }
+            }
+
+            return m_layout.OverflowSpot(cell, SpotTaken);
+        }
+
+        private bool SpotTaken(Vector2 p)
+        {
+            foreach (Customer other in m_customers)
+            {
+                if (other.HasSpot && Vector2.DistanceSquared(other.Spot, p) < 0.01f)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsShelfSpot(Cell cell, Vector2 p)
+        {
+            foreach (Vector2 spot in m_layout.ShelfSpots(cell))
+            {
+                if (Vector2.DistanceSquared(spot, p) < 0.01f)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void OnCustomerArrived(Customer customer)
+        {
+            CustomerArrived?.Invoke(customer);
+        }
+
+        private void OnCustomerPicked(Customer customer)
+        {
+            CustomerPicked?.Invoke(customer);
+        }
+
+        private void OnQueueChanged()
+        {
+            QueueChanged?.Invoke();
+        }
+
+        private void OnCustomerPaid(Customer customer, double coins)
+        {
+            CustomerPaid?.Invoke(customer, coins);
+        }
+
+        private void OnCustomerGaveUp(Customer customer)
+        {
+            CustomerGaveUp?.Invoke(customer);
+        }
+
+        private void OnCustomerExited(Customer customer)
+        {
+            CustomerExited?.Invoke(customer);
+        }
+    }
+}
