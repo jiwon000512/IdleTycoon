@@ -1,0 +1,17 @@
+Image 1 is a character turnaround sheet of this chunky pixel-art penguin: its FRONT view on the left and its BACK view on the right, drawn with the same camera, at the same scale, on the same baseline. The middle slot is empty.
+Image 2 is a finished turnaround sheet of a DIFFERENT character (a rabbit) in the same game: front, right side, back. Use image 2 only to see how the side view keeps the same camera, size and chubby proportions as the front and back. Do not copy the rabbit's body, ears or colors.
+Redraw image 1 as a wide landscape image with its front and back views unchanged, and fill the empty middle slot with the RIGHT SIDE view of the same penguin, at the same scale and on the same baseline.
+
+CHARACTER: a chubby round penguin: dark slate-gray head and back, cream face and belly, small orange beak, orange feet, pink cheeks. In the side view: the small orange beak pokes out at the right edge of the head, one black dot eye and a pink cheek on the cream face, the cream belly shows on the right (front) half of the body and the dark back on the left half, the near flipper hangs against the side of the body, a tiny tail tip at the lower back on the left, the orange feet at the bottom pointing right.
+
+CAMERA (most important): the SAME camera as the front and back views. It looks DOWN at the penguin from about 30 degrees above; it is NOT at eye level. So the penguin reads as one chubby round bean: the big round head and the small body are merged into ONE blob with no neck, and that blob (not counting the ears) is about as wide as it is tall. We see the top of the head, so the face sits LOW in the blob: the eye is a little below the middle of the blob, at the same height as the eyes of the front view. The body under the face is short and squashed: only the tiny front paw, a little round belly and the tiny feet peek out at the bottom.
+
+POSE: standing still, upright on its two hind legs exactly like its front view, strict side profile facing RIGHT.
+
+SIZE: exactly the same size and proportions as the front view: same total height from the top of the head (or ear tips) to the feet, same blob width and height, same eye height, same feet size. Only the direction the penguin faces changes, as if the penguin turned on a turntable while the camera stayed still.
+
+Do NOT draw an eye-level side view: no neck, no tall narrow torso, no small head sitting on top of a separate body, no four-legged stance.
+
+STYLE: chunky pixel art game sprite in exactly the same style as the reference: large blocky square pixels on a roughly 40x40 pixel grid, no anti-aliasing, no blur; thick dark brown outline (about 2 pixels wide) around the whole silhouette in the same outline color; the same soft low-saturation palette as image 1, only 5-7 flat colors, no gradients, no dithering; one flat grayish shadow tone on the lower belly and the far limbs; one small white highlight on the top of the head; plain solid white background, no ground, no ground shadow, no text, no border, no watermark.
+
+Save the image as sheet_penguin_a.png in the current working directory and reply with only the path.

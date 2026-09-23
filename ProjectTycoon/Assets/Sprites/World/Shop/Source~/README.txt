@@ -33,3 +33,7 @@
   미리보기 SPEC: A low 32 foot 39 발 (8,15)·(16,19) 귀 0~14행 (7,20) / B low 31 foot 39 발 (10,16)·(17,20) 귀 0~15행 (5,21) / C low 35 foot 39 발 (9,15)·(16,21) 귀 0~15행 (7,22).
 - 선택(2026-09-23): 3차 A. 사용자 「입을 좀 더 짧게, 너무 길게 나왔어」 → 턱 밑 입선 (20,28)(20,29)(21,29)를 볼 색으로 지워 2칸만 남김. 「볼 도트가 ㅜ처럼」 → 볼을 앞모습처럼 위 2칸(19~20,27)·아래 3칸(18~20,28)으로. 이것이 rabbit_side.png(= rabbit_side3_a.png).
   rabbit_side_{1,2,3}.png·rabbit_side_walk_{0..3}.png = make_breath_frames.py·make_walk_frames.py의 rabbit_side 줄(low 32, foot 39, 발 (8,15)·(16,19), 귀 0~14행 (7,20), 걷기 갸웃은 tip 6). make_visitor_sheets.py가 _side.png가 있는 종만 Side 시트를 묶는다(나머지 종은 더미 유지).
+- 펭귄·여우·고슴도치·웜뱃 옆모습 시안(2026-09-23): 토끼 3차 A 방식. side_sheet_in_<종>.png(앞 | 빈칸 | 뒤, 한 칸 12px) + side_sheet_ref_rabbit.png(완성 토끼 앞·옆·뒤, 카메라 예시)를 참조로 같은 프롬프트(side_prompt_<종>.txt)를 3번 돌림.
+  <종>_side_raw_{a,b,c}.png = 시트 가운데 자름, <종>_side_{a,b,c}.png = make_pixel.py --px=2 --cells=앞모습 키(펭귄 36·여우 45·고슴도치 38·웜뱃 41) + 그 종 앞모습 팔레트. 비교 https://claude.ai/artifact/7wa842yBREohdDRxdxmcWE (선택 대기).
+- 선택(2026-09-23, 사용자 「여우만 B, 나머지는 추천대로」): 펭귄 A·여우 B·고슴도치 A·웜뱃 B. 발 가운데 = 그림 가운데가 되게 투명 여백(펭귄·고슴도치 오른쪽 3칸, 여우 오른쪽 10칸, 웜뱃 왼쪽 2칸)을 붙여 <종>_side.png, 웜뱃은 ../wombat_side.png(더미 덮어씀).
+  숨쉬기·걷기는 두 스크립트의 <종>_side 줄. 펭귄 low 27 foot 33 · 여우 low 33 foot 41 귀 0~9행 tip 3 · 고슴도치 low 26 foot 35 · 웜뱃 low 31 foot 38 귀 0~5행.

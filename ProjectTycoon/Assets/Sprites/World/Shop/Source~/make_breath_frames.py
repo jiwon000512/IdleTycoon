@@ -28,6 +28,11 @@ SPEC = {
     'hedgehog_front': {'dir': '', 'low': 22, 'ear': 0, 'ears': []},
     'fox_back': {'dir': '', 'low': 33, 'ear': 5, 'ears': [(11, 22), (29, 39)]},
     'hedgehog_back': {'dir': '', 'low': 22, 'ear': 0, 'ears': []},
+    # 옆모습(2026-09-23): 발 가운데 = 그림 가운데로 여백을 채움(펭귄·고슴도치 오른쪽 3칸, 여우 오른쪽 10칸, 웜뱃 왼쪽 2칸)
+    'penguin_side': {'dir': '', 'low': 27, 'ear': 0, 'ears': []},
+    'fox_side': {'dir': '', 'low': 33, 'ear': 9, 'ears': [(16, 31)]},
+    'hedgehog_side': {'dir': '', 'low': 26, 'ear': 0, 'ears': []},
+    'wombat_side': {'low': 31, 'ear': 5, 'ears': [(15, 28)]},
 }
 
 

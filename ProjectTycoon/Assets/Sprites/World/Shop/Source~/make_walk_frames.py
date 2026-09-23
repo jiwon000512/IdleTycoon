@@ -24,6 +24,10 @@ SPEC = {
     'hedgehog_front': {'dir': '', 'low': 22, 'foot': 35, 'left': (10, 15), 'right': (21, 26), 'ear': 0, 'ears': []},
     'fox_back': {'dir': '', 'low': 33, 'foot': 42, 'left': (18, 23), 'right': (28, 33), 'ear': 5, 'tip': 3, 'ears': [(11, 22), (29, 39)]},
     'hedgehog_back': {'dir': '', 'low': 22, 'foot': 35, 'left': (10, 15), 'right': (21, 26), 'ear': 0, 'ears': []},
+    'penguin_side': {'dir': '', 'low': 27, 'foot': 33, 'left': (11, 16), 'right': (17, 23), 'ear': 0, 'ears': []},
+    'fox_side': {'dir': '', 'low': 33, 'foot': 41, 'left': (17, 22), 'right': (23, 29), 'ear': 9, 'tip': 3, 'ears': [(16, 31)]},
+    'hedgehog_side': {'dir': '', 'low': 26, 'foot': 35, 'left': (12, 21), 'right': (22, 25), 'ear': 0, 'ears': []},
+    'wombat_side': {'low': 31, 'foot': 38, 'left': (12, 20), 'right': (21, 25), 'ear': 5, 'ears': [(15, 28)]},
 }
 
 
