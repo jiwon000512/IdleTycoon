@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# 손님 프레임(make_breath_frames.py·make_walk_frames.py 결과) → Resources 시트(가로 1행, 칸 폭 60px, 발끝 맞춤).
+# 손님 프레임(make_breath_frames.py·make_walk_frames.py 결과) → Resources 시트(가로 1행, 칸 폭 88px(여우 걷기 86px), 발끝 맞춤).
 # 경로는 visitors.json 칼럼과 같다. 슬라이스는 에디터 메뉴 ZooTycoon/Bake/Import Visitor Sheets
 import os
 from PIL import Image
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 OUT = '../../../../Resources/Sprites/Visitors/'
-W = 60
+W = 88
 
 
 def sheet(names, out):
@@ -18,7 +18,7 @@ def sheet(names, out):
     o.save(OUT + out)
 
 
-for name, folder in (('rabbit', 'Rabbit'),):
+for name, folder in (('rabbit', 'Rabbit'), ('penguin', 'Penguin'), ('fox', 'Fox'), ('hedgehog', 'Hedgehog')):
     os.makedirs(OUT + folder, exist_ok=True)
     Image.open(f'{name}_front.png').save(f'{OUT}{folder}/{folder}.png')
     for side, tag in (('front', ''), ('back', 'Back')):

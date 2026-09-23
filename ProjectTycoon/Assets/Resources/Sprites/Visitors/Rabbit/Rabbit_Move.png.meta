@@ -127,7 +127,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 60
+        width: 88
         height: 84
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: cc538955e19c0734d977b4342e47be2f
+      spriteID: b7afd3c5b3ac1e64a8875e6504cc9dba
       internalID: -2768192132516389839
       vertices: []
       indices: 
@@ -147,9 +147,9 @@ TextureImporter:
       name: Rabbit_Move_1
       rect:
         serializedVersion: 2
-        x: 60
+        x: 88
         y: 0
-        width: 60
+        width: 88
         height: 84
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 32679f9563a005641a2f1784b8974bf8
+      spriteID: bc0424406592fac4fa45e630851c9ce1
       internalID: 8484965390081095598
       vertices: []
       indices: 
@@ -169,9 +169,9 @@ TextureImporter:
       name: Rabbit_Move_2
       rect:
         serializedVersion: 2
-        x: 120
+        x: 176
         y: 0
-        width: 60
+        width: 88
         height: 84
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 88bd50ea2904fc641a61220189ce1f56
+      spriteID: e76cf51c74b4b9348b1064ec223fbf9f
       internalID: -8520832063456969544
       vertices: []
       indices: 
@@ -191,9 +191,9 @@ TextureImporter:
       name: Rabbit_Move_3
       rect:
         serializedVersion: 2
-        x: 180
+        x: 264
         y: 0
-        width: 60
+        width: 88
         height: 84
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 77016da405ab8b542a74034639eee457
+      spriteID: 58a3dd9c4c40b3045b481276c6a5d5a4
       internalID: -1623114653836937521
       vertices: []
       indices: 

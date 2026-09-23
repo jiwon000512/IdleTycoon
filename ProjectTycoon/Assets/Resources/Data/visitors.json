@@ -1,10 +1,12 @@
 {
   "table": "visitors",
-  "version": 2,
+  "version": 4,
   "notes": [
     "기획서 4장 관광객(v0.14). v1.14부터 빵집 손님 외형 전용: 손님이 들어올 때마다 한 행을 고른다.",
     "sprite·idleSheet·moveSheet·backIdleSheet·backMoveSheet는 Resources/ 기준 경로(확장자 없음). idle·move 시트가 null이면 sprite 1장, back 시트가 null이면 앞모습 시트를 쓴다.",
     "version 2 (2026-09-21): 토끼 손님. 뒷모습 시트 2칸 추가(위로 걸으면 뒷모습), frameRate를 idleFrameRate·moveFrameRate로 나눔(웜뱃과 같은 2.5·8). 시트는 Shop/Source~/make_visitor_sheets.py, 슬라이스는 ZooTycoon/Bake/Import Visitor Sheets.",
+    "version 4 (2026-09-23): 여우 v03·고슴도치 v04 추가. 시트 칸 폭 80 → 88px(여우 걷기 86px).",
+    "version 3 (2026-09-23): 펭귄 손님 v02 추가. 손님 외형은 행 중 균등 난수.",
     "viewSecondsMin~Max·weight는 지상 관광객이 쓰던 값으로 지금은 읽지 않는다(손님 개명 때 정리). 값은 전부 시작값."
   ],
   "rows": [
@@ -24,6 +26,57 @@
       "viewSecondsMax": 4.0,
       "weight": 1,
       "sortOrder": 1
+    },
+    {
+      "id": "v02",
+      "name": "펭귄",
+      "sprite": "Sprites/Visitors/Penguin/Penguin",
+      "idleSheet": "Sprites/Visitors/Penguin/Penguin_Idle",
+      "moveSheet": "Sprites/Visitors/Penguin/Penguin_Move",
+      "backIdleSheet": "Sprites/Visitors/Penguin/Penguin_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/Penguin/Penguin_BackMove",
+      "idleFrameRate": 2.5,
+      "moveFrameRate": 8,
+      "scale": 1,
+      "moveSpeed": 1.5,
+      "viewSecondsMin": 2.0,
+      "viewSecondsMax": 4.0,
+      "weight": 1,
+      "sortOrder": 2
+    },
+    {
+      "id": "v03",
+      "name": "여우",
+      "sprite": "Sprites/Visitors/Fox/Fox",
+      "idleSheet": "Sprites/Visitors/Fox/Fox_Idle",
+      "moveSheet": "Sprites/Visitors/Fox/Fox_Move",
+      "backIdleSheet": "Sprites/Visitors/Fox/Fox_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/Fox/Fox_BackMove",
+      "idleFrameRate": 2.5,
+      "moveFrameRate": 8,
+      "scale": 1,
+      "moveSpeed": 1.5,
+      "viewSecondsMin": 2.0,
+      "viewSecondsMax": 4.0,
+      "weight": 1,
+      "sortOrder": 3
+    },
+    {
+      "id": "v04",
+      "name": "고슴도치",
+      "sprite": "Sprites/Visitors/Hedgehog/Hedgehog",
+      "idleSheet": "Sprites/Visitors/Hedgehog/Hedgehog_Idle",
+      "moveSheet": "Sprites/Visitors/Hedgehog/Hedgehog_Move",
+      "backIdleSheet": "Sprites/Visitors/Hedgehog/Hedgehog_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/Hedgehog/Hedgehog_BackMove",
+      "idleFrameRate": 2.5,
+      "moveFrameRate": 8,
+      "scale": 1,
+      "moveSpeed": 1.5,
+      "viewSecondsMin": 2.0,
+      "viewSecondsMax": 4.0,
+      "weight": 1,
+      "sortOrder": 4
     }
   ]
 }

@@ -18,6 +18,14 @@ SPEC = {
     'wombat_back': {'low': 36, 'ear': 5, 'ears': [(4, 12), (29, 37)]},
     'rabbit_front': {'dir': '', 'low': 36, 'ear': 12, 'ears': [(2, 12), (15, 25)]},
     'rabbit_back': {'dir': '', 'low': 23, 'ear': 11, 'ears': [(3, 12), (15, 24)]},
+    # 펭귄(2026-09-23): 귀가 없어 ears 비움 → 3번 프레임은 기본과 같다. 발 위(31~35)는 두고 배·날개만 내려간다
+    'penguin_front': {'dir': '', 'low': 27, 'ear': 0, 'ears': []},
+    'penguin_back': {'dir': '', 'low': 27, 'ear': 0, 'ears': []},
+    # 여우·고슴도치(2026-09-23). 여우는 뾰족귀(0~5행)가 한 박자 늦게, 고슴도치는 귀가 가시에 묻혀 없음
+    'fox_front': {'dir': '', 'low': 33, 'ear': 5, 'ears': [(2, 13), (20, 30)]},
+    'hedgehog_front': {'dir': '', 'low': 22, 'ear': 0, 'ears': []},
+    'fox_back': {'dir': '', 'low': 33, 'ear': 5, 'ears': [(2, 13), (20, 30)]},
+    'hedgehog_back': {'dir': '', 'low': 22, 'ear': 0, 'ears': []},
 }
 
 

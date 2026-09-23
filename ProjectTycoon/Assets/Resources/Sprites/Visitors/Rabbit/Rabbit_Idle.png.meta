@@ -127,7 +127,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 60
+        width: 88
         height: 84
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: cbefffe8b3fcad144937579f174c4c24
+      spriteID: 91142ff6d2481d3499990ab8a8f960a0
       internalID: -2752584300984662343
       vertices: []
       indices: 
@@ -147,9 +147,9 @@ TextureImporter:
       name: Rabbit_Idle_1
       rect:
         serializedVersion: 2
-        x: 60
+        x: 88
         y: 0
-        width: 60
+        width: 88
         height: 84
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bdae95e29059f09479a9e08e03497187
+      spriteID: 1de8926aa5403e8469afea6b3fb1a939
       internalID: 5257862053885382874
       vertices: []
       indices: 
@@ -169,9 +169,9 @@ TextureImporter:
       name: Rabbit_Idle_2
       rect:
         serializedVersion: 2
-        x: 120
+        x: 176
         y: 0
-        width: 60
+        width: 88
         height: 84
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9d4daa7c802765843b26e49bae86e087
+      spriteID: c54ecf1a5c873404f87cc39b02264d15
       internalID: 3876158037475033542
       vertices: []
       indices: 
@@ -191,9 +191,9 @@ TextureImporter:
       name: Rabbit_Idle_3
       rect:
         serializedVersion: 2
-        x: 180
+        x: 264
         y: 0
-        width: 60
+        width: 88
         height: 84
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 55f053f9d2d448441a691eaed4bed92c
+      spriteID: ebaa0656bf874534b9a7777d651602a0
       internalID: -3181089850856105909
       vertices: []
       indices: 
