@@ -9,12 +9,13 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("visitors", 5)]
+        [TestCase("visitors", 6)]
         [TestCase("strings", 9)]
         [TestCase("breads", 1)]
         [TestCase("shop_upgrades", 4)]
         [TestCase("actions", 1)]
         [TestCase("interactables", 1)]
+        [TestCase("sounds", 1)]
         public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile<object>(table);
@@ -126,6 +127,39 @@ namespace ZooTycoon.Tests
             row.Icon = icon;
 
             Assert.That(TableValidator.Validate(TestTables.Build(actions: actions)), Is.Not.Empty);
+        }
+
+        // 2026-09-23: 손님이 물건을 드는 자리는 hand·head만
+        [TestCase(null)]
+        [TestCase("tail")]
+        public void Validate_WhenVisitorCarryAtInvalid_ReportsError(string carryAt)
+        {
+            List<VisitorRecord> visitors = TestTables.LoadRows<VisitorRecord>("visitors");
+            visitors[0].CarryAt = carryAt;
+
+            Assert.That(TableValidator.Validate(TestTables.Build(visitors: visitors)), Is.Not.Empty);
+        }
+
+        // 설계 10: 효과음 표 — 음량 범위 밖, 피치 상한 1 미만, 코드가 아는 소리 빠짐
+        [TestCase("pay", 1.5, 1.3)]
+        [TestCase("pay", 0.6, 0.9)]
+        public void Validate_WhenSoundRowInvalid_ReportsError(string id, double volume, double pitchMax)
+        {
+            List<SoundRecord> sounds = TestTables.LoadRows<SoundRecord>("sounds");
+            SoundRecord row = sounds.Find(s => s.Id == id);
+            row.Volume = volume;
+            row.PitchMax = pitchMax;
+
+            Assert.That(TableValidator.Validate(TestTables.Build(sounds: sounds)), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenSoundMissing_ReportsError()
+        {
+            List<SoundRecord> sounds = TestTables.LoadRows<SoundRecord>("sounds");
+            sounds.RemoveAll(s => s.Id == "give_up");
+
+            Assert.That(TableValidator.Validate(TestTables.Build(sounds: sounds)), Is.Not.Empty);
         }
 
         [Test]

@@ -28,7 +28,7 @@ namespace ZooTycoon.Editor
         const int k_BurrowOrder = -2000;
         const int k_ArchOrder = -1995;
         const int k_MarkerOrder = -1980;
-        // 설계 09: 웜뱃 머리 위 빵 층 수·높이·크기·층 간격(층 로컬)
+        // 설계 09: 웜뱃이 든 빵 층 수·높이·크기·층 간격(층 로컬). 높이·앞뒤 순서는 실행 중 ShopWombat이 방향에 맞춰 옮긴다
         const int k_CarryLayers = 5;
         const float k_CarryHeight = 1.05f;
         const float k_CarryScale = 0.6f;
@@ -93,6 +93,10 @@ namespace ZooTycoon.Editor
             {
                 Import(k_SpriteDir + TimerFrame(i) + ".png", center);
             }
+
+            // 설계 10: 오븐 상태 표시(Source~/make_oven_idle.py). 타이머 자리
+            Import(k_SpriteDir + "oven_empty_mark.png", center);
+            Import(k_SpriteDir + "oven_ready_mark.png", center);
 
             // 오븐 연출: 불빛은 몸통과 같은 크기·하단 가운데, 연기는 하단 가운데 = 굴뚝 입구
             foreach (string name in FxFrames())
@@ -178,7 +182,12 @@ namespace ZooTycoon.Editor
             }
 
             SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, 1.62f, 0f), 3);
-            TextMeshPro ready = WorldText(go.transform, "Ready", new Vector3(0f, 1.45f, 0f), 4);
+            // 설계 10: 빈 오븐 화살표·다 구움 원판은 타이머 자리, 개수 글자는 원판 오른쪽 아래
+            SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, 1.62f, 0f), 3);
+            emptyMark.enabled = false;
+            SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", Load("oven_ready_mark"), new Vector3(0f, 1.62f, 0f), 3);
+            readyMark.enabled = false;
+            TextMeshPro ready = WorldText(go.transform, "Ready", new Vector3(0.4f, 1.42f, 0f), 4);
 
             OvenView view = go.AddComponent<OvenView>();
             Set(view, "m_body", body);
@@ -193,6 +202,8 @@ namespace ZooTycoon.Editor
             SetSprites(view, "m_whiteSmoke", Frames("smoke_white", SmokeSuffixes()));
             SetSprites(view, "m_timerFrames", timerFrames);
             Set(view, "m_readyText", ready);
+            Set(view, "m_emptyMark", emptyMark);
+            Set(view, "m_readyMark", readyMark);
             Set(view, "m_baseBody", Load("oven"));
             Set(view, "m_upgradedBody", Load("oven_2"));
             return Save(go, view, "Oven");
@@ -219,7 +230,7 @@ namespace ZooTycoon.Editor
                 SetSprites(mover, "m_" + side + "Idle", Frames("wombat_" + side, "", "_1", "_2", "_3"));
                 SetSprites(mover, "m_" + side + "Walk", Frames("wombat_" + side, "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
             }
-            // 설계 09: 머리 위 빵 층(아래부터 5개). 크기는 부모 Carry가 정하고 층은 스케일 1(튀기 연출이 1로 되돌린다)
+            // 설계 09: 든 빵 층(아래부터 5개, 앞발에서 위로). 크기는 부모 Carry가 정하고 층은 스케일 1(튀기 연출이 1로 되돌린다)
             GameObject carry = Child(wombat.transform, "Carry", new Vector3(0f, k_CarryHeight, 0f));
             carry.transform.localScale = Vector3.one * k_CarryScale;
             SerializedObject so = new SerializedObject(mover);
@@ -274,7 +285,9 @@ namespace ZooTycoon.Editor
                 Object.DestroyImmediate(old.gameObject);
             }
 
-            TextMeshPro amount = WorldText(root.transform, "Amount", new Vector3(0f, 0.3f, 0f), 60);
+            // 코인은 가게 그림 위에(오븐·손님 뒤로 가려지지 않게), 금액 글자는 코인 윗테 위에(코인 반높이 0.275 + 글자 반높이 약 0.14)
+            root.GetComponent<SpriteRenderer>().sortingOrder = 59;
+            TextMeshPro amount = WorldText(root.transform, "Amount", new Vector3(0f, 0.42f, 0f), 60);
             amount.fontSize = 3.5f;
             amount.color = new Color(1f, 0.93f, 0.55f);
             Set(root.GetComponent<CoinPopup>(), "m_amountText", amount);

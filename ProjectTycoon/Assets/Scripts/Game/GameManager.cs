@@ -51,6 +51,7 @@ namespace ZooTycoon.Game
                 tableManager.Load<ShopUpgradeRecord>("shop_upgrades"),
                 tableManager.Load<ActionRecord>("actions"),
                 tableManager.Load<InteractableRecord>("interactables"),
+                tableManager.Load<SoundRecord>("sounds"),
                 tableManager.Load<StringRecord>("strings"),
                 tableManager.LoadConfig<GameConfig>("game_config"));
         }

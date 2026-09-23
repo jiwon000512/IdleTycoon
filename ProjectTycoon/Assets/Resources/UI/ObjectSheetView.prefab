@@ -1096,6 +1096,7 @@ GameObject:
   - component: {fileID: 6560262392557757591}
   - component: {fileID: 2528717644649317710}
   - component: {fileID: 6687468710004693134}
+  - component: {fileID: 7201717676080737935}
   - component: {fileID: 4012248938260022056}
   - component: {fileID: 7115853782113909102}
   m_Layer: 0
@@ -1209,6 +1210,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7201717676080737935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6630781109416463015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb30390dc17f6241a07d80bdb7d949d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.PressScale
 --- !u!225 &4012248938260022056
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1253,6 +1266,7 @@ GameObject:
   - component: {fileID: 7987364677677958396}
   - component: {fileID: 4231740308777742744}
   - component: {fileID: 8545709513674229517}
+  - component: {fileID: 5403730354192667378}
   - component: {fileID: 7467063668038259013}
   m_Layer: 0
   m_Name: ChipTemplate
@@ -1365,6 +1379,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5403730354192667378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7119482492918446509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb30390dc17f6241a07d80bdb7d949d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.PressScale
 --- !u!225 &7467063668038259013
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1389,6 +1415,7 @@ GameObject:
   - component: {fileID: 3087763961955816443}
   - component: {fileID: 3353731167860229687}
   - component: {fileID: 1246395453504545046}
+  - component: {fileID: 5483724246634941050}
   m_Layer: 0
   m_Name: Close
   m_TagString: Untagged
@@ -1497,6 +1524,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5483724246634941050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7264558071030133444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb30390dc17f6241a07d80bdb7d949d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.PressScale
 --- !u!1 &8224484593341663554
 GameObject:
   m_ObjectHideFlags: 0

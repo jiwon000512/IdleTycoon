@@ -99,5 +99,42 @@ save('pill_cost', pill, border=(13, 3, 3, 3))
 # 딤(시트 뒤)·단색 사각(상단 바 배경)은 흰 1×1: 색은 Image.color
 save('white', np.full((4, 4, 4), 255, np.uint8))
 
+# ---------- 코인 발바닥 각인(2026-09-23, 결제 코인 World/coin.png와 같은 표시) ----------
+# 코인 상자 안의 옛 무늬 색(recolor)을 금색으로 덮고 하이라이트 1칸 + 발바닥(주황)을 찍는다. 상자 = (x0, y0, x1, y1) 끝 포함
+GOLD, ORANGE, CREAM, WHITE = (0xF2, 0xC1, 0x4E), (0xD8, 0x78, 0x48), (0xF0, 0xE4, 0xD8), (0xFB, 0xF4, 0xE6)
+PAW_L = ['.x..x.', 'x....x', '..xx..', '.xxxx.', '.xxxx.']   # 발가락 넷(바깥 둘이 한 칸 아래) + 패드
+for name, (x0, y0, x1, y1), recolor, paw, (px, py), hi in [
+        ('pill_topbar', (4, 4, 11, 11), [ORANGE, CREAM, WHITE], PAW_L, (5, 6), (5, 5)),
+        ('icon_coin', (1, 1, 10, 9), [], PAW_L, (3, 3), (3, 2))]:
+    a = np.array(Image.open(f'{OUT}{name}.png').convert('RGBA'))
+    box = a[y0:y1 + 1, x0:x1 + 1]
+    for c in recolor:
+        box[(box[..., :3] == c).all(-1) & (box[..., 3] > 0)] = GOLD + (255,)
+    a[hi[1], hi[0]] = CREAM + (255,)
+    for dy, row in enumerate(paw):
+        for dx, ch in enumerate(row):
+            if ch == 'x':
+                a[py + dy, px + dx] = ORANGE + (255,)
+    Image.fromarray(a).save(f'{OUT}{name}.png')
+
+# 비용 칸 코인은 원본에 외곽선이 없어 9×9칸으로 새로 그린다(발가락 셋 + 패드, 오른쪽 아래 그늘). 자리는 크림으로 먼저 지운다
+COIN_S = ['...###...',
+          '.##hyy##.',
+          '.#oyoyo#.',
+          '#yyyyyyy#',
+          '#yyoooyy#',
+          '#yyoooyr#',
+          '.#yyyyr#.',
+          '.##rrr##.',
+          '...###...']
+COL = {'#': (0x34, 0x20, 0x20), 'y': GOLD, 'o': ORANGE, 'h': CREAM, 'r': (0xB8, 0x5E, 0x38)}
+a = np.array(Image.open(f'{OUT}pill_cost.png').convert('RGBA'))
+a[2:11, 2:11] = CREAM + (255,)
+for dy, row in enumerate(COIN_S):
+    for dx, ch in enumerate(row):
+        if ch in COL:
+            a[2 + dy, 2 + dx] = COL[ch] + (255,)
+Image.fromarray(a).save(f'{OUT}pill_cost.png')
+
 json.dump(slices, open(f'{OUT}ui_slices.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('ui_slices.json', len(slices))

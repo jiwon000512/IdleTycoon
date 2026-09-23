@@ -562,6 +562,9 @@ MonoBehaviour:
   m_carryFlySeconds: 0.3
   m_emoteRise: 0.5
   m_emoteSeconds: 0.9
+  m_handRatio: 0.33
+  m_breadHalf: 0.18
+  m_handReach: 0.2
   m_coinSideOffset: 0.7
 --- !u!1 &8523852482257474149
 GameObject:

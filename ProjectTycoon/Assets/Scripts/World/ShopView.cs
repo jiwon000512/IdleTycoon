@@ -8,6 +8,7 @@ namespace ZooTycoon.World
     // 굴 격자 설계 v0.5: 가게 = 파낸 칸(BurrowGrid)을 한 덩어리로 그린 굴 그림 + 칸 위의 진열대·오븐·계산대·빈 자리·파기 태그.
     // 손님 동선 설계 v0.2: 사물 자리·굴 모양은 Core ShopLayout이 정하고 여기서는 그 자리에 놓고 그리기만 한다. 손님·웜뱃도 Core 위치를 읽는다.
     // 설계 09: 웜뱃의 상호작용 대상이 바뀌면 그 사물이 한 번 튀고, 대상이 팔 수 있는 칸이면 그 칸에만 파기 태그를 보인다
+    // 설계 10: 업그레이드를 사면 그 대상(shop_upgrades.target)이, 새로 놓인 진열대·오븐이 한 번 튄다
     public sealed class ShopView : MonoBehaviour
     {
         [SerializeField] private ShelfView m_shelfPrefab;
@@ -36,6 +37,7 @@ namespace ZooTycoon.World
         private GameTables m_tables;
         private Sprite m_white;
         private Interactable? m_shownTarget;
+        private bool m_built;
 
         // 굴을 팠다(카메라 경계가 넓어진다)
         public event Action Expanded;
@@ -66,6 +68,16 @@ namespace ZooTycoon.World
 
         public Transform Wombat => m_counter.Wombat.transform;
 
+        public Vector3 OvenBreadPosition(int index)
+        {
+            return m_ovens[index].BreadPosition;
+        }
+
+        public Vector3 ShelfIconPosition(string breadId)
+        {
+            return m_shelves[m_shop.ShelfCell(breadId)].IconPosition;
+        }
+
         public void Bind(ShopSim shop, FrameCache frames, GameTables tables)
         {
             m_shop = shop;
@@ -76,11 +88,13 @@ namespace ZooTycoon.World
             m_counter.Wombat.Bind(shop, this, frames);
             Repaint();
             Build();
+            m_built = true;
 
             m_shop.StockChanged += Shop_StockChanged;
             m_shop.OvenChanged += Shop_OvenChanged;
             m_shop.LayoutChanged += Shop_LayoutChanged;
             m_shop.UpgradesChanged += Shop_UpgradesChanged;
+            m_shop.Upgraded += Shop_Upgraded;
             m_shop.Grid.Dug += Grid_Dug;
             m_shop.TargetChanged += Shop_TargetChanged;
         }
@@ -131,12 +145,15 @@ namespace ZooTycoon.World
             tag.Show(m_tables.Strings.Format("tag_dig", Cost(m_shop.Grid.DigCost)));
         }
 
-        // 오븐 진행 막대는 매 프레임 읽는다(오븐 사건은 초가 바뀔 때만 온다)
+        // 오븐 진행 막대는 매 프레임 읽는다(오븐 사건은 초가 바뀔 때만 온다). 설계 10: 대상인 오븐은 빈 오븐 화살표를 끈다
         private void Update()
         {
+            Interactable? target = m_shop.Target;
+
             for (int i = 0; i < m_ovens.Count; i++)
             {
                 Oven oven = m_shop.Ovens[i];
+                m_ovens[i].SetMarkHidden(target.HasValue && target.Value.Kind == InteractKind.Oven && target.Value.Index == i);
 
                 if (!oven.IsEmpty && oven.Ready == 0)
                 {
@@ -162,6 +179,7 @@ namespace ZooTycoon.World
                 m_shop.OvenChanged -= Shop_OvenChanged;
                 m_shop.LayoutChanged -= Shop_LayoutChanged;
                 m_shop.UpgradesChanged -= Shop_UpgradesChanged;
+                m_shop.Upgraded -= Shop_Upgraded;
                 m_shop.Grid.Dug -= Grid_Dug;
                 m_shop.TargetChanged -= Shop_TargetChanged;
             }
@@ -184,6 +202,40 @@ namespace ZooTycoon.World
             for (int i = 0; i < m_ovens.Count; i++)
             {
                 RefreshOven(i);
+            }
+        }
+
+        private void Shop_Upgraded(string upgradeId)
+        {
+            string target = null;
+
+            foreach (ShopUpgradeRecord upgrade in m_tables.ShopUpgrades)
+            {
+                if (upgrade.Id == upgradeId)
+                {
+                    target = upgrade.Target;
+                }
+            }
+
+            switch (target)
+            {
+                case "shelf":
+                    foreach (ShelfView shelf in m_shelves.Values)
+                    {
+                        shelf.Bounce();
+                    }
+
+                    break;
+                case "oven":
+                    foreach (OvenView oven in m_ovens)
+                    {
+                        oven.Bounce();
+                    }
+
+                    break;
+                case "counter":
+                    m_counter.Bounce();
+                    break;
             }
         }
 
@@ -295,6 +347,11 @@ namespace ZooTycoon.World
                     ShelfView shelf = Instantiate(m_shelfPrefab, transform);
                     shelf.transform.position = ToWorld(Layout.ShelfBase(pair.Key));
                     m_shelves[pair.Key] = shelf;
+
+                    if (m_built)
+                    {
+                        shelf.Bounce();
+                    }
                 }
             }
 
@@ -303,6 +360,11 @@ namespace ZooTycoon.World
                 OvenView oven = Instantiate(m_ovenPrefab, transform);
                 oven.transform.position = ToWorld(Layout.OvenBase(m_shop.Ovens[m_ovens.Count].Cell));
                 m_ovens.Add(oven);
+
+                if (m_built)
+                {
+                    oven.Bounce();
+                }
             }
 
             foreach (MarkerView marker in m_slotMarkers.Values)

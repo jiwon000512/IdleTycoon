@@ -21,6 +21,7 @@ namespace ZooTycoon.World
             m_shopView = Instantiate(m_shopPrefab, Vector3.zero, Quaternion.identity, transform);
             m_shopView.Bind(shop, Frames, tables);
             m_shopView.GetComponent<ShopCustomerSpawner>().Initialize(shop, m_shopView, tables, Frames);
+            m_shopView.gameObject.AddComponent<ShopSound>().Initialize(shop, tables);
             m_shopView.Expanded += ShopView_Expanded;
             m_camera.Follow(m_shopView.Wombat, m_shopView.Bounds);
         }

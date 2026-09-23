@@ -5,7 +5,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 데이터-테이블-규칙 7장: visitors의 sprite·시트 경로, actions의 icon 경로에 파일이 있어야 한다
+    // 데이터-테이블-규칙 7장: visitors의 sprite·시트 경로, actions의 icon·sounds의 clip 경로에 파일이 있어야 한다
     public sealed class VisitorSpriteFileTests
     {
         private const string k_ResourcesPath = "Assets/Resources";
@@ -48,6 +48,20 @@ namespace ZooTycoon.Tests
                     && Directory.GetFiles(directory, Path.GetFileName(action.Icon) + ".*").Any(f => !f.EndsWith(".meta"));
 
                 Assert.That(exists, Is.True, $"actions '{action.Id}': {action.Icon} 파일이 없다.");
+            }
+        }
+
+        // 설계 10: sounds의 clip 경로에도 파일이 있어야 한다
+        [Test]
+        public void Clip_OfEverySound_ExistsUnderResources()
+        {
+            foreach (SoundRecord sound in TestTables.LoadRows<SoundRecord>("sounds"))
+            {
+                string directory = Path.Combine(k_ResourcesPath, Path.GetDirectoryName(sound.Clip));
+                bool exists = Directory.Exists(directory)
+                    && Directory.GetFiles(directory, Path.GetFileName(sound.Clip) + ".*").Any(f => !f.EndsWith(".meta"));
+
+                Assert.That(exists, Is.True, $"sounds '{sound.Id}': {sound.Clip} 파일이 없다.");
             }
         }
     }

@@ -6,11 +6,14 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 손님 동선 설계 v0.2: Core 손님(위치·보는 방향·상태)을 매 프레임 그대로 그린다. 걷기·판단은 Core가, 여기서는 그림 고르기와 연출만.
-    // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 「!!」 말풍선, 집은 빵, 하트
+    // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 「!!」 말풍선, 하트. 집은 빵은 visitors.carryAt 자리(앞발 또는 머리 위)
     public sealed class ShopCustomer : MonoBehaviour
     {
         // 그림자 타원의 세로 납작함(옛 쿼터뷰 2:1 비율)
         private const float k_ShadowSquash = 0.5f;
+        // 집은 빵 순서: 몸(0) 앞, 뒷모습이면 몸 뒤
+        private const int k_CarryFrontOrder = 51;
+        private const int k_CarryBackOrder = -1;
 
         [SerializeField] private Transform m_modelRoot;
         [SerializeField] private SpriteRenderer m_spriteRenderer;
@@ -19,7 +22,7 @@ namespace ZooTycoon.World
         [SerializeField] private CoinPopup m_coinPrefab;
         [Tooltip("「!!」 말풍선. 빵을 못 찾고 떠날 때")]
         [SerializeField] private SpriteRenderer m_bubble;
-        [Tooltip("집은 빵. 계산할 때까지 머리 위")]
+        [Tooltip("집은 빵. 계산할 때까지 앞발(또는 머리 위)에")]
         [SerializeField] private SpriteRenderer m_carry;
         [Tooltip("결제 뒤 하트")]
         [SerializeField] private TextMeshPro m_emote;
@@ -27,11 +30,16 @@ namespace ZooTycoon.World
         [SerializeField] private float m_hopHeight = 0.15f;
         [Tooltip("두리번: 좌우를 바꾸는 간격(초)")]
         [SerializeField] private float m_lookSeconds = 0.5f;
-        [Tooltip("빵이 진열대에서 머리 위로 날아오르는 시간(초)")]
+        [Tooltip("빵이 진열대에서 드는 자리로 날아오는 시간(초)")]
         [SerializeField] private float m_carryFlySeconds = 0.3f;
         [Tooltip("하트: 떠오르는 높이(유닛)와 시간(초)")]
         [SerializeField] private float m_emoteRise = 0.5f;
         [SerializeField] private float m_emoteSeconds = 0.9f;
+        [Tooltip("carryAt hand: 집은 빵 가운데 높이 = 키 × 이 비율 + 빵 반(손님 앞발이 키의 약 1/3)")]
+        [SerializeField] private float m_handRatio = 0.33f;
+        [SerializeField] private float m_breadHalf = 0.18f;
+        [Tooltip("옆모습일 때 빵을 보는 쪽으로 내미는 거리(유닛)")]
+        [SerializeField] private float m_handReach = 0.2f;
         [Tooltip("코인 팝업을 머리 옆으로 비키는 거리(유닛)")]
         [SerializeField] private float m_coinSideOffset = 0.7f;
 
@@ -49,8 +57,14 @@ namespace ZooTycoon.World
         private float m_height;
         private bool m_carrying;
         private bool m_flying;
+        private Facing m_facing = Facing.Down;
+        private bool m_carryOnHead;
 
         private Vector3 HeadOffset => new Vector3(0f, m_height, 0f);
+        // 2026-09-23: 집은 빵은 visitors.carryAt 자리에 든다. 앞발이면 옆모습에서 보는 쪽으로 내민다
+        private Vector3 CarryOffset => m_carryOnHead
+            ? HeadOffset + Vector3.up * 0.1f
+            : Fx.HandOffset(m_facing, m_height * m_handRatio + m_breadHalf, m_handReach);
 
         public void Initialize(Customer customer, VisitorRecord look, FrameCache frames, ShopView view)
         {
@@ -67,6 +81,7 @@ namespace ZooTycoon.World
             m_modelRoot.localScale = Vector3.one * (float)look.Scale;
             m_shadowRenderer.transform.localScale = new Vector3(1f, k_ShadowSquash, 1f);
             m_height = m_frontIdle[0].bounds.size.y * (float)look.Scale;
+            m_carryOnHead = look.CarryAt == VisitorRecord.k_CarryHead;
             m_bubble.transform.localPosition = HeadOffset;
             m_bubble.enabled = false;
             m_carry.enabled = false;
@@ -74,7 +89,7 @@ namespace ZooTycoon.World
             Update();
         }
 
-        // 집기: 빵 그림이 진열대(from, 월드)에서 머리 위로 날아와 계산할 때까지 떠 있다
+        // 집기: 빵 그림이 진열대(from, 월드)에서 드는 자리로 날아와 계산할 때까지 든다
         public void Pick(Sprite bread, Vector3 from)
         {
             m_carry.sprite = bread;
@@ -121,10 +136,12 @@ namespace ZooTycoon.World
             }
 
             Show(facing, m_customer.Moving);
+            m_facing = facing;
+            m_carry.sortingOrder = m_carryOnHead ? k_CarryFrontOrder : Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder);
 
             if (!m_flying)
             {
-                m_carry.transform.localPosition = HeadOffset + Vector3.up * 0.1f;
+                m_carry.transform.localPosition = CarryOffset;
             }
 
             m_carry.enabled = m_carrying;
@@ -177,7 +194,7 @@ namespace ZooTycoon.World
             for (float t = 0f; t < m_carryFlySeconds; t += Time.deltaTime)
             {
                 float k = t / m_carryFlySeconds;
-                Vector3 to = transform.position + HeadOffset + Vector3.up * 0.1f;
+                Vector3 to = transform.position + CarryOffset;
                 m_carry.transform.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * 0.4f);
                 yield return null;
             }

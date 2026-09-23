@@ -204,6 +204,7 @@ GameObject:
   - component: {fileID: 7627497150925566515}
   - component: {fileID: 2057126103907385808}
   - component: {fileID: 7094763111106045538}
+  - component: {fileID: 1482400349730685250}
   m_Layer: 0
   m_Name: InteractButton
   m_TagString: Untagged
@@ -313,6 +314,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1482400349730685250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1743415617433981453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb30390dc17f6241a07d80bdb7d949d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.PressScale
 --- !u!1 &2373345967469497594
 GameObject:
   m_ObjectHideFlags: 0

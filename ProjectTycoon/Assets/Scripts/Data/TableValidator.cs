@@ -14,6 +14,7 @@ namespace ZooTycoon.Data
             { ShopSim.k_OvenCount, ShopSim.k_OvenSpeed, ShopSim.k_ShelfCapacity, ShopSim.k_CheckoutSpeed };
         private static readonly string[] k_ActionIds =
             { ShopSim.k_ActionTakeOut, ShopSim.k_ActionFill, ShopSim.k_ActionServe, ShopSim.k_ActionOpen, ShopSim.k_ActionDig };
+        private static readonly string[] k_SoundIds = { SoundRecord.k_Pay, SoundRecord.k_OvenDone, SoundRecord.k_GiveUp };
         // 시트를 여는 행동은 버튼으로만
         private static readonly string[] k_ManualOnlyActionIds = { ShopSim.k_ActionOpen, ShopSim.k_ActionDig };
 
@@ -26,6 +27,7 @@ namespace ZooTycoon.Data
             ValidateShopUpgrades(tables, errors);
             ValidateActions(tables, errors);
             ValidateInteractables(tables, errors);
+            ValidateSounds(tables, errors);
             ValidateStrings(tables, errors);
             ValidateConfig(tables, errors);
 
@@ -55,6 +57,11 @@ namespace ZooTycoon.Data
                 if (string.IsNullOrEmpty(visitor.Sprite))
                 {
                     errors.Add($"visitors '{visitor.Id}': sprite 경로가 비어 있다.");
+                }
+
+                if (visitor.CarryAt != VisitorRecord.k_CarryHand && visitor.CarryAt != VisitorRecord.k_CarryHead)
+                {
+                    errors.Add($"visitors '{visitor.Id}': carryAt은 hand·head 중 하나여야 한다.");
                 }
 
                 if (visitor.Weight < 1)
@@ -174,6 +181,45 @@ namespace ZooTycoon.Data
                 if (!ids.Contains(id))
                 {
                     errors.Add($"actions: '{id}' 행이 없다.");
+                }
+            }
+        }
+
+        // 설계 10: 코드가 아는 효과음 3개가 모두 있고, volume 0~1, 간격·피치 증가 ≥ 0, pitchMax ≥ 1
+        private static void ValidateSounds(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+
+            foreach (SoundRecord sound in tables.Sounds)
+            {
+                CheckId("sounds", sound.Id, k_IdPattern, ids, errors);
+
+                if (string.IsNullOrEmpty(sound.Clip))
+                {
+                    errors.Add($"sounds '{sound.Id}': clip이 있어야 한다.");
+                }
+
+                if (sound.Volume < 0d || sound.Volume > 1d)
+                {
+                    errors.Add($"sounds '{sound.Id}': volume은 0~1이어야 한다.");
+                }
+
+                if (sound.MinGap < 0d || sound.ComboSeconds < 0d || sound.PitchStep < 0d)
+                {
+                    errors.Add($"sounds '{sound.Id}': minGap·comboSeconds·pitchStep은 0 이상이어야 한다.");
+                }
+
+                if (sound.PitchMax < 1d)
+                {
+                    errors.Add($"sounds '{sound.Id}': pitchMax는 1 이상이어야 한다.");
+                }
+            }
+
+            foreach (string id in k_SoundIds)
+            {
+                if (!ids.Contains(id))
+                {
+                    errors.Add($"sounds: '{id}' 행이 없다.");
                 }
             }
         }

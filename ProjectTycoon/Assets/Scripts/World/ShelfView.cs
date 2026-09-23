@@ -14,6 +14,9 @@ namespace ZooTycoon.World
         private const float k_BlinkSeconds = 0.6f;
         private bool m_empty;
 
+        // 빵 그림 자리(월드). 설계 10: 웜뱃이 채울 때 빵이 날아가는 곳
+        public Vector3 IconPosition => m_icon.transform.position;
+
         public void Bounce()
         {
             StartCoroutine(Fx.Bounce(m_body.transform));

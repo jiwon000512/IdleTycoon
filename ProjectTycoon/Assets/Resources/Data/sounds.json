@@ -1,0 +1,14 @@
+{
+  "table": "sounds",
+  "version": 1,
+  "notes": [
+    "설계 10: 효과음. id는 코드(SoundRecord.k_*)와 같아야 하고, 어느 사건에 나는지는 코드(World ShopSound)가 정한다.",
+    "clip: Resources/ 기준 경로(확장자 없음). 지금은 Assets/Audio/Source~/make_sfx.py로 합성한 더미. 실제 소리는 같은 경로에 덮어쓴다.",
+    "minGap: 마지막 재생 뒤 이 초 안이면 건너뛴다. comboSeconds 안에 이어 나면 피치 = min(pitchMax, 1 + pitchStep × 이어진 횟수), 지나면 1로. 0이면 피치 고정."
+  ],
+  "rows": [
+    { "id": "pay", "clip": "Audio/pay", "volume": 0.6, "minGap": 0.1, "comboSeconds": 1.0, "pitchStep": 0.05, "pitchMax": 1.3 },
+    { "id": "oven_done", "clip": "Audio/oven_done", "volume": 0.7, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "give_up", "clip": "Audio/give_up", "volume": 0.6, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
+  ]
+}

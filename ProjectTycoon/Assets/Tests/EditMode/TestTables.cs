@@ -34,6 +34,7 @@ namespace ZooTycoon.Tests
             IReadOnlyList<ShopUpgradeRecord> shopUpgrades = null,
             IReadOnlyList<ActionRecord> actions = null,
             IReadOnlyList<InteractableRecord> interactables = null,
+            IReadOnlyList<SoundRecord> sounds = null,
             IReadOnlyList<StringRecord> strings = null,
             GameConfig config = null)
         {
@@ -43,6 +44,7 @@ namespace ZooTycoon.Tests
                 shopUpgrades ?? LoadRows<ShopUpgradeRecord>("shop_upgrades"),
                 actions ?? LoadRows<ActionRecord>("actions"),
                 interactables ?? LoadRows<InteractableRecord>("interactables"),
+                sounds ?? LoadRows<SoundRecord>("sounds"),
                 strings ?? LoadRows<StringRecord>("strings"),
                 config ?? LoadConfig());
         }

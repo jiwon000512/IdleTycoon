@@ -96,6 +96,7 @@ namespace ZooTycoon.Editor
             buttonRect.sizeDelta = new Vector2(k_ControlSize, k_ControlSize);
             buttonRect.anchoredPosition = new Vector2(k_ControlOffsetX, k_ControlCenterY);
             Button button = buttonRect.gameObject.AddComponent<Button>();
+            buttonRect.gameObject.AddComponent<PressScale>();
             ColorBlock colors = button.colors;
             colors.pressedColor = new Color(0.8f, 0.8f, 0.8f);
             colors.disabledColor = new Color(0.65f, 0.65f, 0.65f);
@@ -149,6 +150,7 @@ namespace ZooTycoon.Editor
             closeRect.sizeDelta = new Vector2(19 * U, 19 * U);
             Button close = closeRect.gameObject.AddComponent<Button>();
             close.transition = Selectable.Transition.None;
+            closeRect.gameObject.AddComponent<PressScale>();
 
             // 칩 줄
             RectTransform chipRow = Child(panel, "ChipRow");
@@ -246,6 +248,7 @@ namespace ZooTycoon.Editor
             RectTransform rect = Panel(parent, name, Sprite(sprite), Color.white);
             rect.sizeDelta = new Vector2(width, height);
             Button button = rect.gameObject.AddComponent<Button>();
+            rect.gameObject.AddComponent<PressScale>();
             Sprite pressed = AssetDatabase.LoadAssetAtPath<Sprite>(k_SpriteDir + sprite + "_pressed.png");
             Sprite disabled = AssetDatabase.LoadAssetAtPath<Sprite>(k_SpriteDir + sprite + "_disabled.png");
 

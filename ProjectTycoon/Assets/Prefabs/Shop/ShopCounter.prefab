@@ -789,3 +789,7 @@ MonoBehaviour:
   - {fileID: 1574761968921230851}
   - {fileID: 7641445000953852560}
   - {fileID: 1107441208639276602}
+  m_handHeight: 0.35
+  m_handReach: 0.2
+  m_flySeconds: 0.3
+  m_flyArc: 0.4

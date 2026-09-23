@@ -93,6 +93,8 @@ namespace ZooTycoon.Core
         // 굴을 팠거나 자리에 진열대·오븐이 놓였다
         public event Action LayoutChanged;
         public event Action UpgradesChanged;
+        // 설계 10: 업그레이드 하나를 샀다(화면이 그 대상을 튀긴다). UpgradesChanged 뒤에 온다
+        public event Action<string> Upgraded;
         // 대상이 바뀌었거나 대상의 버튼 행동이 바뀌었다(다 구웠다·빵을 들었다 등)
         public event Action TargetChanged;
         public event Action CarryChanged;
@@ -277,6 +279,7 @@ namespace ZooTycoon.Core
 
             m_levels[upgradeId] = UpgradeLevel(upgradeId) + 1;
             OnUpgradesChanged();
+            OnUpgraded(upgradeId);
             return true;
         }
 
@@ -622,6 +625,11 @@ namespace ZooTycoon.Core
         private void OnUpgradesChanged()
         {
             UpgradesChanged?.Invoke();
+        }
+
+        private void OnUpgraded(string upgradeId)
+        {
+            Upgraded?.Invoke(upgradeId);
         }
 
         private void OnTargetChanged()

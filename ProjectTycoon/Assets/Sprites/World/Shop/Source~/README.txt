@@ -41,3 +41,12 @@
 오븐 굽기 표시 (2026-09-23)
 - make_bar.py: 칸 편집 시안 3개(A 빵 배지 캡슐 40×12 · B 원형 타이머 20×20 · C 구워지는 빵 28×18칸), 진행 16단계 프레임 가로 시트. 비교 https://claude.ai/artifact/LBgQA8H6UsEWtKLpWwG5mG
 - 선택: B(사용자). oven_timer.png = make_bar.py의 bar_b(20×20칸 × 16프레임, 한 칸 2px). 12시부터 시계 방향으로 주황 부채꼴이 찬다. 게임 반영: 프레임 16장을 ../oven_timer_00~15.png로 잘라 넣고 OvenView가 진행에 맞는 프레임을 고른다(ShopBaker가 Timer 조립). 옛 bar_bg·bar_fill 삭제.
+
+오븐 상태 표시 (2026-09-23)
+- make_oven_idle.py: 칸 편집 시안 3개(A 빈 타이머 + 식빵 · B 아래 화살표 · C 아궁이 속 점선 식빵). 비교 https://claude.ai/artifact/5wqrM7qnU7tNimK1dDmHnh
+- 선택(사용자 「b를 빈 오븐에 쓰고 A를 다 된 빵을 알려주는걸로 완성된 오븐에」): ../oven_empty_mark.png = B, ../oven_ready_mark.png = A. 둘 다 타이머 자리, 가운데 피벗, PPU 80. C는 버림.
+
+식빵 정면 (2026-09-23)
+- 사용자: 「식빵 리소스 변경, 동물들과 같이 정면 살짝 위에서 바라본 느낌으로」. 결 참조 = 옛 b01, 카메라 참조 = oven.png(정면·위 30도).
+- shop_raw/bread_front_raw_{a,b,c}.png: Codex 3장(A 자른 단면 정면 · B 긴 옆면 한 봉우리 · C 산형 세 봉우리). 프롬프트 bread_front_prompt_{a,b,c}.txt. 비교 https://claude.ai/artifact/QwnfTkEf8VVUuZXTjtDSW8
+- 선택 A: make_pixel.py --px=2 --cellsw=26 (26×25칸, 8색) → shop_raw/bread_front_a_px.png = Resources/Sprites/Shop/Breads/b01.png. 폭 26칸은 옛 b01과 같게(머리 위 층 간격이 빵 크기에 맞춰져 있음).
