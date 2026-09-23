@@ -16,6 +16,7 @@ namespace ZooTycoon.Core
         public const float k_OvenDrop = 0.85f;
         public const float k_CounterDrop = 1.55f;
         public const float k_WombatDrop = 2.45f;
+        public const float k_SlotDrop = 0.3f;
 
         // 사물 바닥 자리: 밑변에서 위로 depth, 가운데에서 좌우로 half
         private const float k_ShelfHalf = 0.6f;
@@ -30,11 +31,10 @@ namespace ZooTycoon.Core
         private const float k_Clearance = 0.3f;
         private const float k_Step = 0.2f;
         private const float k_TurnPenalty = 0.6f;
-        // 서는 자리: 진열대 옆(가운데에서), 앞(아래), 웜뱃은 오븐 옆
+        // 서는 자리: 진열대 옆(가운데에서), 앞(아래)
         private const float k_SideOffset = 1.1f;
         private const float k_FrontOffsetX = 0.55f;
         private const float k_FrontOffsetY = 0.7f;
-        private const float k_OvenSpotOffset = 1.25f;
         // 줄: 간격, 머리 자리(계산대 밑변 기준), 서는 자리와 떨어질 거리, 구멍 아래와 떨어질 거리
         private const float k_QueueSpacing = 0.8f;
         private const float k_SpotGap = 0.6f;
@@ -45,10 +45,11 @@ namespace ZooTycoon.Core
         private readonly GameConfig.ShopConfig m_config;
         private readonly List<Vector2> m_queueSlots = new List<Vector2>();
         private readonly Dictionary<Cell, List<Vector2>> m_shelfSpots = new Dictionary<Cell, List<Vector2>>();
-        private readonly Dictionary<Cell, Vector2> m_ovenSpots = new Dictionary<Cell, Vector2>();
 
         public BurrowShape.Result Shape { get; private set; }
         public BurrowNav Nav { get; private set; }
+        // 설계 09: 웜뱃이 걷는 땅. 손님 땅과 같되 계산대 뒤 웜뱃 자리를 막지 않는다
+        public BurrowNav WombatNav { get; private set; }
         public IReadOnlyList<Vector2> QueueSlots => m_queueSlots;
         // 구멍 안(나타나는 곳)과 구멍 아래 바닥(내려앉는 곳)
         public Vector2 HoleInside => new Vector2(0f, -1.6f);
@@ -82,14 +83,27 @@ namespace ZooTycoon.Core
             return CellCenter(cell) - new Vector2(0f, k_OvenDrop);
         }
 
+        // 빈 자리 표지(칸 가운데보다 조금 아래)
+        public Vector2 SlotBase(Cell cell)
+        {
+            return CellCenter(cell) - new Vector2(0f, k_SlotDrop);
+        }
+
+        // 칸 사각형까지의 거리(안이면 0). 파기 대상 고르기
+        public float DistanceToCell(Cell cell, Vector2 p)
+        {
+            float top = -RowTop(cell.Row);
+            float bottom = top - (float)(cell.Row == 0 ? m_config.EntranceHeight : m_config.CellHeight);
+            float left = (float)(cell.Col * m_config.CellWidth);
+            float right = left + (float)m_config.CellWidth;
+            float dx = Math.Max(Math.Max(left - p.X, p.X - right), 0f);
+            float dy = Math.Max(Math.Max(bottom - p.Y, p.Y - top), 0f);
+            return (float)Math.Sqrt(dx * dx + dy * dy);
+        }
+
         public IReadOnlyList<Vector2> ShelfSpots(Cell cell)
         {
             return m_shelfSpots[cell];
-        }
-
-        public Vector2 OvenSpot(Cell cell)
-        {
-            return m_ovenSpots[cell];
         }
 
         // 진열대 옆자리는 진열대 쪽을, 앞자리는 위를 본다
@@ -139,19 +153,12 @@ namespace ZooTycoon.Core
             }
 
             blocked.Add(Footprint(CounterBase, k_CounterHalf, k_CounterDepth));
+            WombatNav = new BurrowNav(Shape, k_PixelsPerUnit, blocked, k_Clearance, k_Step, k_TurnPenalty);
             blocked.Add(Footprint(WombatHome, k_WombatHalf, k_WombatDepth));
             Nav = new BurrowNav(Shape, k_PixelsPerUnit, blocked, k_Clearance, k_Step, k_TurnPenalty);
 
             BuildQueue(queueCapacity);
             BuildShelfSpots(shelves);
-            m_ovenSpots.Clear();
-
-            foreach (Cell cell in ovens)
-            {
-                Vector2 oven = OvenBase(cell);
-                Vector2 spot = Nav.Snap(oven + new Vector2(ToCenter(oven) * k_OvenSpotOffset, 0.05f));
-                m_ovenSpots[cell] = Nav.IsWalkable(spot) || !Nav.TryNearestFree(spot, _ => false, k_OverflowDistance, out Vector2 near) ? spot : near;
-            }
         }
 
         // 6장: 머리(등록기 앞)에서 왼쪽으로 간격마다. 막히면 아래(계산대 왼쪽) → 위 → 오른쪽으로 꺾고, 모두 막히면 끝자리에 겹쳐 선다

@@ -6,7 +6,8 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 굴 격자 설계 v0.5: 가게 = 파낸 칸(BurrowGrid)을 한 덩어리로 그린 굴 그림 + 칸 위의 진열대·오븐·계산대·빈 자리·파기 태그.
-    // 손님 동선 설계 v0.2: 사물 자리·굴 모양은 Core ShopLayout이 정하고 여기서는 그 자리에 놓고 그리기만 한다. 손님·웜뱃도 Core 위치를 읽는다
+    // 손님 동선 설계 v0.2: 사물 자리·굴 모양은 Core ShopLayout이 정하고 여기서는 그 자리에 놓고 그리기만 한다. 손님·웜뱃도 Core 위치를 읽는다.
+    // 설계 09: 웜뱃의 상호작용 대상이 바뀌면 그 사물이 한 번 튀고, 대상이 팔 수 있는 칸이면 그 칸에만 파기 태그를 보인다
     public sealed class ShopView : MonoBehaviour
     {
         [SerializeField] private ShelfView m_shelfPrefab;
@@ -21,8 +22,6 @@ namespace ZooTycoon.World
         [SerializeField] private Texture2D m_wallTile;
         [Tooltip("새로 판 칸이 흙빛에서 밝아지는 시간(초)")]
         [SerializeField] private float m_digSeconds = 0.6f;
-        [Tooltip("드래그 뒤 파기 태그가 보이는 시간(초)")]
-        [SerializeField] private float m_digTagSeconds = 2f;
 
         private const int k_DirtOrder = -1990;
         private static readonly Color k_Dirt = new Color(0.45f, 0.3f, 0.18f);
@@ -35,11 +34,11 @@ namespace ZooTycoon.World
         private ShopSim m_shop;
         private FrameCache m_frames;
         private GameTables m_tables;
-        private float m_digTagTimer;
         private Sprite m_white;
+        private Interactable? m_shownTarget;
 
-        // 새로 판 칸의 가운데(카메라가 보여 줄 곳)
-        public event Action<Vector2> Expanded;
+        // 굴을 팠다(카메라 경계가 넓어진다)
+        public event Action Expanded;
 
         private ShopLayout Layout => m_shop.Layout;
 
@@ -65,7 +64,7 @@ namespace ZooTycoon.World
             }
         }
 
-        public Vector2 Top => transform.position;
+        public Transform Wombat => m_counter.Wombat.transform;
 
         public void Bind(ShopSim shop, FrameCache frames, GameTables tables)
         {
@@ -74,7 +73,7 @@ namespace ZooTycoon.World
             m_tables = tables;
             m_counter = Instantiate(m_counterPrefab, transform);
             m_counter.transform.localPosition = new Vector3(0f, -Layout.RowTop(BurrowGrid.k_CounterRow), 0f);
-            m_counter.Wombat.Bind(shop, this);
+            m_counter.Wombat.Bind(shop, this, frames);
             Repaint();
             Build();
 
@@ -83,6 +82,7 @@ namespace ZooTycoon.World
             m_shop.LayoutChanged += Shop_LayoutChanged;
             m_shop.UpgradesChanged += Shop_UpgradesChanged;
             m_shop.Grid.Dug += Grid_Dug;
+            m_shop.TargetChanged += Shop_TargetChanged;
         }
 
         // Core 가게 좌표(원점 기준 유닛, y 위) → 월드 위치
@@ -96,63 +96,20 @@ namespace ZooTycoon.World
             return ToWorld(Layout.CellCenter(cell));
         }
 
-        // 사물 터치 기획: 탭 위치의 사물. 파기 태그는 보이는 동안만
-        public ShopTarget? HitTest(Vector3 world)
-        {
-            foreach (KeyValuePair<Cell, ShelfView> pair in m_shelves)
-            {
-                if (pair.Value.Contains(world))
-                {
-                    return new ShopTarget(ShopTargetKind.Shelf, pair.Key);
-                }
-            }
-
-            for (int i = 0; i < m_ovens.Count; i++)
-            {
-                if (m_ovens[i].Contains(world))
-                {
-                    return new ShopTarget(ShopTargetKind.Oven, m_shop.Ovens[i].Cell, i);
-                }
-            }
-
-            if (m_counter.Contains(world))
-            {
-                return new ShopTarget(ShopTargetKind.Counter, m_shop.Grid.Counter);
-            }
-
-            foreach (KeyValuePair<Cell, MarkerView> pair in m_slotMarkers)
-            {
-                if (pair.Value.gameObject.activeSelf && pair.Value.Contains(world))
-                {
-                    return new ShopTarget(ShopTargetKind.EmptySlot, pair.Key);
-                }
-            }
-
-            foreach (KeyValuePair<Cell, MarkerView> pair in m_digTags)
-            {
-                if (pair.Value.gameObject.activeSelf && pair.Value.Contains(world))
-                {
-                    return new ShopTarget(ShopTargetKind.Dig, pair.Key);
-                }
-            }
-
-            return null;
-        }
-
-        public void Bounce(ShopTarget target)
+        private void Bounce(Interactable target)
         {
             switch (target.Kind)
             {
-                case ShopTargetKind.Shelf:
+                case InteractKind.Shelf:
                     m_shelves[target.Cell].Bounce();
                     break;
-                case ShopTargetKind.Oven:
+                case InteractKind.Oven:
                     m_ovens[target.Index].Bounce();
                     break;
-                case ShopTargetKind.EmptySlot:
+                case InteractKind.EmptySlot:
                     m_slotMarkers[target.Cell].Bounce();
                     break;
-                case ShopTargetKind.Dig:
+                case InteractKind.Dig:
                     m_digTags[target.Cell].Bounce();
                     break;
                 default:
@@ -161,25 +118,17 @@ namespace ZooTycoon.World
             }
         }
 
-        // 굴 격자 D4: 끈 방향(dCol, dRow)의 팔 수 있는 칸에 비용 태그를 잠깐 띄운다
-        public void ShowDigTags(int dCol, int dRow)
+        // 굴 격자 D4 → 설계 09: 대상이 된 팔 수 있는 칸에 비용 태그
+        private void ShowDigTag(Cell cell)
         {
-            HideDigTags();
-            string text = m_tables.Strings.Format("tag_dig", Cost(m_shop.Grid.DigCost));
-
-            foreach (Cell cell in m_shop.Grid.Frontier(dCol, dRow))
+            if (!m_digTags.TryGetValue(cell, out MarkerView tag))
             {
-                if (!m_digTags.TryGetValue(cell, out MarkerView tag))
-                {
-                    tag = Instantiate(m_digTagPrefab, transform);
-                    tag.transform.position = CellCenter(cell);
-                    m_digTags[cell] = tag;
-                }
-
-                tag.Show(text);
+                tag = Instantiate(m_digTagPrefab, transform);
+                tag.transform.position = CellCenter(cell);
+                m_digTags[cell] = tag;
             }
 
-            m_digTagTimer = m_digTagSeconds;
+            tag.Show(m_tables.Strings.Format("tag_dig", Cost(m_shop.Grid.DigCost)));
         }
 
         // 오븐 진행 막대는 매 프레임 읽는다(오븐 사건은 초가 바뀔 때만 온다)
@@ -195,17 +144,6 @@ namespace ZooTycoon.World
                 }
             }
 
-            if (m_digTagTimer <= 0f)
-            {
-                return;
-            }
-
-            m_digTagTimer -= Time.deltaTime;
-
-            if (m_digTagTimer <= 0f)
-            {
-                HideDigTags();
-            }
         }
 
         private void HideDigTags()
@@ -225,6 +163,7 @@ namespace ZooTycoon.World
                 m_shop.LayoutChanged -= Shop_LayoutChanged;
                 m_shop.UpgradesChanged -= Shop_UpgradesChanged;
                 m_shop.Grid.Dug -= Grid_Dug;
+                m_shop.TargetChanged -= Shop_TargetChanged;
             }
         }
 
@@ -257,9 +196,39 @@ namespace ZooTycoon.World
         private void Grid_Dug(Cell cell)
         {
             Repaint();
-            HideDigTags();
             StartCoroutine(DigRoutine(cell));
-            Expanded?.Invoke(CellCenter(cell));
+            OnExpanded();
+        }
+
+        // 버튼 행동만 바뀐 사건(다 구웠다 등)에서는 튀지 않는다
+        private void Shop_TargetChanged()
+        {
+            if (Nullable.Equals(m_shop.Target, m_shownTarget))
+            {
+                return;
+            }
+
+            m_shownTarget = m_shop.Target;
+            HideDigTags();
+
+            if (!m_shop.Target.HasValue)
+            {
+                return;
+            }
+
+            Interactable target = m_shop.Target.Value;
+
+            if (target.Kind == InteractKind.Dig)
+            {
+                ShowDigTag(target.Cell);
+            }
+
+            Bounce(target);
+        }
+
+        private void OnExpanded()
+        {
+            Expanded?.Invoke();
         }
 
         private System.Collections.IEnumerator DigRoutine(Cell cell)

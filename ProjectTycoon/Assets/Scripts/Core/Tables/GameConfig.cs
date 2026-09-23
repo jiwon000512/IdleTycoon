@@ -1,12 +1,11 @@
 namespace ZooTycoon.Core
 {
-    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 11: 동물·관광객 수 섹션 삭제)
+    // 기획서 6.2~6.4 · 데이터-테이블-규칙 8.4 (version 11: 동물·관광객 수 섹션 삭제, version 15: 동물원 레벨 틱 income 삭제)
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class GameConfig
     {
         public StartConfig Start { get; set; }
         public OfflineConfig Offline { get; set; }
-        public IncomeConfig Income { get; set; }
         public ShopConfig Shop { get; set; }
 
         public sealed class StartConfig
@@ -17,12 +16,6 @@ namespace ZooTycoon.Core
         public sealed class OfflineConfig
         {
             public int MaxSeconds { get; set; }
-        }
-
-        // 설계 04 P2: 수입 틱 간격(초)
-        public sealed class IncomeConfig
-        {
-            public double TickSeconds { get; set; }
         }
 
         // 설계 08 v0.5: 빵집 시뮬 시간(초)·수량의 시작값
@@ -47,6 +40,9 @@ namespace ZooTycoon.Core
             public double WalkSpeed { get; set; }
             public double DigBaseCost { get; set; }
             public double DigCostGrowth { get; set; }
+            // 설계 09(version 15): 조이스틱 웜뱃 속도(유닛/초), 머리에 이는 빵 수. 사물 거리는 interactables.json(version 16)
+            public double WombatSpeed { get; set; }
+            public int CarryCapacity { get; set; }
         }
     }
 }

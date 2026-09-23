@@ -29,18 +29,20 @@ namespace ZooTycoon.Tests
         }
 
         public static GameTables Build(
-            IReadOnlyList<ZooLevelRecord> zooLevels = null,
             IReadOnlyList<VisitorRecord> visitors = null,
             IReadOnlyList<BreadRecord> breads = null,
             IReadOnlyList<ShopUpgradeRecord> shopUpgrades = null,
+            IReadOnlyList<ActionRecord> actions = null,
+            IReadOnlyList<InteractableRecord> interactables = null,
             IReadOnlyList<StringRecord> strings = null,
             GameConfig config = null)
         {
             return new GameTables(
-                zooLevels ?? LoadRows<ZooLevelRecord>("zoo_levels"),
                 visitors ?? LoadRows<VisitorRecord>("visitors"),
                 breads ?? LoadRows<BreadRecord>("breads"),
                 shopUpgrades ?? LoadRows<ShopUpgradeRecord>("shop_upgrades"),
+                actions ?? LoadRows<ActionRecord>("actions"),
+                interactables ?? LoadRows<InteractableRecord>("interactables"),
                 strings ?? LoadRows<StringRecord>("strings"),
                 config ?? LoadConfig());
         }

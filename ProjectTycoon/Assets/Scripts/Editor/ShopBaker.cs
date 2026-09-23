@@ -22,10 +22,16 @@ namespace ZooTycoon.Editor
         const float k_Ppu = 80f;
         // 가게 유닛(웜뱃·손님) 기본 크기: 한 칸 2px, PPU 80 = 42칸 캐릭터 약 1.05유닛. 스케일은 1로 두고 크기는 PPU로 정한다
         const float k_UnitPpu = 80f;
+        const int k_TimerFrames = 16;
         const int k_BackdropOrder = -2100;
         const int k_BurrowOrder = -2000;
         const int k_ArchOrder = -1995;
         const int k_MarkerOrder = -1980;
+        // 설계 09: 웜뱃 머리 위 빵 층 수·높이·크기·층 간격(층 로컬)
+        const int k_CarryLayers = 5;
+        const float k_CarryHeight = 1.05f;
+        const float k_CarryScale = 0.6f;
+        const float k_CarryStep = 0.3f;
         // 흙 배경: 굴 원점에서 이만큼 왼쪽 위에서 시작해 두 배 크기(타일 32칸 주기에 맞는 값)
         const float k_BackdropHalf = 32f;
 
@@ -82,8 +88,11 @@ namespace ZooTycoon.Editor
                 }
             }
 
-            Import(k_SpriteDir + "bar_bg.png", new Vector2(0f, 0.5f));
-            Import(k_SpriteDir + "bar_fill.png", new Vector2(0f, 0.5f));
+            for (int i = 0; i < k_TimerFrames; i++)
+            {
+                Import(k_SpriteDir + TimerFrame(i) + ".png", center);
+            }
+
             Import(k_SpriteDir + "slot_empty.png", center, k_TagPpu);
             // 타일: 굴 그림이 픽셀을 읽고, 흙 배경은 Tiled로 깐다(왼쪽 위 피벗)
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
@@ -147,17 +156,22 @@ namespace ZooTycoon.Editor
             // 아이콘은 오븐 아궁이 안
             SpriteRenderer icon = Renderer(go.transform, "Icon", null, new Vector3(0f, 0.35f, 0f), 1);
             icon.transform.localScale = Vector3.one * 0.8f;
-            GameObject bar = Child(go.transform, "Bar", new Vector3(-0.5f, 1.45f, 0f));
-            Renderer(bar.transform, "Back", Load("bar_bg"), Vector3.zero, 2);
-            SpriteRenderer fill = Renderer(bar.transform, "Fill", Load("bar_fill"), Vector3.zero, 3);
-            fill.color = new Color(0.95f, 0.76f, 0.3f);
+            // 굽기 타이머(20칸 원): 오븐 윗변(1.3) 위 3칸 띄움
+            Sprite[] timerFrames = new Sprite[k_TimerFrames];
+
+            for (int i = 0; i < k_TimerFrames; i++)
+            {
+                timerFrames[i] = Load(TimerFrame(i));
+            }
+
+            SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, 1.62f, 0f), 2);
             TextMeshPro ready = WorldText(go.transform, "Ready", new Vector3(0f, 1.45f, 0f), 4);
 
             OvenView view = go.AddComponent<OvenView>();
             Set(view, "m_body", body);
             Set(view, "m_icon", icon);
-            Set(view, "m_bar", bar);
-            Set(view, "m_barFill", fill.transform);
+            Set(view, "m_timer", timer);
+            SetSprites(view, "m_timerFrames", timerFrames);
             Set(view, "m_readyText", ready);
             Set(view, "m_baseBody", Load("oven"));
             Set(view, "m_upgradedBody", Load("oven_2"));
@@ -185,6 +199,21 @@ namespace ZooTycoon.Editor
                 SetSprites(mover, "m_" + side + "Idle", Frames("wombat_" + side, "", "_1", "_2", "_3"));
                 SetSprites(mover, "m_" + side + "Walk", Frames("wombat_" + side, "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
             }
+            // 설계 09: 머리 위 빵 층(아래부터 5개). 크기는 부모 Carry가 정하고 층은 스케일 1(튀기 연출이 1로 되돌린다)
+            GameObject carry = Child(wombat.transform, "Carry", new Vector3(0f, k_CarryHeight, 0f));
+            carry.transform.localScale = Vector3.one * k_CarryScale;
+            SerializedObject so = new SerializedObject(mover);
+            SerializedProperty layers = so.FindProperty("m_carry");
+            layers.arraySize = k_CarryLayers;
+
+            for (int i = 0; i < k_CarryLayers; i++)
+            {
+                SpriteRenderer layer = Renderer(carry.transform, "Layer" + i, null, new Vector3(0f, i * k_CarryStep, 0f), 51 + i);
+                layer.enabled = false;
+                layers.GetArrayElementAtIndex(i).objectReferenceValue = layer;
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
             Set(counter, "m_wombat", mover);
             return Save(root, counter, "ShopCounter");
         }
@@ -350,6 +379,11 @@ namespace ZooTycoon.Editor
             SerializedObject so = new SerializedObject(target);
             so.FindProperty(field).objectReferenceValue = value;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static string TimerFrame(int i)
+        {
+            return "oven_timer_" + i.ToString("00");
         }
 
         static Sprite[] Frames(string name, params string[] suffixes)

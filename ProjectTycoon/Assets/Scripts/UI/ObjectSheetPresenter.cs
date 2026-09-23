@@ -5,17 +5,8 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    public enum SheetTargetKind
-    {
-        Shelf,
-        Oven,
-        Counter,
-        EmptySlot,
-        Dig,
-    }
-
-    // 사물 터치 기획(2026-09-23): 탭한 사물에 맞춰 시트 내용을 만든다. 규칙은 ShopSim에서 읽기만 하고, 구매·굽기는 Try*로 부탁한다.
-    // 열린 동안 재고·오븐·업그레이드·코인·웜뱃 이벤트로 갱신한다. 굴 격자 설계 v0.5: 빈 자리(진열대·오븐 놓기)·굴 파기 시트 추가
+    // 사물 터치 기획(2026-09-23) → 설계 09: 상호작용 버튼으로 연 사물에 맞춰 시트 내용을 만든다. 규칙은 ShopSim에서 읽기만 하고, 구매·굽기는 Try*로 부탁한다.
+    // 열린 동안 재고·오븐·업그레이드·코인 이벤트로 갱신하고, 웜뱃의 대상이 바뀌면 닫는다. 굴 격자 설계 v0.5: 빈 자리(진열대·오븐 놓기)·굴 파기 시트
     public sealed class ObjectSheetPresenter : IDisposable
     {
         private readonly ObjectSheetView m_view;
@@ -28,9 +19,7 @@ namespace ZooTycoon.UI
         private readonly List<string> m_rowActions = new List<string>();
         private readonly List<string> m_chipBreads = new List<string>();
 
-        private SheetTargetKind m_kind;
-        private Cell m_cell;
-        private int m_index;
+        private Interactable m_target;
 
         public ObjectSheetPresenter(ObjectSheetView view, ShopSim shop, ZooState state, GameTables tables)
         {
@@ -47,8 +36,7 @@ namespace ZooTycoon.UI
             m_shop.UpgradesChanged += Shop_Refresh;
             m_shop.LayoutChanged += Shop_Refresh;
             m_shop.QueueChanged += Shop_Refresh;
-            m_shop.WombatLeft += Shop_WombatMoved;
-            m_shop.WombatReturned += Shop_Refresh;
+            m_shop.TargetChanged += Shop_TargetChanged;
             m_state.CoinsChanged += Shop_Refresh;
         }
 
@@ -62,16 +50,13 @@ namespace ZooTycoon.UI
             m_shop.UpgradesChanged -= Shop_Refresh;
             m_shop.LayoutChanged -= Shop_Refresh;
             m_shop.QueueChanged -= Shop_Refresh;
-            m_shop.WombatLeft -= Shop_WombatMoved;
-            m_shop.WombatReturned -= Shop_Refresh;
+            m_shop.TargetChanged -= Shop_TargetChanged;
             m_state.CoinsChanged -= Shop_Refresh;
         }
 
-        public void Show(SheetTargetKind kind, Cell cell, int index)
+        public void Show(Interactable target)
         {
-            m_kind = kind;
-            m_cell = cell;
-            m_index = index;
+            m_target = target;
             Refresh();
             m_view.Open();
         }
@@ -89,11 +74,11 @@ namespace ZooTycoon.UI
             List<SheetRow> rows = new List<SheetRow>();
             StringTable s = m_tables.Strings;
 
-            switch (m_kind)
+            switch (m_target.Kind)
             {
-                case SheetTargetKind.Shelf:
+                case InteractKind.Shelf:
                 {
-                    BreadRecord bread = m_shop.Shelves[m_cell];
+                    BreadRecord bread = m_shop.Shelves[m_target.Cell];
                     m_view.SetHeader(s.Format("sheet_shelf_title", bread.Name), s.Format("sheet_shelf_status", m_shop.Stock(bread.Id), m_shop.ShelfCapacity));
                     AddUpgradeRows(rows, "shelf");
 
@@ -105,12 +90,12 @@ namespace ZooTycoon.UI
 
                     break;
                 }
-                case SheetTargetKind.EmptySlot:
+                case InteractKind.EmptySlot:
                     m_view.SetHeader(s.Get("sheet_slot_title"), s.Get("sheet_slot_status"));
                     AddUnlockRow(rows, null, null);
                     AddUpgradeRows(rows, "slot");
                     break;
-                case SheetTargetKind.Dig:
+                case InteractKind.Dig:
                 {
                     double cost = m_shop.Grid.DigCost;
                     m_view.SetHeader(s.Get("sheet_dig_title"), s.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
@@ -124,11 +109,11 @@ namespace ZooTycoon.UI
                     m_rowActions.Add(k_DigAction);
                     break;
                 }
-                case SheetTargetKind.Oven:
+                case InteractKind.Oven:
                 {
-                    Oven oven = m_shop.Ovens[m_index];
-                    m_view.SetHeader(s.Format("sheet_oven_title", m_index + 1), OvenStatus(oven));
-                    bool canBake = oven.IsEmpty && m_shop.WombatAtCounter;
+                    Oven oven = m_shop.Ovens[m_target.Index];
+                    m_view.SetHeader(s.Format("sheet_oven_title", m_target.Index + 1), OvenStatus(oven));
+                    bool canBake = oven.IsEmpty;
 
                     foreach (BreadRecord bread in m_shop.UnlockedBreads)
                     {
@@ -152,7 +137,7 @@ namespace ZooTycoon.UI
                     AddUpgradeRows(rows, "oven");
                     break;
                 }
-                case SheetTargetKind.Counter:
+                case InteractKind.Counter:
                     m_view.SetHeader(s.Get("sheet_counter_title"), s.Format("sheet_counter_status", m_shop.Queue.Count));
                     AddUpgradeRows(rows, "counter");
                     break;
@@ -171,7 +156,7 @@ namespace ZooTycoon.UI
                 return oven.Ready > 0 ? s.Get("sheet_oven_full") : s.Format("sheet_oven_baking", oven.Bread.Name, Math.Ceiling(oven.Remaining));
             }
 
-            return m_shop.WombatAtCounter ? s.Get("sheet_oven_empty") : s.Get("sheet_oven_errand");
+            return s.Get("sheet_oven_empty");
         }
 
         // shop_upgrades.target이 같은 행마다 구매 행. only가 있으면 그 id만
@@ -245,7 +230,7 @@ namespace ZooTycoon.UI
         {
             string breadId = m_chipBreads[index];
 
-            if (breadId != null && m_shop.TryBake(m_index, breadId))
+            if (breadId != null && m_shop.TryBake(m_target.Index, breadId))
             {
                 m_view.Close();
             }
@@ -259,13 +244,13 @@ namespace ZooTycoon.UI
             switch (action)
             {
                 case k_UnlockAction:
-                    bought = m_shop.TryUnlockNextBread(m_cell);
+                    bought = m_shop.TryUnlockNextBread(m_target.Cell);
                     break;
                 case k_DigAction:
-                    bought = m_shop.Grid.TryDig(m_cell);
+                    bought = m_shop.Grid.TryDig(m_target.Cell);
                     break;
                 case ShopSim.k_OvenCount:
-                    bought = m_shop.TryAddOven(m_cell);
+                    bought = m_shop.TryAddOven(m_target.Cell);
                     break;
                 default:
                     bought = m_shop.TryUpgrade(action);
@@ -276,7 +261,7 @@ namespace ZooTycoon.UI
             {
                 m_view.FlashRow(index);
 
-                if (m_kind == SheetTargetKind.EmptySlot || m_kind == SheetTargetKind.Dig)
+                if (m_target.Kind == InteractKind.EmptySlot || m_target.Kind == InteractKind.Dig)
                 {
                     m_view.Close();
                 }
@@ -298,9 +283,13 @@ namespace ZooTycoon.UI
             Shop_Refresh();
         }
 
-        private void Shop_WombatMoved(int oven, double seconds)
+        // 걸어서 다른 사물로 가면(또는 배치가 바뀌어 대상이 사라지면) 닫는다
+        private void Shop_TargetChanged()
         {
-            Shop_Refresh();
+            if (m_view.IsVisible && !Nullable.Equals(m_shop.Target, m_target))
+            {
+                m_view.Close();
+            }
         }
 
         private void Shop_Refresh()

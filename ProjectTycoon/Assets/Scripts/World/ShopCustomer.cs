@@ -9,6 +9,9 @@ namespace ZooTycoon.World
     // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 「!!」 말풍선, 집은 빵, 하트
     public sealed class ShopCustomer : MonoBehaviour
     {
+        // 그림자 타원의 세로 납작함(옛 쿼터뷰 2:1 비율)
+        private const float k_ShadowSquash = 0.5f;
+
         [SerializeField] private Transform m_modelRoot;
         [SerializeField] private SpriteRenderer m_spriteRenderer;
         [SerializeField] private SpriteRenderer m_shadowRenderer;
@@ -62,7 +65,7 @@ namespace ZooTycoon.World
             m_idleFrameRate = (float)look.IdleFrameRate;
             m_moveFrameRate = (float)look.MoveFrameRate;
             m_modelRoot.localScale = Vector3.one * (float)look.Scale;
-            m_shadowRenderer.transform.localScale = new Vector3(1f, Iso.k_Y / Iso.k_X, 1f);
+            m_shadowRenderer.transform.localScale = new Vector3(1f, k_ShadowSquash, 1f);
             m_height = m_frontIdle[0].bounds.size.y * (float)look.Scale;
             m_bubble.transform.localPosition = HeadOffset;
             m_bubble.enabled = false;

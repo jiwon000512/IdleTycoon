@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 사물 터치 기획: 탭한 사물이 0.15초 살짝 튄다(스케일 1.05 → 1)
+    // 설계 09: 상호작용 대상이 된 사물이 0.15초 살짝 튄다(스케일 1.05 → 1)
     public static class Fx
     {
         private const float k_BounceSeconds = 0.15f;

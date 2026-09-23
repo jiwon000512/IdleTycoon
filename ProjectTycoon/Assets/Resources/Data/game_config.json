@@ -1,6 +1,6 @@
 {
   "table": "game_config",
-  "version": 14,
+  "version": 16,
   "notes": [
     "기획서 6.2~6.4의 수식 상수와 시작 상태. 전부 시작값이며 프로토타입에서 튠한다.",
     "레벨 상한 없음(기획서 v0.6).",
@@ -16,16 +16,15 @@
     "version 11 (2026-09-18, 연출 점검 1차 정리): animalCount·visitors 섹션 삭제. 동물 수입·지상 관광객이 사라졌다. income.tickSeconds는 규칙 틱 간격으로 남는다.",
     "version 12 (2026-09-23, 연출 1차): shop.patienceWarnSeconds 추가(남은 인내가 이 값 이하면 말풍선이 흔들림).",
     "version 13 (2026-09-23, 굴 격자 설계 v0.5): shop.rowWalkSeconds 삭제 → walkSpeed(유닛/초). 굴은 칸(cellWidth × cellHeight, 입구 줄은 entranceHeight)의 격자이고 걷기 = 칸 경로 길이 ÷ walkSpeed(방에 들어서는 마지막 세로 한 칸은 enter·toQueue·wombatWalk 시간에 포함). 파기 비용 = digBaseCost × digCostGrowth^(판 칸 수).",
-    "version 14 (2026-09-23, 손님 동선 설계 v0.2): 가게 시뮬이 매 프레임 돌고 손님·웜뱃 걷는 시간 = A* 길 길이 ÷ walkSpeed(3 → 2.2). shop.enterSeconds·toQueueSeconds·patienceWarnSeconds·wombatWalkSeconds 삭제, hopSeconds(구멍에서 톡 나오기·들어가기)·pickSeconds(빵 집기)·lookSeconds(한 진열대 두리번 최대) 추가. patienceSeconds는 빈 진열대 앞 두리번 시간 합계(다 쓰면 「!!」로 나감)."
+    "version 14 (2026-09-23, 손님 동선 설계 v0.2): 가게 시뮬이 매 프레임 돌고 손님·웜뱃 걷는 시간 = A* 길 길이 ÷ walkSpeed(3 → 2.2). shop.enterSeconds·toQueueSeconds·patienceWarnSeconds·wombatWalkSeconds 삭제, hopSeconds(구멍에서 톡 나오기·들어가기)·pickSeconds(빵 집기)·lookSeconds(한 진열대 두리번 최대) 추가. patienceSeconds는 빈 진열대 앞 두리번 시간 합계(다 쓰면 「!!」로 나감).",
+    "version 15 (2026-09-23, 설계 09 웜뱃 조작): 지상·동물원 레벨 폐기로 income 섹션 삭제. shop.wombatSpeed(조이스틱 웜뱃 유닛/초)·interactDistance(상호작용 대상·계산대 자리 거리, 유닛)·carryCapacity(머리에 이는 빵 수) 추가. walkSpeed는 손님만.",
+    "version 16 (2026-09-23, 설계 09 v0.4): shop.interactDistance 삭제. 사물마다 거리는 interactables.json의 range."
   ],
   "start": {
     "coins": 350
   },
   "offline": {
     "maxSeconds": 28800
-  },
-  "income": {
-    "tickSeconds": 1
   },
   "shop": {
     "arrivalSeconds": 4,
@@ -42,6 +41,8 @@
     "digBaseCost": 150,
     "digCostGrowth": 1.4,
     "hopSeconds": 0.3,
-    "pickSeconds": 0.4
+    "pickSeconds": 0.4,
+    "wombatSpeed": 3.0,
+    "carryCapacity": 6
   }
 }

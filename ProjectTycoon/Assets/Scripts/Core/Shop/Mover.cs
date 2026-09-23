@@ -57,12 +57,6 @@ namespace ZooTycoon.Core
             Position = position;
         }
 
-        public void Stop()
-        {
-            m_points.Clear();
-            m_next = 0;
-        }
-
         public void Advance(double distance)
         {
             float left = (float)distance;
@@ -83,24 +77,6 @@ namespace ZooTycoon.Core
 
                 Position += (target - Position) * (left / gap);
                 left = 0f;
-            }
-        }
-
-        // 남은 길 길이(유닛)
-        public float Remaining
-        {
-            get
-            {
-                float length = 0f;
-                Vector2 from = Position;
-
-                for (int i = m_next; i < m_points.Count; i++)
-                {
-                    length += Vector2.Distance(from, m_points[i]);
-                    from = m_points[i];
-                }
-
-                return length;
             }
         }
 

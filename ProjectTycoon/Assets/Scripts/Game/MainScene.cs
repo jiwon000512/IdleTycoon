@@ -6,19 +6,17 @@ using ZooTycoon.World;
 
 namespace ZooTycoon.Game
 {
-    // 씬 조립: GameManager가 만든 서비스로 View·Presenter를 잇는다. 사물 터치 기획: 월드의 사물 탭 → 사물 시트
+    // 씬 조립: GameManager가 만든 서비스로 View·Presenter를 잇는다. 설계 09: 가게 HUD의 상호작용 버튼 → 사물 시트
     public sealed class MainScene : MonoBehaviour
     {
         private TopBarPresenter m_topBarPresenter;
         private ShopHudPresenter m_shopHudPresenter;
         private ObjectSheetPresenter m_sheetPresenter;
-        private Navigation m_navigation;
 
         private void Awake()
         {
             GameManager game = GameManager.Instance;
             game.Init();
-            m_navigation = game.Navigation;
 
             UIManager ui = UIManager.Instance;
             TopBarView topBarView = ui.Open<TopBarView>();
@@ -26,44 +24,28 @@ namespace ZooTycoon.Game
             ObjectSheetView sheetView = ui.Open<ObjectSheetView>();
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Tables);
-            m_shopHudPresenter = new ShopHudPresenter(shopHudView, game.Navigation, game.Tables);
+            m_shopHudPresenter = new ShopHudPresenter(shopHudView, game.Shop, game.Tables);
             m_sheetPresenter = new ObjectSheetPresenter(sheetView, game.Shop, game.State, game.Tables);
+            m_shopHudPresenter.SheetRequested += ShopHud_SheetRequested;
 
-            WorldManager world = WorldManager.Instance;
-            world.Initialize(game.Tables, game.Navigation, game.Shop);
-            world.TargetTapped += World_TargetTapped;
-            m_navigation.Changed += Navigation_Changed;
+            WorldManager.Instance.Initialize(game.Tables, game.Shop);
         }
 
         private void OnDestroy()
         {
+            if (m_shopHudPresenter != null)
+            {
+                m_shopHudPresenter.SheetRequested -= ShopHud_SheetRequested;
+            }
+
             m_topBarPresenter?.Dispose();
             m_shopHudPresenter?.Dispose();
             m_sheetPresenter?.Dispose();
-
-            if (m_navigation != null)
-            {
-                m_navigation.Changed -= Navigation_Changed;
-            }
-
-            if (WorldManager.HasInstance)
-            {
-                WorldManager.Instance.TargetTapped -= World_TargetTapped;
-            }
         }
 
-        // World의 대상 종류를 UI의 종류로(같은 순서). UI는 World를 참조하지 않는다
-        private void World_TargetTapped(ShopTarget target)
+        private void ShopHud_SheetRequested(Interactable target)
         {
-            m_sheetPresenter.Show((SheetTargetKind)(int)target.Kind, target.Cell, target.Index);
-        }
-
-        private void Navigation_Changed()
-        {
-            if (m_navigation.Current != GameScreen.Shop)
-            {
-                m_sheetPresenter.Hide();
-            }
+            m_sheetPresenter.Show(target);
         }
     }
 }

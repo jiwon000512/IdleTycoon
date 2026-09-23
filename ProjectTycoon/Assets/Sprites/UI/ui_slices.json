@@ -178,5 +178,20 @@
   "w": 4,
   "h": 4,
   "border": null
+ },
+ "btn_act": {
+  "w": 36,
+  "h": 36,
+  "border": null
+ },
+ "joystick_base": {
+  "w": 44,
+  "h": 44,
+  "border": null
+ },
+ "joystick_knob": {
+  "w": 20,
+  "h": 20,
+  "border": null
  }
 }

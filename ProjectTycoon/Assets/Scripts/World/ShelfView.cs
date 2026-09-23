@@ -14,12 +14,6 @@ namespace ZooTycoon.World
         private const float k_BlinkSeconds = 0.6f;
         private bool m_empty;
 
-        public bool Contains(Vector3 world)
-        {
-            Bounds bounds = m_body.bounds;
-            return world.x >= bounds.min.x && world.x <= bounds.max.x && world.y >= bounds.min.y && world.y <= bounds.max.y;
-        }
-
         public void Bounce()
         {
             StartCoroutine(Fx.Bounce(m_body.transform));

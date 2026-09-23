@@ -66,21 +66,16 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 줄 머리가 머리 자리에 선 뒤에만 계산한다. 웜뱃이 심부름 중이면 멈춘다
+        // 줄 머리가 머리 자리에 선 뒤에만 계산한다. 웜뱃이 계산대 자리를 비우면 멈춘다
         private void TickCheckout(double dt)
         {
-            if (m_queue.Count == 0 || !WombatAtCounter)
+            // 설계 09 v0.4: serve가 auto면 계산대 range 안에 있는 동안만 흐른다. manual이면 버튼(PayHead)으로만
+            if (!HeadWaiting || !m_actions[k_ActionServe].IsAuto || !WombatAtCounter)
             {
                 return;
             }
 
             Customer head = m_queue[0];
-
-            if (head.Phase != CustomerPhase.Queued || head.Moving)
-            {
-                return;
-            }
-
             head.Timer -= dt * (1d + Effect(k_CheckoutSpeed));
 
             if (head.Timer > 0d)
@@ -88,6 +83,15 @@ namespace ZooTycoon.Core
                 return;
             }
 
+            PayHead();
+        }
+
+        // 줄 머리가 머리 자리에 서서 계산을 기다린다
+        private bool HeadWaiting => m_queue.Count > 0 && m_queue[0].Phase == CustomerPhase.Queued && !m_queue[0].Moving;
+
+        private void PayHead()
+        {
+            Customer head = m_queue[0];
             m_queue.RemoveAt(0);
             head.Paid = true;
             head.CarriesBread = false;

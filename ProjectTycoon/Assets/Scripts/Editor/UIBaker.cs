@@ -6,7 +6,7 @@ using ZooTycoon.UI;
 
 namespace ZooTycoon.Editor
 {
-    // UI-디자인-규칙 v1.0 + 사물 터치 기획: 상단 바·가게 HUD·사물 시트 프리팹을 규칙 숫자로 조립한다(손으로 만든 프리팹 없음).
+    // UI-디자인-규칙 v1.0 + 사물 터치 기획 + 설계 09: 상단 바·가게 HUD(조이스틱·상호작용 버튼)·사물 시트 프리팹을 규칙 숫자로 조립한다(손으로 만든 프리팹 없음).
     // 단위: 1 UI px = 캔버스 4px(U). 스프라이트는 Sprites/UI(PPU 25, 9-slice), 폰트는 Fonts/Galmuri
     public static class UIBaker
     {
@@ -14,6 +14,8 @@ namespace ZooTycoon.Editor
         const string k_SpriteDir = "Assets/Sprites/UI/";
         const string k_FontDir = "Assets/Fonts/Galmuri/";
         const string k_UiDir = "Assets/Resources/UI/";
+        // 설계 09 v0.4: 행동 아이콘(actions.json icon). 실행 중에는 View가 경로로 읽는다
+        const string k_ActionIconDir = "Assets/Resources/Sprites/Actions/";
 
         static readonly Color k_Ink = new Color32(0x2E, 0x23, 0x20, 255);
         static readonly Color k_Muted = new Color32(0x5C, 0x4C, 0x42, 255);
@@ -52,24 +54,57 @@ namespace ZooTycoon.Editor
             Save(root, "TopBarView");
         }
 
-        // ---------- 가게 HUD: 상단 바 아래 왼쪽 "지상으로"(보조 버튼) + 가게 이름 ----------
+        // ---------- 가게 HUD(설계 09): 상단 바 아래 가게 이름 + 아래쪽 60% 조이스틱 영역 + 오른쪽 아래 상호작용 버튼(행동 아이콘) ----------
         static void BakeShopHud()
         {
             GameObject root = Root("ShopHudView");
-            Button back = ButtonUi(root.transform, "BackButton", "btn_secondary", 56 * U, 20 * U, out TextMeshProUGUI backText, "Galmuri11-Bold", 11, k_Ink);
-            RectTransform backRect = back.GetComponent<RectTransform>();
-            Anchor(backRect, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
-            backRect.anchoredPosition = new Vector2(4 * U, -(24 * U));
 
             TextMeshProUGUI title = Text(root.transform, "TitleText", "Galmuri14", 14, k_Cream, TextAlignmentOptions.MidlineLeft);
             Anchor(title.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
             title.rectTransform.sizeDelta = new Vector2(120 * U, 20 * U);
-            title.rectTransform.anchoredPosition = new Vector2(64 * U, -(24 * U));
+            title.rectTransform.anchoredPosition = new Vector2(4 * U, -(24 * U));
+
+            // 조이스틱: 투명 영역(누르는 곳) → 받침(쉬는 자리 = 왼쪽 아래) → 손잡이
+            RectTransform area = Panel(root.transform, "JoystickArea", null, Color.clear);
+            Anchor(area, Vector2.zero, new Vector2(1f, 0.6f), new Vector2(0.5f, 0.5f));
+            area.offsetMin = Vector2.zero;
+            area.offsetMax = Vector2.zero;
+            RectTransform stickBase = Panel(area, "Base", Sprite("joystick_base"), Color.white);
+            Anchor(stickBase, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            stickBase.sizeDelta = new Vector2(44 * U, 44 * U);
+            stickBase.anchoredPosition = new Vector2(-(68 * U), -(60 * U));
+            stickBase.GetComponent<Image>().raycastTarget = false;
+            CanvasGroup group = stickBase.gameObject.AddComponent<CanvasGroup>();
+            group.blocksRaycasts = false;
+            RectTransform knob = Panel(stickBase, "Knob", Sprite("joystick_knob"), Color.white);
+            Anchor(knob, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            knob.sizeDelta = new Vector2(20 * U, 20 * U);
+            knob.GetComponent<Image>().raycastTarget = false;
+            Joystick joystick = area.gameObject.AddComponent<Joystick>();
+            Set(joystick, "m_base", stickBase);
+            Set(joystick, "m_knob", knob);
+            Set(joystick, "m_group", group);
+
+            // 상호작용 버튼: 둥근 바탕 + 가운데 아이콘. 눌림·비활성은 색 틴트
+            RectTransform buttonRect = Panel(root.transform, "InteractButton", Sprite("btn_act"), Color.white);
+            Anchor(buttonRect, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f));
+            buttonRect.sizeDelta = new Vector2(36 * U, 36 * U);
+            buttonRect.anchoredPosition = new Vector2(-(14 * U), 44 * U);
+            Button button = buttonRect.gameObject.AddComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.pressedColor = new Color(0.8f, 0.8f, 0.8f);
+            colors.disabledColor = new Color(0.65f, 0.65f, 0.65f);
+            button.colors = colors;
+            RectTransform icon = Panel(buttonRect, "Icon", AssetDatabase.LoadAssetAtPath<Sprite>(k_ActionIconDir + "open.png"), Color.white);
+            Anchor(icon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            icon.sizeDelta = new Vector2(18 * U, 18 * U);
+            icon.GetComponent<Image>().raycastTarget = false;
 
             ShopHudView view = root.AddComponent<ShopHudView>();
             Set(view, "m_titleText", title);
-            Set(view, "m_backButton", back);
-            Set(view, "m_backText", backText);
+            Set(view, "m_joystick", joystick);
+            Set(view, "m_interactButton", button);
+            Set(view, "m_interactIcon", icon.GetComponent<Image>());
             Save(root, "ShopHudView");
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -6,34 +7,58 @@ using GameKit.UI;
 
 namespace ZooTycoon.UI
 {
-    // 설계 08 → 사물 터치 기획: 가게 HUD는 "지상으로"와 가게 이름만(업그레이드 버튼은 사물 시트로 대체)
+    // 설계 08 → 설계 09: 가게 HUD = 가게 이름 + 조이스틱 + 상호작용 버튼(글자 없이 행동 아이콘. v0.4: 아이콘 경로는 actions.json)
     public sealed class ShopHudView : UIView
     {
-        [SerializeField] private TMP_Text m_titleText;
-        [SerializeField] private Button m_backButton;
-        [SerializeField] private TMP_Text m_backText;
+        private static readonly Color k_DisabledIcon = new Color(1f, 1f, 1f, 0.4f);
 
-        public event Action BackClicked;
+        [SerializeField] private TMP_Text m_titleText;
+        [SerializeField] private Joystick m_joystick;
+        [SerializeField] private Button m_interactButton;
+        [SerializeField] private Image m_interactIcon;
+
+        private readonly Dictionary<string, Sprite> m_icons = new Dictionary<string, Sprite>();
+
+        public event Action<System.Numerics.Vector2> JoystickMoved;
+        public event Action InteractClicked;
 
         private void Awake()
         {
-            m_backButton.onClick.AddListener(BackButton_Clicked);
+            m_interactButton.onClick.AddListener(InteractButton_Clicked);
+            m_joystick.Moved += Joystick_Moved;
         }
 
-        public void SetTexts(string title, string back)
+        public void SetTitle(string title)
         {
             m_titleText.text = title;
-            m_backText.text = back;
         }
 
-        public void SetVisible(bool visible)
+        // iconPath: Resources/ 기준. null이면 아이콘은 그대로 두고 흐리게만
+        public void SetInteract(string iconPath, bool enabled)
         {
-            gameObject.SetActive(visible);
+            if (iconPath != null)
+            {
+                if (!m_icons.TryGetValue(iconPath, out Sprite sprite))
+                {
+                    sprite = Resources.Load<Sprite>(iconPath);
+                    m_icons[iconPath] = sprite;
+                }
+
+                m_interactIcon.sprite = sprite;
+            }
+
+            m_interactIcon.color = enabled ? Color.white : k_DisabledIcon;
+            m_interactButton.interactable = enabled;
         }
 
-        private void BackButton_Clicked()
+        private void InteractButton_Clicked()
         {
-            BackClicked?.Invoke();
+            InteractClicked?.Invoke();
+        }
+
+        private void Joystick_Moved(Vector2 value)
+        {
+            JoystickMoved?.Invoke(new System.Numerics.Vector2(value.x, value.y));
         }
     }
 }

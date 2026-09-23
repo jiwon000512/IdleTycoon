@@ -37,3 +37,7 @@
   <종>_side_raw_{a,b,c}.png = 시트 가운데 자름, <종>_side_{a,b,c}.png = make_pixel.py --px=2 --cells=앞모습 키(펭귄 36·여우 45·고슴도치 38·웜뱃 41) + 그 종 앞모습 팔레트. 비교 https://claude.ai/artifact/7wa842yBREohdDRxdxmcWE (선택 대기).
 - 선택(2026-09-23, 사용자 「여우만 B, 나머지는 추천대로」): 펭귄 A·여우 B·고슴도치 A·웜뱃 B. 발 가운데 = 그림 가운데가 되게 투명 여백(펭귄·고슴도치 오른쪽 3칸, 여우 오른쪽 10칸, 웜뱃 왼쪽 2칸)을 붙여 <종>_side.png, 웜뱃은 ../wombat_side.png(더미 덮어씀).
   숨쉬기·걷기는 두 스크립트의 <종>_side 줄. 펭귄 low 27 foot 33 · 여우 low 33 foot 41 귀 0~9행 tip 3 · 고슴도치 low 26 foot 35 · 웜뱃 low 31 foot 38 귀 0~5행.
+
+오븐 굽기 표시 (2026-09-23)
+- make_bar.py: 칸 편집 시안 3개(A 빵 배지 캡슐 40×12 · B 원형 타이머 20×20 · C 구워지는 빵 28×18칸), 진행 16단계 프레임 가로 시트. 비교 https://claude.ai/artifact/LBgQA8H6UsEWtKLpWwG5mG
+- 선택: B(사용자). oven_timer.png = make_bar.py의 bar_b(20×20칸 × 16프레임, 한 칸 2px). 12시부터 시계 방향으로 주황 부채꼴이 찬다. 게임 반영: 프레임 16장을 ../oven_timer_00~15.png로 잘라 넣고 OvenView가 진행에 맞는 프레임을 고른다(ShopBaker가 Timer 조립). 옛 bar_bg·bar_fill 삭제.

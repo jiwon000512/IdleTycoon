@@ -148,7 +148,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be2cd8a1d1e90724196dca64843dfc37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.WorldView
-  m_branchPrefab: {fileID: 8018213967004442573, guid: e27c47e8792af5c4a87e8ffc447b095e, type: 3}
   m_camera: {fileID: 519420033}
   m_shopPrefab: {fileID: 3832975021042575414, guid: 54489519bab15ab4eaade689f269211f, type: 3}
 --- !u!4 &19269923
@@ -316,8 +315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 218ef6130b29b774cbb2a92570624201, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.CameraPanController
-  m_focus: {x: -0.5, y: 1.25}
-  m_tapMaxMovePixels: 24
+  m_followSeconds: 0.15
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,49 +12,24 @@ namespace ZooTycoon.Data
         private static readonly Regex k_BreadIdPattern = new Regex("^b[0-9]{2}$");
         private static readonly string[] k_ShopUpgradeIds =
             { ShopSim.k_OvenCount, ShopSim.k_OvenSpeed, ShopSim.k_ShelfCapacity, ShopSim.k_CheckoutSpeed };
+        private static readonly string[] k_ActionIds =
+            { ShopSim.k_ActionTakeOut, ShopSim.k_ActionFill, ShopSim.k_ActionServe, ShopSim.k_ActionOpen, ShopSim.k_ActionDig };
+        // 시트를 여는 행동은 버튼으로만
+        private static readonly string[] k_ManualOnlyActionIds = { ShopSim.k_ActionOpen, ShopSim.k_ActionDig };
 
         public static IReadOnlyList<string> Validate(GameTables tables)
         {
             List<string> errors = new List<string>();
 
-            ValidateZooLevels(tables, errors);
             ValidateVisitors(tables, errors);
             ValidateBreads(tables, errors);
             ValidateShopUpgrades(tables, errors);
+            ValidateActions(tables, errors);
+            ValidateInteractables(tables, errors);
             ValidateStrings(tables, errors);
             ValidateConfig(tables, errors);
 
             return errors;
-        }
-
-        private static void ValidateZooLevels(GameTables tables, List<string> errors)
-        {
-            IReadOnlyList<ZooLevelRecord> levels = tables.ZooLevels;
-
-            for (int i = 0; i < levels.Count; i++)
-            {
-                ZooLevelRecord level = levels[i];
-
-                if (level.Level != i + 1)
-                {
-                    errors.Add($"zoo_levels[{i}]: level이 1부터 연속이 아니다(값 {level.Level}).");
-                }
-
-                if (i == 0)
-                {
-                    if (level.RequiredTotalCoins != 0d)
-                    {
-                        errors.Add("zoo_levels: 첫 레벨의 requiredTotalCoins가 0이 아니다.");
-                    }
-
-                    continue;
-                }
-
-                if (level.RequiredTotalCoins <= levels[i - 1].RequiredTotalCoins)
-                {
-                    errors.Add($"zoo_levels[{i}]: requiredTotalCoins가 단조 증가하지 않는다.");
-                }
-            }
         }
 
         private static void ValidateVisitors(GameTables tables, List<string> errors)
@@ -169,6 +144,84 @@ namespace ZooTycoon.Data
             }
         }
 
+        // 설계 09 v0.4: 코드가 아는 행동 5개가 모두 있고, mode가 manual·auto, manual이면 아이콘, 시트 행동은 manual만
+        private static void ValidateActions(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+
+            foreach (ActionRecord action in tables.Actions)
+            {
+                CheckId("actions", action.Id, k_IdPattern, ids, errors);
+
+                if (action.Mode != ActionRecord.k_Manual && action.Mode != ActionRecord.k_Auto)
+                {
+                    errors.Add($"actions '{action.Id}': mode는 manual·auto 중 하나여야 한다.");
+                }
+
+                if (action.Mode == ActionRecord.k_Manual && string.IsNullOrEmpty(action.Icon))
+                {
+                    errors.Add($"actions '{action.Id}': manual 행동은 icon이 있어야 한다.");
+                }
+
+                if (action.IsAuto && System.Array.IndexOf(k_ManualOnlyActionIds, action.Id) >= 0)
+                {
+                    errors.Add($"actions '{action.Id}': 시트를 여는 행동은 manual만 된다.");
+                }
+            }
+
+            foreach (string id in k_ActionIds)
+            {
+                if (!ids.Contains(id))
+                {
+                    errors.Add($"actions: '{id}' 행이 없다.");
+                }
+            }
+        }
+
+        // 설계 09 v0.4: 코드의 사물 종류 5개가 모두 있고, range > 0, actions가 1개 이상이며 모두 actions.json에 있다
+        private static void ValidateInteractables(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+            HashSet<string> actionIds = new HashSet<string>();
+
+            foreach (ActionRecord action in tables.Actions)
+            {
+                actionIds.Add(action.Id);
+            }
+
+            foreach (InteractableRecord element in tables.Interactables)
+            {
+                CheckId("interactables", element.Id, k_IdPattern, ids, errors);
+
+                if (element.Range <= 0d)
+                {
+                    errors.Add($"interactables '{element.Id}': range는 0보다 커야 한다.");
+                }
+
+                if (element.Actions == null || element.Actions.Count == 0)
+                {
+                    errors.Add($"interactables '{element.Id}': actions가 비어 있다.");
+                    continue;
+                }
+
+                foreach (string action in element.Actions)
+                {
+                    if (!actionIds.Contains(action))
+                    {
+                        errors.Add($"interactables '{element.Id}': 행동 '{action}'이 actions.json에 없다.");
+                    }
+                }
+            }
+
+            foreach (string id in Interactable.k_KindIds)
+            {
+                if (!ids.Contains(id))
+                {
+                    errors.Add($"interactables: '{id}' 행이 없다.");
+                }
+            }
+        }
+
         private static void ValidateStrings(GameTables tables, List<string> errors)
         {
             HashSet<string> ids = new HashSet<string>();
@@ -198,11 +251,6 @@ namespace ZooTycoon.Data
                 errors.Add("game_config: offline.maxSeconds가 0 이하다.");
             }
 
-            if (config.Income.TickSeconds <= 0d)
-            {
-                errors.Add("game_config: income.tickSeconds가 0 이하다.");
-            }
-
             GameConfig.ShopConfig shop = config.Shop;
 
             if (shop.ArrivalSeconds <= 0d || shop.CheckoutSeconds <= 0d || shop.HopSeconds <= 0d || shop.PickSeconds < 0d
@@ -215,6 +263,12 @@ namespace ZooTycoon.Data
             if (shop.CellWidth <= 0d || shop.CellHeight <= 0d || shop.EntranceHeight <= 0d || shop.WalkSpeed <= 0d || shop.DigBaseCost <= 0d || shop.DigCostGrowth < 1d)
             {
                 errors.Add("game_config: shop의 cellWidth·cellHeight·entranceHeight·walkSpeed·digBaseCost는 0보다, digCostGrowth는 1 이상이어야 한다.");
+            }
+
+            // 설계 09
+            if (shop.WombatSpeed <= 0d || shop.CarryCapacity < 1)
+            {
+                errors.Add("game_config: shop의 wombatSpeed는 0보다, carryCapacity는 1 이상이어야 한다.");
             }
         }
 

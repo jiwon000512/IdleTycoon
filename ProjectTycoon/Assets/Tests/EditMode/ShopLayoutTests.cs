@@ -66,7 +66,7 @@ namespace ZooTycoon.Tests
             Assert.That(shop.Layout.ShelfFacing(new Cell(-1, 1), spots[0]), Is.EqualTo(Facing.Left));
         }
 
-        // 입구 → 진열대, 진열대 → 줄 머리, 줄 머리 → 입구, 웜뱃 → 오븐 모두 이어지고 가로·세로로만 걷는다
+        // 입구 → 진열대, 진열대 → 줄 머리, 줄 머리 → 입구 모두 이어지고 가로·세로로만 걷는다
         [Test]
         public void Paths_BetweenKeyPoints_ExistAndAreAxisAligned()
         {
@@ -78,8 +78,6 @@ namespace ZooTycoon.Tests
                 (layout.HoleFloor, spot),
                 (spot, layout.QueueSlots[0]),
                 (layout.QueueSlots[0], layout.HoleFloor),
-                (layout.WombatHome, layout.OvenSpot(new Cell(-1, 3))),
-                (layout.OvenSpot(new Cell(-1, 3)), layout.WombatHome),
             };
 
             foreach ((Vector2 from, Vector2 to) in trips)
@@ -97,29 +95,17 @@ namespace ZooTycoon.Tests
             }
         }
 
-        // 웜뱃은 계산대를 뚫지 않는다: 길 위 점이 계산대 그림 사각형 안에 들어가지 않는다
+        // 설계 09: 웜뱃 자리는 웜뱃만 드나들고 계산대는 둘 다 막힌다
         [Test]
-        public void WombatPath_ToOvenAboveCounter_GoesAroundCounter()
+        public void WombatNav_OpensWombatHomeOnly()
         {
-            ShopSim shop = Create();
-            ShopLayout layout = shop.Layout;
-            Vector2 counter = layout.CounterBase;
-            List<Vector2> path = layout.Nav.FindPath(layout.WombatHome, layout.CellCenter(new Cell(0, 1)));
-            Vector2 p = layout.WombatHome;
+            ShopLayout layout = Create().Layout;
+            Vector2 counter = layout.CounterBase + new Vector2(0f, 0.25f);
 
-            Assert.That(path, Is.Not.Empty);
-
-            foreach (Vector2 q in path)
-            {
-                for (float t = 0f; t <= 1f; t += 0.02f)
-                {
-                    Vector2 s = Vector2.Lerp(p, q, t);
-                    bool inCounter = Math.Abs(s.X - counter.X) < 1.05f && s.Y > counter.Y && s.Y < counter.Y + 0.725f;
-                    Assert.That(inCounter, Is.False, $"계산대 안 {s}");
-                }
-
-                p = q;
-            }
+            Assert.That(layout.WombatNav.IsWalkable(layout.WombatHome), Is.True);
+            Assert.That(layout.Nav.IsWalkable(layout.WombatHome), Is.False);
+            Assert.That(layout.WombatNav.IsWalkable(counter), Is.False);
+            Assert.That(layout.Nav.IsWalkable(counter), Is.False);
         }
     }
 }

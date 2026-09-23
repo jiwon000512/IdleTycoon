@@ -12,6 +12,8 @@ namespace ZooTycoon.Editor
     {
         const string k_Dir = "Assets/Sprites/UI/";
         const string k_WorldTag = "Assets/Sprites/World/Shop/tag_cost.png";
+        // 설계 09 v0.4: 행동 아이콘(actions.json icon 경로). UI와 같은 PPU, 9-slice 없음
+        const string k_ActionDir = "Assets/Resources/Sprites/Actions";
         const float k_UiPpu = 25f;
         const float k_WorldPpu = 40f;
 
@@ -30,6 +32,11 @@ namespace ZooTycoon.Editor
             foreach (KeyValuePair<string, Slice> pair in slices)
             {
                 Import(k_Dir + pair.Key + ".png", pair.Value.border, k_UiPpu);
+            }
+
+            foreach (string path in Directory.GetFiles(k_ActionDir, "*.png"))
+            {
+                Import(path.Replace(Path.DirectorySeparatorChar, '/'), null, k_UiPpu);
             }
 
             File.Copy(k_Dir + "tag_cost.png", k_WorldTag, true);

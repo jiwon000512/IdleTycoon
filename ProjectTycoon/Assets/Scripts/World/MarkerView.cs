@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 굴 격자 설계 v0.5: 칸 위 표시(파기 비용 태그·빈 자리 점선). 글자 하나와 탭 판정 영역(m_body)만 갖는다
+    // 굴 격자 설계 v0.5: 칸 위 표시(파기 비용 태그·빈 자리 점선). 글자 하나와 튀는 몸체(m_body)만 갖는다
     public sealed class MarkerView : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer m_body;
@@ -13,12 +13,6 @@ namespace ZooTycoon.World
         {
             m_text.text = text;
             gameObject.SetActive(true);
-        }
-
-        public bool Contains(Vector3 world)
-        {
-            Bounds bounds = m_body.bounds;
-            return world.x >= bounds.min.x && world.x <= bounds.max.x && world.y >= bounds.min.y && world.y <= bounds.max.y;
         }
 
         public void Bounce()

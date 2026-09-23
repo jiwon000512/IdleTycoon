@@ -1,6 +1,6 @@
 {
   "table": "strings",
-  "version": 8,
+  "version": 9,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -10,12 +10,12 @@
     "version 5 (2026-09-23, 연출 1차): topbar_level·topbar_progress·topbar_progress_max 삭제(상단 바는 코인만), coin_popup·oven_busy_* 추가.",
     "version 6 (2026-09-23, 사물 터치 시트): 업그레이드 버튼·팝업 2개 키 삭제(shop_upgrade·popup_close·bake_*·upgrade_*·unlock_row·oven_busy_*), 사물 시트 키(sheet_*·chip_*·row_*·tag_*) 추가.",
     "version 7 (2026-09-23, 굴 격자 설계 v0.5): 잠긴 진열대·오븐 키(sheet_locked_*·tag_unlock·tag_oven) 삭제, 굴 파기·빈 자리 시트 키(sheet_dig_*·sheet_slot_*·row_dig*·tag_dig·tag_slot) 추가, row_unlock 문구 변경.",
-    "version 8 (2026-09-23, 손님 동선 설계 v0.2): emote_happy(결제 뒤 머리 위 하트) 추가."
+    "version 8 (2026-09-23, 손님 동선 설계 v0.2): emote_happy(결제 뒤 머리 위 하트) 추가.",
+    "version 9 (2026-09-23, 설계 09 웜뱃 조작): 지상 폐기로 shop_back, 심부름 폐기로 sheet_oven_errand 삭제. 상호작용 버튼은 아이콘이라 새 키 없음."
   ],
   "rows": [
     { "id": "topbar_coins", "ko": "{0}" },
     { "id": "shop_title_bakery", "ko": "빵집" },
-    { "id": "shop_back", "ko": "지상으로" },
     { "id": "coin_popup", "ko": "+{0}" },
     { "id": "sheet_shelf_title", "ko": "{0} 진열대" },
     { "id": "sheet_shelf_status", "ko": "재고 {0}/{1}" },
@@ -23,7 +23,6 @@
     { "id": "sheet_oven_empty", "ko": "비어 있음" },
     { "id": "sheet_oven_baking", "ko": "{0} 굽는 중 · {1}초" },
     { "id": "sheet_oven_full", "ko": "진열대 가득" },
-    { "id": "sheet_oven_errand", "ko": "심부름 중" },
     { "id": "sheet_counter_title", "ko": "계산대" },
     { "id": "sheet_counter_status", "ko": "손님 {0}명 대기" },
     { "id": "chip_bread", "ko": "{0}" },

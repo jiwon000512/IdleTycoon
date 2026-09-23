@@ -10,12 +10,6 @@ namespace ZooTycoon.World
 
         public ShopWombat Wombat => m_wombat;
 
-        public bool Contains(Vector3 world)
-        {
-            Bounds bounds = m_body.bounds;
-            return world.x >= bounds.min.x && world.x <= bounds.max.x && world.y >= bounds.min.y && world.y <= bounds.max.y;
-        }
-
         public void Bounce()
         {
             StartCoroutine(Fx.Bounce(m_body.transform));

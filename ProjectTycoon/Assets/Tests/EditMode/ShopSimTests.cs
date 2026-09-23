@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 설계 08 v0.5 · 손님 동선 설계 v0.2 검증 3: 매 프레임 틱(0.02초)으로 돌린다. 실제 JSON 값(도착 4 · 걷기 2.2/초 · 톡 0.3 · 집기 0.4 ·
+    // 설계 08 v0.5 · 손님 동선 설계 v0.2 검증 3 · 설계 09 검증 1~4: 매 프레임 틱(0.02초)으로 돌린다. 실제 JSON 값(도착 4 · 걷기 2.2/초 · 톡 0.3 · 집기 0.4 ·
     // 두리번 2 · 인내 6 · 계산 1.5 · 식빵 8초 6개 10코인 가중치 3 · 크루아상 15초 4개 25코인 가중치 2). 걷는 시간은 A* 길 길이 ÷ 2.2
     public sealed class ShopSimTests
     {
@@ -16,12 +17,32 @@ namespace ZooTycoon.Tests
         private GameConfig.ShopConfig m_config;
         private double m_time;
 
-        private ShopSim Create(Action<GameConfig.ShopConfig> tweak = null)
+        // actionModes: 행동 id → mode 덮어쓰기, ranges: 사물 id → range 덮어쓰기(설계 09 v0.4 표 바꾸기)
+        private ShopSim Create(Action<GameConfig.ShopConfig> tweak = null, Dictionary<string, string> actionModes = null, Dictionary<string, double> ranges = null)
         {
             GameConfig config = TestTables.LoadConfig();
             m_config = config.Shop;
             tweak?.Invoke(config.Shop);
-            GameTables tables = TestTables.Build(config: config);
+            List<ActionRecord> actions = TestTables.LoadRows<ActionRecord>("actions");
+            List<InteractableRecord> interactables = TestTables.LoadRows<InteractableRecord>("interactables");
+
+            foreach (ActionRecord action in actions)
+            {
+                if (actionModes != null && actionModes.TryGetValue(action.Id, out string mode))
+                {
+                    action.Mode = mode;
+                }
+            }
+
+            foreach (InteractableRecord element in interactables)
+            {
+                if (ranges != null && ranges.TryGetValue(element.Id, out double range))
+                {
+                    element.Range = range;
+                }
+            }
+
+            GameTables tables = TestTables.Build(actions: actions, interactables: interactables, config: config);
             m_state = ZooState.CreateNew(config);
             m_time = 0d;
             return new ShopSim(m_state, tables, new SequenceRandom(new double[200]));
@@ -54,15 +75,62 @@ namespace ZooTycoon.Tests
             return m_time;
         }
 
-        // 손님을 막아 두고 빵을 채운다
+        // 조이스틱으로 웜뱃을 끈다: 웜뱃 자리 높이까지 세로 → 가로 → 세로(계산대를 돌아가는 길). 닿으면 손을 뗀다
+        private void WalkTo(ShopSim shop, Vector2 target)
+        {
+            float homeY = shop.Layout.WombatHome.Y;
+            Steer(shop, new Vector2(shop.WombatPosition.X, homeY));
+            Steer(shop, new Vector2(target.X, homeY));
+            Steer(shop, target);
+            shop.SetWombatInput(Vector2.Zero);
+        }
+
+        private void Steer(ShopSim shop, Vector2 point)
+        {
+            float stepLength = (float)(m_config.WombatSpeed * k_Dt);
+
+            RunUntil(shop, () =>
+            {
+                Vector2 delta = point - shop.WombatPosition;
+                float distance = delta.Length();
+                shop.SetWombatInput(distance < 1e-3f ? Vector2.Zero : delta / distance * Math.Min(1f, distance / stepLength));
+                return distance < 0.05f;
+            }, 20d);
+        }
+
+        // 진열대 앞(아래)·오븐 위: 설계 09 대상 거리(1.3) 안에서 그 사물이 가장 가까운 곳
+        private static Vector2 ShelfStand(ShopSim shop, Cell cell)
+        {
+            return shop.Layout.ShelfBase(cell) - new Vector2(0f, 0.55f);
+        }
+
+        private static Vector2 OvenStand(ShopSim shop, Cell cell)
+        {
+            return shop.Layout.OvenBase(cell) + new Vector2(0f, 1.05f);
+        }
+
+        // 손님을 막아 두고 굽기 → 꺼내기 → 채우기 → 계산대 자리로 돌아오기
         private void Stock(ShopSim shop, string breadId, int count)
         {
             int before = m_config.MaxCustomers;
             m_config.MaxCustomers = 0;
-            int oven = shop.OvenAt(new Cell(-1, 3));
+            Cell ovenCell = new Cell(-1, 3);
+            int oven = shop.OvenAt(ovenCell);
             Assert.That(shop.TryBake(oven, breadId), Is.True);
-            RunUntil(shop, () => shop.Stock(breadId) >= count && shop.WombatAtCounter);
+            RunUntil(shop, () => shop.Ovens[oven].Ready > 0);
+            CarryToShelf(shop, ovenCell, breadId);
+            WalkTo(shop, shop.Layout.WombatHome);
+            Assert.That(shop.Stock(breadId), Is.GreaterThanOrEqualTo(count));
             m_config.MaxCustomers = before;
+        }
+
+        // 꺼내기는 버튼, 채우기는 진열대 range에 들어가면 저절로(설계 09 v0.4)
+        private void CarryToShelf(ShopSim shop, Cell ovenCell, string breadId)
+        {
+            WalkTo(shop, OvenStand(shop, ovenCell));
+            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionTakeOut));
+            Assert.That(shop.TryInteract(), Is.True);
+            WalkTo(shop, ShelfStand(shop, shop.ShelfCell(breadId)));
         }
 
         private static float PathSeconds(ShopSim shop, Vector2 from, Vector2 to, double speed)
@@ -232,7 +300,10 @@ namespace ZooTycoon.Tests
 
             RunUntil(shop, () => customer != null && customer.Phase == CustomerPhase.Looking);
             Assert.That(shop.TryBake(0, "b01"), Is.True);
-            double stockedAt = RunUntil(shop, () => shop.Ovens[0].Remaining <= 0d || picked >= 0d);
+            RunUntil(shop, () => shop.Ovens[0].Ready > 0);
+            double stockedAt = -1d;
+            shop.StockChanged += _ => stockedAt = stockedAt < 0d ? m_time : stockedAt;
+            CarryToShelf(shop, new Cell(-1, 3), "b01");
             RunUntil(shop, () => picked >= 0d);
 
             Assert.That(picked - stockedAt, Is.LessThan(k_Tolerance));
@@ -261,34 +332,49 @@ namespace ZooTycoon.Tests
             Assert.That(Vector2.Distance(second.Position, shop.Layout.QueueSlots[0]), Is.LessThan(0.01f));
         }
 
+        // 설계 09: 다 구운 빵은 저절로 진열되지 않고, 꺼내면 오븐이 비어 다시 구울 수 있다
         [Test]
-        public void Oven_WhenShelfFull_KeepsRestAndCannotBake()
+        public void TakeOut_EmptiesOvenAndAllowsBakeAgain()
+        {
+            ShopSim shop = Create(c => c.MaxCustomers = 0);
+            Assert.That(shop.TryBake(0, "b01"), Is.True);
+            Assert.That(shop.TryBake(0, "b01"), Is.False);
+
+            RunUntil(shop, () => shop.Ovens[0].Ready == 6);
+            Run(shop, 1d);
+            Assert.That(shop.Stock("b01"), Is.EqualTo(0));
+            Assert.That(shop.TryBake(0, "b01"), Is.False);
+
+            WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+            Assert.That(shop.TryInteract(), Is.True);
+            Assert.That(shop.CarriedCount, Is.EqualTo(6));
+            Assert.That(shop.Carried.Id, Is.EqualTo("b01"));
+            Assert.That(shop.Ovens[0].IsEmpty, Is.True);
+            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionOpen));
+            Assert.That(shop.TryBake(0, "b01"), Is.True);
+        }
+
+        // 설계 09 v0.4: 진열대 range에 들어가면 버튼 없이 자리만큼 내려놓고 남은 건 계속 든다. 진열대 버튼은 시트 열기
+        [Test]
+        public void Fill_AutoOnEnteringRange_PutsShelfSpaceAndKeepsRest()
         {
             ShopSim shop = Create(c =>
             {
                 c.MaxCustomers = 0;
                 c.ShelfCapacity = 4;
             });
+            int carryChanged = 0;
+            shop.CarryChanged += () => carryChanged++;
             shop.TryBake(0, "b01");
+            RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
-            RunUntil(shop, () => shop.Ovens[0].Ready > 0 && shop.WombatAtCounter);
+            CarryToShelf(shop, new Cell(-1, 3), "b01");
 
             Assert.That(shop.Stock("b01"), Is.EqualTo(4));
-            Assert.That(shop.Ovens[0].Ready, Is.EqualTo(2));
-            Assert.That(shop.TryBake(0, "b01"), Is.False);
-        }
-
-        [Test]
-        public void Oven_WhenAllMoved_IsEmptyAgain()
-        {
-            ShopSim shop = Create(c => c.MaxCustomers = 0);
-            Assert.That(shop.TryBake(0, "b01"), Is.True);
-            Assert.That(shop.TryBake(0, "b01"), Is.False);
-
-            RunUntil(shop, () => shop.Ovens[0].IsEmpty && shop.WombatAtCounter);
-
-            Assert.That(shop.Stock("b01"), Is.EqualTo(6));
-            Assert.That(shop.TryBake(0, "b01"), Is.True);
+            Assert.That(shop.CarriedCount, Is.EqualTo(2));
+            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionOpen));
+            Assert.That(shop.TryInteract(), Is.False);
+            Assert.That(carryChanged, Is.EqualTo(2));
         }
 
         [Test]
@@ -365,59 +451,158 @@ namespace ZooTycoon.Tests
             shop.TryUpgrade(ShopSim.k_OvenSpeed);
             shop.TryUpgrade(ShopSim.k_ShelfCapacity);
             shop.TryBake(0, "b01");
-            double started = RunUntil(shop, () => shop.Ovens[0].Started);
-            double done = RunUntil(shop, () => shop.Stock("b01") == 6);
+            double done = RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
-            // 굽기 8초 ÷ 1.2배
-            Assert.That(done - started, Is.EqualTo(8d / 1.2d).Within(k_Tolerance));
+            // 굽기 8초 ÷ 1.2배. 시트에서 고르는 즉시 시작한다
+            Assert.That(done, Is.EqualTo(8d / 1.2d).Within(k_Tolerance));
             Assert.That(shop.ShelfCapacity, Is.EqualTo(12));
         }
 
-        // 웜뱃이 A* 길로 오븐 옆에 닿아야 굽기가 시작되고, 같은 길로 돌아온다. 그동안 다른 굽기는 못 한다
+        // 설계 09 검증 1: 조이스틱 방향으로 wombatSpeed만큼 걷고, 벽을 대각선으로 밀면 벽을 따라 미끄러진다
         [Test]
-        public void Errand_BakingStartsWhenWombatReachesOven()
+        public void Wombat_Input_MovesAtSpeedAndSlidesAlongWall()
         {
             ShopSim shop = Create(c => c.MaxCustomers = 0);
-            m_state.AddCoins(10000d);
-            Assert.That(shop.TryAddOven(new Cell(0, 3)), Is.True);
-            Vector2 spot = shop.Layout.OvenSpot(new Cell(-1, 3));
-            double walk = PathSeconds(shop, shop.Layout.WombatHome, spot, m_config.WalkSpeed);
+            Vector2 home = shop.Layout.WombatHome;
 
-            Assert.That(shop.TryBake(0, "b01"), Is.True);
-            Assert.That(shop.WombatAtCounter, Is.False);
-            Assert.That(shop.TryBake(1, "b01"), Is.False);
+            shop.SetWombatInput(new Vector2(1f, 0f));
+            Run(shop, 0.5d);
+            Assert.That(shop.WombatPosition.X - home.X, Is.EqualTo((float)(m_config.WombatSpeed * 0.5d)).Within(0.25f));
+            Assert.That(shop.WombatFacing, Is.EqualTo(Facing.Right));
 
-            double started = RunUntil(shop, () => shop.Ovens[0].Started);
-            Assert.That(started, Is.EqualTo(walk).Within(k_Tolerance));
-            Assert.That(Vector2.Distance(shop.WombatPosition, spot), Is.LessThan(0.01f));
+            Run(shop, 3d);
+            float wallX = shop.WombatPosition.X;
+            Assert.That(shop.WombatMoving, Is.False);
 
-            double back = RunUntil(shop, () => shop.WombatAtCounter);
-            Assert.That(back - started, Is.EqualTo(walk).Within(k_Tolerance * 2));
-            Assert.That(Vector2.Distance(shop.WombatPosition, shop.Layout.WombatHome), Is.LessThan(0.01f));
-            Assert.That(shop.TryBake(1, "b01"), Is.True);
+            shop.SetWombatInput(new Vector2(1f, 1f));
+            Run(shop, 0.5d);
+            Assert.That(shop.WombatPosition.X, Is.EqualTo(wallX).Within(0.05f));
+            Assert.That(shop.WombatPosition.Y, Is.GreaterThan(home.Y + 0.5f));
+            Assert.That(shop.WombatMoving, Is.True);
+            Assert.That(shop.WombatFacing, Is.EqualTo(Facing.Up));
         }
 
+        // 설계 09 검증 2: 거리 안의 가장 가까운 사물이 대상이고, 바뀔 때만 알린다. 벽 옆이면 그 흙 칸
         [Test]
-        public void Errand_PausesCheckoutUntilWombatReturns()
+        public void Target_NearestInRange_ChangesOnlyWhenDifferent()
+        {
+            ShopSim shop = Create(c => c.MaxCustomers = 0);
+            Assert.That(shop.Target.Value.Kind, Is.EqualTo(InteractKind.Counter));
+            int changed = 0;
+            shop.TargetChanged += () => changed++;
+
+            Run(shop, 1d);
+            Assert.That(changed, Is.EqualTo(0));
+
+            WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+            Assert.That(shop.Target, Is.EqualTo(new Interactable(InteractKind.Oven, new Cell(-1, 3), 0)));
+            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionOpen));
+
+            WalkTo(shop, new Vector2(1.69f, shop.Layout.WombatHome.Y));
+            Assert.That(shop.Target, Is.Null);
+            Assert.That(shop.TargetAction, Is.Null);
+            Assert.That(shop.TryInteract(), Is.False);
+
+            WalkTo(shop, new Vector2(3f, shop.Layout.CellCenter(new Cell(0, 3)).Y));
+            Assert.That(shop.Target, Is.EqualTo(new Interactable(InteractKind.Dig, new Cell(1, 3))));
+            Assert.That(changed, Is.GreaterThanOrEqualTo(3));
+        }
+
+        // 설계 09 검증 4: 웜뱃이 계산대 자리를 비우면 줄 머리 계산이 멈추고, 돌아오면 이어서 계산한다
+        [Test]
+        public void Checkout_PausesWhileWombatAwayFromCounter()
         {
             ShopSim shop = Create(c => c.ArrivalSeconds = 1000d);
             Stock(shop, "b01", 6);
-            m_state.AddCoins(10000d);
-            Assert.That(shop.TryAddOven(new Cell(0, 3)), Is.True);
             Customer customer = null;
             shop.CustomerArrived += c => customer = c;
             RunUntil(shop, () => customer != null && customer.Phase == CustomerPhase.Queued);
 
-            // 줄 머리에 선 손님을 두고 계산대 아래 오븐(왕복 약 2.2초)으로 심부름을 보낸다
             double coins = m_state.Coins;
-            Assert.That(shop.TryBake(1, "b01"), Is.True);
-            Run(shop, m_config.CheckoutSeconds + 0.1d);
+            WalkTo(shop, new Vector2(1.69f, shop.Layout.WombatHome.Y));
             Assert.That(shop.WombatAtCounter, Is.False);
+            Run(shop, m_config.CheckoutSeconds + 0.1d);
             Assert.That(m_state.Coins, Is.EqualTo(coins));
 
-            double back = RunUntil(shop, () => shop.WombatAtCounter);
+            WalkTo(shop, shop.Layout.WombatHome);
+            double back = m_time;
             double paid = RunUntil(shop, () => m_state.Coins > coins);
-            Assert.That(paid - back, Is.EqualTo(m_config.CheckoutSeconds).Within(k_Tolerance));
+            Assert.That(paid - back, Is.LessThanOrEqualTo(m_config.CheckoutSeconds + k_Tolerance));
+        }
+
+        // 설계 09 v0.4 검증 1: 진열대 앞에 서 있는 동안 손님이 집어 자리가 나면 든 빵으로 또 채운다
+        [Test]
+        public void Fill_WhileStanding_RefillsWhenCustomerPicks()
+        {
+            ShopSim shop = Create(c =>
+            {
+                c.ShelfCapacity = 4;
+                c.ArrivalSeconds = 1000d;
+                c.PatienceSeconds = 100d;
+            });
+            double picked = -1d;
+            shop.CustomerPicked += c => picked = m_time;
+            shop.TryBake(0, "b01");
+            RunUntil(shop, () => shop.Ovens[0].Ready > 0);
+
+            CarryToShelf(shop, new Cell(-1, 3), "b01");
+            RunUntil(shop, () => picked >= 0d);
+            Run(shop, 0.1d);
+
+            Assert.That(shop.Stock("b01"), Is.EqualTo(4));
+            Assert.That(shop.CarriedCount, Is.EqualTo(1));
+        }
+
+        // 설계 09 v0.4 검증 2: 버튼 대상이 더 가까운 오븐이어도 range 안 진열대는 저절로 채운다
+        [Test]
+        public void Fill_AutoEvenWhenOvenIsTheTarget()
+        {
+            ShopSim shop = Create(c => c.MaxCustomers = 0, ranges: new Dictionary<string, double> { ["shelf"] = 6d });
+            shop.TryBake(0, "b01");
+            RunUntil(shop, () => shop.Ovens[0].Ready > 0);
+
+            WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+            Assert.That(shop.TryInteract(), Is.True);
+            Run(shop, 0.1d);
+
+            Assert.That(shop.Target.Value.Kind, Is.EqualTo(InteractKind.Oven));
+            Assert.That(shop.Stock("b01"), Is.EqualTo(6));
+            Assert.That(shop.CarriedCount, Is.EqualTo(0));
+        }
+
+        // 설계 09 v0.4 검증 3: serve를 manual로 바꾸면 타이머가 흐르지 않고 버튼 한 번에 계산된다
+        [Test]
+        public void Serve_Manual_PaysHeadOnlyOnButton()
+        {
+            ShopSim shop = Create(c => c.ArrivalSeconds = 1000d, new Dictionary<string, string> { ["serve"] = ActionRecord.k_Manual });
+            Stock(shop, "b01", 6);
+            Customer customer = null;
+            shop.CustomerArrived += c => customer = c;
+            RunUntil(shop, () => customer != null && customer.Phase == CustomerPhase.Queued && !customer.Moving);
+
+            double coins = m_state.Coins;
+            Run(shop, m_config.CheckoutSeconds + 0.5d);
+            Assert.That(m_state.Coins, Is.EqualTo(coins));
+            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionServe));
+
+            Assert.That(shop.TryInteract(), Is.True);
+            Assert.That(m_state.Coins, Is.EqualTo(coins + 10d));
+            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionOpen));
+        }
+
+        // 설계 09 v0.4 검증 4: take_out을 auto로 바꾸면 오븐 range에 들어가기만 해도 꺼낸다
+        [Test]
+        public void TakeOut_Auto_OnEnteringOvenRange()
+        {
+            ShopSim shop = Create(c => c.MaxCustomers = 0, new Dictionary<string, string> { ["take_out"] = ActionRecord.k_Auto });
+            shop.TryBake(0, "b01");
+            RunUntil(shop, () => shop.Ovens[0].Ready > 0);
+
+            WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+
+            Assert.That(shop.CarriedCount, Is.EqualTo(6));
+            Assert.That(shop.Ovens[0].IsEmpty, Is.True);
+            Assert.That(shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionOpen));
         }
     }
 }
