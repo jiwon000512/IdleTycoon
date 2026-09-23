@@ -1,0 +1,14 @@
+Chunky pixel art game sprite, exactly the same character and art style as the attached reference images.
+Style rules:
+- large blocky pixels on a roughly 40x40 pixel grid, crisp square pixels, no anti-aliasing, no blur
+- thick dark brown outline (about 2 pixels wide) around the whole silhouette, same outline color as the references
+- the same soft, low-saturation cream and pink palette as the references, only 5-7 flat colors, no gradients, no dithering
+- one flat shadow tone on the lower belly and far limbs, one small white highlight stroke on the top of the head
+- the camera looks down from about 30 degrees above, the same camera as the references
+- plain solid white background, no ground, no shadow on the ground, no text, no border, no watermark
+
+Reference image 1 shows this rabbit from the FRONT: it stands UPRIGHT on its two hind legs like a little person, the body is taller than wide, and its two tiny front paws are held up in front of its belly.
+Reference image 2 shows the SIDE PROFILE we chose (one dot eye, pink cheek, nose at the right edge of the head, long ears up, round tail), but in image 2 the body is stretched sideways so it looks like it stands on four legs. That pose is WRONG.
+
+Draw the same rabbit in a strict side profile facing RIGHT with the face exactly like image 2, but standing UPRIGHT on its two hind legs like image 1: body vertical and taller than wide, head slightly raised and cheerful, the near tiny front paw raised a little higher and forward in front of the chest as if it is happily walking, the two hind feet at the very bottom, the round tail at the lower back on the left. Same height as image 1.
+Save the image as rabbit_side2_raw_b.png in the current working directory and reply with only the path.

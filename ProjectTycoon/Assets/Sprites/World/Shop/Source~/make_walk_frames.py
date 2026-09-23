@@ -17,6 +17,7 @@ SPEC = {
     'wombat_back': {'low': 36, 'lean': 9, 'foot': 42, 'left': (8, 16), 'right': (25, 33), 'ear': 5, 'ears': [(4, 12), (29, 37)]},
     'rabbit_front': {'dir': '', 'low': 36, 'foot': 39, 'left': (7, 12), 'right': (15, 20), 'ear': 12, 'tip': 6, 'ears': [(2, 12), (15, 25)]},
     'rabbit_back': {'dir': '', 'low': 23, 'foot': 36, 'left': (7, 12), 'right': (15, 20), 'ear': 11, 'tip': 5, 'ears': [(3, 12), (15, 24)]},
+    'rabbit_side': {'dir': '', 'low': 32, 'foot': 39, 'left': (8, 15), 'right': (16, 19), 'ear': 14, 'tip': 6, 'ears': [(7, 20)]},
     'penguin_front': {'dir': '', 'low': 27, 'foot': 32, 'left': (10, 15), 'right': (21, 26), 'ear': 0, 'ears': []},
     'penguin_back': {'dir': '', 'low': 27, 'foot': 32, 'left': (10, 15), 'right': (21, 26), 'ear': 0, 'ears': []},
     'fox_front': {'dir': '', 'low': 33, 'foot': 42, 'left': (18, 23), 'right': (28, 33), 'ear': 5, 'tip': 3, 'ears': [(11, 22), (29, 39)]},

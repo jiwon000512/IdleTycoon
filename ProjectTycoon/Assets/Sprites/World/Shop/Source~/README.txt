@@ -25,4 +25,11 @@
 - rabbit_side_raw_{a,b,c}.png: rabbit_front_raw.png를 참조로 Codex가 뽑은 오른쪽 보는 옆모습 3장(A 완전 옆 · B 살짝 비스듬 · C 몸은 옆 얼굴은 정면). 프롬프트는 side_prompt_{a,b,c}.txt.
 - rabbit_side_{a,b,c}.png = make_pixel.py --px=2 --cells=42 뒤 앞모습(rabbit_front.png) 5색 팔레트로 가장 가까운 색 맞춤. 비교 페이지 https://claude.ai/artifact/VBBmUmkPzaepNfdyeYL3sR (선택 대기).
 - 게임은 지금 옆모습 자리에 앞모습 사본(더미)을 쓴다: Resources/Sprites/Visitors/<종>/<종>_SideIdle·_SideMove, Sprites/World/Shop/wombat_side*. 고른 결로 5종을 만들어 같은 이름에 덮어쓴다.
-
+- 2차(2026-09-23, 사용자: 「A인데 두 발로 걸어다니게. 앞모습은 앞발을 들고 있는데 옆모습 A는 네 발로 서 있는 듯」): rabbit_side2_raw_{a,b,c}.png = 앞모습 원본 + 1차 A 두 장을 참조로 뽑은 두 발 서기(A2 앞발 모으기 · B2 고개 들고 앞발 앞으로 · C2 한 발 내디딘 걸음). 프롬프트 side2_prompt_{a,b,c}.txt.
+  rabbit_side2_{a,b,c}.png = make_pixel.py --px=2 --cells=42 + 앞모습 팔레트. 숨쉬기·걷기 미리보기는 preview_side_frames.py(칸 지도를 보고 정한 SPEC을 인자로. A2: low 37 foot 39 발 (5,10)·(11,14) 귀 0~12행 (1,16)).
+- 3차(2026-09-23, 사용자: 「앞·뒷모습은 위 30도인데 옆모습은 정확히 옆에서 만든 느낌이라 비율이 안 맞아」): 2차 프롬프트의 "body taller than wide · round head on a round body"가 눈높이 비율(폭 22칸, 눈 20줄)을 만들었다. 공통 카메라 문단(한 덩어리·낮은 얼굴·짧은 몸, 목·긴 몸통·작은 머리 금지)을 넣고 방식만 셋으로:
+  A 턴어라운드 = side3_sheet_in.png(앞·뒷모습 격자 ×6을 같은 바닥선에 놓고 가운데를 비운 시트)를 채우게 한 뒤 가운데 캐릭터만 잘라 rabbit_side3_raw_a.png · B 앞·뒤 원본 참조 + 카메라 설명 · C 앞모습만 주고 턴테이블로 90도. 프롬프트 side3_prompt_{a,b,c}.txt.
+  rabbit_side3_{a,b,c}.png = make_pixel.py --px=2 --cells=42 + 앞모습 팔레트(셋 다 28×42칸, 눈 24~25줄로 앞모습과 같음). A·C는 눈만 2×2 점으로 칸 편집(A (22,25) 추가, C (21,24)(20,25)(20,26) 지움).
+  미리보기 SPEC: A low 32 foot 39 발 (8,15)·(16,19) 귀 0~14행 (7,20) / B low 31 foot 39 발 (10,16)·(17,20) 귀 0~15행 (5,21) / C low 35 foot 39 발 (9,15)·(16,21) 귀 0~15행 (7,22).
+- 선택(2026-09-23): 3차 A. 사용자 「입을 좀 더 짧게, 너무 길게 나왔어」 → 턱 밑 입선 (20,28)(20,29)(21,29)를 볼 색으로 지워 2칸만 남김. 「볼 도트가 ㅜ처럼」 → 볼을 앞모습처럼 위 2칸(19~20,27)·아래 3칸(18~20,28)으로. 이것이 rabbit_side.png(= rabbit_side3_a.png).
+  rabbit_side_{1,2,3}.png·rabbit_side_walk_{0..3}.png = make_breath_frames.py·make_walk_frames.py의 rabbit_side 줄(low 32, foot 39, 발 (8,15)·(16,19), 귀 0~14행 (7,20), 걷기 갸웃은 tip 6). make_visitor_sheets.py가 _side.png가 있는 종만 Side 시트를 묶는다(나머지 종은 더미 유지).

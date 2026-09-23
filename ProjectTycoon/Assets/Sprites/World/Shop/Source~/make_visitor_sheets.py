@@ -21,7 +21,9 @@ def sheet(names, out):
 for name, folder in (('rabbit', 'Rabbit'), ('penguin', 'Penguin'), ('fox', 'Fox'), ('hedgehog', 'Hedgehog')):
     os.makedirs(OUT + folder, exist_ok=True)
     Image.open(f'{name}_front.png').save(f'{OUT}{folder}/{folder}.png')
-    for side, tag in (('front', ''), ('back', 'Back')):
+    for side, tag in (('front', ''), ('back', 'Back'), ('side', 'Side')):
+        if not os.path.exists(f'{name}_{side}.png'):
+            continue  # 옆모습이 아직 없는 종은 더미 시트(앞모습 사본)를 그대로 둔다
         sheet([f'{name}_{side}'] + [f'{name}_{side}_{i}' for i in (1, 2, 3)], f'{folder}/{folder}_{tag}Idle.png')
         sheet([f'{name}_{side}_walk_{i}' for i in range(4)], f'{folder}/{folder}_{tag}Move.png')
     print(folder)
