@@ -35,6 +35,11 @@ namespace ZooTycoon.Core
         private const float k_SideOffset = 1.1f;
         private const float k_FrontOffsetX = 0.55f;
         private const float k_FrontOffsetY = 0.7f;
+        // 재고 표지판(2026-09-24): 진열대 벽 쪽 앞 모서리의 발끝. 옆으로 53px(PPU 80, 홀수)이라 진열대와 같은 칸 격자(2px)에 선다
+        private const float k_SignOffsetX = 0.6625f;
+        private const float k_SignDrop = 0.2f;
+        // 벽 쪽 옆자리는 표지판 너머로(손님이 표지판에 가리지 않게). 기본 굴(벽 −3.375)에서 걷는 땅 끝 −3.0
+        private const float k_SignClear = 0.2f;
         // 줄: 간격, 머리 자리(계산대 밑변 기준), 서는 자리와 떨어질 거리, 구멍 아래와 떨어질 거리
         // 머리 높이 0.9: 계산대 바로 위 걷는 줄(−5.0). 한 줄 위(−4.8)는 줄 손님이 진열대 아랫단을 가린다
         private const float k_QueueSpacing = 0.8f;
@@ -78,6 +83,12 @@ namespace ZooTycoon.Core
         public Vector2 ShelfBase(Cell cell)
         {
             return CellCenter(cell) - new Vector2(0f, k_ShelfDrop);
+        }
+
+        public Vector2 ShelfSignBase(Cell cell)
+        {
+            Vector2 shelf = ShelfBase(cell);
+            return shelf + new Vector2(-ToCenter(shelf) * k_SignOffsetX, -k_SignDrop);
         }
 
         public Vector2 OvenBase(Cell cell)
@@ -217,7 +228,7 @@ namespace ZooTycoon.Core
                 Vector2[] candidates =
                 {
                     new Vector2(shelf.X + toCenter * k_SideOffset, shelf.Y - 0.05f),
-                    new Vector2(shelf.X - toCenter * k_SideOffset, shelf.Y - 0.05f),
+                    new Vector2(shelf.X - toCenter * (k_SideOffset + k_SignClear), shelf.Y - 0.05f),
                     new Vector2(shelf.X + toCenter * k_FrontOffsetX, shelf.Y - k_FrontOffsetY),
                     new Vector2(shelf.X - toCenter * k_FrontOffsetX, shelf.Y - k_FrontOffsetY),
                 };

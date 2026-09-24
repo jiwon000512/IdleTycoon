@@ -12,6 +12,8 @@ namespace ZooTycoon.World
     public sealed class ShopView : MonoBehaviour
     {
         [SerializeField] private ShelfView m_shelfPrefab;
+        [Tooltip("진열대 재고 표지판(칠판 입간판). 진열대 벽 쪽 앞 모서리에 따로 선다")]
+        [SerializeField] private ShelfSignView m_shelfSignPrefab;
         [SerializeField] private OvenView m_ovenPrefab;
         [SerializeField] private CounterView m_counterPrefab;
         [SerializeField] private MarkerView m_digTagPrefab;
@@ -32,6 +34,7 @@ namespace ZooTycoon.World
         private static readonly Color k_Dirt = new Color(0.45f, 0.3f, 0.18f);
 
         private readonly Dictionary<Cell, ShelfView> m_shelves = new Dictionary<Cell, ShelfView>();
+        private readonly Dictionary<Cell, ShelfSignView> m_signs = new Dictionary<Cell, ShelfSignView>();
         private readonly List<OvenView> m_ovens = new List<OvenView>();
         private readonly Dictionary<Cell, SpriteRenderer> m_slotMarkers = new Dictionary<Cell, SpriteRenderer>();
         private readonly Dictionary<Cell, MarkerView> m_digTags = new Dictionary<Cell, MarkerView>();
@@ -354,6 +357,9 @@ namespace ZooTycoon.World
                     ShelfView shelf = Instantiate(m_shelfPrefab, transform);
                     shelf.transform.position = ToWorld(Layout.ShelfBase(pair.Key));
                     m_shelves[pair.Key] = shelf;
+                    ShelfSignView sign = Instantiate(m_shelfSignPrefab, transform);
+                    sign.transform.position = ToWorld(Layout.ShelfSignBase(pair.Key));
+                    m_signs[pair.Key] = sign;
 
                     if (m_built)
                     {
@@ -404,7 +410,8 @@ namespace ZooTycoon.World
             foreach (KeyValuePair<Cell, ShelfView> pair in m_shelves)
             {
                 BreadRecord bread = m_shop.Shelves[pair.Key];
-                pair.Value.Show(Icon(bread), m_shop.Stock(bread.Id), m_shop.ShelfCapacity);
+                pair.Value.Show(Icon(bread));
+                m_signs[pair.Key].Show(m_shop.Stock(bread.Id));
             }
         }
 

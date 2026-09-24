@@ -322,6 +322,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.ShopView
   m_shelfPrefab: {fileID: 4482819448682237099, guid: 98d616631cd5cd44d80fedccfbf5a745, type: 3}
+  m_shelfSignPrefab: {fileID: 3981836112669015025, guid: 04725e62b9ea0b440b67179a76f8365f, type: 3}
   m_ovenPrefab: {fileID: 8192886140390090411, guid: ae374a5bb7498b84abd9a7ca91702508, type: 3}
   m_counterPrefab: {fileID: 5878910152373518893, guid: d224b4d083fc57a49abc30ca4678f06b, type: 3}
   m_digTagPrefab: {fileID: 2695013931679785543, guid: 97aa13a92e14cdf42beedaa907855fa1, type: 3}

@@ -64,16 +64,17 @@ namespace ZooTycoon.Editor
             }
 
             ShelfView shelf = BakeShelf();
+            ShelfSignView shelfSign = BakeShelfSign();
             OvenView oven = BakeOven();
             CounterView counter = BakeCounter();
             MarkerView digTag = BakeDigTag();
             SpriteRenderer slotMarker = BakeSlotMarker();
             BakeCoinPopup();
             ShopCustomer customer = BakeCustomer();
-            BakeShop(shelf, oven, counter, digTag, slotMarker, customer);
+            BakeShop(shelf, shelfSign, oven, counter, digTag, slotMarker, customer);
             BakePlaza(customer);
             AssetDatabase.SaveAssets();
-            return "Shop: Shelf·Oven·ShopCounter·DigTag·SlotMarker·Shop·ShopCustomer·Plaza (UI 프리팹은 ZooTycoon/Bake/UI)";
+            return "Shop: Shelf·ShelfSign·Oven·ShopCounter·DigTag·SlotMarker·Shop·ShopCustomer·Plaza (UI 프리팹은 ZooTycoon/Bake/UI)";
         }
 
         static void ImportSprites()
@@ -84,7 +85,7 @@ namespace ZooTycoon.Editor
             // 굴 환경 A2: 피벗 = 구멍 밑변 = 띠 밑변(입구 줄 바닥 윗변)
             Import(k_SpriteDir + "arch.png", bottom);
 
-            foreach (string name in new[] { "shelf", "oven", "oven_2", "counter", "bubble", "angry" })
+            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "bubble", "angry" })
             {
                 Import(k_SpriteDir + name + ".png", bottom);
             }
@@ -179,13 +180,26 @@ namespace ZooTycoon.Editor
             go.AddComponent<SortingGroup>();
             SpriteRenderer body = Renderer(go.transform, "Body", Load("shelf"), Vector3.zero, 0);
             SpriteRenderer icon = Renderer(go.transform, "Icon", null, new Vector3(0f, 0.62f, 0f), 1);
-            TextMeshPro text = WorldText(go.transform, "Stock", new Vector3(0f, 1.4f, 0f), 2);
 
             ShelfView view = go.AddComponent<ShelfView>();
             Set(view, "m_body", body);
             Set(view, "m_icon", icon);
-            Set(view, "m_stockText", text);
             return Save(go, view, "Shelf");
+        }
+
+        // 진열대 재고 표지판(칠판 입간판, Source~/make_shelf_sign.py). 피벗 = 다리 밑변 가운데, 자리는 Core ShopLayout.ShelfSignBase.
+        // 분필 숫자는 칠판 가운데(발끝에서 15.5칸 위)
+        static ShelfSignView BakeShelfSign()
+        {
+            GameObject go = new GameObject("ShelfSign");
+            go.AddComponent<SortingGroup>();
+            Renderer(go.transform, "Body", Load("shelf_sign"), Vector3.zero, 0);
+            TextMeshPro text = WorldText(go.transform, "Stock", new Vector3(0f, 15.5f / ShopLayout.k_PixelsPerUnit, 0f), 1);
+            text.rectTransform.sizeDelta = new Vector2(0.4f, 0.35f);
+
+            ShelfSignView view = go.AddComponent<ShelfSignView>();
+            Set(view, "m_stockText", text);
+            return Save(go, view, "ShelfSign");
         }
 
         static OvenView BakeOven()
@@ -360,7 +374,7 @@ namespace ZooTycoon.Editor
         }
 
         // Shop 루트: 흙 배경(무한 벽 타일) + 굴 그림(실행 중 생성) + 입구 아치
-        static void BakeShop(ShelfView shelf, OvenView oven, CounterView counter, MarkerView digTag, SpriteRenderer slotMarker, ShopCustomer customer)
+        static void BakeShop(ShelfView shelf, ShelfSignView shelfSign, OvenView oven, CounterView counter, MarkerView digTag, SpriteRenderer slotMarker, ShopCustomer customer)
         {
             GameObject root = new GameObject("Shop");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -373,6 +387,7 @@ namespace ZooTycoon.Editor
 
             ShopView view = root.AddComponent<ShopView>();
             Set(view, "m_shelfPrefab", shelf);
+            Set(view, "m_shelfSignPrefab", shelfSign);
             Set(view, "m_ovenPrefab", oven);
             Set(view, "m_counterPrefab", counter);
             Set(view, "m_digTagPrefab", digTag);

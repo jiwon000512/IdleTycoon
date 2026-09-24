@@ -53,9 +53,13 @@ namespace ZooTycoon.Tests
 
             Assert.That(spots.Count, Is.GreaterThanOrEqualTo(2));
 
+            // 재고 표지판(반 폭 0.275)에 손님(반 폭 약 0.28)이 가리지 않는다
+            Vector2 sign = shop.Layout.ShelfSignBase(new Cell(-1, 1));
+
             foreach (Vector2 spot in spots)
             {
                 Assert.That(shop.Layout.Nav.IsWalkable(spot), Is.True);
+                Assert.That(Math.Abs(spot.X - sign.X), Is.GreaterThan(0.55f));
 
                 foreach (Vector2 slot in shop.Layout.QueueSlots)
                 {
