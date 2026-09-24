@@ -53,6 +53,7 @@ namespace ZooTycoon.World
         private float m_moveFrameRate;
         private Sprite[] m_playing;
         private float m_height;
+        private float m_shadowAlpha;
         private bool m_carrying;
         private bool m_flying;
         private Facing m_facing = Facing.Down;
@@ -68,6 +69,7 @@ namespace ZooTycoon.World
         {
             m_customer = customer;
             m_view = view;
+            m_shadowAlpha = m_shadowRenderer.color.a;
             m_frontIdle = frames.Get(look.IdleSheet ?? look.Sprite);
             m_frontMove = frames.Get(look.MoveSheet ?? look.Sprite);
             m_backIdle = look.BackIdleSheet != null ? frames.Get(look.BackIdleSheet) : m_frontIdle;
@@ -177,7 +179,7 @@ namespace ZooTycoon.World
             color.a = alpha;
             m_spriteRenderer.color = color;
             Color shadow = m_shadowRenderer.color;
-            shadow.a = 0.35f * alpha;
+            shadow.a = m_shadowAlpha * alpha;
             m_shadowRenderer.color = shadow;
             Color carry = m_carry.color;
             carry.a = alpha;

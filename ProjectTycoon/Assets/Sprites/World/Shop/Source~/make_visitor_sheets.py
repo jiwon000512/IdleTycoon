@@ -14,7 +14,8 @@ def sheet(names, out):
     h = max(f.height for f in frames)
     o = Image.new('RGBA', (W * len(frames), h), (0, 0, 0, 0))
     for i, f in enumerate(frames):
-        o.alpha_composite(f, (i * W + (W - f.width) // 2, h - f.height))
+        # 여백은 짝수 텍셀로: 홀수면 2px 칸이 반 칸 밀려 그림자·피벗(칸 경계)과 어긋난다
+        o.alpha_composite(f, (i * W + (W - f.width) // 4 * 2, h - f.height))
     o.save(OUT + out)
 
 

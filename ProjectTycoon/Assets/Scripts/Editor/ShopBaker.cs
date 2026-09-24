@@ -28,6 +28,7 @@ namespace ZooTycoon.Editor
         const int k_BurrowOrder = -2000;
         const int k_ArchOrder = -1995;
         const int k_MarkerOrder = -1980;
+        const int k_ShadowOrder = -900;
         // 설계 09: 웜뱃이 든 빵 층 수·높이·크기·층 간격(층 로컬). 높이·앞뒤 순서는 실행 중 ShopWombat이 방향에 맞춰 옮긴다
         const int k_CarryLayers = 5;
         const float k_CarryHeight = 1.05f;
@@ -85,7 +86,8 @@ namespace ZooTycoon.Editor
             {
                 foreach (string suffix in new[] { "", "_1", "_2", "_3", "_walk_0", "_walk_1", "_walk_2", "_walk_3" })
                 {
-                    Import(k_SpriteDir + "wombat_" + side + suffix + ".png", bottom, k_UnitPpu);
+                    string path = k_SpriteDir + "wombat_" + side + suffix + ".png";
+                    Import(path, CellBottom(path), k_UnitPpu);
                 }
             }
 
@@ -136,6 +138,13 @@ namespace ZooTycoon.Editor
             settings.spriteMeshType = SpriteMeshType.FullRect;
             ti.SetTextureSettings(settings);
             ti.SaveAndReimport();
+        }
+
+        // 발끝 가운데 피벗을 한 칸(2px) 경계로. 폭이 홀수 칸이면(웜뱃 옆모습 74·78px) 가운데가 칸 중간이라 그림자 격자와 반 칸 어긋난다
+        static Vector2 CellBottom(string path)
+        {
+            ((TextureImporter)AssetImporter.GetAtPath(path)).GetSourceTextureWidthAndHeight(out int width, out int _);
+            return new Vector2(width / 4 * 2f / width, 0f);
         }
 
         static Sprite Load(string name)
@@ -222,9 +231,7 @@ namespace ZooTycoon.Editor
             SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -ShopLayout.k_WombatDrop, 0f), 0);
             SpriteAnimator animator = wombat.gameObject.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", wombat);
-            // 발밑 그림자(손님과 같은 그림·색). 발끝 가운데, 몸 뒤
-            SpriteRenderer wombatShadow = Renderer(wombat.transform, "Shadow", AssetDatabase.LoadAssetAtPath<Sprite>(k_ShadowPath), Vector3.zero, -900);
-            wombatShadow.color = new Color(0f, 0f, 0f, 0.35f);
+            Shadow(wombat.transform);
             // 걷기(v0.6): 딛기 → 왼발 → 딛기 → 오른발(Source~/make_walk_frames.py)
             ShopWombat mover = wombat.gameObject.AddComponent<ShopWombat>();
             Set(mover, "m_animator", animator);
@@ -304,8 +311,7 @@ namespace ZooTycoon.Editor
             GameObject root = new GameObject("ShopCustomer");
             GameObject model = Child(root.transform, "ModelRoot", Vector3.zero);
             SpriteRenderer sprite = Renderer(model.transform, "Sprite", null, Vector3.zero, 0);
-            SpriteRenderer shadow = Renderer(model.transform, "Shadow", AssetDatabase.LoadAssetAtPath<Sprite>(k_ShadowPath), Vector3.zero, -900);
-            shadow.color = new Color(0f, 0f, 0f, 0.35f);
+            SpriteRenderer shadow = Shadow(model.transform);
             SpriteAnimator animator = root.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", sprite);
 
@@ -371,6 +377,15 @@ namespace ZooTycoon.Editor
             r.sprite = sprite;
             r.sortingOrder = order;
             return r;
+        }
+
+        // 발밑 그림자(웜뱃·손님 공용): 발끝 가운데, 몸 뒤. 흰 그림을 검정 35%로. 손님은 이 알파에 투명도를 곱한다
+        static SpriteRenderer Shadow(Transform parent)
+        {
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(k_ShadowPath);
+            SpriteRenderer shadow = Renderer(parent, "Shadow", sprite, Vector3.zero, k_ShadowOrder);
+            shadow.color = new Color(0f, 0f, 0f, 0.35f);
+            return shadow;
         }
 
         // 비용 태그(UI 규칙 4장: 진갈색 바탕·크림 글자 9px, 월드 스프라이트 PPU 40 = 1px가 한 칸)

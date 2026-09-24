@@ -4,7 +4,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 10: 가게 사건 → 효과음(sounds.json). 결제 짤랑 · 오븐이 다 구움 띵 · 화난 퇴장 흥.
+    // 설계 10: 가게 사건 → 효과음(sounds.json). 결제 짤랑 · 오븐이 다 구움 띵 · 화난 퇴장 뿌우~.
     // 소리마다 AudioSource 하나(피치를 따로 올리려고). WorldManager가 가게 개체에 붙인다
     public sealed class ShopSound : MonoBehaviour
     {
