@@ -289,6 +289,11 @@ namespace ZooTycoon.Data
                     errors.Add($"decorations '{decor.Id}': halfWidth·depth는 0 이상이어야 한다.");
                 }
 
+                if (decor.Frames < 0 || (decor.Frames > 0 && decor.FrameRate <= 0d))
+                {
+                    errors.Add($"decorations '{decor.Id}': frames는 0 이상, frames가 있으면 frameRate는 0보다 커야 한다.");
+                }
+
                 if (decor.Spots == null)
                 {
                     errors.Add($"decorations '{decor.Id}': spots가 없다.");

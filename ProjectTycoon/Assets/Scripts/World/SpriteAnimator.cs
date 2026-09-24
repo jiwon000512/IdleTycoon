@@ -12,6 +12,13 @@ namespace ZooTycoon.World
         private float m_elapsed;
         private int m_index;
 
+        // 실행 중에 붙인 애니메이터(광장 분수)는 렌더러를 같이 넘긴다
+        public void Play(SpriteRenderer renderer, Sprite[] frames, float frameRate)
+        {
+            m_renderer = renderer;
+            Play(frames, frameRate);
+        }
+
         public void Play(Sprite[] frames, float frameRate)
         {
             m_frames = frames;

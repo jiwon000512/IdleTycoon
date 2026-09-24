@@ -76,6 +76,12 @@ namespace ZooTycoon.Tests
                     && Directory.GetFiles(directory, Path.GetFileName(decor.Sprite) + ".*").Any(f => !f.EndsWith(".meta"));
 
                 Assert.That(exists, Is.True, $"decorations '{decor.Id}': {decor.Sprite} 파일이 없다.");
+
+                for (int i = 0; i < decor.Frames; i++)
+                {
+                    string frame = Path.GetFileName(decor.Sprite) + "_" + i + ".png";
+                    Assert.That(File.Exists(Path.Combine(directory, frame)), Is.True, $"decorations '{decor.Id}': {frame} 파일이 없다.");
+                }
             }
         }
     }

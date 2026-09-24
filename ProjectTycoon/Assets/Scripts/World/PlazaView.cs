@@ -56,7 +56,20 @@ namespace ZooTycoon.World
                 GameObject go = new GameObject(decor.Record.Id);
                 go.transform.SetParent(transform, false);
                 go.transform.localPosition = new Vector3(decor.Position.X, decor.Position.Y, 0f);
-                go.AddComponent<SpriteRenderer>().sprite = frames.Get(decor.Record.Sprite)[0];
+                SpriteRenderer renderer = go.AddComponent<SpriteRenderer>();
+                renderer.sprite = frames.Get(decor.Record.Sprite)[0];
+
+                if (decor.Record.Frames > 0)
+                {
+                    Sprite[] loop = new Sprite[decor.Record.Frames];
+
+                    for (int i = 0; i < loop.Length; i++)
+                    {
+                        loop[i] = frames.Get(decor.Record.Sprite + "_" + i)[0];
+                    }
+
+                    go.AddComponent<SpriteAnimator>().Play(renderer, loop, (float)decor.Record.FrameRate);
+                }
             }
 
             m_wombat.Bind(plaza, transform, frames);

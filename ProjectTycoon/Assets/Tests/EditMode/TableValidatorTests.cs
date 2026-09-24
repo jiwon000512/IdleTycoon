@@ -15,7 +15,7 @@ namespace ZooTycoon.Tests
         [TestCase("shop_upgrades", 4)]
         [TestCase("actions", 2)]
         [TestCase("interactables", 2)]
-        [TestCase("decorations", 1)]
+        [TestCase("decorations", 2)]
         [TestCase("sounds", 1)]
         public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table, int version)
         {

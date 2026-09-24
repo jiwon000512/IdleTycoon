@@ -1,0 +1,7 @@
+Pixel art sprite sheet for my cozy pixel-art game (animals run shops in an underground burrow). Match EXACTLY the pixel size, outline and palette style of the first attached image (the real game screen: chunky square pixels, thick dark brown outline #342020 around every standing object, soft warm low-saturation colors, a flat darker tone on the shadow side and one small light highlight, no anti-aliasing, no blur, no gradients, no dithering). Draw each object seen from the front and slightly above (about 30 degrees), like the objects in the images. Plain solid white background, no ground, no cast shadow, no text, no labels. Draw the objects separately in a 2 by 2 grid with wide white gaps between them, each object whole and not touching the image edge.
+Follow the look of the second attached image (decor style B, cute shopping street). The four objects:
+TOP LEFT: a round two-tier fountain with pale blue tiles on the basin rim, a small upper bowl and a water spout, calm pale blue water, about 76 pixels wide.
+TOP RIGHT: a park bench with a warm wooden slatted seat and backrest and dark iron legs and armrests, about 64 pixels wide.
+BOTTOM LEFT: a rectangular wooden planter box full of small pink, yellow and blue flowers with green leaves, about 32 pixels wide.
+BOTTOM RIGHT: a dark iron street lamp with a thin pole, a small base and one round warm glowing glass globe on top, about 56 pixels tall.
+Save as sheet_b.png in the current working directory, reply with only the path.

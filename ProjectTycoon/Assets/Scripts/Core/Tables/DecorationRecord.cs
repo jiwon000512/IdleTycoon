@@ -12,6 +12,9 @@ namespace ZooTycoon.Core
         // 발밑 막는 자리(유닛): 밑변 가운데에서 좌우 halfWidth, 위로 depth
         public double HalfWidth { get; set; }
         public double Depth { get; set; }
+        // 움직이는 그림(분수 물결): <sprite>_0 ~ _(frames−1)을 frameRate로 돈다. 0이면 sprite 한 장
+        public int Frames { get; set; }
+        public double FrameRate { get; set; }
         // 손님이 들르는 자리(밑변 기준 유닛)와 거기서 보는 방향
         public List<DecorationSpot> Spots { get; set; }
     }

@@ -59,6 +59,39 @@ def dig():  # 삽
     return outline(np.asarray(im).copy())
 
 
+HOLE, ORANGE, ORANGE_L = (0x48, 0x2C, 0x2C), (0xD8, 0x78, 0x48), (0xF0, 0xA0, 0x70)
+
+
+def arch(a, x0):  # 흙 테 아치 문: 폭 8칸, 윗부분 반원, 밑은 16줄. 안은 폭 4칸 어두운 구멍
+    y, x = np.mgrid[0:18, 0:18]
+    cx = x0 + 3.5
+    frame = (x >= x0) & (x < x0 + 8) & (y < 16) & ((y >= 6) | ((x - cx) ** 2 + (y - 6) ** 2 <= 4.3 ** 2))
+    hole = (x >= x0 + 2) & (x < x0 + 6) & (y < 16) & ((y >= 7) | ((x - cx) ** 2 + (y - 7) ** 2 <= 2.4 ** 2))
+    paint(a, frame, RIM)
+    paint(a, hole, HOLE)
+
+
+def arrow(a, x0, x1, y):  # 오른쪽 화살표: 몸통 3칸 두께, 머리 7칸
+    a[y - 1:y + 2, x0:x1 - 3] = ORANGE + (255,)
+    for i in range(4):
+        a[y - 3 + i:y + 4 - i, x1 - 4 + i] = ORANGE + (255,)
+    a[y - 1, x0:x1 - 3] = ORANGE_L + (255,)
+
+
+def enter():  # 들어가기: 오른쪽 아치로 들어가는 화살표
+    a = np.zeros((18, 18, 4), np.uint8)
+    arch(a, 9)
+    arrow(a, 1, 13, 11)
+    return outline(a)
+
+
+def exit_():  # 나가기: 왼쪽 아치에서 나오는 화살표
+    a = np.zeros((18, 18, 4), np.uint8)
+    arch(a, 1)
+    arrow(a, 5, 17, 11)
+    return outline(a)
+
+
 Image.fromarray(button()).save('../btn_act.png')
-for action_id, draw in [('open', open_), ('dig', dig)]:
+for action_id, draw in [('open', open_), ('dig', dig), ('enter', enter), ('exit', exit_)]:
     Image.fromarray(draw()).save(f'../../../Resources/Sprites/Actions/{action_id}.png')
