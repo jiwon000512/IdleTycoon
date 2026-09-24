@@ -3,15 +3,15 @@ using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 11·13: 광장의 빵집 문. 들어가기 버튼 → 광장이 Mall에 알린다
-    public sealed class DoorInteractable : Interactable
+    // 설계 11·13: 광장의 빵집 문. 들어가기 → 광장이 Mall에 알린다
+    public sealed class DoorInteractable : Interactable, IPassage
     {
         public const string k_Id = "door";
 
         private readonly Vector2 m_floor;
         private readonly Action m_enter;
 
-        public DoorInteractable(InteractableTable table, Vector2 floor, Action enter) : base(table)
+        public DoorInteractable(InteractableTable table, WombatArea area, Vector2 floor, Action enter) : base(table, area)
         {
             m_floor = floor;
             m_enter = enter;
@@ -22,12 +22,9 @@ namespace ZooTycoon.Core
             return Vector2.Distance(p, m_floor);
         }
 
-        public override void Do(string actionId, Hands hands)
+        public void Pass()
         {
-            if (actionId == ActionTable.k_Enter)
-            {
-                m_enter();
-            }
+            m_enter();
         }
     }
 }

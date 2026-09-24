@@ -134,7 +134,7 @@ namespace ZooTycoon.Core
             }
 
             Customer head = m_queue[0];
-            head.Timer -= dt * (1d + Upgrades.Effect(ShopUpgradeTable.k_CheckoutSpeed));
+            head.Timer -= dt * m_counter.UpgradeValue(m_counter.UpgradeLevel);
 
             if (head.Timer > 0d)
             {

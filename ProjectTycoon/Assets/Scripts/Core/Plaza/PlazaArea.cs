@@ -40,7 +40,7 @@ namespace ZooTycoon.Core
             m_bakery = bakery;
             m_random = random;
             Layout = new PlazaLayout(tables);
-            Things.Add(new DoorInteractable(tables.Get<InteractableTable>(DoorInteractable.k_Id), Layout.DoorFloor, OnDoorEntered));
+            Placed.Add(new DoorInteractable(tables.Get<InteractableTable>(DoorInteractable.k_Id), this, Layout.DoorFloor, OnDoorEntered));
             m_arrivalElapsed = m_config.ArrivalSeconds;
             m_bakery.CustomerExited += Bakery_CustomerExited;
         }

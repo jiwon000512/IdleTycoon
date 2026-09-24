@@ -7,17 +7,18 @@ namespace ZooTycoon.Core
     public sealed class Wombat
     {
         public Mover Mover { get; }
-        public Hands Hands { get; }
+        // v0.5: 행동하는 쪽(손 + 지갑)
+        public Worker Worker { get; }
         // 조이스틱 걷기 속도(유닛/초)
         public double Speed { get; }
         // 조이스틱 방향(길이 1까지)
         public Vector2 Input { get; private set; }
         public bool Moving { get; internal set; }
 
-        public Wombat(TableSet tables)
+        public Wombat(TableSet tables, ZooState wallet)
         {
             Mover = new Mover(Vector2.Zero, Facing.Down);
-            Hands = new Hands(tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).CarryCapacity);
+            Worker = new Worker(new Hands(tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).CarryCapacity), wallet);
             Speed = tables.Get<ConfigTable>(ConfigTable.k_WombatSpeed).Value;
         }
 

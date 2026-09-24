@@ -11,10 +11,11 @@ namespace ZooTycoon.Data
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
         private static readonly Regex k_BreadIdPattern = new Regex("^b[0-9]{2}$");
-        private static readonly string[] k_ShopUpgradeIds =
-            { ShopUpgradeTable.k_OvenCount, ShopUpgradeTable.k_OvenSpeed, ShopUpgradeTable.k_ShelfCapacity, ShopUpgradeTable.k_CheckoutSpeed };
         private static readonly string[] k_ActionIds =
-            { ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Open, ActionTable.k_Dig, ActionTable.k_Exit, ActionTable.k_Enter };
+        {
+            ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter,
+            ActionTable.k_Bake, ActionTable.k_Upgrade, ActionTable.k_Unlock, ActionTable.k_PlaceOven, ActionTable.k_Dig,
+        };
         // 코드에 클래스가 있는 사물
         private static readonly string[] k_InteractableIds =
         {
@@ -23,7 +24,7 @@ namespace ZooTycoon.Data
         };
         private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone, SoundTable.k_GiveUp };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
-        private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_Dig, ActionTable.k_Exit, ActionTable.k_Enter };
+        private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter };
         private static readonly string[] k_ConfigIds =
         {
             ConfigTable.k_StartCoins, ConfigTable.k_OfflineMaxSeconds, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight,
@@ -36,7 +37,6 @@ namespace ZooTycoon.Data
 
             ValidateVisitors(tables, errors);
             ValidateBreads(tables, errors);
-            ValidateShopUpgrades(tables, errors);
             ValidateActions(tables, errors);
             ValidateInteractables(tables, errors);
             ValidateSounds(tables, errors);
@@ -116,47 +116,31 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 설계 08 v0.5: 코드(Upgrades·사물)가 부르는 id 4개가 모두 있어야 한다
-        private static void ValidateShopUpgrades(TableSet tables, List<string> errors)
-        {
-            foreach (ShopUpgradeTable upgrade in tables.GetAll<ShopUpgradeTable>())
-            {
-                CheckId("ShopUpgradeTable", upgrade.Id, errors);
-
-                if (upgrade.BaseCost <= 0d || upgrade.CostGrowth < 1d || upgrade.MaxLevel < 1 || upgrade.EffectPerLevel <= 0d)
-                {
-                    errors.Add($"ShopUpgradeTable '{upgrade.Id}': baseCost·effectPerLevel은 0보다, costGrowth·maxLevel은 1 이상이어야 한다.");
-                }
-
-                if (string.IsNullOrEmpty(upgrade.EffectFormat))
-                {
-                    errors.Add($"ShopUpgradeTable '{upgrade.Id}': effectFormat이 비어 있다.");
-                }
-
-                if (upgrade.LookLevel < 0 || upgrade.LookLevel > upgrade.MaxLevel)
-                {
-                    errors.Add($"ShopUpgradeTable '{upgrade.Id}': lookLevel은 0 이상 maxLevel 이하여야 한다.");
-                }
-            }
-
-            CheckRequired<ShopUpgradeTable>(tables, k_ShopUpgradeIds, errors);
-        }
-
-        // 설계 09 v0.4: 코드가 아는 행동이 모두 있고, manual이면 아이콘, 시트·곳 옮기기 행동은 manual만
+        // 설계 09 v0.4 · 설계 13 v0.5: 코드가 아는 행동이 모두 있고, manual이면 아이콘, 시트 열기·곳 옮기기는 manual만, 시트 줄 행동은 sheet만
         private static void ValidateActions(TableSet tables, List<string> errors)
         {
             foreach (ActionTable action in tables.GetAll<ActionTable>())
             {
                 CheckId("ActionTable", action.Id, errors);
 
-                if (!action.IsAuto && string.IsNullOrEmpty(action.Icon))
+                if (action.Mode == ActionMode.Manual && string.IsNullOrEmpty(action.Icon))
                 {
                     errors.Add($"ActionTable '{action.Id}': manual 행동은 icon이 있어야 한다.");
                 }
 
-                if (action.IsAuto && System.Array.IndexOf(k_ManualOnlyActionIds, action.Id) >= 0)
+                if (action.Mode != ActionMode.Manual && System.Array.IndexOf(k_ManualOnlyActionIds, action.Id) >= 0)
                 {
                     errors.Add($"ActionTable '{action.Id}': 시트를 열거나 곳을 옮기는 행동은 manual만 된다.");
+                }
+
+                // 설계 13 v0.5: 행동 클래스가 있어야 하고, 시트 줄을 내놓는 클래스(SheetAction)면 mode sheet
+                if (System.Array.IndexOf(k_ActionIds, action.Id) < 0)
+                {
+                    errors.Add($"ActionTable '{action.Id}': 코드에 행동 클래스가 없다.");
+                }
+                else if (ActionFactory.Create(action) is SheetAction != (action.Mode == ActionMode.Sheet))
+                {
+                    errors.Add($"ActionTable '{action.Id}': 시트 행동은 mode sheet, 나머지는 auto·manual이어야 한다.");
                 }
             }
 
@@ -221,6 +205,8 @@ namespace ZooTycoon.Data
                         errors.Add($"InteractableTable '{element.Id}': 행동 '{action}'이 ActionTable에 없다.");
                     }
                 }
+
+                ValidateUpgrade(element, errors);
             }
 
             CheckRequired<InteractableTable>(tables, k_InteractableIds, errors);
@@ -292,6 +278,37 @@ namespace ZooTycoon.Data
             CheckRequired<ConfigTable>(tables, k_ConfigIds, errors);
         }
 
+        // 설계 13 v0.6: upgrade 행동이 있는 사물만 업그레이드 데이터를 갖고, 숫자는 비용·단계·효과가 성립해야 한다
+        private static void ValidateUpgrade(InteractableTable element, List<string> errors)
+        {
+            UpgradeInfo upgrade = element.Upgrade;
+
+            if (element.Actions.Contains(ActionTable.k_Upgrade) != (upgrade != null))
+            {
+                errors.Add($"InteractableTable '{element.Id}': upgrade 행동과 upgrade 데이터는 함께 있어야 한다.");
+            }
+
+            if (upgrade == null)
+            {
+                return;
+            }
+
+            if (upgrade.BaseCost <= 0d || upgrade.CostGrowth < 1d || upgrade.MaxLevel < 1 || upgrade.EffectPerLevel <= 0d)
+            {
+                errors.Add($"InteractableTable '{element.Id}': upgrade의 baseCost·effectPerLevel은 0보다, costGrowth·maxLevel은 1 이상이어야 한다.");
+            }
+
+            if (upgrade.LookLevel < 0 || upgrade.LookLevel > upgrade.MaxLevel)
+            {
+                errors.Add($"InteractableTable '{element.Id}': upgrade의 lookLevel은 0 이상 maxLevel 이하여야 한다.");
+            }
+
+            if (string.IsNullOrEmpty(upgrade.Name) || string.IsNullOrEmpty(upgrade.EffectFormat))
+            {
+                errors.Add($"InteractableTable '{element.Id}': upgrade의 name·effectFormat이 비어 있다.");
+            }
+        }
+
         private static void ValidateBakeryConfig(TableSet tables, List<string> errors)
         {
             foreach (BakeryConfigTable bakery in tables.GetAll<BakeryConfigTable>())
@@ -306,6 +323,12 @@ namespace ZooTycoon.Data
                 if (bakery.DigBaseCost <= 0d || bakery.DigCostGrowth < 1d)
                 {
                     errors.Add($"BakeryConfigTable '{bakery.Id}': digBaseCost는 0보다, digCostGrowth는 1 이상이어야 한다.");
+                }
+
+                // 설계 13 v0.6: 오븐 설치
+                if (bakery.OvenBaseCost <= 0d || bakery.OvenCostGrowth < 1d || bakery.OvenMax < bakery.OvenCount)
+                {
+                    errors.Add($"BakeryConfigTable '{bakery.Id}': ovenBaseCost는 0보다, ovenCostGrowth는 1 이상, ovenMax는 ovenCount 이상이어야 한다.");
                 }
             }
 

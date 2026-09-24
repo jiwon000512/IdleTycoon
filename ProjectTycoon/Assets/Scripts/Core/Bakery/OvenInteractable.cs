@@ -9,22 +9,24 @@ namespace ZooTycoon.Core
         public const string k_Id = "oven";
 
         private readonly Vector2 m_base;
-        private readonly Upgrades m_upgrades;
 
         // 굴 격자 설계 v0.5: 놓인 칸
         public Cell Cell { get; }
+        public BakeryArea Bakery { get; }
         public BreadTable Bread { get; private set; }
         public double Remaining { get; private set; }
         public int Ready { get; private set; }
         public bool IsEmpty => Bread == null;
         // 0~1(화면 타이머)
         public double Progress => IsEmpty ? 0d : 1d - Remaining / Bread.BakeSeconds;
+        // 외형 2단계(굽기 속도 lookLevel 이상)
+        public bool LookUpgraded => Table.Upgrade.LookLevel > 0 && UpgradeLevel >= Table.Upgrade.LookLevel;
 
-        public OvenInteractable(InteractableTable table, Cell cell, BakeryLayout layout, Upgrades upgrades) : base(table)
+        public OvenInteractable(InteractableTable table, Cell cell, BakeryArea bakery) : base(table, bakery)
         {
             Cell = cell;
-            m_base = layout.OvenBase(cell);
-            m_upgrades = upgrades;
+            Bakery = bakery;
+            m_base = bakery.Layout.OvenBase(cell);
         }
 
         public override float DistanceTo(Vector2 p)
@@ -54,7 +56,8 @@ namespace ZooTycoon.Core
             }
 
             double before = Math.Ceiling(Remaining);
-            Remaining = Math.Max(0d, Remaining - dt * (1d + m_upgrades.Effect(ShopUpgradeTable.k_OvenSpeed)));
+            double speed = UpgradeValue(UpgradeLevel);
+            Remaining = Math.Max(0d, Remaining - dt * speed);
 
             if (Remaining == 0d)
             {
@@ -67,21 +70,10 @@ namespace ZooTycoon.Core
             }
         }
 
-        public override bool CanDo(string actionId, Hands hands)
+        // 다 구운 빵을 최대 max개 꺼낸다. 다 꺼내면 빈 오븐
+        public int Take(int max)
         {
-            return actionId != ActionTable.k_TakeOut || (Ready > 0 && hands.SpaceFor(Bread) > 0);
-        }
-
-        // 꺼내기: 들 수 있는 만큼 손에. 다 꺼내면 빈 오븐
-        public override void Do(string actionId, Hands hands)
-        {
-            if (actionId != ActionTable.k_TakeOut)
-            {
-                return;
-            }
-
-            BreadTable bread = Bread;
-            int count = Math.Min(Ready, hands.SpaceFor(bread));
+            int count = Math.Min(Ready, max);
             Ready -= count;
 
             if (Ready == 0)
@@ -90,7 +82,7 @@ namespace ZooTycoon.Core
             }
 
             OnChanged();
-            hands.Add(bread, count);
+            return count;
         }
     }
 }

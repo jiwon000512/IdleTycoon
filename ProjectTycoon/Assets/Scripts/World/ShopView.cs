@@ -100,7 +100,6 @@ namespace ZooTycoon.World
             m_built = true;
 
             m_shop.LayoutChanged += Shop_LayoutChanged;
-            m_shop.UpgradesChanged += Shop_UpgradesChanged;
             m_shop.Upgraded += Shop_Upgraded;
             m_shop.Grid.Dug += Grid_Dug;
             m_shop.TargetChanged += Shop_TargetChanged;
@@ -193,7 +192,6 @@ namespace ZooTycoon.World
                 }
 
                 m_shop.LayoutChanged -= Shop_LayoutChanged;
-                m_shop.UpgradesChanged -= Shop_UpgradesChanged;
                 m_shop.Upgraded -= Shop_Upgraded;
                 m_shop.Grid.Dug -= Grid_Dug;
                 m_shop.TargetChanged -= Shop_TargetChanged;
@@ -210,7 +208,8 @@ namespace ZooTycoon.World
             RefreshOven((OvenInteractable)oven);
         }
 
-        private void Shop_UpgradesChanged()
+        // 업그레이드를 산 사물 종류(진열대 전부·오븐 전부·계산대)가 한 번 튀고, 값(오븐 외형·진열대)을 다시 그린다
+        private void Shop_Upgraded(string interactableId)
         {
             RefreshShelves();
 
@@ -218,27 +217,24 @@ namespace ZooTycoon.World
             {
                 RefreshOven(oven);
             }
-        }
 
-        private void Shop_Upgraded(string upgradeId)
-        {
-            switch (m_tables.Get<ShopUpgradeTable>(upgradeId).Target)
+            switch (interactableId)
             {
-                case UpgradeTarget.Shelf:
+                case ShelfInteractable.k_Id:
                     foreach (ShelfView shelf in m_shelves.Values)
                     {
                         shelf.Bounce();
                     }
 
                     break;
-                case UpgradeTarget.Oven:
+                case OvenInteractable.k_Id:
                     foreach (OvenView oven in m_ovens.Values)
                     {
                         oven.Bounce();
                     }
 
                     break;
-                case UpgradeTarget.Counter:
+                case CounterInteractable.k_Id:
                     m_counter.Bounce();
                     break;
             }
@@ -420,7 +416,7 @@ namespace ZooTycoon.World
         private void RefreshOven(OvenInteractable oven)
         {
             OvenView view = m_ovens[oven];
-            view.SetLook(m_shop.Upgrades.OvenLookUpgraded);
+            view.SetLook(oven.LookUpgraded);
 
             if (oven.IsEmpty)
             {

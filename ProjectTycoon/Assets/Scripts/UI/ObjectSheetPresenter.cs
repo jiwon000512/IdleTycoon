@@ -6,19 +6,18 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 사물 터치 기획(2026-09-23) → 설계 09: 상호작용 버튼으로 연 사물에 맞춰 시트 내용을 만든다. 규칙은 BakeryArea에서 읽기만 하고, 구매·굽기는 Try*로 부탁한다.
-    // 열린 동안 재고·오븐·업그레이드·코인 이벤트로 갱신하고, 웜뱃의 대상이 바뀌면 닫는다. 굴 격자 설계 v0.5: 빈 자리(진열대·오븐 놓기)·굴 파기 시트
+    // 사물 터치 기획 → 설계 09 → 설계 13 v0.5: 상호작용 버튼으로 연 사물의 시트. 줄은 그 사물의 시트 행동(InteractableTable.actions 중 mode sheet)이 내놓고,
+    // 여기서는 행동 id별 서식으로 글자만 만든다(굽기 = 칩, 나머지 = 행). 제목·상태 줄만 사물 종류로 가른다. 줄을 누르면 곳에 TryBuy로 부탁한다.
+    // 열린 동안 사물·업그레이드·배치·줄·코인 이벤트로 갱신하고, 웜뱃의 대상이 바뀌면 닫는다
     public sealed class ObjectSheetPresenter : IDisposable
     {
         private readonly ObjectSheetView m_view;
         private readonly BakeryArea m_shop;
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
-        private const string k_UnlockAction = "unlock";
-        private const string k_DigAction = "dig";
-
-        private readonly List<string> m_rowActions = new List<string>();
-        private readonly List<string> m_chipBreads = new List<string>();
+        // 칩·행 번호 → (행동 id, 고른 것)
+        private readonly List<(string action, string option)> m_chips = new List<(string action, string option)>();
+        private readonly List<(string action, string option)> m_rows = new List<(string action, string option)>();
 
         private Interactable m_target;
 
@@ -33,7 +32,7 @@ namespace ZooTycoon.UI
             m_view.RowClicked += View_RowClicked;
             m_view.CloseRequested += View_CloseRequested;
             m_shop.ThingChanged += Shop_ThingChanged;
-            m_shop.UpgradesChanged += Shop_Refresh;
+            m_shop.Upgraded += Shop_Upgraded;
             m_shop.LayoutChanged += Shop_Refresh;
             m_shop.QueueChanged += Shop_Refresh;
             m_shop.TargetChanged += Shop_TargetChanged;
@@ -46,7 +45,7 @@ namespace ZooTycoon.UI
             m_view.RowClicked -= View_RowClicked;
             m_view.CloseRequested -= View_CloseRequested;
             m_shop.ThingChanged -= Shop_ThingChanged;
-            m_shop.UpgradesChanged -= Shop_Refresh;
+            m_shop.Upgraded -= Shop_Upgraded;
             m_shop.LayoutChanged -= Shop_Refresh;
             m_shop.QueueChanged -= Shop_Refresh;
             m_shop.TargetChanged -= Shop_TargetChanged;
@@ -67,80 +66,53 @@ namespace ZooTycoon.UI
 
         private void Refresh()
         {
-            m_rowActions.Clear();
-            m_chipBreads.Clear();
+            m_chips.Clear();
+            m_rows.Clear();
             List<SheetChip> chips = new List<SheetChip>();
             List<SheetRow> rows = new List<SheetRow>();
+            SetHeader();
 
-            switch (m_target)
+            foreach (SheetAction action in m_shop.SheetActions(m_target))
             {
-                case ShelfInteractable shelf:
+                foreach (SheetOption option in action.Options(m_shop.Wombat.Worker, m_target))
                 {
-                    m_view.SetHeader(m_tables.Format("sheet_shelf_title", shelf.Bread.Name), m_tables.Format("sheet_shelf_status", shelf.Stock, shelf.Capacity));
-                    AddUpgradeRows(rows, UpgradeTarget.Shelf);
-
-                    // 빈 자리가 없어 다음 빵을 못 놓을 때만 안내 행
-                    if (m_shop.NextBread != null && !HasEmptySlot())
+                    if (action.Table.Id == ActionTable.k_Bake)
                     {
-                        AddUnlockRow(rows, SheetRowState.Blocked, m_tables.Text("row_unlock_blocked"));
+                        chips.Add(Chip(option));
+                        m_chips.Add((action.Table.Id, option.Option));
                     }
-
-                    break;
-                }
-                case SlotInteractable _:
-                    m_view.SetHeader(m_tables.Text("sheet_slot_title"), m_tables.Text("sheet_slot_status"));
-                    AddUnlockRow(rows, null, null);
-                    AddUpgradeRows(rows, UpgradeTarget.Slot);
-                    break;
-                case DigInteractable _:
-                {
-                    double cost = m_shop.Grid.DigCost;
-                    m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
-                    rows.Add(new SheetRow
+                    else
                     {
-                        Name = m_tables.Text("row_dig"),
-                        Effect = m_tables.Text("row_dig_effect"),
-                        Cost = BigNumberFormatter.Format(cost),
-                        State = m_state.Coins >= cost ? SheetRowState.Enabled : SheetRowState.Poor,
-                    });
-                    m_rowActions.Add(k_DigAction);
-                    break;
-                }
-                case OvenInteractable oven:
-                {
-                    m_view.SetHeader(m_tables.Format("sheet_oven_title", IndexOf(oven) + 1), OvenStatus(oven));
-                    bool canBake = oven.IsEmpty;
-
-                    foreach (BreadTable bread in m_shop.UnlockedBreads)
-                    {
-                        chips.Add(new SheetChip
-                        {
-                            SpritePath = bread.Sprite,
-                            Label = m_tables.Format("chip_bread", bread.Name),
-                            Sub = m_tables.Format("chip_bread_sub", m_shop.ShelfOf(bread.Id).Stock, bread.BakeSeconds),
-                            Highlighted = canBake && m_shop.ShelfOf(bread.Id).Stock == 0,
-                            Enabled = canBake,
-                        });
-                        m_chipBreads.Add(bread.Id);
+                        rows.Add(Row(action.Table.Id, option));
+                        m_rows.Add((action.Table.Id, option.Option));
                     }
-
-                    if (m_shop.NextBread != null)
-                    {
-                        chips.Add(new SheetChip { Label = m_shop.NextBread.Name, Sub = m_tables.Text("chip_locked_sub"), Locked = true });
-                        m_chipBreads.Add(null);
-                    }
-
-                    AddUpgradeRows(rows, UpgradeTarget.Oven);
-                    break;
                 }
-                case CounterInteractable _:
-                    m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", m_shop.Queue.Count));
-                    AddUpgradeRows(rows, UpgradeTarget.Counter);
-                    break;
             }
 
             m_view.SetChips(chips);
             m_view.SetRows(rows);
+        }
+
+        private void SetHeader()
+        {
+            switch (m_target)
+            {
+                case ShelfInteractable shelf:
+                    m_view.SetHeader(m_tables.Format("sheet_shelf_title", shelf.Bread.Name), m_tables.Format("sheet_shelf_status", shelf.Stock, shelf.Capacity));
+                    break;
+                case OvenInteractable oven:
+                    m_view.SetHeader(m_tables.Format("sheet_oven_title", IndexOf(oven) + 1), OvenStatus(oven));
+                    break;
+                case CounterInteractable _:
+                    m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", m_shop.Queue.Count));
+                    break;
+                case SlotInteractable _:
+                    m_view.SetHeader(m_tables.Text("sheet_slot_title"), m_tables.Text("sheet_slot_status"));
+                    break;
+                case DigInteractable _:
+                    m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
+                    break;
+            }
         }
 
         private string OvenStatus(OvenInteractable oven)
@@ -153,66 +125,89 @@ namespace ZooTycoon.UI
             return m_tables.Text("sheet_oven_empty");
         }
 
-        // ShopUpgradeTable.Target이 같은 행마다 구매 행. only가 있으면 그 id만
-        private void AddUpgradeRows(List<SheetRow> rows, UpgradeTarget target, string only = null)
+        // 굽기 칩: 해금된 빵(빈 오븐일 때만 고를 수 있고, 재고가 없으면 강조) · 다음 빵 잠김
+        private SheetChip Chip(SheetOption option)
         {
-            foreach (ShopUpgradeTable upgrade in m_tables.GetAll<ShopUpgradeTable>())
+            BreadTable bread = m_tables.Get<BreadTable>(option.Option);
+
+            if (option.State == SheetOptionState.Locked)
             {
-                if (upgrade.Target != target || (only != null && upgrade.Id != only))
-                {
-                    continue;
-                }
+                return new SheetChip { Label = bread.Name, Sub = m_tables.Text("chip_locked_sub"), Locked = true };
+            }
 
-                int level = m_shop.Upgrades.Level(upgrade.Id);
-                SheetRow row = new SheetRow { Name = m_tables.Format("row_upgrade", upgrade.Name, level) };
+            int stock = m_shop.ShelfOf(bread.Id).Stock;
+            bool enabled = option.State == SheetOptionState.Enabled;
 
-                if (m_shop.Upgrades.IsMaxed(upgrade.Id))
-                {
-                    row.Effect = Effect(upgrade, level, level);
-                    row.Cost = m_tables.Text("row_max");
-                    row.State = SheetRowState.Max;
-                }
-                else
-                {
-                    double cost = m_shop.Upgrades.Cost(upgrade.Id);
-                    row.Effect = Effect(upgrade, level, level + 1);
-                    row.Cost = BigNumberFormatter.Format(cost);
-                    row.State = m_state.Coins >= cost ? SheetRowState.Enabled : SheetRowState.Poor;
-                }
+            return new SheetChip
+            {
+                SpritePath = bread.Sprite,
+                Label = m_tables.Format("chip_bread", bread.Name),
+                Sub = m_tables.Format("chip_bread_sub", stock, bread.BakeSeconds),
+                Highlighted = enabled && stock == 0,
+                Enabled = enabled,
+            };
+        }
 
-                rows.Add(row);
-                m_rowActions.Add(upgrade.Id);
+        private SheetRow Row(string actionId, SheetOption option)
+        {
+            switch (actionId)
+            {
+                // 업그레이드: 사물 행의 이름 Lv · 효과 전후 · 가격
+                case ActionTable.k_Upgrade:
+                {
+                    UpgradeInfo upgrade = m_target.Table.Upgrade;
+
+                    return new SheetRow
+                    {
+                        Name = m_tables.Format("row_upgrade", upgrade.Name, option.Level),
+                        Effect = string.Format(CultureInfo.InvariantCulture, upgrade.EffectFormat, option.Before, option.After),
+                        Cost = Cost(option),
+                        State = RowState(option.State),
+                    };
+                }
+                case ActionTable.k_PlaceOven:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Text("row_place_oven"),
+                        Effect = m_tables.Format("row_place_oven_effect", option.Before, option.After),
+                        Cost = Cost(option),
+                        State = RowState(option.State),
+                    };
+                case ActionTable.k_Unlock:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Format("row_unlock", m_tables.Get<BreadTable>(option.Option).Name),
+                        Effect = m_tables.Text(option.State == SheetOptionState.Blocked ? "row_unlock_blocked" : "row_unlock_effect"),
+                        Cost = BigNumberFormatter.Format(option.Cost),
+                        State = RowState(option.State),
+                    };
+                case ActionTable.k_Dig:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Text("row_dig"),
+                        Effect = m_tables.Text("row_dig_effect"),
+                        Cost = BigNumberFormatter.Format(option.Cost),
+                        State = RowState(option.State),
+                    };
+                default:
+                    throw new InvalidOperationException($"행동 '{actionId}'의 시트 서식이 없다.");
             }
         }
 
-        private string Effect(ShopUpgradeTable upgrade, int fromLevel, int toLevel)
+        private string Cost(SheetOption option)
         {
-            return string.Format(CultureInfo.InvariantCulture, upgrade.EffectFormat, m_shop.Upgrades.Value(upgrade.Id, fromLevel), m_shop.Upgrades.Value(upgrade.Id, toLevel));
+            return option.State == SheetOptionState.Max ? m_tables.Text("row_max") : BigNumberFormatter.Format(option.Cost);
         }
 
-        // 다음 빵 진열대 행. state·effect를 주면 그대로(안내용), 아니면 코인에 따라
-        private void AddUnlockRow(List<SheetRow> rows, SheetRowState? state, string effect)
+        private static SheetRowState RowState(SheetOptionState state)
         {
-            BreadTable next = m_shop.NextBread;
-
-            if (next == null)
+            switch (state)
             {
-                return;
+                case SheetOptionState.Enabled: return SheetRowState.Enabled;
+                case SheetOptionState.Poor: return SheetRowState.Poor;
+                case SheetOptionState.Max: return SheetRowState.Max;
+                default: return SheetRowState.Blocked;
             }
-
-            rows.Add(new SheetRow
-            {
-                Name = m_tables.Format("row_unlock", next.Name),
-                Effect = effect ?? m_tables.Text("row_unlock_effect"),
-                Cost = BigNumberFormatter.Format(next.UnlockCost),
-                State = state ?? (m_state.Coins >= next.UnlockCost ? SheetRowState.Enabled : SheetRowState.Poor),
-            });
-            m_rowActions.Add(k_UnlockAction);
-        }
-
-        private bool HasEmptySlot()
-        {
-            return m_shop.Slots.Count > 0;
         }
 
         // 오븐 번호(시트 제목 "오븐 1")
@@ -231,43 +226,29 @@ namespace ZooTycoon.UI
 
         private void View_ChipClicked(int index)
         {
-            string breadId = m_chipBreads[index];
+            (string action, string option) = m_chips[index];
 
-            if (breadId != null && m_shop.TryBake((OvenInteractable)m_target, breadId))
+            if (m_shop.TryBuy(action, m_target, option))
             {
                 m_view.Close();
             }
         }
 
+        // 빈 자리·파기 자리는 사면 사물이 바뀌어 시트를 닫는다
         private void View_RowClicked(int index)
         {
-            string action = m_rowActions[index];
-            bool bought;
+            (string action, string option) = m_rows[index];
 
-            switch (action)
+            if (!m_shop.TryBuy(action, m_target, option))
             {
-                case k_UnlockAction:
-                    bought = m_shop.TryUnlockNextBread(((SlotInteractable)m_target).Cell);
-                    break;
-                case k_DigAction:
-                    bought = m_shop.Grid.TryDig(((DigInteractable)m_target).Cell);
-                    break;
-                case ShopUpgradeTable.k_OvenCount:
-                    bought = m_shop.TryAddOven(((SlotInteractable)m_target).Cell);
-                    break;
-                default:
-                    bought = m_shop.TryUpgrade(action);
-                    break;
+                return;
             }
 
-            if (bought)
-            {
-                m_view.FlashRow(index);
+            m_view.FlashRow(index);
 
-                if (m_target is SlotInteractable || m_target is DigInteractable)
-                {
-                    m_view.Close();
-                }
+            if (m_target is SlotInteractable || m_target is DigInteractable)
+            {
+                m_view.Close();
             }
         }
 
@@ -277,6 +258,11 @@ namespace ZooTycoon.UI
         }
 
         private void Shop_ThingChanged(Interactable thing)
+        {
+            Shop_Refresh();
+        }
+
+        private void Shop_Upgraded(string interactableId)
         {
             Shop_Refresh();
         }

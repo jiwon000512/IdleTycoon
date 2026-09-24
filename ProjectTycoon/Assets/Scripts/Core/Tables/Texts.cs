@@ -41,10 +41,13 @@ namespace ZooTycoon.Core
                 Add(chars, row.Name);
             }
 
-            foreach (ShopUpgradeTable row in tables.GetAll<ShopUpgradeTable>())
+            foreach (InteractableTable row in tables.GetAll<InteractableTable>())
             {
-                Add(chars, row.Name);
-                Add(chars, row.EffectFormat);
+                if (row.Upgrade != null)
+                {
+                    Add(chars, row.Upgrade.Name);
+                    Add(chars, row.Upgrade.EffectFormat);
+                }
             }
 
             return string.Concat(chars);

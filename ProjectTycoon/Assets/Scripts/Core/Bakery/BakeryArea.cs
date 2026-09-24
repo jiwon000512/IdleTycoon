@@ -26,15 +26,14 @@ namespace ZooTycoon.Core
         private readonly CounterInteractable m_counter;
         private readonly ExitInteractable m_exit;
 
+        public BakeryConfigTable Config => m_config;
         public BurrowGrid Grid { get; }
         public BakeryLayout Layout { get; }
-        public Upgrades Upgrades { get; }
         public IReadOnlyList<BreadTable> UnlockedBreads => m_unlocked;
         public IReadOnlyDictionary<Cell, ShelfInteractable> Shelves => m_shelves;
         public IReadOnlyList<OvenInteractable> Ovens => m_ovens;
         // 진열대도 오븐도 없는 자리
         public IReadOnlyDictionary<Cell, SlotInteractable> Slots => m_slots;
-        public int ShelfCapacity => m_config.ShelfCapacity + (int)Upgrades.Effect(ShopUpgradeTable.k_ShelfCapacity);
         public BreadTable NextBread => m_unlocked.Count < Tables.GetAll<BreadTable>().Count ? Tables.GetAll<BreadTable>()[m_unlocked.Count] : null;
         // 설계 09 v0.4: 웜뱃이 계산대 range 안에 있나(serve가 auto면 있는 동안만 계산이 흐른다)
         public bool WombatAtCounter => WombatPresent && m_counter.DistanceTo(WombatPosition) <= (float)m_counter.Table.Range;
@@ -43,9 +42,6 @@ namespace ZooTycoon.Core
         public event Action<Interactable> ThingChanged;
         // 굴을 팠거나 자리에 진열대·오븐이 놓였다
         public event Action LayoutChanged;
-        public event Action UpgradesChanged;
-        // 설계 10: 업그레이드 하나를 샀다(화면이 그 대상을 튀긴다). UpgradesChanged 뒤에 온다
-        public event Action<string> Upgraded;
         // 구멍 앞에서 나가기 버튼(Mall이 웜뱃을 광장으로 옮긴다)
         public event Action ExitRequested;
 
@@ -66,12 +62,11 @@ namespace ZooTycoon.Core
             Grid = new BurrowGrid(state, m_config);
             Grid.Dug += Grid_Dug;
             Layout = new BakeryLayout(tables);
-            Upgrades = new Upgrades(tables, m_config);
             m_counter = new CounterInteractable(Row(CounterInteractable.k_Id), this);
-            m_exit = new ExitInteractable(Row(ExitInteractable.k_Id), Layout.HoleFloor, OnExitRequested);
+            m_exit = new ExitInteractable(Row(ExitInteractable.k_Id), this, Layout.HoleFloor, OnExitRequested);
 
             // 시작 배치: 왼쪽 열(−1)의 자리 줄 두 곳에 첫 빵과 오븐. 오른쪽 열(0)은 빈 자리
-            Unlock(tables.GetAll<BreadTable>()[0], new Cell(-1, 1));
+            AddShelf(tables.GetAll<BreadTable>()[0], new Cell(-1, 1));
             AddOven(new Cell(-1, 3));
             RebuildLayout();
             EnterAt(Layout.WombatHome);
@@ -101,54 +96,19 @@ namespace ZooTycoon.Core
             throw new KeyNotFoundException($"빵 '{breadId}'의 진열대가 없다.");
         }
 
-        // 설계 09: 시트에서 빵을 고르면 바로 굽는다(오븐 시트는 웜뱃이 오븐 앞에 있을 때만 열린다). 해금은 빵집이, 굽기 시작은 오븐이
-        public bool TryBake(OvenInteractable oven, string breadId)
+        // 설계 13 v0.5: 시트 행동(UnlockAction·PlaceOvenAction)이 값을 치른 뒤 빈 자리에 놓는다
+        internal void PlaceShelf(BreadTable bread, Cell cell)
         {
-            BreadTable bread = m_unlocked.Find(b => b.Id == breadId);
-            return bread != null && oven.TryStart(bread);
+            AddShelf(bread, cell);
+            RebuildLayout();
+            OnLayoutChanged();
         }
 
-        public bool TryUpgrade(string upgradeId)
+        internal void PlaceOven(Cell cell)
         {
-            if (!Upgrades.TryBuy(upgradeId, m_state))
-            {
-                return false;
-            }
-
-            OnUpgradesChanged();
-            OnUpgraded(upgradeId);
-            return true;
-        }
-
-        // 오븐 추가(oven_count)는 빈 자리를 골라 산다
-        public bool TryAddOven(Cell cell)
-        {
-            if (!IsEmptySlot(cell) || !TryUpgrade(ShopUpgradeTable.k_OvenCount))
-            {
-                return false;
-            }
-
             AddOven(cell);
             RebuildLayout();
             OnLayoutChanged();
-            return true;
-        }
-
-        // 빵은 BreadTable 행 순서대로만 해금한다(설계 08 결정 1). 진열대는 고른 빈 자리에
-        public bool TryUnlockNextBread(Cell cell)
-        {
-            BreadTable next = NextBread;
-
-            if (next == null || !IsEmptySlot(cell) || !m_state.TrySpendCoins(next.UnlockCost))
-            {
-                return false;
-            }
-
-            Unlock(next, cell);
-            RebuildLayout();
-            OnLayoutChanged();
-            OnUpgradesChanged();
-            return true;
         }
 
         protected override void TickArea(double dt)
@@ -162,9 +122,9 @@ namespace ZooTycoon.Core
             return Tables.Get<InteractableTable>(interactableId);
         }
 
-        private void Unlock(BreadTable bread, Cell cell)
+        private void AddShelf(BreadTable bread, Cell cell)
         {
-            ShelfInteractable shelf = new ShelfInteractable(Row(ShelfInteractable.k_Id), cell, bread, Layout, m_config, Upgrades);
+            ShelfInteractable shelf = new ShelfInteractable(Row(ShelfInteractable.k_Id), cell, bread, this);
             shelf.Changed += Thing_Changed;
             m_unlocked.Add(bread);
             m_shelves[cell] = shelf;
@@ -172,7 +132,7 @@ namespace ZooTycoon.Core
 
         private void AddOven(Cell cell)
         {
-            OvenInteractable oven = new OvenInteractable(Row(OvenInteractable.k_Id), cell, Layout, Upgrades);
+            OvenInteractable oven = new OvenInteractable(Row(OvenInteractable.k_Id), cell, this);
             oven.Changed += Thing_Changed;
             m_ovens.Add(oven);
         }
@@ -232,23 +192,23 @@ namespace ZooTycoon.Core
             }
 
             List<Cell> digCells = new List<Cell>(Grid.Frontier());
-            Sync(m_slots, slotCells, cell => new SlotInteractable(Row(SlotInteractable.k_Id), cell, Layout));
-            Sync(m_digs, digCells, cell => new DigInteractable(Row(DigInteractable.k_Id), cell, Layout));
+            Sync(m_slots, slotCells, cell => new SlotInteractable(Row(SlotInteractable.k_Id), cell, this));
+            Sync(m_digs, digCells, cell => new DigInteractable(Row(DigInteractable.k_Id), cell, this));
 
-            Things.Clear();
-            Things.AddRange(m_shelves.Values);
-            Things.AddRange(m_ovens);
-            Things.Add(m_counter);
-            Things.Add(m_exit);
+            Placed.Clear();
+            Placed.AddRange(m_shelves.Values);
+            Placed.AddRange(m_ovens);
+            Placed.Add(m_counter);
+            Placed.Add(m_exit);
 
             foreach (Cell cell in slotCells)
             {
-                Things.Add(m_slots[cell]);
+                Placed.Add(m_slots[cell]);
             }
 
             foreach (Cell cell in digCells)
             {
-                Things.Add(m_digs[cell]);
+                Placed.Add(m_digs[cell]);
             }
         }
 
@@ -274,16 +234,6 @@ namespace ZooTycoon.Core
         private void OnLayoutChanged()
         {
             LayoutChanged?.Invoke();
-        }
-
-        private void OnUpgradesChanged()
-        {
-            UpgradesChanged?.Invoke();
-        }
-
-        private void OnUpgraded(string upgradeId)
-        {
-            Upgraded?.Invoke(upgradeId);
         }
 
         private void OnExitRequested()

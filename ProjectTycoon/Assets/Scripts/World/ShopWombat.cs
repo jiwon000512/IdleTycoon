@@ -58,7 +58,7 @@ namespace ZooTycoon.World
             m_shop = shop;
             m_view = view;
             m_area = shop;
-            m_hands = shop.Wombat.Hands;
+            m_hands = shop.Wombat.Worker.Hands;
             m_origin = view.transform;
             m_frames = frames;
             m_hands.Changed += Hands_Changed;

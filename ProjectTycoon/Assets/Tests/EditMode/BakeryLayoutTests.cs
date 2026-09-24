@@ -13,7 +13,8 @@ namespace ZooTycoon.Tests
         private BakeryArea Create()
         {
             TableSet tables = TestTables.Load();
-            return new BakeryArea(ZooState.CreateNew(tables), tables, new SequenceRandom(new double[10]), new Wombat(tables));
+            ZooState state = ZooState.CreateNew(tables);
+            return new BakeryArea(state, tables, new SequenceRandom(new double[10]), new Wombat(tables, state));
         }
 
         [Test]

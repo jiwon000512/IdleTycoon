@@ -3,18 +3,23 @@ using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 13: 곳 안의 사물 하나. 표 행(range·actions) + 자기 상태 + 기준점 + 행동을 스스로 가진다.
-    // 행동은 행동하는 쪽의 손(Hands)을 받는다(지금은 웜뱃, 나중에 직원도)
+    // 설계 13: 곳 안의 사물 하나. 표 행(range·actions·upgrade) + 자기 상태 + 기준점 + 시간 흐름.
+    // v0.5: 사물에 하는 일은 행동 객체(ActionFactory)가 하고, 사물은 상태와 그 상태를 바꾸는 메서드만 가진다
     public abstract class Interactable
     {
         public InteractableTable Table { get; }
+        // 이 사물이 놓인 곳
+        public WombatArea Area { get; }
+        // v0.6: 업그레이드 단계(사물 종류 공통, 곳이 센다). 업그레이드가 없으면 0
+        public int UpgradeLevel => Area.UpgradeLevel(Table.Id);
 
         // 상태가 바뀌었다(화면이 사물마다 구독)
         public event Action<Interactable> Changed;
 
-        protected Interactable(InteractableTable table)
+        protected Interactable(InteractableTable table, WombatArea area)
         {
             Table = table;
+            Area = area;
         }
 
         // 기준점까지 거리. range 판정과 가장 가까운 대상 고르기에 쓴다
@@ -25,14 +30,10 @@ namespace ZooTycoon.Core
         {
         }
 
-        // 지금 할 수 있나. 시트를 여는 행동은 언제나
-        public virtual bool CanDo(string actionId, Hands hands)
+        // v0.6: 그 업그레이드 단계가 이 사물에서 무슨 값인가. 기본은 배수 1 + 효과(굽기·계산 속도), 진열대는 용량
+        public virtual double UpgradeValue(int level)
         {
-            return true;
-        }
-
-        public virtual void Do(string actionId, Hands hands)
-        {
+            return 1d + Table.Upgrade.EffectPerLevel * level;
         }
 
         protected void OnChanged()

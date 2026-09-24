@@ -22,5 +22,9 @@ namespace ZooTycoon.Core
         // 굴 격자 설계 v0.5: 파기 비용 = digBaseCost × digCostGrowth^(판 칸 수)
         public double DigBaseCost { get; set; }
         public double DigCostGrowth { get; set; }
+        // 설계 13 v0.6: 오븐 설치 가격 = ovenBaseCost × ovenCostGrowth^(시작 뒤 설치한 수), 오븐은 모두 ovenMax대까지
+        public double OvenBaseCost { get; set; }
+        public double OvenCostGrowth { get; set; }
+        public int OvenMax { get; set; }
     }
 }

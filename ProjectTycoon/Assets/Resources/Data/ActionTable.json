@@ -1,21 +1,28 @@
 {
   "table": "ActionTable",
-  "version": 3,
+  "version": 4,
   "notes": [
-    "설계 09 v0.4: 웜뱃이 가게 사물에서 하는 행동. 하는 일은 코드(ShopSim.k_Action*)에 있고, 이 표는 수동/자동과 버튼 아이콘만 정한다. 어느 사물에 붙는지는 InteractableTable.json.",
-    "mode: manual = 상호작용 버튼으로, auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로. take_out·fill·serve는 둘 다, open·dig는 manual만. take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
-    "icon: 버튼 아이콘(Resources/ 기준 경로, 확장자 없음). manual이면 필수, auto면 null.",
-    "take_out: 오븐의 다 구운 빵을 carryCapacity까지 머리에 인다. fill: 든 빵을 그 빵 진열대에 자리만큼 한 번에. serve: auto면 range 안에 있는 동안 줄 머리 계산 타이머가 흐르고, manual이면 버튼 한 번에 서 있는 줄 머리 계산을 끝낸다. open: 사물 시트. dig: 파기 시트.",
+    "설계 09 v0.4 → 설계 13 v0.5: 웜뱃이 사물에서 하는 행동. 하는 일은 행동 클래스(ActionFactory가 id로 만든다: TakeOutAction 등), 이 표는 어떻게 하는지(mode)와 버튼 아이콘. 어느 사물에서 되는지는 InteractableTable.json actions.",
+    "mode: auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로 · manual = 상호작용 버튼(지금 할 수 있는 첫 manual 행동) · sheet = 시트의 한 줄(줄을 누르면 산다). take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
+    "icon: 버튼 아이콘(Resources/ 기준 경로, 확장자 없음). manual이면 필수, 나머지는 null.",
+    "take_out: 오븐의 다 구운 빵을 carryCapacity까지 앞발에. fill: 든 빵을 그 빵 진열대에 자리만큼 한 번에. serve: auto면 range 안에 있는 동안 줄 머리 계산 타이머가 흐르고, manual이면 버튼 한 번에 서 있는 줄 머리 계산. open·open_dig: 시트 열기(돋보기·삽 아이콘). exit·enter: 곳 옮기기.",
+    "sheet 행동: bake(해금된 빵마다 칩, 빈 오븐만) · upgrade(ShopUpgradeTable.target이 그 사물인 업그레이드마다 줄) · unlock(빈 자리: 다음 빵 진열대. 진열대: 빈 자리가 없을 때 안내 줄) · place_oven(빈 자리: 오븐 놓기, 값은 oven_count 행) · dig(그 칸 파기).",
     "version 2 (2026-09-24, 설계 11 굴 밖 광장): exit(빵집 구멍 앞 → 광장)·enter(광장 빵집 문 → 빵집) 추가. 곳을 옮기는 행동이라 manual만.",
-    "version 3 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다."
+    "version 3 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
+    "version 4 (2026-09-24, 설계 13 v0.5 행동을 객체로): mode에 sheet 추가, 시트 행동 5개(bake·upgrade·unlock·place_oven·dig). 파기 시트를 여는 버튼은 open_dig(삽 아이콘), dig는 시트의 파기 줄."
   ],
   "rows": [
     { "id": "take_out", "mode": "auto", "icon": null },
     { "id": "fill", "mode": "auto", "icon": null },
     { "id": "serve", "mode": "auto", "icon": null },
     { "id": "open", "mode": "manual", "icon": "Sprites/Actions/open" },
-    { "id": "dig", "mode": "manual", "icon": "Sprites/Actions/dig" },
+    { "id": "open_dig", "mode": "manual", "icon": "Sprites/Actions/dig" },
     { "id": "exit", "mode": "manual", "icon": "Sprites/Actions/exit" },
-    { "id": "enter", "mode": "manual", "icon": "Sprites/Actions/enter" }
+    { "id": "enter", "mode": "manual", "icon": "Sprites/Actions/enter" },
+    { "id": "bake", "mode": "sheet", "icon": null },
+    { "id": "upgrade", "mode": "sheet", "icon": null },
+    { "id": "unlock", "mode": "sheet", "icon": null },
+    { "id": "place_oven", "mode": "sheet", "icon": null },
+    { "id": "dig", "mode": "sheet", "icon": null }
   ]
 }

@@ -24,7 +24,7 @@ namespace ZooTycoon.Tests
             m_tables = TestTables.Load();
             tweak?.Invoke(m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery));
             ZooState state = ZooState.CreateNew(m_tables);
-            Wombat wombat = new Wombat(m_tables);
+            Wombat wombat = new Wombat(m_tables, state);
             m_shop = new BakeryArea(state, m_tables, new SequenceRandom(new double[2000]), wombat);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), wombat);
             m_mall = new Mall(m_shop, m_plaza);
@@ -183,7 +183,7 @@ namespace ZooTycoon.Tests
         {
             Create(c => c.MaxCustomers = 0);
             BreadTable bread = m_tables.Get<BreadTable>("b01");
-            m_mall.Wombat.Hands.Add(bread, 3);
+            m_mall.Wombat.Worker.Hands.Add(bread, 3);
             Vector2 home = m_shop.Layout.WombatHome;
             Vector2 hole = m_shop.Layout.HoleFloor;
 
@@ -193,8 +193,26 @@ namespace ZooTycoon.Tests
             Assert.That(m_mall.Active.TryInteract(), Is.True);
 
             Assert.That(m_mall.Current, Is.EqualTo(Area.Bakery));
-            Assert.That(m_mall.Wombat.Hands.Count, Is.EqualTo(3));
-            Assert.That(m_mall.Wombat.Hands.Bread, Is.SameAs(bread));
+            Assert.That(m_mall.Wombat.Worker.Hands.Count, Is.EqualTo(3));
+            Assert.That(m_mall.Wombat.Worker.Hands.Bread, Is.SameAs(bread));
+        }
+
+        // 설계 13 v0.5: 표가 사물에 붙인 행동은 그 사물을 받을 수 있다(맞지 않는 짝이 조용히 안 보이는 일을 막는다)
+        [Test]
+        public void EveryTableAction_AcceptsItsThing()
+        {
+            Create();
+
+            foreach (WombatArea area in new WombatArea[] { m_shop, m_plaza })
+            {
+                foreach (Interactable thing in area.Things)
+                {
+                    foreach (string id in thing.Table.Actions)
+                    {
+                        Assert.That(ActionFactory.Create(m_tables.Get<ActionTable>(id)).Accepts(thing), Is.True, $"{thing.Table.Id} · {id}");
+                    }
+                }
+            }
         }
     }
 }

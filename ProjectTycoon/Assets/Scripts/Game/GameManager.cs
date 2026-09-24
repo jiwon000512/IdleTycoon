@@ -35,7 +35,7 @@ namespace ZooTycoon.Game
 
             State = ZooState.CreateNew(Tables);
             SystemRandom random = new SystemRandom();
-            Wombat wombat = new Wombat(Tables);
+            Wombat wombat = new Wombat(Tables, State);
             Bakery = new BakeryArea(State, Tables, random, wombat);
             Mall = new Mall(Bakery, new PlazaArea(Tables, Bakery, random, wombat));
         }

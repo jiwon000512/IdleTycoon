@@ -8,7 +8,9 @@ namespace ZooTycoon.Core
     public sealed class InteractableTable : Table<string>
     {
         public double Range { get; set; }
-        // ActionTable Id. 순서 = 버튼 우선순위
+        // ActionTable Id. 순서: manual은 버튼 우선순위, sheet는 시트 줄 순서
         public List<string> Actions { get; set; }
+        // 설계 13 v0.6: 업그레이드(upgrade 행동의 데이터). 없으면 null
+        public UpgradeInfo Upgrade { get; set; }
     }
 }

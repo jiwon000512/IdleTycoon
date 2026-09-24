@@ -11,15 +11,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 7)]
-        [TestCase("StringTable", 13)]
+        [TestCase("StringTable", 14)]
         [TestCase("BreadTable", 2)]
-        [TestCase("ShopUpgradeTable", 5)]
-        [TestCase("ActionTable", 3)]
-        [TestCase("InteractableTable", 3)]
+        [TestCase("ActionTable", 4)]
+        [TestCase("InteractableTable", 5)]
         [TestCase("DecorationTable", 3)]
         [TestCase("SoundTable", 2)]
         [TestCase("ConfigTable", 1)]
-        [TestCase("BakeryConfigTable", 1)]
+        [TestCase("BakeryConfigTable", 2)]
         [TestCase("PlazaConfigTable", 1)]
         [TestCase("PlazaDecorTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -91,11 +90,21 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
+        // 설계 13 v0.6: upgrade 행동이 있는 사물은 업그레이드 데이터가 있어야 한다
         [Test]
-        public void Validate_WhenShopUpgradeLookLevelExceedsMax_ReportsError()
+        public void Validate_WhenUpgradeActionWithoutData_ReportsError()
         {
             TableSet tables = TestTables.Load();
-            ShopUpgradeTable upgrade = tables.GetAll<ShopUpgradeTable>()[0];
+            tables.Get<InteractableTable>("oven").Upgrade = null;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenUpgradeLookLevelExceedsMax_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            UpgradeInfo upgrade = tables.Get<InteractableTable>("oven").Upgrade;
             upgrade.LookLevel = upgrade.MaxLevel + 1;
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
@@ -121,6 +130,8 @@ namespace ZooTycoon.Tests
         [TestCase("open", ActionMode.Auto, "Sprites/Actions/open")]
         [TestCase("exit", ActionMode.Auto, "Sprites/Actions/exit")]
         [TestCase("enter", ActionMode.Auto, "Sprites/Actions/enter")]
+        [TestCase("bake", ActionMode.Manual, "Sprites/Actions/open")]
+        [TestCase("take_out", ActionMode.Sheet, null)]
         public void Validate_WhenActionRowInvalid_ReportsError(string id, ActionMode mode, string icon)
         {
             TableSet tables = TestTables.Load();

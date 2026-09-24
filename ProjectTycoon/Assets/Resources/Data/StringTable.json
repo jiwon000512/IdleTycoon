@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 13,
+  "version": 14,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -15,7 +15,8 @@
     "version 10 (2026-09-23, 상단 HUD 시안 C): 가게 이름 줄을 없애 shop_title_bakery 삭제.",
     "version 11 (2026-09-23): 빈 자리 글자 태그를 없애 tag_slot 삭제(사용자 「게임과 맞지 않음」).",
     "version 12 (2026-09-24, 설계 11 굴 밖 광장): sign_bakery(광장 빵집 문 간판) 추가.",
-    "version 13 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다."
+    "version 13 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
+    "version 14 (2026-09-24, 설계 13 v0.6): 빈 자리 시트의 오븐 설치 줄 row_place_oven·row_place_oven_effect(업그레이드 줄 서식에서 분리)."
   ],
   "rows": [
     { "id": "topbar_coins", "ko": "{0}" },
@@ -40,6 +41,8 @@
     { "id": "sheet_slot_status", "ko": "진열대나 오븐을 놓는다" },
     { "id": "sheet_dig_title", "ko": "굴 파기" },
     { "id": "sheet_dig_status", "ko": "판 칸 {0}" },
+    { "id": "row_place_oven", "ko": "오븐 설치" },
+    { "id": "row_place_oven_effect", "ko": "오븐 {0} → {1}" },
     { "id": "row_dig", "ko": "여기 파기" },
     { "id": "row_dig_effect", "ko": "굴이 넓어진다" },
     { "id": "tag_dig", "ko": "파기 {0}" },

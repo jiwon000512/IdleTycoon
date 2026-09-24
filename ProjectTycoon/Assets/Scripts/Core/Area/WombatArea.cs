@@ -6,10 +6,12 @@ using GameKit.Tables;
 namespace ZooTycoon.Core
 {
     // 설계 13: 웜뱃이 걷는 곳 하나(빵집·광장 공통). 곳이 조립한 사물 중 range 안 가장 가까운 것을 대상으로 고르고,
-    // range 안 사물의 auto 행동은 할 수 있으면 바로 하고, 버튼으로 대상의 manual 행동을 한다(설계 09 v0.4 11장).
-    // 굴은 모른다: 걷는 땅(WombatNav)과 들어오는 곳(Entrance)만 곳이 알려 준다
+    // range 안 사물의 auto 행동은 할 수 있으면 바로 하고, 버튼으로 대상의 manual 행동을, 시트 줄로 sheet 행동을 한다(설계 09 v0.4 11장).
+    // v0.5: 행동은 ActionTable 행마다 행동 객체(ActionFactory). 굴은 모른다: 걷는 땅(WombatNav)과 들어오는 곳(Entrance)만 곳이 알려 준다
     public abstract class WombatArea
     {
+        private readonly Dictionary<string, InteractAction> m_actions = new Dictionary<string, InteractAction>();
+        private readonly Dictionary<string, int> m_upgradeLevels = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly List<Interactable> m_inRange = new List<Interactable>();
         private Interactable m_target;
         private Interactable m_lastTarget;
@@ -22,6 +24,8 @@ namespace ZooTycoon.Core
         public bool WombatMoving => WombatPresent && Wombat.Moving;
         // range 안 사물 중 가장 가까운 것. 없으면 null
         public Interactable Target => m_target;
+        // 곳이 조립한 사물. 순서 = 거리가 같을 때와 auto 행동의 우선순위
+        public IReadOnlyList<Interactable> Things => Placed;
 
         // 대상의 actions를 순서대로 보고 지금 할 수 있는 첫 manual 행동(버튼). 없으면 null
         public ActionTable TargetAction
@@ -35,11 +39,11 @@ namespace ZooTycoon.Core
 
                 foreach (string id in m_target.Table.Actions)
                 {
-                    ActionTable action = Tables.Get<ActionTable>(id);
+                    InteractAction action = m_actions[id];
 
-                    if (!action.IsAuto && m_target.CanDo(id, Wombat.Hands))
+                    if (action.Table.Mode == ActionMode.Manual && action.CanDo(Wombat.Worker, m_target))
                     {
-                        return action;
+                        return action.Table;
                     }
                 }
 
@@ -49,10 +53,11 @@ namespace ZooTycoon.Core
 
         // 대상이 바뀌었거나 대상의 버튼 행동이 바뀌었다(다 구웠다·빵을 들었다 등)
         public event Action TargetChanged;
+        // 설계 13 v0.6: 업그레이드를 샀다(사물 종류 id). 화면이 그 종류 사물을 튀기고 값을 다시 그린다
+        public event Action<string> Upgraded;
 
         protected TableSet Tables { get; }
-        // 곳이 조립한 사물. 순서 = 거리가 같을 때와 auto 행동의 우선순위
-        protected List<Interactable> Things { get; } = new List<Interactable>();
+        protected List<Interactable> Placed { get; } = new List<Interactable>();
         protected abstract BurrowNav WombatNav { get; }
         protected abstract Vector2 Entrance { get; }
 
@@ -60,6 +65,11 @@ namespace ZooTycoon.Core
         {
             Tables = tables;
             Wombat = wombat;
+
+            foreach (ActionTable action in tables.GetAll<ActionTable>())
+            {
+                m_actions[action.Id] = ActionFactory.Create(action);
+            }
         }
 
         // 매 프레임. 순서: 웜뱃(걷기 → 대상·auto 행동) → 사물 → 곳 고유
@@ -67,7 +77,7 @@ namespace ZooTycoon.Core
         {
             TickWombat(dt);
 
-            foreach (Interactable thing in Things)
+            foreach (Interactable thing in Placed)
             {
                 thing.Tick(dt);
             }
@@ -75,18 +85,49 @@ namespace ZooTycoon.Core
             TickArea(dt);
         }
 
-        // 버튼: 대상의 manual 행동을 한다. 시트를 여는 행동(open·dig)은 화면 몫이라 false
+        // 버튼: 대상의 manual 행동을 한다. 시트 열기는 화면 몫이라 false
         public bool TryInteract()
         {
-            ActionTable action = TargetAction;
+            ActionTable table = TargetAction;
 
-            if (action == null || action.Id == ActionTable.k_Open || action.Id == ActionTable.k_Dig)
+            if (table == null || m_actions[table.Id].OpensSheet)
             {
                 return false;
             }
 
-            m_target.Do(action.Id, Wombat.Hands);
+            m_actions[table.Id].Do(Wombat.Worker, m_target);
             return true;
+        }
+
+        // 사물의 시트 행동들(actions 순서 = 시트 줄 순서)
+        public IEnumerable<SheetAction> SheetActions(Interactable target)
+        {
+            foreach (string id in target.Table.Actions)
+            {
+                if (m_actions[id] is SheetAction action)
+                {
+                    yield return action;
+                }
+            }
+        }
+
+        // 시트 줄 누르기
+        public bool TryBuy(string actionId, Interactable target, string option)
+        {
+            return ((SheetAction)m_actions[actionId]).TryBuy(Wombat.Worker, target, option);
+        }
+
+        // v0.6: 업그레이드 단계는 사물 종류 공통이라 곳이 센다
+        public int UpgradeLevel(string interactableId)
+        {
+            m_upgradeLevels.TryGetValue(interactableId, out int level);
+            return level;
+        }
+
+        internal void LevelUp(string interactableId)
+        {
+            m_upgradeLevels[interactableId] = UpgradeLevel(interactableId) + 1;
+            OnUpgraded(interactableId);
         }
 
         // 설계 11: 다른 곳에서 들어온다. 입구 아래 바닥에 선다
@@ -148,7 +189,7 @@ namespace ZooTycoon.Core
             Interactable found = null;
             m_inRange.Clear();
 
-            foreach (Interactable thing in Things)
+            foreach (Interactable thing in Placed)
             {
                 float distance = thing.DistanceTo(p);
 
@@ -170,9 +211,11 @@ namespace ZooTycoon.Core
             {
                 foreach (string id in thing.Table.Actions)
                 {
-                    if (Tables.Get<ActionTable>(id).IsAuto && thing.CanDo(id, Wombat.Hands))
+                    InteractAction action = m_actions[id];
+
+                    if (action.Table.IsAuto && action.CanDo(Wombat.Worker, thing))
                     {
-                        thing.Do(id, Wombat.Hands);
+                        action.Do(Wombat.Worker, thing);
                     }
                 }
             }
@@ -183,6 +226,11 @@ namespace ZooTycoon.Core
         private void OnTargetChanged()
         {
             TargetChanged?.Invoke();
+        }
+
+        private void OnUpgraded(string interactableId)
+        {
+            Upgraded?.Invoke(interactableId);
         }
     }
 }
