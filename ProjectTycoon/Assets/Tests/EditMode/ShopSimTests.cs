@@ -507,7 +507,8 @@ namespace ZooTycoon.Tests
             Assert.That(shop.ShelfCapacity, Is.EqualTo(12));
         }
 
-        // 설계 09 검증 1: 조이스틱 방향으로 wombatSpeed만큼 걷고, 벽을 대각선으로 밀면 벽을 따라 미끄러진다
+        // 설계 09 검증 1: 조이스틱 방향으로 wombatSpeed만큼 걷고, 벽을 대각선으로 밀면 벽을 따라 미끄러진다.
+        // 미끄러지는 동안에도 조이스틱 쪽(오른쪽 위 → 가로가 큰 쪽 = 오른쪽)을 본다(2026-09-24)
         [Test]
         public void Wombat_Input_MovesAtSpeedAndSlidesAlongWall()
         {
@@ -528,7 +529,15 @@ namespace ZooTycoon.Tests
             Assert.That(shop.WombatPosition.X, Is.EqualTo(wallX).Within(0.05f));
             Assert.That(shop.WombatPosition.Y, Is.GreaterThan(home.Y + 0.5f));
             Assert.That(shop.WombatMoving, Is.True);
-            Assert.That(shop.WombatFacing, Is.EqualTo(Facing.Up));
+            Assert.That(shop.WombatFacing, Is.EqualTo(Facing.Right));
+
+            // 벽에 막혀 멈춰도 민 쪽을 본다
+            shop.SetWombatInput(new Vector2(0f, -1f));
+            Run(shop, 0.1d);
+            shop.SetWombatInput(new Vector2(1f, 0f));
+            Run(shop, 0.1d);
+            Assert.That(shop.WombatMoving, Is.False);
+            Assert.That(shop.WombatFacing, Is.EqualTo(Facing.Right));
         }
 
         // 설계 09 검증 2: 거리 안의 가장 가까운 사물이 대상이고, 바뀔 때만 알린다. 벽 옆이면 그 흙 칸
