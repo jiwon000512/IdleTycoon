@@ -52,7 +52,8 @@ namespace ZooTycoon.Core
         public BurrowNav WombatNav { get; private set; }
         public IReadOnlyList<Vector2> QueueSlots => m_queueSlots;
         // 구멍 안(나타나는 곳)과 구멍 아래 바닥(내려앉는 곳)
-        public Vector2 HoleInside => new Vector2(0f, -1.6f);
+        // 굴 환경 A2: 아치 구멍 밑변(= 띠 밑변) 바로 위에서 톡 나온다
+        public Vector2 HoleInside => new Vector2(0f, -(BurrowShape.k_EntranceFloorTop - 1) / k_PixelsPerUnit);
         public Vector2 HoleFloor => new Vector2(0f, -2.2f);
         public Vector2 CounterBase => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_CounterDrop);
         public Vector2 WombatHome => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_WombatDrop);

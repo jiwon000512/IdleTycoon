@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 45aaa70ec50a02a40a98a93003e29389
+guid: f8b8f3fe1380e1a4f8215b817762678b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8274196694388497642
-    second: arch_0
+      213: 8182628634874624770
+    second: wall_face_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -24,7 +24,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -40,9 +40,9 @@ TextureImporter:
     filterMode: 0
     aniso: 1
     mipBias: 0
-    wrapU: 1
-    wrapV: 1
-    wrapW: 1
+    wrapU: 0
+    wrapV: 0
+    wrapW: 0
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -50,8 +50,8 @@ TextureImporter:
   spriteExtrude: 1
   spriteMeshType: 0
   alignment: 9
-  spritePivot: {x: 0.5, y: 0}
-  spritePixelsToUnits: 80
+  spritePivot: {x: 0, y: 1}
+  spritePixelsToUnits: 40
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: arch_0
+      name: wall_face_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 128
-        height: 106
+        width: 64
+        height: 40
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 613234de1f52c2d80800000000000000
-      internalID: -8274196694388497642
+      spriteID: 20b34a6d3698e8170800000000000000
+      internalID: 8182628634874624770
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      arch_0: -8274196694388497642
+      wall_face_0: 8182628634874624770
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

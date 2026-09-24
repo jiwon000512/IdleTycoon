@@ -16,7 +16,7 @@
 
 빵집 소품·배경 (2026-09-23)
 - shop_raw/: Codex 원본 24장(항목별 a·b·c) + 고른 후처리본. 선택: 바닥 B·입구 A·진열대 A·오븐 A(+B는 굽기 속도 5단계부터 oven_2)·계산대 B·빵 A/B/A.
-- make_arch.py: arch_a_px에서 구멍 덩어리만 골라 1.7배 + 테두리 3칸 → arch_hole.png. make_bubble.py: 말풍선·화남. make_shop_sections.py: 구역 배경 4장(둥근 방 벽). compose.py: 시안 목업.
+- make_bubble.py: 말풍선·화남. make_shop_sections.py: 구역 배경 4장(둥근 방 벽). compose.py: 시안 목업.
 - 계산대는 counter_b_th의 20~32열을 두 번 끼워 84칸. 모든 소품 PPU 80(ShopBaker.k_Ppu).
 - fix_fox.py (2026-09-23): fox_{front,back}_unpadded.png → 왼쪽 9칸 여백(몸 중심 = 피벗), 뒷모습 꼬리를 3칸 안쪽 + 외곽선을 몸 위에 다시 그려 앞으로. 시트 칸 폭 88 → 104.
 - fix_fox_tail.py: 뒷모습 꼬리를 베지어 곡선(허리 아래 가운데 → 오른쪽 위)으로 다시 그려 몸 위에 얹음. 1차 시도(fix_fox.py의 꼬리 옮기기)는 "아직 이상하다"로 반려.
@@ -50,3 +50,9 @@
 - 사용자: 「식빵 리소스 변경, 동물들과 같이 정면 살짝 위에서 바라본 느낌으로」. 결 참조 = 옛 b01, 카메라 참조 = oven.png(정면·위 30도).
 - shop_raw/bread_front_raw_{a,b,c}.png: Codex 3장(A 자른 단면 정면 · B 긴 옆면 한 봉우리 · C 산형 세 봉우리). 프롬프트 bread_front_prompt_{a,b,c}.txt.
 - 선택 A: make_pixel.py --px=2 --cellsw=26 (26×25칸, 8색) → shop_raw/bread_front_a_px.png = Resources/Sprites/Shop/Breads/b01.png. 폭 26칸은 옛 b01과 같게(머리 위 층 간격이 빵 크기에 맞춰져 있음).
+
+굴 환경 A2 「벽 높이」 (2026-09-24)
+- 콘셉트: 게임 캡처를 참조로 Codex가 환경만 다시 그린 A 벽 높이 · B 결만 · C 아늑한 가게 내부 중 A(C는 뒤에 내부 업그레이드로). 윗벽 지층은 곧은 가로줄, 방 모서리·턱은 둥글게, 둥근 건 입구 구멍만(수정 2). 턱 4칸.
+- 재료 품질 시안 3벌: A 스크립트(바닥 알갱이 무늬 옮김) · B·C Codex 재료 시트(shop_raw/burrow_mat_{b,c}.png, 프롬프트 burrow_mat_prompt_{b,c}.txt). 선택: 입구 B, 지층 띠·바깥 흙 C.
+- make_burrow_a.py: 시트에서 세 덩어리를 잘라 make_pixel.py로 칸 격자(띠 세로 40칸, 흙 32칸, 입구 가로 60칸, --th=0.001) → 띠는 이음이 가장 매끄러운 64칸 구간 + 맨 아래 그늘 한 줄 → 드문 색을 합쳐 7색 → ../wall_face.png(64×40) · ../wall_tile.png(32×32) · ../arch.png(60×49칸 × 2px). 방 둘레 턱 색은 입구 턱 (168,120,96)에 맞춰 BurrowPainter.k_Ledge.
+- make_arch.py·shop_raw/arch_hole.png(옛 구멍 입구)는 삭제. make_burrow_tiles.py는 floor_tile·slot_empty만 만든다.

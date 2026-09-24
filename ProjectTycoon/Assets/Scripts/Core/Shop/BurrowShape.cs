@@ -5,26 +5,42 @@ namespace ZooTycoon.Core
 {
     // 굴 격자 설계 v0.5 3장: 파낸 칸의 합집합에서 굴 바닥 마스크를 만든다(한 칸 = 1픽셀, y는 아래로).
     // 격자 꼭짓점마다 둘레 네 칸을 보고 바깥 모서리(파낸 칸 1개)는 반지름 r로 깎고, 안쪽 모서리(안 판 칸 1개)는 r로 메운다.
-    // 입구 줄은 아치 구멍 가운데 높이부터 줄 폭 전체가 바닥(2026-09-23: 윗변을 다른 면처럼 평평하게, 모서리도 r로 깎는다)
+    // 굴 환경 A2(2026-09-24): 윗변이 드러난 칸(위 칸을 안 팠음, 입구 줄은 늘)은 바닥 윗변 위에 흙벽 띠 k_WallHeight칸이 선다.
+    // 띠는 방 윤곽 안이지만 걷는 바닥이 아니다(WallRow). 바닥 윗변은 그대로라 길 찾기·자리는 바뀌지 않는다
     public static class BurrowShape
     {
-        // 입구 아치 그림(arch.png) 높이(칸). 아트 사실이라 상수
-        private const int k_ArchHeight = 53;
+        // 입구 줄 바닥 윗변(칸, 줄 윗변 기준) = 띠 밑변 = 아치 구멍 밑변
+        public const int k_EntranceFloorTop = 57;
+        // 윗벽 띠 높이(칸) = wall_face.png 높이. 아트 사실이라 상수
+        public const int k_WallHeight = 40;
 
         public sealed class Result
         {
             // [x, y]. OriginX·OriginY는 왼쪽 위 픽셀의 칸 좌표(굴 원점 기준, y는 아래로 양수)
             public bool[,] Mask { get; }
+            // 띠 안이면 wall_face 텍스처 행 + 1(1 = 띠 윗변), 아니면 0
+            public int[,] WallRow { get; }
             public int OriginX { get; }
             public int OriginY { get; }
             public int Width => Mask.GetLength(0);
             public int Height => Mask.GetLength(1);
 
-            public Result(bool[,] mask, int originX, int originY)
+            public Result(bool[,] mask, int originX, int originY) : this(mask, new int[mask.GetLength(0), mask.GetLength(1)], originX, originY)
+            {
+            }
+
+            public Result(bool[,] mask, int[,] wallRow, int originX, int originY)
             {
                 Mask = mask;
+                WallRow = wallRow;
                 OriginX = originX;
                 OriginY = originY;
+            }
+
+            // 걷는 바닥 = 방 안이면서 띠가 아닌 곳
+            public bool IsFloor(int x, int y)
+            {
+                return Mask[x, y] && WallRow[x, y] == 0;
             }
         }
 
@@ -45,34 +61,28 @@ namespace ZooTycoon.Core
             int width = (maxCol - minCol + 1) * cellWidth + margin * 2;
             int height = RowTop(maxRow + 1, cellHeight, entranceHeight) + margin * 2;
             bool[,] mask = new bool[width, height];
-            int floorTop = EntranceFloorTop(entranceHeight);
+            int[,] wallRow = new int[width, height];
+            HashSet<Cell> set = cells as HashSet<Cell> ?? new HashSet<Cell>(cells);
 
             foreach (Cell cell in cells)
             {
                 int x0 = cell.Col * cellWidth - originX;
-                int y0 = (cell.Row == 0 ? floorTop : RowTop(cell.Row, cellHeight, entranceHeight)) - originY;
-                int h = cell.Row == 0 ? entranceHeight - floorTop : cellHeight;
+                int top = (cell.Row == 0 ? k_EntranceFloorTop : RowTop(cell.Row, cellHeight, entranceHeight)) - originY;
+                int bottom = RowTop(cell.Row + 1, cellHeight, entranceHeight) - originY;
+                bool exposed = !set.Contains(cell.Offset(0, -1));
 
-                for (int y = y0; y < y0 + h; y++)
+                for (int y = exposed ? top - k_WallHeight : top; y < bottom; y++)
                 {
                     for (int x = x0; x < x0 + cellWidth; x++)
                     {
                         mask[x, y] = true;
+                        wallRow[x, y] = y < top ? y - (top - k_WallHeight) + 1 : 0;
                     }
                 }
             }
 
-            HashSet<Cell> set = cells as HashSet<Cell> ?? new HashSet<Cell>(cells);
-
-            for (int row = 0; row <= maxRow + 1; row++)
-            {
-                for (int col = minCol; col <= maxCol + 1; col++)
-                {
-                    RoundVertex(mask, set, col, row, cellWidth, cellHeight, entranceHeight, radius, originX, originY);
-                }
-            }
-
-            return new Result(mask, originX, originY);
+            RoundCorners(mask, radius);
+            return new Result(mask, wallRow, originX, originY);
         }
 
         // 줄 윗변 y(칸). row 0 = 입구 줄
@@ -81,44 +91,43 @@ namespace ZooTycoon.Core
             return row <= 0 ? 0 : entranceHeight + (row - 1) * cellHeight;
         }
 
-        // 입구 줄 바닥 윗변(칸, 줄 윗변 기준) = 아치 구멍 가운데. 아치는 이 선 위에 걸쳐 구멍 아래쪽이 바닥으로 이어진다
-        private static int EntranceFloorTop(int entranceHeight)
+        // 격자점(픽셀 사이 꼭짓점)마다 둘레 네 픽셀을 본다. 1개만 방이면 바깥 모서리를 깎고, 3개면 빠진 쪽 안쪽 모서리를 메운다.
+        // 칸·띠가 모두 축 정렬 사각형이라 모서리는 사각형 변이 만나는 곳에만 생긴다
+        private static void RoundCorners(bool[,] mask, int radius)
         {
-            return (int)Math.Ceiling(entranceHeight - k_ArchHeight + k_ArchHeight * 0.55);
-        }
+            bool[,] raw = (bool[,])mask.Clone();
 
-        // 꼭짓점 (col, row)의 왼쪽 위 = (col−1, row−1) … 오른쪽 아래 = (col, row). 파낸 칸이 1개면 그 칸의 모서리를 깎고, 3개면 빠진 칸 모서리를 메운다
-        private static void RoundVertex(bool[,] mask, HashSet<Cell> cells, int col, int row, int cellWidth, int cellHeight, int entranceHeight, int radius, int originX, int originY)
-        {
-            int vx = col * cellWidth - originX;
-            int vy = (row == 0 ? EntranceFloorTop(entranceHeight) : RowTop(row, cellHeight, entranceHeight)) - originY;
-            int dug = 0;
-            int missingX = 0, missingY = 0, dugX = 0, dugY = 0;
-
-            foreach ((int dx, int dy) in new[] { (-1, -1), (0, -1), (-1, 0), (0, 0) })
+            for (int vy = 1; vy < raw.GetLength(1); vy++)
             {
-                Cell cell = new Cell(col + dx, row + dy);
-
-                if (cell.Row >= 0 && cells.Contains(cell))
+                for (int vx = 1; vx < raw.GetLength(0); vx++)
                 {
-                    dug++;
-                    dugX = dx;
-                    dugY = dy;
-                }
-                else
-                {
-                    missingX = dx;
-                    missingY = dy;
-                }
-            }
+                    int dug = 0;
+                    int missingX = 0, missingY = 0, dugX = 0, dugY = 0;
 
-            if (dug == 1)
-            {
-                Corner(mask, vx, vy, dugX, dugY, radius, false);
-            }
-            else if (dug == 3 && row > 0)
-            {
-                Corner(mask, vx, vy, missingX, missingY, radius, true);
+                    foreach ((int dx, int dy) in new[] { (-1, -1), (0, -1), (-1, 0), (0, 0) })
+                    {
+                        if (raw[vx + dx, vy + dy])
+                        {
+                            dug++;
+                            dugX = dx;
+                            dugY = dy;
+                        }
+                        else
+                        {
+                            missingX = dx;
+                            missingY = dy;
+                        }
+                    }
+
+                    if (dug == 1)
+                    {
+                        Corner(mask, vx, vy, dugX, dugY, radius, false);
+                    }
+                    else if (dug == 3)
+                    {
+                        Corner(mask, vx, vy, missingX, missingY, radius, true);
+                    }
+                }
             }
         }
 

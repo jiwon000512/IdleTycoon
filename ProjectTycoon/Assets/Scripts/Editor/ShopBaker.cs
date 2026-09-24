@@ -71,11 +71,11 @@ namespace ZooTycoon.Editor
 
         static void ImportSprites()
         {
-            Vector2 top = new Vector2(0.5f, 1f);
             Vector2 bottom = new Vector2(0.5f, 0f);
             Vector2 center = new Vector2(0.5f, 0.5f);
 
-            Import(k_SpriteDir + "arch.png", top);
+            // 굴 환경 A2: 피벗 = 구멍 밑변 = 띠 밑변(입구 줄 바닥 윗변)
+            Import(k_SpriteDir + "arch.png", bottom);
 
             foreach (string name in new[] { "shelf", "oven", "oven_2", "counter", "bubble", "angry" })
             {
@@ -112,6 +112,7 @@ namespace ZooTycoon.Editor
             // 타일: 굴 그림이 픽셀을 읽고, 흙 배경은 Tiled로 깐다(왼쪽 위 피벗)
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_SpriteDir + "wall_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
+            Import(k_SpriteDir + "wall_face.png", new Vector2(0f, 1f), k_TagPpu, true);
 
             foreach (string name in new[] { "b01", "b02", "b03" })
             {
@@ -345,7 +346,7 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             // 아치 그림 53칸 높이가 입구 줄(80칸) 밑변에 닿게: 윗변 = 27칸 = 0.675유닛 아래
-            Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -0.675f, 0f), k_ArchOrder);
+            Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / ShopLayout.k_PixelsPerUnit, 0f), k_ArchOrder);
 
             ShopView view = root.AddComponent<ShopView>();
             Set(view, "m_shelfPrefab", shelf);
@@ -356,6 +357,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_burrow", burrow);
             Set(view, "m_floorTile", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "floor_tile.png"));
             Set(view, "m_wallTile", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "wall_tile.png"));
+            Set(view, "m_wallFace", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "wall_face.png"));
             ShopCustomerSpawner spawner = root.AddComponent<ShopCustomerSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Shop");

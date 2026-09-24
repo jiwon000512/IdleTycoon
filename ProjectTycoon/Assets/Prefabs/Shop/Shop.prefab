@@ -208,7 +208,7 @@ Transform:
   m_GameObject: {fileID: 7610013184284186806}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.675, z: 0}
+  m_LocalPosition: {x: 0, y: -1.425, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -268,7 +268,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.6, y: 1.325}
+  m_Size: {x: 1.5, y: 1.225}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -329,6 +329,7 @@ MonoBehaviour:
   m_burrow: {fileID: 6005301527074928383}
   m_floorTile: {fileID: 2800000, guid: cbe2c1fb1b307594393261131b9a1129, type: 3}
   m_wallTile: {fileID: 2800000, guid: 882915a7e11f7f64f99f73a3c756154c, type: 3}
+  m_wallFace: {fileID: 2800000, guid: f8b8f3fe1380e1a4f8215b817762678b, type: 3}
   m_digSeconds: 0.6
 --- !u!114 &864861439378456402
 MonoBehaviour:

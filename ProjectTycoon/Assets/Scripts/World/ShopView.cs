@@ -22,6 +22,7 @@ namespace ZooTycoon.World
         [Tooltip("바닥·벽 타일 한 주기(한 칸 = 1px, 읽기 가능)")]
         [SerializeField] private Texture2D m_floorTile;
         [SerializeField] private Texture2D m_wallTile;
+        [SerializeField] private Texture2D m_wallFace;
         [Tooltip("새로 판 칸이 흙빛에서 밝아지는 시간(초)")]
         [SerializeField] private float m_digSeconds = 0.6f;
 
@@ -328,7 +329,7 @@ namespace ZooTycoon.World
         {
             BurrowShape.Result shape = Layout.Shape;
             Sprite old = m_burrow.sprite;
-            m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile);
+            m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
             m_burrow.transform.localPosition = new Vector3(shape.OriginX / ShopLayout.k_PixelsPerUnit, -shape.OriginY / ShopLayout.k_PixelsPerUnit, 0f);
 
             if (old != null)

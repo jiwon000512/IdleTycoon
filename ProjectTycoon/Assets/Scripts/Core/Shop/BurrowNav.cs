@@ -385,7 +385,7 @@ namespace ZooTycoon.Core
         {
             int x = (int)Math.Floor(p.X * ppu) - shape.OriginX;
             int y = (int)Math.Floor(-p.Y * ppu) - shape.OriginY;
-            return x >= 0 && y >= 0 && x < shape.Width && y < shape.Height && shape.Mask[x, y];
+            return x >= 0 && y >= 0 && x < shape.Width && y < shape.Height && shape.IsFloor(x, y);
         }
 
         private static bool IsBlocked(IReadOnlyList<NavRect> blocked, Vector2 p, float clearance)
