@@ -5,7 +5,7 @@ using System.Numerics;
 namespace ZooTycoon.Core
 {
     // 손님 동선 설계 v0.2 5·6·7장: 손님 행동 트리와 잎 행동, 줄·서는 자리
-    public sealed partial class ShopSim
+    public sealed partial class BakeryArea
     {
         // 비켜 걷기: 이 거리 안의 손님을 피한다(손님 그림 폭). 비키는 최대 거리는 걷는 땅 여유(k_Clearance 0.3) 안
         private const float k_PersonalSpace = 0.6f;
@@ -19,7 +19,7 @@ namespace ZooTycoon.Core
         private int m_nextCustomerId;
 
         public IReadOnlyList<Customer> Customers => m_customers;
-        // 설계 11: 손님은 광장 빵집 문으로 들어온다(도착 타이머는 PlazaSim)
+        // 설계 11: 손님은 광장 빵집 문으로 들어온다(도착 타이머는 PlazaArea)
         public bool CanAdmit => m_customers.Count < m_config.MaxCustomers;
         // 빵을 집은 순서. 걸어오는 중인 손님도 들어 있다
         public IReadOnlyList<Customer> Queue => m_queue;
@@ -128,13 +128,13 @@ namespace ZooTycoon.Core
         private void TickCheckout(double dt)
         {
             // 설계 09 v0.4: serve가 auto면 계산대 range 안에 있는 동안만 흐른다. manual이면 버튼(PayHead)으로만
-            if (!HeadWaiting || !m_tables.Get<ActionTable>(k_ActionServe).IsAuto || !WombatAtCounter)
+            if (!HeadWaiting || !ServeAuto || !WombatAtCounter)
             {
                 return;
             }
 
             Customer head = m_queue[0];
-            head.Timer -= dt * (1d + Effect(k_CheckoutSpeed));
+            head.Timer -= dt * (1d + Upgrades.Effect(ShopUpgradeTable.k_CheckoutSpeed));
 
             if (head.Timer > 0d)
             {
@@ -145,9 +145,9 @@ namespace ZooTycoon.Core
         }
 
         // 줄 머리가 머리 자리에 서서 계산을 기다린다
-        private bool HeadWaiting => m_queue.Count > 0 && m_queue[0].Phase == CustomerPhase.Queued && !m_queue[0].Moving;
+        internal bool HeadWaiting => m_queue.Count > 0 && m_queue[0].Phase == CustomerPhase.Queued && !m_queue[0].Moving;
 
-        private void PayHead()
+        internal void PayHead()
         {
             Customer head = m_queue[0];
             m_queue.RemoveAt(0);
@@ -158,7 +158,7 @@ namespace ZooTycoon.Core
 
             for (int i = 0; i < m_queue.Count; i++)
             {
-                Walk(m_queue[i].Mover, m_layout.QueueSlots[i], m_layout.QueueFacing(i));
+                m_queue[i].Mover.WalkTo(Layout.Nav, Layout.QueueSlots[i], Layout.QueueFacing(i));
             }
 
             OnQueueChanged();
@@ -167,7 +167,7 @@ namespace ZooTycoon.Core
         // 광장 빵집 문에서 톡 들어온 손님이 구멍에서 나온다(자리 확인은 CanAdmit으로 부르는 쪽이)
         public void Admit(VisitorTable look)
         {
-            Customer customer = new Customer(++m_nextCustomerId, look, m_layout.HoleInside, m_config.PatienceSeconds);
+            Customer customer = new Customer(++m_nextCustomerId, look, Layout.HoleInside, m_config.PatienceSeconds);
             customer.Brain = BuildBrain();
             m_customers.Add(customer);
             OnCustomerArrived(customer);
@@ -182,11 +182,11 @@ namespace ZooTycoon.Core
 
                 if (index >= 0)
                 {
-                    Walk(customer.Mover, m_layout.QueueSlots[index], m_layout.QueueFacing(index));
+                    customer.Mover.WalkTo(Layout.Nav, Layout.QueueSlots[index], Layout.QueueFacing(index));
                 }
                 else if (customer.Moving)
                 {
-                    Walk(customer.Mover, customer.Mover.Destination, customer.Mover.ArriveFacing);
+                    customer.Mover.WalkTo(Layout.Nav, customer.Mover.Destination, customer.Mover.ArriveFacing);
                 }
             }
         }
@@ -199,7 +199,7 @@ namespace ZooTycoon.Core
             customer.Phase = CustomerPhase.Entering;
             customer.Timer = m_hopSeconds;
             customer.HopProgress = 0d;
-            customer.Mover.Place(m_layout.HoleInside);
+            customer.Mover.Place(Layout.HoleInside);
             customer.Mover.Facing = Facing.Down;
             return true;
         }
@@ -220,8 +220,8 @@ namespace ZooTycoon.Core
             double t = Math.Min(1d, 1d - customer.Timer / m_hopSeconds);
             customer.HopProgress = t;
             bool entering = customer.Phase == CustomerPhase.Entering;
-            Vector2 from = entering ? m_layout.HoleInside : m_layout.HoleFloor;
-            Vector2 to = entering ? m_layout.HoleFloor : m_layout.HoleInside;
+            Vector2 from = entering ? Layout.HoleInside : Layout.HoleFloor;
+            Vector2 to = entering ? Layout.HoleFloor : Layout.HoleInside;
             customer.Mover.Place(Vector2.Lerp(from, to, (float)t));
             return customer.Timer > 0d ? BtStatus.Running : BtStatus.Success;
         }
@@ -261,7 +261,7 @@ namespace ZooTycoon.Core
             }
 
             customer.Bread = chosen;
-            customer.Cell = ShelfCell(chosen.Id);
+            customer.Cell = ShelfOf(chosen.Id).Cell;
             customer.Tried.Add(chosen.Id);
             return BtStatus.Success;
         }
@@ -280,7 +280,7 @@ namespace ZooTycoon.Core
             Vector2 spot = FreeSpot(customer.Cell);
             customer.Spot = spot;
             customer.HasSpot = true;
-            Walk(customer.Mover, spot, m_layout.ShelfFacing(customer.Cell, spot));
+            customer.Mover.WalkTo(Layout.Nav, spot, Layout.ShelfFacing(customer.Cell, spot));
             return true;
         }
 
@@ -292,15 +292,13 @@ namespace ZooTycoon.Core
         // 재고가 있으면 하나 집는다(pickSeconds 동안 빵이 머리 위로)
         private bool StartPick(Customer customer)
         {
-            if (m_stock[customer.Bread.Id] == 0)
+            if (!m_shelves[customer.Cell].TryPick())
             {
                 return false;
             }
 
-            m_stock[customer.Bread.Id]--;
             customer.Phase = CustomerPhase.Picking;
             customer.Timer = m_config.PickSeconds;
-            OnStockChanged(customer.Bread.Id);
             OnCustomerPicked(customer);
             return true;
         }
@@ -333,7 +331,7 @@ namespace ZooTycoon.Core
 
         private BtStatus TickLook(Customer customer, double dt)
         {
-            if (m_stock[customer.Bread.Id] > 0)
+            if (m_shelves[customer.Cell].Stock > 0)
             {
                 return BtStatus.Success;
             }
@@ -351,7 +349,7 @@ namespace ZooTycoon.Core
             customer.Timer = m_config.CheckoutSeconds;
             m_queue.Add(customer);
             int index = m_queue.Count - 1;
-            Walk(customer.Mover, m_layout.QueueSlots[index], m_layout.QueueFacing(index));
+            customer.Mover.WalkTo(Layout.Nav, Layout.QueueSlots[index], Layout.QueueFacing(index));
             OnQueueChanged();
             return true;
         }
@@ -376,7 +374,7 @@ namespace ZooTycoon.Core
         private bool StartLeave(Customer customer)
         {
             customer.Phase = CustomerPhase.Leaving;
-            Walk(customer.Mover, m_layout.HoleFloor, Facing.Up);
+            customer.Mover.WalkTo(Layout.Nav, Layout.HoleFloor, Facing.Up);
             return true;
         }
 
@@ -386,7 +384,7 @@ namespace ZooTycoon.Core
             customer.Angry = true;
             customer.HasSpot = false;
             customer.Phase = CustomerPhase.Leaving;
-            Walk(customer.Mover, m_layout.HoleFloor, Facing.Up);
+            customer.Mover.WalkTo(Layout.Nav, Layout.HoleFloor, Facing.Up);
             OnCustomerGaveUp(customer);
             return true;
         }
@@ -395,7 +393,7 @@ namespace ZooTycoon.Core
 
         private Vector2 FreeSpot(Cell cell)
         {
-            foreach (Vector2 spot in m_layout.ShelfSpots(cell))
+            foreach (Vector2 spot in Layout.ShelfSpots(cell))
             {
                 if (!SpotTaken(spot))
                 {
@@ -403,7 +401,7 @@ namespace ZooTycoon.Core
                 }
             }
 
-            return m_layout.OverflowSpot(cell, SpotTaken);
+            return Layout.OverflowSpot(cell, SpotTaken);
         }
 
         private bool SpotTaken(Vector2 p)
@@ -421,7 +419,7 @@ namespace ZooTycoon.Core
 
         private bool IsShelfSpot(Cell cell, Vector2 p)
         {
-            foreach (Vector2 spot in m_layout.ShelfSpots(cell))
+            foreach (Vector2 spot in Layout.ShelfSpots(cell))
             {
                 if (Vector2.DistanceSquared(spot, p) < 0.01f)
                 {

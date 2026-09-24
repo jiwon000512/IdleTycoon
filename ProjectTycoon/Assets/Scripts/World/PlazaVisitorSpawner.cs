@@ -5,7 +5,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 11: PlazaSim 손님 사건 → 손님 개체 생성·♥·삭제. 그림은 빵집 손님과 같은 ShopCustomer 프리팹이고, 걷기·판단은 Core가 한다
+    // 설계 11: PlazaArea 손님 사건 → 손님 개체 생성·♥·삭제. 그림은 빵집 손님과 같은 ShopCustomer 프리팹이고, 걷기·판단은 Core가 한다
     public sealed class PlazaVisitorSpawner : MonoBehaviour
     {
         private const string k_HappyKey = "emote_happy";
@@ -13,11 +13,11 @@ namespace ZooTycoon.World
         [SerializeField] private ShopCustomer m_prefab;
 
         private readonly Dictionary<Visitor, ShopCustomer> m_units = new Dictionary<Visitor, ShopCustomer>();
-        private PlazaSim m_plaza;
+        private PlazaArea m_plaza;
         private TableSet m_tables;
         private FrameCache m_frames;
 
-        public void Initialize(PlazaSim plaza, TableSet tables, FrameCache frames)
+        public void Initialize(PlazaArea plaza, TableSet tables, FrameCache frames)
         {
             m_plaza = plaza;
             m_tables = tables;

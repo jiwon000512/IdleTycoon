@@ -15,6 +15,11 @@ namespace ZooTycoon.Core
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class ShopUpgradeTable : Table<string>
     {
+        public const string k_OvenCount = "oven_count";
+        public const string k_OvenSpeed = "oven_speed";
+        public const string k_ShelfCapacity = "shelf_capacity";
+        public const string k_CheckoutSpeed = "checkout_speed";
+
         public string Name { get; set; }
         public double BaseCost { get; set; }
         public double CostGrowth { get; set; }

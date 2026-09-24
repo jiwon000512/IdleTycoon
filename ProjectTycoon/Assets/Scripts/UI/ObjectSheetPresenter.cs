@@ -6,12 +6,12 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 사물 터치 기획(2026-09-23) → 설계 09: 상호작용 버튼으로 연 사물에 맞춰 시트 내용을 만든다. 규칙은 ShopSim에서 읽기만 하고, 구매·굽기는 Try*로 부탁한다.
+    // 사물 터치 기획(2026-09-23) → 설계 09: 상호작용 버튼으로 연 사물에 맞춰 시트 내용을 만든다. 규칙은 BakeryArea에서 읽기만 하고, 구매·굽기는 Try*로 부탁한다.
     // 열린 동안 재고·오븐·업그레이드·코인 이벤트로 갱신하고, 웜뱃의 대상이 바뀌면 닫는다. 굴 격자 설계 v0.5: 빈 자리(진열대·오븐 놓기)·굴 파기 시트
     public sealed class ObjectSheetPresenter : IDisposable
     {
         private readonly ObjectSheetView m_view;
-        private readonly ShopSim m_shop;
+        private readonly BakeryArea m_shop;
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
         private const string k_UnlockAction = "unlock";
@@ -22,7 +22,7 @@ namespace ZooTycoon.UI
 
         private Interactable m_target;
 
-        public ObjectSheetPresenter(ObjectSheetView view, ShopSim shop, ZooState state, TableSet tables)
+        public ObjectSheetPresenter(ObjectSheetView view, BakeryArea shop, ZooState state, TableSet tables)
         {
             m_view = view;
             m_shop = shop;
@@ -32,8 +32,7 @@ namespace ZooTycoon.UI
             m_view.ChipClicked += View_ChipClicked;
             m_view.RowClicked += View_RowClicked;
             m_view.CloseRequested += View_CloseRequested;
-            m_shop.StockChanged += Shop_Changed;
-            m_shop.OvenChanged += Shop_OvenChanged;
+            m_shop.ThingChanged += Shop_ThingChanged;
             m_shop.UpgradesChanged += Shop_Refresh;
             m_shop.LayoutChanged += Shop_Refresh;
             m_shop.QueueChanged += Shop_Refresh;
@@ -46,8 +45,7 @@ namespace ZooTycoon.UI
             m_view.ChipClicked -= View_ChipClicked;
             m_view.RowClicked -= View_RowClicked;
             m_view.CloseRequested -= View_CloseRequested;
-            m_shop.StockChanged -= Shop_Changed;
-            m_shop.OvenChanged -= Shop_OvenChanged;
+            m_shop.ThingChanged -= Shop_ThingChanged;
             m_shop.UpgradesChanged -= Shop_Refresh;
             m_shop.LayoutChanged -= Shop_Refresh;
             m_shop.QueueChanged -= Shop_Refresh;
@@ -74,12 +72,11 @@ namespace ZooTycoon.UI
             List<SheetChip> chips = new List<SheetChip>();
             List<SheetRow> rows = new List<SheetRow>();
 
-            switch (m_target.Kind)
+            switch (m_target)
             {
-                case InteractKind.Shelf:
+                case ShelfInteractable shelf:
                 {
-                    BreadTable bread = m_shop.Shelves[m_target.Cell];
-                    m_view.SetHeader(m_tables.Format("sheet_shelf_title", bread.Name), m_tables.Format("sheet_shelf_status", m_shop.Stock(bread.Id), m_shop.ShelfCapacity));
+                    m_view.SetHeader(m_tables.Format("sheet_shelf_title", shelf.Bread.Name), m_tables.Format("sheet_shelf_status", shelf.Stock, shelf.Capacity));
                     AddUpgradeRows(rows, UpgradeTarget.Shelf);
 
                     // 빈 자리가 없어 다음 빵을 못 놓을 때만 안내 행
@@ -90,12 +87,12 @@ namespace ZooTycoon.UI
 
                     break;
                 }
-                case InteractKind.EmptySlot:
+                case SlotInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_slot_title"), m_tables.Text("sheet_slot_status"));
                     AddUnlockRow(rows, null, null);
                     AddUpgradeRows(rows, UpgradeTarget.Slot);
                     break;
-                case InteractKind.Dig:
+                case DigInteractable _:
                 {
                     double cost = m_shop.Grid.DigCost;
                     m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
@@ -109,10 +106,9 @@ namespace ZooTycoon.UI
                     m_rowActions.Add(k_DigAction);
                     break;
                 }
-                case InteractKind.Oven:
+                case OvenInteractable oven:
                 {
-                    Oven oven = m_shop.Ovens[m_target.Index];
-                    m_view.SetHeader(m_tables.Format("sheet_oven_title", m_target.Index + 1), OvenStatus(oven));
+                    m_view.SetHeader(m_tables.Format("sheet_oven_title", IndexOf(oven) + 1), OvenStatus(oven));
                     bool canBake = oven.IsEmpty;
 
                     foreach (BreadTable bread in m_shop.UnlockedBreads)
@@ -121,8 +117,8 @@ namespace ZooTycoon.UI
                         {
                             SpritePath = bread.Sprite,
                             Label = m_tables.Format("chip_bread", bread.Name),
-                            Sub = m_tables.Format("chip_bread_sub", m_shop.Stock(bread.Id), bread.BakeSeconds),
-                            Highlighted = canBake && m_shop.Stock(bread.Id) == 0,
+                            Sub = m_tables.Format("chip_bread_sub", m_shop.ShelfOf(bread.Id).Stock, bread.BakeSeconds),
+                            Highlighted = canBake && m_shop.ShelfOf(bread.Id).Stock == 0,
                             Enabled = canBake,
                         });
                         m_chipBreads.Add(bread.Id);
@@ -137,7 +133,7 @@ namespace ZooTycoon.UI
                     AddUpgradeRows(rows, UpgradeTarget.Oven);
                     break;
                 }
-                case InteractKind.Counter:
+                case CounterInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", m_shop.Queue.Count));
                     AddUpgradeRows(rows, UpgradeTarget.Counter);
                     break;
@@ -147,7 +143,7 @@ namespace ZooTycoon.UI
             m_view.SetRows(rows);
         }
 
-        private string OvenStatus(Oven oven)
+        private string OvenStatus(OvenInteractable oven)
         {
             if (!oven.IsEmpty)
             {
@@ -167,10 +163,10 @@ namespace ZooTycoon.UI
                     continue;
                 }
 
-                int level = m_shop.UpgradeLevel(upgrade.Id);
+                int level = m_shop.Upgrades.Level(upgrade.Id);
                 SheetRow row = new SheetRow { Name = m_tables.Format("row_upgrade", upgrade.Name, level) };
 
-                if (m_shop.IsMaxed(upgrade.Id))
+                if (m_shop.Upgrades.IsMaxed(upgrade.Id))
                 {
                     row.Effect = Effect(upgrade, level, level);
                     row.Cost = m_tables.Text("row_max");
@@ -178,7 +174,7 @@ namespace ZooTycoon.UI
                 }
                 else
                 {
-                    double cost = m_shop.UpgradeCost(upgrade.Id);
+                    double cost = m_shop.Upgrades.Cost(upgrade.Id);
                     row.Effect = Effect(upgrade, level, level + 1);
                     row.Cost = BigNumberFormatter.Format(cost);
                     row.State = m_state.Coins >= cost ? SheetRowState.Enabled : SheetRowState.Poor;
@@ -191,7 +187,7 @@ namespace ZooTycoon.UI
 
         private string Effect(ShopUpgradeTable upgrade, int fromLevel, int toLevel)
         {
-            return string.Format(CultureInfo.InvariantCulture, upgrade.EffectFormat, m_shop.UpgradeValue(upgrade.Id, fromLevel), m_shop.UpgradeValue(upgrade.Id, toLevel));
+            return string.Format(CultureInfo.InvariantCulture, upgrade.EffectFormat, m_shop.Upgrades.Value(upgrade.Id, fromLevel), m_shop.Upgrades.Value(upgrade.Id, toLevel));
         }
 
         // 다음 빵 진열대 행. state·effect를 주면 그대로(안내용), 아니면 코인에 따라
@@ -216,19 +212,28 @@ namespace ZooTycoon.UI
 
         private bool HasEmptySlot()
         {
-            foreach (Cell _ in m_shop.EmptySlots)
+            return m_shop.Slots.Count > 0;
+        }
+
+        // 오븐 번호(시트 제목 "오븐 1")
+        private int IndexOf(OvenInteractable oven)
+        {
+            for (int i = 0; i < m_shop.Ovens.Count; i++)
             {
-                return true;
+                if (m_shop.Ovens[i] == oven)
+                {
+                    return i;
+                }
             }
 
-            return false;
+            return -1;
         }
 
         private void View_ChipClicked(int index)
         {
             string breadId = m_chipBreads[index];
 
-            if (breadId != null && m_shop.TryBake(m_target.Index, breadId))
+            if (breadId != null && m_shop.TryBake((OvenInteractable)m_target, breadId))
             {
                 m_view.Close();
             }
@@ -242,13 +247,13 @@ namespace ZooTycoon.UI
             switch (action)
             {
                 case k_UnlockAction:
-                    bought = m_shop.TryUnlockNextBread(m_target.Cell);
+                    bought = m_shop.TryUnlockNextBread(((SlotInteractable)m_target).Cell);
                     break;
                 case k_DigAction:
-                    bought = m_shop.Grid.TryDig(m_target.Cell);
+                    bought = m_shop.Grid.TryDig(((DigInteractable)m_target).Cell);
                     break;
-                case ShopSim.k_OvenCount:
-                    bought = m_shop.TryAddOven(m_target.Cell);
+                case ShopUpgradeTable.k_OvenCount:
+                    bought = m_shop.TryAddOven(((SlotInteractable)m_target).Cell);
                     break;
                 default:
                     bought = m_shop.TryUpgrade(action);
@@ -259,7 +264,7 @@ namespace ZooTycoon.UI
             {
                 m_view.FlashRow(index);
 
-                if (m_target.Kind == InteractKind.EmptySlot || m_target.Kind == InteractKind.Dig)
+                if (m_target is SlotInteractable || m_target is DigInteractable)
                 {
                     m_view.Close();
                 }
@@ -271,12 +276,7 @@ namespace ZooTycoon.UI
             m_view.Close();
         }
 
-        private void Shop_Changed(string breadId)
-        {
-            Shop_Refresh();
-        }
-
-        private void Shop_OvenChanged(int oven)
+        private void Shop_ThingChanged(Interactable thing)
         {
             Shop_Refresh();
         }
@@ -284,7 +284,7 @@ namespace ZooTycoon.UI
         // 걸어서 다른 사물로 가면(또는 배치가 바뀌어 대상이 사라지면) 닫는다
         private void Shop_TargetChanged()
         {
-            if (m_view.IsVisible && !Nullable.Equals(m_shop.Target, m_target))
+            if (m_view.IsVisible && m_shop.Target != m_target)
             {
                 m_view.Close();
             }

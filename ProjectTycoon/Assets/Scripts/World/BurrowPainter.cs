@@ -4,7 +4,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 굴 격자 설계 v0.5 3장: BurrowShape 마스크를 텍스처 한 장으로 칠한다(한 칸 = 1픽셀, PPU = ShopLayout.k_PixelsPerUnit, Point).
+    // 굴 격자 설계 v0.5 3장: BurrowShape 마스크를 텍스처 한 장으로 칠한다(한 칸 = 1픽셀, PPU = BakeryLayout.k_PixelsPerUnit, Point).
     // 마스크 안 = 바닥 타일(띠는 윗벽 면), 밖 = 벽 타일, 마스크 바깥 여섯 칸 = 턱(k_Ledge, 8방향 거리마다 색. 아트방 목업과 같은 팽창).
     // 굴 환경 A2: 띠(WallRow)는 wall_face를 행은 띠 윗변부터, 열은 굴 원점 기준 칸 x로 샘플해 지층이 곧은 가로줄로 이어진다
     // 타일은 굴 원점 기준 칸 좌표로 샘플해 흙 배경(같은 타일을 원점에 맞춰 깐 것)과 이음새 없이 이어진다
@@ -56,7 +56,7 @@ namespace ZooTycoon.World
             Texture2D texture = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
             texture.SetPixels32(pixels);
             texture.Apply(false, true);
-            return Sprite.Create(texture, new Rect(0f, 0f, w, h), new Vector2(0f, 1f), ShopLayout.k_PixelsPerUnit, 0, SpriteMeshType.FullRect);
+            return Sprite.Create(texture, new Rect(0f, 0f, w, h), new Vector2(0f, 1f), BakeryLayout.k_PixelsPerUnit, 0, SpriteMeshType.FullRect);
         }
 
         // 방 밖 칸의 방까지 8방향 거리(1 ~ 턱 두께), 방 안·먼 곳은 0. 한 겹씩 넓힌다

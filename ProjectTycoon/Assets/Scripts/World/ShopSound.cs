@@ -18,10 +18,10 @@ namespace ZooTycoon.World
         }
 
         private readonly Dictionary<string, Channel> m_channels = new Dictionary<string, Channel>();
-        private readonly List<bool> m_ovenReady = new List<bool>();
-        private ShopSim m_shop;
+        private readonly Dictionary<OvenInteractable, bool> m_ovenReady = new Dictionary<OvenInteractable, bool>();
+        private BakeryArea m_shop;
 
-        public void Initialize(ShopSim shop, TableSet tables)
+        public void Initialize(BakeryArea shop, TableSet tables)
         {
             m_shop = shop;
 
@@ -36,7 +36,7 @@ namespace ZooTycoon.World
 
             m_shop.CustomerPaid += Shop_CustomerPaid;
             m_shop.CustomerGaveUp += Shop_CustomerGaveUp;
-            m_shop.OvenChanged += Shop_OvenChanged;
+            m_shop.ThingChanged += Shop_ThingChanged;
         }
 
         private void OnDestroy()
@@ -45,7 +45,7 @@ namespace ZooTycoon.World
             {
                 m_shop.CustomerPaid -= Shop_CustomerPaid;
                 m_shop.CustomerGaveUp -= Shop_CustomerGaveUp;
-                m_shop.OvenChanged -= Shop_OvenChanged;
+                m_shop.ThingChanged -= Shop_ThingChanged;
             }
         }
 
@@ -77,21 +77,22 @@ namespace ZooTycoon.World
         }
 
         // 다 구운 빵이 없다가 생긴 순간만
-        private void Shop_OvenChanged(int index)
+        private void Shop_ThingChanged(Interactable thing)
         {
-            while (m_ovenReady.Count <= index)
+            if (!(thing is OvenInteractable oven))
             {
-                m_ovenReady.Add(false);
+                return;
             }
 
-            bool ready = m_shop.Ovens[index].Ready > 0;
+            bool ready = oven.Ready > 0;
+            m_ovenReady.TryGetValue(oven, out bool wasReady);
 
-            if (ready && !m_ovenReady[index])
+            if (ready && !wasReady)
             {
                 Play(SoundTable.k_OvenDone);
             }
 
-            m_ovenReady[index] = ready;
+            m_ovenReady[oven] = ready;
         }
     }
 }

@@ -80,6 +80,25 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 걷는 중이면 지금 선분을 마저 걷고 그 끝점에서 새 길을 찾는다. 닿을 수 없으면 곧장(ponytail: 막힌 배치에서만 생김)
+        public void WalkTo(BurrowNav nav, Vector2 target, Facing arrive)
+        {
+            Vector2 from = NextNode;
+            List<Vector2> path = nav.FindPath(from, target);
+
+            if (path.Count == 0 && Vector2.DistanceSquared(from, target) > 1e-6f)
+            {
+                path.Add(target);
+            }
+
+            if (Moving)
+            {
+                path.Insert(0, from);
+            }
+
+            Follow(path, arrive);
+        }
+
         public static Facing FacingOf(Vector2 delta)
         {
             if (Math.Abs(delta.X) >= Math.Abs(delta.Y))

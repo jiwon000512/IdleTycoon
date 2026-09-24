@@ -8,7 +8,7 @@ namespace ZooTycoon.Core
     // 손님 동선 설계 v0.2 3·4·6·7장: 가게 배치의 단일 출처. 칸 → 사물 자리, 구멍, 줄 자리, 서는 자리, 굴 마스크, 걷는 땅.
     // 배치 숫자는 아트 크기에서 나온 값이라 상수로 두고(굴 모양의 아치 크기와 같은 방식) 화면도 이 값으로 사물을 놓는다.
     // 좌표는 가게 원점(입구 줄 윗변 가운데) 기준 유닛, y 위
-    public sealed class ShopLayout
+    public sealed class BakeryLayout
     {
         public const float k_PixelsPerUnit = 40f;
         public const int k_RoundRadius = 12;
@@ -67,7 +67,7 @@ namespace ZooTycoon.Core
         public Vector2 CounterBase => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_CounterDrop);
         public Vector2 WombatHome => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_WombatDrop);
 
-        public ShopLayout(TableSet tables)
+        public BakeryLayout(TableSet tables)
         {
             m_cellWidth = tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
             m_cellHeight = tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;

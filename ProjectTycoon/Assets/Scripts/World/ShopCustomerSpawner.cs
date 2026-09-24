@@ -5,7 +5,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 08 v0.5 · 손님 동선 설계 v0.2: ShopSim 손님 사건 → 손님 개체 생성·연출·삭제. 걷기와 판단은 Core가 하고 개체는 그 위치를 그린다
+    // 설계 08 v0.5 · 손님 동선 설계 v0.2: BakeryArea 손님 사건 → 손님 개체 생성·연출·삭제. 걷기와 판단은 Core가 하고 개체는 그 위치를 그린다
     public sealed class ShopCustomerSpawner : MonoBehaviour
     {
         private const string k_CoinKey = "coin_popup";
@@ -16,12 +16,12 @@ namespace ZooTycoon.World
         [SerializeField] private ShopCustomer m_prefab;
 
         private readonly Dictionary<Customer, ShopCustomer> m_units = new Dictionary<Customer, ShopCustomer>();
-        private ShopSim m_shop;
+        private BakeryArea m_shop;
         private ShopView m_view;
         private TableSet m_tables;
         private FrameCache m_frames;
 
-        public void Initialize(ShopSim shop, ShopView view, TableSet tables, FrameCache frames)
+        public void Initialize(BakeryArea shop, ShopView view, TableSet tables, FrameCache frames)
         {
             m_shop = shop;
             m_view = view;

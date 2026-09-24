@@ -7,7 +7,7 @@ using ZooTycoon.World;
 
 namespace ZooTycoon.Editor
 {
-    // 설계 08 v0.5 · 굴 격자 설계 v0.5 · 손님 동선 설계 v0.2: 빵집 프리팹을 통째로 다시 만든다. 사물 자리 숫자는 Core ShopLayout과 같은 값을 쓴다.
+    // 설계 08 v0.5 · 굴 격자 설계 v0.5 · 손님 동선 설계 v0.2: 빵집 프리팹을 통째로 다시 만든다. 사물 자리 숫자는 Core BakeryLayout과 같은 값을 쓴다.
     // 사물 프리팹(진열대·오븐·계산대) + 표시(파기 태그·빈 자리) + Shop(ShopView·손님 스포너·흙 배경·굴 그림·입구 아치) + ShopCustomer.
     // 스프라이트는 한 칸 2px·PPU 80(Sprites/World/Shop, Resources/Sprites/Shop/Breads, 원본 Shop/Source~). 굴 그림 재료(타일·빈 자리)는 한 칸 1px·PPU 40
     public static class ShopBaker
@@ -173,7 +173,7 @@ namespace ZooTycoon.Editor
 
         // ---------- 사물 ----------
 
-        // 진열대 하나. 피벗 = 밑변 가운데. 손님이 서는 자리는 Core ShopLayout
+        // 진열대 하나. 피벗 = 밑변 가운데. 손님이 서는 자리는 Core BakeryLayout
         static ShelfView BakeShelf()
         {
             GameObject go = new GameObject("Shelf");
@@ -187,14 +187,14 @@ namespace ZooTycoon.Editor
             return Save(go, view, "Shelf");
         }
 
-        // 진열대 재고 표지판(칠판 입간판, Source~/make_shelf_sign.py). 피벗 = 다리 밑변 가운데, 자리는 Core ShopLayout.ShelfSignBase.
+        // 진열대 재고 표지판(칠판 입간판, Source~/make_shelf_sign.py). 피벗 = 다리 밑변 가운데, 자리는 Core BakeryLayout.ShelfSignBase.
         // 분필 숫자는 칠판 가운데(발끝에서 15.5칸 위)
         static ShelfSignView BakeShelfSign()
         {
             GameObject go = new GameObject("ShelfSign");
             go.AddComponent<SortingGroup>();
             Renderer(go.transform, "Body", Load("shelf_sign"), Vector3.zero, 0);
-            TextMeshPro text = WorldText(go.transform, "Stock", new Vector3(0f, 15.5f / ShopLayout.k_PixelsPerUnit, 0f), 1);
+            TextMeshPro text = WorldText(go.transform, "Stock", new Vector3(0f, 15.5f / BakeryLayout.k_PixelsPerUnit, 0f), 1);
             text.rectTransform.sizeDelta = new Vector2(0.4f, 0.35f);
 
             ShelfSignView view = go.AddComponent<ShelfSignView>();
@@ -257,9 +257,9 @@ namespace ZooTycoon.Editor
         {
             GameObject root = new GameObject("ShopCounter");
             CounterView counter = root.AddComponent<CounterView>();
-            SpriteRenderer counterBody = Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -ShopLayout.k_CounterDrop, 0f), 0);
+            SpriteRenderer counterBody = Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -BakeryLayout.k_CounterDrop, 0f), 0);
             Set(counter, "m_body", counterBody);
-            Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, -ShopLayout.k_WombatDrop, 0f)));
+            Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, -BakeryLayout.k_WombatDrop, 0f)));
             return Save(root, counter, "ShopCounter");
         }
 
@@ -383,7 +383,7 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             // 아치 그림 53칸 높이가 입구 줄(80칸) 밑변에 닿게: 윗변 = 27칸 = 0.675유닛 아래
-            SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / ShopLayout.k_PixelsPerUnit, 0f), k_ArchOrder);
+            SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / BakeryLayout.k_PixelsPerUnit, 0f), k_ArchOrder);
 
             ShopView view = root.AddComponent<ShopView>();
             Set(view, "m_shelfPrefab", shelf);

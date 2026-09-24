@@ -13,11 +13,11 @@ namespace ZooTycoon.Core
         private const float k_HoleFloorY = -2.2f;
 
         private readonly List<PlazaSpot> m_spots = new List<PlazaSpot>();
-        private readonly List<PlazaDecor> m_decor = new List<PlazaDecor>();
+        private readonly List<DecorationData> m_decor = new List<DecorationData>();
 
         public BurrowShape.Result Shape { get; }
         public BurrowNav Nav { get; }
-        public IReadOnlyList<PlazaDecor> Decor => m_decor;
+        public IReadOnlyList<DecorationData> Decor => m_decor;
         public IReadOnlyList<PlazaSpot> Spots => m_spots;
         public Vector2 DoorInside { get; }
         public Vector2 DoorFloor { get; }
@@ -33,7 +33,7 @@ namespace ZooTycoon.Core
             double cellWidth = tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
             double cellHeight = tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;
             double entranceHeight = tables.Get<ConfigTable>(ConfigTable.k_EntranceHeight).Value;
-            int unit = (int)ShopLayout.k_PixelsPerUnit;
+            int unit = (int)BakeryLayout.k_PixelsPerUnit;
             int firstCol = -plaza.Cols / 2;
             HashSet<Cell> cells = new HashSet<Cell>();
 
@@ -46,11 +46,11 @@ namespace ZooTycoon.Core
             }
 
             Shape = BurrowShape.Build(cells, (int)Math.Round(cellWidth * unit), (int)Math.Round(cellHeight * unit),
-                (int)Math.Round(entranceHeight * unit), ShopLayout.k_RoundRadius);
+                (int)Math.Round(entranceHeight * unit), BakeryLayout.k_RoundRadius);
             Width = (float)(plaza.Cols * cellWidth);
             Height = (float)(entranceHeight + (plaza.Rows - 1) * cellHeight);
 
-            float inside = -(BurrowShape.k_EntranceFloorTop - 1) / ShopLayout.k_PixelsPerUnit;
+            float inside = -(BurrowShape.k_EntranceFloorTop - 1) / BakeryLayout.k_PixelsPerUnit;
             float doorX = (float)(-0.5 * cellWidth);
             DoorInside = new Vector2(doorX, inside);
             DoorFloor = new Vector2(doorX, k_HoleFloorY);
@@ -63,17 +63,17 @@ namespace ZooTycoon.Core
             {
                 DecorationTable decoration = tables.Get<DecorationTable>(placed.Decoration);
                 Vector2 position = new Vector2((float)placed.X, (float)placed.Y);
-                m_decor.Add(new PlazaDecor(decoration, position));
+                m_decor.Add(new DecorationData(decoration, position));
                 blocked.Add(new NavRect(position.X - (float)decoration.HalfWidth, position.Y, position.X + (float)decoration.HalfWidth,
                     position.Y + (float)decoration.Depth));
             }
 
-            Nav = new BurrowNav(Shape, ShopLayout.k_PixelsPerUnit, blocked, ShopLayout.k_Clearance, ShopLayout.k_Step, ShopLayout.k_TurnPenalty);
+            Nav = new BurrowNav(Shape, BakeryLayout.k_PixelsPerUnit, blocked, BakeryLayout.k_Clearance, BakeryLayout.k_Step, BakeryLayout.k_TurnPenalty);
 
             // 들를 곳은 격자에 붙이고, 걷는 땅이 아니면 뺀다(장식이 벽에 붙어 있을 때)
-            foreach (PlazaDecor decor in m_decor)
+            foreach (DecorationData decor in m_decor)
             {
-                foreach (DecorationSpot spot in decor.Decoration.Spots)
+                foreach (DecorationSpot spot in decor.Table.Spots)
                 {
                     Vector2 p = Nav.Snap(decor.Position + new Vector2((float)spot.Dx, (float)spot.Dy));
 
@@ -83,19 +83,6 @@ namespace ZooTycoon.Core
                     }
                 }
             }
-        }
-    }
-
-    // 놓인 장식 하나(밑변 가운데)
-    public readonly struct PlazaDecor
-    {
-        public DecorationTable Decoration { get; }
-        public Vector2 Position { get; }
-
-        public PlazaDecor(DecorationTable decoration, Vector2 position)
-        {
-            Decoration = decoration;
-            Position = position;
         }
     }
 

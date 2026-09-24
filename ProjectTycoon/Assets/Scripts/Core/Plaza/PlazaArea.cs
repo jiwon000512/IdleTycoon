@@ -5,126 +5,51 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 11 3장: 광장 규칙의 단일 소유자. 지상 계단으로 손님이 오고, 들를 곳 몇 곳을 들렀다 빵집 문으로(또는 구경만 하고 계단으로) 간다.
-    // 빵집에서 나간 손님은 문에서 다시 나와 광장을 조금 돌고 떠난다. 웜뱃이 광장에 있으면 조이스틱으로 걷고 빵집 문에서 들어간다
-    public sealed class PlazaSim : IWombatArea
+    // 설계 11 3장 · 설계 13: 광장. 지상 계단으로 손님이 오고, 들를 곳 몇 곳을 들렀다 빵집 문으로(또는 구경만 하고 계단으로) 간다.
+    // 빵집에서 나간 손님은 문에서 다시 나와 광장을 조금 돌고 떠난다. 사물은 빵집 문 하나(들어가기)
+    public sealed class PlazaArea : WombatArea
     {
-        public const string k_ActionEnter = "enter";
-
-        private readonly TableSet m_tables;
         private readonly PlazaConfigTable m_config;
         private readonly double m_walkSpeed;
         private readonly double m_hopSeconds;
-        private readonly double m_wombatSpeed;
-        private readonly ShopSim m_shop;
+        private readonly BakeryArea m_bakery;
         private readonly IRandom m_random;
         private readonly List<Visitor> m_visitors = new List<Visitor>();
         private readonly HashSet<int> m_takenSpots = new HashSet<int>();
-        private readonly InteractableTable m_door;
-        private readonly Mover m_wombat;
-        private Vector2 m_wombatInput;
-        private bool m_wombatMoving;
-        private bool m_wombatPresent;
-        private Interactable? m_target;
         private double m_arrivalElapsed;
         private int m_nextVisitorId;
 
         public PlazaLayout Layout { get; }
         public IReadOnlyList<Visitor> Visitors => m_visitors;
-        public bool WombatPresent => m_wombatPresent;
-        public Vector2 WombatPosition => m_wombat.Position;
-        public Facing WombatFacing => m_wombat.Facing;
-        public bool WombatMoving => m_wombatMoving;
-        public Interactable? Target => m_target;
-
-        // 문의 actions에서 첫 manual 행동(들어가기)
-        public ActionTable TargetAction
-        {
-            get
-            {
-                if (!m_target.HasValue)
-                {
-                    return null;
-                }
-
-                foreach (string id in m_door.Actions)
-                {
-                    ActionTable action = m_tables.Get<ActionTable>(id);
-
-                    if (!action.IsAuto)
-                    {
-                        return action;
-                    }
-                }
-
-                return null;
-            }
-        }
 
         public event Action<Visitor> VisitorArrived;
         public event Action<Visitor> VisitorRemoved;
         public event Action<Visitor> VisitorEmoted;
-        public event Action TargetChanged;
         // 빵집 문 앞에서 들어가기 버튼(Mall이 웜뱃을 빵집으로 옮긴다)
         public event Action DoorEntered;
 
+        protected override BurrowNav WombatNav => Layout.Nav;
+        protected override Vector2 Entrance => Layout.DoorFloor;
+
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다
-        public PlazaSim(TableSet tables, ShopSim shop, IRandom random)
+        public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat) : base(tables, wombat)
         {
-            m_tables = tables;
             m_config = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
             m_walkSpeed = tables.Get<ConfigTable>(ConfigTable.k_WalkSpeed).Value;
             m_hopSeconds = tables.Get<ConfigTable>(ConfigTable.k_HopSeconds).Value;
-            m_wombatSpeed = tables.Get<ConfigTable>(ConfigTable.k_WombatSpeed).Value;
-            m_shop = shop;
+            m_bakery = bakery;
             m_random = random;
             Layout = new PlazaLayout(tables);
-            m_door = tables.Get<InteractableTable>(Interactable.k_KindIds[(int)InteractKind.Door]);
-            m_wombat = new Mover(Layout.DoorFloor, Facing.Down);
+            Things.Add(new DoorInteractable(tables.Get<InteractableTable>(DoorInteractable.k_Id), Layout.DoorFloor, OnDoorEntered));
             m_arrivalElapsed = m_config.ArrivalSeconds;
-            m_shop.CustomerExited += Shop_CustomerExited;
+            m_bakery.CustomerExited += Bakery_CustomerExited;
         }
 
-        // 매 프레임. 순서: 도착 → 손님 → 웜뱃
-        public void Tick(double dt)
+        // 매 프레임(웜뱃 다음). 순서: 도착 → 손님
+        protected override void TickArea(double dt)
         {
             TickArrival(dt);
             TickVisitors(dt);
-            TickWombat(dt);
-        }
-
-        public void SetWombatInput(Vector2 input)
-        {
-            float length = input.Length();
-            m_wombatInput = length > 1f ? input / length : input;
-        }
-
-        public bool TryInteract()
-        {
-            if (TargetAction?.Id != k_ActionEnter)
-            {
-                return false;
-            }
-
-            OnDoorEntered();
-            return true;
-        }
-
-        // 빵집에서 나가기: 빵집 문 아래 바닥에 선다
-        public void PlaceWombatAtDoor()
-        {
-            m_wombat.Place(Layout.DoorFloor);
-            m_wombat.Facing = Facing.Down;
-            m_wombatPresent = true;
-            RefreshTarget();
-        }
-
-        public void RemoveWombat()
-        {
-            m_wombatPresent = false;
-            m_wombatInput = Vector2.Zero;
-            m_wombatMoving = false;
-            RefreshTarget();
         }
 
         private void TickArrival(double dt)
@@ -137,7 +62,7 @@ namespace ZooTycoon.Core
             }
 
             m_arrivalElapsed = 0d;
-            IReadOnlyList<VisitorTable> looks = m_tables.GetAll<VisitorTable>();
+            IReadOnlyList<VisitorTable> looks = Tables.GetAll<VisitorTable>();
             VisitorTable look = looks[RandomIndex(looks.Count)];
             Visitor visitor = Spawn(look, Layout.StairsInside, Layout.StairsFloor);
             visitor.VisitsLeft = m_config.VisitsMin + RandomIndex(m_config.VisitsMax - m_config.VisitsMin + 1);
@@ -145,7 +70,7 @@ namespace ZooTycoon.Core
         }
 
         // 빵집에서 나간 손님은 문에서 톡 나와 0 ~ visitsMax곳 들르고 계단으로. 화나서 나갔으면 곧장
-        private void Shop_CustomerExited(Customer customer)
+        private void Bakery_CustomerExited(Customer customer)
         {
             Visitor visitor = Spawn(customer.Look, Layout.DoorInside, Layout.DoorFloor);
             visitor.VisitsLeft = customer.Angry ? 0 : RandomIndex(m_config.VisitsMax + 1);
@@ -197,7 +122,7 @@ namespace ZooTycoon.Core
                     // ponytail: 문 앞에서 자리를 확인하고 톡 뛰는 사이에 다른 손님이 먼저 들어가면 한 명 넘칠 수 있다
                     if (visitor.Heading == Visitor.Goal.Door)
                     {
-                        m_shop.Admit(visitor.Look);
+                        m_bakery.Admit(visitor.Look);
                     }
 
                     return false;
@@ -240,10 +165,10 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            if (visitor.WantsShop && m_shop.CanAdmit)
+            if (visitor.WantsShop && m_bakery.CanAdmit)
             {
                 visitor.Heading = Visitor.Goal.Door;
-                Walk(visitor, Layout.DoorFloor, Facing.Up);
+                visitor.Mover.WalkTo(Layout.Nav, Layout.DoorFloor, Facing.Up);
                 return;
             }
 
@@ -257,7 +182,7 @@ namespace ZooTycoon.Core
 
             visitor.WantsShop = false;
             visitor.Heading = Visitor.Goal.Stairs;
-            Walk(visitor, Layout.StairsFloor, Facing.Up);
+            visitor.Mover.WalkTo(Layout.Nav, Layout.StairsFloor, Facing.Up);
         }
 
         private void Arrive(Visitor visitor)
@@ -274,7 +199,7 @@ namespace ZooTycoon.Core
 
                     break;
                 case Visitor.Goal.Door:
-                    if (m_shop.CanAdmit)
+                    if (m_bakery.CanAdmit)
                     {
                         StartHop(visitor, CustomerPhase.Exiting, Layout.DoorFloor, Layout.DoorInside);
                     }
@@ -310,7 +235,7 @@ namespace ZooTycoon.Core
             visitor.Spot = index;
             visitor.Heading = Visitor.Goal.Spot;
             PlazaSpot spot = Layout.Spots[index];
-            Walk(visitor, spot.Position, spot.Facing);
+            visitor.Mover.WalkTo(Layout.Nav, spot.Position, spot.Facing);
             return true;
         }
 
@@ -334,54 +259,6 @@ namespace ZooTycoon.Core
             visitor.Mover.Facing = phase == CustomerPhase.Exiting ? Facing.Up : Facing.Down;
         }
 
-        // 걷는 중이면 지금 선분을 마저 걷고 그 끝점에서 새 길을 찾는다(ShopSim.Walk와 같은 방식)
-        private void Walk(Visitor visitor, Vector2 target, Facing arrive)
-        {
-            Mover mover = visitor.Mover;
-            Vector2 from = mover.NextNode;
-            List<Vector2> path = Layout.Nav.FindPath(from, target);
-
-            if (path.Count == 0 && Vector2.DistanceSquared(from, target) > 1e-6f)
-            {
-                path.Add(target);
-            }
-
-            if (mover.Moving)
-            {
-                path.Insert(0, from);
-            }
-
-            mover.Follow(path, arrive);
-        }
-
-        private void TickWombat(double dt)
-        {
-            if (!m_wombatPresent)
-            {
-                return;
-            }
-
-            m_wombatMoving = WombatWalker.Step(m_wombat, m_wombatInput, m_wombatSpeed, dt, Layout.Nav);
-            RefreshTarget();
-        }
-
-        // 대상은 빵집 문 하나: 문 아래 바닥에서 range 안
-        private void RefreshTarget()
-        {
-            Interactable? found = null;
-
-            if (m_wombatPresent && Vector2.Distance(m_wombat.Position, Layout.DoorFloor) <= m_door.Range)
-            {
-                found = new Interactable(InteractKind.Door, default);
-            }
-
-            if (!Nullable.Equals(found, m_target))
-            {
-                m_target = found;
-                OnTargetChanged();
-            }
-        }
-
         // [0, count)
         private int RandomIndex(int count)
         {
@@ -401,11 +278,6 @@ namespace ZooTycoon.Core
         private void OnVisitorEmoted(Visitor visitor)
         {
             VisitorEmoted?.Invoke(visitor);
-        }
-
-        private void OnTargetChanged()
-        {
-            TargetChanged?.Invoke();
         }
 
         private void OnDoorEntered()

@@ -13,7 +13,7 @@ namespace ZooTycoon.Game
     {
         public TableSet Tables { get; private set; }
         public ZooState State { get; private set; }
-        public ShopSim Shop { get; private set; }
+        public BakeryArea Bakery { get; private set; }
         // 설계 11: 빵집 + 굴 밖 광장, 웜뱃이 오가는 곳
         public Mall Mall { get; private set; }
 
@@ -35,8 +35,9 @@ namespace ZooTycoon.Game
 
             State = ZooState.CreateNew(Tables);
             SystemRandom random = new SystemRandom();
-            Shop = new ShopSim(State, Tables, random);
-            Mall = new Mall(Shop, new PlazaSim(Tables, Shop, random));
+            Wombat wombat = new Wombat(Tables);
+            Bakery = new BakeryArea(State, Tables, random, wombat);
+            Mall = new Mall(Bakery, new PlazaArea(Tables, Bakery, random, wombat));
         }
 
         // 손님 동선 설계 v0.2: 가게 시뮬은 매 프레임(손님 행동 트리·조이스틱 웜뱃이 멈칫하지 않게). 설계 11: 빵집과 광장을 함께

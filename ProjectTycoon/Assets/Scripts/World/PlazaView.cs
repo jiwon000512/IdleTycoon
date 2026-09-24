@@ -24,7 +24,7 @@ namespace ZooTycoon.World
         [SerializeField] private Transform m_stairs;
         [SerializeField] private ShopWombat m_wombat;
 
-        private PlazaSim m_plaza;
+        private PlazaArea m_plaza;
 
         public Transform Wombat => m_wombat.transform;
 
@@ -39,37 +39,37 @@ namespace ZooTycoon.World
             }
         }
 
-        public void Bind(PlazaSim plaza, FrameCache frames, TableSet tables)
+        public void Bind(PlazaArea plaza, FrameCache frames, TableSet tables)
         {
             m_plaza = plaza;
             PlazaLayout layout = plaza.Layout;
             BurrowShape.Result shape = layout.Shape;
             m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
-            m_burrow.transform.localPosition = new Vector3(shape.OriginX / ShopLayout.k_PixelsPerUnit, -shape.OriginY / ShopLayout.k_PixelsPerUnit, 0f);
+            m_burrow.transform.localPosition = new Vector3(shape.OriginX / BakeryLayout.k_PixelsPerUnit, -shape.OriginY / BakeryLayout.k_PixelsPerUnit, 0f);
 
-            float wallBottom = -BurrowShape.k_EntranceFloorTop / ShopLayout.k_PixelsPerUnit;
+            float wallBottom = -BurrowShape.k_EntranceFloorTop / BakeryLayout.k_PixelsPerUnit;
             m_door.localPosition = new Vector3(layout.DoorFloor.X, wallBottom, 0f);
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
             m_sign.text = tables.Text(k_SignKey);
 
-            foreach (PlazaDecor decor in layout.Decor)
+            foreach (DecorationData decor in layout.Decor)
             {
-                GameObject go = new GameObject(decor.Decoration.Id);
+                GameObject go = new GameObject(decor.Table.Id);
                 go.transform.SetParent(transform, false);
                 go.transform.localPosition = new Vector3(decor.Position.X, decor.Position.Y, 0f);
                 SpriteRenderer renderer = go.AddComponent<SpriteRenderer>();
-                renderer.sprite = frames.Get(decor.Decoration.Sprite)[0];
+                renderer.sprite = frames.Get(decor.Table.Sprite)[0];
 
-                if (decor.Decoration.Frames > 0)
+                if (decor.Table.Frames > 0)
                 {
-                    Sprite[] loop = new Sprite[decor.Decoration.Frames];
+                    Sprite[] loop = new Sprite[decor.Table.Frames];
 
                     for (int i = 0; i < loop.Length; i++)
                     {
-                        loop[i] = frames.Get(decor.Decoration.Sprite + "_" + i)[0];
+                        loop[i] = frames.Get(decor.Table.Sprite + "_" + i)[0];
                     }
 
-                    go.AddComponent<SpriteAnimator>().Play(renderer, loop, (float)decor.Decoration.FrameRate);
+                    go.AddComponent<SpriteAnimator>().Play(renderer, loop, (float)decor.Table.FrameRate);
                 }
             }
 
@@ -87,7 +87,7 @@ namespace ZooTycoon.World
 
         private void Plaza_TargetChanged()
         {
-            if (m_plaza.Target.HasValue)
+            if (m_plaza.Target != null)
             {
                 StartCoroutine(Fx.Bounce(m_door));
             }

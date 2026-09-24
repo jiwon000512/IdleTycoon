@@ -4,11 +4,11 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 08 v0.6 · 손님 동선 설계 v0.2 · 설계 09: 가게 웜뱃. 위치·보는 방향은 Core(ShopSim.WombatPosition)를 매 프레임 읽는다.
+    // 설계 08 v0.6 · 손님 동선 설계 v0.2 · 설계 09: 가게 웜뱃. 위치·보는 방향은 Core(WombatArea.WombatPosition)를 매 프레임 읽는다.
     // 걸으면 그 방향의 앞·뒤·옆 걷기, 서면 숨쉬기(마지막으로 걸은 방향. 계산대 자리에서 줄 머리가 서 있으면 계산 중 뒷모습)
     // 설계 10: 꺼내면 빵 하나가 오븐 → 웜뱃으로 날아온 뒤 층이 늘고, 채우면 맨 위 층 → 진열대로 빵 하나가 날아간다
     // 2026-09-23: 든 빵은 머리 위가 아니라 앞발에서 위로 쌓는다(뒷모습이면 몸 뒤에)
-    // 설계 11: 광장 웜뱃도 같은 그림(IWombatArea만 읽고 든 빵은 그리지 않는다). 웜뱃이 다른 곳에 있으면 숨는다
+    // 설계 11: 광장 웜뱃도 같은 그림(WombatArea만 읽고 든 빵은 그리지 않는다). 웜뱃이 다른 곳에 있으면 숨는다
     public sealed class ShopWombat : MonoBehaviour
     {
         [SerializeField] private SpriteAnimator m_animator;
@@ -40,33 +40,35 @@ namespace ZooTycoon.World
         private const int k_CarryFrontOrder = 51;
         private const int k_CarryBackOrder = -10;
 
-        private IWombatArea m_area;
+        private WombatArea m_area;
         private Transform m_origin;
-        private ShopSim m_shop;
+        private BakeryArea m_shop;
+        private Hands m_hands;
         private ShopView m_view;
         private FrameCache m_frames;
         private Sprite[] m_playing;
         private int m_shownCarry;
         private int m_lastCount;
         private BreadTable m_lastCarried;
-        // 꺼내기는 오븐 사건 바로 뒤에 들기 사건이 온다(ShopSim.TakeOut). 꺼내기가 auto라 대상이 아닌 오븐에서도 꺼낸다
-        private int m_lastOven;
+        // 꺼내기는 오븐 사건 바로 뒤에 손 사건이 온다(OvenInteractable.Do). 꺼내기가 auto라 대상이 아닌 오븐에서도 꺼낸다
+        private OvenInteractable m_lastOven;
 
-        public void Bind(ShopSim shop, ShopView view, FrameCache frames)
+        public void Bind(BakeryArea shop, ShopView view, FrameCache frames)
         {
             m_shop = shop;
             m_view = view;
             m_area = shop;
+            m_hands = shop.Wombat.Hands;
             m_origin = view.transform;
             m_frames = frames;
-            m_shop.CarryChanged += Shop_CarryChanged;
-            m_shop.OvenChanged += Shop_OvenChanged;
+            m_hands.Changed += Hands_Changed;
+            m_shop.ThingChanged += Shop_ThingChanged;
             ShowCarry();
             Update();
         }
 
         // 설계 11: 광장. 든 빵 층은 쓰지 않는다
-        public void Bind(IWombatArea area, Transform origin, FrameCache frames)
+        public void Bind(WombatArea area, Transform origin, FrameCache frames)
         {
             m_area = area;
             m_origin = origin;
@@ -84,8 +86,8 @@ namespace ZooTycoon.World
         {
             if (m_shop != null)
             {
-                m_shop.CarryChanged -= Shop_CarryChanged;
-                m_shop.OvenChanged -= Shop_OvenChanged;
+                m_hands.Changed -= Hands_Changed;
+                m_shop.ThingChanged -= Shop_ThingChanged;
             }
         }
 
@@ -162,10 +164,10 @@ namespace ZooTycoon.World
             }
         }
 
-        private void Shop_CarryChanged()
+        private void Hands_Changed()
         {
-            int count = m_shop.CarriedCount;
-            BreadTable bread = count > m_lastCount ? m_shop.Carried : m_lastCarried;
+            int count = m_hands.Count;
+            BreadTable bread = count > m_lastCount ? m_hands.Bread : m_lastCarried;
 
             if (count > m_lastCount)
             {
@@ -183,12 +185,15 @@ namespace ZooTycoon.World
             }
 
             m_lastCount = count;
-            m_lastCarried = m_shop.Carried;
+            m_lastCarried = m_hands.Bread;
         }
 
-        private void Shop_OvenChanged(int index)
+        private void Shop_ThingChanged(Interactable thing)
         {
-            m_lastOven = index;
+            if (thing is OvenInteractable oven)
+            {
+                m_lastOven = oven;
+            }
         }
 
         private Sprite Icon(BreadTable bread)
@@ -199,8 +204,8 @@ namespace ZooTycoon.World
         // 연출 강도(설계 09 7장): 꺼내서 층이 늘면 맨 위 층만 톡
         private void ShowCarry()
         {
-            int shown = Mathf.Min(m_shop.CarriedCount, m_carry.Length);
-            Sprite icon = m_shop.Carried != null ? Icon(m_shop.Carried) : null;
+            int shown = Mathf.Min(m_hands.Count, m_carry.Length);
+            Sprite icon = m_hands.Bread != null ? Icon(m_hands.Bread) : null;
 
             for (int i = 0; i < m_carry.Length; i++)
             {

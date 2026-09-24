@@ -29,9 +29,9 @@ namespace ZooTycoon.World
         {
             m_mall = mall;
             m_shopView = Instantiate(m_shopPrefab, Vector3.zero, Quaternion.identity, transform);
-            m_shopView.Bind(mall.Shop, Frames, tables);
-            m_shopView.GetComponent<ShopCustomerSpawner>().Initialize(mall.Shop, m_shopView, tables, Frames);
-            m_shopView.gameObject.AddComponent<ShopSound>().Initialize(mall.Shop, tables);
+            m_shopView.Bind(mall.Bakery, Frames, tables);
+            m_shopView.GetComponent<ShopCustomerSpawner>().Initialize(mall.Bakery, m_shopView, tables, Frames);
+            m_shopView.gameObject.AddComponent<ShopSound>().Initialize(mall.Bakery, tables);
             m_shopView.Expanded += ShopView_Expanded;
 
             m_plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
@@ -58,7 +58,7 @@ namespace ZooTycoon.World
 
         private void FollowWombat()
         {
-            if (m_mall.Current == Area.Shop)
+            if (m_mall.Current == Area.Bakery)
             {
                 m_camera.Follow(m_shopView.Wombat, m_shopView.Bounds);
             }
@@ -70,7 +70,7 @@ namespace ZooTycoon.World
 
         private void ShopView_Expanded()
         {
-            if (m_mall.Current == Area.Shop)
+            if (m_mall.Current == Area.Bakery)
             {
                 m_camera.SetBounds(m_shopView.Bounds);
             }

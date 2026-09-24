@@ -8,18 +8,18 @@ using ZooTycoon.Core;
 namespace ZooTycoon.Tests
 {
     // 손님 동선 설계 v0.2 검증 1: 기본 굴(진열대 (−1,1), 오븐 (−1,3))의 줄 자리·서는 자리·길
-    public sealed class ShopLayoutTests
+    public sealed class BakeryLayoutTests
     {
-        private ShopSim Create()
+        private BakeryArea Create()
         {
             TableSet tables = TestTables.Load();
-            return new ShopSim(ZooState.CreateNew(tables), tables, new SequenceRandom(new double[10]));
+            return new BakeryArea(ZooState.CreateNew(tables), tables, new SequenceRandom(new double[10]), new Wombat(tables));
         }
 
         [Test]
         public void QueueSlots_FillCapacity_OnWalkableGroundAt08Apart()
         {
-            ShopSim shop = Create();
+            BakeryArea shop = Create();
             IReadOnlyList<Vector2> slots = shop.Layout.QueueSlots;
 
             Assert.That(slots.Count, Is.EqualTo(8));
@@ -49,7 +49,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void ShelfSpots_AreWalkable_AndKeepAwayFromQueue()
         {
-            ShopSim shop = Create();
+            BakeryArea shop = Create();
             IReadOnlyList<Vector2> spots = shop.Layout.ShelfSpots(new Cell(-1, 1));
 
             Assert.That(spots.Count, Is.GreaterThanOrEqualTo(2));
@@ -77,8 +77,8 @@ namespace ZooTycoon.Tests
         [Test]
         public void Paths_BetweenKeyPoints_ExistAndAreAxisAligned()
         {
-            ShopSim shop = Create();
-            ShopLayout layout = shop.Layout;
+            BakeryArea shop = Create();
+            BakeryLayout layout = shop.Layout;
             Vector2 spot = layout.ShelfSpots(new Cell(-1, 1))[0];
             (Vector2 from, Vector2 to)[] trips =
             {
@@ -106,7 +106,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void WombatNav_OpensWombatHomeOnly()
         {
-            ShopLayout layout = Create().Layout;
+            BakeryLayout layout = Create().Layout;
             Vector2 counter = layout.CounterBase + new Vector2(0f, 0.25f);
 
             Assert.That(layout.WombatNav.IsWalkable(layout.WombatHome), Is.True);

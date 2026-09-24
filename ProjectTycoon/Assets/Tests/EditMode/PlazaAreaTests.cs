@@ -10,13 +10,13 @@ namespace ZooTycoon.Tests
 {
     // 설계 11 검증 1~3: 빵집 ↔ 광장 오가기, 광장 손님 흐름, 걷는 땅. 실제 JSON 값, 난수는 모두 0.5
     // (들를 곳 2곳 · 빵집에 들어감 · 머묾 3.25초 · ♥ 없음)
-    public sealed class PlazaSimTests
+    public sealed class PlazaAreaTests
     {
         private const double k_Dt = 0.02;
 
         private TableSet m_tables;
-        private ShopSim m_shop;
-        private PlazaSim m_plaza;
+        private BakeryArea m_shop;
+        private PlazaArea m_plaza;
         private Mall m_mall;
 
         private void Create(Action<BakeryConfigTable> tweak = null)
@@ -24,8 +24,9 @@ namespace ZooTycoon.Tests
             m_tables = TestTables.Load();
             tweak?.Invoke(m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery));
             ZooState state = ZooState.CreateNew(m_tables);
-            m_shop = new ShopSim(state, m_tables, new SequenceRandom(new double[2000]));
-            m_plaza = new PlazaSim(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()));
+            Wombat wombat = new Wombat(m_tables);
+            m_shop = new BakeryArea(state, m_tables, new SequenceRandom(new double[2000]), wombat);
+            m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), wombat);
             m_mall = new Mall(m_shop, m_plaza);
         }
 
@@ -81,13 +82,13 @@ namespace ZooTycoon.Tests
             int changes = 0;
             m_mall.AreaChanged += () => changes++;
 
-            Assert.That(m_mall.Current, Is.EqualTo(Area.Shop));
+            Assert.That(m_mall.Current, Is.EqualTo(Area.Bakery));
             Assert.That(m_plaza.WombatPresent, Is.False);
 
             // 계산대를 오른쪽으로 돌아 구멍 아래로
             Steer(new Vector2(2.4f, home.Y), new Vector2(2.4f, hole.Y), hole);
-            Assert.That(m_shop.Target?.Kind, Is.EqualTo(InteractKind.Exit));
-            Assert.That(m_shop.TargetAction.Id, Is.EqualTo(ShopSim.k_ActionExit));
+            Assert.That(m_shop.Target, Is.InstanceOf<ExitInteractable>());
+            Assert.That(m_shop.TargetAction.Id, Is.EqualTo(ActionTable.k_Exit));
             Assert.That(m_mall.Active.TryInteract(), Is.True);
 
             Assert.That(m_mall.Current, Is.EqualTo(Area.Plaza));
@@ -96,8 +97,8 @@ namespace ZooTycoon.Tests
             Assert.That(m_shop.WombatAtCounter, Is.False);
             Assert.That(m_plaza.WombatPresent, Is.True);
             Assert.That(m_plaza.WombatPosition, Is.EqualTo(m_plaza.Layout.DoorFloor));
-            Assert.That(m_plaza.Target?.Kind, Is.EqualTo(InteractKind.Door));
-            Assert.That(m_plaza.TargetAction.Id, Is.EqualTo(PlazaSim.k_ActionEnter));
+            Assert.That(m_plaza.Target, Is.InstanceOf<DoorInteractable>());
+            Assert.That(m_plaza.TargetAction.Id, Is.EqualTo(ActionTable.k_Enter));
 
             // 광장에서 걸어 문에서 멀어지면 대상이 없다
             Steer(m_plaza.Layout.DoorFloor + new Vector2(0f, -2f));
@@ -105,7 +106,7 @@ namespace ZooTycoon.Tests
             Steer(m_plaza.Layout.DoorFloor);
             Assert.That(m_mall.Active.TryInteract(), Is.True);
 
-            Assert.That(m_mall.Current, Is.EqualTo(Area.Shop));
+            Assert.That(m_mall.Current, Is.EqualTo(Area.Bakery));
             Assert.That(m_plaza.WombatPresent, Is.False);
             Assert.That(m_shop.WombatPresent, Is.True);
             Assert.That(m_shop.WombatPosition, Is.EqualTo(hole));
@@ -174,6 +175,26 @@ namespace ZooTycoon.Tests
             // 벽에 붙은 화분의 벽 쪽 자리만 빠진다
             Assert.That(layout.Spots.Count, Is.GreaterThanOrEqualTo(12));
             Assert.That(layout.Spots.All(s => layout.Nav.IsWalkable(s.Position)), Is.True);
+        }
+
+        // 설계 13: 웜뱃이 하나라 든 빵이 광장에 갔다 와도 그대로다
+        [Test]
+        public void CarriedBread_StaysInHands_AcrossPlaza()
+        {
+            Create(c => c.MaxCustomers = 0);
+            BreadTable bread = m_tables.Get<BreadTable>("b01");
+            m_mall.Wombat.Hands.Add(bread, 3);
+            Vector2 home = m_shop.Layout.WombatHome;
+            Vector2 hole = m_shop.Layout.HoleFloor;
+
+            Steer(new Vector2(2.4f, home.Y), new Vector2(2.4f, hole.Y), hole);
+            Assert.That(m_mall.Active.TryInteract(), Is.True);
+            Assert.That(m_mall.Current, Is.EqualTo(Area.Plaza));
+            Assert.That(m_mall.Active.TryInteract(), Is.True);
+
+            Assert.That(m_mall.Current, Is.EqualTo(Area.Bakery));
+            Assert.That(m_mall.Wombat.Hands.Count, Is.EqualTo(3));
+            Assert.That(m_mall.Wombat.Hands.Bread, Is.SameAs(bread));
         }
     }
 }

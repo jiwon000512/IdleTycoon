@@ -20,7 +20,7 @@ namespace ZooTycoon.UI
             m_mall = mall;
             m_view.JoystickMoved += View_JoystickMoved;
             m_view.InteractClicked += View_InteractClicked;
-            m_mall.Shop.TargetChanged += Area_TargetChanged;
+            m_mall.Bakery.TargetChanged += Area_TargetChanged;
             m_mall.Plaza.TargetChanged += Area_TargetChanged;
             m_mall.AreaChanged += Mall_AreaChanged;
             Refresh();
@@ -30,7 +30,7 @@ namespace ZooTycoon.UI
         {
             m_view.JoystickMoved -= View_JoystickMoved;
             m_view.InteractClicked -= View_InteractClicked;
-            m_mall.Shop.TargetChanged -= Area_TargetChanged;
+            m_mall.Bakery.TargetChanged -= Area_TargetChanged;
             m_mall.Plaza.TargetChanged -= Area_TargetChanged;
             m_mall.AreaChanged -= Mall_AreaChanged;
         }
@@ -49,11 +49,11 @@ namespace ZooTycoon.UI
 
         private void View_InteractClicked()
         {
-            IWombatArea area = m_mall.Active;
+            WombatArea area = m_mall.Active;
 
             if (!area.TryInteract() && area.TargetAction != null)
             {
-                OnSheetRequested(area.Target.Value);
+                OnSheetRequested(area.Target);
             }
         }
 

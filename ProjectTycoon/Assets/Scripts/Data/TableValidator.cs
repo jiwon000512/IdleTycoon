@@ -12,12 +12,18 @@ namespace ZooTycoon.Data
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
         private static readonly Regex k_BreadIdPattern = new Regex("^b[0-9]{2}$");
         private static readonly string[] k_ShopUpgradeIds =
-            { ShopSim.k_OvenCount, ShopSim.k_OvenSpeed, ShopSim.k_ShelfCapacity, ShopSim.k_CheckoutSpeed };
+            { ShopUpgradeTable.k_OvenCount, ShopUpgradeTable.k_OvenSpeed, ShopUpgradeTable.k_ShelfCapacity, ShopUpgradeTable.k_CheckoutSpeed };
         private static readonly string[] k_ActionIds =
-            { ShopSim.k_ActionTakeOut, ShopSim.k_ActionFill, ShopSim.k_ActionServe, ShopSim.k_ActionOpen, ShopSim.k_ActionDig, ShopSim.k_ActionExit, PlazaSim.k_ActionEnter };
+            { ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Open, ActionTable.k_Dig, ActionTable.k_Exit, ActionTable.k_Enter };
+        // 코드에 클래스가 있는 사물
+        private static readonly string[] k_InteractableIds =
+        {
+            ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id, SlotInteractable.k_Id,
+            DigInteractable.k_Id, ExitInteractable.k_Id, DoorInteractable.k_Id,
+        };
         private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone, SoundTable.k_GiveUp };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
-        private static readonly string[] k_ManualOnlyActionIds = { ShopSim.k_ActionOpen, ShopSim.k_ActionDig, ShopSim.k_ActionExit, PlazaSim.k_ActionEnter };
+        private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_Dig, ActionTable.k_Exit, ActionTable.k_Enter };
         private static readonly string[] k_ConfigIds =
         {
             ConfigTable.k_StartCoins, ConfigTable.k_OfflineMaxSeconds, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight,
@@ -110,7 +116,7 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 설계 08 v0.5: ShopSim이 부르는 id 4개가 모두 있어야 한다
+        // 설계 08 v0.5: 코드(Upgrades·사물)가 부르는 id 4개가 모두 있어야 한다
         private static void ValidateShopUpgrades(TableSet tables, List<string> errors)
         {
             foreach (ShopUpgradeTable upgrade in tables.GetAll<ShopUpgradeTable>())
@@ -217,7 +223,7 @@ namespace ZooTycoon.Data
                 }
             }
 
-            CheckRequired<InteractableTable>(tables, Interactable.k_KindIds, errors);
+            CheckRequired<InteractableTable>(tables, k_InteractableIds, errors);
         }
 
         // 설계 11: 장식 그림·막는 자리·들를 곳, 놓인 장식(PlazaDecorTable)은 있는 장식만
