@@ -107,11 +107,15 @@ namespace ZooTycoon.Editor
             Set(joystick, "m_knob", knob);
             Set(joystick, "m_group", group);
 
-            // 상호작용 버튼: 둥근 바탕 + 가운데 아이콘. 눌림·비활성은 색 틴트
-            RectTransform buttonRect = Panel(root.transform, "InteractButton", Sprite("btn_act"), Color.white);
-            Anchor(buttonRect, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f));
+            // 상호작용 버튼: 둥근 바탕 + 가운데 아이콘. 눌림·비활성은 색 틴트. 숨쉬기는 부모(InteractBreath), 눌림은 버튼(PressScale)
+            RectTransform breath = Child(root.transform, "InteractBreath");
+            Anchor(breath, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f));
+            breath.sizeDelta = new Vector2(k_ControlSize, k_ControlSize);
+            breath.anchoredPosition = new Vector2(k_ControlOffsetX, k_ControlCenterY);
+            RectTransform buttonRect = Panel(breath, "InteractButton", Sprite("btn_act"), Color.white);
+            Anchor(buttonRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             buttonRect.sizeDelta = new Vector2(k_ControlSize, k_ControlSize);
-            buttonRect.anchoredPosition = new Vector2(k_ControlOffsetX, k_ControlCenterY);
+            buttonRect.anchoredPosition = Vector2.zero;
             Button button = buttonRect.gameObject.AddComponent<Button>();
             buttonRect.gameObject.AddComponent<PressScale>();
             ColorBlock colors = button.colors;
@@ -135,6 +139,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_joystick", joystick);
             Set(view, "m_interactButton", button);
             Set(view, "m_interactIcon", icon.GetComponent<Image>());
+            Set(view, "m_interactBreath", breath);
             Save(root, "ShopHudView");
         }
 

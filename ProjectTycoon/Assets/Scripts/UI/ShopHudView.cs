@@ -16,11 +16,16 @@ namespace ZooTycoon.UI
         [SerializeField] private Joystick m_joystick;
         [SerializeField] private Button m_interactButton;
         [SerializeField] private Image m_interactIcon;
+        [Tooltip("할 수 있는 행동이 있으면 숨쉬듯 커졌다 작아지는 버튼 부모(누름 PressScale은 버튼 자체라 곱해진다)")]
+        [SerializeField] private RectTransform m_interactBreath;
+        [SerializeField] private float m_breathScale = 0.06f;
+        [SerializeField] private float m_breathSeconds = 1.2f;
         [Tooltip("화면 전환 페이드(검은 전체 화면, 평소 알파 0)")]
         [SerializeField] private Image m_fade;
         [SerializeField] private float m_fadeSeconds = 0.3f;
 
         private readonly Dictionary<string, Sprite> m_icons = new Dictionary<string, Sprite>();
+        private float m_breathTime;
 
         public event Action<System.Numerics.Vector2> JoystickMoved;
         public event Action InteractClicked;
@@ -47,6 +52,21 @@ namespace ZooTycoon.UI
 
             m_interactIcon.color = enabled ? Color.white : k_DisabledIcon;
             m_interactButton.interactable = enabled;
+        }
+
+        // 2026-09-24 사용자 요청: 행동을 할 수 있을 때 버튼이 숨쉰다(1 → 1 + breathScale → 1, breathSeconds 주기). 켜질 때마다 1배부터
+        private void Update()
+        {
+            if (!m_interactButton.interactable)
+            {
+                m_breathTime = 0f;
+                m_interactBreath.localScale = Vector3.one;
+                return;
+            }
+
+            m_breathTime += Time.unscaledDeltaTime;
+            float k = 0.5f - 0.5f * Mathf.Cos(m_breathTime / m_breathSeconds * 2f * Mathf.PI);
+            m_interactBreath.localScale = Vector3.one * (1f + m_breathScale * k);
         }
 
         public void FadeIn()
