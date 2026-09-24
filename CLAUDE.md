@@ -21,7 +21,7 @@ Tycoon/
       │  ├─ UI/      uGUI HUD·팝업 (상단 바, 가차 버튼, 결과 카드, 홍보/도감 팝업, 오프라인 팝업)
       │  ├─ World/   빵집 굴 화면(굴 그림·사물·손님·웜뱃, 웜뱃을 따라가는 카메라) — 설계 03에서 asmdef 확정, 설계 09에서 지상 폐기
       │  └─ Editor/  에디터 전용 도구 (Editor 폴더라 빌드에서 제외됨)
-      ├─ Resources/Data/     JSON 테이블 5개 (visitors, breads, shop_upgrades, strings, game_config)
+      ├─ Resources/Data/     JSON 테이블 12개 (XXTable.json = 행 클래스 이름: ConfigTable·BakeryConfigTable·VisitorTable·BreadTable 등)
       ├─ Resources/Sprites/Animals/<종>/  동물 아트: 정지 1장 + idle·move 시트. 경로는 animals.json 칼럼. 임포트 규칙은 데이터-테이블-규칙 5장
       ├─ Prefabs/, Prefabs/UI/
       ├─ Sprites/UI/, Fonts/, Audio/
@@ -42,7 +42,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 | 저장 | 로컬 JSON 1파일 (`Application.persistentDataPath`), 마지막 저장 시각 UTC. 시간 조작 방어는 첫 버전에 없음 |
 | 코드 구조 | asmdef 6개로 계층 강제 · UI는 MVP(View MonoBehaviour + Presenter 순수 C#) · 게임 상태·서비스는 `GameManager`(MonoSingleton, `Init()`·틱)가 만들고, 씬 스크립트(`MainScene`)가 그 씬의 View·Presenter만 조립 · 서비스·Presenter는 생성자 주입 · 순수 C# event + 동기 틱. 상세 `기획/코드-규칙.md` |
 | 공통 기반 | GameKit UPM 패키지(`com.jiwon.gamekit`, 저장소 `C:\project\UnityGameKit`, GitHub jiwon000512/UnityGameKit). `MonoSingleton<T>` 기반 Manager(UI·Table·Data·Event·Pool)는 lazy 자기 초기화, Game·UI 계층에서만 접근. 규약 `기획/프로그래밍-규약.md` 10장 |
-| 데이터 | JSON 단일 원본(`Assets/Resources/Data/*.json`, 테이블당 1파일) + Newtonsoft.Json. ScriptableObject 사용 안 함. 에셋은 JSON 경로 칼럼(`animals.sprite` 등)으로 참조하고, 더미 리소스를 먼저 만들어 두면 사용자가 같은 경로로 실제 리소스를 교체. 형식·검증 규칙은 `기획/데이터-테이블-규칙.md` |
+| 데이터 | JSON 단일 원본(`Assets/Resources/Data/*.json`, 테이블당 1파일) + Newtonsoft.Json. ScriptableObject 사용 안 함. 에셋은 JSON 경로 칼럼(`VisitorTable.sprite` 등)으로 참조하고, 더미 리소스를 먼저 만들어 두면 사용자가 같은 경로로 실제 리소스를 교체. 형식·검증 규칙은 `기획/데이터-테이블-규칙.md` |
 | 빌드 | Android IL2CPP, ARM64. 제품명/회사명/패키지 ID는 아직 임시(DefaultCompany) — 스토어 등록 전 변경 |
 | 제외 패키지 | Visual Scripting, Timeline, Multiplayer Center, SpriteShape, Aseprite, PSD Importer, 2D Animation, Tilemap Extras (필요해지면 다시 추가) |
 | 유지 패키지 | `com.unity.pipeline`은 Unity CLI가 에디터에 연결할 때 쓰므로 지우지 않는다 |
@@ -59,7 +59,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 - 프리팹을 통째로 만드는 에디터 스크립트는 `Scripts/Editor`에 `[MenuItem("ZooTycoon/Bake/...")]`로 남긴다(현재 UI·Shop·Fonts·Import UI Sprites·Import Visitor Sheets). 일회성 조립·조회 스크립트만 scratchpad. 규칙 문서 개정은 기능 구현과 커밋을 나눈다.
 - 기획 회차는 같은 주제로 2회를 넘기지 않는다. 2회차 뒤에는 후보 하나를 별도 씬 1주 프로토타입으로 검증한다.
 - 아트는 `기획/아트-프롬프트.md` 0장 스타일 가이드를 모든 프롬프트 앞에 붙이고(동물은 웜뱃이 아니라 사물 참조 + 문장으로 종 지정, 후처리 `make_pixel.py`로 격자 강제, 한 화면 한 칸 크기: 지상 4px), **시안 3장 → 캡처 위 합성 비교 → 사용자 1회 선택 → 굽기 1회** 순서로 한다. 굽기 전에는 프리팹을 건드리지 않는다.
-- 기획서의 숫자는 코드에 하드코딩하지 않고 `game_config.json` 등 JSON 테이블에 둔다. 레코드 클래스에는 기획서 표 번호(예: 6.3)를 주석에 남긴다.
+- 기획서의 숫자는 코드에 하드코딩하지 않고 `ConfigTable.json` 등 JSON 테이블에 둔다. 행 클래스(`XXTable`)에는 기획서 표 번호(예: 6.3)를 주석에 남긴다.
 - JSON 테이블을 고칠 때는 `기획/데이터-테이블-규칙.md` 6장 절차를 따른다(기획서 먼저 → JSON → 검증 테스트). 파일 전체를 유효한 JSON으로 다시 쓴다.
 
 ## 작업 방식
