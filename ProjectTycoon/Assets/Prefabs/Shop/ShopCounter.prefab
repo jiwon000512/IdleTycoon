@@ -843,6 +843,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.ShopWombat
   m_animator: {fileID: 3418585953230077092}
   m_renderer: {fileID: 7568272418757224506}
+  m_shadow: {fileID: 1797430050191815798}
   m_frontIdle:
   - {fileID: 21300000, guid: 510471ceb31adcb469f8d0c42b636898, type: 3}
   - {fileID: 21300000, guid: 467e3baa82c0cd34396da834426f2f5d, type: 3}

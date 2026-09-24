@@ -41,8 +41,8 @@ namespace ZooTycoon.World
         [Tooltip("코인 팝업을 머리 옆으로 비키는 거리(유닛)")]
         [SerializeField] private float m_coinSideOffset = 0.7f;
 
-        private Customer m_customer;
-        private ShopView m_view;
+        private IWalker m_walker;
+        private Transform m_origin;
         private Sprite[] m_frontIdle;
         private Sprite[] m_frontMove;
         private Sprite[] m_backIdle;
@@ -65,10 +65,12 @@ namespace ZooTycoon.World
             ? HeadOffset + Vector3.up * 0.1f
             : Fx.HandOffset(m_facing, m_height * m_handRatio + m_breadHalf, m_handReach);
 
-        public void Initialize(Customer customer, VisitorRecord look, FrameCache frames, ShopView view)
+        // 설계 11: 빵집 손님과 광장 손님이 같이 쓴다. origin = 그 곳(빵집·광장)의 원점
+        public void Initialize(IWalker walker, FrameCache frames, Transform origin)
         {
-            m_customer = customer;
-            m_view = view;
+            VisitorRecord look = walker.Look;
+            m_walker = walker;
+            m_origin = origin;
             m_shadowAlpha = m_shadowRenderer.color.a;
             m_frontIdle = frames.Get(look.IdleSheet ?? look.Sprite);
             m_frontMove = frames.Get(look.MoveSheet ?? look.Sprite);
@@ -101,7 +103,13 @@ namespace ZooTycoon.World
             m_carrying = false;
             CoinPopup popup = Instantiate(m_coinPrefab, transform.position + HeadOffset + Vector3.right * m_coinSideOffset, Quaternion.identity, transform.parent);
             popup.Show(amount);
-            m_emote.text = heart;
+            Emote(heart);
+        }
+
+        // 설계 11: 광장에서 들를 곳에 멈췄을 때 머리 위 ♥
+        public void Emote(string text)
+        {
+            m_emote.text = text;
             StartCoroutine(EmoteRoutine());
         }
 
@@ -112,21 +120,22 @@ namespace ZooTycoon.World
 
         private void Update()
         {
-            Vector3 position = m_view.ToWorld(m_customer.Position + m_customer.Sidestep);
+            System.Numerics.Vector2 p = m_walker.Position + m_walker.Sidestep;
+            Vector3 position = m_origin.position + new Vector3(p.X, p.Y, 0f);
             float alpha = 1f;
-            CustomerPhase phase = m_customer.Phase;
+            CustomerPhase phase = m_walker.Phase;
 
             // 톡 뛰기: 솟았다 내려앉으며 나올 때 선명해지고 들어갈 때 흐려진다
             if (phase == CustomerPhase.Entering || phase == CustomerPhase.Exiting)
             {
-                float t = (float)m_customer.HopProgress;
+                float t = (float)m_walker.HopProgress;
                 position.y += Mathf.Sin(t * Mathf.PI) * m_hopHeight;
                 alpha = phase == CustomerPhase.Entering ? t : 1f - t;
             }
 
             transform.position = position;
             SetAlpha(alpha);
-            Facing facing = m_customer.Facing;
+            Facing facing = m_walker.Facing;
 
             // 두리번: 옆모습으로 좌우를 번갈아 본다
             if (phase == CustomerPhase.Looking)
@@ -134,7 +143,7 @@ namespace ZooTycoon.World
                 facing = Mathf.FloorToInt(Time.time / m_lookSeconds) % 2 == 0 ? Facing.Left : Facing.Right;
             }
 
-            Show(facing, m_customer.Moving);
+            Show(facing, m_walker.Moving);
             m_facing = facing;
             m_carry.sortingOrder = m_carryOnHead ? k_CarryFrontOrder : Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder);
 

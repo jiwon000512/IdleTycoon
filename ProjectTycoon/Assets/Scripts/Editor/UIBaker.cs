@@ -123,7 +123,15 @@ namespace ZooTycoon.Editor
             icon.sizeDelta = new Vector2(18 * U, 18 * U);
             icon.GetComponent<Image>().raycastTarget = false;
 
+            // 설계 11: 곳을 옮길 때 페이드(검은 전체 화면, 평소 투명, 누르기를 막지 않음)
+            RectTransform fade = Panel(root.transform, "Fade", null, Color.clear);
+            Anchor(fade, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
+            fade.offsetMin = Vector2.zero;
+            fade.offsetMax = Vector2.zero;
+            fade.GetComponent<Image>().raycastTarget = false;
+
             ShopHudView view = root.AddComponent<ShopHudView>();
+            Set(view, "m_fade", fade.GetComponent<Image>());
             Set(view, "m_joystick", joystick);
             Set(view, "m_interactButton", button);
             Set(view, "m_interactIcon", icon.GetComponent<Image>());

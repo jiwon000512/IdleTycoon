@@ -11,6 +11,7 @@ namespace ZooTycoon.Core
         public IReadOnlyList<ActionRecord> Actions { get; }
         public IReadOnlyList<InteractableRecord> Interactables { get; }
         public IReadOnlyList<SoundRecord> Sounds { get; }
+        public IReadOnlyList<DecorationRecord> Decorations { get; }
         public IReadOnlyList<StringRecord> StringRows { get; }
         public StringTable Strings { get; }
         public GameConfig Config { get; }
@@ -22,6 +23,7 @@ namespace ZooTycoon.Core
             IReadOnlyList<ActionRecord> actions,
             IReadOnlyList<InteractableRecord> interactables,
             IReadOnlyList<SoundRecord> sounds,
+            IReadOnlyList<DecorationRecord> decorations,
             IReadOnlyList<StringRecord> strings,
             GameConfig config)
         {
@@ -31,6 +33,7 @@ namespace ZooTycoon.Core
             Actions = actions;
             Interactables = interactables;
             Sounds = sounds;
+            Decorations = decorations;
             StringRows = strings;
             Strings = new StringTable(strings);
             Config = config;

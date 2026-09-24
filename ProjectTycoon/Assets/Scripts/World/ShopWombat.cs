@@ -8,10 +8,12 @@ namespace ZooTycoon.World
     // 걸으면 그 방향의 앞·뒤·옆 걷기, 서면 숨쉬기(마지막으로 걸은 방향. 계산대 자리에서 줄 머리가 서 있으면 계산 중 뒷모습)
     // 설계 10: 꺼내면 빵 하나가 오븐 → 웜뱃으로 날아온 뒤 층이 늘고, 채우면 맨 위 층 → 진열대로 빵 하나가 날아간다
     // 2026-09-23: 든 빵은 머리 위가 아니라 앞발에서 위로 쌓는다(뒷모습이면 몸 뒤에)
+    // 설계 11: 광장 웜뱃도 같은 그림(IWombatArea만 읽고 든 빵은 그리지 않는다). 웜뱃이 다른 곳에 있으면 숨는다
     public sealed class ShopWombat : MonoBehaviour
     {
         [SerializeField] private SpriteAnimator m_animator;
         [SerializeField] private SpriteRenderer m_renderer;
+        [SerializeField] private SpriteRenderer m_shadow;
         [SerializeField] private Sprite[] m_frontIdle;
         [SerializeField] private Sprite[] m_backIdle;
         [SerializeField] private Sprite[] m_sideIdle;
@@ -38,6 +40,8 @@ namespace ZooTycoon.World
         private const int k_CarryFrontOrder = 51;
         private const int k_CarryBackOrder = -10;
 
+        private IWombatArea m_area;
+        private Transform m_origin;
         private ShopSim m_shop;
         private ShopView m_view;
         private FrameCache m_frames;
@@ -52,10 +56,27 @@ namespace ZooTycoon.World
         {
             m_shop = shop;
             m_view = view;
+            m_area = shop;
+            m_origin = view.transform;
             m_frames = frames;
             m_shop.CarryChanged += Shop_CarryChanged;
             m_shop.OvenChanged += Shop_OvenChanged;
             ShowCarry();
+            Update();
+        }
+
+        // 설계 11: 광장. 든 빵 층은 쓰지 않는다
+        public void Bind(IWombatArea area, Transform origin, FrameCache frames)
+        {
+            m_area = area;
+            m_origin = origin;
+            m_frames = frames;
+
+            foreach (SpriteRenderer layer in m_carry)
+            {
+                layer.enabled = false;
+            }
+
             Update();
         }
 
@@ -70,16 +91,27 @@ namespace ZooTycoon.World
 
         private void Update()
         {
-            if (m_shop == null)
+            if (m_area == null)
             {
                 return;
             }
 
-            transform.position = m_view.ToWorld(m_shop.WombatPosition);
-            bool moving = m_shop.WombatMoving;
-            Facing facing = m_shop.WombatFacing;
+            bool present = m_area.WombatPresent;
+            m_renderer.enabled = present;
+            m_shadow.enabled = present;
+            m_carry[0].transform.parent.gameObject.SetActive(present);
 
-            if (!moving && m_shop.WombatAtCounter && Serving)
+            if (!present)
+            {
+                return;
+            }
+
+            System.Numerics.Vector2 p = m_area.WombatPosition;
+            transform.position = m_origin.position + new Vector3(p.X, p.Y, 0f);
+            bool moving = m_area.WombatMoving;
+            Facing facing = m_area.WombatFacing;
+
+            if (!moving && m_shop != null && m_shop.WombatAtCounter && Serving)
             {
                 facing = Facing.Up;
             }

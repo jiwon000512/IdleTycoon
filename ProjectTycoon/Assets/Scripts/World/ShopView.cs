@@ -19,6 +19,8 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_slotMarkerPrefab;
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
+        [Tooltip("입구 아치(설계 11: 나가기 대상이면 튄다)")]
+        [SerializeField] private Transform m_arch;
         [Tooltip("바닥·벽 타일 한 주기(한 칸 = 1px, 읽기 가능)")]
         [SerializeField] private Texture2D m_floorTile;
         [SerializeField] private Texture2D m_wallTile;
@@ -127,6 +129,9 @@ namespace ZooTycoon.World
                     break;
                 case InteractKind.Dig:
                     m_digTags[target.Cell].Bounce();
+                    break;
+                case InteractKind.Exit:
+                    StartCoroutine(Fx.Bounce(m_arch));
                     break;
                 default:
                     m_counter.Bounce();

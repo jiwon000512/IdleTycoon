@@ -10,11 +10,12 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("visitors", 6)]
-        [TestCase("strings", 11)]
+        [TestCase("strings", 12)]
         [TestCase("breads", 1)]
         [TestCase("shop_upgrades", 4)]
-        [TestCase("actions", 1)]
-        [TestCase("interactables", 1)]
+        [TestCase("actions", 2)]
+        [TestCase("interactables", 2)]
+        [TestCase("decorations", 1)]
         [TestCase("sounds", 1)]
         public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table, int version)
         {
@@ -30,7 +31,7 @@ namespace ZooTycoon.Tests
             TableFile<object> file = TestTables.LoadFile<object>("game_config");
 
             Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(16));
+            Assert.That(file.Version, Is.EqualTo(17));
         }
 
         [Test]
@@ -160,6 +161,37 @@ namespace ZooTycoon.Tests
             sounds.RemoveAll(s => s.Id == "give_up");
 
             Assert.That(TableValidator.Validate(TestTables.Build(sounds: sounds)), Is.Not.Empty);
+        }
+
+        // 설계 11: 곳을 옮기는 행동은 manual만, 장식 표 — 그림 경로 없음·모르는 방향, 광장에 없는 장식
+        [TestCase("exit")]
+        [TestCase("enter")]
+        public void Validate_WhenMoveActionAuto_ReportsError(string id)
+        {
+            List<ActionRecord> actions = TestTables.LoadRows<ActionRecord>("actions");
+            actions.Find(a => a.Id == id).Mode = ActionRecord.k_Auto;
+
+            Assert.That(TableValidator.Validate(TestTables.Build(actions: actions)), Is.Not.Empty);
+        }
+
+        [TestCase("", "up")]
+        [TestCase("Sprites/Decor/bench_log", "north")]
+        public void Validate_WhenDecorationInvalid_ReportsError(string sprite, string face)
+        {
+            List<DecorationRecord> decorations = TestTables.LoadRows<DecorationRecord>("decorations");
+            decorations[1].Sprite = sprite;
+            decorations[1].Spots[0].Face = face;
+
+            Assert.That(TableValidator.Validate(TestTables.Build(decorations: decorations)), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenPlacedDecorUnknown_ReportsError()
+        {
+            GameConfig config = TestTables.LoadConfig();
+            config.Plaza.Decor[0].Id = "statue";
+
+            Assert.That(TableValidator.Validate(TestTables.Build(config: config)), Is.Not.Empty);
         }
 
         [Test]

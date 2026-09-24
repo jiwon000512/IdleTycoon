@@ -16,6 +16,12 @@ namespace ZooTycoon.Editor
         const string k_BreadDir = "Assets/Resources/Sprites/Shop/Breads/";
         const string k_PrefabDir = "Assets/Prefabs/Shop/";
         const string k_ShadowPath = "Assets/Sprites/World/shadow.png";
+        const string k_PlazaDir = "Assets/Sprites/World/Plaza/";
+        const string k_DecorDir = "Assets/Resources/Sprites/Decor/";
+        // 설계 11 광장 빵집 문(원점 = 구멍 밑변 가운데, 유닛): 차양은 아치 윗부분을 덮고, 간판은 문 왼쪽 띠 가운데
+        const float k_AwningHeight = 1.0f;
+        const float k_SignOffsetX = 1.3f;
+        const float k_SignHeight = 0.5f;
         const string k_CoinPrefabPath = "Assets/Prefabs/CoinPopup.prefab";
         const string k_FontPath = "Assets/Fonts/Galmuri/Galmuri11-Bold.asset";
         const float k_TagPpu = 40f;
@@ -65,8 +71,9 @@ namespace ZooTycoon.Editor
             BakeCoinPopup();
             ShopCustomer customer = BakeCustomer();
             BakeShop(shelf, oven, counter, digTag, slotMarker, customer);
+            BakePlaza(customer);
             AssetDatabase.SaveAssets();
-            return "Shop: Shelf·Oven·ShopCounter·DigTag·SlotMarker·Shop·ShopCustomer (UI 프리팹은 ZooTycoon/Bake/UI)";
+            return "Shop: Shelf·Oven·ShopCounter·DigTag·SlotMarker·Shop·ShopCustomer·Plaza (UI 프리팹은 ZooTycoon/Bake/UI)";
         }
 
         static void ImportSprites()
@@ -109,6 +116,16 @@ namespace ZooTycoon.Editor
             // 발밑 그림자: 격자에 맞춘 최종 모양(Source~/make_shadow.py), 흰색이라 렌더러가 검정 35%로 칠한다
             Import(k_ShadowPath, center);
             Import(k_SpriteDir + "slot_empty.png", center, k_TagPpu);
+
+            // 설계 11 광장: 차양·계단은 아래 가운데, 간판은 가운데. 장식은 Resources(decorations.json 경로), 아래 가운데
+            Import(k_PlazaDir + "awning.png", bottom);
+            Import(k_PlazaDir + "sign.png", center);
+            Import(k_PlazaDir + "stairs.png", bottom);
+
+            foreach (string path in System.IO.Directory.GetFiles(k_DecorDir, "*.png"))
+            {
+                Import(path.Replace('\\', '/'), bottom);
+            }
             // 타일: 굴 그림이 픽셀을 읽고, 흙 배경은 Tiled로 깐다(왼쪽 위 피벗)
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_SpriteDir + "wall_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
@@ -228,15 +245,22 @@ namespace ZooTycoon.Editor
             CounterView counter = root.AddComponent<CounterView>();
             SpriteRenderer counterBody = Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -ShopLayout.k_CounterDrop, 0f), 0);
             Set(counter, "m_body", counterBody);
-            // 웜뱃 정면·뒷모습: 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 0 → 1 → 2 → 3(Source~/make_breath_frames.py)
-            SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -ShopLayout.k_WombatDrop, 0f), 0);
+            Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, -ShopLayout.k_WombatDrop, 0f)));
+            return Save(root, counter, "ShopCounter");
+        }
+
+        // 웜뱃(빵집 계산대·광장 공용). 정면·뒷모습: 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 0 → 1 → 2 → 3(Source~/make_breath_frames.py)
+        static ShopWombat BakeWombat(Transform parent, Vector3 position)
+        {
+            SpriteRenderer wombat = Renderer(parent, "Wombat", Load("wombat_front"), position, 0);
             SpriteAnimator animator = wombat.gameObject.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", wombat);
-            Shadow(wombat.transform);
+            SpriteRenderer shadow = Shadow(wombat.transform);
             // 걷기(v0.6): 딛기 → 왼발 → 딛기 → 오른발(Source~/make_walk_frames.py)
             ShopWombat mover = wombat.gameObject.AddComponent<ShopWombat>();
             Set(mover, "m_animator", animator);
             Set(mover, "m_renderer", wombat);
+            Set(mover, "m_shadow", shadow);
             // 옆모습(손님 동선 설계 v0.2): 오른쪽 보는 그림, 왼쪽은 뒤집기. 실제 아트 전까지 앞모습 사본(더미)
             foreach (string side in new[] { "front", "back", "side" })
             {
@@ -258,8 +282,7 @@ namespace ZooTycoon.Editor
             }
 
             so.ApplyModifiedPropertiesWithoutUndo();
-            Set(counter, "m_wombat", mover);
-            return Save(root, counter, "ShopCounter");
+            return mover;
         }
 
         // 파기 비용 태그: 칸 가운데에 태그만. 탭 영역 = 태그
@@ -346,7 +369,7 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             // 아치 그림 53칸 높이가 입구 줄(80칸) 밑변에 닿게: 윗변 = 27칸 = 0.675유닛 아래
-            Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / ShopLayout.k_PixelsPerUnit, 0f), k_ArchOrder);
+            SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / ShopLayout.k_PixelsPerUnit, 0f), k_ArchOrder);
 
             ShopView view = root.AddComponent<ShopView>();
             Set(view, "m_shelfPrefab", shelf);
@@ -355,12 +378,50 @@ namespace ZooTycoon.Editor
             Set(view, "m_digTagPrefab", digTag);
             Set(view, "m_slotMarkerPrefab", slotMarker);
             Set(view, "m_burrow", burrow);
-            Set(view, "m_floorTile", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "floor_tile.png"));
-            Set(view, "m_wallTile", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "wall_tile.png"));
-            Set(view, "m_wallFace", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "wall_face.png"));
+            Set(view, "m_arch", arch.transform);
+            SetBurrowTextures(view);
             ShopCustomerSpawner spawner = root.AddComponent<ShopCustomerSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Shop");
+        }
+
+        // 설계 11: 굴 밖 광장. 굴 그림·빵집 문·계단·장식 자리는 실행 중 PlazaView가 Core 배치(PlazaLayout)대로 놓는다
+        static void BakePlaza(ShopCustomer customer)
+        {
+            GameObject root = new GameObject("Plaza");
+            SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
+            backdrop.drawMode = SpriteDrawMode.Tiled;
+            backdrop.tileMode = SpriteTileMode.Continuous;
+            backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
+            SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
+
+            GameObject door = Child(root.transform, "BakeryDoor", Vector3.zero);
+            Renderer(door.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
+            Renderer(door.transform, "Awning", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "awning.png"), new Vector3(0f, k_AwningHeight, 0f), k_ArchOrder + 1);
+            Renderer(door.transform, "Sign", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "sign.png"), new Vector3(-k_SignOffsetX, k_SignHeight, 0f), k_ArchOrder + 1);
+            TextMeshPro sign = WorldText(door.transform, "SignText", new Vector3(-k_SignOffsetX, k_SignHeight, 0f), k_ArchOrder + 2);
+            sign.rectTransform.sizeDelta = new Vector2(1f, 0.35f);
+            sign.color = new Color32(0xF4, 0xDF, 0xBF, 255);
+            SpriteRenderer stairs = Renderer(root.transform, "Stairs", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png"), Vector3.zero, k_ArchOrder);
+            ShopWombat wombat = BakeWombat(root.transform, Vector3.zero);
+
+            PlazaView view = root.AddComponent<PlazaView>();
+            Set(view, "m_burrow", burrow);
+            SetBurrowTextures(view);
+            Set(view, "m_door", door.transform);
+            Set(view, "m_sign", sign);
+            Set(view, "m_stairs", stairs.transform);
+            Set(view, "m_wombat", wombat);
+            PlazaVisitorSpawner spawner = root.AddComponent<PlazaVisitorSpawner>();
+            Set(spawner, "m_prefab", customer);
+            Save(root, view, "Plaza");
+        }
+
+        static void SetBurrowTextures(Object view)
+        {
+            Set(view, "m_floorTile", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "floor_tile.png"));
+            Set(view, "m_wallTile", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "wall_tile.png"));
+            Set(view, "m_wallFace", AssetDatabase.LoadAssetAtPath<Texture2D>(k_SpriteDir + "wall_face.png"));
         }
 
         // ---------- 공용 ----------

@@ -13,10 +13,11 @@ namespace ZooTycoon.Data
         private static readonly string[] k_ShopUpgradeIds =
             { ShopSim.k_OvenCount, ShopSim.k_OvenSpeed, ShopSim.k_ShelfCapacity, ShopSim.k_CheckoutSpeed };
         private static readonly string[] k_ActionIds =
-            { ShopSim.k_ActionTakeOut, ShopSim.k_ActionFill, ShopSim.k_ActionServe, ShopSim.k_ActionOpen, ShopSim.k_ActionDig };
+            { ShopSim.k_ActionTakeOut, ShopSim.k_ActionFill, ShopSim.k_ActionServe, ShopSim.k_ActionOpen, ShopSim.k_ActionDig, ShopSim.k_ActionExit, PlazaSim.k_ActionEnter };
         private static readonly string[] k_SoundIds = { SoundRecord.k_Pay, SoundRecord.k_OvenDone, SoundRecord.k_GiveUp };
-        // 시트를 여는 행동은 버튼으로만
-        private static readonly string[] k_ManualOnlyActionIds = { ShopSim.k_ActionOpen, ShopSim.k_ActionDig };
+        // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
+        private static readonly string[] k_ManualOnlyActionIds = { ShopSim.k_ActionOpen, ShopSim.k_ActionDig, ShopSim.k_ActionExit, PlazaSim.k_ActionEnter };
+        private static readonly string[] k_Faces = { "up", "down", "left", "right" };
 
         public static IReadOnlyList<string> Validate(GameTables tables)
         {
@@ -28,6 +29,7 @@ namespace ZooTycoon.Data
             ValidateActions(tables, errors);
             ValidateInteractables(tables, errors);
             ValidateSounds(tables, errors);
+            ValidateDecorations(tables, errors);
             ValidateStrings(tables, errors);
             ValidateConfig(tables, errors);
 
@@ -172,7 +174,7 @@ namespace ZooTycoon.Data
 
                 if (action.IsAuto && System.Array.IndexOf(k_ManualOnlyActionIds, action.Id) >= 0)
                 {
-                    errors.Add($"actions '{action.Id}': 시트를 여는 행동은 manual만 된다.");
+                    errors.Add($"actions '{action.Id}': 시트를 열거나 곳을 옮기는 행동은 manual만 된다.");
                 }
             }
 
@@ -268,6 +270,54 @@ namespace ZooTycoon.Data
             }
         }
 
+        // 설계 11: 장식 id·그림·막는 자리·들를 곳, plaza.decor는 있는 장식만
+        private static void ValidateDecorations(GameTables tables, List<string> errors)
+        {
+            HashSet<string> ids = new HashSet<string>();
+
+            foreach (DecorationRecord decor in tables.Decorations)
+            {
+                CheckId("decorations", decor.Id, k_IdPattern, ids, errors);
+
+                if (string.IsNullOrEmpty(decor.Sprite))
+                {
+                    errors.Add($"decorations '{decor.Id}': sprite 경로가 비어 있다.");
+                }
+
+                if (decor.HalfWidth < 0d || decor.Depth < 0d)
+                {
+                    errors.Add($"decorations '{decor.Id}': halfWidth·depth는 0 이상이어야 한다.");
+                }
+
+                if (decor.Spots == null)
+                {
+                    errors.Add($"decorations '{decor.Id}': spots가 없다.");
+                    continue;
+                }
+
+                foreach (DecorationSpot spot in decor.Spots)
+                {
+                    if (System.Array.IndexOf(k_Faces, spot.Face) < 0)
+                    {
+                        errors.Add($"decorations '{decor.Id}': face '{spot.Face}'는 up·down·left·right 중 하나여야 한다.");
+                    }
+                }
+            }
+
+            if (tables.Config.Plaza?.Decor == null)
+            {
+                return;
+            }
+
+            foreach (GameConfig.PlacedDecor placed in tables.Config.Plaza.Decor)
+            {
+                if (!ids.Contains(placed.Id))
+                {
+                    errors.Add($"game_config: plaza.decor의 '{placed.Id}'가 decorations.json에 없다.");
+                }
+            }
+        }
+
         private static void ValidateStrings(GameTables tables, List<string> errors)
         {
             HashSet<string> ids = new HashSet<string>();
@@ -299,10 +349,10 @@ namespace ZooTycoon.Data
 
             GameConfig.ShopConfig shop = config.Shop;
 
-            if (shop.ArrivalSeconds <= 0d || shop.CheckoutSeconds <= 0d || shop.HopSeconds <= 0d || shop.PickSeconds < 0d
+            if (shop.CheckoutSeconds <= 0d || shop.HopSeconds <= 0d || shop.PickSeconds < 0d
                 || shop.PatienceSeconds < 0d || shop.LookSeconds <= 0d || shop.MaxCustomers < 1 || shop.ShelfCapacity < 1 || shop.OvenCount < 1)
             {
-                errors.Add("game_config: shop의 arrivalSeconds·checkoutSeconds·hopSeconds·lookSeconds는 0보다, pickSeconds·patienceSeconds는 0 이상, maxCustomers·shelfCapacity·ovenCount는 1 이상이어야 한다.");
+                errors.Add("game_config: shop의 checkoutSeconds·hopSeconds·lookSeconds는 0보다, pickSeconds·patienceSeconds는 0 이상, maxCustomers·shelfCapacity·ovenCount는 1 이상이어야 한다.");
             }
 
             // 굴 격자 설계 v0.5
@@ -315,6 +365,30 @@ namespace ZooTycoon.Data
             if (shop.WombatSpeed <= 0d || shop.CarryCapacity < 1)
             {
                 errors.Add("game_config: shop의 wombatSpeed는 0보다, carryCapacity는 1 이상이어야 한다.");
+            }
+
+            // 설계 11
+            GameConfig.PlazaConfig plaza = config.Plaza;
+
+            if (plaza == null || plaza.Decor == null)
+            {
+                errors.Add("game_config: plaza 섹션이나 plaza.decor가 없다.");
+                return;
+            }
+
+            if (plaza.Cols < 2 || plaza.Rows < 2 || plaza.ArrivalSeconds <= 0d || plaza.MaxVisitors < 1)
+            {
+                errors.Add("game_config: plaza의 cols·rows는 2 이상, arrivalSeconds는 0보다, maxVisitors는 1 이상이어야 한다.");
+            }
+
+            if (plaza.VisitSecondsMin < 0d || plaza.VisitSecondsMax < plaza.VisitSecondsMin || plaza.VisitsMin < 0 || plaza.VisitsMax < plaza.VisitsMin)
+            {
+                errors.Add("game_config: plaza의 visitSecondsMin·visitsMin은 0 이상, Max는 Min 이상이어야 한다.");
+            }
+
+            if (plaza.BrowseChance < 0d || plaza.BrowseChance > 1d || plaza.EmoteChance < 0d || plaza.EmoteChance > 1d)
+            {
+                errors.Add("game_config: plaza의 browseChance·emoteChance는 0~1이어야 한다.");
             }
         }
 

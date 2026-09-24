@@ -150,6 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.WorldView
   m_camera: {fileID: 519420033}
   m_shopPrefab: {fileID: 3832975021042575414, guid: 54489519bab15ab4eaade689f269211f, type: 3}
+  m_plazaPrefab: {fileID: 7418904398767101469, guid: 4384faa82dbaa024da4f3d2c84ba8440, type: 3}
 --- !u!4 &19269923
 Transform:
   m_ObjectHideFlags: 0

@@ -35,6 +35,7 @@ namespace ZooTycoon.Tests
             IReadOnlyList<ActionRecord> actions = null,
             IReadOnlyList<InteractableRecord> interactables = null,
             IReadOnlyList<SoundRecord> sounds = null,
+            IReadOnlyList<DecorationRecord> decorations = null,
             IReadOnlyList<StringRecord> strings = null,
             GameConfig config = null)
         {
@@ -45,6 +46,7 @@ namespace ZooTycoon.Tests
                 actions ?? LoadRows<ActionRecord>("actions"),
                 interactables ?? LoadRows<InteractableRecord>("interactables"),
                 sounds ?? LoadRows<SoundRecord>("sounds"),
+                decorations ?? LoadRows<DecorationRecord>("decorations"),
                 strings ?? LoadRows<StringRecord>("strings"),
                 config ?? LoadConfig());
         }

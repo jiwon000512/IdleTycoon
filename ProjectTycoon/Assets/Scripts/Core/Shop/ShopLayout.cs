@@ -28,9 +28,9 @@ namespace ZooTycoon.Core
         // 웜뱃 바닥 자리는 계산대 밑변까지(둘 사이 틈으로 손님이 지나가지 않게)
         private const float k_WombatDepth = 0.9f;
         // 걷는 땅: 몸 반 폭, 격자 간격, 꺾임 벌점
-        private const float k_Clearance = 0.3f;
-        private const float k_Step = 0.2f;
-        private const float k_TurnPenalty = 0.6f;
+        public const float k_Clearance = 0.3f;
+        public const float k_Step = 0.2f;
+        public const float k_TurnPenalty = 0.6f;
         // 서는 자리: 진열대 옆(가운데에서), 앞(아래)
         private const float k_SideOffset = 1.1f;
         private const float k_FrontOffsetX = 0.55f;

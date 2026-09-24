@@ -64,5 +64,19 @@ namespace ZooTycoon.Tests
                 Assert.That(exists, Is.True, $"sounds '{sound.Id}': {sound.Clip} 파일이 없다.");
             }
         }
+
+        // 설계 11
+        [Test]
+        public void Sprite_OfEveryDecoration_ExistsUnderResources()
+        {
+            foreach (DecorationRecord decor in TestTables.LoadRows<DecorationRecord>("decorations"))
+            {
+                string directory = Path.Combine(k_ResourcesPath, Path.GetDirectoryName(decor.Sprite));
+                bool exists = Directory.Exists(directory)
+                    && Directory.GetFiles(directory, Path.GetFileName(decor.Sprite) + ".*").Any(f => !f.EndsWith(".meta"));
+
+                Assert.That(exists, Is.True, $"decorations '{decor.Id}': {decor.Sprite} 파일이 없다.");
+            }
+        }
     }
 }

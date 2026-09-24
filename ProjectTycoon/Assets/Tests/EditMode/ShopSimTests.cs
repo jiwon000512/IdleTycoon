@@ -16,13 +16,19 @@ namespace ZooTycoon.Tests
         private ZooState m_state;
         private GameConfig.ShopConfig m_config;
         private double m_time;
+        // 설계 11: 손님은 광장에서 오지만, 빵집 테스트는 옛 도착 타이머(첫 틱, 그다음 m_arrivalSeconds마다)로 구멍에 들인다
+        private double m_arrivalSeconds;
+        private double m_arrivalElapsed;
+        private VisitorRecord m_look;
 
         // actionModes: 행동 id → mode 덮어쓰기, ranges: 사물 id → range 덮어쓰기(설계 09 v0.4 표 바꾸기)
         private ShopSim Create(Action<GameConfig.ShopConfig> tweak = null, Dictionary<string, string> actionModes = null, Dictionary<string, double> ranges = null)
         {
             GameConfig config = TestTables.LoadConfig();
             m_config = config.Shop;
+            m_arrivalSeconds = config.Plaza.ArrivalSeconds;
             tweak?.Invoke(config.Shop);
+            m_arrivalElapsed = m_arrivalSeconds;
             List<ActionRecord> actions = TestTables.LoadRows<ActionRecord>("actions");
             List<InteractableRecord> interactables = TestTables.LoadRows<InteractableRecord>("interactables");
 
@@ -45,7 +51,21 @@ namespace ZooTycoon.Tests
             GameTables tables = TestTables.Build(actions: actions, interactables: interactables, config: config);
             m_state = ZooState.CreateNew(config);
             m_time = 0d;
+            m_look = tables.Visitors[0];
             return new ShopSim(m_state, tables, new SequenceRandom(new double[200]));
+        }
+
+        private void Arrive(ShopSim shop)
+        {
+            m_arrivalElapsed = Math.Min(m_arrivalElapsed + k_Dt, m_arrivalSeconds);
+
+            if (m_arrivalElapsed < m_arrivalSeconds || !shop.CanAdmit)
+            {
+                return;
+            }
+
+            m_arrivalElapsed = 0d;
+            shop.Admit(m_look);
         }
 
         private void Run(ShopSim shop, double seconds)
@@ -53,6 +73,7 @@ namespace ZooTycoon.Tests
             for (double t = 0d; t < seconds - 1e-9; t += k_Dt)
             {
                 shop.Tick(k_Dt);
+                Arrive(shop);
                 m_time += k_Dt;
             }
         }
@@ -68,6 +89,8 @@ namespace ZooTycoon.Tests
                 }
 
                 shop.Tick(k_Dt);
+
+                Arrive(shop);
                 m_time += k_Dt;
             }
 
@@ -149,24 +172,12 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void Arrival_FirstOnFirstTick_ThenEveryArrivalSeconds()
-        {
-            ShopSim shop = Create(c => c.PatienceSeconds = 1000d);
-            int arrived = 0;
-            shop.CustomerArrived += _ => arrived++;
-
-            Run(shop, 9d);
-
-            Assert.That(arrived, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void Arrival_StopsAtMaxCustomers()
+        public void Admit_StopsAtMaxCustomers()
         {
             ShopSim shop = Create(c =>
             {
                 c.PatienceSeconds = 1000d;
-                c.ArrivalSeconds = 1d;
+                m_arrivalSeconds = 1d;
             });
 
             Run(shop, 20d);
@@ -201,7 +212,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Customer_Paid_WalksOutThroughHoleAndLeaves()
         {
-            ShopSim shop = Create(c => c.ArrivalSeconds = 1000d);
+            ShopSim shop = Create(c => m_arrivalSeconds = 1000d);
             Stock(shop, "b01", 6);
             double coins = m_state.Coins;
             int exited = 0;
@@ -220,7 +231,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Checkout_StartsOnlyAfterHeadStandsAtHeadSlot()
         {
-            ShopSim shop = Create(c => c.ArrivalSeconds = 1000d);
+            ShopSim shop = Create(c => m_arrivalSeconds = 1000d);
             Stock(shop, "b01", 6);
             double coins = m_state.Coins;
             Customer customer = null;
@@ -240,7 +251,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Customer_EmptyFirstShelf_LooksThenGoesToNextBread()
         {
-            ShopSim shop = Create(c => c.ArrivalSeconds = 1000d);
+            ShopSim shop = Create(c => m_arrivalSeconds = 1000d);
             m_state.AddCoins(10000d);
             Assert.That(shop.TryUnlockNextBread(new Cell(0, 1)), Is.True);
             Stock(shop, "b02", 4);
@@ -265,7 +276,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Customer_OnlyBreadEmpty_LooksForPatienceThenGivesUp()
         {
-            ShopSim shop = Create(c => c.ArrivalSeconds = 1000d);
+            ShopSim shop = Create(c => m_arrivalSeconds = 1000d);
             Customer customer = null;
             double gaveUpAt = -1d;
             int exited = 0;
@@ -287,7 +298,7 @@ namespace ZooTycoon.Tests
         {
             ShopSim shop = Create(c =>
             {
-                c.ArrivalSeconds = 1000d;
+                m_arrivalSeconds = 1000d;
                 c.PatienceSeconds = 100d;
             });
             Customer customer = null;
@@ -315,7 +326,7 @@ namespace ZooTycoon.Tests
         {
             ShopSim shop = Create(c =>
             {
-                c.ArrivalSeconds = 0.5d;
+                m_arrivalSeconds = 0.5d;
                 c.CheckoutSeconds = 3d;
             });
             Stock(shop, "b01", 6);
@@ -335,7 +346,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Sidestep_KeepsCrowdedCustomersApart()
         {
-            ShopSim shop = Create(c => c.ArrivalSeconds = 0.5d);
+            ShopSim shop = Create(c => m_arrivalSeconds = 0.5d);
             Stock(shop, "b01", 6);
             int pathClose = 0;
             int drawnClose = 0;
@@ -343,6 +354,7 @@ namespace ZooTycoon.Tests
             for (double t = 0d; t < 20d; t += k_Dt)
             {
                 shop.Tick(k_Dt);
+                Arrive(shop);
                 m_time += k_Dt;
                 IReadOnlyList<Customer> customers = shop.Customers;
 
@@ -549,7 +561,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Checkout_PausesWhileWombatAwayFromCounter()
         {
-            ShopSim shop = Create(c => c.ArrivalSeconds = 1000d);
+            ShopSim shop = Create(c => m_arrivalSeconds = 1000d);
             Stock(shop, "b01", 6);
             Customer customer = null;
             shop.CustomerArrived += c => customer = c;
@@ -574,7 +586,7 @@ namespace ZooTycoon.Tests
             ShopSim shop = Create(c =>
             {
                 c.ShelfCapacity = 4;
-                c.ArrivalSeconds = 1000d;
+                m_arrivalSeconds = 1000d;
                 c.PatienceSeconds = 100d;
             });
             double picked = -1d;
@@ -610,7 +622,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Serve_Manual_PaysHeadOnlyOnButton()
         {
-            ShopSim shop = Create(c => c.ArrivalSeconds = 1000d, new Dictionary<string, string> { ["serve"] = ActionRecord.k_Manual });
+            ShopSim shop = Create(c => m_arrivalSeconds = 1000d, new Dictionary<string, string> { ["serve"] = ActionRecord.k_Manual });
             Stock(shop, "b01", 6);
             Customer customer = null;
             shop.CustomerArrived += c => customer = c;

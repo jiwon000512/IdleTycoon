@@ -1,0 +1,52 @@
+{
+  "table": "decorations",
+  "version": 1,
+  "notes": [
+    "설계 11 굴 밖 광장: 광장 장식 종류. 어디에 놓였는지는 game_config.plaza.decor. 사는 값(cost)·자유 배치는 설계 12 꾸미기에서.",
+    "두 벌(2026-09-24 사용자 확정): A 소박한 흙·나무(fountain_stone·bench_log·plant_pot·lamp_lantern) · B 아기자기한 상가 거리(fountain_tile·bench_iron·plant_box·lamp_globe). 처음 광장에는 A가 놓인다.",
+    "sprite: Resources/ 기준 경로(확장자 없음), 한 칸 2px·PPU 80, 피벗 아래 가운데. halfWidth·depth: 밑변 가운데에서 좌우·위로 막는 바닥(유닛, 손님·웜뱃이 지나가지 못함).",
+    "spots: 손님이 들르는 자리(밑변 기준 dx·dy 유닛, y 위)와 거기서 보는 방향(up·down·left·right). 걷는 땅이 아니면 게임이 뺀다(벽에 붙은 장식). 값은 전부 시작값."
+  ],
+  "rows": [
+    {
+      "id": "fountain_stone", "sprite": "Sprites/Decor/fountain_stone", "halfWidth": 0.95, "depth": 0.65,
+      "spots": [
+        { "dx": -0.6, "dy": -0.4, "face": "up" }, { "dx": 0.6, "dy": -0.4, "face": "up" },
+        { "dx": -1.35, "dy": 0.35, "face": "right" }, { "dx": 1.35, "dy": 0.35, "face": "left" },
+        { "dx": -0.7, "dy": 1.05, "face": "down" }, { "dx": 0.7, "dy": 1.05, "face": "down" }
+      ]
+    },
+    {
+      "id": "fountain_tile", "sprite": "Sprites/Decor/fountain_tile", "halfWidth": 0.95, "depth": 0.65,
+      "spots": [
+        { "dx": -0.6, "dy": -0.4, "face": "up" }, { "dx": 0.6, "dy": -0.4, "face": "up" },
+        { "dx": -1.35, "dy": 0.35, "face": "right" }, { "dx": 1.35, "dy": 0.35, "face": "left" },
+        { "dx": -0.7, "dy": 1.05, "face": "down" }, { "dx": 0.7, "dy": 1.05, "face": "down" }
+      ]
+    },
+    {
+      "id": "bench_log", "sprite": "Sprites/Decor/bench_log", "halfWidth": 0.75, "depth": 0.25,
+      "spots": [ { "dx": -0.4, "dy": -0.35, "face": "down" }, { "dx": 0.4, "dy": -0.35, "face": "down" } ]
+    },
+    {
+      "id": "bench_iron", "sprite": "Sprites/Decor/bench_iron", "halfWidth": 0.75, "depth": 0.25,
+      "spots": [ { "dx": -0.4, "dy": -0.35, "face": "down" }, { "dx": 0.4, "dy": -0.35, "face": "down" } ]
+    },
+    {
+      "id": "plant_pot", "sprite": "Sprites/Decor/plant_pot", "halfWidth": 0.35, "depth": 0.25,
+      "spots": [ { "dx": -0.8, "dy": 0.0, "face": "right" }, { "dx": 0.8, "dy": 0.0, "face": "left" } ]
+    },
+    {
+      "id": "plant_box", "sprite": "Sprites/Decor/plant_box", "halfWidth": 0.35, "depth": 0.25,
+      "spots": [ { "dx": -0.8, "dy": 0.0, "face": "right" }, { "dx": 0.8, "dy": 0.0, "face": "left" } ]
+    },
+    {
+      "id": "lamp_lantern", "sprite": "Sprites/Decor/lamp_lantern", "halfWidth": 0.12, "depth": 0.15,
+      "spots": [ { "dx": 0.55, "dy": -0.1, "face": "left" } ]
+    },
+    {
+      "id": "lamp_globe", "sprite": "Sprites/Decor/lamp_globe", "halfWidth": 0.12, "depth": 0.15,
+      "spots": [ { "dx": 0.55, "dy": -0.1, "face": "left" } ]
+    }
+  ]
+}

@@ -46,12 +46,11 @@ namespace ZooTycoon.World
             }
         }
 
-        // 규칙 예외: 손님 외형 선택은 연출 난수(UnityEngine.Random, 프로그래밍-규약 5장)
+        // 설계 11: 외형은 광장에서 정해져 온다(customer.Look)
         private void Shop_CustomerArrived(Customer customer)
         {
-            IReadOnlyList<VisitorRecord> looks = m_tables.Visitors;
             ShopCustomer unit = Instantiate(m_prefab, transform);
-            unit.Initialize(customer, looks[Random.Range(0, looks.Count)], m_frames, m_view);
+            unit.Initialize(customer, m_frames, m_view.transform);
             m_units[customer] = unit;
         }
 

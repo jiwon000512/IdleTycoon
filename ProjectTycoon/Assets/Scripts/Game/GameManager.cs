@@ -14,6 +14,8 @@ namespace ZooTycoon.Game
         public GameTables Tables { get; private set; }
         public ZooState State { get; private set; }
         public ShopSim Shop { get; private set; }
+        // 설계 11: 빵집 + 굴 밖 광장, 웜뱃이 오가는 곳
+        public Mall Mall { get; private set; }
 
         // 씬을 다시 열어도 상태는 한 번만 만든다(싱글턴이 씬 사이에서 살아남는 이유)
         public void Init()
@@ -32,13 +34,15 @@ namespace ZooTycoon.Game
             }
 
             State = ZooState.CreateNew(Tables.Config);
-            Shop = new ShopSim(State, Tables, new SystemRandom());
+            SystemRandom random = new SystemRandom();
+            Shop = new ShopSim(State, Tables, random);
+            Mall = new Mall(Shop, new PlazaSim(Tables, Shop, random));
         }
 
-        // 손님 동선 설계 v0.2: 가게 시뮬은 매 프레임(손님 행동 트리·조이스틱 웜뱃이 멈칫하지 않게)
+        // 손님 동선 설계 v0.2: 가게 시뮬은 매 프레임(손님 행동 트리·조이스틱 웜뱃이 멈칫하지 않게). 설계 11: 빵집과 광장을 함께
         private void Update()
         {
-            Shop?.Tick(Time.deltaTime);
+            Mall?.Tick(Time.deltaTime);
         }
 
         private static GameTables LoadTables()
@@ -52,6 +56,7 @@ namespace ZooTycoon.Game
                 tableManager.Load<ActionRecord>("actions"),
                 tableManager.Load<InteractableRecord>("interactables"),
                 tableManager.Load<SoundRecord>("sounds"),
+                tableManager.Load<DecorationRecord>("decorations"),
                 tableManager.Load<StringRecord>("strings"),
                 tableManager.LoadConfig<GameConfig>("game_config"));
         }

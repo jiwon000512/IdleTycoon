@@ -9,7 +9,8 @@ namespace ZooTycoon.Core
     // 손님 동선 설계 v0.2: 매 프레임 돈다. 손님(행동 트리, ShopSim.Customers.cs)의 위치·걷는 시간(A* 길 ÷ walkSpeed)도 여기서 정하고 화면은 읽기만 한다.
     // 설계 09: 웜뱃은 플레이어가 조이스틱으로 움직이고, 가까운 사물(대상)을 버튼으로 다룬다.
     // v0.4: 사물마다 거리·행동은 interactables.json, 행동마다 수동/자동은 actions.json. 행동이 하는 일은 여기(k_Action*)
-    public sealed partial class ShopSim
+    // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기(exit)로 광장에 간다(없는 동안 계산이 멈춘다)
+    public sealed partial class ShopSim : IWombatArea
     {
         public const string k_OvenCount = "oven_count";
         public const string k_OvenSpeed = "oven_speed";
@@ -20,6 +21,7 @@ namespace ZooTycoon.Core
         public const string k_ActionServe = "serve";
         public const string k_ActionOpen = "open";
         public const string k_ActionDig = "dig";
+        public const string k_ActionExit = "exit";
 
         private readonly ZooState m_state;
         private readonly GameTables m_tables;
@@ -38,6 +40,7 @@ namespace ZooTycoon.Core
         private readonly Mover m_wombat;
         private Vector2 m_wombatInput;
         private bool m_wombatMoving;
+        private bool m_wombatPresent = true;
         private readonly InteractableRecord[] m_elements;
         private readonly Dictionary<string, ActionRecord> m_actions = new Dictionary<string, ActionRecord>(StringComparer.Ordinal);
         private readonly List<Interactable> m_inRange = new List<Interactable>();
@@ -55,7 +58,8 @@ namespace ZooTycoon.Core
         public int ShelfCapacity => m_config.ShelfCapacity + (int)Effect(k_ShelfCapacity);
         public BreadRecord NextBread => m_unlocked.Count < m_tables.Breads.Count ? m_tables.Breads[m_unlocked.Count] : null;
         // 설계 09 v0.4: 웜뱃이 계산대 range 안에 있나(serve가 auto면 있는 동안만 계산이 흐른다)
-        public bool WombatAtCounter => Vector2.Distance(m_wombat.Position, m_layout.WombatHome) <= Range(InteractKind.Counter);
+        public bool WombatAtCounter => m_wombatPresent && Vector2.Distance(m_wombat.Position, m_layout.WombatHome) <= Range(InteractKind.Counter);
+        public bool WombatPresent => m_wombatPresent;
         public Vector2 WombatPosition => m_wombat.Position;
         public Facing WombatFacing => m_wombat.Facing;
         public bool WombatMoving => m_wombatMoving;
@@ -98,6 +102,8 @@ namespace ZooTycoon.Core
         // 대상이 바뀌었거나 대상의 버튼 행동이 바뀌었다(다 구웠다·빵을 들었다 등)
         public event Action TargetChanged;
         public event Action CarryChanged;
+        // 구멍 앞에서 나가기 버튼(Mall이 웜뱃을 광장으로 옮긴다)
+        public event Action ExitRequested;
 
         // 첫 손님은 첫 틱에 온다
         public ShopSim(ZooState state, GameTables tables, IRandom random)
@@ -120,7 +126,6 @@ namespace ZooTycoon.Core
             {
                 m_actions[action.Id] = action;
             }
-            m_arrivalElapsed = m_config.ArrivalSeconds;
 
             // 시작 배치: 왼쪽 열(−1)의 자리 줄 두 곳에 첫 빵과 오븐. 오른쪽 열(0)은 빈 자리
             Unlock(tables.Breads[0], new Cell(-1, 1));
@@ -222,14 +227,13 @@ namespace ZooTycoon.Core
             return UpgradeLevel(upgradeId) >= GetUpgrade(upgradeId).MaxLevel;
         }
 
-        // 매 프레임. 순서: 웜뱃(이동 → 대상) → 오븐 → 손님 행동 트리 → 계산 → 도착
+        // 매 프레임. 순서: 웜뱃(이동 → 대상) → 오븐 → 손님 행동 트리 → 계산
         public void Tick(double dt)
         {
             TickWombat(dt);
             TickOvens(dt);
             TickCustomers(dt);
             TickCheckout(dt);
-            TickArrival(dt);
         }
 
         // 조이스틱 방향(길이 1까지). 다음 Tick부터 이 방향으로 걷는다
@@ -254,6 +258,24 @@ namespace ZooTycoon.Core
             oven.Remaining = bread.BakeSeconds;
             OnOvenChanged(ovenIndex);
             return true;
+        }
+
+        // 설계 11: 광장에서 들어오기. 구멍 아래 바닥에 선다
+        public void PlaceWombatAtHole()
+        {
+            m_wombat.Place(m_layout.HoleFloor);
+            m_wombat.Facing = Facing.Down;
+            m_wombatPresent = true;
+            RefreshTarget();
+        }
+
+        // 광장으로 나갔다: 걷기·자동 행동·계산이 멈추고 대상이 없다
+        public void RemoveWombat()
+        {
+            m_wombatPresent = false;
+            m_wombatInput = Vector2.Zero;
+            m_wombatMoving = false;
+            RefreshTarget();
         }
 
         // 버튼: 대상의 manual 행동을 한다. 시트 열기(open·dig)는 화면 몫이라 false
@@ -359,34 +381,31 @@ namespace ZooTycoon.Core
         // 설계 09 3장: 조이스틱 방향으로 걷고, 막히면 X만·Y만 시도해 벽을 따라 미끄러진다. 걸은 뒤 대상을 다시 고른다
         private void TickWombat(double dt)
         {
-            Vector2 from = m_wombat.Position;
-            Vector2 step = m_wombatInput * (float)(m_config.WombatSpeed * dt);
-            BurrowNav nav = m_layout.WombatNav;
-            Vector2 to = from + step;
-
-            if (!nav.IsWalkable(to))
+            if (!m_wombatPresent)
             {
-                to = from + new Vector2(step.X, 0f);
+                return;
             }
 
-            if (!nav.IsWalkable(to))
-            {
-                to = from + new Vector2(0f, step.Y);
-            }
-
-            m_wombatMoving = to != from && nav.IsWalkable(to);
-
-            if (m_wombatMoving)
-            {
-                m_wombat.Place(to);
-                m_wombat.Facing = Mover.FacingOf(to - from);
-            }
-
+            m_wombatMoving = WombatWalker.Step(m_wombat, m_wombatInput, m_config.WombatSpeed, dt, m_layout.WombatNav);
             RefreshTarget();
         }
 
-        // 11장: range 안 사물을 모으고, 그 사물들의 auto 행동을 할 수 있으면 하고, 가장 가까운 것을 버튼 대상으로
+        // 11장: range 안 사물을 모으고, 그 사물들의 auto 행동을 할 수 있으면 하고, 가장 가까운 것을 버튼 대상으로. 웜뱃이 광장에 있으면 대상이 없다
         private void RefreshTarget()
+        {
+            Interactable? found = m_wombatPresent ? GatherInRange() : null;
+            m_target = found;
+            ActionRecord action = TargetAction;
+
+            if (!Nullable.Equals(found, m_lastTarget) || action != m_targetAction)
+            {
+                m_lastTarget = found;
+                m_targetAction = action;
+                OnTargetChanged();
+            }
+        }
+
+        private Interactable? GatherInRange()
         {
             Vector2 p = m_wombat.Position;
             float best = float.MaxValue;
@@ -404,6 +423,7 @@ namespace ZooTycoon.Core
             }
 
             Consider(new Interactable(InteractKind.Counter, m_grid.Counter), Vector2.Distance(p, m_layout.WombatHome), ref found, ref best);
+            Consider(new Interactable(InteractKind.Exit, default), Vector2.Distance(p, m_layout.HoleFloor), ref found, ref best);
 
             foreach (Cell cell in EmptySlots)
             {
@@ -427,15 +447,7 @@ namespace ZooTycoon.Core
                 }
             }
 
-            m_target = found;
-            ActionRecord action = TargetAction;
-
-            if (!Nullable.Equals(found, m_lastTarget) || action != m_targetAction)
-            {
-                m_lastTarget = found;
-                m_targetAction = action;
-                OnTargetChanged();
-            }
+            return found;
         }
 
         private void Consider(Interactable element, float distance, ref Interactable? found, ref float best)
@@ -492,6 +504,9 @@ namespace ZooTycoon.Core
                     break;
                 case k_ActionServe:
                     PayHead();
+                    break;
+                case k_ActionExit:
+                    OnExitRequested();
                     break;
             }
         }
@@ -640,6 +655,11 @@ namespace ZooTycoon.Core
         private void OnCarryChanged()
         {
             CarryChanged?.Invoke();
+        }
+
+        private void OnExitRequested()
+        {
+            ExitRequested?.Invoke();
         }
     }
 }

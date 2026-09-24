@@ -1,6 +1,6 @@
 {
   "table": "game_config",
-  "version": 16,
+  "version": 17,
   "notes": [
     "기획서 6.2~6.4의 수식 상수와 시작 상태. 전부 시작값이며 프로토타입에서 튠한다.",
     "레벨 상한 없음(기획서 v0.6).",
@@ -18,7 +18,8 @@
     "version 13 (2026-09-23, 굴 격자 설계 v0.5): shop.rowWalkSeconds 삭제 → walkSpeed(유닛/초). 굴은 칸(cellWidth × cellHeight, 입구 줄은 entranceHeight)의 격자이고 걷기 = 칸 경로 길이 ÷ walkSpeed(방에 들어서는 마지막 세로 한 칸은 enter·toQueue·wombatWalk 시간에 포함). 파기 비용 = digBaseCost × digCostGrowth^(판 칸 수).",
     "version 14 (2026-09-23, 손님 동선 설계 v0.2): 가게 시뮬이 매 프레임 돌고 손님·웜뱃 걷는 시간 = A* 길 길이 ÷ walkSpeed(3 → 2.2). shop.enterSeconds·toQueueSeconds·patienceWarnSeconds·wombatWalkSeconds 삭제, hopSeconds(구멍에서 톡 나오기·들어가기)·pickSeconds(빵 집기)·lookSeconds(한 진열대 두리번 최대) 추가. patienceSeconds는 빈 진열대 앞 두리번 시간 합계(다 쓰면 「!!」로 나감).",
     "version 15 (2026-09-23, 설계 09 웜뱃 조작): 지상·동물원 레벨 폐기로 income 섹션 삭제. shop.wombatSpeed(조이스틱 웜뱃 유닛/초)·interactDistance(상호작용 대상·계산대 자리 거리, 유닛)·carryCapacity(머리에 이는 빵 수) 추가. walkSpeed는 손님만.",
-    "version 16 (2026-09-23, 설계 09 v0.4): shop.interactDistance 삭제. 사물마다 거리는 interactables.json의 range."
+    "version 16 (2026-09-23, 설계 09 v0.4): shop.interactDistance 삭제. 사물마다 거리는 interactables.json의 range.",
+    "version 17 (2026-09-24, 설계 11 굴 밖 광장): shop.arrivalSeconds → plaza.arrivalSeconds(손님은 광장 지상 계단으로 온다). plaza 신설: cols·rows(빵집과 같은 칸, 가로 가운데 정렬), maxVisitors, 들를 곳에서 머무는 초(visitSecondsMin~Max)·빵집 가기 전 들르는 곳 수(visitsMin~Max), browseChance(가게 없이 구경만), emoteChance(들를 곳에서 ♥), decor(놓인 장식: decorations.json id와 밑변 가운데 광장 좌표 유닛. 원점 = 첫 줄 윗변 가운데, y 위)."
   ],
   "start": {
     "coins": 350
@@ -27,7 +28,6 @@
     "maxSeconds": 28800
   },
   "shop": {
-    "arrivalSeconds": 4,
     "maxCustomers": 8,
     "patienceSeconds": 6,
     "lookSeconds": 2,
@@ -44,5 +44,28 @@
     "pickSeconds": 0.4,
     "wombatSpeed": 3.0,
     "carryCapacity": 6
+  },
+  "plaza": {
+    "cols": 4,
+    "rows": 6,
+    "arrivalSeconds": 4,
+    "maxVisitors": 10,
+    "visitSecondsMin": 2,
+    "visitSecondsMax": 4.5,
+    "visitsMin": 1,
+    "visitsMax": 2,
+    "browseChance": 0.3,
+    "emoteChance": 0.4,
+    "decor": [
+      { "id": "fountain_stone", "x": 0, "y": -8.2 },
+      { "id": "bench_log", "x": -3.8, "y": -6.0 },
+      { "id": "bench_log", "x": 3.8, "y": -10.6 },
+      { "id": "plant_pot", "x": -5.9, "y": -3.2 },
+      { "id": "plant_pot", "x": 5.9, "y": -3.2 },
+      { "id": "plant_pot", "x": -5.9, "y": -13.2 },
+      { "id": "plant_pot", "x": 5.9, "y": -13.2 },
+      { "id": "lamp_lantern", "x": -2.8, "y": -11.0 },
+      { "id": "lamp_lantern", "x": 2.8, "y": -5.0 }
+    ]
   }
 }

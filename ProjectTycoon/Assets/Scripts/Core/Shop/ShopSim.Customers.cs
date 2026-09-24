@@ -16,10 +16,11 @@ namespace ZooTycoon.Core
 
         private readonly List<Customer> m_customers = new List<Customer>();
         private readonly List<Customer> m_queue = new List<Customer>();
-        private double m_arrivalElapsed;
         private int m_nextCustomerId;
 
         public IReadOnlyList<Customer> Customers => m_customers;
+        // 설계 11: 손님은 광장 빵집 문으로 들어온다(도착 타이머는 PlazaSim)
+        public bool CanAdmit => m_customers.Count < m_config.MaxCustomers;
         // 빵을 집은 순서. 걸어오는 중인 손님도 들어 있다
         public IReadOnlyList<Customer> Queue => m_queue;
 
@@ -163,17 +164,10 @@ namespace ZooTycoon.Core
             OnQueueChanged();
         }
 
-        private void TickArrival(double dt)
+        // 광장 빵집 문에서 톡 들어온 손님이 구멍에서 나온다(자리 확인은 CanAdmit으로 부르는 쪽이)
+        public void Admit(VisitorRecord look)
         {
-            m_arrivalElapsed = Math.Min(m_arrivalElapsed + dt, m_config.ArrivalSeconds);
-
-            if (m_arrivalElapsed < m_config.ArrivalSeconds || m_customers.Count >= m_config.MaxCustomers)
-            {
-                return;
-            }
-
-            m_arrivalElapsed = 0d;
-            Customer customer = new Customer(++m_nextCustomerId, m_layout.HoleInside, m_config.PatienceSeconds);
+            Customer customer = new Customer(++m_nextCustomerId, look, m_layout.HoleInside, m_config.PatienceSeconds);
             customer.Brain = BuildBrain();
             m_customers.Add(customer);
             OnCustomerArrived(customer);

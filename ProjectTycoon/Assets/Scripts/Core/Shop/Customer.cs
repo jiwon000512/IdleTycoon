@@ -17,9 +17,11 @@ namespace ZooTycoon.Core
     }
 
     // 설계 08 v0.5 · 손님 동선 설계 v0.2: 빵집 손님 한 명. 위치·보는 방향은 Mover가, 할 일은 행동 트리(Brain)가 정한다
-    public sealed class Customer
+    // 설계 11: 외형(Look)은 광장에서 정해져 빵집 안까지, 나갈 때 다시 광장으로 그대로 간다
+    public sealed class Customer : IWalker
     {
         public int Id { get; }
+        public VisitorRecord Look { get; }
         // 지금 찾는 빵과 그 진열대 칸
         public BreadRecord Bread { get; internal set; }
         public Cell Cell { get; internal set; }
@@ -44,9 +46,10 @@ namespace ZooTycoon.Core
         internal Vector2 Spot { get; set; }
         internal bool Paid { get; set; }
 
-        internal Customer(int id, Vector2 position, double patience)
+        internal Customer(int id, VisitorRecord look, Vector2 position, double patience)
         {
             Id = id;
+            Look = look;
             Mover = new Mover(position, Facing.Down);
             Patience = patience;
         }
