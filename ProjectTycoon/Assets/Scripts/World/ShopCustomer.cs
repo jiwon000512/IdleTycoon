@@ -112,7 +112,7 @@ namespace ZooTycoon.World
 
         private void Update()
         {
-            Vector3 position = m_view.ToWorld(m_customer.Position);
+            Vector3 position = m_view.ToWorld(m_customer.Position + m_customer.Sidestep);
             float alpha = 1f;
             CustomerPhase phase = m_customer.Phase;
 

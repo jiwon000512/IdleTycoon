@@ -331,6 +331,45 @@ namespace ZooTycoon.Tests
             Assert.That(Vector2.Distance(second.Position, shop.Layout.QueueSlots[0]), Is.LessThan(0.01f));
         }
 
+        // 비켜 걷기: 붐비는 가게에서 그린 자리(위치 + 비킴)가 길 위치보다 덜 겹치고, 비킴은 0.25를 넘지 않는다
+        [Test]
+        public void Sidestep_KeepsCrowdedCustomersApart()
+        {
+            ShopSim shop = Create(c => c.ArrivalSeconds = 0.5d);
+            Stock(shop, "b01", 6);
+            int pathClose = 0;
+            int drawnClose = 0;
+
+            for (double t = 0d; t < 20d; t += k_Dt)
+            {
+                shop.Tick(k_Dt);
+                m_time += k_Dt;
+                IReadOnlyList<Customer> customers = shop.Customers;
+
+                for (int i = 0; i < customers.Count; i++)
+                {
+                    Customer a = customers[i];
+                    Assert.That(a.Sidestep.Length(), Is.LessThanOrEqualTo(0.25f + 1e-4f));
+
+                    for (int j = i + 1; j < customers.Count; j++)
+                    {
+                        Customer b = customers[j];
+
+                        if (a.Phase == CustomerPhase.Entering || a.Phase == CustomerPhase.Exiting || b.Phase == CustomerPhase.Entering || b.Phase == CustomerPhase.Exiting)
+                        {
+                            continue;
+                        }
+
+                        pathClose += Vector2.Distance(a.Position, b.Position) < 0.3f ? 1 : 0;
+                        drawnClose += Vector2.Distance(a.Position + a.Sidestep, b.Position + b.Sidestep) < 0.3f ? 1 : 0;
+                    }
+                }
+            }
+
+            Assert.That(pathClose, Is.GreaterThan(0));
+            Assert.That(drawnClose, Is.LessThan(pathClose / 2));
+        }
+
         // 설계 09: 다 구운 빵은 저절로 진열되지 않고, 오븐 앞에 가면 꺼내져 오븐이 비어 다시 구울 수 있다
         [Test]
         public void TakeOut_EmptiesOvenAndAllowsBakeAgain()

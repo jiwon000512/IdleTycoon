@@ -36,11 +36,12 @@ namespace ZooTycoon.Core
         private const float k_FrontOffsetX = 0.55f;
         private const float k_FrontOffsetY = 0.7f;
         // 줄: 간격, 머리 자리(계산대 밑변 기준), 서는 자리와 떨어질 거리, 구멍 아래와 떨어질 거리
+        // 머리 높이 0.9: 계산대 바로 위 걷는 줄(−5.0). 한 줄 위(−4.8)는 줄 손님이 진열대 아랫단을 가린다
         private const float k_QueueSpacing = 0.8f;
         private const float k_SpotGap = 0.6f;
         private const float k_HoleGap = 1f;
         private const float k_OverflowDistance = 2f;
-        private static readonly Vector2 k_QueueHeadOffset = new Vector2(0.6f, 1.1f);
+        private static readonly Vector2 k_QueueHeadOffset = new Vector2(0.6f, 0.9f);
 
         private readonly GameConfig.ShopConfig m_config;
         private readonly List<Vector2> m_queueSlots = new List<Vector2>();

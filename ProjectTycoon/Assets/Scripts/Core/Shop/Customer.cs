@@ -29,8 +29,11 @@ namespace ZooTycoon.Core
         // 나오기·나가기 톡 뛰기 진행(0~1)
         public double HopProgress { get; internal set; }
         public Vector2 Position => Mover.Position;
+        // 비켜 걷기: 가까운 손님과 겹치지 않게 옆으로 비킨 만큼. 길·자리는 그대로이고 화면만 Position에 더한다
+        public Vector2 Sidestep { get; internal set; }
         public Facing Facing => Mover.Facing;
         public bool Moving => Mover.Moving;
+        internal bool Hopping => Phase == CustomerPhase.Entering || Phase == CustomerPhase.Exiting;
 
         internal Mover Mover { get; }
         internal BtNode<Customer> Brain { get; set; }

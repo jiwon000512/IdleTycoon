@@ -7,6 +7,13 @@ namespace ZooTycoon.Core
     // 손님 동선 설계 v0.2 5·6·7장: 손님 행동 트리와 잎 행동, 줄·서는 자리
     public sealed partial class ShopSim
     {
+        // 비켜 걷기: 이 거리 안의 손님을 피한다(손님 그림 폭). 비키는 최대 거리는 걷는 땅 여유(k_Clearance 0.3) 안
+        private const float k_PersonalSpace = 0.6f;
+        private const float k_MaxSidestep = 0.25f;
+        private const float k_SidestepRate = 8f;
+        // 앞사람이 이만큼도 옆에 있지 않으면 한 줄로 마주 온 것: 오른쪽으로 비킨다
+        private const float k_InLine = 0.05f;
+
         private readonly List<Customer> m_customers = new List<Customer>();
         private readonly List<Customer> m_queue = new List<Customer>();
         private double m_arrivalElapsed;
@@ -64,6 +71,56 @@ namespace ZooTycoon.Core
                     OnCustomerExited(customer);
                 }
             }
+
+            float blend = (float)Math.Min(1d, dt * k_SidestepRate);
+
+            foreach (Customer customer in m_customers)
+            {
+                customer.Sidestep += (SidestepTarget(customer) - customer.Sidestep) * blend;
+            }
+        }
+
+        // 걷는 손님은 앞에 있는 손님 반대쪽 옆으로(한 줄로 마주 오면 오른쪽으로), 선 손님은 가까운 손님 반대쪽으로 비킨다
+        private Vector2 SidestepTarget(Customer customer)
+        {
+            if (customer.Hopping)
+            {
+                return Vector2.Zero;
+            }
+
+            Vector2 self = customer.Mover.Position;
+            Vector2 ahead = customer.Mover.NextNode - self;
+            bool walking = ahead.LengthSquared() > 1e-6f;
+            Vector2 left = walking ? Vector2.Normalize(new Vector2(-ahead.Y, ahead.X)) : Vector2.Zero;
+            Vector2 push = Vector2.Zero;
+
+            foreach (Customer other in m_customers)
+            {
+                Vector2 toOther = other.Mover.Position - self;
+                float distance = toOther.Length();
+
+                if (other == customer || other.Hopping || distance >= k_PersonalSpace)
+                {
+                    continue;
+                }
+
+                float strength = 1f - distance / k_PersonalSpace;
+
+                if (walking)
+                {
+                    if (Vector2.Dot(toOther, ahead) > 0f)
+                    {
+                        push += left * (Vector2.Dot(toOther, left) < -k_InLine ? strength : -strength);
+                    }
+                }
+                else if (distance > 1e-4f)
+                {
+                    push -= toOther / distance * strength;
+                }
+            }
+
+            float length = push.Length();
+            return (length > 1f ? push / length : push) * k_MaxSidestep;
         }
 
         // 줄 머리가 머리 자리에 선 뒤에만 계산한다. 웜뱃이 계산대 자리를 비우면 멈춘다

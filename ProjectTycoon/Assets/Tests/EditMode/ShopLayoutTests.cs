@@ -35,11 +35,13 @@ namespace ZooTycoon.Tests
             }
 
             // 머리는 계산대 위, 줄은 입구 구멍 아래와 가운데 통로(입구 줄)에서 떨어져 있다
+            // 줄 손님(키 약 1.1)이 진열대 아랫단을 가리지 않게 진열대 밑변에서 1.1 넘게 아래
             Assert.That(slots[0].Y, Is.GreaterThan(shop.Layout.CounterBase.Y));
 
             foreach (Vector2 slot in slots)
             {
                 Assert.That(Vector2.Distance(slot, shop.Layout.HoleFloor), Is.GreaterThan(1f));
+                Assert.That(slot.Y, Is.LessThan(shop.Layout.ShelfBase(new Cell(-1, 1)).Y - 1.1f));
             }
         }
 
