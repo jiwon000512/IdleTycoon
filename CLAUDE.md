@@ -21,7 +21,7 @@ Tycoon/
       │  ├─ UI/      uGUI HUD·팝업 (상단 바, 가차 버튼, 결과 카드, 홍보/도감 팝업, 오프라인 팝업)
       │  ├─ World/   빵집 굴 화면(굴 그림·사물·손님·웜뱃, 웜뱃을 따라가는 카메라) — 설계 03에서 asmdef 확정, 설계 09에서 지상 폐기
       │  └─ Editor/  에디터 전용 도구 (Editor 폴더라 빌드에서 제외됨)
-      ├─ Resources/Data/     JSON 테이블 12개 (XXTable.json = 행 클래스 이름: ConfigTable·BakeryConfigTable·VisitorTable·BreadTable 등)
+      ├─ Resources/Data/     JSON 테이블 11개 (XXTable.json = 행 클래스 이름: ConfigTable·BakeryConfigTable·VisitorTable·BreadTable 등)
       ├─ Resources/Sprites/Animals/<종>/  동물 아트: 정지 1장 + idle·move 시트. 경로는 animals.json 칼럼. 임포트 규칙은 데이터-테이블-규칙 5장
       ├─ Prefabs/, Prefabs/UI/
       ├─ Sprites/UI/, Fonts/, Audio/
