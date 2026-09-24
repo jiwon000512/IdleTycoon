@@ -9,8 +9,6 @@ namespace ZooTycoon.World
     // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 「!!」 말풍선, 하트. 집은 빵은 visitors.carryAt 자리(앞발 또는 머리 위)
     public sealed class ShopCustomer : MonoBehaviour
     {
-        // 그림자 타원의 세로 납작함(옛 쿼터뷰 2:1 비율)
-        private const float k_ShadowSquash = 0.5f;
         // 집은 빵 순서: 몸(0) 앞, 뒷모습이면 몸 뒤
         private const int k_CarryFrontOrder = 51;
         private const int k_CarryBackOrder = -1;
@@ -79,7 +77,6 @@ namespace ZooTycoon.World
             m_idleFrameRate = (float)look.IdleFrameRate;
             m_moveFrameRate = (float)look.MoveFrameRate;
             m_modelRoot.localScale = Vector3.one * (float)look.Scale;
-            m_shadowRenderer.transform.localScale = new Vector3(1f, k_ShadowSquash, 1f);
             m_height = m_frontIdle[0].bounds.size.y * (float)look.Scale;
             m_carryOnHead = look.CarryAt == VisitorRecord.k_CarryHead;
             m_bubble.transform.localPosition = HeadOffset;

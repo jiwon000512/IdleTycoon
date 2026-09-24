@@ -2,7 +2,7 @@
 # 오븐 상태 표시(2026-09-23, 연출 점검 2순위 1). AI 없이 칸 단위(1칸 = 2px)로 그린다. 둘 다 타이머 자리(가운데 피벗, PPU 80)
 #   ../oven_empty_mark.png  빈 오븐 = 아래 화살표 11×10칸(시안 B). 코드가 오르내림
 #   ../oven_ready_mark.png  다 구움 = 빈 타이머 원(oven_timer_00, 20×20칸) 안에 식빵(시안 A)
-# 시안 C(아궁이 속 점선 식빵)는 버림. 비교 https://claude.ai/artifact/5wqrM7qnU7tNimK1dDmHnh
+# 시안 C(아궁이 속 점선 식빵)는 버림.
 import os
 import numpy as np
 from PIL import Image

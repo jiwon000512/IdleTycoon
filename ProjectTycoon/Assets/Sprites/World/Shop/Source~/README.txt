@@ -23,7 +23,7 @@
 
 옆모습 시안 (2026-09-23, 손님 동선 설계 v0.3 10장)
 - rabbit_side_raw_{a,b,c}.png: rabbit_front_raw.png를 참조로 Codex가 뽑은 오른쪽 보는 옆모습 3장(A 완전 옆 · B 살짝 비스듬 · C 몸은 옆 얼굴은 정면). 프롬프트는 side_prompt_{a,b,c}.txt.
-- rabbit_side_{a,b,c}.png = make_pixel.py --px=2 --cells=42 뒤 앞모습(rabbit_front.png) 5색 팔레트로 가장 가까운 색 맞춤. 비교 페이지 https://claude.ai/artifact/VBBmUmkPzaepNfdyeYL3sR (선택 대기).
+- rabbit_side_{a,b,c}.png = make_pixel.py --px=2 --cells=42 뒤 앞모습(rabbit_front.png) 5색 팔레트로 가장 가까운 색 맞춤.
 - 게임은 지금 옆모습 자리에 앞모습 사본(더미)을 쓴다: Resources/Sprites/Visitors/<종>/<종>_SideIdle·_SideMove, Sprites/World/Shop/wombat_side*. 고른 결로 5종을 만들어 같은 이름에 덮어쓴다.
 - 2차(2026-09-23, 사용자: 「A인데 두 발로 걸어다니게. 앞모습은 앞발을 들고 있는데 옆모습 A는 네 발로 서 있는 듯」): rabbit_side2_raw_{a,b,c}.png = 앞모습 원본 + 1차 A 두 장을 참조로 뽑은 두 발 서기(A2 앞발 모으기 · B2 고개 들고 앞발 앞으로 · C2 한 발 내디딘 걸음). 프롬프트 side2_prompt_{a,b,c}.txt.
   rabbit_side2_{a,b,c}.png = make_pixel.py --px=2 --cells=42 + 앞모습 팔레트. 숨쉬기·걷기 미리보기는 preview_side_frames.py(칸 지도를 보고 정한 SPEC을 인자로. A2: low 37 foot 39 발 (5,10)·(11,14) 귀 0~12행 (1,16)).
@@ -34,19 +34,19 @@
 - 선택(2026-09-23): 3차 A. 사용자 「입을 좀 더 짧게, 너무 길게 나왔어」 → 턱 밑 입선 (20,28)(20,29)(21,29)를 볼 색으로 지워 2칸만 남김. 「볼 도트가 ㅜ처럼」 → 볼을 앞모습처럼 위 2칸(19~20,27)·아래 3칸(18~20,28)으로. 이것이 rabbit_side.png(= rabbit_side3_a.png).
   rabbit_side_{1,2,3}.png·rabbit_side_walk_{0..3}.png = make_breath_frames.py·make_walk_frames.py의 rabbit_side 줄(low 32, foot 39, 발 (8,15)·(16,19), 귀 0~14행 (7,20), 걷기 갸웃은 tip 6). make_visitor_sheets.py가 _side.png가 있는 종만 Side 시트를 묶는다(나머지 종은 더미 유지).
 - 펭귄·여우·고슴도치·웜뱃 옆모습 시안(2026-09-23): 토끼 3차 A 방식. side_sheet_in_<종>.png(앞 | 빈칸 | 뒤, 한 칸 12px) + side_sheet_ref_rabbit.png(완성 토끼 앞·옆·뒤, 카메라 예시)를 참조로 같은 프롬프트(side_prompt_<종>.txt)를 3번 돌림.
-  <종>_side_raw_{a,b,c}.png = 시트 가운데 자름, <종>_side_{a,b,c}.png = make_pixel.py --px=2 --cells=앞모습 키(펭귄 36·여우 45·고슴도치 38·웜뱃 41) + 그 종 앞모습 팔레트. 비교 https://claude.ai/artifact/7wa842yBREohdDRxdxmcWE (선택 대기).
+  <종>_side_raw_{a,b,c}.png = 시트 가운데 자름, <종>_side_{a,b,c}.png = make_pixel.py --px=2 --cells=앞모습 키(펭귄 36·여우 45·고슴도치 38·웜뱃 41) + 그 종 앞모습 팔레트.
 - 선택(2026-09-23, 사용자 「여우만 B, 나머지는 추천대로」): 펭귄 A·여우 B·고슴도치 A·웜뱃 B. 발 가운데 = 그림 가운데가 되게 투명 여백(펭귄·고슴도치 오른쪽 3칸, 여우 오른쪽 10칸, 웜뱃 왼쪽 2칸)을 붙여 <종>_side.png, 웜뱃은 ../wombat_side.png(더미 덮어씀).
   숨쉬기·걷기는 두 스크립트의 <종>_side 줄. 펭귄 low 27 foot 33 · 여우 low 33 foot 41 귀 0~9행 tip 3 · 고슴도치 low 26 foot 35 · 웜뱃 low 31 foot 38 귀 0~5행.
 
 오븐 굽기 표시 (2026-09-23)
-- make_bar.py: 칸 편집 시안 3개(A 빵 배지 캡슐 40×12 · B 원형 타이머 20×20 · C 구워지는 빵 28×18칸), 진행 16단계 프레임 가로 시트. 비교 https://claude.ai/artifact/LBgQA8H6UsEWtKLpWwG5mG
+- make_bar.py: 칸 편집 시안 3개(A 빵 배지 캡슐 40×12 · B 원형 타이머 20×20 · C 구워지는 빵 28×18칸), 진행 16단계 프레임 가로 시트.
 - 선택: B(사용자). oven_timer.png = make_bar.py의 bar_b(20×20칸 × 16프레임, 한 칸 2px). 12시부터 시계 방향으로 주황 부채꼴이 찬다. 게임 반영: 프레임 16장을 ../oven_timer_00~15.png로 잘라 넣고 OvenView가 진행에 맞는 프레임을 고른다(ShopBaker가 Timer 조립). 옛 bar_bg·bar_fill 삭제.
 
 오븐 상태 표시 (2026-09-23)
-- make_oven_idle.py: 칸 편집 시안 3개(A 빈 타이머 + 식빵 · B 아래 화살표 · C 아궁이 속 점선 식빵). 비교 https://claude.ai/artifact/5wqrM7qnU7tNimK1dDmHnh
+- make_oven_idle.py: 칸 편집 시안 3개(A 빈 타이머 + 식빵 · B 아래 화살표 · C 아궁이 속 점선 식빵).
 - 선택(사용자 「b를 빈 오븐에 쓰고 A를 다 된 빵을 알려주는걸로 완성된 오븐에」): ../oven_empty_mark.png = B, ../oven_ready_mark.png = A. 둘 다 타이머 자리, 가운데 피벗, PPU 80. C는 버림.
 
 식빵 정면 (2026-09-23)
 - 사용자: 「식빵 리소스 변경, 동물들과 같이 정면 살짝 위에서 바라본 느낌으로」. 결 참조 = 옛 b01, 카메라 참조 = oven.png(정면·위 30도).
-- shop_raw/bread_front_raw_{a,b,c}.png: Codex 3장(A 자른 단면 정면 · B 긴 옆면 한 봉우리 · C 산형 세 봉우리). 프롬프트 bread_front_prompt_{a,b,c}.txt. 비교 https://claude.ai/artifact/QwnfTkEf8VVUuZXTjtDSW8
+- shop_raw/bread_front_raw_{a,b,c}.png: Codex 3장(A 자른 단면 정면 · B 긴 옆면 한 봉우리 · C 산형 세 봉우리). 프롬프트 bread_front_prompt_{a,b,c}.txt.
 - 선택 A: make_pixel.py --px=2 --cellsw=26 (26×25칸, 8색) → shop_raw/bread_front_a_px.png = Resources/Sprites/Shop/Breads/b01.png. 폭 26칸은 옛 b01과 같게(머리 위 층 간격이 빵 크기에 맞춰져 있음).

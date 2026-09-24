@@ -104,6 +104,8 @@ namespace ZooTycoon.Editor
                 Import(k_SpriteDir + name + ".png", bottom);
             }
 
+            // 발밑 그림자: 격자에 맞춘 최종 모양(Source~/make_shadow.py), 흰색이라 렌더러가 검정 35%로 칠한다
+            Import(k_ShadowPath, center);
             Import(k_SpriteDir + "slot_empty.png", center, k_TagPpu);
             // 타일: 굴 그림이 픽셀을 읽고, 흙 배경은 Tiled로 깐다(왼쪽 위 피벗)
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
@@ -220,6 +222,9 @@ namespace ZooTycoon.Editor
             SpriteRenderer wombat = Renderer(root.transform, "Wombat", Load("wombat_front"), new Vector3(0f, -ShopLayout.k_WombatDrop, 0f), 0);
             SpriteAnimator animator = wombat.gameObject.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", wombat);
+            // 발밑 그림자(손님과 같은 그림·색). 발끝 가운데, 몸 뒤
+            SpriteRenderer wombatShadow = Renderer(wombat.transform, "Shadow", AssetDatabase.LoadAssetAtPath<Sprite>(k_ShadowPath), Vector3.zero, -900);
+            wombatShadow.color = new Color(0f, 0f, 0f, 0.35f);
             // 걷기(v0.6): 딛기 → 왼발 → 딛기 → 오른발(Source~/make_walk_frames.py)
             ShopWombat mover = wombat.gameObject.AddComponent<ShopWombat>();
             Set(mover, "m_animator", animator);

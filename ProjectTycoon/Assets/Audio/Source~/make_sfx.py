@@ -1,38 +1,38 @@
 # -*- coding: utf-8 -*-
-# 설계 10: 더미 효과음 3개를 합성한다(표준 라이브러리만). 실제 소리가 오면 같은 경로에 덮어쓴다.
-#   ../../Resources/Audio/pay.wav        결제 짤랑: 높은 사인 두 번(E6 → A6), 0.18초
-#   ../../Resources/Audio/oven_done.wav  굽기 완료 띵: C6 종소리(배음 + 지수 감쇠), 0.6초
-#   ../../Resources/Audio/give_up.wav    화난 퇴장 흥: 내려가는 낮은 사각파 콧소리, 0.25초
-import math, os, struct, wave
+# 설계 10: 효과음 3개를 칩튠 결로 합성한다(numpy). 2026-09-24 시안 3개씩 중 사용자 선택
+#   ../../Resources/Audio/pay.wav        결제 짤랑: 금속 방울 배음(C7·E7·G7), 0.22초 (시안 B)
+#   ../../Resources/Audio/oven_done.wav  굽기 완료 띵: G6 주방 타이머 종(배음 + 지수 감쇠), 0.8초 (시안 A)
+#   ../../Resources/Audio/give_up.wav    화난 퇴장 뿌우~: 흔들리며 내려가는 삼각파, 0.45초 (시안 B)
+# 실행은 Windows Python(numpy 있음): Python312/python.exe make_sfx.py
+import os, wave
+import numpy as np
 
-RATE = 22050
+R = 44100
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'Resources', 'Audio')
 
 
-def save(name, samples):
-    os.makedirs(OUT, exist_ok=True)
+def save(name, x, peak):
+    k = int(R * 0.01)
+    x = x.copy()
+    x[-k:] *= np.linspace(1, 0, k)
+    x = x / np.max(np.abs(x)) * peak
     with wave.open(os.path.join(OUT, name + '.wav'), 'wb') as w:
         w.setnchannels(1)
         w.setsampwidth(2)
-        w.setframerate(RATE)
-        w.writeframes(b''.join(struct.pack('<h', int(max(-1, min(1, s)) * 32767)) for s in samples))
+        w.setframerate(R)
+        w.writeframes((x * 32767).astype('<i2').tobytes())
 
 
-def tone(freq, seconds, decay, harmonics=((1, 1.0),)):
-    n = int(RATE * seconds)
-    return [sum(a * math.sin(2 * math.pi * freq * h * i / RATE) for h, a in harmonics) * math.exp(-decay * i / RATE) * min(1, i / 60) for i in range(n)]
+def bell(freq_amps, seconds, decay):
+    t = np.arange(int(R * seconds)) / R
+    return sum(a * np.sin(2 * np.pi * f * t) * np.exp(-t / d) for f, a, d in [(f, a, decay(f)) for f, a in freq_amps])
 
 
-pay = [0.45 * s for s in tone(1318.5, 0.07, 30, ((1, 1), (2, 0.3)))] + [0.45 * s for s in tone(1760, 0.11, 25, ((1, 1), (2, 0.3)))]
-save('pay', pay)
+save('pay', bell(((2093, 1), (2637, 0.6), (3136 * 1.01, 0.35)), 0.22, lambda f: 0.06), 0.45)
+save('oven_done', bell(((1568 * h, a) for h, a in ((1, 1), (2.76, 0.4), (5.4, 0.15))), 0.8, lambda f: 0.25 / (f / 1568) ** 0.5), 0.6)
 
-save('oven_done', [0.4 * s for s in tone(1046.5, 0.6, 6, ((1, 1), (2.76, 0.35), (5.4, 0.12)))])
-
-n = int(RATE * 0.25)
-phase, huff = 0.0, []
-for i in range(n):
-    t = i / n
-    phase += (300 - 130 * t) / RATE
-    square = 1 if (phase % 1) < 0.5 else -1
-    huff.append(0.25 * square * math.sin(math.pi * t) ** 0.5)
-save('give_up', huff)
+n = int(R * 0.45)
+x = np.arange(n) / n
+freq = 440 * 2 ** (-x * 0.35) * (1 + 0.04 * np.sin(2 * np.pi * 4.05 * x))
+tri = 4 * np.abs(np.cumsum(freq) / R % 1 - 0.5) - 1
+save('give_up', tri * np.minimum(1, (1 - x) * 4) * np.minimum(1, x * 40), 0.55)

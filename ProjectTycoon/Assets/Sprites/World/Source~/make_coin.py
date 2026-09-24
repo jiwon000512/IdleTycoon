@@ -2,7 +2,7 @@
 # 결제 코인 시안(2026-09-23). AI 없이 칸 단위(1칸 = 2px, 가게 PPU 80)로 그린다.
 # 앞면 18칸 원 + 아래 두께 2칸(위 30도에서 본 동전). 가운데 각인만 다르다:
 #   coin_a.png 웜뱃 발바닥 · coin_b.png 식빵 · coin_c.png 엽전(가운데 네모 구멍)
-# 선택 A(사용자 「A인데 발바닥이 좀 더 크게」 → 9×8칸에서 11×10칸) = ../coin.png. 비교 https://claude.ai/artifact/HxxcQG4q1vymSSiN27ccif
+# 선택 A(사용자 「A인데 발바닥이 좀 더 크게」 → 9×8칸에서 11×10칸) = ../coin.png.
 import os
 import numpy as np
 from PIL import Image
