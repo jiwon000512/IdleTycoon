@@ -1,0 +1,59 @@
+{
+  "table": "ShopUpgradeTable",
+  "version": 5,
+  "notes": [
+    "설계 08 v0.5 빵집 업그레이드. 비용 = baseCost × costGrowth^단계, 효과 = effectPerLevel × 단계.",
+    "oven_count: 오븐 +1대/단계(BakeryConfigTable.json ovenCount에서 시작). oven_speed·checkout_speed: 속도 배수 +effect. shelf_capacity: 빵 칸 용량 +effect.",
+    "id는 코드 상수(ShopSim.k_*)와 같아야 한다. 값은 전부 시작값.",
+    "version 2 (2026-09-23): lookLevel 추가. 이 단계부터 소품 외형이 바뀐다(0 = 안 바뀜). oven_speed 5 = 흙 돔 오븐 → 벽돌 오븐(Sprites/World/Shop/oven_2.png).",
+    "version 3 (2026-09-23, 사물 터치): target(어느 사물 시트에서 파는지: shelf·oven·counter), effectFormat(효과 전후 문구, {0} 현재 {1} 다음. 값은 ShopSim.UpgradeValue).",
+    "version 4 (2026-09-23, 굴 격자 설계 v0.5): oven_count의 target을 slot으로. 빈 자리 시트에서 그 칸에 오븐을 놓는다(ShopSim.TryAddOven).",
+    "version 5 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다."
+  ],
+  "rows": [
+    {
+      "id": "oven_count",
+      "name": "오븐 추가",
+      "baseCost": 300,
+      "costGrowth": 3,
+      "maxLevel": 3,
+      "effectPerLevel": 1,
+      "lookLevel": 0,
+      "target": "slot",
+      "effectFormat": "오븐 {0} → {1}"
+    },
+    {
+      "id": "oven_speed",
+      "name": "굽기 속도",
+      "baseCost": 100,
+      "costGrowth": 1.6,
+      "maxLevel": 10,
+      "effectPerLevel": 0.2,
+      "lookLevel": 5,
+      "target": "oven",
+      "effectFormat": "속도 ×{0} → ×{1}"
+    },
+    {
+      "id": "shelf_capacity",
+      "name": "진열대 넓히기",
+      "baseCost": 80,
+      "costGrowth": 1.5,
+      "maxLevel": 10,
+      "effectPerLevel": 4,
+      "lookLevel": 0,
+      "target": "shelf",
+      "effectFormat": "용량 {0} → {1}"
+    },
+    {
+      "id": "checkout_speed",
+      "name": "계산 속도",
+      "baseCost": 120,
+      "costGrowth": 1.6,
+      "maxLevel": 10,
+      "effectPerLevel": 0.2,
+      "lookLevel": 0,
+      "target": "counter",
+      "effectFormat": "속도 ×{0} → ×{1}"
+    }
+  ]
+}

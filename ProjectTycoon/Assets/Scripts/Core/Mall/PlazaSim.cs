@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
@@ -10,14 +11,16 @@ namespace ZooTycoon.Core
     {
         public const string k_ActionEnter = "enter";
 
-        private readonly GameTables m_tables;
-        private readonly GameConfig.PlazaConfig m_config;
-        private readonly GameConfig.ShopConfig m_shopConfig;
+        private readonly TableSet m_tables;
+        private readonly PlazaConfigTable m_config;
+        private readonly double m_walkSpeed;
+        private readonly double m_hopSeconds;
+        private readonly double m_wombatSpeed;
         private readonly ShopSim m_shop;
         private readonly IRandom m_random;
         private readonly List<Visitor> m_visitors = new List<Visitor>();
         private readonly HashSet<int> m_takenSpots = new HashSet<int>();
-        private readonly InteractableRecord m_door;
+        private readonly InteractableTable m_door;
         private readonly Mover m_wombat;
         private Vector2 m_wombatInput;
         private bool m_wombatMoving;
@@ -35,7 +38,7 @@ namespace ZooTycoon.Core
         public Interactable? Target => m_target;
 
         // 문의 actions에서 첫 manual 행동(들어가기)
-        public ActionRecord TargetAction
+        public ActionTable TargetAction
         {
             get
             {
@@ -46,7 +49,7 @@ namespace ZooTycoon.Core
 
                 foreach (string id in m_door.Actions)
                 {
-                    ActionRecord action = FindAction(id);
+                    ActionTable action = m_tables.Get<ActionTable>(id);
 
                     if (!action.IsAuto)
                     {
@@ -66,15 +69,17 @@ namespace ZooTycoon.Core
         public event Action DoorEntered;
 
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다
-        public PlazaSim(GameTables tables, ShopSim shop, IRandom random)
+        public PlazaSim(TableSet tables, ShopSim shop, IRandom random)
         {
             m_tables = tables;
-            m_config = tables.Config.Plaza;
-            m_shopConfig = tables.Config.Shop;
+            m_config = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
+            m_walkSpeed = tables.Get<ConfigTable>(ConfigTable.k_WalkSpeed).Value;
+            m_hopSeconds = tables.Get<ConfigTable>(ConfigTable.k_HopSeconds).Value;
+            m_wombatSpeed = tables.Get<ConfigTable>(ConfigTable.k_WombatSpeed).Value;
             m_shop = shop;
             m_random = random;
-            Layout = new PlazaLayout(tables.Config, tables.Decorations);
-            m_door = FindElement(Interactable.k_KindIds[(int)InteractKind.Door]);
+            Layout = new PlazaLayout(tables);
+            m_door = tables.Get<InteractableTable>(Interactable.k_KindIds[(int)InteractKind.Door]);
             m_wombat = new Mover(Layout.DoorFloor, Facing.Down);
             m_arrivalElapsed = m_config.ArrivalSeconds;
             m_shop.CustomerExited += Shop_CustomerExited;
@@ -132,7 +137,8 @@ namespace ZooTycoon.Core
             }
 
             m_arrivalElapsed = 0d;
-            VisitorRecord look = m_tables.Visitors[RandomIndex(m_tables.Visitors.Count)];
+            IReadOnlyList<VisitorTable> looks = m_tables.GetAll<VisitorTable>();
+            VisitorTable look = looks[RandomIndex(looks.Count)];
             Visitor visitor = Spawn(look, Layout.StairsInside, Layout.StairsFloor);
             visitor.VisitsLeft = m_config.VisitsMin + RandomIndex(m_config.VisitsMax - m_config.VisitsMin + 1);
             visitor.WantsShop = m_random.NextDouble() >= m_config.BrowseChance;
@@ -145,7 +151,7 @@ namespace ZooTycoon.Core
             visitor.VisitsLeft = customer.Angry ? 0 : RandomIndex(m_config.VisitsMax + 1);
         }
 
-        private Visitor Spawn(VisitorRecord look, Vector2 inside, Vector2 floor)
+        private Visitor Spawn(VisitorTable look, Vector2 inside, Vector2 floor)
         {
             Visitor visitor = new Visitor(++m_nextVisitorId, look, inside);
             StartHop(visitor, CustomerPhase.Entering, inside, floor);
@@ -159,7 +165,7 @@ namespace ZooTycoon.Core
             for (int i = 0; i < m_visitors.Count; i++)
             {
                 Visitor visitor = m_visitors[i];
-                visitor.Mover.Advance(m_shopConfig.WalkSpeed * dt);
+                visitor.Mover.Advance(m_walkSpeed * dt);
 
                 if (!TickVisitor(visitor, dt))
                 {
@@ -177,7 +183,7 @@ namespace ZooTycoon.Core
             if (visitor.Phase == CustomerPhase.Entering || visitor.Phase == CustomerPhase.Exiting)
             {
                 visitor.Timer -= dt;
-                double t = Math.Min(1d, 1d - visitor.Timer / m_shopConfig.HopSeconds);
+                double t = Math.Min(1d, 1d - visitor.Timer / m_hopSeconds);
                 visitor.HopProgress = t;
                 visitor.Mover.Place(Vector2.Lerp(visitor.HopFrom, visitor.HopTo, (float)t));
 
@@ -320,7 +326,7 @@ namespace ZooTycoon.Core
         private void StartHop(Visitor visitor, CustomerPhase phase, Vector2 from, Vector2 to)
         {
             visitor.Phase = phase;
-            visitor.Timer = m_shopConfig.HopSeconds;
+            visitor.Timer = m_hopSeconds;
             visitor.HopProgress = 0d;
             visitor.HopFrom = from;
             visitor.HopTo = to;
@@ -355,7 +361,7 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            m_wombatMoving = WombatWalker.Step(m_wombat, m_wombatInput, m_shopConfig.WombatSpeed, dt, Layout.Nav);
+            m_wombatMoving = WombatWalker.Step(m_wombat, m_wombatInput, m_wombatSpeed, dt, Layout.Nav);
             RefreshTarget();
         }
 
@@ -380,32 +386,6 @@ namespace ZooTycoon.Core
         private int RandomIndex(int count)
         {
             return Math.Min(count - 1, (int)(m_random.NextDouble() * count));
-        }
-
-        private ActionRecord FindAction(string id)
-        {
-            foreach (ActionRecord action in m_tables.Actions)
-            {
-                if (action.Id == id)
-                {
-                    return action;
-                }
-            }
-
-            throw new KeyNotFoundException($"행동 ID '{id}'가 actions.json에 없다.");
-        }
-
-        private InteractableRecord FindElement(string id)
-        {
-            foreach (InteractableRecord element in m_tables.Interactables)
-            {
-                if (element.Id == id)
-                {
-                    return element;
-                }
-            }
-
-            throw new KeyNotFoundException($"사물 ID '{id}'가 interactables.json에 없다.");
         }
 
         private void OnVisitorArrived(Visitor visitor)

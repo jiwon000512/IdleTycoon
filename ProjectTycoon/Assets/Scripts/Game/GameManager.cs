@@ -11,7 +11,7 @@ namespace ZooTycoon.Game
     // 규칙 예외: 게임 상태·서비스를 씬 사이에서 유지하는 싱글턴(설계 04 D2). 게임 규칙은 Core 서비스에 있고 여기서는 생성·보관·틱 호출만 한다
     public sealed class GameManager : MonoSingleton<GameManager>
     {
-        public GameTables Tables { get; private set; }
+        public TableSet Tables { get; private set; }
         public ZooState State { get; private set; }
         public ShopSim Shop { get; private set; }
         // 설계 11: 빵집 + 굴 밖 광장, 웜뱃이 오가는 곳
@@ -25,7 +25,7 @@ namespace ZooTycoon.Game
                 return;
             }
 
-            Tables = LoadTables();
+            Tables = TableManager.Instance.Tables;
             IReadOnlyList<string> errors = TableValidator.Validate(Tables);
 
             if (errors.Count > 0)
@@ -33,7 +33,7 @@ namespace ZooTycoon.Game
                 throw new InvalidOperationException($"테이블 검증 실패:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
             }
 
-            State = ZooState.CreateNew(Tables.Config);
+            State = ZooState.CreateNew(Tables);
             SystemRandom random = new SystemRandom();
             Shop = new ShopSim(State, Tables, random);
             Mall = new Mall(Shop, new PlazaSim(Tables, Shop, random));
@@ -43,22 +43,6 @@ namespace ZooTycoon.Game
         private void Update()
         {
             Mall?.Tick(Time.deltaTime);
-        }
-
-        private static GameTables LoadTables()
-        {
-            TableManager tableManager = TableManager.Instance;
-
-            return new GameTables(
-                tableManager.Load<VisitorRecord>("visitors"),
-                tableManager.Load<BreadRecord>("breads"),
-                tableManager.Load<ShopUpgradeRecord>("shop_upgrades"),
-                tableManager.Load<ActionRecord>("actions"),
-                tableManager.Load<InteractableRecord>("interactables"),
-                tableManager.Load<SoundRecord>("sounds"),
-                tableManager.Load<DecorationRecord>("decorations"),
-                tableManager.Load<StringRecord>("strings"),
-                tableManager.LoadConfig<GameConfig>("game_config"));
         }
     }
 }

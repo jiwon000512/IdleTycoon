@@ -118,7 +118,7 @@ namespace ZooTycoon.Editor
             Import(k_ShadowPath, center);
             Import(k_SpriteDir + "slot_empty.png", center, k_TagPpu);
 
-            // 설계 11 광장: 차양·계단은 아래 가운데, 간판은 가운데. 장식은 Resources(decorations.json 경로), 아래 가운데
+            // 설계 11 광장: 차양·계단은 아래 가운데, 간판은 가운데. 장식은 Resources(DecorationTable 경로), 아래 가운데
             Import(k_PlazaDir + "awning.png", bottom);
             Import(k_PlazaDir + "sign.png", center);
             Import(k_PlazaDir + "stairs.png", bottom);
@@ -343,7 +343,7 @@ namespace ZooTycoon.Editor
             PrefabUtility.UnloadPrefabContents(root);
         }
 
-        // 손님 몸체: 루트(SpriteAnimator) → ModelRoot(크기) → Sprite + Shadow(납작한 타원). 외형은 visitors.json 행이 실행 중에 채운다
+        // 손님 몸체: 루트(SpriteAnimator) → ModelRoot(크기) → Sprite + Shadow(납작한 타원). 외형은 VisitorTable 행이 실행 중에 채운다
         static ShopCustomer BakeCustomer()
         {
             GameObject root = new GameObject("ShopCustomer");

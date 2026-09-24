@@ -13,7 +13,7 @@ namespace ZooTycoon.Core
         }
 
         public int Id { get; }
-        public VisitorRecord Look { get; }
+        public VisitorTable Look { get; }
         public CustomerPhase Phase { get; internal set; }
         public double HopProgress { get; internal set; }
         public Vector2 Position => Mover.Position;
@@ -35,7 +35,7 @@ namespace ZooTycoon.Core
         internal Vector2 HopFrom { get; set; }
         internal Vector2 HopTo { get; set; }
 
-        internal Visitor(int id, VisitorRecord look, Vector2 position)
+        internal Visitor(int id, VisitorTable look, Vector2 position)
         {
             Id = id;
             Look = look;

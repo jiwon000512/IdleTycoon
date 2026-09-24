@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # 상호작용 버튼 + 행동 아이콘 실제 아트(시안 B 흙 테 + 크림 판, 2026-09-23 사용자 선택). AI 없이 칸 단위로 그린다.
-# 1 px = 1 UI px(PPU 25). 버튼 44: 조이스틱 받침과 같은 흙 테 + 크림 판. 아이콘 18: 버튼 행동(actions.json manual)만 — 열기·파기(꺼내기는 2026-09-23 auto로 바뀌어 아이콘 삭제).
+# 1 px = 1 UI px(PPU 25). 버튼 44: 조이스틱 받침과 같은 흙 테 + 크림 판. 아이콘 18: 버튼 행동(ActionTable.json manual)만 — 열기·파기·들어가기·나가기(꺼내기는 2026-09-23 auto로 바뀌어 아이콘 삭제).
 # 비활성은 코드 틴트(버튼 × 0.65, 아이콘 40%)라 따로 그리지 않는다. 칠한 뒤 바깥 1칸 진갈색 외곽선.
 # 사용: make_act_button.py (이 폴더에서) → ../btn_act.png, Resources/Sprites/Actions/<id>.png → 메뉴 ZooTycoon/Bake/Import UI Sprites → Bake/UI
 import os

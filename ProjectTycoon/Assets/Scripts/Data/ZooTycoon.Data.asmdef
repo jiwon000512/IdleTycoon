@@ -1,7 +1,7 @@
 {
   "name": "ZooTycoon.Data",
   "rootNamespace": "ZooTycoon.Data",
-  "references": [ "ZooTycoon.Core" ],
+  "references": [ "ZooTycoon.Core", "GameKit.Core" ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

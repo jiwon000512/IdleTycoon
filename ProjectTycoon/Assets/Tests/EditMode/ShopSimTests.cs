@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
@@ -14,45 +15,32 @@ namespace ZooTycoon.Tests
         private const double k_Tolerance = 0.06;
 
         private ZooState m_state;
-        private GameConfig.ShopConfig m_config;
+        private TableSet m_tables;
+        private BakeryConfigTable m_config;
         private double m_time;
         // 설계 11: 손님은 광장에서 오지만, 빵집 테스트는 옛 도착 타이머(첫 틱, 그다음 m_arrivalSeconds마다)로 구멍에 들인다
         private double m_arrivalSeconds;
         private double m_arrivalElapsed;
-        private VisitorRecord m_look;
+        private VisitorTable m_look;
 
-        // actionModes: 행동 id → mode 덮어쓰기, ranges: 사물 id → range 덮어쓰기(설계 09 v0.4 표 바꾸기)
-        private ShopSim Create(Action<GameConfig.ShopConfig> tweak = null, Dictionary<string, string> actionModes = null, Dictionary<string, double> ranges = null)
+        // edit: 행동 mode·사물 range 같은 다른 표 바꾸기(설계 09 v0.4)
+        private ShopSim Create(Action<BakeryConfigTable> tweak = null, Action<TableSet> edit = null)
         {
-            GameConfig config = TestTables.LoadConfig();
-            m_config = config.Shop;
-            m_arrivalSeconds = config.Plaza.ArrivalSeconds;
-            tweak?.Invoke(config.Shop);
+            m_tables = TestTables.Load();
+            m_config = m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery);
+            m_arrivalSeconds = m_tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).ArrivalSeconds;
+            tweak?.Invoke(m_config);
+            edit?.Invoke(m_tables);
             m_arrivalElapsed = m_arrivalSeconds;
-            List<ActionRecord> actions = TestTables.LoadRows<ActionRecord>("actions");
-            List<InteractableRecord> interactables = TestTables.LoadRows<InteractableRecord>("interactables");
-
-            foreach (ActionRecord action in actions)
-            {
-                if (actionModes != null && actionModes.TryGetValue(action.Id, out string mode))
-                {
-                    action.Mode = mode;
-                }
-            }
-
-            foreach (InteractableRecord element in interactables)
-            {
-                if (ranges != null && ranges.TryGetValue(element.Id, out double range))
-                {
-                    element.Range = range;
-                }
-            }
-
-            GameTables tables = TestTables.Build(actions: actions, interactables: interactables, config: config);
-            m_state = ZooState.CreateNew(config);
+            m_state = ZooState.CreateNew(m_tables);
             m_time = 0d;
-            m_look = tables.Visitors[0];
-            return new ShopSim(m_state, tables, new SequenceRandom(new double[200]));
+            m_look = m_tables.GetAll<VisitorTable>()[0];
+            return new ShopSim(m_state, m_tables, new SequenceRandom(new double[200]));
+        }
+
+        private double Config(string id)
+        {
+            return m_tables.Get<ConfigTable>(id).Value;
         }
 
         private void Arrive(ShopSim shop)
@@ -110,7 +98,7 @@ namespace ZooTycoon.Tests
 
         private void Steer(ShopSim shop, Vector2 point)
         {
-            float stepLength = (float)(m_config.WombatSpeed * k_Dt);
+            float stepLength = (float)(Config(ConfigTable.k_WombatSpeed) * k_Dt);
 
             RunUntil(shop, () =>
             {
@@ -203,7 +191,7 @@ namespace ZooTycoon.Tests
             RunUntil(shop, () => pickedAt >= 0d);
 
             Vector2 spot = shop.Layout.ShelfSpots(new Cell(-1, 1))[0];
-            double expected = m_config.HopSeconds + PathSeconds(shop, shop.Layout.HoleFloor, spot, m_config.WalkSpeed);
+            double expected = Config(ConfigTable.k_HopSeconds) + PathSeconds(shop, shop.Layout.HoleFloor, spot, Config(ConfigTable.k_WalkSpeed));
             Assert.That(pickedAt - arrivedAt, Is.EqualTo(expected).Within(k_Tolerance * 2));
             Assert.That(Vector2.Distance(first.Position, spot), Is.LessThan(0.01f));
             Assert.That(shop.Stock("b01"), Is.EqualTo(5));
@@ -517,7 +505,7 @@ namespace ZooTycoon.Tests
 
             shop.SetWombatInput(new Vector2(1f, 0f));
             Run(shop, 0.5d);
-            Assert.That(shop.WombatPosition.X - home.X, Is.EqualTo((float)(m_config.WombatSpeed * 0.5d)).Within(0.25f));
+            Assert.That(shop.WombatPosition.X - home.X, Is.EqualTo((float)(Config(ConfigTable.k_WombatSpeed) * 0.5d)).Within(0.25f));
             Assert.That(shop.WombatFacing, Is.EqualTo(Facing.Right));
 
             Run(shop, 3d);
@@ -615,7 +603,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Fill_AutoEvenWhenOvenIsTheTarget()
         {
-            ShopSim shop = Create(c => c.MaxCustomers = 0, ranges: new Dictionary<string, double> { ["shelf"] = 6d });
+            ShopSim shop = Create(c => c.MaxCustomers = 0, edit: t => t.Get<InteractableTable>("shelf").Range = 6d);
             shop.TryBake(0, "b01");
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
@@ -631,7 +619,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Serve_Manual_PaysHeadOnlyOnButton()
         {
-            ShopSim shop = Create(c => m_arrivalSeconds = 1000d, new Dictionary<string, string> { ["serve"] = ActionRecord.k_Manual });
+            ShopSim shop = Create(c => m_arrivalSeconds = 1000d, t => t.Get<ActionTable>("serve").Mode = ActionMode.Manual);
             Stock(shop, "b01", 6);
             Customer customer = null;
             shop.CustomerArrived += c => customer = c;
@@ -651,7 +639,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void TakeOut_Manual_OnlyOnButton()
         {
-            ShopSim shop = Create(c => c.MaxCustomers = 0, new Dictionary<string, string> { ["take_out"] = ActionRecord.k_Manual });
+            ShopSim shop = Create(c => c.MaxCustomers = 0, t => t.Get<ActionTable>("take_out").Mode = ActionMode.Manual);
             shop.TryBake(0, "b01");
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 

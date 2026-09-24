@@ -68,7 +68,7 @@ namespace ZooTycoon.World
         // 설계 11: 빵집 손님과 광장 손님이 같이 쓴다. origin = 그 곳(빵집·광장)의 원점
         public void Initialize(IWalker walker, FrameCache frames, Transform origin)
         {
-            VisitorRecord look = walker.Look;
+            VisitorTable look = walker.Look;
             m_walker = walker;
             m_origin = origin;
             m_shadowAlpha = m_shadowRenderer.color.a;
@@ -82,7 +82,7 @@ namespace ZooTycoon.World
             m_moveFrameRate = (float)look.MoveFrameRate;
             m_modelRoot.localScale = Vector3.one * (float)look.Scale;
             m_height = m_frontIdle[0].bounds.size.y * (float)look.Scale;
-            m_carryOnHead = look.CarryAt == VisitorRecord.k_CarryHead;
+            m_carryOnHead = look.CarryAt == CarryAt.Head;
             m_bubble.transform.localPosition = HeadOffset;
             m_bubble.enabled = false;
             m_carry.enabled = false;

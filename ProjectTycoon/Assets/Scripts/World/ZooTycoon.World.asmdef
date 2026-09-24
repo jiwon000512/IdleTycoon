@@ -1,7 +1,7 @@
 {
   "name": "ZooTycoon.World",
   "rootNamespace": "ZooTycoon.World",
-  "references": [ "ZooTycoon.Core", "GameKit.Unity", "Unity.InputSystem", "Unity.TextMeshPro" ],
+  "references": [ "ZooTycoon.Core", "GameKit.Core", "GameKit.Unity", "Unity.InputSystem", "Unity.TextMeshPro" ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

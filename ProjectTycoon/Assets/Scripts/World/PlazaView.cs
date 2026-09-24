@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
@@ -38,7 +39,7 @@ namespace ZooTycoon.World
             }
         }
 
-        public void Bind(PlazaSim plaza, FrameCache frames, GameTables tables)
+        public void Bind(PlazaSim plaza, FrameCache frames, TableSet tables)
         {
             m_plaza = plaza;
             PlazaLayout layout = plaza.Layout;
@@ -49,26 +50,26 @@ namespace ZooTycoon.World
             float wallBottom = -BurrowShape.k_EntranceFloorTop / ShopLayout.k_PixelsPerUnit;
             m_door.localPosition = new Vector3(layout.DoorFloor.X, wallBottom, 0f);
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
-            m_sign.text = tables.Strings.Get(k_SignKey);
+            m_sign.text = tables.Text(k_SignKey);
 
             foreach (PlazaDecor decor in layout.Decor)
             {
-                GameObject go = new GameObject(decor.Record.Id);
+                GameObject go = new GameObject(decor.Decoration.Id);
                 go.transform.SetParent(transform, false);
                 go.transform.localPosition = new Vector3(decor.Position.X, decor.Position.Y, 0f);
                 SpriteRenderer renderer = go.AddComponent<SpriteRenderer>();
-                renderer.sprite = frames.Get(decor.Record.Sprite)[0];
+                renderer.sprite = frames.Get(decor.Decoration.Sprite)[0];
 
-                if (decor.Record.Frames > 0)
+                if (decor.Decoration.Frames > 0)
                 {
-                    Sprite[] loop = new Sprite[decor.Record.Frames];
+                    Sprite[] loop = new Sprite[decor.Decoration.Frames];
 
                     for (int i = 0; i < loop.Length; i++)
                     {
-                        loop[i] = frames.Get(decor.Record.Sprite + "_" + i)[0];
+                        loop[i] = frames.Get(decor.Decoration.Sprite + "_" + i)[0];
                     }
 
-                    go.AddComponent<SpriteAnimator>().Play(renderer, loop, (float)decor.Record.FrameRate);
+                    go.AddComponent<SpriteAnimator>().Play(renderer, loop, (float)decor.Decoration.FrameRate);
                 }
             }
 

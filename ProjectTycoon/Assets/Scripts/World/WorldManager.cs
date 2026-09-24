@@ -1,5 +1,6 @@
 using GameKit.Singleton;
 using UnityEngine;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
@@ -24,7 +25,7 @@ namespace ZooTycoon.World
 
         public FrameCache Frames { get; } = new FrameCache();
 
-        public void Initialize(GameTables tables, Mall mall)
+        public void Initialize(TableSet tables, Mall mall)
         {
             m_mall = mall;
             m_shopView = Instantiate(m_shopPrefab, Vector3.zero, Quaternion.identity, transform);

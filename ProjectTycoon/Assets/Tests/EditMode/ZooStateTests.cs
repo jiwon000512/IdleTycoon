@@ -9,7 +9,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void CreateNew_StartsWithConfiguredCoinsAndNothingElse()
         {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+            ZooState state = ZooState.CreateNew(TestTables.Load());
 
             Assert.That(state.Coins, Is.EqualTo(350d));
             Assert.That(state.TotalCoinsEarned, Is.EqualTo(0d));
@@ -18,7 +18,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void AddCoins_RaisesTotalEarnedAndNotifies()
         {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+            ZooState state = ZooState.CreateNew(TestTables.Load());
             double notified = 0d;
             state.CoinsChanged += () => notified = state.Coins;
 
@@ -32,7 +32,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void TrySpendCoins_WhenEnough_SpendsWithoutChangingTotalEarned()
         {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+            ZooState state = ZooState.CreateNew(TestTables.Load());
 
             bool spent = state.TrySpendCoins(100d);
 
@@ -44,7 +44,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void TrySpendCoins_WhenShort_FailsAndLeavesCoins()
         {
-            ZooState state = ZooState.CreateNew(TestTables.LoadConfig());
+            ZooState state = ZooState.CreateNew(TestTables.Load());
 
             bool spent = state.TrySpendCoins(351d);
 

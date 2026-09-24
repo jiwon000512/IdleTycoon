@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
@@ -12,7 +13,7 @@ namespace ZooTycoon.UI
         private readonly ObjectSheetView m_view;
         private readonly ShopSim m_shop;
         private readonly ZooState m_state;
-        private readonly GameTables m_tables;
+        private readonly TableSet m_tables;
         private const string k_UnlockAction = "unlock";
         private const string k_DigAction = "dig";
 
@@ -21,7 +22,7 @@ namespace ZooTycoon.UI
 
         private Interactable m_target;
 
-        public ObjectSheetPresenter(ObjectSheetView view, ShopSim shop, ZooState state, GameTables tables)
+        public ObjectSheetPresenter(ObjectSheetView view, ShopSim shop, ZooState state, TableSet tables)
         {
             m_view = view;
             m_shop = shop;
@@ -72,37 +73,36 @@ namespace ZooTycoon.UI
             m_chipBreads.Clear();
             List<SheetChip> chips = new List<SheetChip>();
             List<SheetRow> rows = new List<SheetRow>();
-            StringTable s = m_tables.Strings;
 
             switch (m_target.Kind)
             {
                 case InteractKind.Shelf:
                 {
-                    BreadRecord bread = m_shop.Shelves[m_target.Cell];
-                    m_view.SetHeader(s.Format("sheet_shelf_title", bread.Name), s.Format("sheet_shelf_status", m_shop.Stock(bread.Id), m_shop.ShelfCapacity));
-                    AddUpgradeRows(rows, "shelf");
+                    BreadTable bread = m_shop.Shelves[m_target.Cell];
+                    m_view.SetHeader(m_tables.Format("sheet_shelf_title", bread.Name), m_tables.Format("sheet_shelf_status", m_shop.Stock(bread.Id), m_shop.ShelfCapacity));
+                    AddUpgradeRows(rows, UpgradeTarget.Shelf);
 
                     // 빈 자리가 없어 다음 빵을 못 놓을 때만 안내 행
                     if (m_shop.NextBread != null && !HasEmptySlot())
                     {
-                        AddUnlockRow(rows, SheetRowState.Blocked, s.Get("row_unlock_blocked"));
+                        AddUnlockRow(rows, SheetRowState.Blocked, m_tables.Text("row_unlock_blocked"));
                     }
 
                     break;
                 }
                 case InteractKind.EmptySlot:
-                    m_view.SetHeader(s.Get("sheet_slot_title"), s.Get("sheet_slot_status"));
+                    m_view.SetHeader(m_tables.Text("sheet_slot_title"), m_tables.Text("sheet_slot_status"));
                     AddUnlockRow(rows, null, null);
-                    AddUpgradeRows(rows, "slot");
+                    AddUpgradeRows(rows, UpgradeTarget.Slot);
                     break;
                 case InteractKind.Dig:
                 {
                     double cost = m_shop.Grid.DigCost;
-                    m_view.SetHeader(s.Get("sheet_dig_title"), s.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
+                    m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
                     rows.Add(new SheetRow
                     {
-                        Name = s.Get("row_dig"),
-                        Effect = s.Get("row_dig_effect"),
+                        Name = m_tables.Text("row_dig"),
+                        Effect = m_tables.Text("row_dig_effect"),
                         Cost = BigNumberFormatter.Format(cost),
                         State = m_state.Coins >= cost ? SheetRowState.Enabled : SheetRowState.Poor,
                     });
@@ -112,16 +112,16 @@ namespace ZooTycoon.UI
                 case InteractKind.Oven:
                 {
                     Oven oven = m_shop.Ovens[m_target.Index];
-                    m_view.SetHeader(s.Format("sheet_oven_title", m_target.Index + 1), OvenStatus(oven));
+                    m_view.SetHeader(m_tables.Format("sheet_oven_title", m_target.Index + 1), OvenStatus(oven));
                     bool canBake = oven.IsEmpty;
 
-                    foreach (BreadRecord bread in m_shop.UnlockedBreads)
+                    foreach (BreadTable bread in m_shop.UnlockedBreads)
                     {
                         chips.Add(new SheetChip
                         {
                             SpritePath = bread.Sprite,
-                            Label = s.Format("chip_bread", bread.Name),
-                            Sub = s.Format("chip_bread_sub", m_shop.Stock(bread.Id), bread.BakeSeconds),
+                            Label = m_tables.Format("chip_bread", bread.Name),
+                            Sub = m_tables.Format("chip_bread_sub", m_shop.Stock(bread.Id), bread.BakeSeconds),
                             Highlighted = canBake && m_shop.Stock(bread.Id) == 0,
                             Enabled = canBake,
                         });
@@ -130,16 +130,16 @@ namespace ZooTycoon.UI
 
                     if (m_shop.NextBread != null)
                     {
-                        chips.Add(new SheetChip { Label = m_shop.NextBread.Name, Sub = s.Get("chip_locked_sub"), Locked = true });
+                        chips.Add(new SheetChip { Label = m_shop.NextBread.Name, Sub = m_tables.Text("chip_locked_sub"), Locked = true });
                         m_chipBreads.Add(null);
                     }
 
-                    AddUpgradeRows(rows, "oven");
+                    AddUpgradeRows(rows, UpgradeTarget.Oven);
                     break;
                 }
                 case InteractKind.Counter:
-                    m_view.SetHeader(s.Get("sheet_counter_title"), s.Format("sheet_counter_status", m_shop.Queue.Count));
-                    AddUpgradeRows(rows, "counter");
+                    m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", m_shop.Queue.Count));
+                    AddUpgradeRows(rows, UpgradeTarget.Counter);
                     break;
             }
 
@@ -149,20 +149,18 @@ namespace ZooTycoon.UI
 
         private string OvenStatus(Oven oven)
         {
-            StringTable s = m_tables.Strings;
-
             if (!oven.IsEmpty)
             {
-                return oven.Ready > 0 ? s.Get("sheet_oven_full") : s.Format("sheet_oven_baking", oven.Bread.Name, Math.Ceiling(oven.Remaining));
+                return oven.Ready > 0 ? m_tables.Text("sheet_oven_full") : m_tables.Format("sheet_oven_baking", oven.Bread.Name, Math.Ceiling(oven.Remaining));
             }
 
-            return s.Get("sheet_oven_empty");
+            return m_tables.Text("sheet_oven_empty");
         }
 
-        // shop_upgrades.target이 같은 행마다 구매 행. only가 있으면 그 id만
-        private void AddUpgradeRows(List<SheetRow> rows, string target, string only = null)
+        // ShopUpgradeTable.Target이 같은 행마다 구매 행. only가 있으면 그 id만
+        private void AddUpgradeRows(List<SheetRow> rows, UpgradeTarget target, string only = null)
         {
-            foreach (ShopUpgradeRecord upgrade in m_tables.ShopUpgrades)
+            foreach (ShopUpgradeTable upgrade in m_tables.GetAll<ShopUpgradeTable>())
             {
                 if (upgrade.Target != target || (only != null && upgrade.Id != only))
                 {
@@ -170,12 +168,12 @@ namespace ZooTycoon.UI
                 }
 
                 int level = m_shop.UpgradeLevel(upgrade.Id);
-                SheetRow row = new SheetRow { Name = m_tables.Strings.Format("row_upgrade", upgrade.Name, level) };
+                SheetRow row = new SheetRow { Name = m_tables.Format("row_upgrade", upgrade.Name, level) };
 
                 if (m_shop.IsMaxed(upgrade.Id))
                 {
                     row.Effect = Effect(upgrade, level, level);
-                    row.Cost = m_tables.Strings.Get("row_max");
+                    row.Cost = m_tables.Text("row_max");
                     row.State = SheetRowState.Max;
                 }
                 else
@@ -191,7 +189,7 @@ namespace ZooTycoon.UI
             }
         }
 
-        private string Effect(ShopUpgradeRecord upgrade, int fromLevel, int toLevel)
+        private string Effect(ShopUpgradeTable upgrade, int fromLevel, int toLevel)
         {
             return string.Format(CultureInfo.InvariantCulture, upgrade.EffectFormat, m_shop.UpgradeValue(upgrade.Id, fromLevel), m_shop.UpgradeValue(upgrade.Id, toLevel));
         }
@@ -199,7 +197,7 @@ namespace ZooTycoon.UI
         // 다음 빵 진열대 행. state·effect를 주면 그대로(안내용), 아니면 코인에 따라
         private void AddUnlockRow(List<SheetRow> rows, SheetRowState? state, string effect)
         {
-            BreadRecord next = m_shop.NextBread;
+            BreadTable next = m_shop.NextBread;
 
             if (next == null)
             {
@@ -208,8 +206,8 @@ namespace ZooTycoon.UI
 
             rows.Add(new SheetRow
             {
-                Name = m_tables.Strings.Format("row_unlock", next.Name),
-                Effect = effect ?? m_tables.Strings.Get("row_unlock_effect"),
+                Name = m_tables.Format("row_unlock", next.Name),
+                Effect = effect ?? m_tables.Text("row_unlock_effect"),
                 Cost = BigNumberFormatter.Format(next.UnlockCost),
                 State = state ?? (m_state.Coins >= next.UnlockCost ? SheetRowState.Enabled : SheetRowState.Poor),
             });

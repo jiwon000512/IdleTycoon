@@ -1,4 +1,5 @@
 using System;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
@@ -9,9 +10,9 @@ namespace ZooTycoon.UI
 
         private readonly TopBarView m_view;
         private readonly ZooState m_state;
-        private readonly GameTables m_tables;
+        private readonly TableSet m_tables;
 
-        public TopBarPresenter(TopBarView view, ZooState state, GameTables tables)
+        public TopBarPresenter(TopBarView view, ZooState state, TableSet tables)
         {
             m_view = view;
             m_state = state;
@@ -33,7 +34,7 @@ namespace ZooTycoon.UI
 
         private void RefreshCoins()
         {
-            m_view.SetCoins(m_state.Coins, coins => m_tables.Strings.Format(k_CoinsKey, BigNumberFormatter.Format(coins)));
+            m_view.SetCoins(m_state.Coins, coins => m_tables.Format(k_CoinsKey, BigNumberFormatter.Format(coins)));
         }
     }
 }

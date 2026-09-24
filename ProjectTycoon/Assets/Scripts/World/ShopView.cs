@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
@@ -41,7 +42,7 @@ namespace ZooTycoon.World
         private CounterView m_counter;
         private ShopSim m_shop;
         private FrameCache m_frames;
-        private GameTables m_tables;
+        private TableSet m_tables;
         private Sprite m_white;
         private Interactable? m_shownTarget;
         private bool m_built;
@@ -65,7 +66,7 @@ namespace ZooTycoon.World
                     maxRow = Mathf.Max(maxRow, cell.Row);
                 }
 
-                float cellWidth = (float)m_tables.Config.Shop.CellWidth;
+                float cellWidth = (float)m_tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
                 float xMin = transform.position.x + (minCol - 1) * cellWidth;
                 float xMax = transform.position.x + (maxCol + 2) * cellWidth;
                 float yMin = transform.position.y - Layout.RowTop(maxRow + 2);
@@ -85,7 +86,7 @@ namespace ZooTycoon.World
             return m_shelves[m_shop.ShelfCell(breadId)].IconPosition;
         }
 
-        public void Bind(ShopSim shop, FrameCache frames, GameTables tables)
+        public void Bind(ShopSim shop, FrameCache frames, TableSet tables)
         {
             m_shop = shop;
             m_frames = frames;
@@ -152,7 +153,7 @@ namespace ZooTycoon.World
                 m_digTags[cell] = tag;
             }
 
-            tag.Show(m_tables.Strings.Format("tag_dig", Cost(m_shop.Grid.DigCost)));
+            tag.Show(m_tables.Format("tag_dig", Cost(m_shop.Grid.DigCost)));
         }
 
         // 오븐 진행 막대는 매 프레임 읽는다(오븐 사건은 초가 바뀔 때만 온다). 설계 10: 대상인 오븐은 빈 오븐 화살표를 끈다
@@ -217,33 +218,23 @@ namespace ZooTycoon.World
 
         private void Shop_Upgraded(string upgradeId)
         {
-            string target = null;
-
-            foreach (ShopUpgradeRecord upgrade in m_tables.ShopUpgrades)
+            switch (m_tables.Get<ShopUpgradeTable>(upgradeId).Target)
             {
-                if (upgrade.Id == upgradeId)
-                {
-                    target = upgrade.Target;
-                }
-            }
-
-            switch (target)
-            {
-                case "shelf":
+                case UpgradeTarget.Shelf:
                     foreach (ShelfView shelf in m_shelves.Values)
                     {
                         shelf.Bounce();
                     }
 
                     break;
-                case "oven":
+                case UpgradeTarget.Oven:
                     foreach (OvenView oven in m_ovens)
                     {
                         oven.Bounce();
                     }
 
                     break;
-                case "counter":
+                case UpgradeTarget.Counter:
                     m_counter.Bounce();
                     break;
             }
@@ -315,8 +306,8 @@ namespace ZooTycoon.World
 
         private void ShopConfigSize(out float cellWidth, out float cellHeight)
         {
-            cellWidth = (float)m_tables.Config.Shop.CellWidth;
-            cellHeight = (float)m_tables.Config.Shop.CellHeight;
+            cellWidth = (float)m_tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
+            cellHeight = (float)m_tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;
         }
 
         private Sprite White
@@ -350,7 +341,7 @@ namespace ZooTycoon.World
         // 자리마다 진열대·오븐·빈 자리 표시를 맞춘다
         private void Build()
         {
-            foreach (KeyValuePair<Cell, BreadRecord> pair in m_shop.Shelves)
+            foreach (KeyValuePair<Cell, BreadTable> pair in m_shop.Shelves)
             {
                 if (!m_shelves.ContainsKey(pair.Key))
                 {
@@ -409,7 +400,7 @@ namespace ZooTycoon.World
         {
             foreach (KeyValuePair<Cell, ShelfView> pair in m_shelves)
             {
-                BreadRecord bread = m_shop.Shelves[pair.Key];
+                BreadTable bread = m_shop.Shelves[pair.Key];
                 pair.Value.Show(Icon(bread));
                 m_signs[pair.Key].Show(m_shop.Stock(bread.Id));
             }
@@ -436,7 +427,7 @@ namespace ZooTycoon.World
             return cost.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        private Sprite Icon(BreadRecord bread)
+        private Sprite Icon(BreadTable bread)
         {
             return m_frames.Get(bread.Sprite)[0];
         }

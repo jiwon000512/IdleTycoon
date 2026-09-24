@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
@@ -11,8 +12,8 @@ namespace ZooTycoon.Tests
     {
         private ShopSim Create()
         {
-            GameConfig config = TestTables.LoadConfig();
-            return new ShopSim(ZooState.CreateNew(config), TestTables.Build(config: config), new SequenceRandom(new double[10]));
+            TableSet tables = TestTables.Load();
+            return new ShopSim(ZooState.CreateNew(tables), tables, new SequenceRandom(new double[10]));
         }
 
         [Test]

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
@@ -13,10 +14,10 @@ namespace ZooTycoon.World
 
         private readonly Dictionary<Visitor, ShopCustomer> m_units = new Dictionary<Visitor, ShopCustomer>();
         private PlazaSim m_plaza;
-        private GameTables m_tables;
+        private TableSet m_tables;
         private FrameCache m_frames;
 
-        public void Initialize(PlazaSim plaza, GameTables tables, FrameCache frames)
+        public void Initialize(PlazaSim plaza, TableSet tables, FrameCache frames)
         {
             m_plaza = plaza;
             m_tables = tables;
@@ -51,7 +52,7 @@ namespace ZooTycoon.World
 
         private void Plaza_VisitorEmoted(Visitor visitor)
         {
-            m_units[visitor].Emote(m_tables.Strings.Get(k_HappyKey));
+            m_units[visitor].Emote(m_tables.Text(k_HappyKey));
         }
     }
 }

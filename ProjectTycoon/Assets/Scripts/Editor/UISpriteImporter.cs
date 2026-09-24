@@ -12,7 +12,7 @@ namespace ZooTycoon.Editor
     {
         const string k_Dir = "Assets/Sprites/UI/";
         const string k_WorldTag = "Assets/Sprites/World/Shop/tag_cost.png";
-        // 설계 09 v0.4: 행동 아이콘(actions.json icon 경로). UI와 같은 PPU, 9-slice 없음
+        // 설계 09 v0.4: 행동 아이콘(ActionTable icon 경로). UI와 같은 PPU, 9-slice 없음
         const string k_ActionDir = "Assets/Resources/Sprites/Actions";
         const float k_UiPpu = 25f;
         const float k_WorldPpu = 40f;

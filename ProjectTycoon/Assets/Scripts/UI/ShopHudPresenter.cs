@@ -5,7 +5,7 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 설계 09: 조이스틱 → 웜뱃 걷기, 상호작용 버튼 → 대상의 manual 행동, 시트가 필요하면 SheetRequested.
-    // v0.4: 버튼 아이콘은 행동 표(actions.json)의 icon. 대상이나 그 행동이 바뀔 때(TargetChanged)만 갱신한다.
+    // v0.4: 버튼 아이콘은 행동 표(ActionTable)의 icon. 대상이나 그 행동이 바뀔 때(TargetChanged)만 갱신한다.
     // 설계 11: 웜뱃이 있는 곳(Mall.Active, 빵집·광장)의 대상을 보고, 곳을 옮기면 검은 화면에서 페이드 인
     public sealed class ShopHudPresenter : IDisposable
     {
@@ -38,7 +38,7 @@ namespace ZooTycoon.UI
         // 할 수 있는 행동이 없으면 마지막 아이콘을 흐리게 둔다
         private void Refresh()
         {
-            ActionRecord action = m_mall.Active.TargetAction;
+            ActionTable action = m_mall.Active.TargetAction;
             m_view.SetInteract(action?.Icon, action != null);
         }
 

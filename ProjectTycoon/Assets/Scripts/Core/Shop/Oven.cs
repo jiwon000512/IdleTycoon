@@ -5,7 +5,7 @@ namespace ZooTycoon.Core
     {
         // 굴 격자 설계 v0.5: 놓인 칸
         public Cell Cell { get; internal set; }
-        public BreadRecord Bread { get; internal set; }
+        public BreadTable Bread { get; internal set; }
         public double Remaining { get; internal set; }
         public int Ready { get; internal set; }
 

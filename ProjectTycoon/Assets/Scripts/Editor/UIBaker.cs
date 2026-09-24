@@ -18,7 +18,7 @@ namespace ZooTycoon.Editor
         const float k_ControlSize = 44 * U;
         const float k_ControlOffsetX = 68 * U;
         const float k_ControlCenterY = 62 * U;
-        // 설계 09 v0.4: 행동 아이콘(actions.json icon). 실행 중에는 View가 경로로 읽는다
+        // 설계 09 v0.4: 행동 아이콘(ActionTable icon). 실행 중에는 View가 경로로 읽는다
         const string k_ActionIconDir = "Assets/Resources/Sprites/Actions/";
 
         static readonly Color k_Ink = new Color32(0x2E, 0x23, 0x20, 255);

@@ -48,7 +48,7 @@ namespace ZooTycoon.World
         private Sprite[] m_playing;
         private int m_shownCarry;
         private int m_lastCount;
-        private BreadRecord m_lastCarried;
+        private BreadTable m_lastCarried;
         // 꺼내기는 오븐 사건 바로 뒤에 들기 사건이 온다(ShopSim.TakeOut). 꺼내기가 auto라 대상이 아닌 오븐에서도 꺼낸다
         private int m_lastOven;
 
@@ -165,7 +165,7 @@ namespace ZooTycoon.World
         private void Shop_CarryChanged()
         {
             int count = m_shop.CarriedCount;
-            BreadRecord bread = count > m_lastCount ? m_shop.Carried : m_lastCarried;
+            BreadTable bread = count > m_lastCount ? m_shop.Carried : m_lastCarried;
 
             if (count > m_lastCount)
             {
@@ -191,7 +191,7 @@ namespace ZooTycoon.World
             m_lastOven = index;
         }
 
-        private Sprite Icon(BreadRecord bread)
+        private Sprite Icon(BreadTable bread)
         {
             return m_frames.Get(bread.Sprite)[0];
         }

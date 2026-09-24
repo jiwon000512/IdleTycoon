@@ -17,7 +17,7 @@ namespace ZooTycoon.Core
     // Cell = 그 사물의 칸(진열대·빈 자리·파기), Index = 오븐 번호
     public readonly struct Interactable : IEquatable<Interactable>
     {
-        // interactables.json의 id(InteractKind 순서)
+        // InteractableTable Id(InteractKind 순서)
         public static readonly string[] k_KindIds = { "shelf", "oven", "counter", "slot", "dig", "exit", "door" };
 
         public InteractKind Kind { get; }

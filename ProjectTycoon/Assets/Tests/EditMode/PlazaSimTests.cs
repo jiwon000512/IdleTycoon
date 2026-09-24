@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
@@ -13,19 +14,18 @@ namespace ZooTycoon.Tests
     {
         private const double k_Dt = 0.02;
 
-        private GameConfig m_config;
+        private TableSet m_tables;
         private ShopSim m_shop;
         private PlazaSim m_plaza;
         private Mall m_mall;
 
-        private void Create(Action<GameConfig> tweak = null)
+        private void Create(Action<BakeryConfigTable> tweak = null)
         {
-            m_config = TestTables.LoadConfig();
-            tweak?.Invoke(m_config);
-            GameTables tables = TestTables.Build(config: m_config);
-            ZooState state = ZooState.CreateNew(m_config);
-            m_shop = new ShopSim(state, tables, new SequenceRandom(new double[2000]));
-            m_plaza = new PlazaSim(tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()));
+            m_tables = TestTables.Load();
+            tweak?.Invoke(m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery));
+            ZooState state = ZooState.CreateNew(m_tables);
+            m_shop = new ShopSim(state, m_tables, new SequenceRandom(new double[2000]));
+            m_plaza = new PlazaSim(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()));
             m_mall = new Mall(m_shop, m_plaza);
         }
 
@@ -56,7 +56,7 @@ namespace ZooTycoon.Tests
         // 조이스틱으로 지금 있는 곳의 웜뱃을 점마다 끈다
         private void Steer(params Vector2[] points)
         {
-            float stepLength = (float)(m_config.Shop.WombatSpeed * k_Dt);
+            float stepLength = (float)(m_tables.Get<ConfigTable>(ConfigTable.k_WombatSpeed).Value * k_Dt);
 
             foreach (Vector2 point in points)
             {
@@ -75,7 +75,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void ExitAndEnter_MoveWombatBetweenShopAndPlaza()
         {
-            Create(c => c.Shop.MaxCustomers = 0);
+            Create(c => c.MaxCustomers = 0);
             Vector2 home = m_shop.Layout.WombatHome;
             Vector2 hole = m_shop.Layout.HoleFloor;
             int changes = 0;
@@ -130,7 +130,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void ShopFull_VisitorsWanderAndLeave()
         {
-            Create(c => c.Shop.MaxCustomers = 0);
+            Create(c => c.MaxCustomers = 0);
             int left = 0;
             m_plaza.VisitorRemoved += _ => left++;
 
@@ -170,7 +170,7 @@ namespace ZooTycoon.Tests
 
             Assert.That(layout.Nav.IsWalkable(layout.DoorFloor), Is.True);
             Assert.That(layout.Nav.IsWalkable(layout.StairsFloor), Is.True);
-            Assert.That(layout.Decor.Count, Is.EqualTo(m_config.Plaza.Decor.Count));
+            Assert.That(layout.Decor.Count, Is.EqualTo(m_tables.GetAll<PlazaDecorTable>().Count));
             // 벽에 붙은 화분의 벽 쪽 자리만 빠진다
             Assert.That(layout.Spots.Count, Is.GreaterThanOrEqualTo(12));
             Assert.That(layout.Spots.All(s => layout.Nav.IsWalkable(s.Position)), Is.True);

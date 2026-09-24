@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
@@ -48,7 +49,9 @@ namespace ZooTycoon.Core
         private const float k_OverflowDistance = 2f;
         private static readonly Vector2 k_QueueHeadOffset = new Vector2(0.6f, 0.9f);
 
-        private readonly GameConfig.ShopConfig m_config;
+        private readonly double m_cellWidth;
+        private readonly double m_cellHeight;
+        private readonly double m_entranceHeight;
         private readonly List<Vector2> m_queueSlots = new List<Vector2>();
         private readonly Dictionary<Cell, List<Vector2>> m_shelfSpots = new Dictionary<Cell, List<Vector2>>();
 
@@ -64,20 +67,22 @@ namespace ZooTycoon.Core
         public Vector2 CounterBase => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_CounterDrop);
         public Vector2 WombatHome => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_WombatDrop);
 
-        public ShopLayout(GameConfig.ShopConfig config)
+        public ShopLayout(TableSet tables)
         {
-            m_config = config;
+            m_cellWidth = tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
+            m_cellHeight = tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;
+            m_entranceHeight = tables.Get<ConfigTable>(ConfigTable.k_EntranceHeight).Value;
         }
 
         public float RowTop(int row)
         {
-            return row <= 0 ? 0f : (float)(m_config.EntranceHeight + (row - 1) * m_config.CellHeight);
+            return row <= 0 ? 0f : (float)(m_entranceHeight + (row - 1) * m_cellHeight);
         }
 
         public Vector2 CellCenter(Cell cell)
         {
-            float height = (float)(cell.Row == 0 ? m_config.EntranceHeight : m_config.CellHeight);
-            return new Vector2((float)((cell.Col + 0.5) * m_config.CellWidth), -(RowTop(cell.Row) + height * 0.5f));
+            float height = (float)(cell.Row == 0 ? m_entranceHeight : m_cellHeight);
+            return new Vector2((float)((cell.Col + 0.5) * m_cellWidth), -(RowTop(cell.Row) + height * 0.5f));
         }
 
         public Vector2 ShelfBase(Cell cell)
@@ -106,9 +111,9 @@ namespace ZooTycoon.Core
         public float DistanceToCell(Cell cell, Vector2 p)
         {
             float top = -RowTop(cell.Row);
-            float bottom = top - (float)(cell.Row == 0 ? m_config.EntranceHeight : m_config.CellHeight);
-            float left = (float)(cell.Col * m_config.CellWidth);
-            float right = left + (float)m_config.CellWidth;
+            float bottom = top - (float)(cell.Row == 0 ? m_entranceHeight : m_cellHeight);
+            float left = (float)(cell.Col * m_cellWidth);
+            float right = left + (float)m_cellWidth;
             float dx = Math.Max(Math.Max(left - p.X, p.X - right), 0f);
             float dy = Math.Max(Math.Max(bottom - p.Y, p.Y - top), 0f);
             return (float)Math.Sqrt(dx * dx + dy * dy);
@@ -148,8 +153,8 @@ namespace ZooTycoon.Core
         public void Rebuild(IReadOnlyCollection<Cell> cells, IEnumerable<Cell> shelfCells, IEnumerable<Cell> ovenCells, int queueCapacity)
         {
             int unit = (int)k_PixelsPerUnit;
-            Shape = BurrowShape.Build(cells, (int)Math.Round(m_config.CellWidth * unit), (int)Math.Round(m_config.CellHeight * unit),
-                (int)Math.Round(m_config.EntranceHeight * unit), k_RoundRadius);
+            Shape = BurrowShape.Build(cells, (int)Math.Round(m_cellWidth * unit), (int)Math.Round(m_cellHeight * unit),
+                (int)Math.Round(m_entranceHeight * unit), k_RoundRadius);
 
             List<NavRect> blocked = new List<NavRect>();
             List<Cell> shelves = new List<Cell>(shelfCells);

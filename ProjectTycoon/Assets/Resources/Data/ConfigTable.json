@@ -1,0 +1,21 @@
+{
+  "table": "ConfigTable",
+  "version": 1,
+  "notes": [
+    "게임 전체에 하나뿐인 값. id = 값 이름, value = 숫자. 전부 시작값이며 프로토타입에서 튠한다.",
+    "startCoins: 새 게임 코인. offlineMaxSeconds: 오프라인 수익 상한(초).",
+    "cellWidth·cellHeight·entranceHeight: 굴 칸 크기와 입구 줄 높이(유닛). 빵집·광장 공통.",
+    "walkSpeed: 손님 걷기(유닛/초, 걷는 시간 = A* 길 길이 ÷ walkSpeed). wombatSpeed: 조이스틱 웜뱃(유닛/초). hopSeconds: 구멍·문에서 톡 나오기·들어가기(초).",
+    "version 1 (2026-09-24 코드 리뷰 R1): game_config.json v17을 Id로 찾는 테이블 4개(ConfigTable·BakeryConfigTable·PlazaConfigTable·PlazaDecorTable)로 나눴다. 값은 그대로."
+  ],
+  "rows": [
+    {"id": "startCoins", "value": 350},
+    {"id": "offlineMaxSeconds", "value": 28800},
+    {"id": "cellWidth", "value": 3.375},
+    {"id": "cellHeight", "value": 2.4},
+    {"id": "entranceHeight", "value": 2.0},
+    {"id": "walkSpeed", "value": 2.2},
+    {"id": "wombatSpeed", "value": 3.0},
+    {"id": "hopSeconds", "value": 0.3}
+  ]
+}

@@ -21,9 +21,9 @@ namespace ZooTycoon.Core
     public sealed class Customer : IWalker
     {
         public int Id { get; }
-        public VisitorRecord Look { get; }
+        public VisitorTable Look { get; }
         // 지금 찾는 빵과 그 진열대 칸
-        public BreadRecord Bread { get; internal set; }
+        public BreadTable Bread { get; internal set; }
         public Cell Cell { get; internal set; }
         public CustomerPhase Phase { get; internal set; }
         public bool CarriesBread { get; internal set; }
@@ -46,7 +46,7 @@ namespace ZooTycoon.Core
         internal Vector2 Spot { get; set; }
         internal bool Paid { get; set; }
 
-        internal Customer(int id, VisitorRecord look, Vector2 position, double patience)
+        internal Customer(int id, VisitorTable look, Vector2 position, double patience)
         {
             Id = id;
             Look = look;

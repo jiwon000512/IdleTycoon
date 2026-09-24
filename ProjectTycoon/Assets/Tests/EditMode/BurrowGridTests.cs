@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
@@ -11,9 +12,9 @@ namespace ZooTycoon.Tests
 
         private BurrowGrid Create()
         {
-            GameConfig config = TestTables.LoadConfig();
-            m_state = ZooState.CreateNew(config);
-            return new BurrowGrid(m_state, config.Shop);
+            TableSet tables = TestTables.Load();
+            m_state = ZooState.CreateNew(tables);
+            return new BurrowGrid(m_state, tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery));
         }
 
         [Test]

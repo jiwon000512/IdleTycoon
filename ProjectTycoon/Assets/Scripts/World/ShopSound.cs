@@ -1,16 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 10: 가게 사건 → 효과음(sounds.json). 결제 짤랑 · 오븐이 다 구움 띵 · 화난 퇴장 뿌우~.
+    // 설계 10: 가게 사건 → 효과음(SoundTable). 결제 짤랑 · 오븐이 다 구움 띵 · 화난 퇴장 뿌우~.
     // 소리마다 AudioSource 하나(피치를 따로 올리려고). WorldManager가 가게 개체에 붙인다
     public sealed class ShopSound : MonoBehaviour
     {
         private sealed class Channel
         {
-            public SoundRecord Record;
+            public SoundTable Sound;
             public AudioSource Source;
             public float Last = float.NegativeInfinity;
             public int Combo;
@@ -20,17 +21,17 @@ namespace ZooTycoon.World
         private readonly List<bool> m_ovenReady = new List<bool>();
         private ShopSim m_shop;
 
-        public void Initialize(ShopSim shop, GameTables tables)
+        public void Initialize(ShopSim shop, TableSet tables)
         {
             m_shop = shop;
 
-            foreach (SoundRecord sound in tables.Sounds)
+            foreach (SoundTable sound in tables.GetAll<SoundTable>())
             {
                 AudioSource source = gameObject.AddComponent<AudioSource>();
                 source.clip = Resources.Load<AudioClip>(sound.Clip);
                 source.playOnAwake = false;
                 source.volume = (float)sound.Volume;
-                m_channels[sound.Id] = new Channel { Record = sound, Source = source };
+                m_channels[sound.Id] = new Channel { Sound = sound, Source = source };
             }
 
             m_shop.CustomerPaid += Shop_CustomerPaid;
@@ -51,7 +52,7 @@ namespace ZooTycoon.World
         private void Play(string id)
         {
             Channel channel = m_channels[id];
-            SoundRecord record = channel.Record;
+            SoundTable record = channel.Sound;
             float since = Time.time - channel.Last;
 
             if (since < record.MinGap)
@@ -67,12 +68,12 @@ namespace ZooTycoon.World
 
         private void Shop_CustomerPaid(Customer customer, double coins)
         {
-            Play(SoundRecord.k_Pay);
+            Play(SoundTable.k_Pay);
         }
 
         private void Shop_CustomerGaveUp(Customer customer)
         {
-            Play(SoundRecord.k_GiveUp);
+            Play(SoundTable.k_GiveUp);
         }
 
         // 다 구운 빵이 없다가 생긴 순간만
@@ -87,7 +88,7 @@ namespace ZooTycoon.World
 
             if (ready && !m_ovenReady[index])
             {
-                Play(SoundRecord.k_OvenDone);
+                Play(SoundTable.k_OvenDone);
             }
 
             m_ovenReady[index] = ready;

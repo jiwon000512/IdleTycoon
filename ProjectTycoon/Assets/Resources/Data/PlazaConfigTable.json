@@ -1,0 +1,13 @@
+{
+  "table": "PlazaConfigTable",
+  "version": 1,
+  "notes": [
+    "설계 11 굴 밖 광장 숫자. id = 광장(지금 main 하나). 손님은 광장 지상 계단으로 온다(arrivalSeconds).",
+    "cols·rows: 칸 수(빵집과 같은 칸, 가로 가운데 정렬). visitSecondsMin~Max: 들를 곳에서 머무는 초. visitsMin~Max: 빵집 가기 전 들르는 곳 수.",
+    "browseChance: 가게 없이 구경만 하고 떠나는 비율. emoteChance: 들를 곳에서 ♥를 띄우는 비율. 놓인 장식은 PlazaDecorTable.json.",
+    "version 1 (2026-09-24 코드 리뷰 R1): game_config.json v17을 Id로 찾는 테이블 4개(ConfigTable·BakeryConfigTable·PlazaConfigTable·PlazaDecorTable)로 나눴다. 값은 그대로."
+  ],
+  "rows": [
+    {"id": "main", "cols": 4, "rows": 6, "arrivalSeconds": 4, "maxVisitors": 10, "visitSecondsMin": 2, "visitSecondsMax": 4.5, "visitsMin": 1, "visitsMax": 2, "browseChance": 0.3, "emoteChance": 0.4}
+  ]
+}

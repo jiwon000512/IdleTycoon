@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -9,214 +10,179 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("visitors", 6)]
-        [TestCase("strings", 12)]
-        [TestCase("breads", 1)]
-        [TestCase("shop_upgrades", 4)]
-        [TestCase("actions", 2)]
-        [TestCase("interactables", 2)]
-        [TestCase("decorations", 2)]
-        [TestCase("sounds", 1)]
-        public void Envelope_OfRowTable_MatchesFileNameAndVersion(string table, int version)
+        [TestCase("VisitorTable", 7)]
+        [TestCase("StringTable", 13)]
+        [TestCase("BreadTable", 2)]
+        [TestCase("ShopUpgradeTable", 5)]
+        [TestCase("ActionTable", 3)]
+        [TestCase("InteractableTable", 3)]
+        [TestCase("DecorationTable", 3)]
+        [TestCase("SoundTable", 2)]
+        [TestCase("ConfigTable", 1)]
+        [TestCase("BakeryConfigTable", 1)]
+        [TestCase("PlazaConfigTable", 1)]
+        [TestCase("PlazaDecorTable", 1)]
+        public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
-            TableFile<object> file = TestTables.LoadFile<object>(table);
+            TableFile<object> file = TestTables.LoadFile(table);
 
             Assert.That(file.Table, Is.EqualTo(table));
             Assert.That(file.Version, Is.EqualTo(version));
         }
 
         [Test]
-        public void Envelope_OfGameConfig_MatchesFileNameAndVersion()
+        public void Validate_WithShippedTables_ReportsNoError()
         {
-            TableFile<object> file = TestTables.LoadFile<object>("game_config");
+            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Load());
 
-            Assert.That(file.Table, Is.EqualTo("game_config"));
-            Assert.That(file.Version, Is.EqualTo(17));
+            Assert.That(errors, Is.Empty);
+        }
+
+        // 문자열 enum 칸(mode·target·carryAt·face)에 모르는 값이 있으면 읽을 때 실패한다
+        [Test]
+        public void Load_WhenEnumValueUnknown_Throws()
+        {
+            TableSet tables = TestTables.Load("ActionTable", rows => rows[0]["mode"] = "sometimes");
+
+            Assert.Throws<JsonSerializationException>(() => tables.GetAll<ActionTable>());
         }
 
         [Test]
-        public void Validate_WithShippedTables_ReportsNoError()
+        public void Load_WhenIdDuplicated_Throws()
         {
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build());
+            TableSet tables = TestTables.Load("BreadTable", rows => rows.Add(rows[0].DeepClone()));
 
-            Assert.That(errors, Is.Empty);
+            Assert.Throws<System.InvalidOperationException>(() => tables.GetAll<BreadTable>());
         }
 
         [Test]
         public void Validate_WhenLookSecondsNotPositive_ReportsError()
         {
-            GameConfig config = TestTables.LoadConfig();
-            config.Shop.LookSeconds = 0d;
+            TableSet tables = TestTables.Load();
+            tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).LookSeconds = 0d;
 
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(config: config));
-
-            Assert.That(errors, Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
         [Test]
         public void Validate_WhenStartCoinsNegative_ReportsError()
         {
-            GameConfig config = TestTables.LoadConfig();
-            config.Start.Coins = -1;
+            TableSet tables = TestTables.Load();
+            tables.Get<ConfigTable>(ConfigTable.k_StartCoins).Value = -1d;
 
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(config: config));
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
 
-            Assert.That(errors, Is.Not.Empty);
+        [TestCase("ConfigTable", ConfigTable.k_WalkSpeed)]
+        [TestCase("BakeryConfigTable", BakeryConfigTable.k_Bakery)]
+        [TestCase("PlazaConfigTable", PlazaConfigTable.k_Main)]
+        public void Validate_WhenConfigRowMissing_ReportsError(string table, string id)
+        {
+            Assert.That(TableValidator.Validate(TestTables.LoadWithout(table, id)), Is.Not.Empty);
         }
 
         [Test]
         public void Validate_WhenVisitorViewSecondsMinExceedsMax_ReportsError()
         {
-            List<VisitorRecord> visitors = TestTables.LoadRows<VisitorRecord>("visitors");
-            visitors[0].ViewSecondsMin = visitors[0].ViewSecondsMax + 1d;
+            TableSet tables = TestTables.Load();
+            VisitorTable visitor = tables.GetAll<VisitorTable>()[0];
+            visitor.ViewSecondsMin = visitor.ViewSecondsMax + 1d;
 
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(visitors: visitors));
-
-            Assert.That(errors, Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenShopUpgradeTargetUnknown_ReportsError()
-        {
-            List<ShopUpgradeRecord> upgrades = TestTables.LoadRows<ShopUpgradeRecord>("shop_upgrades");
-            upgrades[0].Target = "wall";
-
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(shopUpgrades: upgrades));
-
-            Assert.That(errors, Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
         [Test]
         public void Validate_WhenShopUpgradeLookLevelExceedsMax_ReportsError()
         {
-            List<ShopUpgradeRecord> upgrades = TestTables.LoadRows<ShopUpgradeRecord>("shop_upgrades");
-            upgrades[0].LookLevel = upgrades[0].MaxLevel + 1;
+            TableSet tables = TestTables.Load();
+            ShopUpgradeTable upgrade = tables.GetAll<ShopUpgradeTable>()[0];
+            upgrade.LookLevel = upgrade.MaxLevel + 1;
 
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(shopUpgrades: upgrades));
-
-            Assert.That(errors, Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
         [Test]
         public void Validate_WhenVisitorsEmpty_ReportsError()
         {
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(visitors: new List<VisitorRecord>()));
-
-            Assert.That(errors, Is.Not.Empty);
+            Assert.That(TableValidator.Validate(TestTables.Load("VisitorTable", rows => rows.Clear())), Is.Not.Empty);
         }
 
         [Test]
         public void Validate_WhenStringTextEmpty_ReportsError()
         {
-            List<StringRecord> strings = TestTables.LoadRows<StringRecord>("strings");
-            strings[0].Ko = string.Empty;
+            TableSet tables = TestTables.Load();
+            tables.GetAll<StringTable>()[0].Ko = string.Empty;
 
-            IReadOnlyList<string> errors = TableValidator.Validate(TestTables.Build(strings: strings));
-
-            Assert.That(errors, Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 09 v0.4: 행동 표 — manual인데 아이콘 없음, 시트 행동을 auto, 코드가 아는 행동 빠짐
-        [TestCase("take_out", "manual", null)]
-        [TestCase("open", "auto", "Sprites/Actions/open")]
-        [TestCase("fill", "sometimes", null)]
-        public void Validate_WhenActionRowInvalid_ReportsError(string id, string mode, string icon)
+        // 설계 09 v0.4: 행동 표 — manual인데 아이콘 없음, 시트·곳 옮기기 행동을 auto(설계 11)
+        [TestCase("take_out", ActionMode.Manual, null)]
+        [TestCase("open", ActionMode.Auto, "Sprites/Actions/open")]
+        [TestCase("exit", ActionMode.Auto, "Sprites/Actions/exit")]
+        [TestCase("enter", ActionMode.Auto, "Sprites/Actions/enter")]
+        public void Validate_WhenActionRowInvalid_ReportsError(string id, ActionMode mode, string icon)
         {
-            List<ActionRecord> actions = TestTables.LoadRows<ActionRecord>("actions");
-            ActionRecord row = actions.Find(a => a.Id == id);
+            TableSet tables = TestTables.Load();
+            ActionTable row = tables.Get<ActionTable>(id);
             row.Mode = mode;
             row.Icon = icon;
 
-            Assert.That(TableValidator.Validate(TestTables.Build(actions: actions)), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 2026-09-23: 손님이 물건을 드는 자리는 hand·head만
-        [TestCase(null)]
-        [TestCase("tail")]
-        public void Validate_WhenVisitorCarryAtInvalid_ReportsError(string carryAt)
-        {
-            List<VisitorRecord> visitors = TestTables.LoadRows<VisitorRecord>("visitors");
-            visitors[0].CarryAt = carryAt;
-
-            Assert.That(TableValidator.Validate(TestTables.Build(visitors: visitors)), Is.Not.Empty);
-        }
-
-        // 설계 10: 효과음 표 — 음량 범위 밖, 피치 상한 1 미만, 코드가 아는 소리 빠짐
+        // 설계 10: 효과음 표 — 음량 범위 밖, 피치 상한 1 미만
         [TestCase("pay", 1.5, 1.3)]
         [TestCase("pay", 0.6, 0.9)]
         public void Validate_WhenSoundRowInvalid_ReportsError(string id, double volume, double pitchMax)
         {
-            List<SoundRecord> sounds = TestTables.LoadRows<SoundRecord>("sounds");
-            SoundRecord row = sounds.Find(s => s.Id == id);
+            TableSet tables = TestTables.Load();
+            SoundTable row = tables.Get<SoundTable>(id);
             row.Volume = volume;
             row.PitchMax = pitchMax;
 
-            Assert.That(TableValidator.Validate(TestTables.Build(sounds: sounds)), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
+        // 코드가 Id로 부르는 행이 빠짐
+        [TestCase("SoundTable", "give_up")]
+        [TestCase("ActionTable", "serve")]
+        [TestCase("InteractableTable", "dig")]
+        public void Validate_WhenRequiredRowMissing_ReportsError(string table, string id)
+        {
+            Assert.That(TableValidator.Validate(TestTables.LoadWithout(table, id)), Is.Not.Empty);
+        }
+
+        // 설계 11: 장식 그림 경로 없음, 광장에 없는 장식
         [Test]
-        public void Validate_WhenSoundMissing_ReportsError()
+        public void Validate_WhenDecorationSpriteEmpty_ReportsError()
         {
-            List<SoundRecord> sounds = TestTables.LoadRows<SoundRecord>("sounds");
-            sounds.RemoveAll(s => s.Id == "give_up");
+            TableSet tables = TestTables.Load();
+            tables.GetAll<DecorationTable>()[1].Sprite = string.Empty;
 
-            Assert.That(TableValidator.Validate(TestTables.Build(sounds: sounds)), Is.Not.Empty);
-        }
-
-        // 설계 11: 곳을 옮기는 행동은 manual만, 장식 표 — 그림 경로 없음·모르는 방향, 광장에 없는 장식
-        [TestCase("exit")]
-        [TestCase("enter")]
-        public void Validate_WhenMoveActionAuto_ReportsError(string id)
-        {
-            List<ActionRecord> actions = TestTables.LoadRows<ActionRecord>("actions");
-            actions.Find(a => a.Id == id).Mode = ActionRecord.k_Auto;
-
-            Assert.That(TableValidator.Validate(TestTables.Build(actions: actions)), Is.Not.Empty);
-        }
-
-        [TestCase("", "up")]
-        [TestCase("Sprites/Decor/bench_log", "north")]
-        public void Validate_WhenDecorationInvalid_ReportsError(string sprite, string face)
-        {
-            List<DecorationRecord> decorations = TestTables.LoadRows<DecorationRecord>("decorations");
-            decorations[1].Sprite = sprite;
-            decorations[1].Spots[0].Face = face;
-
-            Assert.That(TableValidator.Validate(TestTables.Build(decorations: decorations)), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
         [Test]
         public void Validate_WhenPlacedDecorUnknown_ReportsError()
         {
-            GameConfig config = TestTables.LoadConfig();
-            config.Plaza.Decor[0].Id = "statue";
+            TableSet tables = TestTables.Load();
+            tables.Get<PlazaDecorTable>(1).Decoration = "statue";
 
-            Assert.That(TableValidator.Validate(TestTables.Build(config: config)), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        [Test]
-        public void Validate_WhenActionMissing_ReportsError()
-        {
-            List<ActionRecord> actions = TestTables.LoadRows<ActionRecord>("actions");
-            actions.RemoveAll(a => a.Id == "serve");
-
-            Assert.That(TableValidator.Validate(TestTables.Build(actions: actions)), Is.Not.Empty);
-        }
-
-        // 설계 09 v0.4: 사물 표 — 없는 행동 참조, range 0, 사물 종류 빠짐
+        // 설계 09 v0.4: 사물 표 — 없는 행동 참조, range 0
         [Test]
         public void Validate_WhenInteractableInvalid_ReportsError()
         {
-            List<InteractableRecord> unknownAction = TestTables.LoadRows<InteractableRecord>("interactables");
-            unknownAction[0].Actions.Add("juggle");
-            List<InteractableRecord> zeroRange = TestTables.LoadRows<InteractableRecord>("interactables");
-            zeroRange[1].Range = 0d;
-            List<InteractableRecord> missing = TestTables.LoadRows<InteractableRecord>("interactables");
-            missing.RemoveAll(e => e.Id == "dig");
+            TableSet unknownAction = TestTables.Load();
+            unknownAction.GetAll<InteractableTable>()[0].Actions.Add("juggle");
+            TableSet zeroRange = TestTables.Load();
+            zeroRange.GetAll<InteractableTable>()[1].Range = 0d;
 
-            Assert.That(TableValidator.Validate(TestTables.Build(interactables: unknownAction)), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(TestTables.Build(interactables: zeroRange)), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(TestTables.Build(interactables: missing)), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(unknownAction), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(zeroRange), Is.Not.Empty);
         }
     }
 }

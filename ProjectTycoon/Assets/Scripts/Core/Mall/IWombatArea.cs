@@ -12,7 +12,7 @@ namespace ZooTycoon.Core
         bool WombatMoving { get; }
         Interactable? Target { get; }
         // 지금 할 수 있는 첫 manual 행동(버튼). 없으면 null
-        ActionRecord TargetAction { get; }
+        ActionTable TargetAction { get; }
 
         event Action TargetChanged;
 

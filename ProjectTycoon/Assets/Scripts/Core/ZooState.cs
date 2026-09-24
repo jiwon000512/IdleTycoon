@@ -1,4 +1,5 @@
 using System;
+using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
@@ -15,9 +16,9 @@ namespace ZooTycoon.Core
         }
 
         // 기획서 6.4: 시작 상태 — 코인 350
-        public static ZooState CreateNew(GameConfig config)
+        public static ZooState CreateNew(TableSet tables)
         {
-            return new ZooState(config.Start.Coins);
+            return new ZooState(tables.Get<ConfigTable>(ConfigTable.k_StartCoins).Value);
         }
 
         public void AddCoins(double amount)

@@ -14,7 +14,7 @@ namespace ZooTycoon.Core
         private static readonly Cell[] k_Around = { new Cell(1, 0), new Cell(-1, 0), new Cell(0, 1), new Cell(0, -1) };
 
         private readonly ZooState m_state;
-        private readonly GameConfig.ShopConfig m_config;
+        private readonly BakeryConfigTable m_config;
         private readonly HashSet<Cell> m_cells = new HashSet<Cell>();
 
         public IReadOnlyCollection<Cell> Cells => m_cells;
@@ -23,7 +23,7 @@ namespace ZooTycoon.Core
 
         public event Action<Cell> Dug;
 
-        public BurrowGrid(ZooState state, GameConfig.ShopConfig config)
+        public BurrowGrid(ZooState state, BakeryConfigTable config)
         {
             m_state = state;
             m_config = config;

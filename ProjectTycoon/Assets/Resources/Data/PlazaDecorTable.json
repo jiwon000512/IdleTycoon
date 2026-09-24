@@ -1,0 +1,20 @@
+{
+  "table": "PlazaDecorTable",
+  "version": 1,
+  "notes": [
+    "설계 11 광장에 놓인 장식. id = 놓인 자리 번호(1부터), decoration = DecorationTable.json id, x·y = 밑변 가운데 광장 좌표(유닛, 원점 = 첫 줄 윗변 가운데, y 위).",
+    "설계 12 꾸미기에서 사고 옮기는 대상이 된다.",
+    "version 1 (2026-09-24 코드 리뷰 R1): game_config.json v17을 Id로 찾는 테이블 4개(ConfigTable·BakeryConfigTable·PlazaConfigTable·PlazaDecorTable)로 나눴다. 값은 그대로."
+  ],
+  "rows": [
+    {"id": 1, "decoration": "fountain_stone", "x": 0, "y": -8.2},
+    {"id": 2, "decoration": "bench_log", "x": -3.8, "y": -6.0},
+    {"id": 3, "decoration": "bench_log", "x": 3.8, "y": -10.6},
+    {"id": 4, "decoration": "plant_pot", "x": -5.9, "y": -3.2},
+    {"id": 5, "decoration": "plant_pot", "x": 5.9, "y": -3.2},
+    {"id": 6, "decoration": "plant_pot", "x": -5.9, "y": -13.2},
+    {"id": 7, "decoration": "plant_pot", "x": 5.9, "y": -13.2},
+    {"id": 8, "decoration": "lamp_lantern", "x": -2.8, "y": -11.0},
+    {"id": 9, "decoration": "lamp_lantern", "x": 2.8, "y": -5.0}
+  ]
+}

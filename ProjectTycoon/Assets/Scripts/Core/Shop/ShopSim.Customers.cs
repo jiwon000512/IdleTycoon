@@ -62,7 +62,7 @@ namespace ZooTycoon.Core
             for (int i = 0; i < m_customers.Count; i++)
             {
                 Customer customer = m_customers[i];
-                customer.Mover.Advance(m_config.WalkSpeed * dt);
+                customer.Mover.Advance(m_walkSpeed * dt);
 
                 if (customer.Brain.Tick(customer, dt) != BtStatus.Running)
                 {
@@ -128,7 +128,7 @@ namespace ZooTycoon.Core
         private void TickCheckout(double dt)
         {
             // 설계 09 v0.4: serve가 auto면 계산대 range 안에 있는 동안만 흐른다. manual이면 버튼(PayHead)으로만
-            if (!HeadWaiting || !m_actions[k_ActionServe].IsAuto || !WombatAtCounter)
+            if (!HeadWaiting || !m_tables.Get<ActionTable>(k_ActionServe).IsAuto || !WombatAtCounter)
             {
                 return;
             }
@@ -165,7 +165,7 @@ namespace ZooTycoon.Core
         }
 
         // 광장 빵집 문에서 톡 들어온 손님이 구멍에서 나온다(자리 확인은 CanAdmit으로 부르는 쪽이)
-        public void Admit(VisitorRecord look)
+        public void Admit(VisitorTable look)
         {
             Customer customer = new Customer(++m_nextCustomerId, look, m_layout.HoleInside, m_config.PatienceSeconds);
             customer.Brain = BuildBrain();
@@ -197,7 +197,7 @@ namespace ZooTycoon.Core
         private bool StartEnter(Customer customer)
         {
             customer.Phase = CustomerPhase.Entering;
-            customer.Timer = m_config.HopSeconds;
+            customer.Timer = m_hopSeconds;
             customer.HopProgress = 0d;
             customer.Mover.Place(m_layout.HoleInside);
             customer.Mover.Facing = Facing.Down;
@@ -208,7 +208,7 @@ namespace ZooTycoon.Core
         private bool StartExit(Customer customer)
         {
             customer.Phase = CustomerPhase.Exiting;
-            customer.Timer = m_config.HopSeconds;
+            customer.Timer = m_hopSeconds;
             customer.HopProgress = 0d;
             customer.Mover.Facing = Facing.Up;
             return true;
@@ -217,7 +217,7 @@ namespace ZooTycoon.Core
         private BtStatus TickHop(Customer customer, double dt)
         {
             customer.Timer -= dt;
-            double t = Math.Min(1d, 1d - customer.Timer / m_config.HopSeconds);
+            double t = Math.Min(1d, 1d - customer.Timer / m_hopSeconds);
             customer.HopProgress = t;
             bool entering = customer.Phase == CustomerPhase.Entering;
             Vector2 from = entering ? m_layout.HoleInside : m_layout.HoleFloor;
@@ -231,7 +231,7 @@ namespace ZooTycoon.Core
         {
             int weightSum = 0;
 
-            foreach (BreadRecord bread in m_unlocked)
+            foreach (BreadTable bread in m_unlocked)
             {
                 weightSum += customer.Tried.Contains(bread.Id) ? 0 : bread.Weight;
             }
@@ -242,9 +242,9 @@ namespace ZooTycoon.Core
             }
 
             double roll = m_random.NextDouble() * weightSum;
-            BreadRecord chosen = null;
+            BreadTable chosen = null;
 
-            foreach (BreadRecord bread in m_unlocked)
+            foreach (BreadTable bread in m_unlocked)
             {
                 if (customer.Tried.Contains(bread.Id))
                 {

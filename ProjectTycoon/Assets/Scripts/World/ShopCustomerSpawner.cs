@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
@@ -17,10 +18,10 @@ namespace ZooTycoon.World
         private readonly Dictionary<Customer, ShopCustomer> m_units = new Dictionary<Customer, ShopCustomer>();
         private ShopSim m_shop;
         private ShopView m_view;
-        private GameTables m_tables;
+        private TableSet m_tables;
         private FrameCache m_frames;
 
-        public void Initialize(ShopSim shop, ShopView view, GameTables tables, FrameCache frames)
+        public void Initialize(ShopSim shop, ShopView view, TableSet tables, FrameCache frames)
         {
             m_shop = shop;
             m_view = view;
@@ -62,8 +63,8 @@ namespace ZooTycoon.World
 
         private void Shop_CustomerPaid(Customer customer, double coins)
         {
-            string amount = m_tables.Strings.Format(k_CoinKey, coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
-            m_units[customer].Pay(amount, m_tables.Strings.Get(k_HappyKey));
+            string amount = m_tables.Format(k_CoinKey, coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
+            m_units[customer].Pay(amount, m_tables.Text(k_HappyKey));
         }
 
         private void Shop_CustomerGaveUp(Customer customer)

@@ -1,0 +1,13 @@
+{
+  "table": "BakeryConfigTable",
+  "version": 1,
+  "notes": [
+    "빵집 시뮬 숫자. id = 빵집 종류(지금 bakery 하나). 시간은 초.",
+    "patienceSeconds: 빈 진열대 앞 두리번 시간 합계(다 쓰면 「!!」로 나감). lookSeconds: 한 진열대 두리번 최대. pickSeconds: 빵 집기. carryCapacity: 웜뱃이 머리에 이는 빵 수.",
+    "파기 비용 = digBaseCost × digCostGrowth^(판 칸 수). 사물마다 상호작용 거리는 InteractableTable.json의 range.",
+    "version 1 (2026-09-24 코드 리뷰 R1): game_config.json v17을 Id로 찾는 테이블 4개(ConfigTable·BakeryConfigTable·PlazaConfigTable·PlazaDecorTable)로 나눴다. 값은 그대로."
+  ],
+  "rows": [
+    {"id": "bakery", "maxCustomers": 8, "patienceSeconds": 6, "lookSeconds": 2, "checkoutSeconds": 1.5, "shelfCapacity": 8, "ovenCount": 1, "pickSeconds": 0.4, "carryCapacity": 6, "digBaseCost": 150, "digCostGrowth": 1.4}
+  ]
+}

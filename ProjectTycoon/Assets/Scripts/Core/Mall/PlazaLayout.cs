@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
@@ -26,10 +27,12 @@ namespace ZooTycoon.Core
         public float Width { get; }
         public float Height { get; }
 
-        public PlazaLayout(GameConfig config, IReadOnlyList<DecorationRecord> decorations)
+        public PlazaLayout(TableSet tables)
         {
-            GameConfig.ShopConfig shop = config.Shop;
-            GameConfig.PlazaConfig plaza = config.Plaza;
+            PlazaConfigTable plaza = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
+            double cellWidth = tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
+            double cellHeight = tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;
+            double entranceHeight = tables.Get<ConfigTable>(ConfigTable.k_EntranceHeight).Value;
             int unit = (int)ShopLayout.k_PixelsPerUnit;
             int firstCol = -plaza.Cols / 2;
             HashSet<Cell> cells = new HashSet<Cell>();
@@ -42,13 +45,13 @@ namespace ZooTycoon.Core
                 }
             }
 
-            Shape = BurrowShape.Build(cells, (int)Math.Round(shop.CellWidth * unit), (int)Math.Round(shop.CellHeight * unit),
-                (int)Math.Round(shop.EntranceHeight * unit), ShopLayout.k_RoundRadius);
-            Width = (float)(plaza.Cols * shop.CellWidth);
-            Height = (float)(shop.EntranceHeight + (plaza.Rows - 1) * shop.CellHeight);
+            Shape = BurrowShape.Build(cells, (int)Math.Round(cellWidth * unit), (int)Math.Round(cellHeight * unit),
+                (int)Math.Round(entranceHeight * unit), ShopLayout.k_RoundRadius);
+            Width = (float)(plaza.Cols * cellWidth);
+            Height = (float)(entranceHeight + (plaza.Rows - 1) * cellHeight);
 
             float inside = -(BurrowShape.k_EntranceFloorTop - 1) / ShopLayout.k_PixelsPerUnit;
-            float doorX = (float)(-0.5 * shop.CellWidth);
+            float doorX = (float)(-0.5 * cellWidth);
             DoorInside = new Vector2(doorX, inside);
             DoorFloor = new Vector2(doorX, k_HoleFloorY);
             StairsInside = new Vector2(0f, inside);
@@ -56,12 +59,13 @@ namespace ZooTycoon.Core
 
             List<NavRect> blocked = new List<NavRect>();
 
-            foreach (GameConfig.PlacedDecor placed in plaza.Decor)
+            foreach (PlazaDecorTable placed in tables.GetAll<PlazaDecorTable>())
             {
-                DecorationRecord record = Find(decorations, placed.Id);
+                DecorationTable decoration = tables.Get<DecorationTable>(placed.Decoration);
                 Vector2 position = new Vector2((float)placed.X, (float)placed.Y);
-                m_decor.Add(new PlazaDecor(record, position));
-                blocked.Add(new NavRect(position.X - (float)record.HalfWidth, position.Y, position.X + (float)record.HalfWidth, position.Y + (float)record.Depth));
+                m_decor.Add(new PlazaDecor(decoration, position));
+                blocked.Add(new NavRect(position.X - (float)decoration.HalfWidth, position.Y, position.X + (float)decoration.HalfWidth,
+                    position.Y + (float)decoration.Depth));
             }
 
             Nav = new BurrowNav(Shape, ShopLayout.k_PixelsPerUnit, blocked, ShopLayout.k_Clearance, ShopLayout.k_Step, ShopLayout.k_TurnPenalty);
@@ -69,52 +73,28 @@ namespace ZooTycoon.Core
             // 들를 곳은 격자에 붙이고, 걷는 땅이 아니면 뺀다(장식이 벽에 붙어 있을 때)
             foreach (PlazaDecor decor in m_decor)
             {
-                foreach (DecorationSpot spot in decor.Record.Spots)
+                foreach (DecorationSpot spot in decor.Decoration.Spots)
                 {
                     Vector2 p = Nav.Snap(decor.Position + new Vector2((float)spot.Dx, (float)spot.Dy));
 
                     if (Nav.IsWalkable(p))
                     {
-                        m_spots.Add(new PlazaSpot(p, ParseFacing(spot.Face)));
+                        m_spots.Add(new PlazaSpot(p, spot.Face));
                     }
                 }
             }
-        }
-
-        public static Facing ParseFacing(string face)
-        {
-            switch (face)
-            {
-                case "up": return Facing.Up;
-                case "left": return Facing.Left;
-                case "right": return Facing.Right;
-                default: return Facing.Down;
-            }
-        }
-
-        private static DecorationRecord Find(IReadOnlyList<DecorationRecord> decorations, string id)
-        {
-            foreach (DecorationRecord record in decorations)
-            {
-                if (record.Id == id)
-                {
-                    return record;
-                }
-            }
-
-            throw new KeyNotFoundException($"장식 ID '{id}'가 decorations.json에 없다.");
         }
     }
 
     // 놓인 장식 하나(밑변 가운데)
     public readonly struct PlazaDecor
     {
-        public DecorationRecord Record { get; }
+        public DecorationTable Decoration { get; }
         public Vector2 Position { get; }
 
-        public PlazaDecor(DecorationRecord record, Vector2 position)
+        public PlazaDecor(DecorationTable decoration, Vector2 position)
         {
-            Record = record;
+            Decoration = decoration;
             Position = position;
         }
     }

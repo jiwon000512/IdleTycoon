@@ -5,7 +5,7 @@
 #   raw/plaza_sheet_f.png  고정 부품 B 결 (위: 차양 / 아래: 간판·계단). Codex가 차양 위에 판을 붙여 그려서 판 줄은 잘라 낸다
 #   프롬프트 raw/plaza_sheet_prompt_{a,b,f}.txt, 콘셉트 raw/plaza_concept_{a,b}.png
 # 분수는 물결 4프레임(<이름>_0~3, 바탕 = _0): 수면 바탕색 칸에만 가운데에서 바깥으로 퍼지는 고리, 물줄기·반짝임은 그대로
-# 폭(칸)은 decorations.json halfWidth·depth와 맞춘 더미 크기를 따른다. 사용: make_plaza.py [<Assets 폴더>]
+# 폭(칸)은 DecorationTable.json halfWidth·depth와 맞춘 더미 크기를 따른다. 사용: make_plaza.py [<Assets 폴더>]
 import os, subprocess, sys, tempfile
 import numpy as np
 from PIL import Image
