@@ -161,6 +161,8 @@ namespace ZooTycoon.World
         // 오븐 진행 막대는 매 프레임 읽는다(오븐 사건은 초가 바뀔 때만 온다). 설계 10: 대상인 오븐은 빈 오븐 화살표를 끈다
         private void Update()
         {
+            m_counter.SetProgress((float)m_shop.Counter.Progress, m_shop.Counter.Serving);
+
             foreach (KeyValuePair<OvenInteractable, OvenView> pair in m_ovens)
             {
                 OvenInteractable oven = pair.Key;

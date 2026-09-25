@@ -301,7 +301,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5079c7d33382cab4284d413d82fb2d98, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.ShopWombat
+  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.WombatView
   m_animator: {fileID: 1040230831047119176}
   m_renderer: {fileID: 5888606682621168530}
   m_shadow: {fileID: 7198057170867242443}

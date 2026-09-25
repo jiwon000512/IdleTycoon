@@ -21,6 +21,10 @@ namespace ZooTycoon.Core
         public IReadOnlyList<BakeryVisitor> Queue => m_queue;
         // 줄 머리가 머리 자리에 서서 계산을 기다린다
         public bool HeadWaiting => m_queue.Count > 0 && m_queue[0].Phase == VisitorPhase.Queued && !m_queue[0].Moving;
+        // 줄 머리의 계산 타이머가 돌기 시작했다(웜뱃이 자리를 비우면 멈춘 채 남는다). 화면이 게이지를 보인다
+        public bool Serving => HeadWaiting && m_timing == m_queue[0];
+        // 계산 진행 0~1(화면 게이지)
+        public double Progress => Serving ? 1d - m_remaining / Bakery.Config.CheckoutSeconds : 0d;
 
         public CounterInteractable(InteractableTable table, BakeryArea bakery, ZooState till) : base(table, bakery)
         {

@@ -548,7 +548,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b7f6c4b406cf9214184a539b927e180c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.ShopCustomer
+  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.VisitorView
   m_modelRoot: {fileID: 5333820973761613285}
   m_spriteRenderer: {fileID: 2497995087212270304}
   m_shadowRenderer: {fileID: 8912264895226516972}

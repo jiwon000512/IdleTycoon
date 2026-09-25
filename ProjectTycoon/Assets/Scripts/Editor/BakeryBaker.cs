@@ -102,6 +102,7 @@ namespace ZooTycoon.Editor
             for (int i = 0; i < k_TimerFrames; i++)
             {
                 Import(k_SpriteDir + TimerFrame(i) + ".png", center);
+                Import(k_SpriteDir + CounterTimerFrame(i) + ".png", center);
             }
 
             // 설계 10: 오븐 상태 표시(Source~/make_oven_idle.py). 타이머 자리
@@ -260,6 +261,18 @@ namespace ZooTycoon.Editor
             SpriteRenderer counterBody = Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -BakeryLayout.k_CounterDrop, 0f), 0);
             Set(counter, "m_body", counterBody);
             Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, -BakeryLayout.k_WombatDrop, 0f)));
+            // 2026-09-25 사용자 선택 C: 영수증 출력기(Source~/make_counter_timer.py). 늘 계산대 위에 있고 계산 중에 영수증이 올라온다.
+            // 자리는 계산대 왼쪽, 출력기 밑 외곽선이 금전등록기 밑변과 같은 줄(계산대 밑에서 15칸 위)에 서게 가운데 = (−0.6, +0.725)
+            Sprite[] timerFrames = new Sprite[k_TimerFrames];
+
+            for (int i = 0; i < k_TimerFrames; i++)
+            {
+                timerFrames[i] = Load(CounterTimerFrame(i));
+            }
+
+            SpriteRenderer timer = Renderer(root.transform, "Timer", timerFrames[0], new Vector3(-0.6f, -BakeryLayout.k_CounterDrop + 0.725f, 0f), 3);
+            Set(counter, "m_timer", timer);
+            SetSprites(counter, "m_timerFrames", timerFrames);
             return Save(root, counter, "Counter");
         }
 
@@ -508,6 +521,11 @@ namespace ZooTycoon.Editor
             SerializedObject so = new SerializedObject(target);
             so.FindProperty(field).objectReferenceValue = value;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static string CounterTimerFrame(int i)
+        {
+            return "counter_timer_c_" + i.ToString("00");
         }
 
         static string TimerFrame(int i)

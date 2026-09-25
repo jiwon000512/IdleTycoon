@@ -320,7 +320,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f079c74ed6de6e14bbe64a1bc78bb45c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.ShopView
+  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.BakeryView
   m_shelfPrefab: {fileID: 4482819448682237099, guid: 98d616631cd5cd44d80fedccfbf5a745, type: 3}
   m_shelfSignPrefab: {fileID: 3981836112669015025, guid: 04725e62b9ea0b440b67179a76f8365f, type: 3}
   m_ovenPrefab: {fileID: 8192886140390090411, guid: ae374a5bb7498b84abd9a7ca91702508, type: 3}
@@ -344,5 +344,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5c3c15ba83fb9f54497e13bf536d1aad, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.ShopCustomerSpawner
+  m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.BakeryVisitorSpawner
   m_prefab: {fileID: 5516403084649859135, guid: 9e9d24c611c17be408369858cf2152c6, type: 3}
