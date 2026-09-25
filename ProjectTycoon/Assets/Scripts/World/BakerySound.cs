@@ -40,7 +40,6 @@ namespace ZooTycoon.World
             m_subscriptions = new[]
             {
                 bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
-                bus.Subscribe<Events.BakeryVisitorGaveUp>(Bus_VisitorGaveUp),
                 bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
             };
         }
@@ -78,14 +77,6 @@ namespace ZooTycoon.World
             if (e.Visitor.Bakery == m_shop)
             {
                 Play(SoundTable.k_Pay);
-            }
-        }
-
-        private void Bus_VisitorGaveUp(Events.BakeryVisitorGaveUp e)
-        {
-            if (e.Visitor.Bakery == m_shop)
-            {
-                Play(SoundTable.k_GiveUp);
             }
         }
 

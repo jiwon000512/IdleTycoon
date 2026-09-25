@@ -34,7 +34,6 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorArrived>(Bus_VisitorArrived),
                 bus.Subscribe<Events.BakeryVisitorPicked>(Bus_VisitorPicked),
                 bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
-                bus.Subscribe<Events.BakeryVisitorGaveUp>(Bus_VisitorGaveUp),
                 bus.Subscribe<Events.BakeryVisitorLeft>(Bus_VisitorLeft),
             };
         }
@@ -84,14 +83,6 @@ namespace ZooTycoon.World
             {
                 string amount = m_tables.Format(k_CoinKey, e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
                 m_units[e.Visitor].Pay(amount, m_tables.Text(k_HappyKey));
-            }
-        }
-
-        private void Bus_VisitorGaveUp(Events.BakeryVisitorGaveUp e)
-        {
-            if (Mine(e.Visitor))
-            {
-                m_units[e.Visitor].GiveUp();
             }
         }
 

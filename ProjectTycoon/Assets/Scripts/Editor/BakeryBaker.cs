@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEditor;
@@ -85,10 +86,13 @@ namespace ZooTycoon.Editor
             // 굴 환경 A2: 피벗 = 구멍 밑변 = 띠 밑변(입구 줄 바닥 윗변)
             Import(k_SpriteDir + "arch.png", bottom);
 
-            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "bubble", "angry" })
+            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "bubble", "wait" })
             {
                 Import(k_SpriteDir + name + ".png", bottom);
             }
+
+            // 기다림 말풍선 시트(점이 하나씩 늘어남, 3프레임, 칸 폭 52px)
+            VisitorSheetImporter.Import(k_SpriteDir + "wait_sheet.png", true, 52);
 
             foreach (string side in new[] { "front", "back", "side" })
             {
@@ -170,6 +174,12 @@ namespace ZooTycoon.Editor
         static Sprite Load(string name)
         {
             return AssetDatabase.LoadAssetAtPath<Sprite>(k_SpriteDir + name + ".png");
+        }
+
+        // 시트의 잘린 칸들을 이름(_0, _1, …) 순으로
+        static Sprite[] LoadFrames(string name)
+        {
+            return AssetDatabase.LoadAllAssetRepresentationsAtPath(k_SpriteDir + name + ".png").OfType<Sprite>().OrderBy(s => s.name).ToArray();
         }
 
         // ---------- 사물 ----------
@@ -366,8 +376,9 @@ namespace ZooTycoon.Editor
             SpriteAnimator animator = root.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", sprite);
 
-            // 「!!」 말풍선(빵을 못 찾고 떠날 때), 집은 빵, 결제 뒤 하트. 머리 높이는 외형마다 달라 실행 중에 맞춘다
-            SpriteRenderer bubble = Renderer(root.transform, "Bubble", Load("angry"), new Vector3(0f, 0.8f, 0f), 50);
+            // 기다림 말풍선(빈 진열대 앞, 점 셋 시트), 집은 빵, 결제 뒤 하트. 머리 높이는 외형마다 달라 실행 중에 맞춘다
+            Sprite[] wait = LoadFrames("wait_sheet");
+            SpriteRenderer bubble = Renderer(root.transform, "Bubble", wait[0], new Vector3(0f, 0.8f, 0f), 50);
             SpriteRenderer carry = Renderer(root.transform, "Carry", null, new Vector3(0f, 0.9f, 0f), 51);
             carry.transform.localScale = Vector3.one * 0.7f;
             TextMeshPro emote = WorldText(root.transform, "Emote", new Vector3(0f, 1f, 0f), 52);
@@ -381,6 +392,7 @@ namespace ZooTycoon.Editor
             Set(customer, "m_animator", animator);
             Set(customer, "m_coinPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             Set(customer, "m_bubble", bubble);
+            SetSprites(customer, "m_waitFrames", wait);
             Set(customer, "m_carry", carry);
             Set(customer, "m_emote", emote);
             return Save(root, customer, "Visitor");

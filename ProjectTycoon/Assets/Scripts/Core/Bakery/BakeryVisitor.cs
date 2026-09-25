@@ -5,7 +5,7 @@ using System.Numerics;
 namespace ZooTycoon.Core
 {
     // 설계 08 v0.5 · 손님 동선 설계 v0.2 5·6·7장 · 리뷰 R2: 빵집 손님 한 명. 할 일은 자기 행동 트리(Brain)와 잎 행동으로 스스로 정한다.
-    // 구멍에서 톡 나와 → 빵을 고르고 진열대로 → 집기(비었으면 두리번) → 줄 → 계산 → 구멍으로. 빵을 못 찾으면 「!!」 뒤 나간다
+    // 구멍에서 톡 나와 → 빵을 고르고 진열대로 → 집기(비었으면 기다림) → 줄 → 계산 → 구멍으로. 빵을 못 찾으면 그냥 나간다
     public sealed class BakeryVisitor : Visitor
     {
         private readonly BtNode<BakeryVisitor> m_brain;
@@ -251,7 +251,7 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 빵을 못 찾았다: 「!!」 뒤 구멍으로
+        // 빵을 못 찾았다: 구멍으로
         private bool StartAngry()
         {
             Angry = true;

@@ -70,7 +70,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 빵을 못 찾고 포기했다(「!!」)
+        // 빵을 못 찾고 포기했다(효과음)
         public readonly struct BakeryVisitorGaveUp
         {
             public readonly BakeryVisitor Visitor;

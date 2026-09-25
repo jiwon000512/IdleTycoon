@@ -8,7 +8,6 @@ namespace ZooTycoon.Core
     {
         public const string k_Pay = "pay";
         public const string k_OvenDone = "oven_done";
-        public const string k_GiveUp = "give_up";
 
         // Resources/ 기준, 확장자 없음
         public string Clip { get; set; }

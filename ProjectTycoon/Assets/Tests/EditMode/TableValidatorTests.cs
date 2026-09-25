@@ -16,7 +16,7 @@ namespace ZooTycoon.Tests
         [TestCase("ActionTable", 4)]
         [TestCase("InteractableTable", 5)]
         [TestCase("DecorationTable", 3)]
-        [TestCase("SoundTable", 2)]
+        [TestCase("SoundTable", 3)]
         [TestCase("ConfigTable", 2)]
         [TestCase("BakeryConfigTable", 3)]
         [TestCase("PlazaConfigTable", 1)]
@@ -165,7 +165,7 @@ namespace ZooTycoon.Tests
         }
 
         // 코드가 Id로 부르는 행이 빠짐
-        [TestCase("SoundTable", "give_up")]
+        [TestCase("SoundTable", "pay")]
         [TestCase("ActionTable", "serve")]
         [TestCase("InteractableTable", "dig")]
         public void Validate_WhenRequiredRowMissing_ReportsError(string table, string id)

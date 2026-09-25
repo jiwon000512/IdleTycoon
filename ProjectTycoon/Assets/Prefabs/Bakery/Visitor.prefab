@@ -444,12 +444,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 50
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: ee92c0f282017fa428ddeb72cae5bd8d, type: 3}
+  m_Sprite: {fileID: -7203152898459188240, guid: a39c57f057a469343b504503468dfec1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.8, y: 0.9}
+  m_Size: {x: 0.65, y: 0.45}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -555,10 +555,14 @@ MonoBehaviour:
   m_animator: {fileID: 4407403992217488953}
   m_coinPrefab: {fileID: 7514188495375028674, guid: 7e45d723b8f7bf241a56d4293794eb7c, type: 3}
   m_bubble: {fileID: 7599874222169812408}
+  m_waitFrames:
+  - {fileID: -7203152898459188240, guid: a39c57f057a469343b504503468dfec1, type: 3}
+  - {fileID: -1601760411, guid: a39c57f057a469343b504503468dfec1, type: 3}
+  - {fileID: 284914545, guid: a39c57f057a469343b504503468dfec1, type: 3}
+  m_waitFrameSeconds: 0.4
   m_carry: {fileID: 5920128972911689525}
   m_emote: {fileID: 3183586303682535223}
   m_hopHeight: 0.15
-  m_lookSeconds: 0.5
   m_carryFlySeconds: 0.3
   m_emoteRise: 0.5
   m_emoteSeconds: 0.9

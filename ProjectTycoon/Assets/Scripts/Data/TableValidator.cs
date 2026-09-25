@@ -17,7 +17,7 @@ namespace ZooTycoon.Data
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id, SlotInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door,
         };
-        private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone, SoundTable.k_GiveUp };
+        private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
         private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter };
         private static readonly string[] k_ConfigIds =

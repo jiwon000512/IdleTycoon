@@ -6,7 +6,7 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 손님 동선 설계 v0.2: Core 손님(Visitor: 위치·보는 방향·상태)을 매 프레임 그대로 그린다. 걷기·판단은 Core가, 여기서는 그림 고르기와 연출만.
-    // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 「!!」 말풍선, 하트. 집은 빵은 VisitorTable.carryAt 자리(앞발 또는 머리 위)
+    // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 기다림 말풍선(빈 진열대 앞), 하트. 집은 빵은 VisitorTable.carryAt 자리(앞발 또는 머리 위)
     public sealed class VisitorView : MonoBehaviour
     {
         // 집은 빵 순서: 몸(0) 앞, 뒷모습이면 몸 뒤
@@ -18,16 +18,16 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_shadowRenderer;
         [SerializeField] private SpriteAnimator m_animator;
         [SerializeField] private CoinPopup m_coinPrefab;
-        [Tooltip("「!!」 말풍선. 빵을 못 찾고 떠날 때")]
+        [Tooltip("기다림 말풍선. 빈 진열대 앞에 서 있는 동안 점이 하나씩 늘어난다")]
         [SerializeField] private SpriteRenderer m_bubble;
+        [SerializeField] private Sprite[] m_waitFrames;
+        [SerializeField] private float m_waitFrameSeconds = 0.4f;
         [Tooltip("집은 빵. 계산할 때까지 앞발(또는 머리 위)에")]
         [SerializeField] private SpriteRenderer m_carry;
         [Tooltip("결제 뒤 하트")]
         [SerializeField] private TextMeshPro m_emote;
         [Tooltip("톡 뛸 때 솟는 높이(유닛)")]
         [SerializeField] private float m_hopHeight = 0.15f;
-        [Tooltip("두리번: 좌우를 바꾸는 간격(초)")]
-        [SerializeField] private float m_lookSeconds = 0.5f;
         [Tooltip("빵이 진열대에서 드는 자리로 날아오는 시간(초)")]
         [SerializeField] private float m_carryFlySeconds = 0.3f;
         [Tooltip("하트: 떠오르는 높이(유닛)와 시간(초)")]
@@ -58,6 +58,7 @@ namespace ZooTycoon.World
         private bool m_flying;
         private Facing m_facing = Facing.Down;
         private bool m_carryOnHead;
+        private float m_lookStart;
 
         private Vector3 HeadOffset => new Vector3(0f, m_height, 0f);
         // 2026-09-23: 집은 빵은 visitors.carryAt 자리에 든다. 앞발이면 옆모습에서 보는 쪽으로 내민다
@@ -113,11 +114,6 @@ namespace ZooTycoon.World
             StartCoroutine(EmoteRoutine());
         }
 
-        public void GiveUp()
-        {
-            m_bubble.enabled = true;
-        }
-
         private void Update()
         {
             System.Numerics.Vector2 p = m_walker.Position + m_walker.Sidestep;
@@ -136,13 +132,18 @@ namespace ZooTycoon.World
             transform.position = position;
             SetAlpha(alpha);
             Facing facing = m_walker.Facing;
-
-            // 두리번: 옆모습으로 좌우를 번갈아 본다
+            // 빈 진열대 앞: 진열대를 본 채 기다림 말풍선. 선 순간부터 점이 하나씩(2026-09-25: 좌우 두리번·「!!」는 뺐다)
             if (phase == VisitorPhase.Looking)
             {
-                facing = Mathf.FloorToInt(Time.time / m_lookSeconds) % 2 == 0 ? Facing.Left : Facing.Right;
+                if (!m_bubble.enabled)
+                {
+                    m_lookStart = Time.time;
+                }
+
+                m_bubble.sprite = m_waitFrames[Mathf.FloorToInt((Time.time - m_lookStart) / m_waitFrameSeconds) % m_waitFrames.Length];
             }
 
+            m_bubble.enabled = phase == VisitorPhase.Looking;
             Show(facing, m_walker.Moving);
             m_facing = facing;
             m_carry.sortingOrder = m_carryOnHead ? k_CarryFrontOrder : Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder);

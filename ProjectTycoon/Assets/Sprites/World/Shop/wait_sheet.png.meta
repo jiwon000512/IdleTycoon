@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ee92c0f282017fa428ddeb72cae5bd8d
+guid: a39c57f057a469343b504503468dfec1
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -9082789242079819192
-    second: angry_0
+      213: -7203152898459188240
+    second: wait_sheet_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,11 +46,11 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 0
-  alignment: 9
-  spritePivot: {x: 0.5, y: 0}
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 80
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
@@ -113,23 +113,67 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: angry_0
+      name: wait_sheet_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 44
-        height: 48
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 52
+        height: 36
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 84ac7189e4373f180800000000000000
-      internalID: -9082789242079819192
+      spriteID: 6eb9b04fac835c5489707f994121a358
+      internalID: -7203152898459188240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wait_sheet_1
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 0
+        width: 52
+        height: 36
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6e7f8a5be02bdb14aaed970642da6e2e
+      internalID: -1601760411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wait_sheet_2
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 0
+        width: 52
+        height: 36
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a7819abb6a46a59419d3bbe43379cd80
+      internalID: 284914545
       vertices: []
       indices: 
       edges: []
@@ -138,7 +182,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: ed3733ef0a4cc5c4882882c71f0b8494
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +192,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      angry_0: -9082789242079819192
+      wait_sheet_0: -7203152898459188240
+      wait_sheet_1: -1601760411
+      wait_sheet_2: 284914545
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

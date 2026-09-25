@@ -25,7 +25,8 @@ namespace ZooTycoon.Editor
             }
         }
 
-        static void Import(string path, bool sheet)
+        // frameWidth: 시트 칸 폭(px). 가게 말풍선 시트(wait_sheet, 52px)도 BakeryBaker가 이걸로 자른다
+        internal static void Import(string path, bool sheet, int frameWidth = k_FrameWidth)
         {
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             TextureImporter ti = (TextureImporter)AssetImporter.GetAtPath(path);
@@ -55,12 +56,12 @@ namespace ZooTycoon.Editor
             string name = Path.GetFileNameWithoutExtension(path);
             List<SpriteRect> rects = new List<SpriteRect>();
 
-            for (int i = 0; i < texture.width / k_FrameWidth; i++)
+            for (int i = 0; i < texture.width / frameWidth; i++)
             {
                 rects.Add(new SpriteRect
                 {
                     name = name + "_" + i,
-                    rect = new Rect(i * k_FrameWidth, 0, k_FrameWidth, texture.height),
+                    rect = new Rect(i * frameWidth, 0, frameWidth, texture.height),
                     alignment = SpriteAlignment.BottomCenter,
                     pivot = new Vector2(0.5f, 0f),
                     spriteID = GUID.Generate(),
