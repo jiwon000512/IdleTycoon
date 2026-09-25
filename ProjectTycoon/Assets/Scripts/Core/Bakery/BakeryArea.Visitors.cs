@@ -21,21 +21,12 @@ namespace ZooTycoon.Core
         // 설계 11: 손님은 광장 빵집 문으로 들어온다(도착 타이머는 PlazaArea)
         public bool CanAdmit => m_visitors.Count < m_config.MaxCustomers;
 
-        // 손님 한 명의 사건을 여러 손님을 보는 쪽(스포너·소리)이 한 곳에서 듣는다
-        public event Action<BakeryVisitor> VisitorArrived;
-        public event Action<BakeryVisitor> VisitorPicked;
-        public event Action<BakeryVisitor, double> VisitorPaid;
-        public event Action<BakeryVisitor> VisitorGaveUp;
-        public event Action<BakeryVisitor> VisitorExited;
-
         // 광장 빵집 문에서 톡 들어온 손님이 구멍에서 나온다(자리 확인은 CanAdmit으로 부르는 쪽이)
         public void Admit(VisitorTable look)
         {
             BakeryVisitor visitor = new BakeryVisitor(++m_nextVisitorId, look, this);
-            visitor.Picked += Visitor_Picked;
-            visitor.GaveUp += Visitor_GaveUp;
             m_visitors.Add(visitor);
-            OnVisitorArrived(visitor);
+            Bus.Publish(new Events.BakeryVisitorArrived(visitor));
         }
 
         // 진열대 옆·앞 자리 중 아무도 잡지 않은 첫 자리. 다 찼으면 근처 빈 걷는 점
@@ -63,11 +54,9 @@ namespace ZooTycoon.Core
                     continue;
                 }
 
-                visitor.Picked -= Visitor_Picked;
-                visitor.GaveUp -= Visitor_GaveUp;
                 m_visitors.RemoveAt(i);
                 i--;
-                OnVisitorExited(visitor);
+                Bus.Publish(new Events.BakeryVisitorLeft(visitor));
             }
 
             float blend = (float)Math.Min(1d, dt * k_SidestepRate);
@@ -143,31 +132,6 @@ namespace ZooTycoon.Core
             }
 
             return false;
-        }
-
-        private void Visitor_Picked(BakeryVisitor visitor)
-        {
-            VisitorPicked?.Invoke(visitor);
-        }
-
-        private void Visitor_GaveUp(BakeryVisitor visitor)
-        {
-            VisitorGaveUp?.Invoke(visitor);
-        }
-
-        private void Counter_Served(BakeryVisitor visitor, double coins)
-        {
-            VisitorPaid?.Invoke(visitor, coins);
-        }
-
-        private void OnVisitorArrived(BakeryVisitor visitor)
-        {
-            VisitorArrived?.Invoke(visitor);
-        }
-
-        private void OnVisitorExited(BakeryVisitor visitor)
-        {
-            VisitorExited?.Invoke(visitor);
         }
     }
 }

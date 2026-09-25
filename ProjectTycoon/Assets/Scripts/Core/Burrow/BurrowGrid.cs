@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GameKit.Events;
 
 namespace ZooTycoon.Core
 {
@@ -14,17 +15,17 @@ namespace ZooTycoon.Core
         private static readonly Cell[] k_Around = { new Cell(1, 0), new Cell(-1, 0), new Cell(0, 1), new Cell(0, -1) };
 
         private readonly BakeryConfigTable m_config;
+        private readonly EventBus m_bus;
         private readonly HashSet<Cell> m_cells = new HashSet<Cell>();
 
         public IReadOnlyCollection<Cell> Cells => m_cells;
         public double DigCost => m_config.DigBaseCost * Math.Pow(m_config.DigCostGrowth, m_cells.Count - k_StartCells);
         public Cell Counter => new Cell(0, k_CounterRow);
 
-        public event Action<Cell> Dug;
-
-        public BurrowGrid(BakeryConfigTable config)
+        public BurrowGrid(BakeryConfigTable config, EventBus bus)
         {
             m_config = config;
+            m_bus = bus;
 
             for (int row = 0; row < 4; row++)
             {
@@ -90,12 +91,7 @@ namespace ZooTycoon.Core
         public void Dig(Cell cell)
         {
             m_cells.Add(cell);
-            OnDug(cell);
-        }
-
-        private void OnDug(Cell cell)
-        {
-            Dug?.Invoke(cell);
+            m_bus.Publish(new Events.Dug(this, cell));
         }
     }
 }

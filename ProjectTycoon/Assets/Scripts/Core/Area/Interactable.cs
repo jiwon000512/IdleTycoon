@@ -13,7 +13,7 @@ namespace ZooTycoon.Core
         // v0.6: 업그레이드 단계(사물 종류 공통, 곳이 센다). 업그레이드가 없으면 0
         public int UpgradeLevel => Area.UpgradeLevel(Table.Id);
 
-        // 상태가 바뀌었다(화면이 사물마다 구독)
+        // 상태가 바뀌었다. 사물 하나만 보는 그림은 이 C# event를, 여러 사물을 보는 쪽은 버스의 ThingChanged를 듣는다(설계 16)
         public event Action<Interactable> Changed;
 
         protected Interactable(InteractableTable table, WombatArea area)
@@ -39,6 +39,7 @@ namespace ZooTycoon.Core
         protected void OnChanged()
         {
             Changed?.Invoke(this);
+            Area.Bus.Publish(new Events.ThingChanged(this));
         }
     }
 }

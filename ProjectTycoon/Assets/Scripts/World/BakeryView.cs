@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -47,6 +48,7 @@ namespace ZooTycoon.World
         private Sprite m_white;
         private Interactable m_shownTarget;
         private bool m_built;
+        private IDisposable[] m_subscriptions;
 
         // 굴을 팠다(카메라 경계가 넓어진다)
         public event Action Expanded;
@@ -86,7 +88,7 @@ namespace ZooTycoon.World
             return m_shelves[shelf].IconPosition;
         }
 
-        public void Bind(BakeryArea shop, FrameCache frames, TableSet tables)
+        public void Bind(BakeryArea shop, EventBus bus, FrameCache frames, TableSet tables)
         {
             m_shop = shop;
             m_frames = frames;
@@ -98,10 +100,13 @@ namespace ZooTycoon.World
             Build();
             m_built = true;
 
-            m_shop.LayoutChanged += Shop_LayoutChanged;
-            m_shop.Upgraded += Shop_Upgraded;
-            m_shop.Grid.Dug += Grid_Dug;
-            m_shop.TargetChanged += Shop_TargetChanged;
+            m_subscriptions = new[]
+            {
+                bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
+                bus.Subscribe<Events.Upgraded>(Bus_Upgraded),
+                bus.Subscribe<Events.Dug>(Bus_Dug),
+                bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
+            };
         }
 
         // Core 가게 좌표(원점 기준 유닛, y 위) → 월드 위치
@@ -190,10 +195,10 @@ namespace ZooTycoon.World
                     oven.Changed -= Oven_Changed;
                 }
 
-                m_shop.LayoutChanged -= Shop_LayoutChanged;
-                m_shop.Upgraded -= Shop_Upgraded;
-                m_shop.Grid.Dug -= Grid_Dug;
-                m_shop.TargetChanged -= Shop_TargetChanged;
+                foreach (IDisposable subscription in m_subscriptions)
+                {
+                    subscription.Dispose();
+                }
             }
         }
 
@@ -208,8 +213,14 @@ namespace ZooTycoon.World
         }
 
         // 업그레이드를 산 사물 종류(진열대 전부·오븐 전부·계산대)가 한 번 튀고, 값(오븐 외형·진열대)을 다시 그린다
-        private void Shop_Upgraded(string interactableId)
+        private void Bus_Upgraded(Events.Upgraded e)
         {
+            if (e.Area != m_shop)
+            {
+                return;
+            }
+
+            string interactableId = e.InteractableId;
             RefreshShelves();
 
             foreach (OvenInteractable oven in m_ovens.Keys)
@@ -239,23 +250,31 @@ namespace ZooTycoon.World
             }
         }
 
-        private void Shop_LayoutChanged()
+        private void Bus_LayoutChanged(Events.LayoutChanged e)
         {
-            Build();
+            if (e.Bakery == m_shop)
+            {
+                Build();
+            }
         }
 
         // 굴 파기 연출: 다시 그리고, 새 칸 자리에 흙빛 사각형을 얹어 밝아지게 한다
-        private void Grid_Dug(Cell cell)
+        private void Bus_Dug(Events.Dug e)
         {
+            if (e.Grid != m_shop.Grid)
+            {
+                return;
+            }
+
             Repaint();
-            StartCoroutine(DigRoutine(cell));
+            StartCoroutine(DigRoutine(e.Cell));
             OnExpanded();
         }
 
         // 버튼 행동만 바뀐 사건(다 구웠다 등)에서는 튀지 않는다
-        private void Shop_TargetChanged()
+        private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            if (m_shop.Target == m_shownTarget)
+            if (e.Area != m_shop || m_shop.Target == m_shownTarget)
             {
                 return;
             }

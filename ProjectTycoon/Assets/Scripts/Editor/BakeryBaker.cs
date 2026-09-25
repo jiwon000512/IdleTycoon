@@ -488,7 +488,7 @@ namespace ZooTycoon.Editor
             text.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(k_FontPath);
             text.fontSize = 2.75f;
             text.alignment = TextAlignmentOptions.Center;
-            text.enableWordWrapping = false;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;
             text.color = new Color(0.23f, 0.14f, 0.09f);
             text.sortingOrder = order;

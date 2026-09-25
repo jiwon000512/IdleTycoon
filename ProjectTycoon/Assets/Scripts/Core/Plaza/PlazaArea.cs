@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using GameKit.Events;
 using GameKit.Tables;
 
 namespace ZooTycoon.Core
@@ -20,25 +21,19 @@ namespace ZooTycoon.Core
         public BakeryArea Bakery { get; }
         public IReadOnlyList<PlazaVisitor> Visitors => m_visitors;
 
-        public event Action<PlazaVisitor> VisitorArrived;
-        public event Action<PlazaVisitor> VisitorRemoved;
-        public event Action<PlazaVisitor> VisitorEmoted;
-        // 빵집 문 앞에서 들어가기 버튼(Mall이 웜뱃을 빵집으로 옮긴다)
-        public event Action DoorEntered;
-
         protected override BurrowNav WombatNav => Layout.Nav;
         protected override Vector2 Entrance => Layout.DoorFloor;
 
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다
-        public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat) : base(tables, wombat)
+        public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
         {
             m_config = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
             m_random = random;
             Bakery = bakery;
             Layout = new PlazaLayout(tables);
-            Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.DoorFloor, OnDoorEntered));
+            Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.DoorFloor));
             m_arrivalElapsed = m_config.ArrivalSeconds;
-            Bakery.VisitorExited += Bakery_VisitorExited;
+            bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
         }
 
         // 들를 곳에서 머무는 초 · ♥를 띄울지
@@ -104,17 +99,22 @@ namespace ZooTycoon.Core
         }
 
         // 빵집에서 나간 손님은 문에서 톡 나와 0 ~ visitsMax곳 들르고 계단으로. 화나서 나갔으면 곧장
-        private void Bakery_VisitorExited(BakeryVisitor customer)
+        private void Bus_BakeryVisitorLeft(Events.BakeryVisitorLeft e)
         {
+            if (e.Visitor.Bakery != Bakery)
+            {
+                return;
+            }
+
+            BakeryVisitor customer = e.Visitor;
             int visits = customer.Angry ? 0 : RandomIndex(m_config.VisitsMax + 1);
             Spawn(new PlazaVisitor(++m_nextVisitorId, customer.Look, this, Layout.DoorInside, Layout.DoorFloor, visits, false));
         }
 
         private void Spawn(PlazaVisitor visitor)
         {
-            visitor.Emoted += Visitor_Emoted;
             m_visitors.Add(visitor);
-            OnVisitorArrived(visitor);
+            Bus.Publish(new Events.PlazaVisitorArrived(visitor));
         }
 
         private void TickVisitors(double dt)
@@ -128,10 +128,9 @@ namespace ZooTycoon.Core
                     continue;
                 }
 
-                visitor.Emoted -= Visitor_Emoted;
                 m_visitors.RemoveAt(i);
                 i--;
-                OnVisitorRemoved(visitor);
+                Bus.Publish(new Events.PlazaVisitorLeft(visitor));
             }
         }
 
@@ -139,26 +138,6 @@ namespace ZooTycoon.Core
         private int RandomIndex(int count)
         {
             return Math.Min(count - 1, (int)(m_random.NextDouble() * count));
-        }
-
-        private void Visitor_Emoted(PlazaVisitor visitor)
-        {
-            VisitorEmoted?.Invoke(visitor);
-        }
-
-        private void OnVisitorArrived(PlazaVisitor visitor)
-        {
-            VisitorArrived?.Invoke(visitor);
-        }
-
-        private void OnVisitorRemoved(PlazaVisitor visitor)
-        {
-            VisitorRemoved?.Invoke(visitor);
-        }
-
-        private void OnDoorEntered()
-        {
-            DoorEntered?.Invoke();
         }
     }
 }

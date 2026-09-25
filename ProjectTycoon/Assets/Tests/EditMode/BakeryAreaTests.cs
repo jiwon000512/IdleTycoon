@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -14,6 +15,7 @@ namespace ZooTycoon.Tests
         private const double k_Dt = 0.02;
         private const double k_Tolerance = 0.06;
 
+        private EventBus m_bus;
         private ZooState m_state;
         private TableSet m_tables;
         private BakeryConfigTable m_config;
@@ -32,10 +34,11 @@ namespace ZooTycoon.Tests
             tweak?.Invoke(m_config);
             edit?.Invoke(m_tables);
             m_arrivalElapsed = m_arrivalSeconds;
-            m_state = ZooState.CreateNew(m_tables);
+            m_bus = new EventBus();
+            m_state = ZooState.CreateNew(m_tables, m_bus);
             m_time = 0d;
             m_look = m_tables.GetAll<VisitorTable>()[0];
-            return new BakeryArea(m_state, m_tables, new SequenceRandom(new double[200]), new Wombat(m_tables, m_state));
+            return new BakeryArea(m_state, m_tables, new SequenceRandom(new double[200]), new Wombat(m_tables, m_state), m_bus);
         }
 
         // 설계 13 v0.5: 빈 자리 시트의 줄 누르기(빈 자리가 아니면 실패)
@@ -218,12 +221,12 @@ namespace ZooTycoon.Tests
             Stock(shop, "b01", 6);
             double arrivedAt = -1d, pickedAt = -1d;
             BakeryVisitor first = null;
-            shop.VisitorArrived += c =>
+            m_bus.Subscribe<Events.BakeryVisitorArrived>(e =>
             {
-                first ??= c;
+                first ??= e.Visitor;
                 arrivedAt = m_time;
-            };
-            shop.VisitorPicked += c => pickedAt = m_time;
+            });
+            m_bus.Subscribe<Events.BakeryVisitorPicked>(_ => pickedAt = m_time);
 
             RunUntil(shop, () => pickedAt >= 0d);
 
@@ -242,8 +245,8 @@ namespace ZooTycoon.Tests
             double coins = m_state.Coins;
             int exited = 0;
             bool paid = false;
-            shop.VisitorPaid += (c, amount) => paid = true;
-            shop.VisitorExited += c => exited++;
+            m_bus.Subscribe<Events.BakeryVisitorPaid>(_ => paid = true);
+            m_bus.Subscribe<Events.BakeryVisitorLeft>(_ => exited++);
 
             RunUntil(shop, () => exited == 1);
 
@@ -261,8 +264,8 @@ namespace ZooTycoon.Tests
             double coins = m_state.Coins;
             BakeryVisitor customer = null;
             double paidAt = -1d;
-            shop.VisitorArrived += c => customer = c;
-            shop.VisitorPaid += (c, amount) => paidAt = m_time;
+            m_bus.Subscribe<Events.BakeryVisitorArrived>(e => customer = e.Visitor);
+            m_bus.Subscribe<Events.BakeryVisitorPaid>(_ => paidAt = m_time);
 
             double queuedAt = RunUntil(shop, () => customer != null && customer.Phase == VisitorPhase.Queued);
             Assert.That(m_state.Coins, Is.EqualTo(coins));
@@ -282,8 +285,8 @@ namespace ZooTycoon.Tests
             Stock(shop, "b02", 4);
             BakeryVisitor customer = null;
             double picked = -1d;
-            shop.VisitorArrived += c => customer = c;
-            shop.VisitorPicked += c => picked = m_time;
+            m_bus.Subscribe<Events.BakeryVisitorArrived>(e => customer = e.Visitor);
+            m_bus.Subscribe<Events.BakeryVisitorPicked>(_ => picked = m_time);
 
             double lookStart = RunUntil(shop, () => customer != null && customer.Phase == VisitorPhase.Looking);
             Assert.That(customer.Bread.Id, Is.EqualTo("b01"));
@@ -305,9 +308,9 @@ namespace ZooTycoon.Tests
             BakeryVisitor customer = null;
             double gaveUpAt = -1d;
             int exited = 0;
-            shop.VisitorArrived += c => customer = c;
-            shop.VisitorGaveUp += c => gaveUpAt = m_time;
-            shop.VisitorExited += c => exited++;
+            m_bus.Subscribe<Events.BakeryVisitorArrived>(e => customer = e.Visitor);
+            m_bus.Subscribe<Events.BakeryVisitorGaveUp>(_ => gaveUpAt = m_time);
+            m_bus.Subscribe<Events.BakeryVisitorLeft>(_ => exited++);
 
             double lookStart = RunUntil(shop, () => customer != null && customer.Phase == VisitorPhase.Looking);
             RunUntil(shop, () => gaveUpAt >= 0d);
@@ -329,15 +332,15 @@ namespace ZooTycoon.Tests
             BakeryVisitor customer = null;
             int gaveUp = 0;
             double picked = -1d;
-            shop.VisitorArrived += c => customer = c;
-            shop.VisitorGaveUp += c => gaveUp++;
-            shop.VisitorPicked += c => picked = m_time;
+            m_bus.Subscribe<Events.BakeryVisitorArrived>(e => customer = e.Visitor);
+            m_bus.Subscribe<Events.BakeryVisitorGaveUp>(_ => gaveUp++);
+            m_bus.Subscribe<Events.BakeryVisitorPicked>(_ => picked = m_time);
 
             RunUntil(shop, () => customer != null && customer.Phase == VisitorPhase.Looking);
             Assert.That(shop.TryChoose(ActionTable.k_Bake, shop.Ovens[0], "b01"), Is.True);
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
             double stockedAt = -1d;
-            shop.ThingChanged += thing => stockedAt = stockedAt < 0d && thing is ShelfInteractable ? m_time : stockedAt;
+            m_bus.Subscribe<Events.ThingChanged>(e => stockedAt = stockedAt < 0d && e.Thing is ShelfInteractable ? m_time : stockedAt);
             CarryToShelf(shop, new Cell(-1, 3), "b01");
             RunUntil(shop, () => picked >= 0d);
 
@@ -499,7 +502,7 @@ namespace ZooTycoon.Tests
         {
             BakeryArea shop = Create();
             int layoutChanged = 0;
-            shop.LayoutChanged += () => layoutChanged++;
+            m_bus.Subscribe<Events.LayoutChanged>(_ => layoutChanged++);
 
             Assert.That(Unlock(shop, new Cell(0, 1)), Is.False);
 
@@ -593,7 +596,7 @@ namespace ZooTycoon.Tests
             BakeryArea shop = Create(c => c.MaxCustomers = 0);
             Assert.That(shop.Target, Is.InstanceOf<CounterInteractable>());
             int changed = 0;
-            shop.TargetChanged += () => changed++;
+            m_bus.Subscribe<Events.TargetChanged>(_ => changed++);
 
             Run(shop, 1d);
             Assert.That(changed, Is.EqualTo(0));
@@ -619,7 +622,7 @@ namespace ZooTycoon.Tests
             BakeryArea shop = Create(c => m_arrivalSeconds = 1000d);
             Stock(shop, "b01", 6);
             BakeryVisitor customer = null;
-            shop.VisitorArrived += c => customer = c;
+            m_bus.Subscribe<Events.BakeryVisitorArrived>(e => customer = e.Visitor);
             RunUntil(shop, () => customer != null && customer.Phase == VisitorPhase.Queued);
 
             double coins = m_state.Coins;
@@ -645,7 +648,7 @@ namespace ZooTycoon.Tests
                 c.PatienceSeconds = 100d;
             });
             double picked = -1d;
-            shop.VisitorPicked += c => picked = m_time;
+            m_bus.Subscribe<Events.BakeryVisitorPicked>(_ => picked = m_time);
             shop.TryChoose(ActionTable.k_Bake, shop.Ovens[0], "b01");
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
@@ -680,7 +683,7 @@ namespace ZooTycoon.Tests
             BakeryArea shop = Create(c => m_arrivalSeconds = 1000d, t => t.Get<ActionTable>("serve").Mode = ActionMode.Manual);
             Stock(shop, "b01", 6);
             BakeryVisitor customer = null;
-            shop.VisitorArrived += c => customer = c;
+            m_bus.Subscribe<Events.BakeryVisitorArrived>(e => customer = e.Visitor);
             RunUntil(shop, () => customer != null && customer.Phase == VisitorPhase.Queued && !customer.Moving);
 
             double coins = m_state.Coins;
@@ -721,8 +724,8 @@ namespace ZooTycoon.Tests
             WalkTo(shop, shop.Layout.SlotBase(slot));
             Assert.That((shop.Target as SlotInteractable)?.Cell, Is.EqualTo(slot));
             List<string> events = new List<string>();
-            shop.LayoutChanged += () => events.Add("layout");
-            shop.TargetChanged += () => events.Add("target");
+            m_bus.Subscribe<Events.LayoutChanged>(_ => events.Add("layout"));
+            m_bus.Subscribe<Events.TargetChanged>(_ => events.Add("target"));
 
             Assert.That(PlaceOven(shop, slot), Is.True);
             Assert.That(events, Is.EqualTo(new[] { "layout" }));
@@ -809,7 +812,7 @@ namespace ZooTycoon.Tests
             Interactable slot = shop.Target;
             Assert.That(slot, Is.InstanceOf<SlotInteractable>());
             int changed = 0;
-            shop.TargetChanged += () => changed++;
+            m_bus.Subscribe<Events.TargetChanged>(_ => changed++);
 
             Assert.That(PlaceOven(shop, new Cell(0, 3)), Is.True);
             Run(shop, 0.1d);

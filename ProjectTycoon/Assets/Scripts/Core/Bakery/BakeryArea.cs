@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using GameKit.Events;
 using GameKit.Tables;
 
 namespace ZooTycoon.Core
@@ -35,28 +36,19 @@ namespace ZooTycoon.Core
         public BreadTable NextBread => m_unlocked.Count < Tables.GetAll<BreadTable>().Count ? Tables.GetAll<BreadTable>()[m_unlocked.Count] : null;
         internal IRandom Random { get; }
 
-        // 오븐·진열대·계산대 하나가 바뀌었다(여러 사물을 보는 시트·소리·웜뱃 연출이 한 곳에서 듣는다. 사물 하나만 보는 뷰는 그 사물의 Changed)
-        public event Action<Interactable> ThingChanged;
-        // 굴을 팠거나 자리에 진열대·오븐이 놓였다
-        public event Action LayoutChanged;
-        // 구멍 앞에서 나가기 버튼(Mall이 웜뱃을 광장으로 옮긴다)
-        public event Action ExitRequested;
-
         protected override BurrowNav WombatNav => Layout.WombatNav;
         protected override Vector2 Entrance => Layout.HoleFloor;
 
         // 첫 손님은 광장에서 온다. 웜뱃은 계산대 뒤에서 시작한다
-        public BakeryArea(ZooState state, TableSet tables, IRandom random, Wombat wombat) : base(tables, wombat)
+        public BakeryArea(ZooState state, TableSet tables, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
         {
             m_config = tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery);
             Random = random;
-            Grid = new BurrowGrid(m_config);
-            Grid.Dug += Grid_Dug;
+            Grid = new BurrowGrid(m_config, bus);
+            bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new BakeryLayout(tables);
             Counter = new CounterInteractable(Row(CounterInteractable.k_Id), this, state);
-            Counter.Changed += Thing_Changed;
-            Counter.Served += Counter_Served;
-            m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, OnExitRequested);
+            m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor);
 
             // 시작 배치: 왼쪽 열(−1)의 자리 줄 두 곳에 첫 빵과 오븐. 오른쪽 열(0)은 빈 자리
             AddShelf(tables.GetAll<BreadTable>()[0], new Cell(-1, 1));
@@ -117,7 +109,6 @@ namespace ZooTycoon.Core
         private void AddShelf(BreadTable bread, Cell cell)
         {
             ShelfInteractable shelf = new ShelfInteractable(Row(ShelfInteractable.k_Id), cell, bread, this);
-            shelf.Changed += Thing_Changed;
             m_unlocked.Add(bread);
             m_shelves[cell] = shelf;
         }
@@ -125,19 +116,18 @@ namespace ZooTycoon.Core
         private void AddOven(Cell cell)
         {
             OvenInteractable oven = new OvenInteractable(Row(OvenInteractable.k_Id), cell, this);
-            oven.Changed += Thing_Changed;
             m_ovens.Add(oven);
         }
 
-        private void Grid_Dug(Cell cell)
+        private void Bus_Dug(Events.Dug e)
         {
+            if (e.Grid != Grid)
+            {
+                return;
+            }
+
             RebuildLayout();
             OnLayoutChanged();
-        }
-
-        private void Thing_Changed(Interactable thing)
-        {
-            ThingChanged?.Invoke(thing);
         }
 
         // 배치가 바뀌면 걷는 땅·줄 자리·서는 자리·사물 목록을 다시 맞추고, 걷는 중인 손님·웜뱃은 새 땅에서 길을 다시 찾는다
@@ -226,12 +216,7 @@ namespace ZooTycoon.Core
 
         private void OnLayoutChanged()
         {
-            LayoutChanged?.Invoke();
-        }
-
-        private void OnExitRequested()
-        {
-            ExitRequested?.Invoke();
+            Bus.Publish(new Events.LayoutChanged(this));
         }
     }
 }

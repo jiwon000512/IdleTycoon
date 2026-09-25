@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -8,10 +9,13 @@ namespace ZooTycoon.Tests
     // 굴 격자 설계 v0.5 검증 1: 시작 8칸, 파기 규칙, 비용(값을 치르는 건 파기 행동 — BakeryAreaTests, 길 찾기는 BurrowNavTests)
     public sealed class BurrowGridTests
     {
-        private static BurrowGrid Create()
+        private EventBus m_bus;
+
+        private BurrowGrid Create()
         {
             TableSet tables = TestTables.Load();
-            return new BurrowGrid(tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery));
+            m_bus = new EventBus();
+            return new BurrowGrid(tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery), m_bus);
         }
 
         [Test]
@@ -47,7 +51,7 @@ namespace ZooTycoon.Tests
         {
             BurrowGrid grid = Create();
             int dug = 0;
-            grid.Dug += _ => dug++;
+            m_bus.Subscribe<Events.Dug>(e => dug += e.Grid == grid ? 1 : 0);
 
             Assert.That(grid.DigCost, Is.EqualTo(150d));
             grid.Dig(new Cell(1, 1));

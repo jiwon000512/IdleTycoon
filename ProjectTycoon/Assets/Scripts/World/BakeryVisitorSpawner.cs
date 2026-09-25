@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -18,62 +20,88 @@ namespace ZooTycoon.World
         private BakeryView m_view;
         private TableSet m_tables;
         private FrameCache m_frames;
+        private IDisposable[] m_subscriptions;
 
-        public void Initialize(BakeryArea shop, BakeryView view, TableSet tables, FrameCache frames)
+        public void Initialize(BakeryArea shop, BakeryView view, EventBus bus, TableSet tables, FrameCache frames)
         {
             m_shop = shop;
             m_view = view;
             m_tables = tables;
             m_frames = frames;
 
-            m_shop.VisitorArrived += Shop_VisitorArrived;
-            m_shop.VisitorPicked += Shop_VisitorPicked;
-            m_shop.VisitorPaid += Shop_VisitorPaid;
-            m_shop.VisitorGaveUp += Shop_VisitorGaveUp;
-            m_shop.VisitorExited += Shop_VisitorExited;
+            m_subscriptions = new[]
+            {
+                bus.Subscribe<Events.BakeryVisitorArrived>(Bus_VisitorArrived),
+                bus.Subscribe<Events.BakeryVisitorPicked>(Bus_VisitorPicked),
+                bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
+                bus.Subscribe<Events.BakeryVisitorGaveUp>(Bus_VisitorGaveUp),
+                bus.Subscribe<Events.BakeryVisitorLeft>(Bus_VisitorLeft),
+            };
         }
 
         private void OnDestroy()
         {
-            if (m_shop != null)
+            if (m_subscriptions != null)
             {
-                m_shop.VisitorArrived -= Shop_VisitorArrived;
-                m_shop.VisitorPicked -= Shop_VisitorPicked;
-                m_shop.VisitorPaid -= Shop_VisitorPaid;
-                m_shop.VisitorGaveUp -= Shop_VisitorGaveUp;
-                m_shop.VisitorExited -= Shop_VisitorExited;
+                foreach (IDisposable subscription in m_subscriptions)
+                {
+                    subscription.Dispose();
+                }
             }
         }
 
-        // 설계 11: 외형은 광장에서 정해져 온다(visitor.Look)
-        private void Shop_VisitorArrived(BakeryVisitor visitor)
+        // 이 빵집 손님만(설계 16: 사건은 발신자의 곳으로 거른다)
+        private bool Mine(BakeryVisitor visitor)
         {
+            return visitor.Bakery == m_shop;
+        }
+
+        // 설계 11: 외형은 광장에서 정해져 온다(visitor.Look)
+        private void Bus_VisitorArrived(Events.BakeryVisitorArrived e)
+        {
+            if (!Mine(e.Visitor))
+            {
+                return;
+            }
+
             VisitorView unit = Instantiate(m_prefab, transform);
-            unit.Initialize(visitor, m_frames, m_view.transform);
-            m_units[visitor] = unit;
+            unit.Initialize(e.Visitor, m_frames, m_view.transform);
+            m_units[e.Visitor] = unit;
         }
 
         // 빵 그림이 진열대의 빵 자리에서 손으로 날아온다
-        private void Shop_VisitorPicked(BakeryVisitor visitor)
+        private void Bus_VisitorPicked(Events.BakeryVisitorPicked e)
         {
-            m_units[visitor].Pick(m_frames.Get(visitor.Bread.Sprite)[0], m_view.ShelfIconPosition(m_shop.Shelves[visitor.Cell]));
+            if (Mine(e.Visitor))
+            {
+                m_units[e.Visitor].Pick(m_frames.Get(e.Visitor.Bread.Sprite)[0], m_view.ShelfIconPosition(m_shop.Shelves[e.Visitor.Cell]));
+            }
         }
 
-        private void Shop_VisitorPaid(BakeryVisitor visitor, double coins)
+        private void Bus_VisitorPaid(Events.BakeryVisitorPaid e)
         {
-            string amount = m_tables.Format(k_CoinKey, coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
-            m_units[visitor].Pay(amount, m_tables.Text(k_HappyKey));
+            if (Mine(e.Visitor))
+            {
+                string amount = m_tables.Format(k_CoinKey, e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
+                m_units[e.Visitor].Pay(amount, m_tables.Text(k_HappyKey));
+            }
         }
 
-        private void Shop_VisitorGaveUp(BakeryVisitor visitor)
+        private void Bus_VisitorGaveUp(Events.BakeryVisitorGaveUp e)
         {
-            m_units[visitor].GiveUp();
+            if (Mine(e.Visitor))
+            {
+                m_units[e.Visitor].GiveUp();
+            }
         }
 
-        private void Shop_VisitorExited(BakeryVisitor visitor)
+        private void Bus_VisitorLeft(Events.BakeryVisitorLeft e)
         {
-            Destroy(m_units[visitor].gameObject);
-            m_units.Remove(visitor);
+            if (Mine(e.Visitor))
+            {
+                Destroy(m_units[e.Visitor].gameObject);
+                m_units.Remove(e.Visitor);
+            }
         }
     }
 }

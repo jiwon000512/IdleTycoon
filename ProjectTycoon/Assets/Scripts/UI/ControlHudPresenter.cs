@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using GameKit.Events;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
@@ -11,18 +12,19 @@ namespace ZooTycoon.UI
     {
         private readonly ControlHudView m_view;
         private readonly Mall m_mall;
+        private readonly IDisposable m_target;
+        private readonly IDisposable m_area;
 
         public event Action<Interactable> SheetRequested;
 
-        public ControlHudPresenter(ControlHudView view, Mall mall)
+        public ControlHudPresenter(ControlHudView view, Mall mall, EventBus bus)
         {
             m_view = view;
             m_mall = mall;
             m_view.JoystickMoved += View_JoystickMoved;
             m_view.InteractClicked += View_InteractClicked;
-            m_mall.Bakery.TargetChanged += Area_TargetChanged;
-            m_mall.Plaza.TargetChanged += Area_TargetChanged;
-            m_mall.AreaChanged += Mall_AreaChanged;
+            m_target = bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged);
+            m_area = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             Refresh();
         }
 
@@ -30,9 +32,8 @@ namespace ZooTycoon.UI
         {
             m_view.JoystickMoved -= View_JoystickMoved;
             m_view.InteractClicked -= View_InteractClicked;
-            m_mall.Bakery.TargetChanged -= Area_TargetChanged;
-            m_mall.Plaza.TargetChanged -= Area_TargetChanged;
-            m_mall.AreaChanged -= Mall_AreaChanged;
+            m_target.Dispose();
+            m_area.Dispose();
         }
 
         // 할 수 있는 행동이 없으면 마지막 아이콘을 흐리게 둔다
@@ -57,12 +58,15 @@ namespace ZooTycoon.UI
             }
         }
 
-        private void Area_TargetChanged()
+        private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            Refresh();
+            if (e.Area == m_mall.Active)
+            {
+                Refresh();
+            }
         }
 
-        private void Mall_AreaChanged()
+        private void Bus_AreaChanged(Events.AreaChanged e)
         {
             Refresh();
             m_view.FadeIn();

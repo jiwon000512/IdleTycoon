@@ -22,9 +22,6 @@ namespace ZooTycoon.Core
         // 줄 머리가 머리 자리에 서서 계산을 기다린다
         public bool HeadWaiting => m_queue.Count > 0 && m_queue[0].Phase == VisitorPhase.Queued && !m_queue[0].Moving;
 
-        // 줄 머리가 값을 치렀다
-        public event Action<BakeryVisitor, double> Served;
-
         public CounterInteractable(InteractableTable table, BakeryArea bakery, ZooState till) : base(table, bakery)
         {
             Bakery = bakery;
@@ -67,7 +64,7 @@ namespace ZooTycoon.Core
             m_queue.RemoveAt(0);
             head.Pay();
             m_till.AddCoins(head.Bread.Price);
-            OnServed(head, head.Bread.Price);
+            Bakery.Bus.Publish(new Events.BakeryVisitorPaid(head, head.Bread.Price));
             Repath();
             OnChanged();
         }
@@ -93,11 +90,6 @@ namespace ZooTycoon.Core
         {
             BakeryLayout layout = Bakery.Layout;
             m_queue[index].Mover.WalkTo(layout.Nav, layout.QueueSlots[index], layout.QueueFacing(index));
-        }
-
-        private void OnServed(BakeryVisitor visitor, double coins)
-        {
-            Served?.Invoke(visitor, coins);
         }
     }
 }

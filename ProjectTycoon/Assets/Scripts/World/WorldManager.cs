@@ -1,3 +1,5 @@
+using System;
+using GameKit.Events;
 using GameKit.Singleton;
 using UnityEngine;
 using GameKit.Tables;
@@ -22,22 +24,23 @@ namespace ZooTycoon.World
         private BakeryView m_shopView;
         private PlazaView m_plazaView;
         private Mall m_mall;
+        private IDisposable m_areaChanged;
 
         public FrameCache Frames { get; } = new FrameCache();
 
-        public void Initialize(TableSet tables, Mall mall)
+        public void Initialize(TableSet tables, Mall mall, EventBus bus)
         {
             m_mall = mall;
             m_shopView = Instantiate(m_shopPrefab, Vector3.zero, Quaternion.identity, transform);
-            m_shopView.Bind(mall.Bakery, Frames, tables);
-            m_shopView.GetComponent<BakeryVisitorSpawner>().Initialize(mall.Bakery, m_shopView, tables, Frames);
-            m_shopView.gameObject.AddComponent<BakerySound>().Initialize(mall.Bakery, tables);
+            m_shopView.Bind(mall.Bakery, bus, Frames, tables);
+            m_shopView.GetComponent<BakeryVisitorSpawner>().Initialize(mall.Bakery, m_shopView, bus, tables, Frames);
+            m_shopView.gameObject.AddComponent<BakerySound>().Initialize(mall.Bakery, bus, tables);
             m_shopView.Expanded += BakeryView_Expanded;
 
             m_plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
-            m_plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, tables, Frames);
-            m_plazaView.Bind(mall.Plaza, Frames, tables);
-            m_mall.AreaChanged += Mall_AreaChanged;
+            m_plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, bus, tables, Frames);
+            m_plazaView.Bind(mall.Plaza, bus, Frames, tables);
+            m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             FollowWombat();
         }
 
@@ -48,10 +51,7 @@ namespace ZooTycoon.World
                 m_shopView.Expanded -= BakeryView_Expanded;
             }
 
-            if (m_mall != null)
-            {
-                m_mall.AreaChanged -= Mall_AreaChanged;
-            }
+            m_areaChanged?.Dispose();
 
             base.OnDestroy();
         }
@@ -76,7 +76,7 @@ namespace ZooTycoon.World
             }
         }
 
-        private void Mall_AreaChanged()
+        private void Bus_AreaChanged(Events.AreaChanged e)
         {
             FollowWombat();
         }

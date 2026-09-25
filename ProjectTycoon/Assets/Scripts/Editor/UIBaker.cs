@@ -311,7 +311,7 @@ namespace ZooTycoon.Editor
             text.fontSize = size * U;
             text.color = color;
             text.alignment = alignment;
-            text.enableWordWrapping = false;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;
             text.raycastTarget = false;
             text.text = "-";

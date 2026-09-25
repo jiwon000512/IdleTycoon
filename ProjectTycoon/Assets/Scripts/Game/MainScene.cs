@@ -23,12 +23,12 @@ namespace ZooTycoon.Game
             ControlHudView hudView = ui.Open<ControlHudView>();
             ObjectSheetView sheetView = ui.Open<ObjectSheetView>();
 
-            m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Tables);
-            m_hudPresenter = new ControlHudPresenter(hudView, game.Mall);
-            m_sheetPresenter = new ObjectSheetPresenter(sheetView, game.Mall.Bakery, game.Tables);
+            m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables);
+            m_hudPresenter = new ControlHudPresenter(hudView, game.Mall, game.Bus);
+            m_sheetPresenter = new ObjectSheetPresenter(sheetView, game.Mall.Bakery, game.Bus, game.Tables);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
 
-            WorldManager.Instance.Initialize(game.Tables, game.Mall);
+            WorldManager.Instance.Initialize(game.Tables, game.Mall, game.Bus);
         }
 
         private void OnDestroy()

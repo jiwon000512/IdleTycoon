@@ -13,8 +13,9 @@ namespace ZooTycoon.Tests
         private BakeryArea Create()
         {
             TableSet tables = TestTables.Load();
-            ZooState state = ZooState.CreateNew(tables);
-            return new BakeryArea(state, tables, new SequenceRandom(new double[10]), new Wombat(tables, state));
+            GameKit.Events.EventBus bus = new GameKit.Events.EventBus();
+            ZooState state = ZooState.CreateNew(tables, bus);
+            return new BakeryArea(state, tables, new SequenceRandom(new double[10]), new Wombat(tables, state), bus);
         }
 
         [Test]

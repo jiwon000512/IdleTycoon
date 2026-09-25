@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -20,8 +22,9 @@ namespace ZooTycoon.World
         private readonly Dictionary<string, Channel> m_channels = new Dictionary<string, Channel>();
         private readonly Dictionary<OvenInteractable, bool> m_ovenReady = new Dictionary<OvenInteractable, bool>();
         private BakeryArea m_shop;
+        private IDisposable[] m_subscriptions;
 
-        public void Initialize(BakeryArea shop, TableSet tables)
+        public void Initialize(BakeryArea shop, EventBus bus, TableSet tables)
         {
             m_shop = shop;
 
@@ -34,18 +37,22 @@ namespace ZooTycoon.World
                 m_channels[sound.Id] = new Channel { Sound = sound, Source = source };
             }
 
-            m_shop.VisitorPaid += Shop_VisitorPaid;
-            m_shop.VisitorGaveUp += Shop_VisitorGaveUp;
-            m_shop.ThingChanged += Shop_ThingChanged;
+            m_subscriptions = new[]
+            {
+                bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
+                bus.Subscribe<Events.BakeryVisitorGaveUp>(Bus_VisitorGaveUp),
+                bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
+            };
         }
 
         private void OnDestroy()
         {
-            if (m_shop != null)
+            if (m_subscriptions != null)
             {
-                m_shop.VisitorPaid -= Shop_VisitorPaid;
-                m_shop.VisitorGaveUp -= Shop_VisitorGaveUp;
-                m_shop.ThingChanged -= Shop_ThingChanged;
+                foreach (IDisposable subscription in m_subscriptions)
+                {
+                    subscription.Dispose();
+                }
             }
         }
 
@@ -66,20 +73,26 @@ namespace ZooTycoon.World
             channel.Source.PlayOneShot(channel.Source.clip);
         }
 
-        private void Shop_VisitorPaid(BakeryVisitor visitor, double coins)
+        private void Bus_VisitorPaid(Events.BakeryVisitorPaid e)
         {
-            Play(SoundTable.k_Pay);
+            if (e.Visitor.Bakery == m_shop)
+            {
+                Play(SoundTable.k_Pay);
+            }
         }
 
-        private void Shop_VisitorGaveUp(BakeryVisitor visitor)
+        private void Bus_VisitorGaveUp(Events.BakeryVisitorGaveUp e)
         {
-            Play(SoundTable.k_GiveUp);
+            if (e.Visitor.Bakery == m_shop)
+            {
+                Play(SoundTable.k_GiveUp);
+            }
         }
 
         // 다 구운 빵이 없다가 생긴 순간만
-        private void Shop_ThingChanged(Interactable thing)
+        private void Bus_ThingChanged(Events.ThingChanged e)
         {
-            if (!(thing is OvenInteractable oven))
+            if (!(e.Thing is OvenInteractable oven) || oven.Bakery != m_shop)
             {
                 return;
             }

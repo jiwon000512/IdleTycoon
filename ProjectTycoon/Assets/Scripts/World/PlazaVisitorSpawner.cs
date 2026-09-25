@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -16,43 +18,59 @@ namespace ZooTycoon.World
         private PlazaArea m_plaza;
         private TableSet m_tables;
         private FrameCache m_frames;
+        private IDisposable[] m_subscriptions;
 
-        public void Initialize(PlazaArea plaza, TableSet tables, FrameCache frames)
+        public void Initialize(PlazaArea plaza, EventBus bus, TableSet tables, FrameCache frames)
         {
             m_plaza = plaza;
             m_tables = tables;
             m_frames = frames;
-            m_plaza.VisitorArrived += Plaza_VisitorArrived;
-            m_plaza.VisitorRemoved += Plaza_VisitorRemoved;
-            m_plaza.VisitorEmoted += Plaza_VisitorEmoted;
+            m_subscriptions = new[]
+            {
+                bus.Subscribe<Events.PlazaVisitorArrived>(Bus_VisitorArrived),
+                bus.Subscribe<Events.PlazaVisitorLeft>(Bus_VisitorLeft),
+                bus.Subscribe<Events.PlazaVisitorEmoted>(Bus_VisitorEmoted),
+            };
         }
 
         private void OnDestroy()
         {
-            if (m_plaza != null)
+            if (m_subscriptions != null)
             {
-                m_plaza.VisitorArrived -= Plaza_VisitorArrived;
-                m_plaza.VisitorRemoved -= Plaza_VisitorRemoved;
-                m_plaza.VisitorEmoted -= Plaza_VisitorEmoted;
+                foreach (IDisposable subscription in m_subscriptions)
+                {
+                    subscription.Dispose();
+                }
             }
         }
 
-        private void Plaza_VisitorArrived(PlazaVisitor visitor)
+        private void Bus_VisitorArrived(Events.PlazaVisitorArrived e)
         {
+            if (e.Visitor.Plaza != m_plaza)
+            {
+                return;
+            }
+
             VisitorView unit = Instantiate(m_prefab, transform);
-            unit.Initialize(visitor, m_frames, transform);
-            m_units[visitor] = unit;
+            unit.Initialize(e.Visitor, m_frames, transform);
+            m_units[e.Visitor] = unit;
         }
 
-        private void Plaza_VisitorRemoved(PlazaVisitor visitor)
+        private void Bus_VisitorLeft(Events.PlazaVisitorLeft e)
         {
-            Destroy(m_units[visitor].gameObject);
-            m_units.Remove(visitor);
+            if (e.Visitor.Plaza == m_plaza)
+            {
+                Destroy(m_units[e.Visitor].gameObject);
+                m_units.Remove(e.Visitor);
+            }
         }
 
-        private void Plaza_VisitorEmoted(PlazaVisitor visitor)
+        private void Bus_VisitorEmoted(Events.PlazaVisitorEmoted e)
         {
-            m_units[visitor].Emote(m_tables.Text(k_HappyKey));
+            if (e.Visitor.Plaza == m_plaza)
+            {
+                m_units[e.Visitor].Emote(m_tables.Text(k_HappyKey));
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using GameKit.Events;
 using GameKit.Tables;
 
 namespace ZooTycoon.Core
@@ -18,6 +19,8 @@ namespace ZooTycoon.Core
         private ActionTable m_lastAction;
 
         public TableSet Tables { get; }
+        // 설계 16: 곳의 사건 버스. 사물·손님이 이걸로 사건을 낸다
+        public EventBus Bus { get; }
         public Wombat Wombat { get; }
         public bool WombatPresent { get; private set; }
         // range 안 사물 중 가장 가까운 것. 없으면 null
@@ -49,19 +52,15 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 대상이 바뀌었거나 대상의 버튼 행동이 바뀌었다(다 구웠다·빵을 들었다 등)
-        public event Action TargetChanged;
-        // 설계 13 v0.6: 업그레이드를 샀다(사물 종류 id). 화면이 그 종류 사물을 튀기고 값을 다시 그린다
-        public event Action<string> Upgraded;
-
         protected List<Interactable> Placed { get; } = new List<Interactable>();
         protected abstract BurrowNav WombatNav { get; }
         protected abstract Vector2 Entrance { get; }
 
-        protected WombatArea(TableSet tables, Wombat wombat)
+        protected WombatArea(TableSet tables, Wombat wombat, EventBus bus)
         {
             Tables = tables;
             Wombat = wombat;
+            Bus = bus;
 
             foreach (ActionTable action in tables.GetAll<ActionTable>())
             {
@@ -129,7 +128,7 @@ namespace ZooTycoon.Core
         internal void LevelUp(string interactableId)
         {
             m_upgradeLevels[interactableId] = UpgradeLevel(interactableId) + 1;
-            OnUpgraded(interactableId);
+            Bus.Publish(new Events.Upgraded(this, interactableId));
         }
 
         // 설계 11: 다른 곳에서 들어온다. 입구 아래 바닥에 선다
@@ -179,7 +178,7 @@ namespace ZooTycoon.Core
             {
                 m_lastTarget = m_target;
                 m_lastAction = action;
-                OnTargetChanged();
+                Bus.Publish(new Events.TargetChanged(this));
             }
         }
 
@@ -223,16 +222,6 @@ namespace ZooTycoon.Core
             }
 
             return found;
-        }
-
-        private void OnTargetChanged()
-        {
-            TargetChanged?.Invoke();
-        }
-
-        private void OnUpgraded(string interactableId)
-        {
-            Upgraded?.Invoke(interactableId);
         }
     }
 }

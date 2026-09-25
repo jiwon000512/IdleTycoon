@@ -1,4 +1,5 @@
 using System;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -11,25 +12,29 @@ namespace ZooTycoon.UI
         private readonly TopBarView m_view;
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
+        private readonly IDisposable m_coins;
 
-        public TopBarPresenter(TopBarView view, ZooState state, TableSet tables)
+        public TopBarPresenter(TopBarView view, ZooState state, EventBus bus, TableSet tables)
         {
             m_view = view;
             m_state = state;
             m_tables = tables;
 
-            m_state.CoinsChanged += State_CoinsChanged;
+            m_coins = bus.Subscribe<Events.CoinsChanged>(Bus_CoinsChanged);
             RefreshCoins();
         }
 
         public void Dispose()
         {
-            m_state.CoinsChanged -= State_CoinsChanged;
+            m_coins.Dispose();
         }
 
-        private void State_CoinsChanged()
+        private void Bus_CoinsChanged(Events.CoinsChanged e)
         {
-            RefreshCoins();
+            if (e.Wallet == m_state)
+            {
+                RefreshCoins();
+            }
         }
 
         private void RefreshCoins()

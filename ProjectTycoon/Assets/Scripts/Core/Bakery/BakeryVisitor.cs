@@ -23,10 +23,6 @@ namespace ZooTycoon.Core
         public bool HasSpot { get; private set; }
         public Vector2 Spot { get; private set; }
 
-        // 재고 하나를 집었다 · 빵을 못 찾고 포기했다
-        public event Action<BakeryVisitor> Picked;
-        public event Action<BakeryVisitor> GaveUp;
-
         internal BakeryVisitor(int id, VisitorTable look, BakeryArea bakery) : base(id, look, bakery.Layout.HoleInside, bakery.Tables)
         {
             Bakery = bakery;
@@ -180,7 +176,7 @@ namespace ZooTycoon.Core
 
             Phase = VisitorPhase.Picking;
             Timer = Bakery.Config.PickSeconds;
-            OnPicked();
+            Bakery.Bus.Publish(new Events.BakeryVisitorPicked(this));
             return true;
         }
 
@@ -262,7 +258,7 @@ namespace ZooTycoon.Core
             HasSpot = false;
             Phase = VisitorPhase.Leaving;
             Mover.WalkTo(Bakery.Layout.Nav, Bakery.Layout.HoleFloor, Facing.Up);
-            OnGaveUp();
+            Bakery.Bus.Publish(new Events.BakeryVisitorGaveUp(this));
             return true;
         }
 
@@ -277,16 +273,6 @@ namespace ZooTycoon.Core
             }
 
             return false;
-        }
-
-        private void OnPicked()
-        {
-            Picked?.Invoke(this);
-        }
-
-        private void OnGaveUp()
-        {
-            GaveUp?.Invoke(this);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Events;
 using GameKit.Singleton;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -12,6 +13,8 @@ namespace ZooTycoon.Game
     public sealed class GameManager : MonoSingleton<GameManager>
     {
         public TableSet Tables { get; private set; }
+        // 설계 16: 도메인 사건 버스(EventManager의 것). Core에는 생성자로 넘긴다
+        public EventBus Bus { get; private set; }
         public ZooState State { get; private set; }
         // 설계 11: 빵집 + 굴 밖 광장, 웜뱃이 오가는 곳
         public Mall Mall { get; private set; }
@@ -32,11 +35,12 @@ namespace ZooTycoon.Game
                 throw new InvalidOperationException($"테이블 검증 실패:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
             }
 
-            State = ZooState.CreateNew(Tables);
+            Bus = EventManager.Instance.Bus;
+            State = ZooState.CreateNew(Tables, Bus);
             SystemRandom random = new SystemRandom();
             Wombat wombat = new Wombat(Tables, State);
-            BakeryArea bakery = new BakeryArea(State, Tables, random, wombat);
-            Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat));
+            BakeryArea bakery = new BakeryArea(State, Tables, random, wombat, Bus);
+            Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), Bus);
         }
 
         // 손님 동선 설계 v0.2: 가게 시뮬은 매 프레임(손님 행동 트리·조이스틱 웜뱃이 멈칫하지 않게). 설계 11: 빵집과 광장을 함께

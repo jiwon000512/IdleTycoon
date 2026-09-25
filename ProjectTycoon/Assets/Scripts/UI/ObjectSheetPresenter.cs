@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -17,10 +18,11 @@ namespace ZooTycoon.UI
         // 칩·행 번호 → (행동 id, 고른 것)
         private readonly List<(string action, string option)> m_chips = new List<(string action, string option)>();
         private readonly List<(string action, string option)> m_rows = new List<(string action, string option)>();
+        private readonly IDisposable[] m_subscriptions;
 
         private Interactable m_target;
 
-        public ObjectSheetPresenter(ObjectSheetView view, BakeryArea shop, TableSet tables)
+        public ObjectSheetPresenter(ObjectSheetView view, BakeryArea shop, EventBus bus, TableSet tables)
         {
             m_view = view;
             m_shop = shop;
@@ -29,11 +31,14 @@ namespace ZooTycoon.UI
             m_view.ChipClicked += View_ChipClicked;
             m_view.RowClicked += View_RowClicked;
             m_view.CloseRequested += View_CloseRequested;
-            m_shop.ThingChanged += Shop_ThingChanged;
-            m_shop.Upgraded += Shop_Upgraded;
-            m_shop.LayoutChanged += Shop_Refresh;
-            m_shop.TargetChanged += Shop_TargetChanged;
-            m_shop.Wombat.Worker.Wallet.CoinsChanged += Shop_Refresh;
+            m_subscriptions = new[]
+            {
+                bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
+                bus.Subscribe<Events.Upgraded>(Bus_Upgraded),
+                bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
+                bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
+                bus.Subscribe<Events.CoinsChanged>(Bus_CoinsChanged),
+            };
         }
 
         public void Dispose()
@@ -41,11 +46,11 @@ namespace ZooTycoon.UI
             m_view.ChipClicked -= View_ChipClicked;
             m_view.RowClicked -= View_RowClicked;
             m_view.CloseRequested -= View_CloseRequested;
-            m_shop.ThingChanged -= Shop_ThingChanged;
-            m_shop.Upgraded -= Shop_Upgraded;
-            m_shop.LayoutChanged -= Shop_Refresh;
-            m_shop.TargetChanged -= Shop_TargetChanged;
-            m_shop.Wombat.Worker.Wallet.CoinsChanged -= Shop_Refresh;
+
+            foreach (IDisposable subscription in m_subscriptions)
+            {
+                subscription.Dispose();
+            }
         }
 
         public void Show(Interactable target)
@@ -253,26 +258,45 @@ namespace ZooTycoon.UI
             m_view.Close();
         }
 
-        private void Shop_ThingChanged(Interactable thing)
+        private void Bus_ThingChanged(Events.ThingChanged e)
         {
-            Shop_Refresh();
+            if (e.Thing.Area == m_shop)
+            {
+                RefreshIfOpen();
+            }
         }
 
-        private void Shop_Upgraded(string interactableId)
+        private void Bus_Upgraded(Events.Upgraded e)
         {
-            Shop_Refresh();
+            if (e.Area == m_shop)
+            {
+                RefreshIfOpen();
+            }
+        }
+
+        private void Bus_LayoutChanged(Events.LayoutChanged e)
+        {
+            if (e.Bakery == m_shop)
+            {
+                RefreshIfOpen();
+            }
+        }
+
+        private void Bus_CoinsChanged(Events.CoinsChanged e)
+        {
+            RefreshIfOpen();
         }
 
         // 걸어서 다른 사물로 가면(또는 배치가 바뀌어 대상이 사라지면) 닫는다
-        private void Shop_TargetChanged()
+        private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            if (m_view.IsVisible && m_shop.Target != m_target)
+            if (e.Area == m_shop && m_view.IsVisible && m_shop.Target != m_target)
             {
                 m_view.Close();
             }
         }
 
-        private void Shop_Refresh()
+        private void RefreshIfOpen()
         {
             if (m_view.IsVisible)
             {

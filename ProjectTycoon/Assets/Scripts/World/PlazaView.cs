@@ -1,5 +1,7 @@
+using System;
 using TMPro;
 using UnityEngine;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -25,6 +27,7 @@ namespace ZooTycoon.World
         [SerializeField] private WombatView m_wombat;
 
         private PlazaArea m_plaza;
+        private IDisposable m_target;
 
         public Transform Wombat => m_wombat.transform;
 
@@ -39,7 +42,7 @@ namespace ZooTycoon.World
             }
         }
 
-        public void Bind(PlazaArea plaza, FrameCache frames, TableSet tables)
+        public void Bind(PlazaArea plaza, EventBus bus, FrameCache frames, TableSet tables)
         {
             m_plaza = plaza;
             PlazaLayout layout = plaza.Layout;
@@ -74,20 +77,17 @@ namespace ZooTycoon.World
             }
 
             m_wombat.Bind(plaza, transform, frames);
-            m_plaza.TargetChanged += Plaza_TargetChanged;
+            m_target = bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged);
         }
 
         private void OnDestroy()
         {
-            if (m_plaza != null)
-            {
-                m_plaza.TargetChanged -= Plaza_TargetChanged;
-            }
+            m_target?.Dispose();
         }
 
-        private void Plaza_TargetChanged()
+        private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            if (m_plaza.Target != null)
+            if (e.Area == m_plaza && m_plaza.Target != null)
             {
                 StartCoroutine(Fx.Bounce(m_door));
             }

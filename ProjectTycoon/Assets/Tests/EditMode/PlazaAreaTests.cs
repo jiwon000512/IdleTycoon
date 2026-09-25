@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
+using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
@@ -15,6 +16,7 @@ namespace ZooTycoon.Tests
         private const double k_Dt = 0.02;
 
         private TableSet m_tables;
+        private EventBus m_bus;
         private BakeryArea m_shop;
         private PlazaArea m_plaza;
         private Mall m_mall;
@@ -23,11 +25,12 @@ namespace ZooTycoon.Tests
         {
             m_tables = TestTables.Load();
             tweak?.Invoke(m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery));
-            ZooState state = ZooState.CreateNew(m_tables);
+            m_bus = new EventBus();
+            ZooState state = ZooState.CreateNew(m_tables, m_bus);
             Wombat wombat = new Wombat(m_tables, state);
-            m_shop = new BakeryArea(state, m_tables, new SequenceRandom(new double[2000]), wombat);
-            m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), wombat);
-            m_mall = new Mall(m_shop, m_plaza);
+            m_shop = new BakeryArea(state, m_tables, new SequenceRandom(new double[2000]), wombat, m_bus);
+            m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), wombat, m_bus);
+            m_mall = new Mall(m_shop, m_plaza, m_bus);
         }
 
         private void Run(double seconds)
@@ -80,7 +83,7 @@ namespace ZooTycoon.Tests
             Vector2 home = m_shop.Layout.WombatHome;
             Vector2 hole = m_shop.Layout.HoleFloor;
             int changes = 0;
-            m_mall.AreaChanged += () => changes++;
+            m_bus.Subscribe<Events.AreaChanged>(_ => changes++);
 
             Assert.That(m_mall.Active, Is.SameAs(m_shop));
             Assert.That(m_plaza.WombatPresent, Is.False);
@@ -117,7 +120,7 @@ namespace ZooTycoon.Tests
         {
             Create();
             PlazaVisitor first = null;
-            m_plaza.VisitorArrived += v => first ??= v;
+            m_bus.Subscribe<Events.PlazaVisitorArrived>(e => first ??= e.Visitor);
 
             double time = RunUntil(() => m_shop.Visitors.Count > 0);
 
@@ -133,7 +136,7 @@ namespace ZooTycoon.Tests
         {
             Create(c => c.MaxCustomers = 0);
             int left = 0;
-            m_plaza.VisitorRemoved += _ => left++;
+            m_bus.Subscribe<Events.PlazaVisitorLeft>(_ => left++);
 
             Run(40d);
 
@@ -148,13 +151,13 @@ namespace ZooTycoon.Tests
             RunUntil(() => m_shop.Visitors.Count > 0);
             BakeryVisitor customer = m_shop.Visitors[0];
             PlazaVisitor back = null;
-            m_plaza.VisitorArrived += v =>
+            m_bus.Subscribe<Events.PlazaVisitorArrived>(e =>
             {
-                if (Vector2.Distance(v.Position, m_plaza.Layout.DoorInside) < 1e-3f)
+                if (Vector2.Distance(e.Visitor.Position, m_plaza.Layout.DoorInside) < 1e-3f)
                 {
-                    back ??= v;
+                    back ??= e.Visitor;
                 }
-            };
+            });
 
             // 진열대가 비어 두리번하다 화나서 나간다(인내 6초)
             RunUntil(() => back != null, 40d);
@@ -195,6 +198,27 @@ namespace ZooTycoon.Tests
             Assert.That(m_mall.Active, Is.SameAs(m_shop));
             Assert.That(m_mall.Wombat.Worker.Hands.Count, Is.EqualTo(3));
             Assert.That(m_mall.Wombat.Worker.Hands.Bread, Is.SameAs(bread));
+        }
+
+        // 설계 16: 다른 곳(가짜 빵집)의 통로 사건은 Mall이 무시하고, 곳의 사건은 발신자가 그 곳이다
+        [Test]
+        public void Passed_FromForeignArea_IsIgnored()
+        {
+            Create(c => c.MaxCustomers = 0);
+            ZooState otherState = ZooState.CreateNew(m_tables, m_bus);
+            BakeryArea other = new BakeryArea(otherState, m_tables, new SequenceRandom(new double[10]), new Wombat(m_tables, otherState), m_bus);
+            int changes = 0;
+            m_bus.Subscribe<Events.AreaChanged>(_ => changes++);
+
+            m_bus.Publish(new Events.Passed(other));
+
+            Assert.That(changes, Is.EqualTo(0));
+            Assert.That(m_mall.Active, Is.SameAs(m_shop));
+
+            m_bus.Publish(new Events.Passed(m_shop));
+
+            Assert.That(changes, Is.EqualTo(1));
+            Assert.That(m_mall.Active, Is.SameAs(m_plaza));
         }
 
         // 설계 13 v0.5: 표가 사물에 붙인 행동은 그 사물을 받을 수 있다(맞지 않는 짝이 조용히 안 보이는 일을 막는다)

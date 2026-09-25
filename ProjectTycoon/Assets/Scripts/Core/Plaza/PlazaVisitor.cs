@@ -24,9 +24,6 @@ namespace ZooTycoon.Core
 
         public PlazaArea Plaza { get; }
 
-        // 들를 곳에 멈춰 ♥를 띄운다
-        public event Action<PlazaVisitor> Emoted;
-
         // inside에서 floor로 톡 나온다(계단·빵집 문)
         internal PlazaVisitor(int id, VisitorTable look, PlazaArea plaza, Vector2 inside, Vector2 floor, int visits, bool wantsShop) : base(id, look, inside, plaza.Tables)
         {
@@ -123,7 +120,7 @@ namespace ZooTycoon.Core
 
                     if (Plaza.RollEmote())
                     {
-                        OnEmoted();
+                        Plaza.Bus.Publish(new Events.PlazaVisitorEmoted(this));
                     }
 
                     break;
@@ -165,11 +162,6 @@ namespace ZooTycoon.Core
                 Plaza.ReleaseSpot(m_spot);
                 m_spot = -1;
             }
-        }
-
-        private void OnEmoted()
-        {
-            Emoted?.Invoke(this);
         }
     }
 }

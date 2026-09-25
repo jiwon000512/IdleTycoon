@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using GameKit.Events;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
@@ -9,7 +10,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void CreateNew_StartsWithConfiguredCoins()
         {
-            ZooState state = ZooState.CreateNew(TestTables.Load());
+            ZooState state = ZooState.CreateNew(TestTables.Load(), new EventBus());
 
             Assert.That(state.Coins, Is.EqualTo(350d));
         }
@@ -17,9 +18,10 @@ namespace ZooTycoon.Tests
         [Test]
         public void AddCoins_AddsAndNotifies()
         {
-            ZooState state = ZooState.CreateNew(TestTables.Load());
+            EventBus bus = new EventBus();
+            ZooState state = ZooState.CreateNew(TestTables.Load(), bus);
             double notified = 0d;
-            state.CoinsChanged += () => notified = state.Coins;
+            bus.Subscribe<Events.CoinsChanged>(e => notified = e.Wallet.Coins);
 
             state.AddCoins(50d);
 
@@ -30,7 +32,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void TrySpendCoins_WhenEnough_Spends()
         {
-            ZooState state = ZooState.CreateNew(TestTables.Load());
+            ZooState state = ZooState.CreateNew(TestTables.Load(), new EventBus());
 
             bool spent = state.TrySpendCoins(100d);
 
@@ -41,7 +43,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void TrySpendCoins_WhenShort_FailsAndLeavesCoins()
         {
-            ZooState state = ZooState.CreateNew(TestTables.Load());
+            ZooState state = ZooState.CreateNew(TestTables.Load(), new EventBus());
 
             bool spent = state.TrySpendCoins(351d);
 
