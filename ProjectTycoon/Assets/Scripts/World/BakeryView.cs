@@ -9,9 +9,9 @@ namespace ZooTycoon.World
     // 굴 격자 설계 v0.5: 가게 = 파낸 칸(BurrowGrid)을 한 덩어리로 그린 굴 그림 + 칸 위의 진열대·오븐·계산대·빈 자리·파기 태그.
     // 손님 동선 설계 v0.2: 사물 자리·굴 모양은 Core BakeryLayout이 정하고 여기서는 그 자리에 놓고 그리기만 한다. 손님·웜뱃도 Core 위치를 읽는다.
     // 설계 09: 웜뱃의 상호작용 대상이 바뀌면 그 사물이 한 번 튀고, 대상이 팔 수 있는 칸이면 그 칸에만 파기 태그를 보인다
-    // 설계 10: 업그레이드를 사면 그 대상(shop_upgrades.target)이, 새로 놓인 진열대·오븐이 한 번 튄다
+    // 설계 10: 업그레이드를 사면 그 종류 사물이, 새로 놓인 진열대·오븐이 한 번 튄다
     // 설계 13: 진열대·오븐 그림은 자기 사물의 Changed만 듣는다
-    public sealed class ShopView : MonoBehaviour
+    public sealed class BakeryView : MonoBehaviour
     {
         [SerializeField] private ShelfView m_shelfPrefab;
         [Tooltip("진열대 재고 표지판(칠판 입간판). 진열대 벽 쪽 앞 모서리에 따로 선다")]
@@ -67,9 +67,8 @@ namespace ZooTycoon.World
                     maxRow = Mathf.Max(maxRow, cell.Row);
                 }
 
-                float cellWidth = (float)m_tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
-                float xMin = transform.position.x + (minCol - 1) * cellWidth;
-                float xMax = transform.position.x + (maxCol + 2) * cellWidth;
+                float xMin = transform.position.x + (minCol - 1) * Layout.CellWidth;
+                float xMax = transform.position.x + (maxCol + 2) * Layout.CellWidth;
                 float yMin = transform.position.y - Layout.RowTop(maxRow + 2);
                 return new Rect(xMin, yMin, xMax - xMin, transform.position.y - yMin);
             }
@@ -82,9 +81,9 @@ namespace ZooTycoon.World
             return m_ovens[oven].BreadPosition;
         }
 
-        public Vector3 ShelfIconPosition(string breadId)
+        public Vector3 ShelfIconPosition(ShelfInteractable shelf)
         {
-            return m_shelves[m_shop.ShelfOf(breadId)].IconPosition;
+            return m_shelves[shelf].IconPosition;
         }
 
         public void Bind(BakeryArea shop, FrameCache frames, TableSet tables)
@@ -132,7 +131,7 @@ namespace ZooTycoon.World
                 case DigInteractable dig:
                     m_digTags[dig.Cell].Bounce();
                     break;
-                case ExitInteractable _:
+                case PassageInteractable _:
                     StartCoroutine(Fx.Bounce(m_arch));
                     break;
                 default:
@@ -284,11 +283,10 @@ namespace ZooTycoon.World
 
         private System.Collections.IEnumerator DigRoutine(Cell cell)
         {
-            ShopConfigSize(out float cellWidth, out float cellHeight);
             GameObject go = new GameObject("Dirt");
             go.transform.SetParent(transform, false);
             go.transform.position = CellCenter(cell);
-            go.transform.localScale = new Vector3(cellWidth, cellHeight, 1f);
+            go.transform.localScale = new Vector3(Layout.CellWidth, Layout.CellHeight, 1f);
             SpriteRenderer r = go.AddComponent<SpriteRenderer>();
             r.sprite = White;
             r.sortingOrder = k_DirtOrder;
@@ -300,12 +298,6 @@ namespace ZooTycoon.World
             }
 
             Destroy(go);
-        }
-
-        private void ShopConfigSize(out float cellWidth, out float cellHeight)
-        {
-            cellWidth = (float)m_tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
-            cellHeight = (float)m_tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;
         }
 
         private Sprite White
@@ -327,7 +319,7 @@ namespace ZooTycoon.World
             BurrowShape.Result shape = Layout.Shape;
             Sprite old = m_burrow.sprite;
             m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
-            m_burrow.transform.localPosition = new Vector3(shape.OriginX / BakeryLayout.k_PixelsPerUnit, -shape.OriginY / BakeryLayout.k_PixelsPerUnit, 0f);
+            m_burrow.transform.localPosition = new Vector3(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit, 0f);
 
             if (old != null)
             {

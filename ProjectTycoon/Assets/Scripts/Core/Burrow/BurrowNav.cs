@@ -30,6 +30,10 @@ namespace ZooTycoon.Core
     // 걷는 점 = 굴 바닥이고 벽·막힌 사각형에서 clearance 이상 떨어진 격자 점. 비용 = 걸은 거리 + 꺾을 때마다 turnPenalty
     public sealed class BurrowNav
     {
+        // 걷는 땅: 몸 반 폭(벽·사물에서 이만큼 떨어진 점만), 격자 간격, 꺾임 벌점
+        public const float k_Clearance = 0.3f;
+        public const float k_Step = 0.2f;
+        public const float k_TurnPenalty = 0.6f;
         private const int k_None = 4;
         private const int k_EscapeSteps = 16;
         private static readonly int[] k_Dx = { 1, -1, 0, 0 };
@@ -52,10 +56,13 @@ namespace ZooTycoon.Core
 
         public float Step => m_step;
 
-        public BurrowNav(BurrowShape.Result shape, float pixelsPerUnit, IReadOnlyList<NavRect> blocked, float clearance, float step, float turnPenalty)
+        public BurrowNav(BurrowShape.Result shape, IReadOnlyList<NavRect> blocked)
         {
+            float pixelsPerUnit = BurrowShape.k_PixelsPerUnit;
+            float clearance = k_Clearance;
+            float step = k_Step;
             m_step = step;
-            m_turnPenalty = turnPenalty;
+            m_turnPenalty = k_TurnPenalty;
             float xMin = shape.OriginX / pixelsPerUnit;
             float xMax = (shape.OriginX + shape.Width) / pixelsPerUnit;
             float yMax = -shape.OriginY / pixelsPerUnit;

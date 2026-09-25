@@ -17,11 +17,9 @@ namespace ZooTycoon.Core
         private Interactable m_lastTarget;
         private ActionTable m_lastAction;
 
+        public TableSet Tables { get; }
         public Wombat Wombat { get; }
         public bool WombatPresent { get; private set; }
-        public Vector2 WombatPosition => Wombat.Mover.Position;
-        public Facing WombatFacing => Wombat.Mover.Facing;
-        public bool WombatMoving => WombatPresent && Wombat.Moving;
         // range 안 사물 중 가장 가까운 것. 없으면 null
         public Interactable Target => m_target;
         // 곳이 조립한 사물. 순서 = 거리가 같을 때와 auto 행동의 우선순위
@@ -56,7 +54,6 @@ namespace ZooTycoon.Core
         // 설계 13 v0.6: 업그레이드를 샀다(사물 종류 id). 화면이 그 종류 사물을 튀기고 값을 다시 그린다
         public event Action<string> Upgraded;
 
-        protected TableSet Tables { get; }
         protected List<Interactable> Placed { get; } = new List<Interactable>();
         protected abstract BurrowNav WombatNav { get; }
         protected abstract Vector2 Entrance { get; }
@@ -72,17 +69,22 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 매 프레임. 순서: 웜뱃(걷기 → 대상·auto 행동) → 사물 → 곳 고유
+        // 매 프레임. 순서: 웜뱃(걷기 → 대상·auto 행동) → 곳 고유(손님) → 사물(계산대 타이머·오븐)
         public void Tick(double dt)
         {
             TickWombat(dt);
+            TickArea(dt);
 
             foreach (Interactable thing in Placed)
             {
                 thing.Tick(dt);
             }
+        }
 
-            TickArea(dt);
+        // 웜뱃이 이 사물의 range 안에 있나(이번 프레임 기준)
+        public bool IsInRange(Interactable thing)
+        {
+            return m_inRange.Contains(thing);
         }
 
         // 버튼: 대상의 manual 행동을 한다. 시트 열기는 화면 몫이라 false
@@ -112,9 +114,9 @@ namespace ZooTycoon.Core
         }
 
         // 시트 줄 누르기
-        public bool TryBuy(string actionId, Interactable target, string option)
+        public bool TryChoose(string actionId, Interactable target, string option)
         {
-            return ((SheetAction)m_actions[actionId]).TryBuy(Wombat.Worker, target, option);
+            return ((SheetAction)m_actions[actionId]).TryChoose(Wombat.Worker, target, option);
         }
 
         // v0.6: 업그레이드 단계는 사물 종류 공통이라 곳이 센다
@@ -140,7 +142,7 @@ namespace ZooTycoon.Core
         public void Leave()
         {
             WombatPresent = false;
-            Wombat.Moving = false;
+            Wombat.Stop();
             RefreshTarget();
         }
 
@@ -156,7 +158,7 @@ namespace ZooTycoon.Core
         {
         }
 
-        // 설계 09 3장: 조이스틱 방향으로 걷고, 막히면 벽을 따라 미끄러진다. 걸은 뒤 대상을 다시 고른다
+        // 조이스틱으로 걸은 뒤 대상을 다시 고른다
         private void TickWombat(double dt)
         {
             if (!WombatPresent)
@@ -164,7 +166,7 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            Wombat.Moving = WombatWalker.Step(Wombat.Mover, Wombat.Input, Wombat.Speed, dt, WombatNav);
+            Wombat.Walk(WombatNav, dt);
             RefreshTarget();
         }
 

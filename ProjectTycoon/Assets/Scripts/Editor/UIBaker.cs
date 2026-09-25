@@ -34,10 +34,10 @@ namespace ZooTycoon.Editor
         public static void Bake()
         {
             BakeTopBar();
-            BakeShopHud();
+            BakeControlHud();
             BakeObjectSheet();
             AssetDatabase.SaveAssets();
-            Debug.Log("UI prefabs: TopBarView, ShopHudView, ObjectSheetView");
+            Debug.Log("UI prefabs: TopBarView, ControlHudView, ObjectSheetView");
         }
 
         // ---------- 상단 HUD(시안 C): 바 배경 없음, 왼쪽 위 (3,3)에 높이 16 캡슐 = 코인 12 + 숫자. 폭은 숫자에 맞춰 늘어난다 ----------
@@ -81,9 +81,9 @@ namespace ZooTycoon.Editor
         }
 
         // ---------- 가게 HUD(설계 09): 아래쪽 60% 조이스틱 영역 + 오른쪽 아래 상호작용 버튼(행동 아이콘). 가게 이름은 상단 HUD 시안 C에서 뺐다 ----------
-        static void BakeShopHud()
+        static void BakeControlHud()
         {
-            GameObject root = Root("ShopHudView");
+            GameObject root = Root("ControlHudView");
 
             // 조이스틱: 투명 영역(누르는 곳) → 받침(쉬는 자리 = 상호작용 버튼과 좌우 대칭) → 손잡이.
             // 영역 피벗과 받침 앵커를 같은 점(아래 가운데)에 둬야 누른 곳 = 받침 위치가 된다
@@ -134,13 +134,13 @@ namespace ZooTycoon.Editor
             fade.offsetMax = Vector2.zero;
             fade.GetComponent<Image>().raycastTarget = false;
 
-            ShopHudView view = root.AddComponent<ShopHudView>();
+            ControlHudView view = root.AddComponent<ControlHudView>();
             Set(view, "m_fade", fade.GetComponent<Image>());
             Set(view, "m_joystick", joystick);
             Set(view, "m_interactButton", button);
             Set(view, "m_interactIcon", icon.GetComponent<Image>());
             Set(view, "m_interactBreath", breath);
-            Save(root, "ShopHudView");
+            Save(root, "ControlHudView");
         }
 
         // ---------- 사물 시트: 딤 + 하단 패널(나무 틀) → 헤더 / 칩 줄 / 행 목록 ----------

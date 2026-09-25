@@ -2,7 +2,7 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 10 · 데이터-테이블-규칙 8.12: 효과음(SoundTable.json 행). 어느 사건에 나는지는 코드(World ShopSound)
+    // 설계 10 · 데이터-테이블-규칙 8.12: 효과음(SoundTable.json 행). 어느 사건에 나는지는 코드(World BakerySound)
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class SoundTable : Table<string>
     {

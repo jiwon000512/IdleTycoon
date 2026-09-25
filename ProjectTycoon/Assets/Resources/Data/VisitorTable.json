@@ -1,6 +1,6 @@
 {
   "table": "VisitorTable",
-  "version": 7,
+  "version": 8,
   "notes": [
     "기획서 4장 관광객(v0.14). v1.14부터 빵집 손님 외형 전용: 손님이 들어올 때마다 한 행을 고른다.",
     "sprite·idleSheet·moveSheet·backIdleSheet·backMoveSheet는 Resources/ 기준 경로(확장자 없음). idle·move 시트가 null이면 sprite 1장, back 시트가 null이면 앞모습 시트를 쓴다.",
@@ -9,8 +9,8 @@
     "version 3 (2026-09-23): 펭귄 손님 v02 추가. 손님 외형은 행 중 균등 난수.",
     "version 5 (2026-09-23, 손님 동선 설계 v0.2): sideIdleSheet·sideMoveSheet 추가. 오른쪽 보는 옆모습(가로로 걸을 때·두리번·진열대 옆), 왼쪽은 좌우 뒤집기. 실제 아트 전까지는 같은 경로에 앞모습 사본(더미).",
     "version 6 (2026-09-23): carryAt 추가 — 집은 물건(빵 등)을 드는 자리. hand = 앞발에서 위로(몸 앞, 뒷모습이면 몸 뒤), head = 머리 위(날개를 벌린 펭귄). 앞발 높이 비율 등 연출 숫자는 ShopCustomer 프리팹.",
-    "viewSecondsMin~Max·weight는 지상 관광객이 쓰던 값으로 지금은 읽지 않는다(손님 개명 때 정리). 값은 전부 시작값.",
-    "version 7 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다."
+    "version 7 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
+    "version 8 (2026-09-24, 리뷰 R2): 읽는 코드가 없던 moveSpeed·viewSecondsMin·viewSecondsMax·weight·sortOrder 삭제(손님 외형은 행 중 균등 난수, 걷는 속도는 ConfigTable walkSpeed)."
   ],
   "rows": [
     {
@@ -26,11 +26,6 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "moveSpeed": 1.5,
-      "viewSecondsMin": 2.0,
-      "viewSecondsMax": 4.0,
-      "weight": 1,
-      "sortOrder": 1,
       "carryAt": "hand"
     },
     {
@@ -46,11 +41,6 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "moveSpeed": 1.5,
-      "viewSecondsMin": 2.0,
-      "viewSecondsMax": 4.0,
-      "weight": 1,
-      "sortOrder": 2,
       "carryAt": "head"
     },
     {
@@ -66,11 +56,6 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "moveSpeed": 1.5,
-      "viewSecondsMin": 2.0,
-      "viewSecondsMax": 4.0,
-      "weight": 1,
-      "sortOrder": 3,
       "carryAt": "hand"
     },
     {
@@ -86,11 +71,6 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "moveSpeed": 1.5,
-      "viewSecondsMin": 2.0,
-      "viewSecondsMax": 4.0,
-      "weight": 1,
-      "sortOrder": 4,
       "carryAt": "hand"
     }
   ]

@@ -11,24 +11,19 @@ namespace ZooTycoon.Data
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
         private static readonly Regex k_BreadIdPattern = new Regex("^b[0-9]{2}$");
-        private static readonly string[] k_ActionIds =
-        {
-            ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter,
-            ActionTable.k_Bake, ActionTable.k_Upgrade, ActionTable.k_Unlock, ActionTable.k_PlaceOven, ActionTable.k_Dig,
-        };
-        // 코드에 클래스가 있는 사물
+        // 코드에 클래스가 있는 사물(행동은 ActionFactory.Ids)
         private static readonly string[] k_InteractableIds =
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id, SlotInteractable.k_Id,
-            DigInteractable.k_Id, ExitInteractable.k_Id, DoorInteractable.k_Id,
+            DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door,
         };
         private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone, SoundTable.k_GiveUp };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
         private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter };
         private static readonly string[] k_ConfigIds =
         {
-            ConfigTable.k_StartCoins, ConfigTable.k_OfflineMaxSeconds, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight,
-            ConfigTable.k_EntranceHeight, ConfigTable.k_WalkSpeed, ConfigTable.k_WombatSpeed, ConfigTable.k_HopSeconds,
+            ConfigTable.k_StartCoins, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight, ConfigTable.k_EntranceHeight,
+            ConfigTable.k_WalkSpeed, ConfigTable.k_WombatSpeed, ConfigTable.k_HopSeconds, ConfigTable.k_CarryCapacity,
         };
 
         public static IReadOnlyList<string> Validate(TableSet tables)
@@ -51,8 +46,6 @@ namespace ZooTycoon.Data
 
         private static void ValidateVisitors(TableSet tables, List<string> errors)
         {
-            HashSet<int> sortOrders = new HashSet<int>();
-
             if (tables.GetAll<VisitorTable>().Count == 0)
             {
                 errors.Add("VisitorTable: 행이 하나도 없다.");
@@ -60,8 +53,6 @@ namespace ZooTycoon.Data
 
             foreach (VisitorTable visitor in tables.GetAll<VisitorTable>())
             {
-                CheckSortOrder("VisitorTable", visitor.SortOrder, sortOrders, errors);
-
                 if (!k_VisitorIdPattern.IsMatch(visitor.Id))
                 {
                     errors.Add($"VisitorTable '{visitor.Id}': 관광객 ID는 v + 두 자리 번호여야 한다.");
@@ -72,19 +63,9 @@ namespace ZooTycoon.Data
                     errors.Add($"VisitorTable '{visitor.Id}': sprite 경로가 비어 있다.");
                 }
 
-                if (visitor.Weight < 1)
+                if (visitor.IdleFrameRate <= 0d || visitor.MoveFrameRate <= 0d || visitor.Scale <= 0d)
                 {
-                    errors.Add($"VisitorTable '{visitor.Id}': weight가 1 미만이다.");
-                }
-
-                if (visitor.IdleFrameRate <= 0d || visitor.MoveFrameRate <= 0d || visitor.Scale <= 0d || visitor.MoveSpeed <= 0d)
-                {
-                    errors.Add($"VisitorTable '{visitor.Id}': idleFrameRate·moveFrameRate·scale·moveSpeed는 0보다 커야 한다.");
-                }
-
-                if (visitor.ViewSecondsMin < 0d || visitor.ViewSecondsMax < visitor.ViewSecondsMin)
-                {
-                    errors.Add($"VisitorTable '{visitor.Id}': 0 ≤ viewSecondsMin ≤ viewSecondsMax여야 한다.");
+                    errors.Add($"VisitorTable '{visitor.Id}': idleFrameRate·moveFrameRate·scale은 0보다 커야 한다.");
                 }
             }
         }
@@ -134,7 +115,7 @@ namespace ZooTycoon.Data
                 }
 
                 // 설계 13 v0.5: 행동 클래스가 있어야 하고, 시트 줄을 내놓는 클래스(SheetAction)면 mode sheet
-                if (System.Array.IndexOf(k_ActionIds, action.Id) < 0)
+                if (System.Array.IndexOf(ActionFactory.Ids, action.Id) < 0)
                 {
                     errors.Add($"ActionTable '{action.Id}': 코드에 행동 클래스가 없다.");
                 }
@@ -144,7 +125,7 @@ namespace ZooTycoon.Data
                 }
             }
 
-            CheckRequired<ActionTable>(tables, k_ActionIds, errors);
+            CheckRequired<ActionTable>(tables, ActionFactory.Ids, errors);
         }
 
         // 설계 10: 코드가 아는 효과음 3개가 모두 있고, volume 0~1, 간격·피치 증가 ≥ 0, pitchMax ≥ 1
@@ -264,7 +245,7 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 전역 값은 전부 0보다 크다(시작 코인만 0 이상)
+        // 전역 값은 전부 0보다 크다(시작 코인만 0 이상). 드는 빵 수는 정수
         private static void ValidateConfig(TableSet tables, List<string> errors)
         {
             foreach (ConfigTable row in tables.GetAll<ConfigTable>())
@@ -272,6 +253,11 @@ namespace ZooTycoon.Data
                 if (row.Id == ConfigTable.k_StartCoins ? row.Value < 0d : row.Value <= 0d)
                 {
                     errors.Add($"ConfigTable '{row.Id}': value가 너무 작다(startCoins는 0 이상, 나머지는 0보다 커야 한다).");
+                }
+
+                if (row.Id == ConfigTable.k_CarryCapacity && row.Value != System.Math.Floor(row.Value))
+                {
+                    errors.Add($"ConfigTable '{row.Id}': carryCapacity는 정수여야 한다.");
                 }
             }
 
@@ -314,9 +300,9 @@ namespace ZooTycoon.Data
             foreach (BakeryConfigTable bakery in tables.GetAll<BakeryConfigTable>())
             {
                 if (bakery.CheckoutSeconds <= 0d || bakery.PickSeconds < 0d || bakery.PatienceSeconds < 0d || bakery.LookSeconds <= 0d
-                    || bakery.MaxCustomers < 1 || bakery.ShelfCapacity < 1 || bakery.OvenCount < 1 || bakery.CarryCapacity < 1)
+                    || bakery.MaxCustomers < 1 || bakery.ShelfCapacity < 1)
                 {
-                    errors.Add($"BakeryConfigTable '{bakery.Id}': checkoutSeconds·lookSeconds는 0보다, pickSeconds·patienceSeconds는 0 이상, maxCustomers·shelfCapacity·ovenCount·carryCapacity는 1 이상이어야 한다.");
+                    errors.Add($"BakeryConfigTable '{bakery.Id}': checkoutSeconds·lookSeconds는 0보다, pickSeconds·patienceSeconds는 0 이상, maxCustomers·shelfCapacity는 1 이상이어야 한다.");
                 }
 
                 // 굴 격자 설계 v0.5
@@ -326,9 +312,9 @@ namespace ZooTycoon.Data
                 }
 
                 // 설계 13 v0.6: 오븐 설치
-                if (bakery.OvenBaseCost <= 0d || bakery.OvenCostGrowth < 1d || bakery.OvenMax < bakery.OvenCount)
+                if (bakery.OvenBaseCost <= 0d || bakery.OvenCostGrowth < 1d || bakery.OvenMax < BakeryArea.k_StartOvens)
                 {
-                    errors.Add($"BakeryConfigTable '{bakery.Id}': ovenBaseCost는 0보다, ovenCostGrowth는 1 이상, ovenMax는 ovenCount 이상이어야 한다.");
+                    errors.Add($"BakeryConfigTable '{bakery.Id}': ovenBaseCost는 0보다, ovenCostGrowth는 1 이상, ovenMax는 시작 오븐 수 이상이어야 한다.");
                 }
             }
 
@@ -391,14 +377,6 @@ namespace ZooTycoon.Data
             }
 
             return ids;
-        }
-
-        private static void CheckSortOrder(string table, int sortOrder, HashSet<int> seen, List<string> errors)
-        {
-            if (!seen.Add(sortOrder))
-            {
-                errors.Add($"{table}: sortOrder {sortOrder}가 중복이다.");
-            }
         }
     }
 }

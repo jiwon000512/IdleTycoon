@@ -7,9 +7,9 @@ using GameKit.UI;
 
 namespace ZooTycoon.UI
 {
-    // 설계 08 → 설계 09: 가게 HUD = 조이스틱 + 상호작용 버튼(글자 없이 행동 아이콘. v0.4: 아이콘 경로는 ActionTable). 가게 이름은 상단 HUD 시안 C에서 뺐다.
+    // 설계 08 → 설계 09 · 리뷰 R2: 조작 HUD = 조이스틱 + 상호작용 버튼(글자 없이 행동 아이콘. v0.4: 아이콘 경로는 ActionTable). 웜뱃이 있는 곳을 따라간다.
     // 설계 11: 곳을 옮기면 화면 전체 검은 이미지가 사라지며 새 곳이 드러난다
-    public sealed class ShopHudView : UIView
+    public sealed class ControlHudView : UIView
     {
         private static readonly Color k_DisabledIcon = new Color(1f, 1f, 1f, 0.4f);
 

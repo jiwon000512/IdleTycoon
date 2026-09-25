@@ -5,9 +5,9 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 손님 동선 설계 v0.2: Core 손님(위치·보는 방향·상태)을 매 프레임 그대로 그린다. 걷기·판단은 Core가, 여기서는 그림 고르기와 연출만.
-    // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 「!!」 말풍선, 하트. 집은 빵은 visitors.carryAt 자리(앞발 또는 머리 위)
-    public sealed class ShopCustomer : MonoBehaviour
+    // 손님 동선 설계 v0.2: Core 손님(Visitor: 위치·보는 방향·상태)을 매 프레임 그대로 그린다. 걷기·판단은 Core가, 여기서는 그림 고르기와 연출만.
+    // 계층: 루트(발끝) → ModelRoot(크기) → Sprite + Shadow. 머리 위: 「!!」 말풍선, 하트. 집은 빵은 VisitorTable.carryAt 자리(앞발 또는 머리 위)
+    public sealed class VisitorView : MonoBehaviour
     {
         // 집은 빵 순서: 몸(0) 앞, 뒷모습이면 몸 뒤
         private const int k_CarryFrontOrder = 51;
@@ -41,7 +41,7 @@ namespace ZooTycoon.World
         [Tooltip("코인 팝업을 머리 옆으로 비키는 거리(유닛)")]
         [SerializeField] private float m_coinSideOffset = 0.7f;
 
-        private IWalker m_walker;
+        private Visitor m_walker;
         private Transform m_origin;
         private Sprite[] m_frontIdle;
         private Sprite[] m_frontMove;
@@ -66,7 +66,7 @@ namespace ZooTycoon.World
             : Fx.HandOffset(m_facing, m_height * m_handRatio + m_breadHalf, m_handReach);
 
         // 설계 11: 빵집 손님과 광장 손님이 같이 쓴다. origin = 그 곳(빵집·광장)의 원점
-        public void Initialize(IWalker walker, FrameCache frames, Transform origin)
+        public void Initialize(Visitor walker, FrameCache frames, Transform origin)
         {
             VisitorTable look = walker.Look;
             m_walker = walker;
@@ -123,14 +123,14 @@ namespace ZooTycoon.World
             System.Numerics.Vector2 p = m_walker.Position + m_walker.Sidestep;
             Vector3 position = m_origin.position + new Vector3(p.X, p.Y, 0f);
             float alpha = 1f;
-            CustomerPhase phase = m_walker.Phase;
+            VisitorPhase phase = m_walker.Phase;
 
             // 톡 뛰기: 솟았다 내려앉으며 나올 때 선명해지고 들어갈 때 흐려진다
-            if (phase == CustomerPhase.Entering || phase == CustomerPhase.Exiting)
+            if (phase == VisitorPhase.Entering || phase == VisitorPhase.Exiting)
             {
                 float t = (float)m_walker.HopProgress;
                 position.y += Mathf.Sin(t * Mathf.PI) * m_hopHeight;
-                alpha = phase == CustomerPhase.Entering ? t : 1f - t;
+                alpha = phase == VisitorPhase.Entering ? t : 1f - t;
             }
 
             transform.position = position;
@@ -138,7 +138,7 @@ namespace ZooTycoon.World
             Facing facing = m_walker.Facing;
 
             // 두리번: 옆모습으로 좌우를 번갈아 본다
-            if (phase == CustomerPhase.Looking)
+            if (phase == VisitorPhase.Looking)
             {
                 facing = Mathf.FloorToInt(Time.time / m_lookSeconds) % 2 == 0 ? Facing.Left : Facing.Right;
             }

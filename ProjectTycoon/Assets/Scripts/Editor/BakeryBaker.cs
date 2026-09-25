@@ -8,13 +8,13 @@ using ZooTycoon.World;
 namespace ZooTycoon.Editor
 {
     // 설계 08 v0.5 · 굴 격자 설계 v0.5 · 손님 동선 설계 v0.2: 빵집 프리팹을 통째로 다시 만든다. 사물 자리 숫자는 Core BakeryLayout과 같은 값을 쓴다.
-    // 사물 프리팹(진열대·오븐·계산대) + 표시(파기 태그·빈 자리) + Shop(ShopView·손님 스포너·흙 배경·굴 그림·입구 아치) + ShopCustomer.
+    // 사물 프리팹(진열대·오븐·계산대) + 표시(파기 태그·빈 자리) + Shop(BakeryView·손님 스포너·흙 배경·굴 그림·입구 아치) + VisitorView.
     // 스프라이트는 한 칸 2px·PPU 80(Sprites/World/Shop, Resources/Sprites/Shop/Breads, 원본 Shop/Source~). 굴 그림 재료(타일·빈 자리)는 한 칸 1px·PPU 40
-    public static class ShopBaker
+    public static class BakeryBaker
     {
         const string k_SpriteDir = "Assets/Sprites/World/Shop/";
         const string k_BreadDir = "Assets/Resources/Sprites/Shop/Breads/";
-        const string k_PrefabDir = "Assets/Prefabs/Shop/";
+        const string k_PrefabDir = "Assets/Prefabs/Bakery/";
         const string k_ShadowPath = "Assets/Sprites/World/shadow.png";
         const string k_PlazaDir = "Assets/Sprites/World/Plaza/";
         const string k_DecorDir = "Assets/Resources/Sprites/Decor/";
@@ -35,7 +35,7 @@ namespace ZooTycoon.Editor
         const int k_ArchOrder = -1995;
         const int k_MarkerOrder = -1980;
         const int k_ShadowOrder = -900;
-        // 설계 09: 웜뱃이 든 빵 층 수·높이·크기·층 간격(층 로컬). 높이·앞뒤 순서는 실행 중 ShopWombat이 방향에 맞춰 옮긴다
+        // 설계 09: 웜뱃이 든 빵 층 수·높이·크기·층 간격(층 로컬). 높이·앞뒤 순서는 실행 중 WombatView이 방향에 맞춰 옮긴다
         const int k_CarryLayers = 5;
         const float k_CarryHeight = 1.05f;
         const float k_CarryScale = 0.6f;
@@ -43,7 +43,7 @@ namespace ZooTycoon.Editor
         // 흙 배경: 굴 원점에서 이만큼 왼쪽 위에서 시작해 두 배 크기(타일 32칸 주기에 맞는 값)
         const float k_BackdropHalf = 32f;
 
-        [MenuItem("ZooTycoon/Bake/Shop")]
+        [MenuItem("ZooTycoon/Bake/Bakery")]
         public static void Bake()
         {
             Debug.Log(Run());
@@ -53,9 +53,9 @@ namespace ZooTycoon.Editor
         {
             ImportSprites();
 
-            if (!AssetDatabase.IsValidFolder("Assets/Prefabs/Shop"))
+            if (!AssetDatabase.IsValidFolder("Assets/Prefabs/Bakery"))
             {
-                AssetDatabase.CreateFolder("Assets/Prefabs", "Shop");
+                AssetDatabase.CreateFolder("Assets/Prefabs", "Bakery");
             }
 
             foreach (string old in new[] { "ShopEntrance", "ShopShelfRow", "ShopOvenRow" })
@@ -70,11 +70,11 @@ namespace ZooTycoon.Editor
             MarkerView digTag = BakeDigTag();
             SpriteRenderer slotMarker = BakeSlotMarker();
             BakeCoinPopup();
-            ShopCustomer customer = BakeCustomer();
+            VisitorView customer = BakeCustomer();
             BakeShop(shelf, shelfSign, oven, counter, digTag, slotMarker, customer);
             BakePlaza(customer);
             AssetDatabase.SaveAssets();
-            return "Shop: Shelf·ShelfSign·Oven·ShopCounter·DigTag·SlotMarker·Shop·ShopCustomer·Plaza (UI 프리팹은 ZooTycoon/Bake/UI)";
+            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·SlotMarker·Bakery·Visitor·Plaza (UI 프리팹은 ZooTycoon/Bake/UI)";
         }
 
         static void ImportSprites()
@@ -194,7 +194,7 @@ namespace ZooTycoon.Editor
             GameObject go = new GameObject("ShelfSign");
             go.AddComponent<SortingGroup>();
             Renderer(go.transform, "Body", Load("shelf_sign"), Vector3.zero, 0);
-            TextMeshPro text = WorldText(go.transform, "Stock", new Vector3(0f, 15.5f / BakeryLayout.k_PixelsPerUnit, 0f), 1);
+            TextMeshPro text = WorldText(go.transform, "Stock", new Vector3(0f, 15.5f / BurrowShape.k_PixelsPerUnit, 0f), 1);
             text.rectTransform.sizeDelta = new Vector2(0.4f, 0.35f);
 
             ShelfSignView view = go.AddComponent<ShelfSignView>();
@@ -255,23 +255,23 @@ namespace ZooTycoon.Editor
         // 계산대. 피벗 = 계산대 줄 윗변 가운데(옛 구역과 같은 오프셋)
         static CounterView BakeCounter()
         {
-            GameObject root = new GameObject("ShopCounter");
+            GameObject root = new GameObject("Counter");
             CounterView counter = root.AddComponent<CounterView>();
             SpriteRenderer counterBody = Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -BakeryLayout.k_CounterDrop, 0f), 0);
             Set(counter, "m_body", counterBody);
             Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, -BakeryLayout.k_WombatDrop, 0f)));
-            return Save(root, counter, "ShopCounter");
+            return Save(root, counter, "Counter");
         }
 
         // 웜뱃(빵집 계산대·광장 공용). 정면·뒷모습: 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 0 → 1 → 2 → 3(Source~/make_breath_frames.py)
-        static ShopWombat BakeWombat(Transform parent, Vector3 position)
+        static WombatView BakeWombat(Transform parent, Vector3 position)
         {
             SpriteRenderer wombat = Renderer(parent, "Wombat", Load("wombat_front"), position, 0);
             SpriteAnimator animator = wombat.gameObject.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", wombat);
             SpriteRenderer shadow = Shadow(wombat.transform);
             // 걷기(v0.6): 딛기 → 왼발 → 딛기 → 오른발(Source~/make_walk_frames.py)
-            ShopWombat mover = wombat.gameObject.AddComponent<ShopWombat>();
+            WombatView mover = wombat.gameObject.AddComponent<WombatView>();
             Set(mover, "m_animator", animator);
             Set(mover, "m_renderer", wombat);
             Set(mover, "m_shadow", shadow);
@@ -344,9 +344,9 @@ namespace ZooTycoon.Editor
         }
 
         // 손님 몸체: 루트(SpriteAnimator) → ModelRoot(크기) → Sprite + Shadow(납작한 타원). 외형은 VisitorTable 행이 실행 중에 채운다
-        static ShopCustomer BakeCustomer()
+        static VisitorView BakeCustomer()
         {
-            GameObject root = new GameObject("ShopCustomer");
+            GameObject root = new GameObject("Visitor");
             GameObject model = Child(root.transform, "ModelRoot", Vector3.zero);
             SpriteRenderer sprite = Renderer(model.transform, "Sprite", null, Vector3.zero, 0);
             SpriteRenderer shadow = Shadow(model.transform);
@@ -361,7 +361,7 @@ namespace ZooTycoon.Editor
             emote.fontSize = 3.5f;
             emote.color = new Color(0.93f, 0.33f, 0.4f);
 
-            ShopCustomer customer = root.AddComponent<ShopCustomer>();
+            VisitorView customer = root.AddComponent<VisitorView>();
             Set(customer, "m_modelRoot", model.transform);
             Set(customer, "m_spriteRenderer", sprite);
             Set(customer, "m_shadowRenderer", shadow);
@@ -370,22 +370,22 @@ namespace ZooTycoon.Editor
             Set(customer, "m_bubble", bubble);
             Set(customer, "m_carry", carry);
             Set(customer, "m_emote", emote);
-            return Save(root, customer, "ShopCustomer");
+            return Save(root, customer, "Visitor");
         }
 
         // Shop 루트: 흙 배경(무한 벽 타일) + 굴 그림(실행 중 생성) + 입구 아치
-        static void BakeShop(ShelfView shelf, ShelfSignView shelfSign, OvenView oven, CounterView counter, MarkerView digTag, SpriteRenderer slotMarker, ShopCustomer customer)
+        static void BakeShop(ShelfView shelf, ShelfSignView shelfSign, OvenView oven, CounterView counter, MarkerView digTag, SpriteRenderer slotMarker, VisitorView customer)
         {
-            GameObject root = new GameObject("Shop");
+            GameObject root = new GameObject("Bakery");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
             backdrop.drawMode = SpriteDrawMode.Tiled;
             backdrop.tileMode = SpriteTileMode.Continuous;
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             // 아치 그림 53칸 높이가 입구 줄(80칸) 밑변에 닿게: 윗변 = 27칸 = 0.675유닛 아래
-            SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / BakeryLayout.k_PixelsPerUnit, 0f), k_ArchOrder);
+            SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f), k_ArchOrder);
 
-            ShopView view = root.AddComponent<ShopView>();
+            BakeryView view = root.AddComponent<BakeryView>();
             Set(view, "m_shelfPrefab", shelf);
             Set(view, "m_shelfSignPrefab", shelfSign);
             Set(view, "m_ovenPrefab", oven);
@@ -395,13 +395,13 @@ namespace ZooTycoon.Editor
             Set(view, "m_burrow", burrow);
             Set(view, "m_arch", arch.transform);
             SetBurrowTextures(view);
-            ShopCustomerSpawner spawner = root.AddComponent<ShopCustomerSpawner>();
+            BakeryVisitorSpawner spawner = root.AddComponent<BakeryVisitorSpawner>();
             Set(spawner, "m_prefab", customer);
-            Save(root, view, "Shop");
+            Save(root, view, "Bakery");
         }
 
         // 설계 11: 굴 밖 광장. 굴 그림·빵집 문·계단·장식 자리는 실행 중 PlazaView가 Core 배치(PlazaLayout)대로 놓는다
-        static void BakePlaza(ShopCustomer customer)
+        static void BakePlaza(VisitorView customer)
         {
             GameObject root = new GameObject("Plaza");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -418,7 +418,7 @@ namespace ZooTycoon.Editor
             sign.rectTransform.sizeDelta = new Vector2(1f, 0.35f);
             sign.color = new Color32(0xF4, 0xDF, 0xBF, 255);
             SpriteRenderer stairs = Renderer(root.transform, "Stairs", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png"), Vector3.zero, k_ArchOrder);
-            ShopWombat wombat = BakeWombat(root.transform, Vector3.zero);
+            WombatView wombat = BakeWombat(root.transform, Vector3.zero);
 
             PlazaView view = root.AddComponent<PlazaView>();
             Set(view, "m_burrow", burrow);

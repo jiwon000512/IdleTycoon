@@ -9,6 +9,10 @@ namespace ZooTycoon.Core
     // 띠는 방 윤곽 안이지만 걷는 바닥이 아니다(WallRow). 바닥 윗변은 그대로라 길 찾기·자리는 바뀌지 않는다
     public static class BurrowShape
     {
+        // 한 칸 = 1/40유닛(마스크·타일·굴 그림 공통)
+        public const float k_PixelsPerUnit = 40f;
+        // 모서리 둥글림 반지름(칸)
+        public const int k_RoundRadius = 12;
         // 입구 줄 바닥 윗변(칸, 줄 윗변 기준) = 띠 밑변 = 아치 구멍 밑변
         public const int k_EntranceFloorTop = 57;
         // 윗벽 띠 높이(칸) = wall_face.png 높이. 아트 사실이라 상수
@@ -44,8 +48,9 @@ namespace ZooTycoon.Core
             }
         }
 
-        public static Result Build(IReadOnlyCollection<Cell> cells, int cellWidth, int cellHeight, int entranceHeight, int radius)
+        public static Result Build(IReadOnlyCollection<Cell> cells, int cellWidth, int cellHeight, int entranceHeight)
         {
+            int radius = k_RoundRadius;
             int margin = radius + 2;
             int minCol = int.MaxValue, maxCol = int.MinValue, maxRow = 0;
 

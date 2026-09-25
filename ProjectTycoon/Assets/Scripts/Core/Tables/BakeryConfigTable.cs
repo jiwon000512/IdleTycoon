@@ -15,10 +15,7 @@ namespace ZooTycoon.Core
         public double LookSeconds { get; set; }
         public double CheckoutSeconds { get; set; }
         public int ShelfCapacity { get; set; }
-        public int OvenCount { get; set; }
         public double PickSeconds { get; set; }
-        // 설계 09: 웜뱃이 드는 빵 수
-        public int CarryCapacity { get; set; }
         // 굴 격자 설계 v0.5: 파기 비용 = digBaseCost × digCostGrowth^(판 칸 수)
         public double DigBaseCost { get; set; }
         public double DigCostGrowth { get; set; }

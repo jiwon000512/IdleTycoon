@@ -3,10 +3,10 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
+    // 지갑(코인). 웜뱃의 일꾼(Worker)이 갖고, 계산대가 값을 넣는다
     public sealed class ZooState
     {
         public double Coins { get; private set; }
-        public double TotalCoinsEarned { get; private set; }
 
         public event Action CoinsChanged;
 
@@ -24,7 +24,6 @@ namespace ZooTycoon.Core
         public void AddCoins(double amount)
         {
             Coins += amount;
-            TotalCoinsEarned += amount;
             OnCoinsChanged();
         }
 

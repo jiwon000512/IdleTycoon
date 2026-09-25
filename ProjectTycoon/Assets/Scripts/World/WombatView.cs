@@ -4,12 +4,12 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 08 v0.6 · 손님 동선 설계 v0.2 · 설계 09: 가게 웜뱃. 위치·보는 방향은 Core(WombatArea.WombatPosition)를 매 프레임 읽는다.
+    // 설계 08 v0.6 · 손님 동선 설계 v0.2 · 설계 09: 웜뱃 그림. 위치·보는 방향은 Core(Wombat.Mover)를 매 프레임 읽는다.
     // 걸으면 그 방향의 앞·뒤·옆 걷기, 서면 숨쉬기(마지막으로 걸은 방향. 계산대 자리에서 줄 머리가 서 있으면 계산 중 뒷모습)
     // 설계 10: 꺼내면 빵 하나가 오븐 → 웜뱃으로 날아온 뒤 층이 늘고, 채우면 맨 위 층 → 진열대로 빵 하나가 날아간다
     // 2026-09-23: 든 빵은 머리 위가 아니라 앞발에서 위로 쌓는다(뒷모습이면 몸 뒤에)
     // 설계 11: 광장 웜뱃도 같은 그림(WombatArea만 읽고 든 빵은 그리지 않는다). 웜뱃이 다른 곳에 있으면 숨는다
-    public sealed class ShopWombat : MonoBehaviour
+    public sealed class WombatView : MonoBehaviour
     {
         [SerializeField] private SpriteAnimator m_animator;
         [SerializeField] private SpriteRenderer m_renderer;
@@ -44,16 +44,13 @@ namespace ZooTycoon.World
         private Transform m_origin;
         private BakeryArea m_shop;
         private Hands m_hands;
-        private ShopView m_view;
+        private BakeryView m_view;
         private FrameCache m_frames;
         private Sprite[] m_playing;
         private int m_shownCarry;
         private int m_lastCount;
-        private BreadTable m_lastCarried;
-        // 꺼내기는 오븐 사건 바로 뒤에 손 사건이 온다(OvenInteractable.Do). 꺼내기가 auto라 대상이 아닌 오븐에서도 꺼낸다
-        private OvenInteractable m_lastOven;
 
-        public void Bind(BakeryArea shop, ShopView view, FrameCache frames)
+        public void Bind(BakeryArea shop, BakeryView view, FrameCache frames)
         {
             m_shop = shop;
             m_view = view;
@@ -62,7 +59,6 @@ namespace ZooTycoon.World
             m_origin = view.transform;
             m_frames = frames;
             m_hands.Changed += Hands_Changed;
-            m_shop.ThingChanged += Shop_ThingChanged;
             ShowCarry();
             Update();
         }
@@ -87,7 +83,6 @@ namespace ZooTycoon.World
             if (m_shop != null)
             {
                 m_hands.Changed -= Hands_Changed;
-                m_shop.ThingChanged -= Shop_ThingChanged;
             }
         }
 
@@ -108,12 +103,13 @@ namespace ZooTycoon.World
                 return;
             }
 
-            System.Numerics.Vector2 p = m_area.WombatPosition;
+            System.Numerics.Vector2 p = m_area.Wombat.Mover.Position;
             transform.position = m_origin.position + new Vector3(p.X, p.Y, 0f);
-            bool moving = m_area.WombatMoving;
-            Facing facing = m_area.WombatFacing;
+            bool moving = m_area.Wombat.Moving;
+            Facing facing = m_area.Wombat.Mover.Facing;
 
-            if (!moving && m_shop != null && m_shop.WombatAtCounter && Serving)
+            // 계산대 자리에서 줄 머리가 서 있으면 계산 중 뒷모습
+            if (!moving && m_shop != null && m_shop.IsInRange(m_shop.Counter) && m_shop.Counter.HeadWaiting)
             {
                 facing = Facing.Up;
             }
@@ -149,51 +145,27 @@ namespace ZooTycoon.World
             }
         }
 
-        // 줄 머리가 머리 자리에 서 있으면 계산 중
-        private bool Serving
-        {
-            get
-            {
-                if (m_shop.Queue.Count == 0)
-                {
-                    return false;
-                }
-
-                Customer head = m_shop.Queue[0];
-                return head.Phase == CustomerPhase.Queued && !head.Moving;
-            }
-        }
-
-        private void Hands_Changed()
+        // 꺼내면(오븐에서) 빵 하나가 오븐 → 손으로 날아온 뒤 층이 늘고, 채우면(진열대에) 맨 위 층 → 진열대로 날아간다
+        private void Hands_Changed(Interactable at)
         {
             int count = m_hands.Count;
-            BreadTable bread = count > m_lastCount ? m_hands.Bread : m_lastCarried;
 
-            if (count > m_lastCount)
+            if (at is OvenInteractable oven && count > m_lastCount)
             {
-                StartCoroutine(FlyRoutine(Icon(bread), m_view.OvenBreadPosition(m_lastOven), () => m_carry[Mathf.Min(count, m_carry.Length) - 1].transform.position, ShowCarry));
+                StartCoroutine(FlyRoutine(Icon(oven.Bread ?? m_hands.Bread), m_view.OvenBreadPosition(oven), () => m_carry[Mathf.Min(count, m_carry.Length) - 1].transform.position, ShowCarry));
             }
             else
             {
-                if (count < m_lastCount)
+                if (at is ShelfInteractable shelf && count < m_lastCount)
                 {
-                    Vector3 shelf = m_view.ShelfIconPosition(bread.Id);
-                    StartCoroutine(FlyRoutine(Icon(bread), m_carry[Mathf.Min(m_lastCount, m_carry.Length) - 1].transform.position, () => shelf, null));
+                    Vector3 to = m_view.ShelfIconPosition(shelf);
+                    StartCoroutine(FlyRoutine(Icon(shelf.Bread), m_carry[Mathf.Min(m_lastCount, m_carry.Length) - 1].transform.position, () => to, null));
                 }
 
                 ShowCarry();
             }
 
             m_lastCount = count;
-            m_lastCarried = m_hands.Bread;
-        }
-
-        private void Shop_ThingChanged(Interactable thing)
-        {
-            if (thing is OvenInteractable oven)
-            {
-                m_lastOven = oven;
-            }
         }
 
         private Sprite Icon(BreadTable bread)

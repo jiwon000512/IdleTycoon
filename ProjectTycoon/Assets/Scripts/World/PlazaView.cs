@@ -22,7 +22,7 @@ namespace ZooTycoon.World
         [SerializeField] private TextMeshPro m_sign;
         [Tooltip("지상 계단. 원점 = 띠 밑변 가운데")]
         [SerializeField] private Transform m_stairs;
-        [SerializeField] private ShopWombat m_wombat;
+        [SerializeField] private WombatView m_wombat;
 
         private PlazaArea m_plaza;
 
@@ -45,9 +45,9 @@ namespace ZooTycoon.World
             PlazaLayout layout = plaza.Layout;
             BurrowShape.Result shape = layout.Shape;
             m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
-            m_burrow.transform.localPosition = new Vector3(shape.OriginX / BakeryLayout.k_PixelsPerUnit, -shape.OriginY / BakeryLayout.k_PixelsPerUnit, 0f);
+            m_burrow.transform.localPosition = new Vector3(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit, 0f);
 
-            float wallBottom = -BurrowShape.k_EntranceFloorTop / BakeryLayout.k_PixelsPerUnit;
+            float wallBottom = -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit;
             m_door.localPosition = new Vector3(layout.DoorFloor.X, wallBottom, 0f);
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
             m_sign.text = tables.Text(k_SignKey);

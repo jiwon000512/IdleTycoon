@@ -33,7 +33,7 @@ namespace ZooTycoon.Core
             double cellWidth = tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
             double cellHeight = tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;
             double entranceHeight = tables.Get<ConfigTable>(ConfigTable.k_EntranceHeight).Value;
-            int unit = (int)BakeryLayout.k_PixelsPerUnit;
+            int unit = (int)BurrowShape.k_PixelsPerUnit;
             int firstCol = -plaza.Cols / 2;
             HashSet<Cell> cells = new HashSet<Cell>();
 
@@ -45,12 +45,11 @@ namespace ZooTycoon.Core
                 }
             }
 
-            Shape = BurrowShape.Build(cells, (int)Math.Round(cellWidth * unit), (int)Math.Round(cellHeight * unit),
-                (int)Math.Round(entranceHeight * unit), BakeryLayout.k_RoundRadius);
+            Shape = BurrowShape.Build(cells, (int)Math.Round(cellWidth * unit), (int)Math.Round(cellHeight * unit), (int)Math.Round(entranceHeight * unit));
             Width = (float)(plaza.Cols * cellWidth);
             Height = (float)(entranceHeight + (plaza.Rows - 1) * cellHeight);
 
-            float inside = -(BurrowShape.k_EntranceFloorTop - 1) / BakeryLayout.k_PixelsPerUnit;
+            float inside = -(BurrowShape.k_EntranceFloorTop - 1) / BurrowShape.k_PixelsPerUnit;
             float doorX = (float)(-0.5 * cellWidth);
             DoorInside = new Vector2(doorX, inside);
             DoorFloor = new Vector2(doorX, k_HoleFloorY);
@@ -68,7 +67,7 @@ namespace ZooTycoon.Core
                     position.Y + (float)decoration.Depth));
             }
 
-            Nav = new BurrowNav(Shape, BakeryLayout.k_PixelsPerUnit, blocked, BakeryLayout.k_Clearance, BakeryLayout.k_Step, BakeryLayout.k_TurnPenalty);
+            Nav = new BurrowNav(Shape, blocked);
 
             // 들를 곳은 격자에 붙이고, 걷는 땅이 아니면 뺀다(장식이 벽에 붙어 있을 때)
             foreach (DecorationData decor in m_decor)

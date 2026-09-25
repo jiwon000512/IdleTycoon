@@ -5,40 +5,37 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 08 v0.5 → 설계 13: 빵집. 사물(진열대·오븐·계산대·나가기·빈 자리·파기)을 조립하고 사물 사이(오븐 → 웜뱃 손 → 진열대 → 손님 → 계산)를 잇는다.
-    // 굴 격자 설계 v0.5: 진열대·오븐은 굴 칸의 자리에 놓인다. 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(행동 트리, BakeryArea.Customers.cs)의 위치도 여기서 정한다.
+    // 설계 08 v0.5 → 설계 13: 빵집. 사물(진열대·오븐·계산대·나가기·빈 자리·파기)을 조립하고 사물 사이(오븐 → 웜뱃 손 → 진열대 → 손님 → 계산대)를 잇는다.
+    // 굴 격자 설계 v0.5: 진열대·오븐은 굴 칸의 자리에 놓인다. 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs.
     // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기로 광장에 간다(없는 동안 계산이 멈춘다)
     public sealed partial class BakeryArea : WombatArea
     {
+        // 시작 오븐 수(왼쪽 열 자리 줄 하나). 오븐 설치 가격은 이 뒤로 산 수로 오른다
+        public const int k_StartOvens = 1;
         // 웜뱃이 끼인 자리(배치가 바뀜)에서 걷는 땅을 찾는 거리(맨해튼)
         private const float k_UnstuckDistance = 3f;
 
-        private readonly ZooState m_state;
         private readonly BakeryConfigTable m_config;
-        private readonly double m_walkSpeed;
-        private readonly double m_hopSeconds;
-        private readonly IRandom m_random;
         private readonly List<BreadTable> m_unlocked = new List<BreadTable>();
         private readonly Dictionary<Cell, ShelfInteractable> m_shelves = new Dictionary<Cell, ShelfInteractable>();
         private readonly List<OvenInteractable> m_ovens = new List<OvenInteractable>();
         private readonly Dictionary<Cell, SlotInteractable> m_slots = new Dictionary<Cell, SlotInteractable>();
         private readonly Dictionary<Cell, DigInteractable> m_digs = new Dictionary<Cell, DigInteractable>();
-        private readonly CounterInteractable m_counter;
-        private readonly ExitInteractable m_exit;
+        private readonly PassageInteractable m_exit;
 
         public BakeryConfigTable Config => m_config;
         public BurrowGrid Grid { get; }
         public BakeryLayout Layout { get; }
+        public CounterInteractable Counter { get; }
         public IReadOnlyList<BreadTable> UnlockedBreads => m_unlocked;
         public IReadOnlyDictionary<Cell, ShelfInteractable> Shelves => m_shelves;
         public IReadOnlyList<OvenInteractable> Ovens => m_ovens;
         // 진열대도 오븐도 없는 자리
         public IReadOnlyDictionary<Cell, SlotInteractable> Slots => m_slots;
         public BreadTable NextBread => m_unlocked.Count < Tables.GetAll<BreadTable>().Count ? Tables.GetAll<BreadTable>()[m_unlocked.Count] : null;
-        // 설계 09 v0.4: 웜뱃이 계산대 range 안에 있나(serve가 auto면 있는 동안만 계산이 흐른다)
-        public bool WombatAtCounter => WombatPresent && m_counter.DistanceTo(WombatPosition) <= (float)m_counter.Table.Range;
+        internal IRandom Random { get; }
 
-        // 오븐·진열대 하나가 바뀌었다(여러 사물을 보는 시트·소리·웜뱃 연출이 한 곳에서 듣는다. 사물 하나만 보는 뷰는 그 사물의 Changed)
+        // 오븐·진열대·계산대 하나가 바뀌었다(여러 사물을 보는 시트·소리·웜뱃 연출이 한 곳에서 듣는다. 사물 하나만 보는 뷰는 그 사물의 Changed)
         public event Action<Interactable> ThingChanged;
         // 굴을 팠거나 자리에 진열대·오븐이 놓였다
         public event Action LayoutChanged;
@@ -48,22 +45,18 @@ namespace ZooTycoon.Core
         protected override BurrowNav WombatNav => Layout.WombatNav;
         protected override Vector2 Entrance => Layout.HoleFloor;
 
-        // serve가 auto인가(설계 09 v0.4: auto면 계산대 range 안에서 타이머, manual이면 버튼)
-        internal bool ServeAuto => Tables.Get<ActionTable>(ActionTable.k_Serve).IsAuto;
-
         // 첫 손님은 광장에서 온다. 웜뱃은 계산대 뒤에서 시작한다
         public BakeryArea(ZooState state, TableSet tables, IRandom random, Wombat wombat) : base(tables, wombat)
         {
-            m_state = state;
             m_config = tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery);
-            m_walkSpeed = tables.Get<ConfigTable>(ConfigTable.k_WalkSpeed).Value;
-            m_hopSeconds = tables.Get<ConfigTable>(ConfigTable.k_HopSeconds).Value;
-            m_random = random;
-            Grid = new BurrowGrid(state, m_config);
+            Random = random;
+            Grid = new BurrowGrid(m_config);
             Grid.Dug += Grid_Dug;
             Layout = new BakeryLayout(tables);
-            m_counter = new CounterInteractable(Row(CounterInteractable.k_Id), this);
-            m_exit = new ExitInteractable(Row(ExitInteractable.k_Id), this, Layout.HoleFloor, OnExitRequested);
+            Counter = new CounterInteractable(Row(CounterInteractable.k_Id), this, state);
+            Counter.Changed += Thing_Changed;
+            Counter.Served += Counter_Served;
+            m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, OnExitRequested);
 
             // 시작 배치: 왼쪽 열(−1)의 자리 줄 두 곳에 첫 빵과 오븐. 오른쪽 열(0)은 빈 자리
             AddShelf(tables.GetAll<BreadTable>()[0], new Cell(-1, 1));
@@ -96,7 +89,7 @@ namespace ZooTycoon.Core
             throw new KeyNotFoundException($"빵 '{breadId}'의 진열대가 없다.");
         }
 
-        // 설계 13 v0.5: 시트 행동(UnlockAction·PlaceOvenAction)이 값을 치른 뒤 빈 자리에 놓는다
+        // 설계 13 v0.5: 시트 행동(Unlock·PlaceOven)이 값을 치른 뒤 빈 자리에 놓는다
         internal void PlaceShelf(BreadTable bread, Cell cell)
         {
             AddShelf(bread, cell);
@@ -113,8 +106,7 @@ namespace ZooTycoon.Core
 
         protected override void TickArea(double dt)
         {
-            TickCustomers(dt);
-            TickCheckout(dt);
+            TickVisitors(dt);
         }
 
         private InteractableTable Row(string interactableId)
@@ -160,7 +152,7 @@ namespace ZooTycoon.Core
 
             Layout.Rebuild(Grid.Cells, m_shelves.Keys, ovenCells, m_config.MaxCustomers);
             SyncThings();
-            RepathCustomers();
+            RepathVisitors();
 
             if (!WombatPresent)
             {
@@ -169,8 +161,9 @@ namespace ZooTycoon.Core
 
             // 새 사물이 웜뱃 발밑에 놓이면 가까운 걷는 땅으로 비켜 선다
             BurrowNav nav = Layout.WombatNav;
+            Vector2 wombat = Wombat.Mover.Position;
 
-            if (!nav.IsWalkable(WombatPosition) && nav.TryNearestFree(WombatPosition, _ => false, k_UnstuckDistance, out Vector2 free))
+            if (!nav.IsWalkable(wombat) && nav.TryNearestFree(wombat, _ => false, k_UnstuckDistance, out Vector2 free))
             {
                 Wombat.Mover.Place(free);
             }
@@ -198,7 +191,7 @@ namespace ZooTycoon.Core
             Placed.Clear();
             Placed.AddRange(m_shelves.Values);
             Placed.AddRange(m_ovens);
-            Placed.Add(m_counter);
+            Placed.Add(Counter);
             Placed.Add(m_exit);
 
             foreach (Cell cell in slotCells)

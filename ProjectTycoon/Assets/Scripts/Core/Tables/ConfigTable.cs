@@ -7,7 +7,6 @@ namespace ZooTycoon.Core
     public sealed class ConfigTable : Table<string>
     {
         public const string k_StartCoins = "startCoins";
-        public const string k_OfflineMaxSeconds = "offlineMaxSeconds";
         // 굴 칸 크기(유닛)·입구 줄 높이: 빵집·광장 공통
         public const string k_CellWidth = "cellWidth";
         public const string k_CellHeight = "cellHeight";
@@ -16,6 +15,8 @@ namespace ZooTycoon.Core
         public const string k_WalkSpeed = "walkSpeed";
         public const string k_WombatSpeed = "wombatSpeed";
         public const string k_HopSeconds = "hopSeconds";
+        // 설계 09 · 리뷰 R2: 웜뱃이 드는 빵 수(웜뱃의 값이라 빵집 설정이 아니라 여기)
+        public const string k_CarryCapacity = "carryCapacity";
 
         public double Value { get; set; }
     }

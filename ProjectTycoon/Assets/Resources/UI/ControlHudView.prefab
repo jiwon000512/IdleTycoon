@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6193339786905443795}
   - component: {fileID: 2509803018702604392}
   m_Layer: 0
-  m_Name: ShopHudView
+  m_Name: ControlHudView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

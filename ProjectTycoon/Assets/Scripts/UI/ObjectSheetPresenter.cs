@@ -7,13 +7,12 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 사물 터치 기획 → 설계 09 → 설계 13 v0.5: 상호작용 버튼으로 연 사물의 시트. 줄은 그 사물의 시트 행동(InteractableTable.actions 중 mode sheet)이 내놓고,
-    // 여기서는 행동 id별 서식으로 글자만 만든다(굽기 = 칩, 나머지 = 행). 제목·상태 줄만 사물 종류로 가른다. 줄을 누르면 곳에 TryBuy로 부탁한다.
-    // 열린 동안 사물·업그레이드·배치·줄·코인 이벤트로 갱신하고, 웜뱃의 대상이 바뀌면 닫는다
+    // 여기서는 행동 id별 서식으로 글자만 만든다(굽기 = 칩, 나머지 = 행). 제목·상태 줄만 사물 종류로 가른다. 줄을 누르면 곳에 TryChoose로 부탁한다.
+    // 열린 동안 사물(계산대 줄 포함)·업그레이드·배치·코인 이벤트로 갱신하고, 웜뱃의 대상이 바뀌면 닫는다
     public sealed class ObjectSheetPresenter : IDisposable
     {
         private readonly ObjectSheetView m_view;
         private readonly BakeryArea m_shop;
-        private readonly ZooState m_state;
         private readonly TableSet m_tables;
         // 칩·행 번호 → (행동 id, 고른 것)
         private readonly List<(string action, string option)> m_chips = new List<(string action, string option)>();
@@ -21,11 +20,10 @@ namespace ZooTycoon.UI
 
         private Interactable m_target;
 
-        public ObjectSheetPresenter(ObjectSheetView view, BakeryArea shop, ZooState state, TableSet tables)
+        public ObjectSheetPresenter(ObjectSheetView view, BakeryArea shop, TableSet tables)
         {
             m_view = view;
             m_shop = shop;
-            m_state = state;
             m_tables = tables;
 
             m_view.ChipClicked += View_ChipClicked;
@@ -34,9 +32,8 @@ namespace ZooTycoon.UI
             m_shop.ThingChanged += Shop_ThingChanged;
             m_shop.Upgraded += Shop_Upgraded;
             m_shop.LayoutChanged += Shop_Refresh;
-            m_shop.QueueChanged += Shop_Refresh;
             m_shop.TargetChanged += Shop_TargetChanged;
-            m_state.CoinsChanged += Shop_Refresh;
+            m_shop.Wombat.Worker.Wallet.CoinsChanged += Shop_Refresh;
         }
 
         public void Dispose()
@@ -47,9 +44,8 @@ namespace ZooTycoon.UI
             m_shop.ThingChanged -= Shop_ThingChanged;
             m_shop.Upgraded -= Shop_Upgraded;
             m_shop.LayoutChanged -= Shop_Refresh;
-            m_shop.QueueChanged -= Shop_Refresh;
             m_shop.TargetChanged -= Shop_TargetChanged;
-            m_state.CoinsChanged -= Shop_Refresh;
+            m_shop.Wombat.Worker.Wallet.CoinsChanged -= Shop_Refresh;
         }
 
         public void Show(Interactable target)
@@ -104,7 +100,7 @@ namespace ZooTycoon.UI
                     m_view.SetHeader(m_tables.Format("sheet_oven_title", IndexOf(oven) + 1), OvenStatus(oven));
                     break;
                 case CounterInteractable _:
-                    m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", m_shop.Queue.Count));
+                    m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", m_shop.Counter.Queue.Count));
                     break;
                 case SlotInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_slot_title"), m_tables.Text("sheet_slot_status"));
@@ -228,7 +224,7 @@ namespace ZooTycoon.UI
         {
             (string action, string option) = m_chips[index];
 
-            if (m_shop.TryBuy(action, m_target, option))
+            if (m_shop.TryChoose(action, m_target, option))
             {
                 m_view.Close();
             }
@@ -239,7 +235,7 @@ namespace ZooTycoon.UI
         {
             (string action, string option) = m_rows[index];
 
-            if (!m_shop.TryBuy(action, m_target, option))
+            if (!m_shop.TryChoose(action, m_target, option))
             {
                 return;
             }

@@ -6,8 +6,8 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 설계 10: 가게 사건 → 효과음(SoundTable). 결제 짤랑 · 오븐이 다 구움 띵 · 화난 퇴장 뿌우~.
-    // 소리마다 AudioSource 하나(피치를 따로 올리려고). WorldManager가 가게 개체에 붙인다
-    public sealed class ShopSound : MonoBehaviour
+    // 소리마다 AudioSource 하나(피치를 따로 올리려고). WorldManager가 빵집 개체에 붙인다
+    public sealed class BakerySound : MonoBehaviour
     {
         private sealed class Channel
         {
@@ -34,8 +34,8 @@ namespace ZooTycoon.World
                 m_channels[sound.Id] = new Channel { Sound = sound, Source = source };
             }
 
-            m_shop.CustomerPaid += Shop_CustomerPaid;
-            m_shop.CustomerGaveUp += Shop_CustomerGaveUp;
+            m_shop.VisitorPaid += Shop_VisitorPaid;
+            m_shop.VisitorGaveUp += Shop_VisitorGaveUp;
             m_shop.ThingChanged += Shop_ThingChanged;
         }
 
@@ -43,8 +43,8 @@ namespace ZooTycoon.World
         {
             if (m_shop != null)
             {
-                m_shop.CustomerPaid -= Shop_CustomerPaid;
-                m_shop.CustomerGaveUp -= Shop_CustomerGaveUp;
+                m_shop.VisitorPaid -= Shop_VisitorPaid;
+                m_shop.VisitorGaveUp -= Shop_VisitorGaveUp;
                 m_shop.ThingChanged -= Shop_ThingChanged;
             }
         }
@@ -66,12 +66,12 @@ namespace ZooTycoon.World
             channel.Source.PlayOneShot(channel.Source.clip);
         }
 
-        private void Shop_CustomerPaid(Customer customer, double coins)
+        private void Shop_VisitorPaid(BakeryVisitor visitor, double coins)
         {
             Play(SoundTable.k_Pay);
         }
 
-        private void Shop_CustomerGaveUp(Customer customer)
+        private void Shop_VisitorGaveUp(BakeryVisitor visitor)
         {
             Play(SoundTable.k_GiveUp);
         }

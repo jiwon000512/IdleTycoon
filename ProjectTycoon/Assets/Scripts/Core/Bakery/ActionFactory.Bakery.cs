@@ -27,7 +27,7 @@ namespace ZooTycoon.Core
             {
                 OvenInteractable oven = (OvenInteractable)target;
                 BreadTable bread = oven.Bread;
-                worker.Hands.Add(bread, oven.Take(worker.Hands.SpaceFor(bread)));
+                worker.Hands.Add(bread, oven.Take(worker.Hands.SpaceFor(bread)), oven);
             }
         }
 
@@ -51,11 +51,11 @@ namespace ZooTycoon.Core
             public override void Do(Worker worker, Interactable target)
             {
                 ShelfInteractable shelf = (ShelfInteractable)target;
-                worker.Hands.Remove(shelf.Put(worker.Hands.Count));
+                worker.Hands.Remove(shelf.Put(worker.Hands.Count), shelf);
             }
         }
 
-        // 설계 09 v0.4: 계산. auto면 행동이 아니라 계산대 range 안에서 흐르는 타이머(BakeryArea.TickCheckout)라 CanDo가 늘 false,
+        // 설계 09 v0.4: 계산. auto면 행동이 아니라 계산대가 range 안에서 돌리는 타이머(CounterInteractable.Tick)라 CanDo가 늘 false,
         // manual이면 버튼 한 번에 서 있는 줄 머리 계산
         private sealed class Serve : InteractAction
         {
@@ -110,7 +110,7 @@ namespace ZooTycoon.Core
             }
 
             // 해금된 빵만 굽는다
-            public override bool TryBuy(Worker worker, Interactable target, string option)
+            public override bool TryChoose(Worker worker, Interactable target, string option)
             {
                 OvenInteractable oven = (OvenInteractable)target;
 
@@ -162,7 +162,7 @@ namespace ZooTycoon.Core
             }
 
             // 빵은 BreadTable 행 순서대로만 해금한다(설계 08 결정 1)
-            public override bool TryBuy(Worker worker, Interactable target, string option)
+            public override bool TryChoose(Worker worker, Interactable target, string option)
             {
                 if (!(target is SlotInteractable slot))
                 {
@@ -203,7 +203,7 @@ namespace ZooTycoon.Core
                 return new[] { new SheetOption(null, state, cost, 0, ovens, full ? ovens : ovens + 1) };
             }
 
-            public override bool TryBuy(Worker worker, Interactable target, string option)
+            public override bool TryChoose(Worker worker, Interactable target, string option)
             {
                 SlotInteractable slot = (SlotInteractable)target;
                 BakeryArea bakery = slot.Bakery;
@@ -220,7 +220,7 @@ namespace ZooTycoon.Core
             // 설치 가격 = ovenBaseCost × ovenCostGrowth^(시작 뒤 설치한 수)
             private static double Cost(BakeryArea bakery)
             {
-                return bakery.Config.OvenBaseCost * Math.Pow(bakery.Config.OvenCostGrowth, bakery.Ovens.Count - bakery.Config.OvenCount);
+                return bakery.Config.OvenBaseCost * Math.Pow(bakery.Config.OvenCostGrowth, bakery.Ovens.Count - BakeryArea.k_StartOvens);
             }
         }
 
@@ -242,10 +242,18 @@ namespace ZooTycoon.Core
                 return new[] { new SheetOption(null, SheetOption.Afford(worker, cost), cost) };
             }
 
-            public override bool TryBuy(Worker worker, Interactable target, string option)
+            public override bool TryChoose(Worker worker, Interactable target, string option)
             {
                 DigInteractable dig = (DigInteractable)target;
-                return dig.Bakery.Grid.TryDig(dig.Cell);
+                BurrowGrid grid = dig.Bakery.Grid;
+
+                if (!grid.CanDig(dig.Cell) || !worker.Wallet.TrySpendCoins(grid.DigCost))
+                {
+                    return false;
+                }
+
+                grid.Dig(dig.Cell);
+                return true;
             }
         }
     }

@@ -11,13 +11,13 @@ namespace ZooTycoon.Tests
         private const int k_W = 135;
         private const int k_H = 96;
         private const int k_E = 80;
-        private const int k_R = 12;
+        private const int k_R = BurrowShape.k_RoundRadius;
         private const int k_FloorTop = BurrowShape.k_EntranceFloorTop;
         private const int k_K = BurrowShape.k_WallHeight;
 
         private static BurrowShape.Result Build(params Cell[] cells)
         {
-            return BurrowShape.Build(new HashSet<Cell>(cells), k_W, k_H, k_E, k_R);
+            return BurrowShape.Build(new HashSet<Cell>(cells), k_W, k_H, k_E);
         }
 
         // 굴 원점 기준 칸 좌표(x, y 아래로)의 방 안 여부·걷는 바닥 여부·띠 행

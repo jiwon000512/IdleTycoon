@@ -5,16 +5,13 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 굴 격자 설계 v0.5 검증 1: 시작 8칸, 파기 규칙, 비용(길 찾기는 BurrowNavTests)
+    // 굴 격자 설계 v0.5 검증 1: 시작 8칸, 파기 규칙, 비용(값을 치르는 건 파기 행동 — BakeryAreaTests, 길 찾기는 BurrowNavTests)
     public sealed class BurrowGridTests
     {
-        private ZooState m_state;
-
-        private BurrowGrid Create()
+        private static BurrowGrid Create()
         {
             TableSet tables = TestTables.Load();
-            m_state = ZooState.CreateNew(tables);
-            return new BurrowGrid(m_state, tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery));
+            return new BurrowGrid(tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery));
         }
 
         [Test]
@@ -46,29 +43,20 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void TryDig_ChargesGrowingCostAndRefusesTwice()
+        public void Dig_GrowsCostAndDugCellCannotBeDugAgain()
         {
             BurrowGrid grid = Create();
-            m_state.AddCoins(1000d);
-            double coins = m_state.Coins;
+            int dug = 0;
+            grid.Dug += _ => dug++;
 
             Assert.That(grid.DigCost, Is.EqualTo(150d));
-            Assert.That(grid.TryDig(new Cell(1, 1)), Is.True);
-            Assert.That(m_state.Coins, Is.EqualTo(coins - 150d));
+            grid.Dig(new Cell(1, 1));
             Assert.That(grid.DigCost, Is.EqualTo(210d).Within(1e-9));
-            Assert.That(grid.TryDig(new Cell(1, 1)), Is.False);
-            Assert.That(grid.TryDig(new Cell(2, 1)), Is.True);
+            Assert.That(grid.CanDig(new Cell(1, 1)), Is.False);
+            Assert.That(grid.CanDig(new Cell(2, 1)), Is.True);
+            grid.Dig(new Cell(2, 1));
             Assert.That(grid.DigCost, Is.EqualTo(294d).Within(1e-9));
-        }
-
-        [Test]
-        public void TryDig_WithoutCoins_Fails()
-        {
-            BurrowGrid grid = Create();
-            m_state.TrySpendCoins(m_state.Coins);
-
-            Assert.That(grid.TryDig(new Cell(1, 1)), Is.False);
-            Assert.That(grid.Cells.Count, Is.EqualTo(8));
+            Assert.That(dug, Is.EqualTo(2));
         }
     }
 }

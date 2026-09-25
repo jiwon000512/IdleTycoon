@@ -7,16 +7,15 @@ namespace ZooTycoon.Tests
     public sealed class ZooStateTests
     {
         [Test]
-        public void CreateNew_StartsWithConfiguredCoinsAndNothingElse()
+        public void CreateNew_StartsWithConfiguredCoins()
         {
             ZooState state = ZooState.CreateNew(TestTables.Load());
 
             Assert.That(state.Coins, Is.EqualTo(350d));
-            Assert.That(state.TotalCoinsEarned, Is.EqualTo(0d));
         }
 
         [Test]
-        public void AddCoins_RaisesTotalEarnedAndNotifies()
+        public void AddCoins_AddsAndNotifies()
         {
             ZooState state = ZooState.CreateNew(TestTables.Load());
             double notified = 0d;
@@ -25,12 +24,11 @@ namespace ZooTycoon.Tests
             state.AddCoins(50d);
 
             Assert.That(state.Coins, Is.EqualTo(400d));
-            Assert.That(state.TotalCoinsEarned, Is.EqualTo(50d));
             Assert.That(notified, Is.EqualTo(400d));
         }
 
         [Test]
-        public void TrySpendCoins_WhenEnough_SpendsWithoutChangingTotalEarned()
+        public void TrySpendCoins_WhenEnough_Spends()
         {
             ZooState state = ZooState.CreateNew(TestTables.Load());
 
@@ -38,7 +36,6 @@ namespace ZooTycoon.Tests
 
             Assert.That(spent, Is.True);
             Assert.That(state.Coins, Is.EqualTo(250d));
-            Assert.That(state.TotalCoinsEarned, Is.EqualTo(0d));
         }
 
         [Test]

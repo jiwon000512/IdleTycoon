@@ -9,7 +9,7 @@ namespace ZooTycoon.Core
         Head,
     }
 
-    // 기획서 4장 · 데이터-테이블-규칙 8.5: 빵집 손님 외형(VisitorTable.json 행)
+    // 기획서 4장 · 데이터-테이블-규칙 8.5: 손님 외형(VisitorTable.json 행). 손님이 올 때마다 행 중 하나를 고른다
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class VisitorTable : Table<string>
     {
@@ -25,11 +25,6 @@ namespace ZooTycoon.Core
         public double IdleFrameRate { get; set; }
         public double MoveFrameRate { get; set; }
         public double Scale { get; set; }
-        public double MoveSpeed { get; set; }
-        public double ViewSecondsMin { get; set; }
-        public double ViewSecondsMax { get; set; }
-        public int Weight { get; set; }
-        public int SortOrder { get; set; }
         public CarryAt CarryAt { get; set; }
     }
 }

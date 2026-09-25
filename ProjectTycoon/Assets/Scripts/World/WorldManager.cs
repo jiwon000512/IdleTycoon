@@ -15,11 +15,11 @@ namespace ZooTycoon.World
 
         [SerializeField] private WorldCameraController m_camera;
         [Tooltip("빵집 프리팹(설계 08 v0.5). 씬에는 두지 않고 실행 중에 원점에 생성한다")]
-        [SerializeField] private ShopView m_shopPrefab;
+        [SerializeField] private BakeryView m_shopPrefab;
         [Tooltip("광장 프리팹(설계 11). 씬에는 두지 않고 실행 중에 생성한다")]
         [SerializeField] private PlazaView m_plazaPrefab;
 
-        private ShopView m_shopView;
+        private BakeryView m_shopView;
         private PlazaView m_plazaView;
         private Mall m_mall;
 
@@ -30,9 +30,9 @@ namespace ZooTycoon.World
             m_mall = mall;
             m_shopView = Instantiate(m_shopPrefab, Vector3.zero, Quaternion.identity, transform);
             m_shopView.Bind(mall.Bakery, Frames, tables);
-            m_shopView.GetComponent<ShopCustomerSpawner>().Initialize(mall.Bakery, m_shopView, tables, Frames);
-            m_shopView.gameObject.AddComponent<ShopSound>().Initialize(mall.Bakery, tables);
-            m_shopView.Expanded += ShopView_Expanded;
+            m_shopView.GetComponent<BakeryVisitorSpawner>().Initialize(mall.Bakery, m_shopView, tables, Frames);
+            m_shopView.gameObject.AddComponent<BakerySound>().Initialize(mall.Bakery, tables);
+            m_shopView.Expanded += BakeryView_Expanded;
 
             m_plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
             m_plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, tables, Frames);
@@ -45,7 +45,7 @@ namespace ZooTycoon.World
         {
             if (m_shopView != null)
             {
-                m_shopView.Expanded -= ShopView_Expanded;
+                m_shopView.Expanded -= BakeryView_Expanded;
             }
 
             if (m_mall != null)
@@ -58,7 +58,7 @@ namespace ZooTycoon.World
 
         private void FollowWombat()
         {
-            if (m_mall.Current == Area.Bakery)
+            if (m_mall.Active == m_mall.Bakery)
             {
                 m_camera.Follow(m_shopView.Wombat, m_shopView.Bounds);
             }
@@ -68,9 +68,9 @@ namespace ZooTycoon.World
             }
         }
 
-        private void ShopView_Expanded()
+        private void BakeryView_Expanded()
         {
-            if (m_mall.Current == Area.Bakery)
+            if (m_mall.Active == m_mall.Bakery)
             {
                 m_camera.SetBounds(m_shopView.Bounds);
             }

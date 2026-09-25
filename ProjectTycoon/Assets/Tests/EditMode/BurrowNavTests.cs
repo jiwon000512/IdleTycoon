@@ -9,10 +9,7 @@ namespace ZooTycoon.Tests
     // 손님 동선 설계 v0.2 검증 1: 4방향 A*. 마스크는 한 칸 = 1/40유닛, 가게 좌표 y 위
     public sealed class BurrowNavTests
     {
-        private const float k_Ppu = 40f;
-        private const float k_Clearance = 0.3f;
-        private const float k_Step = 0.2f;
-        private const float k_TurnPenalty = 0.6f;
+        private const float k_Ppu = BurrowShape.k_PixelsPerUnit;
 
         // 가게 좌표 사각형들(x0, y0, x1, y1, y 위)을 바닥으로 칠한 마스크. 원점 (0,0)에서 오른쪽 아래로 w×h 유닛
         private static BurrowShape.Result Mask(float w, float h, params (float x0, float y0, float x1, float y1)[] floors)
@@ -43,7 +40,7 @@ namespace ZooTycoon.Tests
 
         private static BurrowNav Nav(BurrowShape.Result shape, params NavRect[] blocked)
         {
-            return new BurrowNav(shape, k_Ppu, blocked, k_Clearance, k_Step, k_TurnPenalty);
+            return new BurrowNav(shape, blocked);
         }
 
         private static void AssertAxisAligned(Vector2 from, IReadOnlyList<Vector2> path)

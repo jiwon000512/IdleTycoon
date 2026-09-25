@@ -25,7 +25,7 @@ namespace ZooTycoon.Core
         // 기준점까지 거리. range 판정과 가장 가까운 대상 고르기에 쓴다
         public abstract float DistanceTo(Vector2 p);
 
-        // 시간이 흐르는 사물만(오븐 굽기)
+        // 시간이 흐르는 사물만(오븐 굽기·계산대 계산)
         public virtual void Tick(double dt)
         {
         }

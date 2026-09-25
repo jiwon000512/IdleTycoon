@@ -138,7 +138,7 @@ GameObject:
   - component: {fileID: 665803465624617356}
   - component: {fileID: 5878910152373518893}
   m_Layer: 0
-  m_Name: ShopCounter
+  m_Name: Counter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

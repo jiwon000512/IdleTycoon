@@ -10,8 +10,6 @@ namespace ZooTycoon.Core
     // 좌표는 가게 원점(입구 줄 윗변 가운데) 기준 유닛, y 위
     public sealed class BakeryLayout
     {
-        public const float k_PixelsPerUnit = 40f;
-        public const int k_RoundRadius = 12;
         // 사물 밑변(그림 발끝): 진열대·오븐은 칸 가운데에서, 계산대·웜뱃은 계산대 줄 윗변에서 아래로
         public const float k_ShelfDrop = 0.65f;
         public const float k_OvenDrop = 0.85f;
@@ -28,10 +26,6 @@ namespace ZooTycoon.Core
         private const float k_CounterDepth = 0.5f;
         // 웜뱃 바닥 자리는 계산대 밑변까지(둘 사이 틈으로 손님이 지나가지 않게)
         private const float k_WombatDepth = 0.9f;
-        // 걷는 땅: 몸 반 폭, 격자 간격, 꺾임 벌점
-        public const float k_Clearance = 0.3f;
-        public const float k_Step = 0.2f;
-        public const float k_TurnPenalty = 0.6f;
         // 서는 자리: 진열대 옆(가운데에서), 앞(아래)
         private const float k_SideOffset = 1.1f;
         private const float k_FrontOffsetX = 0.55f;
@@ -55,6 +49,9 @@ namespace ZooTycoon.Core
         private readonly List<Vector2> m_queueSlots = new List<Vector2>();
         private readonly Dictionary<Cell, List<Vector2>> m_shelfSpots = new Dictionary<Cell, List<Vector2>>();
 
+        // 굴 칸 크기(유닛)
+        public float CellWidth => (float)m_cellWidth;
+        public float CellHeight => (float)m_cellHeight;
         public BurrowShape.Result Shape { get; private set; }
         public BurrowNav Nav { get; private set; }
         // 설계 09: 웜뱃이 걷는 땅. 손님 땅과 같되 계산대 뒤 웜뱃 자리를 막지 않는다
@@ -62,7 +59,7 @@ namespace ZooTycoon.Core
         public IReadOnlyList<Vector2> QueueSlots => m_queueSlots;
         // 구멍 안(나타나는 곳)과 구멍 아래 바닥(내려앉는 곳)
         // 굴 환경 A2: 아치 구멍 밑변(= 띠 밑변) 바로 위에서 톡 나온다
-        public Vector2 HoleInside => new Vector2(0f, -(BurrowShape.k_EntranceFloorTop - 1) / k_PixelsPerUnit);
+        public Vector2 HoleInside => new Vector2(0f, -(BurrowShape.k_EntranceFloorTop - 1) / BurrowShape.k_PixelsPerUnit);
         public Vector2 HoleFloor => new Vector2(0f, -2.2f);
         public Vector2 CounterBase => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_CounterDrop);
         public Vector2 WombatHome => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_WombatDrop);
@@ -152,9 +149,8 @@ namespace ZooTycoon.Core
 
         public void Rebuild(IReadOnlyCollection<Cell> cells, IEnumerable<Cell> shelfCells, IEnumerable<Cell> ovenCells, int queueCapacity)
         {
-            int unit = (int)k_PixelsPerUnit;
-            Shape = BurrowShape.Build(cells, (int)Math.Round(m_cellWidth * unit), (int)Math.Round(m_cellHeight * unit),
-                (int)Math.Round(m_entranceHeight * unit), k_RoundRadius);
+            int unit = (int)BurrowShape.k_PixelsPerUnit;
+            Shape = BurrowShape.Build(cells, (int)Math.Round(m_cellWidth * unit), (int)Math.Round(m_cellHeight * unit), (int)Math.Round(m_entranceHeight * unit));
 
             List<NavRect> blocked = new List<NavRect>();
             List<Cell> shelves = new List<Cell>(shelfCells);
@@ -171,9 +167,9 @@ namespace ZooTycoon.Core
             }
 
             blocked.Add(Footprint(CounterBase, k_CounterHalf, k_CounterDepth));
-            WombatNav = new BurrowNav(Shape, k_PixelsPerUnit, blocked, k_Clearance, k_Step, k_TurnPenalty);
+            WombatNav = new BurrowNav(Shape, blocked);
             blocked.Add(Footprint(WombatHome, k_WombatHalf, k_WombatDepth));
-            Nav = new BurrowNav(Shape, k_PixelsPerUnit, blocked, k_Clearance, k_Step, k_TurnPenalty);
+            Nav = new BurrowNav(Shape, blocked);
 
             BuildQueue(queueCapacity);
             BuildShelfSpots(shelves);
@@ -244,7 +240,7 @@ namespace ZooTycoon.Core
                     // x는 가까운 격자, y는 아래 격자(사물보다 앞에 그려지게)
                     Vector2 spot = new Vector2(Nav.Snap(candidate).X, (float)Math.Floor(candidate.Y / Nav.Step + 1e-4) * Nav.Step);
 
-                    if (Nav.IsWalkable(spot) && !NearQueue(spot) && Vector2.Distance(spot, HoleFloor) >= k_SpotGap && !Near(all, spot, k_Step))
+                    if (Nav.IsWalkable(spot) && !NearQueue(spot) && Vector2.Distance(spot, HoleFloor) >= k_SpotGap && !Near(all, spot, BurrowNav.k_Step))
                     {
                         spots.Add(spot);
                         all.Add(spot);

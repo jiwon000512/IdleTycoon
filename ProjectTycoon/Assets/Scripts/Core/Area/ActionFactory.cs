@@ -4,9 +4,16 @@ using System.Collections.Generic;
 namespace ZooTycoon.Core
 {
     // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일, 빵집: ActionFactory.Bakery.cs).
-    // 새 행동 = 그 sim 파일에 중첩 클래스 하나 + 여기 case 한 줄 + ActionTable 한 줄
+    // 새 행동 = 그 sim 파일에 중첩 클래스 하나 + 여기 case 한 줄과 Ids 한 칸 + ActionTable 한 줄
     public static partial class ActionFactory
     {
+        // 코드에 행동 클래스가 있는 id 전부(검증기가 표와 맞춘다)
+        public static readonly string[] Ids =
+        {
+            ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter, ActionTable.k_Upgrade,
+            ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake, ActionTable.k_Unlock, ActionTable.k_PlaceOven, ActionTable.k_Dig,
+        };
+
         public static InteractAction Create(ActionTable table)
         {
             switch (table.Id)
@@ -51,12 +58,12 @@ namespace ZooTycoon.Core
 
             public override bool Accepts(Interactable target)
             {
-                return target is IPassage;
+                return target is PassageInteractable;
             }
 
             public override void Do(Worker worker, Interactable target)
             {
-                ((IPassage)target).Pass();
+                ((PassageInteractable)target).Pass();
             }
         }
 
@@ -82,7 +89,7 @@ namespace ZooTycoon.Core
                 return new[] { new SheetOption(null, state, cost, level, target.UpgradeValue(level), target.UpgradeValue(maxed ? level : level + 1)) };
             }
 
-            public override bool TryBuy(Worker worker, Interactable target, string option)
+            public override bool TryChoose(Worker worker, Interactable target, string option)
             {
                 UpgradeInfo upgrade = target.Table.Upgrade;
                 int level = target.UpgradeLevel;

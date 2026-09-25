@@ -10,15 +10,15 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("VisitorTable", 7)]
+        [TestCase("VisitorTable", 8)]
         [TestCase("StringTable", 14)]
         [TestCase("BreadTable", 2)]
         [TestCase("ActionTable", 4)]
         [TestCase("InteractableTable", 5)]
         [TestCase("DecorationTable", 3)]
         [TestCase("SoundTable", 2)]
-        [TestCase("ConfigTable", 1)]
-        [TestCase("BakeryConfigTable", 2)]
+        [TestCase("ConfigTable", 2)]
+        [TestCase("BakeryConfigTable", 3)]
         [TestCase("PlazaConfigTable", 1)]
         [TestCase("PlazaDecorTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -81,11 +81,20 @@ namespace ZooTycoon.Tests
         }
 
         [Test]
-        public void Validate_WhenVisitorViewSecondsMinExceedsMax_ReportsError()
+        public void Validate_WhenVisitorScaleZero_ReportsError()
         {
             TableSet tables = TestTables.Load();
-            VisitorTable visitor = tables.GetAll<VisitorTable>()[0];
-            visitor.ViewSecondsMin = visitor.ViewSecondsMax + 1d;
+            tables.GetAll<VisitorTable>()[0].Scale = 0d;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 리뷰 R2: 드는 빵 수는 ConfigTable, 정수
+        [Test]
+        public void Validate_WhenCarryCapacityFraction_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<ConfigTable>(ConfigTable.k_CarryCapacity).Value = 2.5d;
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
