@@ -13,7 +13,7 @@ namespace ZooTycoon.Game
     public sealed class GameManager : MonoSingleton<GameManager>
     {
         public TableSet Tables { get; private set; }
-        // 설계 16: 도메인 사건 버스(EventManager의 것). Core에는 생성자로 넘긴다
+        // 설계 16: 도메인 사건 버스. 게임 상태와 같이 만들고 Core에는 생성자로 넘긴다
         public EventBus Bus { get; private set; }
         public ZooState State { get; private set; }
         // 설계 11: 빵집 + 굴 밖 광장, 웜뱃이 오가는 곳
@@ -35,7 +35,7 @@ namespace ZooTycoon.Game
                 throw new InvalidOperationException($"테이블 검증 실패:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
             }
 
-            Bus = EventManager.Instance.Bus;
+            Bus = new EventBus();
             State = ZooState.CreateNew(Tables, Bus);
             SystemRandom random = new SystemRandom();
             Wombat wombat = new Wombat(Tables, State);
