@@ -11,7 +11,7 @@ namespace ZooTycoon.Core
         public static readonly string[] Ids =
         {
             ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter, ActionTable.k_Upgrade,
-            ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake, ActionTable.k_Unlock, ActionTable.k_PlaceOven, ActionTable.k_Dig,
+            ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake, ActionTable.k_PlaceShelf, ActionTable.k_PlaceOven, ActionTable.k_Dig,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -27,7 +27,7 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Fill: return new Fill(table);
                 case ActionTable.k_Serve: return new Serve(table);
                 case ActionTable.k_Bake: return new Bake(table);
-                case ActionTable.k_Unlock: return new Unlock(table);
+                case ActionTable.k_PlaceShelf: return new PlaceShelf(table);
                 case ActionTable.k_PlaceOven: return new PlaceOven(table);
                 case ActionTable.k_Dig: return new Dig(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");

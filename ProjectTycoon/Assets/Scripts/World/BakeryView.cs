@@ -422,7 +422,7 @@ namespace ZooTycoon.World
 
         private void RefreshShelf(ShelfInteractable shelf)
         {
-            m_shelves[shelf].Show(Icon(shelf.Bread));
+            m_shelves[shelf].Show(Icon(shelf.Bread), shelf.Stock);
             m_signs[shelf].Show(shelf.Stock);
         }
 
@@ -445,9 +445,10 @@ namespace ZooTycoon.World
             return cost.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
         }
 
+        // 빈 진열대(설계 17)는 null
         private Sprite Icon(BreadTable bread)
         {
-            return m_frames.Get(bread.Sprite)[0];
+            return bread == null ? null : m_frames.Get(bread.Sprite)[0];
         }
     }
 }

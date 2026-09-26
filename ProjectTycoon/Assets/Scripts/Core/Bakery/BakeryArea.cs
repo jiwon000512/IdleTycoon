@@ -11,8 +11,9 @@ namespace ZooTycoon.Core
     // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기로 광장에 간다(없는 동안 계산이 멈춘다)
     public sealed partial class BakeryArea : WombatArea
     {
-        // 시작 오븐 수(왼쪽 열 자리 줄 하나). 오븐 설치 가격은 이 뒤로 산 수로 오른다
+        // 시작 오븐·진열대 수(왼쪽 열 자리 줄 하나씩). 설치 가격은 이 뒤로 산 수로 오른다
         public const int k_StartOvens = 1;
+        public const int k_StartShelves = 1;
         // 웜뱃이 끼인 자리(배치가 바뀜)에서 걷는 땅을 찾는 거리(맨해튼)
         private const float k_UnstuckDistance = 3f;
 
@@ -50,8 +51,9 @@ namespace ZooTycoon.Core
             Counter = new CounterInteractable(Row(CounterInteractable.k_Id), this, state);
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor);
 
-            // 시작 배치: 왼쪽 열(−1)의 자리 줄 두 곳에 첫 빵과 오븐. 오른쪽 열(0)은 빈 자리
-            AddShelf(tables.GetAll<BreadTable>()[0], new Cell(-1, 1));
+            // 시작 배치: 왼쪽 열(−1)의 자리 줄 두 곳에 빈 진열대와 오븐. 오른쪽 열(0)은 빈 자리. 첫 빵은 해금된 채 시작(설계 17)
+            m_unlocked.Add(tables.GetAll<BreadTable>()[0]);
+            AddShelf(new Cell(-1, 1));
             AddOven(new Cell(-1, 3));
             RebuildLayout();
             EnterAt(Layout.WombatHome);
@@ -68,23 +70,69 @@ namespace ZooTycoon.Core
             return m_ovens.Find(oven => oven.Cell.Equals(cell));
         }
 
-        public ShelfInteractable ShelfOf(string breadId)
+        // 설계 17: 그 빵 재고가 있는 가장 가까운 진열대. 없으면 가장 가까운 진열대(손님은 거기서 기다린다)
+        public ShelfInteractable ShelfFor(BreadTable bread, Vector2 from)
         {
+            ShelfInteractable best = null;
+            bool bestHas = false;
+            float bestDistance = float.MaxValue;
+
             foreach (ShelfInteractable shelf in m_shelves.Values)
             {
-                if (shelf.Bread.Id == breadId)
+                bool has = shelf.Bread == bread && shelf.Stock > 0;
+                float distance = shelf.DistanceTo(from);
+
+                if (has && !bestHas || has == bestHas && distance < bestDistance)
                 {
-                    return shelf;
+                    best = shelf;
+                    bestHas = has;
+                    bestDistance = distance;
                 }
             }
 
-            throw new KeyNotFoundException($"빵 '{breadId}'의 진열대가 없다.");
+            return best;
         }
 
-        // 설계 13 v0.5: 시트 행동(Unlock·PlaceOven)이 값을 치른 뒤 빈 자리에 놓는다
-        internal void PlaceShelf(BreadTable bread, Cell cell)
+        // 그 빵의 재고 합(굽기 시트 칩)
+        public int StockOf(BreadTable bread)
         {
-            AddShelf(bread, cell);
+            int stock = 0;
+
+            foreach (ShelfInteractable shelf in m_shelves.Values)
+            {
+                if (shelf.Bread == bread)
+                {
+                    stock += shelf.Stock;
+                }
+            }
+
+            return stock;
+        }
+
+        // 그 빵을 진열 중인 진열대 어딘가에 자리가 남았다(채우기가 빈 진열대를 쓸지 정한다)
+        public bool HasRoomFor(BreadTable bread)
+        {
+            foreach (ShelfInteractable shelf in m_shelves.Values)
+            {
+                if (shelf.HasRoomFor(bread))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // 설계 17: 굽기 시트가 값을 치른 뒤 다음 빵을 연다(BreadTable 행 순서)
+        internal void UnlockBread(BreadTable bread)
+        {
+            m_unlocked.Add(bread);
+        }
+
+        // 설계 13 v0.5: 시트 행동(PlaceShelf·PlaceOven)이 값을 치른 뒤 빈 자리에 놓는다
+        internal void PlaceShelf(Cell cell)
+        {
+            AddShelf(cell);
             RebuildLayout();
             OnLayoutChanged();
         }
@@ -106,11 +154,9 @@ namespace ZooTycoon.Core
             return Tables.Get<InteractableTable>(interactableId);
         }
 
-        private void AddShelf(BreadTable bread, Cell cell)
+        private void AddShelf(Cell cell)
         {
-            ShelfInteractable shelf = new ShelfInteractable(Row(ShelfInteractable.k_Id), cell, bread, this);
-            m_unlocked.Add(bread);
-            m_shelves[cell] = shelf;
+            m_shelves[cell] = new ShelfInteractable(Row(ShelfInteractable.k_Id), cell, this);
         }
 
         private void AddOven(Cell cell)

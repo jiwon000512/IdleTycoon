@@ -23,5 +23,9 @@ namespace ZooTycoon.Core
         public double OvenBaseCost { get; set; }
         public double OvenCostGrowth { get; set; }
         public int OvenMax { get; set; }
+        // 설계 17: 진열대 설치 가격 = shelfBaseCost × shelfCostGrowth^(시작 뒤 설치한 수), 진열대는 모두 shelfMax대까지
+        public double ShelfBaseCost { get; set; }
+        public double ShelfCostGrowth { get; set; }
+        public int ShelfMax { get; set; }
     }
 }

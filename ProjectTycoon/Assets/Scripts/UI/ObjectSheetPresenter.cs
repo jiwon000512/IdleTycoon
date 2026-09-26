@@ -99,7 +99,7 @@ namespace ZooTycoon.UI
             switch (m_target)
             {
                 case ShelfInteractable shelf:
-                    m_view.SetHeader(m_tables.Format("sheet_shelf_title", shelf.Bread.Name), m_tables.Format("sheet_shelf_status", shelf.Stock, shelf.Capacity));
+                    m_view.SetHeader(shelf.Bread == null ? m_tables.Text("sheet_shelf_empty_title") : m_tables.Format("sheet_shelf_title", shelf.Bread.Name), m_tables.Format("sheet_shelf_status", shelf.Stock, shelf.Capacity));
                     break;
                 case OvenInteractable oven:
                     m_view.SetHeader(m_tables.Format("sheet_oven_title", IndexOf(oven) + 1), OvenStatus(oven));
@@ -126,18 +126,24 @@ namespace ZooTycoon.UI
             return m_tables.Text("sheet_oven_empty");
         }
 
-        // 굽기 칩: 해금된 빵(빈 오븐일 때만 고를 수 있고, 재고가 없으면 강조) · 다음 빵 잠김
+        // 굽기 칩: 해금된 빵(빈 오븐일 때만 고를 수 있고, 재고가 없으면 강조) · 다음 빵 해금(값, 설계 17)
         private SheetChip Chip(SheetOption option)
         {
             BreadTable bread = m_tables.Get<BreadTable>(option.Option);
+            bool enabled = option.State == SheetOptionState.Enabled;
 
-            if (option.State == SheetOptionState.Locked)
+            if (bread == m_shop.NextBread)
             {
-                return new SheetChip { Label = bread.Name, Sub = m_tables.Text("chip_locked_sub"), Locked = true };
+                return new SheetChip
+                {
+                    SpritePath = bread.Sprite,
+                    Label = m_tables.Format("chip_bread", bread.Name),
+                    Sub = m_tables.Format("chip_unlock_sub", BigNumberFormatter.Format(option.Cost)),
+                    Enabled = enabled,
+                };
             }
 
-            int stock = m_shop.ShelfOf(bread.Id).Stock;
-            bool enabled = option.State == SheetOptionState.Enabled;
+            int stock = m_shop.StockOf(bread);
 
             return new SheetChip
             {
@@ -174,12 +180,12 @@ namespace ZooTycoon.UI
                         Cost = Cost(option),
                         State = RowState(option.State),
                     };
-                case ActionTable.k_Unlock:
+                case ActionTable.k_PlaceShelf:
                     return new SheetRow
                     {
-                        Name = m_tables.Format("row_unlock", m_tables.Get<BreadTable>(option.Option).Name),
-                        Effect = m_tables.Text(option.State == SheetOptionState.Blocked ? "row_unlock_blocked" : "row_unlock_effect"),
-                        Cost = BigNumberFormatter.Format(option.Cost),
+                        Name = m_tables.Text("row_place_shelf"),
+                        Effect = m_tables.Format("row_place_shelf_effect", option.Before, option.After),
+                        Cost = Cost(option),
                         State = RowState(option.State),
                     };
                 case ActionTable.k_Dig:

@@ -1,6 +1,6 @@
 {
   "table": "InteractableTable",
-  "version": 5,
+  "version": 6,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
     "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상.",
@@ -9,11 +9,12 @@
     "version 3 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
     "version 4 (2026-09-24, 설계 13 v0.5 행동을 객체로): actions에 시트 행동(bake·upgrade·unlock·place_oven·dig)을 더해 사물에서 할 수 있는 일을 표 한 곳에 둔다. 파기 자리 버튼은 open_dig.",
     "upgrade (version 5, 2026-09-24, 설계 13 v0.6): 이 사물의 업그레이드(upgrade 행동의 데이터, 없으면 null). 비용 = baseCost × costGrowth^단계, 효과 = effectPerLevel × 단계, 단계는 사물 종류 공통. 값의 뜻은 사물 코드가 정한다(오븐·계산대 = 속도 배수 1 + 효과, 진열대 = 용량 설정 + 효과). lookLevel: 이 단계부터 사물 외형이 바뀐다(오븐 5 = 벽돌 오븐). effectFormat: 효과 전후 문구({0} 현재 {1} 다음).",
-    "version 5 (2026-09-24, 설계 13 v0.6): ShopUpgradeTable.json을 없애고 업그레이드를 사물 행 안(upgrade)으로. 오븐 추가(oven_count)는 업그레이드가 아니라 빈 자리의 오븐 설치(place_oven)라 빼고, 가격은 BakeryConfigTable로."
+    "version 5 (2026-09-24, 설계 13 v0.6): ShopUpgradeTable.json을 없애고 업그레이드를 사물 행 안(upgrade)으로. 오븐 추가(oven_count)는 업그레이드가 아니라 빈 자리의 오븐 설치(place_oven)라 빼고, 가격은 BakeryConfigTable로.",
+    "version 6 (2026-09-26, 설계 17 빈 진열대는 아무 빵): 빵 해금이 진열대와 갈라져 unlock 삭제. 진열대는 빈 자리의 진열대 설치(place_shelf, 값은 BakeryConfigTable), 빵 해금은 오븐 굽기 시트(bake)의 다음 빵 칩."
   ],
   "rows": [
     {
-      "id": "shelf", "range": 1.3, "actions": [ "fill", "open", "upgrade", "unlock" ],
+      "id": "shelf", "range": 1.3, "actions": [ "fill", "open", "upgrade" ],
       "upgrade": { "name": "진열대 넓히기", "baseCost": 80, "costGrowth": 1.5, "maxLevel": 10, "effectPerLevel": 4, "lookLevel": 0, "effectFormat": "용량 {0} → {1}" }
     },
     {
@@ -25,7 +26,7 @@
       "upgrade": { "name": "계산 속도", "baseCost": 120, "costGrowth": 1.6, "maxLevel": 10, "effectPerLevel": 0.2, "lookLevel": 0, "effectFormat": "속도 ×{0} → ×{1}" }
     },
     {
-      "id": "slot", "range": 1.0, "actions": [ "open", "unlock", "place_oven" ],
+      "id": "slot", "range": 1.0, "actions": [ "open", "place_shelf", "place_oven" ],
       "upgrade": null
     },
     {

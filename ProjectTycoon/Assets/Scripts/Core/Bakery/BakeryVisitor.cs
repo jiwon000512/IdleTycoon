@@ -104,7 +104,8 @@ namespace ZooTycoon.Core
             return TickHop(dt) ? BtStatus.Success : BtStatus.Running;
         }
 
-        // 안 가 본 빵 중 가중치 난수. 재고는 보지 않는다(가 봐야 안다). 다 가 봤으면 지금 빵 그대로
+        // 안 가 본 빵 중 가중치 난수. 재고는 보지 않는다(가 봐야 안다). 다 가 봤으면 지금 빵 그대로.
+        // 설계 17: 진열대는 그 빵 재고가 있는 가장 가까운 곳, 없으면 가장 가까운 진열대(거기서 기다린다)
         private BtStatus ChooseBread()
         {
             int weightSum = 0;
@@ -116,7 +117,13 @@ namespace ZooTycoon.Core
 
             if (weightSum == 0)
             {
-                return Bread != null ? BtStatus.Success : BtStatus.Failure;
+                if (Bread == null)
+                {
+                    return BtStatus.Failure;
+                }
+
+                Cell = Bakery.ShelfFor(Bread, Position).Cell;
+                return BtStatus.Success;
             }
 
             double roll = Bakery.Random.NextDouble() * weightSum;
@@ -139,7 +146,7 @@ namespace ZooTycoon.Core
             }
 
             Bread = chosen;
-            Cell = Bakery.ShelfOf(chosen.Id).Cell;
+            Cell = Bakery.ShelfFor(chosen, Position).Cell;
             m_tried.Add(chosen.Id);
             return BtStatus.Success;
         }
@@ -166,10 +173,12 @@ namespace ZooTycoon.Core
             return Moving ? BtStatus.Running : BtStatus.Success;
         }
 
-        // 재고가 있으면 하나 집는다(pickSeconds 동안 빵이 손으로)
+        // 내 빵의 재고가 있으면 하나 집는다(pickSeconds 동안 빵이 손으로). 기다리는 사이 다른 빵으로 바뀐 진열대에서는 집지 않는다
         private bool StartPick()
         {
-            if (!Bakery.Shelves[Cell].TryPick())
+            ShelfInteractable shelf = Bakery.Shelves[Cell];
+
+            if (shelf.Bread != Bread || !shelf.TryPick())
             {
                 return false;
             }
@@ -208,7 +217,9 @@ namespace ZooTycoon.Core
 
         private BtStatus TickLook(double dt)
         {
-            if (Bakery.Shelves[Cell].Stock > 0)
+            ShelfInteractable shelf = Bakery.Shelves[Cell];
+
+            if (shelf.Bread == Bread && shelf.Stock > 0)
             {
                 return BtStatus.Success;
             }

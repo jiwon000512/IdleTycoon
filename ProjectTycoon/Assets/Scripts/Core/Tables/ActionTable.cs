@@ -23,7 +23,7 @@ namespace ZooTycoon.Core
         public const string k_Enter = "enter";
         public const string k_Bake = "bake";
         public const string k_Upgrade = "upgrade";
-        public const string k_Unlock = "unlock";
+        public const string k_PlaceShelf = "place_shelf";
         public const string k_PlaceOven = "place_oven";
         public const string k_Dig = "dig";
 

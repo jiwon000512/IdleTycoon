@@ -1,15 +1,16 @@
 {
   "table": "ActionTable",
-  "version": 4,
+  "version": 5,
   "notes": [
     "설계 09 v0.4 → 설계 13 v0.5: 웜뱃이 사물에서 하는 행동. 하는 일은 행동 클래스(ActionFactory 안 중첩 클래스, id로 만든다), 이 표는 어떻게 하는지(mode)와 버튼 아이콘. 어느 사물에서 되는지는 InteractableTable.json actions.",
     "mode: auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로 · manual = 상호작용 버튼(지금 할 수 있는 첫 manual 행동) · sheet = 시트의 한 줄(줄을 누르면 산다). take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
     "icon: 버튼 아이콘(Resources/ 기준 경로, 확장자 없음). manual이면 필수, 나머지는 null.",
-    "take_out: 오븐의 다 구운 빵을 ConfigTable carryCapacity까지 앞발에. fill: 든 빵을 그 빵 진열대에 자리만큼 한 번에. serve: auto면 range 안에 있는 동안 줄 머리 계산 타이머가 흐르고, manual이면 버튼 한 번에 서 있는 줄 머리 계산. open·open_dig: 시트 열기(돋보기·삽 아이콘). exit·enter: 곳 옮기기.",
-    "sheet 행동: bake(해금된 빵마다 칩, 빈 오븐만) · upgrade(사물 행의 upgrade 데이터로 줄 하나) · unlock(빈 자리: 다음 빵 진열대. 진열대: 빈 자리가 없을 때 안내 줄) · place_oven(빈 자리: 오븐 설치, 값은 BakeryConfigTable) · dig(그 칸 파기).",
+    "take_out: 오븐의 다 구운 빵을 ConfigTable carryCapacity까지 앞발에. fill: 든 빵을 그 빵 진열대에 자리만큼 한 번에(빈 진열대는 그 빵 진열대 어디에도 자리가 없을 때만, 설계 17). serve: auto면 range 안에 있는 동안 줄 머리 계산 타이머가 흐르고, manual이면 버튼 한 번에 서 있는 줄 머리 계산. open·open_dig: 시트 열기(돋보기·삽 아이콘). exit·enter: 곳 옮기기.",
+    "sheet 행동: bake(해금된 빵마다 칩, 빈 오븐만 + 다음 빵 해금 칩, 값은 BreadTable unlockCost) · upgrade(사물 행의 upgrade 데이터로 줄 하나) · place_shelf(빈 자리: 진열대 설치) · place_oven(빈 자리: 오븐 설치, 값은 둘 다 BakeryConfigTable) · dig(그 칸 파기).",
     "version 2 (2026-09-24, 설계 11 굴 밖 광장): exit(빵집 구멍 앞 → 광장)·enter(광장 빵집 문 → 빵집) 추가. 곳을 옮기는 행동이라 manual만.",
     "version 3 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
-    "version 4 (2026-09-24, 설계 13 v0.5 행동을 객체로): mode에 sheet 추가, 시트 행동 5개(bake·upgrade·unlock·place_oven·dig). 파기 시트를 여는 버튼은 open_dig(삽 아이콘), dig는 시트의 파기 줄."
+    "version 4 (2026-09-24, 설계 13 v0.5 행동을 객체로): mode에 sheet 추가, 시트 행동 5개(bake·upgrade·unlock·place_oven·dig). 파기 시트를 여는 버튼은 open_dig(삽 아이콘), dig는 시트의 파기 줄.",
+    "version 5 (2026-09-26, 설계 17): unlock 삭제(빵 해금은 bake의 다음 빵 칩), place_shelf(빈 자리의 진열대 설치) 추가."
   ],
   "rows": [
     { "id": "take_out", "mode": "auto", "icon": null },
@@ -21,7 +22,7 @@
     { "id": "enter", "mode": "manual", "icon": "Sprites/Actions/enter" },
     { "id": "bake", "mode": "sheet", "icon": null },
     { "id": "upgrade", "mode": "sheet", "icon": null },
-    { "id": "unlock", "mode": "sheet", "icon": null },
+    { "id": "place_shelf", "mode": "sheet", "icon": null },
     { "id": "place_oven", "mode": "sheet", "icon": null },
     { "id": "dig", "mode": "sheet", "icon": null }
   ]

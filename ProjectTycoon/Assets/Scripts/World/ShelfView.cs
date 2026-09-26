@@ -16,10 +16,9 @@ namespace ZooTycoon.World
             StartCoroutine(Fx.Bounce(m_body.transform));
         }
 
-        public void Show(Sprite icon)
+        public void Show(Sprite icon, int stock)
         {
-            m_body.color = Color.white;
-            m_icon.enabled = true;
+            m_icon.enabled = stock > 0;
             m_icon.sprite = icon;
         }
     }

@@ -11,14 +11,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 8)]
-        [TestCase("StringTable", 14)]
+        [TestCase("StringTable", 15)]
         [TestCase("BreadTable", 2)]
-        [TestCase("ActionTable", 4)]
-        [TestCase("InteractableTable", 5)]
+        [TestCase("ActionTable", 5)]
+        [TestCase("InteractableTable", 6)]
         [TestCase("DecorationTable", 3)]
         [TestCase("SoundTable", 3)]
         [TestCase("ConfigTable", 2)]
-        [TestCase("BakeryConfigTable", 3)]
+        [TestCase("BakeryConfigTable", 4)]
         [TestCase("PlazaConfigTable", 1)]
         [TestCase("PlazaDecorTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)

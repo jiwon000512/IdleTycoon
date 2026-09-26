@@ -22,7 +22,6 @@ namespace ZooTycoon.UI
         public string Label;
         public string Sub;
         public bool Highlighted;
-        public bool Locked;
         public bool Enabled = true;
     }
 
@@ -93,7 +92,7 @@ namespace ZooTycoon.UI
                 SheetChip chip = chips[i];
                 Button button = m_chips[i];
                 button.image.sprite = chip.Highlighted ? m_chipHighlightSprite : m_chipSprite;
-                button.interactable = chip.Enabled && !chip.Locked;
+                button.interactable = chip.Enabled;
                 Image icon = button.transform.Find("Icon").GetComponent<Image>();
                 Sprite sprite = chip.SpritePath != null ? Resources.Load<Sprite>(chip.SpritePath) : null;
                 icon.sprite = sprite;
@@ -108,7 +107,7 @@ namespace ZooTycoon.UI
                 button.transform.Find("Label").GetComponent<TMP_Text>().text = chip.Label;
                 button.transform.Find("Sub").GetComponent<TMP_Text>().text = chip.Sub;
                 CanvasGroup group = button.GetComponent<CanvasGroup>();
-                group.alpha = chip.Locked || !chip.Enabled ? 0.5f : 1f;
+                group.alpha = chip.Enabled ? 1f : 0.5f;
             }
         }
 
