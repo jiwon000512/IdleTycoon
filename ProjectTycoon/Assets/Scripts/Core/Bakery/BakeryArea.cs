@@ -72,6 +72,7 @@ namespace ZooTycoon.Core
             Grid = new BurrowGrid(m_config, bus);
             bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new BakeryLayout(tables);
+            InitClerks();
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor);
 
             foreach (InteractableTable row in tables.GetAll<InteractableTable>())
@@ -184,6 +185,12 @@ namespace ZooTycoon.Core
         protected override void TickArea(double dt)
         {
             TickVisitors(dt);
+            TickClerks(dt);
+        }
+
+        protected override bool IsStaffed(Interactable thing)
+        {
+            return ClerkOf(thing) != null;
         }
 
         protected override IPlacedKind KindOf(string kindId)
@@ -220,8 +227,16 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 보관하면 붙어 있던 점원은 그만둔다(설계 21)
         protected override void Destroy(IPlaced thing)
         {
+            Clerk clerk = ClerkOf((Interactable)thing);
+
+            if (clerk != null)
+            {
+                Fire(clerk, FireReason.Stored);
+            }
+
             switch (thing)
             {
                 case ShelfInteractable shelf:
@@ -270,6 +285,7 @@ namespace ZooTycoon.Core
             Layout.Rebuild(Grid.Cells, m_shelves, m_ovens, m_counters, m_config.MaxCustomers);
             SyncThings();
             RepathVisitors();
+            RepathClerks();
 
             if (!WombatPresent)
             {

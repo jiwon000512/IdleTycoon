@@ -53,6 +53,12 @@ namespace ZooTycoon.Core
         }
 
         protected List<Interactable> Placed { get; } = new List<Interactable>();
+        // 설계 21: 점원이 붙은 사물(웜뱃의 auto 행동은 건너뛴다. 시트 열기·대상은 그대로)
+        protected virtual bool IsStaffed(Interactable thing)
+        {
+            return false;
+        }
+
         protected abstract BurrowNav WombatNav { get; }
         protected abstract Vector2 Entrance { get; }
 
@@ -111,6 +117,20 @@ namespace ZooTycoon.Core
                     yield return action;
                 }
             }
+        }
+
+        // 설계 21: 점원이 행동(꺼내기·채우기)을 자기 손으로 한다. 할 수 없으면 false
+        internal bool TryDo(string actionId, Worker worker, Interactable target)
+        {
+            InteractAction action = m_actions[actionId];
+
+            if (!action.CanDo(worker, target))
+            {
+                return false;
+            }
+
+            action.Do(worker, target);
+            return true;
         }
 
         // 시트 줄 누르기
@@ -212,6 +232,11 @@ namespace ZooTycoon.Core
 
             foreach (Interactable thing in m_inRange)
             {
+                if (IsStaffed(thing))
+                {
+                    continue;
+                }
+
                 foreach (string id in thing.Table.Actions)
                 {
                     InteractAction action = m_actions[id];

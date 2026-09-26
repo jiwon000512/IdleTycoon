@@ -41,6 +41,17 @@ namespace ZooTycoon.Core
                 Add(chars, row.Name);
             }
 
+            // 설계 21: 점원 역할 이름과 후보 이름 풀
+            foreach (ClerkTable row in tables.GetAll<ClerkTable>())
+            {
+                Add(chars, row.Name);
+            }
+
+            foreach (string name in tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main).Names)
+            {
+                Add(chars, name);
+            }
+
             foreach (InteractableTable row in tables.GetAll<InteractableTable>())
             {
                 if (row.Upgrade != null)

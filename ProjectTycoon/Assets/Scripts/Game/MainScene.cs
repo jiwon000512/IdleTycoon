@@ -14,6 +14,7 @@ namespace ZooTycoon.Game
         private ControlHudPresenter m_hudPresenter;
         private ObjectSheetPresenter m_sheetPresenter;
         private EditModePresenter m_editPresenter;
+        private ClerkPresenter m_clerkPresenter;
         private ControlHudView m_hudView;
 
         private void Awake()
@@ -26,12 +27,14 @@ namespace ZooTycoon.Game
             m_hudView = ui.Open<ControlHudView>();
             ObjectSheetView sheetView = ui.Open<ObjectSheetView>();
             EditModeView editView = ui.Open<EditModeView>();
+            ClerkPopupView clerkView = ui.Open<ClerkPopupView>();
             WorldManager world = WorldManager.Instance;
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables);
             m_hudPresenter = new ControlHudPresenter(m_hudView, game.Mall, game.Bus);
             m_sheetPresenter = new ObjectSheetPresenter(sheetView, game.Mall.Bakery, game.Bus, game.Tables);
             m_editPresenter = new EditModePresenter(editView, game.Mall, game.Bus, game.Tables, world.OriginOf);
+            m_clerkPresenter = new ClerkPresenter(clerkView, game.Mall, game.Bus, game.Tables);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.EditingChanged += Edit_EditingChanged;
@@ -60,6 +63,7 @@ namespace ZooTycoon.Game
             m_hudPresenter?.Dispose();
             m_sheetPresenter?.Dispose();
             m_editPresenter?.Dispose();
+            m_clerkPresenter?.Dispose();
         }
 
         private void Hud_SheetRequested(Interactable target)
@@ -70,6 +74,7 @@ namespace ZooTycoon.Game
         private void Edit_EditingChanged(bool editing)
         {
             m_hudView.SetEditing(editing);
+            m_clerkPresenter.SetEditing(editing);
             WorldManager.Instance.SetEditing(editing);
         }
     }

@@ -99,6 +99,13 @@ namespace ZooTycoon.World
             StartCoroutine(FlyRoutine(from));
         }
 
+        // 설계 21 점원: 든 빵을 바로 보이거나 감춘다(null = 빈손)
+        public void ShowCarry(Sprite bread)
+        {
+            m_carry.sprite = bread;
+            m_carrying = bread != null;
+        }
+
         public void Pay(string amount, string heart)
         {
             m_carrying = false;

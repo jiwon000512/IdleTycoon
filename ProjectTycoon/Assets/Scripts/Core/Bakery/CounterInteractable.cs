@@ -21,6 +21,8 @@ namespace ZooTycoon.Core
         public BakeryArea Bakery { get; }
         public Vector2 Position { get; private set; }
         public IReadOnlyList<BakeryVisitor> Queue => m_queue;
+        // 설계 21: 지금까지 계산한 손님 수(계산 점원이 한 명 끝났는지 본다)
+        public int Served { get; private set; }
         // 줄 머리가 머리 자리에 서서 계산을 기다린다
         public bool HeadWaiting => m_queue.Count > 0 && m_queue[0].Phase == VisitorPhase.Queued && !m_queue[0].Moving;
         // 줄 머리의 계산 타이머가 돌기 시작했다(웜뱃이 자리를 비우면 멈춘 채 남는다). 화면이 게이지를 보인다
@@ -52,24 +54,41 @@ namespace ZooTycoon.Core
         // 웜뱃이 자리에 붙어 있다
         public bool WombatAtSpot => Vector2.Distance(Area.Wombat.Mover.Position, WorkerSpot) <= k_AtSpot;
 
-        // 줄 머리가 머리 자리에 선 뒤에만 계산이 흐른다. 웜뱃이 계산대 자리를 비우면 멈춘다
+        // 줄 머리가 머리 자리에 선 뒤에만 계산이 흐른다. 점원(설계 21)이 있으면 점원이 자리에 붙어 일할 때, 없으면 웜뱃이 자리에 붙어 있을 때
         public override void Tick(double dt)
         {
-            if (!HeadWaiting || !m_serveAuto || !Area.IsInRange(this))
+            if (!HeadWaiting || !m_serveAuto)
             {
                 return;
             }
 
-            if (!WombatAtSpot)
-            {
-                Wombat wombat = Area.Wombat;
+            Clerk clerk = Bakery.ClerkOf(this);
 
-                if (Area.Target == this && !wombat.Guided && wombat.Input == Vector2.Zero)
+            if (clerk != null)
+            {
+                if (!clerk.Working)
                 {
-                    wombat.Guide(Bakery.Layout.WombatNav, WorkerSpot, Facing.Down);
+                    return;
+                }
+            }
+            else
+            {
+                if (!Area.IsInRange(this))
+                {
+                    return;
                 }
 
-                return;
+                if (!WombatAtSpot)
+                {
+                    Wombat wombat = Area.Wombat;
+
+                    if (Area.Target == this && !wombat.Guided && wombat.Input == Vector2.Zero)
+                    {
+                        wombat.Guide(Bakery.Layout.WombatNav, WorkerSpot, Facing.Down);
+                    }
+
+                    return;
+                }
             }
 
             if (m_timing != m_queue[0])
@@ -91,6 +110,7 @@ namespace ZooTycoon.Core
         {
             BakeryVisitor head = m_queue[0];
             m_queue.RemoveAt(0);
+            Served++;
             head.Pay();
             m_till.AddCoins(head.Bread.Price);
             Bakery.Bus.Publish(new Events.BakeryVisitorPaid(head, head.Bread.Price));

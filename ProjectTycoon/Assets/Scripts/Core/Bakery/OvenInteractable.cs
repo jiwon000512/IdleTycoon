@@ -11,6 +11,8 @@ namespace ZooTycoon.Core
         public BakeryArea Bakery { get; }
         public Vector2 Position { get; private set; }
         public BreadTable Bread { get; private set; }
+        // 설계 21: 이 오븐에서 마지막으로 구운 빵. 오븐 점원이 이 빵을 반복해 굽는다(아직 없으면 해금된 첫 빵)
+        public BreadTable LastBread { get; private set; }
         public double Remaining { get; private set; }
         public int Ready { get; private set; }
         public bool IsEmpty => Bread == null;
@@ -44,6 +46,7 @@ namespace ZooTycoon.Core
             }
 
             Bread = bread;
+            LastBread = bread;
             Remaining = bread.BakeSeconds;
             OnChanged();
             return true;

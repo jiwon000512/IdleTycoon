@@ -9,7 +9,7 @@ namespace ZooTycoon.Editor
 {
     // UI-디자인-규칙 v1.0 + 사물 터치 기획 + 설계 09: 상단 바·가게 HUD(조이스틱·상호작용 버튼)·사물 시트 프리팹을 규칙 숫자로 조립한다(손으로 만든 프리팹 없음).
     // 단위: 1 UI px = 캔버스 4px(U). 스프라이트는 Sprites/UI(PPU 25, 9-slice), 폰트는 Fonts/Galmuri
-    public static class UIBaker
+    public static partial class UIBaker
     {
         const float U = 4f;
         const string k_SpriteDir = "Assets/Sprites/UI/";
@@ -38,8 +38,9 @@ namespace ZooTycoon.Editor
             BakeControlHud();
             BakeObjectSheet();
             BakeEditMode();
+            BakeClerkPopup();
             AssetDatabase.SaveAssets();
-            Debug.Log("UI prefabs: TopBarView, ControlHudView, ObjectSheetView, EditModeView");
+            Debug.Log("UI prefabs: TopBarView, ControlHudView, ObjectSheetView, EditModeView, ClerkPopupView");
         }
 
         // ---------- 상단 HUD(시안 C): 바 배경 없음, 왼쪽 위 (3,3)에 높이 16 캡슐 = 코인 12 + 숫자. 폭은 숫자에 맞춰 늘어난다 ----------

@@ -16,6 +16,8 @@ namespace ZooTycoon.Core
         private readonly List<DecorationData> m_decor = new List<DecorationData>();
         private readonly List<IPlacedKind> m_shopKinds = new List<IPlacedKind>();
         private readonly HashSet<int> m_takenSpots = new HashSet<int>();
+        // 설계 21: 손님 외형(role customer)만
+        private readonly List<VisitorTable> m_looks = new List<VisitorTable>();
         private double m_arrivalElapsed;
         private int m_nextVisitorId;
 
@@ -44,6 +46,14 @@ namespace ZooTycoon.Core
             foreach (DecorationTable row in tables.GetAll<DecorationTable>())
             {
                 m_shopKinds.Add(row);
+            }
+
+            foreach (VisitorTable look in tables.GetAll<VisitorTable>())
+            {
+                if (look.Role == VisitorRole.Customer)
+                {
+                    m_looks.Add(look);
+                }
             }
 
             foreach (PlazaDecorTable placed in tables.GetAll<PlazaDecorTable>())
@@ -140,8 +150,7 @@ namespace ZooTycoon.Core
             }
 
             m_arrivalElapsed = 0d;
-            IReadOnlyList<VisitorTable> looks = Tables.GetAll<VisitorTable>();
-            VisitorTable look = looks[RandomIndex(looks.Count)];
+            VisitorTable look = m_looks[RandomIndex(m_looks.Count)];
             int visits = m_config.VisitsMin + RandomIndex(m_config.VisitsMax - m_config.VisitsMin + 1);
             bool wantsShop = m_random.NextDouble() >= m_config.BrowseChance;
             Spawn(new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, visits, wantsShop));

@@ -7,15 +7,19 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 08 v0.5 · 손님 동선 설계 v0.2: BakeryArea 손님 사건 → 손님 개체 생성·연출·삭제. 걷기와 판단은 Core가 하고 개체는 그 위치를 그린다
+    // 설계 08 v0.5 · 손님 동선 설계 v0.2: BakeryArea 손님 사건 → 손님 개체 생성·연출·삭제. 걷기와 판단은 Core가 하고 개체는 그 위치를 그린다.
+    // 설계 21: 점원(Clerk)도 같은 프리팹(외형은 VisitorTable clerk 행). 고용되면 만들고, 든 빵을 보이고, 해고 말풍선, 구멍으로 사라지면 지운다
     public sealed class BakeryVisitorSpawner : MonoBehaviour
     {
         private const string k_CoinKey = "coin_popup";
         private const string k_HappyKey = "emote_happy";
+        private const string k_FiredKey = "emote_fired";
 
         [SerializeField] private VisitorView m_prefab;
 
         private readonly Dictionary<BakeryVisitor, VisitorView> m_units = new Dictionary<BakeryVisitor, VisitorView>();
+        private readonly Dictionary<Clerk, VisitorView> m_clerks = new Dictionary<Clerk, VisitorView>();
+        private readonly Dictionary<Clerk, System.Action<Interactable>> m_clerkHands = new Dictionary<Clerk, System.Action<Interactable>>();
         private BakeryArea m_shop;
         private BakeryView m_view;
         private TableSet m_tables;
@@ -35,6 +39,9 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorPicked>(Bus_VisitorPicked),
                 bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
                 bus.Subscribe<Events.BakeryVisitorLeft>(Bus_VisitorLeft),
+                bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired),
+                bus.Subscribe<Events.ClerkFired>(Bus_ClerkFired),
+                bus.Subscribe<Events.ClerkLeft>(Bus_ClerkLeft),
             };
         }
 
@@ -47,6 +54,49 @@ namespace ZooTycoon.World
                     subscription.Dispose();
                 }
             }
+
+            foreach (KeyValuePair<Clerk, System.Action<Interactable>> pair in m_clerkHands)
+            {
+                pair.Key.Worker.Hands.Changed -= pair.Value;
+            }
+        }
+
+        private void Bus_ClerkHired(Events.ClerkHired e)
+        {
+            Clerk clerk = e.Clerk;
+
+            if (clerk.Bakery != m_shop)
+            {
+                return;
+            }
+
+            VisitorView unit = Instantiate(m_prefab, transform);
+            unit.Initialize(clerk, m_frames, m_view.transform);
+            m_clerks[clerk] = unit;
+            System.Action<Interactable> handler = _ => unit.ShowCarry(clerk.Worker.Hands.Bread != null ? m_frames.Get(clerk.Worker.Hands.Bread.Sprite)[0] : null);
+            clerk.Worker.Hands.Changed += handler;
+            m_clerkHands[clerk] = handler;
+        }
+
+        private void Bus_ClerkFired(Events.ClerkFired e)
+        {
+            if (e.Clerk.Bakery == m_shop && m_clerks.TryGetValue(e.Clerk, out VisitorView unit))
+            {
+                unit.Emote(m_tables.Text(k_FiredKey));
+            }
+        }
+
+        private void Bus_ClerkLeft(Events.ClerkLeft e)
+        {
+            if (e.Clerk.Bakery != m_shop || !m_clerks.TryGetValue(e.Clerk, out VisitorView unit))
+            {
+                return;
+            }
+
+            e.Clerk.Worker.Hands.Changed -= m_clerkHands[e.Clerk];
+            m_clerkHands.Remove(e.Clerk);
+            Destroy(unit.gameObject);
+            m_clerks.Remove(e.Clerk);
         }
 
         // 이 빵집 손님만(설계 16: 사건은 발신자의 곳으로 거른다)

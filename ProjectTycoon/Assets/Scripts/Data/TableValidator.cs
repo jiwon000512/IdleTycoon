@@ -31,6 +31,8 @@ namespace ZooTycoon.Data
             List<string> errors = new List<string>();
 
             ValidateVisitors(tables, errors);
+            ValidateClerks(tables, errors);
+            ValidateClerkConfig(tables, errors);
             ValidateBreads(tables, errors);
             ValidateActions(tables, errors);
             ValidateInteractables(tables, errors);
@@ -51,8 +53,14 @@ namespace ZooTycoon.Data
                 errors.Add("VisitorTable: 행이 하나도 없다.");
             }
 
+            bool customer = false;
+            bool clerk = false;
+
             foreach (VisitorTable visitor in tables.GetAll<VisitorTable>())
             {
+                customer |= visitor.Role == VisitorRole.Customer;
+                clerk |= visitor.Role == VisitorRole.Clerk;
+
                 if (!k_VisitorIdPattern.IsMatch(visitor.Id))
                 {
                     errors.Add($"VisitorTable '{visitor.Id}': 관광객 ID는 v + 두 자리 번호여야 한다.");
@@ -68,6 +76,76 @@ namespace ZooTycoon.Data
                     errors.Add($"VisitorTable '{visitor.Id}': idleFrameRate·moveFrameRate·scale은 0보다 커야 한다.");
                 }
             }
+
+            // 설계 21: 손님 외형과 점원 외형이 하나씩은 있어야 한다
+            if (tables.GetAll<VisitorTable>().Count > 0 && (!customer || !clerk))
+            {
+                errors.Add("VisitorTable: role customer와 clerk 행이 하나씩은 있어야 한다.");
+            }
+        }
+
+        // 설계 21: 점원 역할은 worker 자리가 있는 사물(오븐·계산대)마다 하나, baseWage > 0
+        private static void ValidateClerks(TableSet tables, List<string> errors)
+        {
+            HashSet<string> interactableIds = Ids<InteractableTable>(tables);
+
+            foreach (ClerkTable role in tables.GetAll<ClerkTable>())
+            {
+                CheckId("ClerkTable", role.Id, errors);
+
+                if (string.IsNullOrEmpty(role.Name) || role.BaseWage <= 0d)
+                {
+                    errors.Add($"ClerkTable '{role.Id}': name이 있고 baseWage는 0보다 커야 한다.");
+                }
+
+                if (!interactableIds.Contains(role.Id))
+                {
+                    errors.Add($"ClerkTable '{role.Id}': InteractableTable에 같은 id의 사물이 없다.");
+                }
+            }
+
+            CheckRequired<ClerkTable>(tables, new[] { OvenInteractable.k_Id, CounterInteractable.k_Id }, errors);
+        }
+
+        private static void ValidateClerkConfig(TableSet tables, List<string> errors)
+        {
+            foreach (ClerkConfigTable config in tables.GetAll<ClerkConfigTable>())
+            {
+                if (config.WagePeriodSeconds <= 0d || config.CandidateCount < 1 || config.RefreshCost < 0d || config.SkillSkew <= 0d || config.WagePerSkill < 0d)
+                {
+                    errors.Add($"ClerkConfigTable '{config.Id}': wagePeriodSeconds·skillSkew는 0보다, candidateCount는 1 이상, refreshCost·wagePerSkill은 0 이상이어야 한다.");
+                }
+
+                if (config.IdleSecondsMin < 0d || config.IdleSecondsMax < config.IdleSecondsMin || config.MarkerSpeedMin <= 0d || config.MarkerSpeedMax < config.MarkerSpeedMin
+                    || config.NegotiateSeconds <= 0d || config.ChangeMin < 0d || config.ChangeMax < config.ChangeMin)
+                {
+                    errors.Add($"ClerkConfigTable '{config.Id}': idleSeconds·markerSpeed·change는 Min 0 이상(markerSpeedMin은 0보다) Max ≥ Min, negotiateSeconds는 0보다 커야 한다.");
+                }
+
+                bool red = false;
+
+                foreach (NegotiationZone zone in config.Zones ?? new List<NegotiationZone>())
+                {
+                    red |= zone.Color == ZoneColor.Red;
+
+                    if (zone.HalfWidth <= 0d || zone.Keep < 0 || zone.Down < 0 || zone.Up < 0 || zone.Keep + zone.Down + zone.Up == 0)
+                    {
+                        errors.Add($"ClerkConfigTable '{config.Id}': zones의 halfWidth는 0보다, keep·down·up은 0 이상이고 합이 0보다 커야 한다.");
+                    }
+                }
+
+                if (!red)
+                {
+                    errors.Add($"ClerkConfigTable '{config.Id}': zones에 red가 있어야 한다(못 맞췄을 때·시간 초과).");
+                }
+
+                if (config.Names == null || config.Names.Count < config.CandidateCount)
+                {
+                    errors.Add($"ClerkConfigTable '{config.Id}': names는 candidateCount 이상이어야 한다.");
+                }
+            }
+
+            CheckRequired<ClerkConfigTable>(tables, new[] { ClerkConfigTable.k_Main }, errors);
         }
 
         // 설계 08 v0.5

@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 16,
+  "version": 17,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -18,45 +18,281 @@
     "version 13 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
     "version 14 (2026-09-24, 설계 13 v0.6): 빈 자리 시트의 오븐 설치 줄 row_place_oven·row_place_oven_effect(업그레이드 줄 서식에서 분리).",
     "version 15 (2026-09-26, 설계 17 빈 진열대는 아무 빵): 빈 진열대 제목 sheet_shelf_empty_title, 굽기 시트 다음 빵 해금 칩 chip_unlock_sub, 빈 자리 진열대 설치 줄 row_place_shelf·row_place_shelf_effect 추가. chip_locked_sub·row_unlock·row_unlock_effect·row_unlock_blocked 삭제.",
-    "version 16 (2026-09-26, 설계 18 자유 배치): 편집 모드 문구 edit_*(완료 버튼·보관 안내·보관 개수)와 상점 카드 이름 kind_<종류 id>(사물 3 + 장식 8) 추가. 빈 자리 시트 sheet_slot_*·설치 줄 row_place_* 삭제."
+    "version 16 (2026-09-26, 설계 18 자유 배치): 편집 모드 문구 edit_*(완료 버튼·보관 안내·보관 개수)와 상점 카드 이름 kind_<종류 id>(사물 3 + 장식 8) 추가. 빈 자리 시트 sheet_slot_*·설치 줄 row_place_* 삭제.",
+    "version 17 (2026-09-26, 설계 21 점원): 점원 팝업·후보·협상·해고 문구 clerk_*, 해고 말풍선 emote_fired 추가 점원은 구운 적 없는 오븐에서 첫 빵을 구우므로 clerk_no_bread는 두지 않는다."
   ],
   "rows": [
-    { "id": "topbar_coins", "ko": "{0}" },
-    { "id": "coin_popup", "ko": "+{0}" },
-    { "id": "sheet_shelf_title", "ko": "{0} 진열대" },
-    { "id": "sheet_shelf_empty_title", "ko": "빈 진열대" },
-    { "id": "sheet_shelf_status", "ko": "재고 {0}/{1}" },
-    { "id": "sheet_oven_title", "ko": "오븐 {0}" },
-    { "id": "sheet_oven_empty", "ko": "비어 있음" },
-    { "id": "sheet_oven_baking", "ko": "{0} 굽는 중 · {1}초" },
-    { "id": "sheet_oven_full", "ko": "진열대 가득" },
-    { "id": "sheet_counter_title", "ko": "계산대" },
-    { "id": "sheet_counter_status", "ko": "손님 {0}명 대기" },
-    { "id": "chip_bread", "ko": "{0}" },
-    { "id": "chip_bread_sub", "ko": "×{0} · {1}초" },
-    { "id": "chip_unlock_sub", "ko": "해금 {0}" },
-    { "id": "row_upgrade", "ko": "{0} Lv.{1}" },
-    { "id": "row_max", "ko": "MAX" },
-    { "id": "sheet_dig_title", "ko": "굴 파기" },
-    { "id": "sheet_dig_status", "ko": "판 칸 {0}" },
-    { "id": "row_dig", "ko": "여기 파기" },
-    { "id": "row_dig_effect", "ko": "굴이 넓어진다" },
-    { "id": "tag_dig", "ko": "파기 {0}" },
-    { "id": "emote_happy", "ko": "♥" },
-    { "id": "sign_bakery", "ko": "빵집" },
-    { "id": "edit_done", "ko": "완료" },
-    { "id": "edit_store_hint", "ko": "여기에 놓으면 보관" },
-    { "id": "edit_stored", "ko": "보관 {0}" },
-    { "id": "kind_shelf", "ko": "진열대" },
-    { "id": "kind_oven", "ko": "오븐" },
-    { "id": "kind_counter", "ko": "계산대" },
-    { "id": "kind_fountain_stone", "ko": "돌 분수" },
-    { "id": "kind_fountain_tile", "ko": "타일 분수" },
-    { "id": "kind_bench_log", "ko": "통나무 벤치" },
-    { "id": "kind_bench_iron", "ko": "철제 벤치" },
-    { "id": "kind_plant_pot", "ko": "화분" },
-    { "id": "kind_plant_box", "ko": "화단" },
-    { "id": "kind_lamp_lantern", "ko": "초롱 가로등" },
-    { "id": "kind_lamp_globe", "ko": "구슬 가로등" }
+    {
+      "id": "topbar_coins",
+      "ko": "{0}"
+    },
+    {
+      "id": "coin_popup",
+      "ko": "+{0}"
+    },
+    {
+      "id": "sheet_shelf_title",
+      "ko": "{0} 진열대"
+    },
+    {
+      "id": "sheet_shelf_empty_title",
+      "ko": "빈 진열대"
+    },
+    {
+      "id": "sheet_shelf_status",
+      "ko": "재고 {0}/{1}"
+    },
+    {
+      "id": "sheet_oven_title",
+      "ko": "오븐 {0}"
+    },
+    {
+      "id": "sheet_oven_empty",
+      "ko": "비어 있음"
+    },
+    {
+      "id": "sheet_oven_baking",
+      "ko": "{0} 굽는 중 · {1}초"
+    },
+    {
+      "id": "sheet_oven_full",
+      "ko": "진열대 가득"
+    },
+    {
+      "id": "sheet_counter_title",
+      "ko": "계산대"
+    },
+    {
+      "id": "sheet_counter_status",
+      "ko": "손님 {0}명 대기"
+    },
+    {
+      "id": "chip_bread",
+      "ko": "{0}"
+    },
+    {
+      "id": "chip_bread_sub",
+      "ko": "×{0} · {1}초"
+    },
+    {
+      "id": "chip_unlock_sub",
+      "ko": "해금 {0}"
+    },
+    {
+      "id": "row_upgrade",
+      "ko": "{0} Lv.{1}"
+    },
+    {
+      "id": "row_max",
+      "ko": "MAX"
+    },
+    {
+      "id": "sheet_dig_title",
+      "ko": "굴 파기"
+    },
+    {
+      "id": "sheet_dig_status",
+      "ko": "판 칸 {0}"
+    },
+    {
+      "id": "row_dig",
+      "ko": "여기 파기"
+    },
+    {
+      "id": "row_dig_effect",
+      "ko": "굴이 넓어진다"
+    },
+    {
+      "id": "tag_dig",
+      "ko": "파기 {0}"
+    },
+    {
+      "id": "emote_happy",
+      "ko": "♥"
+    },
+    {
+      "id": "sign_bakery",
+      "ko": "빵집"
+    },
+    {
+      "id": "edit_done",
+      "ko": "완료"
+    },
+    {
+      "id": "edit_store_hint",
+      "ko": "여기에 놓으면 보관"
+    },
+    {
+      "id": "edit_stored",
+      "ko": "보관 {0}"
+    },
+    {
+      "id": "kind_shelf",
+      "ko": "진열대"
+    },
+    {
+      "id": "kind_oven",
+      "ko": "오븐"
+    },
+    {
+      "id": "kind_counter",
+      "ko": "계산대"
+    },
+    {
+      "id": "kind_fountain_stone",
+      "ko": "돌 분수"
+    },
+    {
+      "id": "kind_fountain_tile",
+      "ko": "타일 분수"
+    },
+    {
+      "id": "kind_bench_log",
+      "ko": "통나무 벤치"
+    },
+    {
+      "id": "kind_bench_iron",
+      "ko": "철제 벤치"
+    },
+    {
+      "id": "kind_plant_pot",
+      "ko": "화분"
+    },
+    {
+      "id": "kind_plant_box",
+      "ko": "화단"
+    },
+    {
+      "id": "kind_lamp_lantern",
+      "ko": "초롱 가로등"
+    },
+    {
+      "id": "kind_lamp_globe",
+      "ko": "구슬 가로등"
+    },
+    {
+      "id": "clerk_title",
+      "ko": "점원"
+    },
+    {
+      "id": "clerk_tab_bakery",
+      "ko": "빵집"
+    },
+    {
+      "id": "clerk_summary",
+      "ko": "점원 {0}/{1} · 월급 합 {2}"
+    },
+    {
+      "id": "clerk_slot",
+      "ko": "{0} {1}"
+    },
+    {
+      "id": "clerk_empty",
+      "ko": "비어 있음"
+    },
+    {
+      "id": "clerk_status",
+      "ko": "일머리 {0} · {1} · {2}"
+    },
+    {
+      "id": "clerk_working",
+      "ko": "일하는 중"
+    },
+    {
+      "id": "clerk_idling",
+      "ko": "딴짓 중"
+    },
+    {
+      "id": "clerk_hire",
+      "ko": "고용"
+    },
+    {
+      "id": "clerk_fire",
+      "ko": "해고"
+    },
+    {
+      "id": "clerk_candidates_title",
+      "ko": "{0} · 후보"
+    },
+    {
+      "id": "clerk_candidate_sub",
+      "ko": "일머리 {0} · {1}"
+    },
+    {
+      "id": "clerk_select",
+      "ko": "선택"
+    },
+    {
+      "id": "clerk_refresh",
+      "ko": "새 후보 보기 · {0}"
+    },
+    {
+      "id": "clerk_ask",
+      "ko": "{0} 고용할까?"
+    },
+    {
+      "id": "clerk_ask_sub",
+      "ko": "일머리 {0} · 기본 월급 {1}"
+    },
+    {
+      "id": "clerk_hire_plain",
+      "ko": "그냥 고용"
+    },
+    {
+      "id": "clerk_negotiate",
+      "ko": "협상하기"
+    },
+    {
+      "id": "clerk_cancel",
+      "ko": "취소"
+    },
+    {
+      "id": "clerk_nego_title",
+      "ko": "{0} · 월급 협상"
+    },
+    {
+      "id": "clerk_nego_hint",
+      "ko": "표시가 초록일 때 탭!"
+    },
+    {
+      "id": "clerk_nego_offer",
+      "ko": "{0} 어때?"
+    },
+    {
+      "id": "clerk_nego_think",
+      "ko": "…"
+    },
+    {
+      "id": "clerk_nego_keep",
+      "ko": "{0}, 좋아!"
+    },
+    {
+      "id": "clerk_nego_down",
+      "ko": "{0}면 되지"
+    },
+    {
+      "id": "clerk_nego_up",
+      "ko": "{0}은 줘야지"
+    },
+    {
+      "id": "clerk_wage",
+      "ko": "{0}/분"
+    },
+    {
+      "id": "clerk_foot",
+      "ko": "월급은 {0}초마다 나간다. 못 내면 그만둔다"
+    },
+    {
+      "id": "clerk_fired_toast",
+      "ko": "월급을 못 냈다 · {0} 그만둠"
+    },
+    {
+      "id": "emote_fired",
+      "ko": "!!"
+    },
+    {
+      "id": "clerk_slot_named",
+      "ko": "{0} · {1}"
+    }
   ]
 }

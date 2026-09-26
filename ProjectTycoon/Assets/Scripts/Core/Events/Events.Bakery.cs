@@ -80,5 +80,53 @@ namespace ZooTycoon.Core
                 Visitor = visitor;
             }
         }
+
+        // ---------- 설계 21 점원 ----------
+
+        // 점원을 고용했다(구멍에서 톡 나와 자리로 간다)
+        public readonly struct ClerkHired
+        {
+            public readonly Clerk Clerk;
+
+            public ClerkHired(Clerk clerk)
+            {
+                Clerk = clerk;
+            }
+        }
+
+        // 점원이 그만둔다(말풍선 → 구멍으로 걸어 나간다). 자리는 바로 빈다
+        public readonly struct ClerkFired
+        {
+            public readonly Clerk Clerk;
+            public readonly FireReason Reason;
+
+            public ClerkFired(Clerk clerk, FireReason reason)
+            {
+                Clerk = clerk;
+                Reason = reason;
+            }
+        }
+
+        // 그만둔 점원이 구멍으로 사라졌다(그림 삭제)
+        public readonly struct ClerkLeft
+        {
+            public readonly Clerk Clerk;
+
+            public ClerkLeft(Clerk clerk)
+            {
+                Clerk = clerk;
+            }
+        }
+
+        // 대기 후보가 바뀌었다(고용·새 후보 보기)
+        public readonly struct CandidatesChanged
+        {
+            public readonly BakeryArea Bakery;
+
+            public CandidatesChanged(BakeryArea bakery)
+            {
+                Bakery = bakery;
+            }
+        }
     }
 }

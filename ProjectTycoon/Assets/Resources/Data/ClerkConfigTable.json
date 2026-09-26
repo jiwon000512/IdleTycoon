@@ -1,0 +1,64 @@
+{
+  "table": "ClerkConfigTable",
+  "version": 1,
+  "notes": [
+    "설계 21 점원(2026-09-26): 월급·후보·일머리·협상 숫자 한 행(id main). 전부 시작값.",
+    "wagePeriodSeconds: 월급 주기(초). 주기마다 점원마다 지갑에서 빼고, 모자라면 그 점원만 해고. 고용 즉시 첫 월급.",
+    "candidateCount: 가게마다 대기 후보 수. refreshCost: 새 후보 보기 값. names: 후보 이름 풀(대기 후보와 겹치지 않게 뽑는다).",
+    "일머리 1~100 = 1 + ⌊99 × r^skillSkew⌋(r 균등 난수): 클수록 높은 일머리가 드물다(2에서 절반이 25 아래). wagePerSkill: 일머리 100이면 월급 ×(1 + 이 값).",
+    "idleSecondsMin·Max: 한 바퀴 끝날 때마다 확률 (100 − 일머리)/100로 딴짓(멍 때리기), 이 사이 균등 초.",
+    "협상(타이밍 바): 표시가 바 위를 왕복(markerSpeedMin~Max 바 폭/초, 일머리 1→100에 따라). negotiateSeconds 안에 탭하지 않으면 red. zones: 가운데에서 거리(halfWidth) 안이면 그 색(첫 맞는 것), keep·down·up은 유지·인하·인상 확률 가중치. 변동 금액 = 기본 월급 × changeMin~changeMax 균등 난수, 정수(최소 1)."
+  ],
+  "rows": [
+    {
+      "id": "main",
+      "wagePeriodSeconds": 60,
+      "candidateCount": 5,
+      "refreshCost": 50,
+      "skillSkew": 2,
+      "wagePerSkill": 1.0,
+      "idleSecondsMin": 3,
+      "idleSecondsMax": 6,
+      "markerSpeedMin": 0.6,
+      "markerSpeedMax": 1.1,
+      "negotiateSeconds": 3,
+      "changeMin": 0.1,
+      "changeMax": 0.4,
+      "zones": [
+        {
+          "color": "green",
+          "halfWidth": 0.12,
+          "keep": 50,
+          "down": 50,
+          "up": 0
+        },
+        {
+          "color": "white",
+          "halfWidth": 0.35,
+          "keep": 80,
+          "down": 20,
+          "up": 0
+        },
+        {
+          "color": "red",
+          "halfWidth": 1.0,
+          "keep": 50,
+          "down": 0,
+          "up": 50
+        }
+      ],
+      "names": [
+        "구름",
+        "자갈",
+        "안개",
+        "이끼",
+        "도토리",
+        "솔방울",
+        "조약돌",
+        "먹구름",
+        "이슬",
+        "진흙"
+      ]
+    }
+  ]
+}
