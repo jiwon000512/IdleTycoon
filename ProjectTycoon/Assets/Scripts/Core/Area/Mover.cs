@@ -84,6 +84,14 @@ namespace ZooTycoon.Core
         public void WalkTo(BurrowNav nav, Vector2 target, Facing arrive)
         {
             Vector2 from = NextNode;
+
+            // 이미 그 자리면 길이 없다(2026-09-26: 격자 밖 자리에서 격자 점을 거쳐 되돌아오는 한 걸음이 좌우 떨림이 됐다)
+            if (!Moving && Vector2.DistanceSquared(Position, target) < 1e-6f)
+            {
+                Follow(System.Array.Empty<Vector2>(), arrive);
+                return;
+            }
+
             List<Vector2> path = nav.FindPath(from, target);
 
             if (path.Count == 0 && Vector2.DistanceSquared(from, target) > 1e-6f)

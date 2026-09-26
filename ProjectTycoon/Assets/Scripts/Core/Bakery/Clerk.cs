@@ -115,6 +115,7 @@ namespace ZooTycoon.Core
                 new BtAction<Clerk>(null, (c, dt) => c.Bake()),
                 new BtAction<Clerk>(null, (c, dt) => c.TickWaitReady()),
                 new BtAction<Clerk>(null, (c, dt) => c.TakeOut()),
+                new BtAction<Clerk>(null, (c, dt) => c.TickWaitShelf()),
                 new BtAction<Clerk>(c => c.StartWalkToShelf(), (c, dt) => c.TickWalk()),
                 new BtAction<Clerk>(null, (c, dt) => c.Fill()),
                 new BtAction<Clerk>(c => c.StartIdle(), (c, dt) => c.TickIdle(dt)));
@@ -188,14 +189,32 @@ namespace ZooTycoon.Core
             return BtStatus.Success;
         }
 
-        // 든 빵을 받을 진열대(채우기 규칙과 같다: 그 빵 진열대에 자리, 없으면 빈 진열대)로. 없으면 이번 바퀴는 여기서 끝
-        private bool StartWalkToShelf()
+        // 든 빵을 받을 진열대(채우기 규칙과 같다: 그 빵 진열대에 자리, 없으면 빈 진열대)가 생길 때까지 자리에서 기다린다
+        // (2026-09-26: 진열대가 가득 찰 때 바퀴가 매 프레임 되돌아 좌우로 떨렸다). 빈손이면 건너뛴다
+        private BtStatus TickWaitShelf()
         {
+            if (Worker.Hands.Count == 0)
+            {
+                m_shelf = null;
+                return BtStatus.Success;
+            }
+
             m_shelf = ShelfFor(Worker.Hands.Bread);
 
+            // 기다리는 동안 오븐은 계속 돌린다
             if (m_shelf == null)
             {
-                return false;
+                Bake();
+            }
+
+            return m_shelf != null ? BtStatus.Success : BtStatus.Running;
+        }
+
+        private bool StartWalkToShelf()
+        {
+            if (m_shelf == null)
+            {
+                return true;
             }
 
             WalkToGoal(Goal.Shelf);
@@ -204,7 +223,11 @@ namespace ZooTycoon.Core
 
         private BtStatus Fill()
         {
-            Bakery.TryDo(ActionTable.k_Fill, Worker, m_shelf);
+            if (m_shelf != null)
+            {
+                Bakery.TryDo(ActionTable.k_Fill, Worker, m_shelf);
+            }
+
             return BtStatus.Success;
         }
 

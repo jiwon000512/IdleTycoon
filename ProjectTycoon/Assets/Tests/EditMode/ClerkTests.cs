@@ -164,13 +164,38 @@ namespace ZooTycoon.Tests
             Assert.That(cycles, Is.GreaterThan(1), "바퀴가 두 번 이상 돌아야 한다");
         }
 
+        // 2026-09-26 사용자 버그: 진열대가 가득 차면 자리에서 좌우로 떨렸다. 든 채로 자리에 서서 기다리다 자리가 나면 채운다(그동안 오븐은 계속 굽는다)
+        [Test]
+        public void OvenClerk_WhenShelvesFull_WaitsStillAndFillsWhenRoomAppears()
+        {
+            BakeryArea shop = Create();
+            ShelfInteractable shelf = shop.Shelves[0];
+            shelf.Put(Bread("b01"), shelf.Capacity);
+            Clerk clerk = Hire(shop, shop.Ovens[0]);
+            Assert.That(RunUntil(shop, () => clerk.Worker.Hands.Count > 0), Is.True);
+            Assert.That(RunUntil(shop, () => !clerk.Moving && clerk.Working), Is.True);
+            Vector2 at = clerk.Position;
+
+            for (double t = 0d; t < 5d; t += k_Dt)
+            {
+                shop.Tick(k_Dt);
+                Assert.That(Vector2.Distance(clerk.Position, at), Is.LessThan(1e-4f), "자리에서 움직였다");
+            }
+
+            Assert.That(clerk.Worker.Hands.Count, Is.GreaterThan(0));
+            Assert.That(shop.Ovens[0].IsEmpty, Is.False, "기다리는 동안 오븐이 놀았다");
+            shelf.TryPick();
+            shelf.TryPick();
+            Assert.That(RunUntil(shop, () => shelf.Stock == shelf.Capacity, 20d), Is.True);
+        }
+
         // 2026-09-26 사용자: 아직 구운 적 없는 오븐의 점원은 해금된 첫 빵을 굽는다. 웜뱃이 다른 빵을 고르면 그 빵으로
         [Test]
         public void OvenClerk_WithoutLastBread_BakesFirstBread_ThenFollowsWombatChoice()
         {
             BakeryArea shop = Create();
             OvenInteractable oven = shop.Ovens[0];
-            Hire(shop, oven);
+            Clerk clerk = Hire(shop, oven);
 
             Assert.That(RunUntil(shop, () => !oven.IsEmpty), Is.True);
             Assert.That(oven.Bread, Is.EqualTo(Bread("b01")));
@@ -182,9 +207,9 @@ namespace ZooTycoon.Tests
             Assert.That(shop.TryChoose(ActionTable.k_Bake, oven, shop.NextBread.Id), Is.True);
             BreadTable second = oven.Bread;
             Assert.That(second, Is.Not.EqualTo(Bread("b01")));
-            Assert.That(RunUntil(shop, () => oven.IsEmpty), Is.True);
-            Assert.That(RunUntil(shop, () => !oven.IsEmpty, 20d), Is.True);
-            Assert.That(oven.Bread, Is.EqualTo(second));
+            // 점원이 꺼내면(진열대에 식빵이 있어 든 채 기다린다) 그 자리에서 같은 빵을 다시 굽는다
+            Assert.That(RunUntil(shop, () => clerk.Worker.Hands.Bread == second, 30d), Is.True);
+            Assert.That(RunUntil(shop, () => !oven.IsEmpty && oven.Bread == second, 20d), Is.True, "다음 바퀴도 그 빵");
         }
 
         // 검증 2: 일머리 1이면 한 바퀴 뒤 딴짓(Looking), 일머리 100이면 없음
