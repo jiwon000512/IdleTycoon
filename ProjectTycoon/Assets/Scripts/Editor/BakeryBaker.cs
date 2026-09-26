@@ -268,7 +268,10 @@ namespace ZooTycoon.Editor
         {
             GameObject root = new GameObject("Counter");
             CounterView counter = root.AddComponent<CounterView>();
-            SpriteRenderer counterBody = Renderer(root.transform, "Counter", Load("counter"), new Vector3(0f, -BakeryLayout.k_CounterDrop, 0f), 0);
+            // 몸체 + 출력기는 SortingGroup(밑변 = CounterBase)으로 묶는다. 안 묶으면 출력기의 order 3이 전역이라 계산대 앞에 선 웜뱃 위에 그려진다(2026-09-25). 웜뱃은 그룹 밖(root 자식)
+            GameObject body = Child(root.transform, "Body", new Vector3(0f, -BakeryLayout.k_CounterDrop, 0f));
+            body.AddComponent<SortingGroup>();
+            SpriteRenderer counterBody = Renderer(body.transform, "Counter", Load("counter"), Vector3.zero, 0);
             Set(counter, "m_body", counterBody);
             Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, -BakeryLayout.k_WombatDrop, 0f)));
             // 2026-09-25 사용자 선택 C: 영수증 출력기(Source~/make_counter_timer.py). 늘 계산대 위에 있고 계산 중에 영수증이 올라온다.
@@ -280,7 +283,7 @@ namespace ZooTycoon.Editor
                 timerFrames[i] = Load(CounterTimerFrame(i));
             }
 
-            SpriteRenderer timer = Renderer(root.transform, "Timer", timerFrames[0], new Vector3(-0.6f, -BakeryLayout.k_CounterDrop + 0.725f, 0f), 3);
+            SpriteRenderer timer = Renderer(body.transform, "Timer", timerFrames[0], new Vector3(-0.6f, 0.725f, 0f), 3);
             Set(counter, "m_timer", timer);
             SetSprites(counter, "m_timerFrames", timerFrames);
             return Save(root, counter, "Counter");

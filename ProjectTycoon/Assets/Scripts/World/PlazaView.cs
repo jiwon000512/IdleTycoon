@@ -62,6 +62,8 @@ namespace ZooTycoon.World
                 go.transform.localPosition = new Vector3(decor.Position.X, decor.Position.Y, 0f);
                 SpriteRenderer renderer = go.AddComponent<SpriteRenderer>();
                 renderer.sprite = frames.Get(decor.Table.Sprite)[0];
+                // 월드 스프라이트는 밑변(피벗)으로 정렬(BakeryBaker.Renderer와 같은 규칙)
+                renderer.spriteSortPoint = SpriteSortPoint.Pivot;
 
                 if (decor.Table.Frames > 0)
                 {
