@@ -280,10 +280,10 @@ namespace ZooTycoon.Editor
             panel.sizeDelta = new Vector2(0f, k_EditPanelHeight);
             panel.anchoredPosition = Vector2.zero;
 
-            TextMeshProUGUI hint = Text(panel, "StoreHint", "Galmuri9", 9, k_Muted, TextAlignmentOptions.MidlineLeft);
+            TextMeshProUGUI hint = Text(panel, "StoreHint", "Galmuri11", 11, k_Ink, TextAlignmentOptions.MidlineLeft);
             Anchor(hint.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
-            hint.rectTransform.sizeDelta = new Vector2(150 * U, 12 * U);
-            hint.rectTransform.anchoredPosition = new Vector2(6 * U, -4 * U);
+            hint.rectTransform.sizeDelta = new Vector2(150 * U, 14 * U);
+            hint.rectTransform.anchoredPosition = new Vector2(6 * U, -3 * U);
 
             Button done = ButtonUi(panel, "DoneButton", "btn_primary", 44 * U, 14 * U, out TextMeshProUGUI doneLabel, "Galmuri11-Bold", 11, k_Cream);
             RectTransform doneRect = done.GetComponent<RectTransform>();
@@ -303,29 +303,38 @@ namespace ZooTycoon.Editor
             row.childForceExpandWidth = false;
             row.childForceExpandHeight = false;
 
-            // 카드 틀(비활성, View가 복제): 칩 배경 + 아이콘 + 이름 + 값
+            // 카드 틀(비활성, View가 복제): 칩 배경 + 아이콘(가운데 정렬 — 피벗이 위면 preserveAspect가 그림을 위로 붙인다) + 이름 + 값(코인 HUD처럼 그림자 위 금색).
+            // 설계 20: 탭이라 PressScale, 글자는 11 굵게(9는 읽기 어렵다는 2026-09-26 사용자 피드백)
             RectTransform card = Panel(cards, "Card", Sprite("chip"), Color.white);
             card.sizeDelta = new Vector2(k_CardWidth, k_CardHeight);
             CanvasGroup group = card.gameObject.AddComponent<CanvasGroup>();
+            card.gameObject.AddComponent<PressScale>();
             RectTransform icon = Panel(card, "Icon", null, Color.white);
-            Anchor(icon, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
-            icon.sizeDelta = new Vector2(32 * U, 32 * U);
-            icon.anchoredPosition = new Vector2(0f, -5 * U);
+            Anchor(icon, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f));
+            icon.sizeDelta = new Vector2(32 * U, 30 * U);
+            icon.anchoredPosition = new Vector2(0f, -20 * U);
             Image iconImage = icon.GetComponent<Image>();
             iconImage.preserveAspect = true;
             iconImage.raycastTarget = false;
-            TextMeshProUGUI label = Text(card, "Label", "Galmuri9", 9, k_Ink, TextAlignmentOptions.Center);
+            TextMeshProUGUI label = Text(card, "Label", "Galmuri11-Bold", 11, k_Ink, TextAlignmentOptions.Center);
             Anchor(label.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f));
-            label.rectTransform.sizeDelta = new Vector2(0f, 11 * U);
-            label.rectTransform.anchoredPosition = new Vector2(0f, 14 * U);
-            TextMeshProUGUI sub = Text(card, "Sub", "Galmuri9", 9, k_Gold, TextAlignmentOptions.Center);
-            Anchor(sub.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f));
-            sub.rectTransform.sizeDelta = new Vector2(0f, 11 * U);
-            sub.rectTransform.anchoredPosition = new Vector2(0f, 3 * U);
+            label.rectTransform.sizeDelta = new Vector2(0f, 13 * U);
+            label.rectTransform.anchoredPosition = new Vector2(0f, 16 * U);
+            label.raycastTarget = false;
+            TextMeshProUGUI subShadow = Text(card, "SubShadow", "Galmuri11-Bold", 11, k_Shadow, TextAlignmentOptions.Center);
+            Anchor(subShadow.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f));
+            subShadow.rectTransform.sizeDelta = new Vector2(0f, 13 * U);
+            subShadow.rectTransform.anchoredPosition = new Vector2(0f, 3 * U);
+            subShadow.raycastTarget = false;
+            TextMeshProUGUI sub = Text(subShadow.rectTransform, "Sub", "Galmuri11-Bold", 11, k_Gold, TextAlignmentOptions.Center);
+            Stretch(sub.rectTransform, Vector4.zero);
+            sub.rectTransform.anchoredPosition = new Vector2(-1 * U, 1 * U);
+            sub.raycastTarget = false;
             EditCardView cardView = card.gameObject.AddComponent<EditCardView>();
             Set(cardView, "m_icon", iconImage);
             Set(cardView, "m_label", label);
             Set(cardView, "m_sub", sub);
+            Set(cardView, "m_subShadow", subShadow);
             Set(cardView, "m_group", group);
 
             EditModeView view = root.AddComponent<EditModeView>();

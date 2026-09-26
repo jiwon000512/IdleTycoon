@@ -8,6 +8,7 @@ namespace ZooTycoon.Core
     // 곳은 무엇을 파는지(ShopKinds)·놓인 것(PlacedThings)·만들고 없애는 법만 다르다. 보관함은 종류별 개수(상태는 버린다)
     public abstract partial class WombatArea
     {
+        private const float k_SpotSearch = 3f;
         private readonly Dictionary<string, int> m_stored = new Dictionary<string, int>(StringComparer.Ordinal);
 
         // 배치 격자 한 변(ConfigTable placeCell). 사물 밑변 가운데를 여기에 맞춘다
@@ -32,6 +33,41 @@ namespace ZooTycoon.Core
         public Vector2 Snap(Vector2 p)
         {
             return new Vector2((float)Math.Round(p.X / PlaceCell) * PlaceCell, (float)Math.Round(p.Y / PlaceCell) * PlaceCell);
+        }
+
+        // 설계 20: near에서 가장 가까운 놓을 수 있는 자리(배치 격자 고리를 넓혀 가며, 반지름 k_SpotSearch 안). 상점 카드를 탭하면 화면 가운데 근처에 생긴다
+        // ponytail: 고리마다 CanPlace가 걷는 땅을 새로 만든다(최대 31×31회). 탭 한 번이라 두고, 느려지면 후보 사각형만 먼저 거른다
+        public bool TryFindSpot(string kindId, Vector2 near, out Vector2 spot)
+        {
+            // 격자 번호로 계산해야 Snap 결과와 비트까지 같다(더한 값은 1ulp 어긋나 모서리 맞닿음 판정이 뒤집힌다)
+            int cx = (int)Math.Round(near.X / PlaceCell);
+            int cy = (int)Math.Round(near.Y / PlaceCell);
+            int rings = (int)Math.Round(k_SpotSearch / PlaceCell);
+
+            for (int r = 0; r <= rings; r++)
+            {
+                for (int dy = -r; dy <= r; dy++)
+                {
+                    for (int dx = -r; dx <= r; dx++)
+                    {
+                        if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r)
+                        {
+                            continue;
+                        }
+
+                        Vector2 p = new Vector2((cx + dx) * PlaceCell, (cy + dy) * PlaceCell);
+
+                        if (CanPlace(kindId, p) == PlacementCheck.Ok)
+                        {
+                            spot = p;
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            spot = Snap(near);
+            return false;
         }
 
         // 놓인 것 + 보관함

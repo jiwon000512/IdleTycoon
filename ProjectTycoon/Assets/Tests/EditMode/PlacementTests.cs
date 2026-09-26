@@ -53,6 +53,23 @@ namespace ZooTycoon.Tests
             Assert.That(m_shop.CanPlace("oven", new Vector2(-1.6875f, -2.3f)), Is.EqualTo(PlacementCheck.NoWorkSpot));
         }
 
+        // 설계 20: 카드 탭 자리 — 시작 진열대 위(겹침)를 주면 가장 가까운 고리의 빈 자리를 찾고, 굴 밖 멀리를 주면 못 찾는다
+        [Test]
+        public void TryFindSpot_ReturnsNearestFreeSpotOrFalse()
+        {
+            BakeryArea shop = m_shop;
+            Vector2 taken = shop.Shelves[0].Position;
+            Assert.That(shop.CanPlace(ShelfInteractable.k_Id, taken), Is.EqualTo(PlacementCheck.Overlaps));
+            Assert.That(shop.TryFindSpot(ShelfInteractable.k_Id, taken, out Vector2 spot), Is.True);
+            Assert.That(shop.CanPlace(ShelfInteractable.k_Id, spot), Is.EqualTo(PlacementCheck.Ok));
+            Assert.That(Vector2.Distance(spot, taken), Is.LessThan(1.6f));
+
+            Assert.That(shop.TryFindSpot(ShelfInteractable.k_Id, spot, out Vector2 same), Is.True);
+            Assert.That(same, Is.EqualTo(spot), "놓을 수 있는 자리를 주면 그 자리");
+
+            Assert.That(shop.TryFindSpot(ShelfInteractable.k_Id, new Vector2(30f, 30f), out _), Is.False);
+        }
+
         [Test]
         public void Buy_ChargesGrowingPrice_AndStopsAtMax()
         {

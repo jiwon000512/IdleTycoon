@@ -8,7 +8,7 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 설계 18: 편집 모드. 들어가면 웜뱃은 서고 조이스틱이 숨는다(EditingChanged로 HUD·월드가 따라온다).
-    // 카드를 끌면 사기(보관함에 있으면 꺼내기), 놓인 사물을 끌면 옮기기, 패널 위에 놓으면 보관, 빈 곳을 끌면 카메라 팬, 팔 수 있는 흙을 누르면 파기 시트.
+    // 카드를 탭하면 화면 가운데 근처 빈 자리에 사기(보관함에 있으면 꺼내기, 설계 20), 놓인 사물을 끌면 옮기기, 패널 위에 놓으면 보관, 빈 곳을 끌면 카메라 팬, 팔 수 있는 흙을 누르면 파기 시트.
     // 규칙(놓을 수 있나·값)은 전부 곳(WombatArea.Placement)이 정하고 여기는 손가락을 그 호출로 바꾼다
     public sealed class EditModePresenter : IDisposable
     {
@@ -20,8 +20,7 @@ namespace ZooTycoon.UI
         private readonly List<EditModeView.CardData> m_cards = new List<EditModeView.CardData>();
 
         private bool m_editing;
-        // 끌고 있는 것: 카드(종류)거나 놓인 사물
-        private string m_dragKind;
+        // 끌고 있는 사물
         private IPlaced m_dragThing;
         // 빈 곳을 누른 뒤 팬 기준점(월드). 누른 채 움직이지 않고 떼면 파기 시트
         private bool m_panning;
@@ -47,9 +46,7 @@ namespace ZooTycoon.UI
             m_originOf = originOf;
             m_view.EditClicked += View_EditClicked;
             m_view.DoneClicked += View_DoneClicked;
-            m_view.CardDragBegan += View_CardDragBegan;
-            m_view.DragMoved += View_DragMoved;
-            m_view.DragEnded += View_DragEnded;
+            m_view.CardClicked += View_CardClicked;
             m_view.WorldPointerDown += View_WorldPointerDown;
             m_view.WorldPointerMoved += View_WorldPointerMoved;
             m_view.WorldPointerUp += View_WorldPointerUp;
@@ -66,9 +63,7 @@ namespace ZooTycoon.UI
         {
             m_view.EditClicked -= View_EditClicked;
             m_view.DoneClicked -= View_DoneClicked;
-            m_view.CardDragBegan -= View_CardDragBegan;
-            m_view.DragMoved -= View_DragMoved;
-            m_view.DragEnded -= View_DragEnded;
+            m_view.CardClicked -= View_CardClicked;
             m_view.WorldPointerDown -= View_WorldPointerDown;
             m_view.WorldPointerMoved -= View_WorldPointerMoved;
             m_view.WorldPointerUp -= View_WorldPointerUp;
@@ -141,49 +136,34 @@ namespace ZooTycoon.UI
             SetEditing(false);
         }
 
-        private void View_CardDragBegan(string kindId)
+        // 카드 탭: 화면 가운데에서 가장 가까운 빈 자리에 놓는다(자리가 없으면 아무 일 없음)
+        private void View_CardClicked(string kindId, Vector2 world)
         {
-            m_dragKind = kindId;
-            m_dragThing = null;
-        }
-
-        private void View_DragMoved(Vector2 world)
-        {
-            if (m_dragKind == null && m_dragThing == null)
+            if (!Area.TryFindSpot(kindId, ToArea(world), out Vector2 at))
             {
                 return;
             }
 
-            Vector2 at = Area.Snap(ToArea(world));
-            IPlacedKind kind = m_dragThing != null ? m_dragThing.Kind : KindOf(m_dragKind);
-            PlacementCheck check = m_dragThing != null ? Area.CanMove(m_dragThing, at) : Area.CanPlace(m_dragKind, at);
-            GhostChanged?.Invoke(kind, at, check == PlacementCheck.Ok);
+            if (Area.StoredCount(kindId) > 0)
+            {
+                Area.TryPlaceStored(kindId, at);
+            }
+            else
+            {
+                Area.TryBuy(kindId, at);
+            }
         }
 
-        private void View_DragEnded(Vector2 world, bool overPanel)
+        private void ShowGhost(Vector2 world)
         {
-            if (m_dragKind != null && !overPanel)
-            {
-                Vector2 at = Area.Snap(ToArea(world));
-
-                if (Area.StoredCount(m_dragKind) > 0)
-                {
-                    Area.TryPlaceStored(m_dragKind, at);
-                }
-                else
-                {
-                    Area.TryBuy(m_dragKind, at);
-                }
-            }
-
-            EndDrag();
+            Vector2 at = Area.Snap(ToArea(world));
+            GhostChanged?.Invoke(m_dragThing.Kind, at, Area.CanMove(m_dragThing, at) == PlacementCheck.Ok);
         }
 
         private void View_WorldPointerDown(Vector2 world)
         {
             Vector2 at = ToArea(world);
             m_dragThing = Area.ThingAt(at);
-            m_dragKind = null;
             m_moved = false;
             m_pressedDig = null;
             m_panning = false;
@@ -205,7 +185,7 @@ namespace ZooTycoon.UI
 
             if (m_dragThing != null)
             {
-                View_DragMoved(world);
+                ShowGhost(world);
                 return;
             }
 
@@ -240,7 +220,6 @@ namespace ZooTycoon.UI
         private void EndDrag()
         {
             bool wasHolding = m_dragThing != null;
-            m_dragKind = null;
             m_dragThing = null;
             m_panning = false;
             m_pressedDig = null;
@@ -250,19 +229,6 @@ namespace ZooTycoon.UI
             {
                 HeldChanged?.Invoke(null);
             }
-        }
-
-        private IPlacedKind KindOf(string kindId)
-        {
-            foreach (IPlacedKind kind in Area.ShopKinds)
-            {
-                if (kind.Id == kindId)
-                {
-                    return kind;
-                }
-            }
-
-            throw new InvalidOperationException($"상점에 없는 종류 '{kindId}'.");
         }
     }
 }

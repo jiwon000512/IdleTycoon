@@ -9,7 +9,8 @@ using GameKit.UI;
 namespace ZooTycoon.UI
 {
     // 설계 18 편집 모드 화면: 편집 버튼(늘 보임) · 편집 중에는 아래 패널(상점 카드 줄 + 완료)과 화면 전체 터치 판.
-    // 화면 좌표는 카메라로 월드 좌표로 바꿔 넘긴다(곳 좌표로 바꾸는 것은 Presenter). 패널 위에 놓으면 보관
+    // 화면 좌표는 카메라로 월드 좌표로 바꿔 넘긴다(곳 좌표로 바꾸는 것은 Presenter). 패널 위에 놓으면 보관.
+    // 설계 20: 카드는 탭. 패널 위 화면 가운데의 월드 점을 같이 넘긴다
     public sealed class EditModeView : UIView
     {
         [Serializable]
@@ -46,10 +47,8 @@ namespace ZooTycoon.UI
 
         public event Action EditClicked;
         public event Action DoneClicked;
-        public event Action<string> CardDragBegan;
-        public event Action<System.Numerics.Vector2> DragMoved;
-        // 손을 뗀 월드 점과 패널 위였는지
-        public event Action<System.Numerics.Vector2, bool> DragEnded;
+        // 카드 종류와 패널 위 화면 가운데의 월드 점
+        public event Action<string, System.Numerics.Vector2> CardClicked;
         public event Action<System.Numerics.Vector2> WorldPointerDown;
         public event Action<System.Numerics.Vector2> WorldPointerMoved;
         public event Action<System.Numerics.Vector2, bool> WorldPointerUp;
@@ -83,9 +82,7 @@ namespace ZooTycoon.UI
             while (m_cards.Count < cards.Count)
             {
                 EditCardView card = Instantiate(m_cardTemplate, m_cardsRoot);
-                card.DragBegan += Card_DragBegan;
-                card.Dragged += Card_Dragged;
-                card.DragEnded += Card_DragEnded;
+                card.Clicked += Card_Clicked;
                 m_cards.Add(card);
             }
 
@@ -126,20 +123,13 @@ namespace ZooTycoon.UI
             return sprite;
         }
 
-        private void Card_DragBegan(EditCardView card, PointerEventData data)
+        private void Card_Clicked(EditCardView card)
         {
-            CardDragBegan?.Invoke(card.KindId);
-            DragMoved?.Invoke(World(data));
-        }
-
-        private void Card_Dragged(EditCardView card, PointerEventData data)
-        {
-            DragMoved?.Invoke(World(data));
-        }
-
-        private void Card_DragEnded(EditCardView card, PointerEventData data)
-        {
-            DragEnded?.Invoke(World(data), OverPanel(data));
+            Vector3[] corners = new Vector3[4];
+            m_panelRect.GetWorldCorners(corners);
+            float panelTop = RectTransformUtility.WorldToScreenPoint(null, corners[1]).y;
+            Vector2 center = new Vector2(Screen.width * 0.5f, (panelTop + Screen.height) * 0.5f);
+            CardClicked?.Invoke(card.KindId, World(center));
         }
 
         private bool OverPanel(PointerEventData data)
@@ -149,12 +139,17 @@ namespace ZooTycoon.UI
 
         private System.Numerics.Vector2 World(PointerEventData data)
         {
+            return World(data.position);
+        }
+
+        private System.Numerics.Vector2 World(Vector2 screen)
+        {
             if (m_camera == null)
             {
                 m_camera = Camera.main;
             }
 
-            Vector3 world = m_camera.ScreenToWorldPoint(new Vector3(data.position.x, data.position.y, -m_camera.transform.position.z));
+            Vector3 world = m_camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -m_camera.transform.position.z));
             return new System.Numerics.Vector2(world.x, world.y);
         }
     }
