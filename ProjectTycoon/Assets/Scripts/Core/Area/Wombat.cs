@@ -14,6 +14,8 @@ namespace ZooTycoon.Core
         // 조이스틱 방향(길이 1까지)
         public Vector2 Input { get; private set; }
         public bool Moving { get; private set; }
+        // 곳에 들어온 직후: 누르고 있던 조이스틱을 놓을 때까지 걷지 않는다(굴을 등진 채 서고, 놓기 전에 통로 띠로 되돌아가지 않는다)
+        public bool WaitingRelease { get; private set; }
 
         public Wombat(TableSet tables, ZooState wallet)
         {
@@ -32,6 +34,13 @@ namespace ZooTycoon.Core
         // 보는 방향은 미끄러진 쪽이 아니라 조이스틱 쪽(2026-09-24 사용자 지적: 벽에 비비면 고개가 돌아간다)
         internal void Walk(BurrowNav nav, double dt)
         {
+            if (WaitingRelease)
+            {
+                WaitingRelease = Input != Vector2.Zero;
+                Moving = false;
+                return;
+            }
+
             if (Input != Vector2.Zero)
             {
                 Mover.Facing = Mover.FacingOf(Input);
@@ -62,6 +71,11 @@ namespace ZooTycoon.Core
         internal void Stop()
         {
             Moving = false;
+        }
+
+        internal void WaitRelease()
+        {
+            WaitingRelease = true;
         }
     }
 }

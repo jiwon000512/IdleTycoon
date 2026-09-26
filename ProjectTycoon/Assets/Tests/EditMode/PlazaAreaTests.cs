@@ -76,7 +76,6 @@ namespace ZooTycoon.Tests
             m_mall.Wombat.SetInput(Vector2.Zero);
         }
 
-        // 2026-09-26 자동 이동: 구멍·문 아래에 닿으면 버튼 없이 넘어가고, 들어온 직후에는 되돌아가지 않는다
         // 조이스틱을 한 방향으로 밀어 통로를 지나 곳이 바뀔 때까지(자동 이동)
         private void PushUntil(Vector2 direction, WombatArea to)
         {
@@ -88,6 +87,7 @@ namespace ZooTycoon.Tests
             m_mall.Wombat.SetInput(Vector2.Zero);
         }
 
+        // 2026-09-26 자동 이동: 구멍·문 앞 띠(바닥선에서 0.25 위)에 들어오면 버튼 없이 넘어간다. 들어온 직후에는 조이스틱을 놓을 때까지 서 있고(굴을 등짐), 놓았다 다시 위로 밀면 물러서지 않아도 넘어간다
         [Test]
         public void ExitAndEnter_MoveWombatBetweenShopAndPlaza()
         {
@@ -100,30 +100,42 @@ namespace ZooTycoon.Tests
             Assert.That(m_mall.Active, Is.SameAs(m_shop));
             Assert.That(m_plaza.WombatPresent, Is.False);
 
-            // 계산대를 오른쪽으로 돌아 구멍 아래로 걸어 들어가면 저절로
-            Steer(new Vector2(2.4f, home.Y), new Vector2(2.4f, hole.Y));
+            // 계산대를 오른쪽으로 돌아 구멍 아래 바닥선까지는 안 넘어가고, 위로 밀어 띠에 들면 넘어간다
+            Steer(new Vector2(2.4f, home.Y), new Vector2(2.4f, hole.Y), hole);
             Assert.That(m_mall.Active, Is.SameAs(m_shop));
-            PushUntil(new Vector2(-1f, 0f), m_plaza);
-            Run(1d);
+            Assert.That(m_shop.Target, Is.Not.InstanceOf<PassageInteractable>());
+            PushUntil(new Vector2(0f, 1f), m_plaza);
 
+            // 도착 뒤 계속 위로 밀어도 문 위에서 아래를 본 채 서 있다
+            m_mall.Wombat.SetInput(new Vector2(0f, 1f));
+            Run(1d);
             Assert.That(m_mall.Active, Is.SameAs(m_plaza));
+            Assert.That(m_plaza.Wombat.Mover.Facing, Is.EqualTo(Facing.Down));
+            Assert.That(m_plaza.Wombat.Moving, Is.False);
+            m_mall.Wombat.SetInput(Vector2.Zero);
+            Run(0.1d);
             Assert.That(changes, Is.EqualTo(1));
             Assert.That(m_shop.WombatPresent, Is.False);
             Assert.That(m_shop.IsInRange(m_shop.Counter), Is.False);
             Assert.That(m_plaza.WombatPresent, Is.True);
-            // 넘어간 프레임에 조이스틱이 남아 한 걸음(0.06) 움직일 수 있다
-            Assert.That(Vector2.Distance(m_plaza.Wombat.Mover.Position, m_plaza.Layout.DoorFloor), Is.LessThan(0.1f));
-            Assert.That(m_plaza.Target, Is.InstanceOf<PassageInteractable>());
-            Assert.That(m_plaza.TargetAction, Is.Null);
-
-            // 광장에서 걸어 문에서 멀어지면 대상이 없고, 다시 문에 닿으면 저절로 빵집
-            Steer(m_plaza.Layout.DoorFloor + new Vector2(0f, -2f));
+            Assert.That(m_plaza.Wombat.Mover.Position, Is.EqualTo(m_plaza.Layout.DoorFloor));
             Assert.That(m_plaza.Target, Is.Null);
-            PushUntil(new Vector2(0f, 1f), m_shop);
-            Run(1d);
 
-            Assert.That(m_mall.Active, Is.SameAs(m_shop));
+            // 놓았다가 그 자리에서 다시 위로 조금만(조이스틱 0.3) 밀어도 물러서지 않고 빵집
+            PushUntil(new Vector2(0f, 0.3f), m_shop);
             Assert.That(changes, Is.EqualTo(2));
+            m_mall.Wombat.SetInput(Vector2.Zero);
+            Run(0.1d);
+
+            // 빵집 구멍 아래에서 멀어졌다가 위로 밀며 다가가면 바닥선에서 0.25 올라간 순간 다시 광장
+            Steer(hole + new Vector2(0f, -2f));
+            Assert.That(m_shop.Target, Is.Not.InstanceOf<PassageInteractable>());
+            PushUntil(new Vector2(0f, 1f), m_plaza);
+            Assert.That(changes, Is.EqualTo(3));
+            m_mall.Wombat.SetInput(Vector2.Zero);
+            Run(0.1d);
+            PushUntil(new Vector2(0f, 1f), m_shop);
+            Assert.That(changes, Is.EqualTo(4));
             Assert.That(m_plaza.WombatPresent, Is.False);
             Assert.That(m_shop.WombatPresent, Is.True);
             Assert.That(m_shop.Wombat.Mover.Position, Is.EqualTo(hole));
@@ -204,9 +216,10 @@ namespace ZooTycoon.Tests
             Vector2 home = m_shop.Layout.WombatHome;
             Vector2 hole = m_shop.Layout.HoleFloor;
 
-            Steer(new Vector2(2.4f, home.Y), new Vector2(2.4f, hole.Y));
-            PushUntil(new Vector2(-1f, 0f), m_plaza);
-            Steer(m_plaza.Layout.DoorFloor + new Vector2(0f, -2f));
+            Steer(new Vector2(2.4f, home.Y), new Vector2(2.4f, hole.Y), hole);
+            PushUntil(new Vector2(0f, 1f), m_plaza);
+            m_mall.Wombat.SetInput(Vector2.Zero);
+            Run(0.1d);
             PushUntil(new Vector2(0f, 1f), m_shop);
 
             Assert.That(m_mall.Active, Is.SameAs(m_shop));

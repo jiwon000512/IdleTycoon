@@ -131,10 +131,11 @@ namespace ZooTycoon.Core
             Bus.Publish(new Events.Upgraded(this, interactableId));
         }
 
-        // 설계 11: 다른 곳에서 들어온다. 입구 아래 바닥에 선다
+        // 설계 11: 다른 곳에서 들어온다. 입구 아래 바닥(통로 띠 바로 밑)에 서고, 누르고 있던 조이스틱을 놓을 때까지 걷지 않는다(굴을 등진 채. 놓기 전에 띠로 되돌아가지 않게)
         public void Enter()
         {
             EnterAt(Entrance);
+            Wombat.WaitRelease();
         }
 
         // 다른 곳으로 나갔다: 걷기·자동 행동이 멈추고 대상이 없다
@@ -150,13 +151,6 @@ namespace ZooTycoon.Core
             Wombat.Mover.Place(position);
             Wombat.Mover.Facing = Facing.Down;
             WombatPresent = true;
-
-            // 들어온 자리가 통로 위라 자동 이동이 바로 되돌리지 않게
-            foreach (Interactable thing in Placed)
-            {
-                (thing as PassageInteractable)?.Disarm();
-            }
-
             RefreshTarget();
         }
 

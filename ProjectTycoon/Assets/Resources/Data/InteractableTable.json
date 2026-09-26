@@ -3,7 +3,7 @@
   "version": 6,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
-    "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상.",
+    "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상. 통로(exit·door)는 바닥선에서 0.25 이상 올라간 띠(코드 PassageInteractable.k_Enter) 안에서 가로 거리만 잰다 — 거리만으로 넘어간다(2026-09-26).",
     "actions: 이 사물에서 할 수 있는 행동 전부(ActionTable.json id). 순서: manual은 버튼 우선순위(지금 할 수 있는 첫 manual 행동이 버튼), sheet는 시트 줄 순서. auto 행동은 range 안이면 대상이 아니어도 한다. 행동이 그 사물을 받을 수 있는지는 EditMode 테스트가 확인한다.",
     "version 2 (2026-09-24, 설계 11 굴 밖 광장): exit(빵집 구멍 아래 바닥)·door(광장 빵집 문 아래 바닥) 추가.",
     "version 3 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
@@ -34,11 +34,11 @@
       "upgrade": null
     },
     {
-      "id": "exit", "range": 1.0, "actions": [ "exit" ],
+      "id": "exit", "range": 0.75, "actions": [ "exit" ],
       "upgrade": null
     },
     {
-      "id": "door", "range": 1.0, "actions": [ "enter" ],
+      "id": "door", "range": 0.75, "actions": [ "enter" ],
       "upgrade": null
     }
   ]

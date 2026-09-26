@@ -49,7 +49,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 11: 나가기(빵집 → 광장)·들어가기(광장 → 빵집). 2026-09-26부터 auto: range에 들어오면 바로, 단 들어온 직후는 아니다(Armed)
+        // 설계 11: 나가기(빵집 → 광장)·들어가기(광장 → 빵집). 2026-09-26부터 auto: 통로 앞 띠(PassageInteractable.DistanceTo)에 들어오면 바로
         private sealed class Pass : InteractAction
         {
             public Pass(ActionTable table) : base(table)
@@ -59,11 +59,6 @@ namespace ZooTycoon.Core
             public override bool Accepts(Interactable target)
             {
                 return target is PassageInteractable;
-            }
-
-            public override bool CanDo(Worker worker, Interactable target)
-            {
-                return target is PassageInteractable passage && passage.Armed;
             }
 
             public override void Do(Worker worker, Interactable target)
