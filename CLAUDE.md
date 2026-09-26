@@ -68,6 +68,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 - 기획을 바꾸는 결정은 먼저 사용자에게 객관식으로 하나씩 묻고, 확정되면 기획서 「확정 결정」표와 변경 이력에 반영한다.
 - Unity 에디터가 열려 있으면 Unity CLI(unity-cli 스킬)로 씬·프리팹을 조작할 수 있다. 닫혀 있을 때는 텍스트 자산(.asset/.unity/.meta) 직접 편집이 가능하나 새 폴더/파일에는 .meta를 함께 만든다.
 - Unity CLI 요령: 연결 확인은 `unity pipeline list`. 여러 줄 C#은 `run_script --file --entry`(eval은 using 불가). Git Bash에서 계층 경로를 쓰기 전에 `export MSYS_NO_PATHCONV=1`. UI 확인은 플레이 모드에서 `capture_game_view --source screen`. 스크립트 작성 후 `recompile` → `editor_status.compiling=false` 대기 → `console_status` 오류 0 확인.
+- 설명·비교·보고는 아티팩트로 한다. 그 작업이 끝나 다음 작업으로 넘어가면 사용자가 남기라고 한 것이 아닌 한 **그 아티팩트를 묻지 않고 삭제**하고 문서의 링크도 지운다(2026-09-26). 기획서·설계 NN처럼 진행상황·기획서가 링크하는 결정 기록은 남긴다.
 - 커밋은 묻지 않는다(2026-09-26). 검증이 끝난 작업은 사용자가 다음 작업을 언급하는 순간 에이전트가 알아서 커밋 + `origin main` 푸시한다. 사용자가 "커밋"이라고 하면 즉시. 검증이 안 끝난 것은 커밋하지 않는다. 메시지는 한국어 한 줄 요약 + 필요 시 본문.
 
 ## 유용한 명령
