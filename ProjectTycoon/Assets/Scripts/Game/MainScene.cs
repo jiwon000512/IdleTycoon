@@ -38,6 +38,7 @@ namespace ZooTycoon.Game
             m_editPresenter.GhostChanged += world.ShowGhost;
             m_editPresenter.GhostHidden += world.HideGhost;
             m_editPresenter.Panned += world.Pan;
+            m_editPresenter.HeldChanged += world.SetHeld;
 
             world.Initialize(game.Tables, game.Mall, game.Bus);
         }

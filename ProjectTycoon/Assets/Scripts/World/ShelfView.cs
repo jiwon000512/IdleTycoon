@@ -10,6 +10,8 @@ namespace ZooTycoon.World
 
         // 빵 그림 자리(월드). 설계 10: 웜뱃이 채울 때 빵이 날아가는 곳
         public Vector3 IconPosition => m_icon.transform.position;
+        // 편집 모드 외곽선을 붙일 몸체
+        public SpriteRenderer Body => m_body;
 
         public void Bounce()
         {

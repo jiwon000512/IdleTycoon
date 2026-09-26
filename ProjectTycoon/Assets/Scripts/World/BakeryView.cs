@@ -51,6 +51,7 @@ namespace ZooTycoon.World
         private Interactable m_shownTarget;
         private bool m_built;
         private bool m_editing;
+        private IPlaced m_held;
         private IDisposable[] m_subscriptions;
 
         // 굴을 팠다(카메라 경계가 넓어진다)
@@ -122,11 +123,79 @@ namespace ZooTycoon.World
             return ToWorld(Layout.CellCenter(cell));
         }
 
-        // 편집 모드: 팔 수 있는 흙 칸의 태그를 늘 보인다
+        // 편집 모드: 팔 수 있는 흙 칸의 태그를 늘 보이고, 옮길 수 있는 사물은 도는 점선 외곽선 + 들어갈 때 한 번 톡 튄다
         public void SetEditing(bool editing)
         {
             m_editing = editing;
             RefreshDigTags();
+            RefreshOutlines();
+
+            if (!editing)
+            {
+                return;
+            }
+
+            foreach (SpriteRenderer body in Bodies())
+            {
+                StartCoroutine(Fx.Bounce(body.transform));
+            }
+        }
+
+        // 잡은 사물만 노랑
+        public void SetHeld(IPlaced held)
+        {
+            m_held = held;
+            RefreshOutlines();
+        }
+
+        private void RefreshOutlines()
+        {
+            foreach (KeyValuePair<ShelfInteractable, ShelfView> pair in m_shelves)
+            {
+                Outline(pair.Value.Body, pair.Key);
+            }
+
+            foreach (KeyValuePair<OvenInteractable, OvenView> pair in m_ovens)
+            {
+                Outline(pair.Value.Body, pair.Key);
+            }
+
+            foreach (KeyValuePair<CounterInteractable, CounterView> pair in m_counters)
+            {
+                Outline(pair.Value.Body, pair.Key);
+            }
+        }
+
+        private void Outline(SpriteRenderer body, IPlaced thing)
+        {
+            EditOutlineView outline = EditOutlineView.Attach(body);
+
+            if (m_editing)
+            {
+                outline.Show(thing == m_held);
+            }
+            else
+            {
+                outline.Hide();
+            }
+        }
+
+        private IEnumerable<SpriteRenderer> Bodies()
+        {
+            foreach (ShelfView view in m_shelves.Values)
+            {
+                yield return view.Body;
+            }
+
+            foreach (OvenView view in m_ovens.Values)
+            {
+                yield return view.Body;
+            }
+
+            foreach (CounterView view in m_counters.Values)
+            {
+                yield return view.Body;
+            }
         }
 
         public void ShowGhost(IPlacedKind kind, System.Numerics.Vector2 at, bool ok)
@@ -302,6 +371,7 @@ namespace ZooTycoon.World
             {
                 Build();
                 RefreshDigTags();
+                RefreshOutlines();
             }
         }
 

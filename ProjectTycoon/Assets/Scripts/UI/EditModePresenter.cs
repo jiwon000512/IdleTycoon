@@ -36,6 +36,8 @@ namespace ZooTycoon.UI
         public event Action GhostHidden;
         public event Action<Vector2> Panned;
         public event Action<Interactable> SheetRequested;
+        // 잡은 사물(null = 놓음)
+        public event Action<IPlaced> HeldChanged;
 
         public EditModePresenter(EditModeView view, Mall mall, EventBus bus, TableSet tables, Func<WombatArea, Vector2> originOf)
         {
@@ -188,6 +190,7 @@ namespace ZooTycoon.UI
 
             if (m_dragThing != null)
             {
+                HeldChanged?.Invoke(m_dragThing);
                 return;
             }
 
@@ -236,11 +239,17 @@ namespace ZooTycoon.UI
 
         private void EndDrag()
         {
+            bool wasHolding = m_dragThing != null;
             m_dragKind = null;
             m_dragThing = null;
             m_panning = false;
             m_pressedDig = null;
             GhostHidden?.Invoke();
+
+            if (wasHolding)
+            {
+                HeldChanged?.Invoke(null);
+            }
         }
 
         private IPlacedKind KindOf(string kindId)

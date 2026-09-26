@@ -32,6 +32,8 @@ namespace ZooTycoon.World
         private PlazaArea m_plaza;
         private FrameCache m_frames;
         private GhostView m_ghost;
+        private bool m_editing;
+        private IPlaced m_held;
         private IDisposable[] m_subscriptions;
 
         public Transform Wombat => m_wombat.transform;
@@ -79,6 +81,46 @@ namespace ZooTycoon.World
         public void HideGhost()
         {
             m_ghost.Hide();
+        }
+
+        // 편집 모드: 장식마다 도는 점선 외곽선 + 들어갈 때 한 번 톡 튄다
+        public void SetEditing(bool editing)
+        {
+            m_editing = editing;
+            RefreshOutlines();
+
+            if (!editing)
+            {
+                return;
+            }
+
+            foreach (GameObject go in m_decor.Values)
+            {
+                StartCoroutine(Fx.Bounce(go.transform));
+            }
+        }
+
+        public void SetHeld(IPlaced held)
+        {
+            m_held = held;
+            RefreshOutlines();
+        }
+
+        private void RefreshOutlines()
+        {
+            foreach (KeyValuePair<DecorationData, GameObject> pair in m_decor)
+            {
+                EditOutlineView outline = EditOutlineView.Attach(pair.Value.GetComponent<SpriteRenderer>());
+
+                if (m_editing)
+                {
+                    outline.Show(pair.Key == m_held);
+                }
+                else
+                {
+                    outline.Hide();
+                }
+            }
         }
 
         private void OnDestroy()
@@ -147,6 +189,7 @@ namespace ZooTycoon.World
             if (e.Area == m_plaza)
             {
                 Build();
+                RefreshOutlines();
             }
         }
 

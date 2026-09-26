@@ -83,6 +83,7 @@ namespace ZooTycoon.World
 
         // 빵을 꺼낼 때 날아가기 시작하는 자리(몸통 가운데)
         public Vector3 BreadPosition => m_body.bounds.center;
+        public SpriteRenderer Body => m_body;
 
         public void Bounce()
         {

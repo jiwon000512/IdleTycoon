@@ -12,6 +12,7 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_timerFrames;
 
         public WombatView Wombat => m_wombat;
+        public SpriteRenderer Body => m_body;
 
         public void SetProgress(float progress, bool serving)
         {

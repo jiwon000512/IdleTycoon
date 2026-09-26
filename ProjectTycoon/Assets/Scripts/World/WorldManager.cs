@@ -57,11 +57,19 @@ namespace ZooTycoon.World
         {
             m_camera.SetFollowing(!editing);
             m_shopView.SetEditing(editing);
+            m_plazaView.SetEditing(editing);
 
             if (!editing)
             {
                 HideGhost();
             }
+        }
+
+        // 잡은 사물(null이면 없음)의 외곽선을 노랗게
+        public void SetHeld(IPlaced held)
+        {
+            m_shopView.SetHeld(held);
+            m_plazaView.SetHeld(held);
         }
 
         public void Pan(System.Numerics.Vector2 delta)
