@@ -4,13 +4,12 @@ using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 08·09·13 · 리뷰 R2: 계산대. 기준점은 계산대 뒤 웜뱃 자리. 줄(빵을 집은 순서, 걸어오는 손님 포함)과 계산을 스스로 갖는다.
-    // serve가 auto면 웜뱃이 range 안에 있는 동안 줄 머리 계산 타이머가 흐르고(Tick), manual이면 버튼(Serve)으로만. 속도는 업그레이드
-    public sealed class CounterInteractable : Interactable
+    // 설계 08·09·13 · 리뷰 R2 · 설계 18: 계산대(자유 배치, 여러 대). 기준점은 계산대 뒤 웜뱃 자리(표의 worker 자리). 줄(빵을 집은 순서, 걸어오는 손님 포함)과 계산을 스스로 갖는다.
+    // serve가 auto면 웜뱃이 range 안에 있는 동안 줄 머리 계산 타이머가 흐르고(Tick), manual이면 버튼(Serve)으로만. 속도는 업그레이드. 줄 자리는 BakeryLayout이 계산대마다 만든다
+    public sealed class CounterInteractable : Interactable, IPlaced
     {
         public const string k_Id = "counter";
 
-        private readonly Vector2 m_home;
         private readonly ZooState m_till;
         private readonly bool m_serveAuto;
         private readonly List<BakeryVisitor> m_queue = new List<BakeryVisitor>();
@@ -18,6 +17,7 @@ namespace ZooTycoon.Core
         private double m_remaining;
 
         public BakeryArea Bakery { get; }
+        public Vector2 Position { get; private set; }
         public IReadOnlyList<BakeryVisitor> Queue => m_queue;
         // 줄 머리가 머리 자리에 서서 계산을 기다린다
         public bool HeadWaiting => m_queue.Count > 0 && m_queue[0].Phase == VisitorPhase.Queued && !m_queue[0].Moving;
@@ -25,18 +25,26 @@ namespace ZooTycoon.Core
         public bool Serving => HeadWaiting && m_timing == m_queue[0];
         // 계산 진행 0~1(화면 게이지)
         public double Progress => Serving ? 1d - m_remaining / Bakery.Config.CheckoutSeconds : 0d;
+        // 웜뱃(점원)이 서는 자리(계산대 뒤)
+        public Vector2 WorkerSpot => Placement.SpotOf(this, SpotRole.Worker);
+        public IPlacedKind Kind => Table;
 
-        public CounterInteractable(InteractableTable table, BakeryArea bakery, ZooState till) : base(table, bakery)
+        public CounterInteractable(InteractableTable table, Vector2 position, BakeryArea bakery, ZooState till) : base(table, bakery)
         {
             Bakery = bakery;
+            Position = position;
             m_till = till;
-            m_home = bakery.Layout.WombatHome;
             m_serveAuto = bakery.Tables.Get<ActionTable>(ActionTable.k_Serve).IsAuto;
         }
 
         public override float DistanceTo(Vector2 p)
         {
-            return Vector2.Distance(p, m_home);
+            return Vector2.Distance(p, WorkerSpot);
+        }
+
+        public void MoveTo(Vector2 position)
+        {
+            Position = position;
         }
 
         // 줄 머리가 머리 자리에 선 뒤에만 계산이 흐른다. 웜뱃이 계산대 자리를 비우면 멈춘다
@@ -93,7 +101,7 @@ namespace ZooTycoon.Core
         private void WalkToSlot(int index)
         {
             BakeryLayout layout = Bakery.Layout;
-            m_queue[index].Mover.WalkTo(layout.Nav, layout.QueueSlots[index], layout.QueueFacing(index));
+            m_queue[index].Mover.WalkTo(layout.Nav, layout.QueueSlots(this)[index], layout.QueueFacing(this, index));
         }
     }
 }

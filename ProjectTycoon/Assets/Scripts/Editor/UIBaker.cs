@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
 using TMPro;
+using UnityEngine.EventSystems;
 using ZooTycoon.UI;
 
 namespace ZooTycoon.Editor
@@ -36,8 +37,9 @@ namespace ZooTycoon.Editor
             BakeTopBar();
             BakeControlHud();
             BakeObjectSheet();
+            BakeEditMode();
             AssetDatabase.SaveAssets();
-            Debug.Log("UI prefabs: TopBarView, ControlHudView, ObjectSheetView");
+            Debug.Log("UI prefabs: TopBarView, ControlHudView, ObjectSheetView, EditModeView");
         }
 
         // ---------- 상단 HUD(시안 C): 바 배경 없음, 왼쪽 위 (3,3)에 높이 16 캡슐 = 코인 12 + 숫자. 폭은 숫자에 맞춰 늘어난다 ----------
@@ -241,6 +243,120 @@ namespace ZooTycoon.Editor
             panel.gameObject.SetActive(false);
             dimRect.gameObject.SetActive(false);
             Save(root, "ObjectSheetView");
+        }
+
+        // ---------- 편집 모드(설계 18): 오른쪽 위 편집 버튼 · 편집 중 화면 전체 터치 판 + 아래 패널(상점 카드 줄 · 보관 안내 · 완료) ----------
+        const float k_EditPanelHeight = 96 * U;
+        const float k_CardWidth = 52 * U;
+        const float k_CardHeight = 66 * U;
+        const string k_ShopSpriteDir = "Assets/Sprites/World/Shop/";
+
+        static void BakeEditMode()
+        {
+            GameObject root = Root("EditModeView");
+
+            // 화면 전체 터치 판(패널·버튼보다 먼저 = 뒤에 그려져 그 위 버튼이 먼저 받는다)
+            RectTransform dragArea = Panel(root.transform, "DragArea", null, Color.clear);
+            Anchor(dragArea, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
+            dragArea.offsetMin = Vector2.zero;
+            dragArea.offsetMax = Vector2.zero;
+            PointerRelay relay = dragArea.gameObject.AddComponent<PointerRelay>();
+
+            // 편집 버튼: 오른쪽 위(코인 캡슐 반대편), 상호작용 버튼과 같은 둥근 바탕에 삽 아이콘(임시)
+            RectTransform editRect = Panel(root.transform, "EditButton", Sprite("btn_act"), Color.white);
+            Anchor(editRect, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f));
+            editRect.sizeDelta = new Vector2(28 * U, 28 * U);
+            editRect.anchoredPosition = new Vector2(-3 * U, -3 * U);
+            Button editButton = editRect.gameObject.AddComponent<Button>();
+            editRect.gameObject.AddComponent<PressScale>();
+            RectTransform editIcon = Panel(editRect, "Icon", AssetDatabase.LoadAssetAtPath<Sprite>(k_ActionIconDir + "dig.png"), Color.white);
+            Anchor(editIcon, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            editIcon.sizeDelta = new Vector2(14 * U, 14 * U);
+            editIcon.GetComponent<Image>().raycastTarget = false;
+
+            // 패널: 아래 붙임
+            RectTransform panel = Panel(root.transform, "Panel", Sprite("sheet_frame"), Color.white);
+            Anchor(panel, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f));
+            panel.sizeDelta = new Vector2(0f, k_EditPanelHeight);
+            panel.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI hint = Text(panel, "StoreHint", "Galmuri9", 9, k_Muted, TextAlignmentOptions.MidlineLeft);
+            Anchor(hint.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            hint.rectTransform.sizeDelta = new Vector2(150 * U, 12 * U);
+            hint.rectTransform.anchoredPosition = new Vector2(6 * U, -4 * U);
+
+            Button done = ButtonUi(panel, "DoneButton", "btn_primary", 44 * U, 14 * U, out TextMeshProUGUI doneLabel, "Galmuri11-Bold", 11, k_Cream);
+            RectTransform doneRect = done.GetComponent<RectTransform>();
+            Anchor(doneRect, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f));
+            doneRect.anchoredPosition = new Vector2(-4 * U, -3 * U);
+
+            RectTransform cards = Child(panel, "Cards");
+            Anchor(cards, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f));
+            cards.sizeDelta = new Vector2(0f, k_CardHeight + 4 * U);
+            cards.anchoredPosition = new Vector2(0f, 6 * U);
+            HorizontalLayoutGroup row = cards.gameObject.AddComponent<HorizontalLayoutGroup>();
+            row.padding = new RectOffset((int)(6 * U), (int)(6 * U), 0, 0);
+            row.spacing = 4 * U;
+            row.childAlignment = TextAnchor.MiddleLeft;
+            row.childControlWidth = false;
+            row.childControlHeight = false;
+            row.childForceExpandWidth = false;
+            row.childForceExpandHeight = false;
+
+            // 카드 틀(비활성, View가 복제): 칩 배경 + 아이콘 + 이름 + 값
+            RectTransform card = Panel(cards, "Card", Sprite("chip"), Color.white);
+            card.sizeDelta = new Vector2(k_CardWidth, k_CardHeight);
+            CanvasGroup group = card.gameObject.AddComponent<CanvasGroup>();
+            RectTransform icon = Panel(card, "Icon", null, Color.white);
+            Anchor(icon, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
+            icon.sizeDelta = new Vector2(32 * U, 32 * U);
+            icon.anchoredPosition = new Vector2(0f, -5 * U);
+            Image iconImage = icon.GetComponent<Image>();
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+            TextMeshProUGUI label = Text(card, "Label", "Galmuri9", 9, k_Ink, TextAlignmentOptions.Center);
+            Anchor(label.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f));
+            label.rectTransform.sizeDelta = new Vector2(0f, 11 * U);
+            label.rectTransform.anchoredPosition = new Vector2(0f, 14 * U);
+            TextMeshProUGUI sub = Text(card, "Sub", "Galmuri9", 9, k_Gold, TextAlignmentOptions.Center);
+            Anchor(sub.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f));
+            sub.rectTransform.sizeDelta = new Vector2(0f, 11 * U);
+            sub.rectTransform.anchoredPosition = new Vector2(0f, 3 * U);
+            EditCardView cardView = card.gameObject.AddComponent<EditCardView>();
+            Set(cardView, "m_icon", iconImage);
+            Set(cardView, "m_label", label);
+            Set(cardView, "m_sub", sub);
+            Set(cardView, "m_group", group);
+
+            EditModeView view = root.AddComponent<EditModeView>();
+            Set(view, "m_editButton", editButton);
+            Set(view, "m_doneButton", done);
+            Set(view, "m_panel", panel.gameObject);
+            Set(view, "m_panelRect", panel);
+            Set(view, "m_cardsRoot", cards);
+            Set(view, "m_cardTemplate", cardView);
+            Set(view, "m_dragArea", relay);
+            Set(view, "m_storeHint", hint);
+            Set(view, "m_doneLabel", doneLabel);
+            SetKindIcons(view, new[] { "shelf", "oven", "counter" });
+            Save(root, "EditModeView");
+        }
+
+        // Resources 밖의 사물 그림을 카드 아이콘으로(List<KindIcon> 직렬화)
+        static void SetKindIcons(Object target, string[] ids)
+        {
+            SerializedObject so = new SerializedObject(target);
+            SerializedProperty list = so.FindProperty("m_kindIcons");
+            list.arraySize = ids.Length;
+
+            for (int i = 0; i < ids.Length; i++)
+            {
+                SerializedProperty element = list.GetArrayElementAtIndex(i);
+                element.FindPropertyRelative("Id").stringValue = ids[i];
+                element.FindPropertyRelative("Sprite").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(k_ShopSpriteDir + ids[i] + ".png");
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // ---------- 부품 ----------

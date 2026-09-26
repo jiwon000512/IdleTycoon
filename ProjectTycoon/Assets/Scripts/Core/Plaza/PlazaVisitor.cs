@@ -141,6 +141,23 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 설계 18: 장식이 바뀌어 들를 곳 번호가 다시 매겨졌다. 들르던 곳은 놓고 다음으로, 걷던 길은 새 땅에서 다시
+        internal void Relayout()
+        {
+            if (m_spot >= 0)
+            {
+                m_spot = -1;
+                Timer = 0d;
+                Next();
+                return;
+            }
+
+            if (Moving && !Hopping)
+            {
+                Mover.WalkTo(Plaza.Layout.Nav, Mover.Destination, Mover.ArriveFacing);
+            }
+        }
+
         private bool TryVisitSpot()
         {
             if (!Plaza.TryTakeSpot(out int index))

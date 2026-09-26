@@ -14,7 +14,7 @@ namespace ZooTycoon.Data
         // 코드에 클래스가 있는 사물(행동은 ActionFactory.Ids)
         private static readonly string[] k_InteractableIds =
         {
-            ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id, SlotInteractable.k_Id,
+            ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door,
         };
         private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone };
@@ -23,7 +23,7 @@ namespace ZooTycoon.Data
         private static readonly string[] k_ConfigIds =
         {
             ConfigTable.k_StartCoins, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight, ConfigTable.k_EntranceHeight,
-            ConfigTable.k_WalkSpeed, ConfigTable.k_WombatSpeed, ConfigTable.k_HopSeconds, ConfigTable.k_CarryCapacity,
+            ConfigTable.k_WalkSpeed, ConfigTable.k_WombatSpeed, ConfigTable.k_HopSeconds, ConfigTable.k_CarryCapacity, ConfigTable.k_PlaceCell,
         };
 
         public static IReadOnlyList<string> Validate(TableSet tables)
@@ -188,9 +188,31 @@ namespace ZooTycoon.Data
                 }
 
                 ValidateUpgrade(element, errors);
+                ValidatePlaced("InteractableTable", element, errors);
             }
 
             CheckRequired<InteractableTable>(tables, k_InteractableIds, errors);
+        }
+
+        // 설계 18: 살 수 있는(price가 있는) 사물은 바닥 사각형이 있고 자리 오프셋이 있으며 가격이 성립한다. 장식은 모두 살 수 있다
+        private static void ValidatePlaced(string table, IPlacedKind kind, List<string> errors)
+        {
+            PriceInfo price = kind.Price;
+
+            if (price == null)
+            {
+                return;
+            }
+
+            if (kind.HalfWidth <= 0d || kind.Depth <= 0d || kind.Spots == null || kind.Spots.Count == 0)
+            {
+                errors.Add($"{table} '{kind.Id}': 살 수 있는 사물은 halfWidth·depth가 0보다 크고 spots가 있어야 한다.");
+            }
+
+            if (price.BaseCost < 0d || price.Growth < 1d || price.Max < 1 || price.Start < 0)
+            {
+                errors.Add($"{table} '{kind.Id}': price의 baseCost·start는 0 이상, growth·max는 1 이상이어야 한다.");
+            }
         }
 
         // 설계 11: 장식 그림·막는 자리·들를 곳, 놓인 장식(PlazaDecorTable)은 있는 장식만
@@ -218,6 +240,15 @@ namespace ZooTycoon.Data
                 if (decor.Spots == null)
                 {
                     errors.Add($"DecorationTable '{decor.Id}': spots가 없다.");
+                }
+
+                if (decor.Price == null)
+                {
+                    errors.Add($"DecorationTable '{decor.Id}': price가 없다.");
+                }
+                else
+                {
+                    ValidatePlaced("DecorationTable", decor, errors);
                 }
             }
 
@@ -309,12 +340,6 @@ namespace ZooTycoon.Data
                 if (bakery.DigBaseCost <= 0d || bakery.DigCostGrowth < 1d)
                 {
                     errors.Add($"BakeryConfigTable '{bakery.Id}': digBaseCost는 0보다, digCostGrowth는 1 이상이어야 한다.");
-                }
-
-                // 설계 13 v0.6: 오븐 설치
-                if (bakery.OvenBaseCost <= 0d || bakery.OvenCostGrowth < 1d || bakery.OvenMax < BakeryArea.k_StartOvens)
-                {
-                    errors.Add($"BakeryConfigTable '{bakery.Id}': ovenBaseCost는 0보다, ovenCostGrowth는 1 이상, ovenMax는 시작 오븐 수 이상이어야 한다.");
                 }
             }
 

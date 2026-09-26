@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ZooTycoon.Core
 {
-    // 설계 13 v0.6 → 설계 17: 빵집 행동(꺼내기·채우기·계산·굽기(해금 포함)·진열대 설치·오븐 설치·파기)
+    // 설계 13 v0.6 → 설계 17·18: 빵집 행동(꺼내기·채우기·계산·굽기(해금 포함)·파기). 진열대·오븐·계산대 설치는 편집 모드(WombatArea.Placement)
     public static partial class ActionFactory
     {
         // 설계 09 v0.4: 꺼내기(auto). 오븐의 다 구운 빵을 들 수 있는 만큼 손에
@@ -145,92 +145,6 @@ namespace ZooTycoon.Core
                 }
 
                 return false;
-            }
-        }
-
-        // 설계 17: 빈 자리에 진열대 설치(시트 줄). 가격은 빵집 설정, 진열대는 모두 shelfMax대까지. 새 진열대는 비어 있어 아무 빵이나 받는다
-        private sealed class PlaceShelf : SheetAction
-        {
-            public PlaceShelf(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is SlotInteractable;
-            }
-
-            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
-            {
-                BakeryArea bakery = ((SlotInteractable)target).Bakery;
-                int shelves = bakery.Shelves.Count;
-                bool full = shelves >= bakery.Config.ShelfMax;
-                double cost = Cost(bakery);
-                SheetOptionState state = full ? SheetOptionState.Max : SheetOption.Afford(worker, cost);
-                return new[] { new SheetOption(null, state, cost, 0, shelves, full ? shelves : shelves + 1) };
-            }
-
-            public override bool TryChoose(Worker worker, Interactable target, string option)
-            {
-                SlotInteractable slot = (SlotInteractable)target;
-                BakeryArea bakery = slot.Bakery;
-
-                if (!bakery.IsEmptySlot(slot.Cell) || bakery.Shelves.Count >= bakery.Config.ShelfMax || !worker.Wallet.TrySpendCoins(Cost(bakery)))
-                {
-                    return false;
-                }
-
-                bakery.PlaceShelf(slot.Cell);
-                return true;
-            }
-
-            // 설치 가격 = shelfBaseCost × shelfCostGrowth^(시작 뒤 설치한 수)
-            private static double Cost(BakeryArea bakery)
-            {
-                return bakery.Config.ShelfBaseCost * Math.Pow(bakery.Config.ShelfCostGrowth, bakery.Shelves.Count - BakeryArea.k_StartShelves);
-            }
-        }
-
-        // 설계 13 v0.6: 빈 자리에 오븐 설치(시트 줄). 업그레이드가 아니라 사는 것 — 가격은 빵집 설정, 오븐은 모두 ovenMax대까지
-        private sealed class PlaceOven : SheetAction
-        {
-            public PlaceOven(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is SlotInteractable;
-            }
-
-            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
-            {
-                BakeryArea bakery = ((SlotInteractable)target).Bakery;
-                int ovens = bakery.Ovens.Count;
-                bool full = ovens >= bakery.Config.OvenMax;
-                double cost = Cost(bakery);
-                SheetOptionState state = full ? SheetOptionState.Max : SheetOption.Afford(worker, cost);
-                return new[] { new SheetOption(null, state, cost, 0, ovens, full ? ovens : ovens + 1) };
-            }
-
-            public override bool TryChoose(Worker worker, Interactable target, string option)
-            {
-                SlotInteractable slot = (SlotInteractable)target;
-                BakeryArea bakery = slot.Bakery;
-
-                if (!bakery.IsEmptySlot(slot.Cell) || bakery.Ovens.Count >= bakery.Config.OvenMax || !worker.Wallet.TrySpendCoins(Cost(bakery)))
-                {
-                    return false;
-                }
-
-                bakery.PlaceOven(slot.Cell);
-                return true;
-            }
-
-            // 설치 가격 = ovenBaseCost × ovenCostGrowth^(시작 뒤 설치한 수)
-            private static double Cost(BakeryArea bakery)
-            {
-                return bakery.Config.OvenBaseCost * Math.Pow(bakery.Config.OvenCostGrowth, bakery.Ovens.Count - BakeryArea.k_StartOvens);
             }
         }
 

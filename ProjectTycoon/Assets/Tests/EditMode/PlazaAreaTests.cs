@@ -200,7 +200,7 @@ namespace ZooTycoon.Tests
 
             Assert.That(layout.Nav.IsWalkable(layout.DoorFloor), Is.True);
             Assert.That(layout.Nav.IsWalkable(layout.StairsFloor), Is.True);
-            Assert.That(layout.Decor.Count, Is.EqualTo(m_tables.GetAll<PlazaDecorTable>().Count));
+            Assert.That(m_plaza.Decor.Count, Is.EqualTo(m_tables.GetAll<PlazaDecorTable>().Count));
             // 벽에 붙은 화분의 벽 쪽 자리만 빠진다
             Assert.That(layout.Spots.Count, Is.GreaterThanOrEqualTo(12));
             Assert.That(layout.Spots.All(s => layout.Nav.IsWalkable(s.Position)), Is.True);

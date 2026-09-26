@@ -105,10 +105,7 @@ namespace ZooTycoon.UI
                     m_view.SetHeader(m_tables.Format("sheet_oven_title", IndexOf(oven) + 1), OvenStatus(oven));
                     break;
                 case CounterInteractable _:
-                    m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", m_shop.Counter.Queue.Count));
-                    break;
-                case SlotInteractable _:
-                    m_view.SetHeader(m_tables.Text("sheet_slot_title"), m_tables.Text("sheet_slot_status"));
+                    m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", ((CounterInteractable)m_target).Queue.Count));
                     break;
                 case DigInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
@@ -172,22 +169,6 @@ namespace ZooTycoon.UI
                         State = RowState(option.State),
                     };
                 }
-                case ActionTable.k_PlaceOven:
-                    return new SheetRow
-                    {
-                        Name = m_tables.Text("row_place_oven"),
-                        Effect = m_tables.Format("row_place_oven_effect", option.Before, option.After),
-                        Cost = Cost(option),
-                        State = RowState(option.State),
-                    };
-                case ActionTable.k_PlaceShelf:
-                    return new SheetRow
-                    {
-                        Name = m_tables.Text("row_place_shelf"),
-                        Effect = m_tables.Format("row_place_shelf_effect", option.Before, option.After),
-                        Cost = Cost(option),
-                        State = RowState(option.State),
-                    };
                 case ActionTable.k_Dig:
                     return new SheetRow
                     {
@@ -253,7 +234,7 @@ namespace ZooTycoon.UI
 
             m_view.FlashRow(index);
 
-            if (m_target is SlotInteractable || m_target is DigInteractable)
+            if (m_target is DigInteractable)
             {
                 m_view.Close();
             }
@@ -282,7 +263,7 @@ namespace ZooTycoon.UI
 
         private void Bus_LayoutChanged(Events.LayoutChanged e)
         {
-            if (e.Bakery == m_shop)
+            if (e.Area == m_shop)
             {
                 RefreshIfOpen();
             }

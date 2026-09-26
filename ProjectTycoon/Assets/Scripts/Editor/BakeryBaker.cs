@@ -69,10 +69,9 @@ namespace ZooTycoon.Editor
             OvenView oven = BakeOven();
             CounterView counter = BakeCounter();
             MarkerView digTag = BakeDigTag();
-            SpriteRenderer slotMarker = BakeSlotMarker();
             BakeCoinPopup();
             VisitorView customer = BakeCustomer();
-            BakeShop(shelf, shelfSign, oven, counter, digTag, slotMarker, customer);
+            BakeShop(shelf, shelfSign, oven, counter, digTag, customer);
             BakePlaza(customer);
             AssetDatabase.SaveAssets();
             return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·SlotMarker·Bakery·Visitor·Plaza (UI 프리팹은 ZooTycoon/Bake/UI)";
@@ -269,11 +268,12 @@ namespace ZooTycoon.Editor
             GameObject root = new GameObject("Counter");
             CounterView counter = root.AddComponent<CounterView>();
             // 몸체 + 출력기는 SortingGroup(밑변 = CounterBase)으로 묶는다. 안 묶으면 출력기의 order 3이 전역이라 계산대 앞에 선 웜뱃 위에 그려진다(2026-09-25). 웜뱃은 그룹 밖(root 자식)
-            GameObject body = Child(root.transform, "Body", new Vector3(0f, -BakeryLayout.k_CounterDrop, 0f));
+            // 설계 18: 프리팹 원점 = 계산대 밑변(진열대·오븐과 같다). 옛 「계산대 줄 윗변」 원점은 자유 배치에서 그림이 1.55 아래로 어긋났다
+            GameObject body = Child(root.transform, "Body", Vector3.zero);
             body.AddComponent<SortingGroup>();
             SpriteRenderer counterBody = Renderer(body.transform, "Counter", Load("counter"), Vector3.zero, 0);
             Set(counter, "m_body", counterBody);
-            Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, -BakeryLayout.k_WombatDrop, 0f)));
+            Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, 0.4f, 0f)));
             // 2026-09-25 사용자 선택 C: 영수증 출력기(Source~/make_counter_timer.py). 늘 계산대 위에 있고 계산 중에 영수증이 올라온다.
             // 자리는 계산대 왼쪽, 출력기 밑 외곽선이 금전등록기 밑변과 같은 줄(계산대 밑에서 15칸 위)에 서게 가운데 = (−0.6, +0.725)
             Sprite[] timerFrames = new Sprite[k_TimerFrames];
@@ -336,15 +336,6 @@ namespace ZooTycoon.Editor
             return Save(root, view, "DigTag");
         }
 
-        // 빈 자리: 점선 발자국만(2026-09-23 「빈 자리」 글자 태그 삭제)
-        static SpriteRenderer BakeSlotMarker()
-        {
-            GameObject root = new GameObject("SlotMarker");
-            SpriteRenderer body = root.AddComponent<SpriteRenderer>();
-            body.sprite = Load("slot_empty");
-            body.sortingOrder = k_MarkerOrder;
-            return Save(root, body, "SlotMarker");
-        }
 
         // ---------- 손님 · 가게 ----------
 
@@ -402,7 +393,7 @@ namespace ZooTycoon.Editor
         }
 
         // Shop 루트: 흙 배경(무한 벽 타일) + 굴 그림(실행 중 생성) + 입구 아치
-        static void BakeShop(ShelfView shelf, ShelfSignView shelfSign, OvenView oven, CounterView counter, MarkerView digTag, SpriteRenderer slotMarker, VisitorView customer)
+        static void BakeShop(ShelfView shelf, ShelfSignView shelfSign, OvenView oven, CounterView counter, MarkerView digTag, VisitorView customer)
         {
             GameObject root = new GameObject("Bakery");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -419,7 +410,9 @@ namespace ZooTycoon.Editor
             Set(view, "m_ovenPrefab", oven);
             Set(view, "m_counterPrefab", counter);
             Set(view, "m_digTagPrefab", digTag);
-            Set(view, "m_slotMarkerPrefab", slotMarker);
+            Set(view, "m_ghostShelf", Load("shelf"));
+            Set(view, "m_ghostOven", Load("oven"));
+            Set(view, "m_ghostCounter", Load("counter"));
             Set(view, "m_burrow", burrow);
             Set(view, "m_arch", arch.transform);
             SetBurrowTextures(view);

@@ -26,9 +26,6 @@ namespace ZooTycoon.Tests
             Assert.That(grid.Cells.Count, Is.EqualTo(8));
             Assert.That(grid.Contains(new Cell(-1, 0)), Is.True);
             Assert.That(grid.Contains(new Cell(0, 3)), Is.True);
-            Assert.That(grid.HasSlot(new Cell(0, 1)), Is.True);
-            Assert.That(grid.HasSlot(new Cell(0, 2)), Is.False);
-            Assert.That(grid.HasSlot(new Cell(0, 0)), Is.False);
         }
 
         [Test]

@@ -20,6 +20,11 @@ namespace ZooTycoon.Core
             YMax = yMax;
         }
 
+        public bool Intersects(NavRect other)
+        {
+            return XMin < other.XMax && other.XMin < XMax && YMin < other.YMax && other.YMin < YMax;
+        }
+
         public bool Contains(Vector2 p, float margin)
         {
             return p.X > XMin - margin && p.X < XMax + margin && p.Y > YMin - margin && p.Y < YMax + margin;
@@ -367,6 +372,12 @@ namespace ZooTycoon.Core
         }
 
         // 가운데와 둘레 8점이 모두 굴 바닥인가(벽에서 clearance 이상)
+        // 그 점이 굴 바닥 마스크 안인가(여유 없이). 설계 18 배치 검증
+        public static bool IsFloor(BurrowShape.Result shape, Vector2 p)
+        {
+            return MaskAt(shape, BurrowShape.k_PixelsPerUnit, p);
+        }
+
         private static bool OnFloor(BurrowShape.Result shape, float ppu, Vector2 p, float clearance)
         {
             if (!MaskAt(shape, ppu, p))

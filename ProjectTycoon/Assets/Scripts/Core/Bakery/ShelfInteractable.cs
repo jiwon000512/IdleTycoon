@@ -3,31 +3,34 @@ using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 08·09·13 → 설계 17: 진열대 하나 = 빵 한 종류와 그 재고. 종류는 웜뱃이 처음 올린 빵이 정하고 다 팔리면 풀린다(Bread = null, 빈 진열대).
-    // 웜뱃이 채우고 손님이 하나씩 집는다. 용량은 업그레이드
-    public sealed class ShelfInteractable : Interactable
+    // 설계 08·09·13 → 설계 17·18: 진열대 하나 = 빵 한 종류와 그 재고. 종류는 웜뱃이 처음 올린 빵이 정하고 다 팔리면 풀린다(Bread = null, 빈 진열대).
+    // 자리는 자유 배치(밑변 가운데 좌표). 웜뱃이 채우고 손님이 하나씩 집는다. 용량은 업그레이드
+    public sealed class ShelfInteractable : Interactable, IPlaced
     {
         public const string k_Id = "shelf";
 
-        private readonly Vector2 m_base;
-
-        public Cell Cell { get; }
         public BakeryArea Bakery { get; }
+        public Vector2 Position { get; private set; }
         // 지금 진열한 빵. 빈 진열대면 null
         public BreadTable Bread { get; private set; }
         public int Stock { get; private set; }
         public int Capacity => (int)UpgradeValue(UpgradeLevel);
+        public IPlacedKind Kind => Table;
 
-        public ShelfInteractable(InteractableTable table, Cell cell, BakeryArea bakery) : base(table, bakery)
+        public ShelfInteractable(InteractableTable table, Vector2 position, BakeryArea bakery) : base(table, bakery)
         {
-            Cell = cell;
             Bakery = bakery;
-            m_base = bakery.Layout.ShelfBase(cell);
+            Position = position;
         }
 
         public override float DistanceTo(Vector2 p)
         {
-            return Vector2.Distance(p, m_base);
+            return Vector2.Distance(p, Position);
+        }
+
+        public void MoveTo(Vector2 position)
+        {
+            Position = position;
         }
 
         // 용량 = 설정 + 업그레이드

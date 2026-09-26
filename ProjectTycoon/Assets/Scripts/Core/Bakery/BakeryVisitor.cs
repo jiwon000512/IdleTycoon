@@ -13,9 +13,9 @@ namespace ZooTycoon.Core
         private double m_patience;
 
         public BakeryArea Bakery { get; }
-        // 지금 찾는 빵과 그 진열대 칸
+        // 지금 찾는 빵과 그 진열대
         public BreadTable Bread { get; private set; }
-        public Cell Cell { get; private set; }
+        public ShelfInteractable Shelf { get; private set; }
         public bool CarriesBread { get; private set; }
         public bool Angry { get; private set; }
         public bool Paid { get; private set; }
@@ -122,8 +122,8 @@ namespace ZooTycoon.Core
                     return BtStatus.Failure;
                 }
 
-                Cell = Bakery.ShelfFor(Bread, Position).Cell;
-                return BtStatus.Success;
+                Shelf = Bakery.ShelfFor(Bread, Position);
+                return Shelf != null ? BtStatus.Success : BtStatus.Failure;
             }
 
             double roll = Bakery.Random.NextDouble() * weightSum;
@@ -146,9 +146,10 @@ namespace ZooTycoon.Core
             }
 
             Bread = chosen;
-            Cell = Bakery.ShelfFor(chosen, Position).Cell;
+            Shelf = Bakery.ShelfFor(chosen, Position);
             m_tried.Add(chosen.Id);
-            return BtStatus.Success;
+            // 진열대가 하나도 없으면(다 보관함) 빵을 못 찾은 것
+            return Shelf != null ? BtStatus.Success : BtStatus.Failure;
         }
 
         // 그 진열대의 빈 서는 자리를 잡고 걷는다. 이미 그 진열대 자리에 서 있으면 그대로
@@ -156,15 +157,15 @@ namespace ZooTycoon.Core
         {
             Phase = VisitorPhase.Walking;
 
-            if (HasSpot && IsShelfSpot(Cell, Spot))
+            if (HasSpot && IsShelfSpot(Shelf, Spot))
             {
                 return true;
             }
 
             HasSpot = false;
-            Spot = Bakery.FreeSpot(Cell);
+            Spot = Bakery.FreeSpot(Shelf);
             HasSpot = true;
-            Mover.WalkTo(Bakery.Layout.Nav, Spot, Bakery.Layout.ShelfFacing(Cell, Spot));
+            Mover.WalkTo(Bakery.Layout.Nav, Spot, Bakery.Layout.ShelfFacing(Shelf, Spot));
             return true;
         }
 
@@ -176,9 +177,7 @@ namespace ZooTycoon.Core
         // 내 빵의 재고가 있으면 하나 집는다(pickSeconds 동안 빵이 손으로). 기다리는 사이 다른 빵으로 바뀐 진열대에서는 집지 않는다
         private bool StartPick()
         {
-            ShelfInteractable shelf = Bakery.Shelves[Cell];
-
-            if (shelf.Bread != Bread || !shelf.TryPick())
+            if (Shelf.Bread != Bread || !Shelf.TryPick())
             {
                 return false;
             }
@@ -217,9 +216,7 @@ namespace ZooTycoon.Core
 
         private BtStatus TickLook(double dt)
         {
-            ShelfInteractable shelf = Bakery.Shelves[Cell];
-
-            if (shelf.Bread == Bread && shelf.Stock > 0)
+            if (Shelf.Bread == Bread && Shelf.Stock > 0)
             {
                 return BtStatus.Success;
             }
@@ -234,7 +231,7 @@ namespace ZooTycoon.Core
         {
             HasSpot = false;
             Phase = VisitorPhase.ToQueue;
-            Bakery.Counter.Join(this);
+            Bakery.ShortestQueue(Position).Join(this);
             return true;
         }
 
@@ -273,9 +270,9 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        private bool IsShelfSpot(Cell cell, Vector2 p)
+        private bool IsShelfSpot(ShelfInteractable shelf, Vector2 p)
         {
-            foreach (Vector2 spot in Bakery.Layout.ShelfSpots(cell))
+            foreach (Vector2 spot in Bakery.Layout.ShelfSpots(shelf))
             {
                 if (Vector2.DistanceSquared(spot, p) < 0.01f)
                 {

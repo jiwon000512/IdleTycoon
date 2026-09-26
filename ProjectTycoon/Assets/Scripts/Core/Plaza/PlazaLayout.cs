@@ -5,19 +5,18 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 11 2장: 광장 배치의 단일 출처. 빵집과 같은 칸 격자(가로 cols칸 가운데 정렬 × 세로 rows칸)로 굴 그림·걷는 땅을 만들고,
-    // 뒷벽에 빵집 문(계단 왼쪽 칸 가운데)과 지상 계단(가운데), 바닥에 장식과 들를 곳을 둔다. 좌표는 광장 원점(첫 줄 윗변 가운데) 기준 유닛, y 위
+    // 설계 11 2장 · 설계 18: 광장 배치의 단일 출처. 빵집과 같은 칸 격자(가로 cols칸 가운데 정렬 × 세로 rows칸)로 굴 그림·걷는 땅을 만들고,
+    // 뒷벽에 빵집 문(계단 왼쪽 칸 가운데)과 지상 계단(가운데)을 둔다. 장식은 곳이 들고 있고 Rebuild로 걷는 땅·들를 곳을 다시 만든다.
+    // 좌표는 광장 원점(첫 줄 윗변 가운데) 기준 유닛, y 위
     public sealed class PlazaLayout
     {
         // 구멍 안(나타나는 곳)은 띠 밑변 바로 위, 아래 바닥(내려앉는 곳)은 빵집 구멍 아래와 같은 높이
         private const float k_HoleFloorY = -2.2f;
 
         private readonly List<PlazaSpot> m_spots = new List<PlazaSpot>();
-        private readonly List<DecorationData> m_decor = new List<DecorationData>();
 
         public BurrowShape.Result Shape { get; }
-        public BurrowNav Nav { get; }
-        public IReadOnlyList<DecorationData> Decor => m_decor;
+        public BurrowNav Nav { get; private set; }
         public IReadOnlyList<PlazaSpot> Spots => m_spots;
         public Vector2 DoorInside { get; }
         public Vector2 DoorFloor { get; }
@@ -55,26 +54,27 @@ namespace ZooTycoon.Core
             DoorFloor = new Vector2(doorX, k_HoleFloorY);
             StairsInside = new Vector2(0f, inside);
             StairsFloor = new Vector2(0f, k_HoleFloorY);
+            Rebuild(new List<DecorationData>());
+        }
 
+        // 장식 바닥을 막고, 들를 곳은 격자에 붙이되 걷는 땅이 아니면 뺀다(장식이 벽에 붙어 있을 때)
+        public void Rebuild(IReadOnlyList<DecorationData> decor)
+        {
             List<NavRect> blocked = new List<NavRect>();
 
-            foreach (PlazaDecorTable placed in tables.GetAll<PlazaDecorTable>())
+            foreach (DecorationData placed in decor)
             {
-                DecorationTable decoration = tables.Get<DecorationTable>(placed.Decoration);
-                Vector2 position = new Vector2((float)placed.X, (float)placed.Y);
-                m_decor.Add(new DecorationData(decoration, position));
-                blocked.Add(new NavRect(position.X - (float)decoration.HalfWidth, position.Y, position.X + (float)decoration.HalfWidth,
-                    position.Y + (float)decoration.Depth));
+                blocked.Add(Placement.Rect(placed));
             }
 
             Nav = new BurrowNav(Shape, blocked);
+            m_spots.Clear();
 
-            // 들를 곳은 격자에 붙이고, 걷는 땅이 아니면 뺀다(장식이 벽에 붙어 있을 때)
-            foreach (DecorationData decor in m_decor)
+            foreach (DecorationData placed in decor)
             {
-                foreach (DecorationSpot spot in decor.Table.Spots)
+                foreach (SpotOffset spot in placed.Kind.Spots)
                 {
-                    Vector2 p = Nav.Snap(decor.Position + new Vector2((float)spot.Dx, (float)spot.Dy));
+                    Vector2 p = Nav.Snap(Placement.SpotAt(placed.Position, spot));
 
                     if (Nav.IsWalkable(p))
                     {

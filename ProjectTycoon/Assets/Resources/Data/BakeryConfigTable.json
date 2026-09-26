@@ -1,6 +1,6 @@
 {
   "table": "BakeryConfigTable",
-  "version": 4,
+  "version": 5,
   "notes": [
     "빵집 시뮬 숫자. id = 빵집 종류(지금 bakery 하나). 시간은 초.",
     "patienceSeconds: 빈 진열대 앞 두리번 시간 합계(다 쓰면 「!!」로 나감). lookSeconds: 한 진열대 두리번 최대. pickSeconds: 빵 집기.",
@@ -8,9 +8,10 @@
     "version 1 (2026-09-24 코드 리뷰 R1): game_config.json v17을 Id로 찾는 테이블 4개(ConfigTable·BakeryConfigTable·PlazaConfigTable·PlazaDecorTable)로 나눴다. 값은 그대로.",
     "version 2 (2026-09-24, 설계 13 v0.6): 오븐 설치 가격 ovenBaseCost·ovenCostGrowth(설치 가격 = ovenBaseCost × ovenCostGrowth^(시작 뒤 설치한 수))와 전체 오븐 수 상한 ovenMax. 값은 옛 ShopUpgradeTable oven_count(300 × 3^n, 최대 3단계 = 시작 1 + 3대) 그대로.",
     "version 3 (2026-09-24, 리뷰 R2): carryCapacity는 ConfigTable로(웜뱃의 값). ovenCount 삭제(시작 오븐은 코드의 시작 배치 1대, 오븐 설치 가격은 그 뒤로 산 수로 오른다).",
-    "version 4 (2026-09-26, 설계 17): 진열대 설치 가격 shelfBaseCost·shelfCostGrowth(설치 가격 = shelfBaseCost × shelfCostGrowth^(시작 뒤 설치한 수), 시작 진열대는 코드의 시작 배치 1대)와 전체 진열대 수 상한 shelfMax. 오븐보다 싸게 150 × 2^n, 최대 4대."
+    "version 4 (2026-09-26, 설계 17): 진열대 설치 가격 shelfBaseCost·shelfCostGrowth(설치 가격 = shelfBaseCost × shelfCostGrowth^(시작 뒤 설치한 수), 시작 진열대는 코드의 시작 배치 1대)와 전체 진열대 수 상한 shelfMax. 오븐보다 싸게 150 × 2^n, 최대 4대.",
+    "version 5 (2026-09-26, 설계 18 자유 배치): oven*·shelf* 삭제 — 사물 가격은 InteractableTable price로."
   ],
   "rows": [
-    {"id": "bakery", "maxCustomers": 8, "patienceSeconds": 6, "lookSeconds": 2, "checkoutSeconds": 1.5, "shelfCapacity": 8, "pickSeconds": 0.4, "digBaseCost": 150, "digCostGrowth": 1.4, "ovenBaseCost": 300, "ovenCostGrowth": 3, "ovenMax": 4, "shelfBaseCost": 150, "shelfCostGrowth": 2, "shelfMax": 4}
+    {"id": "bakery", "maxCustomers": 8, "patienceSeconds": 6, "lookSeconds": 2, "checkoutSeconds": 1.5, "shelfCapacity": 8, "pickSeconds": 0.4, "digBaseCost": 150, "digCostGrowth": 1.4}
   ]
 }

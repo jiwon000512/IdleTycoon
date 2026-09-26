@@ -4,7 +4,7 @@ using GameKit.Events;
 
 namespace ZooTycoon.Core
 {
-    // 굴 격자 설계 v0.5: 파낸 칸의 집합·파기 규칙·비용(길 찾기는 손님 동선 설계 v0.2의 BurrowNav). 시작은 가운데 두 열(−1·0) × 네 줄(입구·자리·계산대·자리).
+    // 굴 격자 설계 v0.5: 파낸 칸의 집합·파기 규칙·비용(길 찾기는 손님 동선 설계 v0.2의 BurrowNav). 시작은 가운데 두 열(−1·0) × 네 줄. 사물 자리는 설계 18부터 칸이 아니라 자유 좌표
     // 팔 수 있는 칸 = 안 판 칸 중 파낸 칸과 상하좌우로 붙고 입구 줄(row 0)이 아닌 곳. 비용 = digBaseCost × digCostGrowth^(판 칸 수). 값은 파기 행동이 치른다
     public sealed class BurrowGrid
     {
@@ -37,12 +37,6 @@ namespace ZooTycoon.Core
         public bool Contains(Cell cell)
         {
             return m_cells.Contains(cell);
-        }
-
-        // 자리(진열대·오븐)를 놓을 수 있는 칸: 입구 줄·계산대 줄이 아닌 파낸 칸
-        public bool HasSlot(Cell cell)
-        {
-            return m_cells.Contains(cell) && cell.Row != k_EntranceRow && cell.Row != k_CounterRow;
         }
 
         public bool CanDig(Cell cell)

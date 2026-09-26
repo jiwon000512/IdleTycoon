@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using GameKit.Events;
@@ -7,8 +9,8 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 11: 굴 밖 광장. 굴 그림은 빵집과 같은 BurrowPainter로 칠하고, 빵집 문(아치·차양·간판)·지상 계단·장식은 Core PlazaLayout이 정한 자리에 놓기만 한다.
-    // 웜뱃이 문 앞에 서면(대상이 문) 문이 한 번 튄다
+    // 설계 11 · 설계 18: 굴 밖 광장. 굴 그림은 빵집과 같은 BurrowPainter로 칠하고, 빵집 문(아치·차양·간판)·지상 계단은 Core PlazaLayout이 정한 자리에 놓는다.
+    // 장식은 Core PlazaArea.Decor를 객체 키로 맞춘다(놓이면 만들고 옮기면 옮기고 치우면 지운다). 웜뱃이 문 앞에 서면(대상이 문) 문이 한 번 튄다
     public sealed class PlazaView : MonoBehaviour
     {
         private const string k_SignKey = "sign_bakery";
@@ -26,8 +28,11 @@ namespace ZooTycoon.World
         [SerializeField] private Transform m_stairs;
         [SerializeField] private WombatView m_wombat;
 
+        private readonly Dictionary<DecorationData, GameObject> m_decor = new Dictionary<DecorationData, GameObject>();
         private PlazaArea m_plaza;
-        private IDisposable m_target;
+        private FrameCache m_frames;
+        private GhostView m_ghost;
+        private IDisposable[] m_subscriptions;
 
         public Transform Wombat => m_wombat.transform;
 
@@ -45,6 +50,7 @@ namespace ZooTycoon.World
         public void Bind(PlazaArea plaza, EventBus bus, FrameCache frames, TableSet tables)
         {
             m_plaza = plaza;
+            m_frames = frames;
             PlazaLayout layout = plaza.Layout;
             BurrowShape.Result shape = layout.Shape;
             m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
@@ -54,42 +60,99 @@ namespace ZooTycoon.World
             m_door.localPosition = new Vector3(layout.DoorFloor.X, wallBottom, 0f);
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
             m_sign.text = tables.Text(k_SignKey);
-
-            foreach (DecorationData decor in layout.Decor)
-            {
-                GameObject go = new GameObject(decor.Table.Id);
-                go.transform.SetParent(transform, false);
-                go.transform.localPosition = new Vector3(decor.Position.X, decor.Position.Y, 0f);
-                SpriteRenderer renderer = go.AddComponent<SpriteRenderer>();
-                renderer.sprite = frames.Get(decor.Table.Sprite)[0];
-                // 월드 스프라이트는 밑변(피벗)으로 정렬(BakeryBaker.Renderer와 같은 규칙)
-                renderer.spriteSortPoint = SpriteSortPoint.Pivot;
-
-                if (decor.Table.Frames > 0)
-                {
-                    Sprite[] loop = new Sprite[decor.Table.Frames];
-
-                    for (int i = 0; i < loop.Length; i++)
-                    {
-                        loop[i] = frames.Get(decor.Table.Sprite + "_" + i)[0];
-                    }
-
-                    go.AddComponent<SpriteAnimator>().Play(renderer, loop, (float)decor.Table.FrameRate);
-                }
-            }
+            m_ghost = GhostView.Create(transform);
+            Build();
 
             m_wombat.Bind(plaza, transform, frames);
-            m_target = bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged);
+            m_subscriptions = new[]
+            {
+                bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
+                bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
+            };
+        }
+
+        public void ShowGhost(IPlacedKind kind, System.Numerics.Vector2 at, bool ok)
+        {
+            m_ghost.Show(m_frames.Get(kind.Icon)[0], transform.position + new Vector3(at.X, at.Y, 0f), ok);
+        }
+
+        public void HideGhost()
+        {
+            m_ghost.Hide();
         }
 
         private void OnDestroy()
         {
-            m_target?.Dispose();
+            if (m_subscriptions == null)
+            {
+                return;
+            }
+
+            foreach (IDisposable subscription in m_subscriptions)
+            {
+                subscription.Dispose();
+            }
+        }
+
+        // 장식을 Core 목록에 맞춘다: 없는 것은 만들고, 사라진 것은 지우고, 자리는 늘 다시 놓는다
+        private void Build()
+        {
+            foreach (DecorationData decor in new List<DecorationData>(m_decor.Keys))
+            {
+                if (!m_plaza.Decor.Contains(decor))
+                {
+                    Destroy(m_decor[decor]);
+                    m_decor.Remove(decor);
+                }
+            }
+
+            foreach (DecorationData decor in m_plaza.Decor)
+            {
+                if (!m_decor.TryGetValue(decor, out GameObject go))
+                {
+                    go = CreateDecor(decor);
+                    m_decor[decor] = go;
+                }
+
+                go.transform.localPosition = new Vector3(decor.Position.X, decor.Position.Y, 0f);
+            }
+        }
+
+        private GameObject CreateDecor(DecorationData decor)
+        {
+            GameObject go = new GameObject(decor.Table.Id);
+            go.transform.SetParent(transform, false);
+            SpriteRenderer renderer = go.AddComponent<SpriteRenderer>();
+            renderer.sprite = m_frames.Get(decor.Table.Sprite)[0];
+            // 월드 스프라이트는 밑변(피벗)으로 정렬(BakeryBaker.Renderer와 같은 규칙)
+            renderer.spriteSortPoint = SpriteSortPoint.Pivot;
+
+            if (decor.Table.Frames > 0)
+            {
+                Sprite[] loop = new Sprite[decor.Table.Frames];
+
+                for (int i = 0; i < loop.Length; i++)
+                {
+                    loop[i] = m_frames.Get(decor.Table.Sprite + "_" + i)[0];
+                }
+
+                go.AddComponent<SpriteAnimator>().Play(renderer, loop, (float)decor.Table.FrameRate);
+            }
+
+            return go;
+        }
+
+        private void Bus_LayoutChanged(Events.LayoutChanged e)
+        {
+            if (e.Area == m_plaza)
+            {
+                Build();
+            }
         }
 
         private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            if (e.Area == m_plaza && m_plaza.Target != null)
+            if (e.Area == m_plaza && m_plaza.Target is PassageInteractable)
             {
                 StartCoroutine(Fx.Bounce(m_door));
             }

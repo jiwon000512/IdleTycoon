@@ -17,6 +17,8 @@ namespace ZooTycoon.Core
         public const string k_HopSeconds = "hopSeconds";
         // 설계 09 · 리뷰 R2: 웜뱃이 드는 빵 수(웜뱃의 값이라 빵집 설정이 아니라 여기)
         public const string k_CarryCapacity = "carryCapacity";
+        // 설계 18: 배치 격자 한 변(유닛). 사물 밑변 가운데를 여기에 맞춘다
+        public const string k_PlaceCell = "placeCell";
 
         public double Value { get; set; }
     }

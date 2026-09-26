@@ -30,9 +30,9 @@ namespace ZooTycoon.Core
         }
 
         // 진열대 옆·앞 자리 중 아무도 잡지 않은 첫 자리. 다 찼으면 근처 빈 걷는 점
-        internal Vector2 FreeSpot(Cell cell)
+        internal Vector2 FreeSpot(ShelfInteractable shelf)
         {
-            foreach (Vector2 spot in Layout.ShelfSpots(cell))
+            foreach (Vector2 spot in Layout.ShelfSpots(shelf))
             {
                 if (!SpotTaken(spot))
                 {
@@ -40,7 +40,7 @@ namespace ZooTycoon.Core
                 }
             }
 
-            return Layout.OverflowSpot(cell, SpotTaken);
+            return Layout.OverflowSpot(shelf, SpotTaken);
         }
 
         private void TickVisitors(double dt)
@@ -113,7 +113,10 @@ namespace ZooTycoon.Core
         // 배치가 바뀌면: 줄에 선 손님은 계산대가 새 줄 자리로, 걷는 중인 손님은 같은 목적지로 새 길을 찾는다
         private void RepathVisitors()
         {
-            Counter.Repath();
+            foreach (CounterInteractable counter in m_counters)
+            {
+                counter.Repath();
+            }
 
             foreach (BakeryVisitor visitor in m_visitors)
             {

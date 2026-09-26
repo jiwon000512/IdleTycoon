@@ -36,6 +36,13 @@ namespace ZooTycoon.UI
             m_joystick.Moved += Joystick_Moved;
         }
 
+        // 설계 18 편집 모드: 조이스틱·상호작용 버튼을 숨긴다
+        public void SetEditing(bool editing)
+        {
+            m_joystick.gameObject.SetActive(!editing);
+            m_interactBreath.gameObject.SetActive(!editing);
+        }
+
         // iconPath: Resources/ 기준. null이면 아이콘은 그대로 두고 흐리게만
         public void SetInteract(string iconPath, bool enabled)
         {

@@ -50,7 +50,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 40e86cff9afc4e4b9fc384ef271976d6, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.ShopHudView
+  m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.ControlHudView
   m_joystick: {fileID: 4616560835850420880}
   m_interactButton: {fileID: 7094763111106045538}
   m_interactIcon: {fileID: 888784649368822564}

@@ -1,6 +1,6 @@
 {
   "table": "InteractableTable",
-  "version": 6,
+  "version": 7,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
     "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상. 통로(exit·door)는 바닥선에서 0.25 이상 올라간 띠(코드 PassageInteractable.k_Enter) 안에서 가로 거리만 잰다 — 거리만으로 넘어간다(2026-09-26).",
@@ -10,24 +10,38 @@
     "version 4 (2026-09-24, 설계 13 v0.5 행동을 객체로): actions에 시트 행동(bake·upgrade·unlock·place_oven·dig)을 더해 사물에서 할 수 있는 일을 표 한 곳에 둔다. 파기 자리 버튼은 open_dig.",
     "upgrade (version 5, 2026-09-24, 설계 13 v0.6): 이 사물의 업그레이드(upgrade 행동의 데이터, 없으면 null). 비용 = baseCost × costGrowth^단계, 효과 = effectPerLevel × 단계, 단계는 사물 종류 공통. 값의 뜻은 사물 코드가 정한다(오븐·계산대 = 속도 배수 1 + 효과, 진열대 = 용량 설정 + 효과). lookLevel: 이 단계부터 사물 외형이 바뀐다(오븐 5 = 벽돌 오븐). effectFormat: 효과 전후 문구({0} 현재 {1} 다음).",
     "version 5 (2026-09-24, 설계 13 v0.6): ShopUpgradeTable.json을 없애고 업그레이드를 사물 행 안(upgrade)으로. 오븐 추가(oven_count)는 업그레이드가 아니라 빈 자리의 오븐 설치(place_oven)라 빼고, 가격은 BakeryConfigTable로.",
-    "version 6 (2026-09-26, 설계 17 빈 진열대는 아무 빵): 빵 해금이 진열대와 갈라져 unlock 삭제. 진열대는 빈 자리의 진열대 설치(place_shelf, 값은 BakeryConfigTable), 빵 해금은 오븐 굽기 시트(bake)의 다음 빵 칩."
+    "version 6 (2026-09-26, 설계 17 빈 진열대는 아무 빵): 빵 해금이 진열대와 갈라져 unlock 삭제. 진열대는 빈 자리의 진열대 설치(place_shelf, 값은 BakeryConfigTable), 빵 해금은 오븐 굽기 시트(bake)의 다음 빵 칩.",
+    "version 7 (2026-09-26, 설계 18 자유 배치): 빈 자리(slot)와 place_shelf·place_oven 삭제. 놓을 수 있는 사물(shelf·oven·counter)은 halfWidth·depth(밑변 가운데에서 좌우·위로 막는 바닥, 유닛)·spots(밑변 기준 자리: role customer = 손님이 서는 곳(하나 이상 걷는 땅이어야 놓임), worker = 웜뱃·점원 자리(계산대는 뒤 = 위 0.4, 발이 계산대 그림에 묻힘. 웜뱃에게 계산대는 밑변 선만 막는다), queue = 줄 머리(계산대 앞 = 아래 0.8))·price(baseCost × growth^(지금 수 − start), 전체 수 max까지)를 갖고 편집 모드 상점에서 산다. 통로·파기는 price 없음."
   ],
   "rows": [
     {
       "id": "shelf", "range": 1.3, "actions": [ "fill", "open", "upgrade" ],
-      "upgrade": { "name": "진열대 넓히기", "baseCost": 80, "costGrowth": 1.5, "maxLevel": 10, "effectPerLevel": 4, "lookLevel": 0, "effectFormat": "용량 {0} → {1}" }
+      "upgrade": { "name": "진열대 넓히기", "baseCost": 80, "costGrowth": 1.5, "maxLevel": 10, "effectPerLevel": 4, "lookLevel": 0, "effectFormat": "용량 {0} → {1}" },
+      "halfWidth": 0.6, "depth": 0.45,
+      "spots": [
+        { "dx": 1.1, "dy": -0.05, "face": "left", "role": "customer" },
+        { "dx": -1.3, "dy": -0.05, "face": "right", "role": "customer" },
+        { "dx": 0.6, "dy": -0.7, "face": "up", "role": "customer" },
+        { "dx": 0.0, "dy": -0.7, "face": "up", "role": "customer" }
+      ],
+      "price": { "baseCost": 150, "growth": 2, "max": 4, "start": 1 }
     },
     {
       "id": "oven", "range": 1.3, "actions": [ "take_out", "open", "bake", "upgrade" ],
-      "upgrade": { "name": "굽기 속도", "baseCost": 100, "costGrowth": 1.6, "maxLevel": 10, "effectPerLevel": 0.2, "lookLevel": 5, "effectFormat": "속도 ×{0} → ×{1}" }
+      "upgrade": { "name": "굽기 속도", "baseCost": 100, "costGrowth": 1.6, "maxLevel": 10, "effectPerLevel": 0.2, "lookLevel": 5, "effectFormat": "속도 ×{0} → ×{1}" },
+      "halfWidth": 0.65, "depth": 0.45,
+      "spots": [ { "dx": 0, "dy": 1.05, "face": "down", "role": "worker" } ],
+      "price": { "baseCost": 300, "growth": 3, "max": 4, "start": 1 }
     },
     {
       "id": "counter", "range": 1.0, "actions": [ "serve", "open", "upgrade" ],
-      "upgrade": { "name": "계산 속도", "baseCost": 120, "costGrowth": 1.6, "maxLevel": 10, "effectPerLevel": 0.2, "lookLevel": 0, "effectFormat": "속도 ×{0} → ×{1}" }
-    },
-    {
-      "id": "slot", "range": 1.0, "actions": [ "open", "place_shelf", "place_oven" ],
-      "upgrade": null
+      "upgrade": { "name": "계산 속도", "baseCost": 120, "costGrowth": 1.6, "maxLevel": 10, "effectPerLevel": 0.2, "lookLevel": 0, "effectFormat": "속도 ×{0} → ×{1}" },
+      "halfWidth": 1.0, "depth": 0.4,
+      "spots": [
+        { "dx": 0, "dy": 0.4, "face": "down", "role": "worker" },
+        { "dx": 0.6, "dy": -0.8, "face": "up", "role": "queue" }
+      ],
+      "price": { "baseCost": 400, "growth": 2.5, "max": 3, "start": 1 }
     },
     {
       "id": "dig", "range": 0.6, "actions": [ "open_dig", "dig" ],

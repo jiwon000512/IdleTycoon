@@ -73,7 +73,7 @@ namespace ZooTycoon.World
         {
             if (Mine(e.Visitor))
             {
-                m_units[e.Visitor].Pick(m_frames.Get(e.Visitor.Bread.Sprite)[0], m_view.ShelfIconPosition(m_shop.Shelves[e.Visitor.Cell]));
+                m_units[e.Visitor].Pick(m_frames.Get(e.Visitor.Bread.Sprite)[0], m_view.ShelfIconPosition(e.Visitor.Shelf));
             }
         }
 

@@ -6,68 +6,89 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 08 v0.5 → 설계 13: 빵집. 사물(진열대·오븐·계산대·나가기·빈 자리·파기)을 조립하고 사물 사이(오븐 → 웜뱃 손 → 진열대 → 손님 → 계산대)를 잇는다.
-    // 굴 격자 설계 v0.5: 진열대·오븐은 굴 칸의 자리에 놓인다. 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs.
+    // 설계 08 v0.5 → 설계 13 → 설계 18: 빵집. 사물(진열대·오븐·계산대·나가기·파기)을 조립하고 사물 사이(오븐 → 웜뱃 손 → 진열대 → 손님 → 계산대)를 잇는다.
+    // 설계 18: 진열대·오븐·계산대는 자유 배치(밑변 가운데 좌표). 사고 옮기고 보관하는 규칙은 WombatArea.Placement. 굴 파기는 칸 그대로.
+    // 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs.
     // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기로 광장에 간다(없는 동안 계산이 멈춘다)
     public sealed partial class BakeryArea : WombatArea
     {
-        // 시작 오븐·진열대 수(왼쪽 열 자리 줄 하나씩). 설치 가격은 이 뒤로 산 수로 오른다
-        public const int k_StartOvens = 1;
-        public const int k_StartShelves = 1;
         // 웜뱃이 끼인 자리(배치가 바뀜)에서 걷는 땅을 찾는 거리(맨해튼)
         private const float k_UnstuckDistance = 3f;
 
         private readonly BakeryConfigTable m_config;
+        private readonly ZooState m_state;
         private readonly List<BreadTable> m_unlocked = new List<BreadTable>();
-        private readonly Dictionary<Cell, ShelfInteractable> m_shelves = new Dictionary<Cell, ShelfInteractable>();
+        private readonly List<ShelfInteractable> m_shelves = new List<ShelfInteractable>();
         private readonly List<OvenInteractable> m_ovens = new List<OvenInteractable>();
-        private readonly Dictionary<Cell, SlotInteractable> m_slots = new Dictionary<Cell, SlotInteractable>();
+        private readonly List<CounterInteractable> m_counters = new List<CounterInteractable>();
+        private readonly List<IPlacedKind> m_shopKinds = new List<IPlacedKind>();
         private readonly Dictionary<Cell, DigInteractable> m_digs = new Dictionary<Cell, DigInteractable>();
         private readonly PassageInteractable m_exit;
 
         public BakeryConfigTable Config => m_config;
         public BurrowGrid Grid { get; }
         public BakeryLayout Layout { get; }
-        public CounterInteractable Counter { get; }
         public IReadOnlyList<BreadTable> UnlockedBreads => m_unlocked;
-        public IReadOnlyDictionary<Cell, ShelfInteractable> Shelves => m_shelves;
+        public IReadOnlyList<ShelfInteractable> Shelves => m_shelves;
         public IReadOnlyList<OvenInteractable> Ovens => m_ovens;
-        // 진열대도 오븐도 없는 자리
-        public IReadOnlyDictionary<Cell, SlotInteractable> Slots => m_slots;
+        public IReadOnlyList<CounterInteractable> Counters => m_counters;
+        // 첫 계산대(웜뱃이 시작하는 곳)
+        public CounterInteractable Counter => m_counters[0];
         public BreadTable NextBread => m_unlocked.Count < Tables.GetAll<BreadTable>().Count ? Tables.GetAll<BreadTable>()[m_unlocked.Count] : null;
+        public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         internal IRandom Random { get; }
 
         protected override BurrowNav WombatNav => Layout.WombatNav;
         protected override Vector2 Entrance => Layout.HoleFloor;
+        protected override BurrowShape.Result Shape => Layout.Shape;
+
+        protected override IEnumerable<IPlaced> PlacedThings
+        {
+            get
+            {
+                foreach (ShelfInteractable shelf in m_shelves)
+                {
+                    yield return shelf;
+                }
+
+                foreach (OvenInteractable oven in m_ovens)
+                {
+                    yield return oven;
+                }
+
+                foreach (CounterInteractable counter in m_counters)
+                {
+                    yield return counter;
+                }
+            }
+        }
 
         // 첫 손님은 광장에서 온다. 웜뱃은 계산대 뒤에서 시작한다
         public BakeryArea(ZooState state, TableSet tables, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
         {
             m_config = tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery);
+            m_state = state;
             Random = random;
             Grid = new BurrowGrid(m_config, bus);
             bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new BakeryLayout(tables);
-            Counter = new CounterInteractable(Row(CounterInteractable.k_Id), this, state);
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor);
 
-            // 시작 배치: 왼쪽 열(−1)의 자리 줄 두 곳에 빈 진열대와 오븐. 오른쪽 열(0)은 빈 자리. 첫 빵은 해금된 채 시작(설계 17)
+            foreach (InteractableTable row in tables.GetAll<InteractableTable>())
+            {
+                if (row.Price != null)
+                {
+                    m_shopKinds.Add(row);
+                }
+            }
+
+            // 시작 배치(옛 칸 자리 그대로): 왼쪽 열(−1) 자리 줄에 빈 진열대와 오븐, 계산대 줄 가운데에 계산대. 첫 빵은 해금된 채 시작(설계 17)
             m_unlocked.Add(tables.GetAll<BreadTable>()[0]);
-            AddShelf(new Cell(-1, 1));
-            AddOven(new Cell(-1, 3));
+            Create(Row(ShelfInteractable.k_Id), Layout.ShelfBase(new Cell(-1, 1)));
+            Create(Row(OvenInteractable.k_Id), Layout.OvenBase(new Cell(-1, 3)));
+            Create(Row(CounterInteractable.k_Id), Layout.CounterBase);
             RebuildLayout();
             EnterAt(Layout.WombatHome);
-        }
-
-        public bool IsEmptySlot(Cell cell)
-        {
-            return Grid.HasSlot(cell) && !m_shelves.ContainsKey(cell) && OvenAt(cell) == null;
-        }
-
-        // 그 칸의 오븐. 없으면 null
-        public OvenInteractable OvenAt(Cell cell)
-        {
-            return m_ovens.Find(oven => oven.Cell.Equals(cell));
         }
 
         // 설계 17: 그 빵 재고가 있는 가장 가까운 진열대. 없으면 가장 가까운 진열대(손님은 거기서 기다린다)
@@ -77,7 +98,7 @@ namespace ZooTycoon.Core
             bool bestHas = false;
             float bestDistance = float.MaxValue;
 
-            foreach (ShelfInteractable shelf in m_shelves.Values)
+            foreach (ShelfInteractable shelf in m_shelves)
             {
                 bool has = shelf.Bread == bread && shelf.Stock > 0;
                 float distance = shelf.DistanceTo(from);
@@ -98,7 +119,7 @@ namespace ZooTycoon.Core
         {
             int stock = 0;
 
-            foreach (ShelfInteractable shelf in m_shelves.Values)
+            foreach (ShelfInteractable shelf in m_shelves)
             {
                 if (shelf.Bread == bread)
                 {
@@ -112,7 +133,7 @@ namespace ZooTycoon.Core
         // 그 빵을 진열 중인 진열대 어딘가에 자리가 남았다(채우기가 빈 진열대를 쓸지 정한다)
         public bool HasRoomFor(BreadTable bread)
         {
-            foreach (ShelfInteractable shelf in m_shelves.Values)
+            foreach (ShelfInteractable shelf in m_shelves)
             {
                 if (shelf.HasRoomFor(bread))
                 {
@@ -123,25 +144,41 @@ namespace ZooTycoon.Core
             return false;
         }
 
+        // 설계 18: 가장 짧은 줄, 같으면 가까운 계산대
+        public CounterInteractable ShortestQueue(Vector2 from)
+        {
+            CounterInteractable best = null;
+
+            foreach (CounterInteractable counter in m_counters)
+            {
+                if (best == null || counter.Queue.Count < best.Queue.Count
+                    || counter.Queue.Count == best.Queue.Count && counter.DistanceTo(from) < best.DistanceTo(from))
+                {
+                    best = counter;
+                }
+            }
+
+            return best;
+        }
+
+        // 편집 모드에서 누른 점의 팔 수 있는 흙 칸. 없으면 null
+        public DigInteractable DigAt(Vector2 p)
+        {
+            foreach (DigInteractable dig in m_digs.Values)
+            {
+                if (Layout.DistanceToCell(dig.Cell, p) == 0f)
+                {
+                    return dig;
+                }
+            }
+
+            return null;
+        }
+
         // 설계 17: 굽기 시트가 값을 치른 뒤 다음 빵을 연다(BreadTable 행 순서)
         internal void UnlockBread(BreadTable bread)
         {
             m_unlocked.Add(bread);
-        }
-
-        // 설계 13 v0.5: 시트 행동(PlaceShelf·PlaceOven)이 값을 치른 뒤 빈 자리에 놓는다
-        internal void PlaceShelf(Cell cell)
-        {
-            AddShelf(cell);
-            RebuildLayout();
-            OnLayoutChanged();
-        }
-
-        internal void PlaceOven(Cell cell)
-        {
-            AddOven(cell);
-            RebuildLayout();
-            OnLayoutChanged();
         }
 
         protected override void TickArea(double dt)
@@ -149,20 +186,71 @@ namespace ZooTycoon.Core
             TickVisitors(dt);
         }
 
+        protected override IPlacedKind KindOf(string kindId)
+        {
+            return Row(kindId);
+        }
+
+        protected override IPlaced Create(IPlacedKind kind, Vector2 at)
+        {
+            InteractableTable table = (InteractableTable)kind;
+
+            switch (kind.Id)
+            {
+                case ShelfInteractable.k_Id:
+                {
+                    ShelfInteractable shelf = new ShelfInteractable(table, at, this);
+                    m_shelves.Add(shelf);
+                    return shelf;
+                }
+                case OvenInteractable.k_Id:
+                {
+                    OvenInteractable oven = new OvenInteractable(table, at, this);
+                    m_ovens.Add(oven);
+                    return oven;
+                }
+                case CounterInteractable.k_Id:
+                {
+                    CounterInteractable counter = new CounterInteractable(table, at, this, m_state);
+                    m_counters.Add(counter);
+                    return counter;
+                }
+                default:
+                    throw new ArgumentException($"빵집에 놓을 수 없는 종류 '{kind.Id}'.");
+            }
+        }
+
+        protected override void Destroy(IPlaced thing)
+        {
+            switch (thing)
+            {
+                case ShelfInteractable shelf:
+                    m_shelves.Remove(shelf);
+                    break;
+                case OvenInteractable oven:
+                    m_ovens.Remove(oven);
+                    break;
+                case CounterInteractable counter:
+                    m_counters.Remove(counter);
+                    break;
+            }
+        }
+
+        // 계산대는 하나는 남아야 하고, 줄이 선 계산대는 치울 수 없다
+        protected override bool CanRemove(IPlaced thing)
+        {
+            return !(thing is CounterInteractable counter) || m_counters.Count > 1 && counter.Queue.Count == 0;
+        }
+
+        protected override void OnPlacementChanged()
+        {
+            RebuildLayout();
+            OnLayoutChanged();
+        }
+
         private InteractableTable Row(string interactableId)
         {
             return Tables.Get<InteractableTable>(interactableId);
-        }
-
-        private void AddShelf(Cell cell)
-        {
-            m_shelves[cell] = new ShelfInteractable(Row(ShelfInteractable.k_Id), cell, this);
-        }
-
-        private void AddOven(Cell cell)
-        {
-            OvenInteractable oven = new OvenInteractable(Row(OvenInteractable.k_Id), cell, this);
-            m_ovens.Add(oven);
         }
 
         private void Bus_Dug(Events.Dug e)
@@ -179,14 +267,7 @@ namespace ZooTycoon.Core
         // 배치가 바뀌면 걷는 땅·줄 자리·서는 자리·사물 목록을 다시 맞추고, 걷는 중인 손님·웜뱃은 새 땅에서 길을 다시 찾는다
         private void RebuildLayout()
         {
-            List<Cell> ovenCells = new List<Cell>();
-
-            foreach (OvenInteractable oven in m_ovens)
-            {
-                ovenCells.Add(oven.Cell);
-            }
-
-            Layout.Rebuild(Grid.Cells, m_shelves.Keys, ovenCells, m_config.MaxCustomers);
+            Layout.Rebuild(Grid.Cells, m_shelves, m_ovens, m_counters, m_config.MaxCustomers);
             SyncThings();
             RepathVisitors();
 
@@ -207,56 +288,36 @@ namespace ZooTycoon.Core
             // 대상은 다음 Tick에 고른다. 여기서 고르면 LayoutChanged보다 TargetChanged가 먼저 나가 화면에 없는 사물(새 오븐·진열대)을 가리킨다
         }
 
-        // 빈 자리·팔 수 있는 칸은 칸 기준으로 맞춘다(있던 칸은 같은 객체를 둬 대상이 흔들리지 않는다). 목록 순서는 진열대 → 오븐 → 계산대 → 나가기 → 빈 자리 → 파기
+        // 팔 수 있는 칸은 칸 기준으로 맞춘다(있던 칸은 같은 객체를 둬 대상이 흔들리지 않는다). 목록 순서는 진열대 → 오븐 → 계산대 → 나가기 → 파기
         private void SyncThings()
         {
-            List<Cell> slotCells = new List<Cell>();
-
-            foreach (Cell cell in Grid.Cells)
-            {
-                if (IsEmptySlot(cell))
-                {
-                    slotCells.Add(cell);
-                }
-            }
-
             List<Cell> digCells = new List<Cell>(Grid.Frontier());
-            Sync(m_slots, slotCells, cell => new SlotInteractable(Row(SlotInteractable.k_Id), cell, this));
-            Sync(m_digs, digCells, cell => new DigInteractable(Row(DigInteractable.k_Id), cell, this));
 
-            Placed.Clear();
-            Placed.AddRange(m_shelves.Values);
-            Placed.AddRange(m_ovens);
-            Placed.Add(Counter);
-            Placed.Add(m_exit);
-
-            foreach (Cell cell in slotCells)
+            foreach (Cell cell in new List<Cell>(m_digs.Keys))
             {
-                Placed.Add(m_slots[cell]);
+                if (!digCells.Contains(cell))
+                {
+                    m_digs.Remove(cell);
+                }
             }
 
             foreach (Cell cell in digCells)
             {
+                if (!m_digs.ContainsKey(cell))
+                {
+                    m_digs[cell] = new DigInteractable(Row(DigInteractable.k_Id), cell, this);
+                }
+            }
+
+            Placed.Clear();
+            Placed.AddRange(m_shelves);
+            Placed.AddRange(m_ovens);
+            Placed.AddRange(m_counters);
+            Placed.Add(m_exit);
+
+            foreach (Cell cell in digCells)
+            {
                 Placed.Add(m_digs[cell]);
-            }
-        }
-
-        private static void Sync<T>(Dictionary<Cell, T> things, List<Cell> cells, Func<Cell, T> create)
-        {
-            foreach (Cell cell in new List<Cell>(things.Keys))
-            {
-                if (!cells.Contains(cell))
-                {
-                    things.Remove(cell);
-                }
-            }
-
-            foreach (Cell cell in cells)
-            {
-                if (!things.ContainsKey(cell))
-                {
-                    things[cell] = create(cell);
-                }
             }
         }
 

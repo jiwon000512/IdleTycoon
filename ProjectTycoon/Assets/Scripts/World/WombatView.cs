@@ -86,6 +86,19 @@ namespace ZooTycoon.World
             }
         }
 
+        private bool ServingAtCounter()
+        {
+            foreach (CounterInteractable counter in m_shop.Counters)
+            {
+                if (m_shop.IsInRange(counter) && counter.HeadWaiting)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void Update()
         {
             if (m_area == null)
@@ -108,10 +121,10 @@ namespace ZooTycoon.World
             bool moving = m_area.Wombat.Moving;
             Facing facing = m_area.Wombat.Mover.Facing;
 
-            // 계산대 자리에서 줄 머리가 서 있으면 계산 중 뒷모습
-            if (!moving && m_shop != null && m_shop.IsInRange(m_shop.Counter) && m_shop.Counter.HeadWaiting)
+            // 계산대 뒤(위)에서 줄 머리가 서 있으면 계산 중 앞모습(손님은 아래)
+            if (!moving && m_shop != null && ServingAtCounter())
             {
-                facing = Facing.Up;
+                facing = Facing.Down;
             }
 
             Sprite[] frames;

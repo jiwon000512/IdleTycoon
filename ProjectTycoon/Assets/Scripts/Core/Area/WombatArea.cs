@@ -9,7 +9,7 @@ namespace ZooTycoon.Core
     // 설계 13: 웜뱃이 걷는 곳 하나(빵집·광장 공통). 곳이 조립한 사물 중 range 안 가장 가까운 것을 대상으로 고르고,
     // range 안 사물의 auto 행동은 할 수 있으면 바로 하고, 버튼으로 대상의 manual 행동을, 시트 줄로 sheet 행동을 한다(설계 09 v0.4 11장).
     // v0.5: 행동은 ActionTable 행마다 행동 객체(ActionFactory). 굴은 모른다: 걷는 땅(WombatNav)과 들어오는 곳(Entrance)만 곳이 알려 준다
-    public abstract class WombatArea
+    public abstract partial class WombatArea
     {
         private readonly Dictionary<string, InteractAction> m_actions = new Dictionary<string, InteractAction>();
         private readonly Dictionary<string, int> m_upgradeLevels = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -61,6 +61,7 @@ namespace ZooTycoon.Core
             Tables = tables;
             Wombat = wombat;
             Bus = bus;
+            PlaceCell = (float)tables.Get<ConfigTable>(ConfigTable.k_PlaceCell).Value;
 
             foreach (ActionTable action in tables.GetAll<ActionTable>())
             {

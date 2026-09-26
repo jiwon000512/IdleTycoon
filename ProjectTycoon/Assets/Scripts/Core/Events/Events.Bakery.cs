@@ -3,14 +3,14 @@ namespace ZooTycoon.Core
     // 설계 16: 빵집 사건. 손님 사건은 곳마다 따로 둔다(곳마다 도착 행동이 달라질 수 있다)
     public static partial class Events
     {
-        // 굴을 팠거나 자리에 진열대·오븐이 놓였다
+        // 굴을 팠거나 사물(진열대·오븐·계산대·장식)이 놓이고 옮겨지고 치워졌다(설계 18: 광장도 낸다)
         public readonly struct LayoutChanged
         {
-            public readonly BakeryArea Bakery;
+            public readonly WombatArea Area;
 
-            public LayoutChanged(BakeryArea bakery)
+            public LayoutChanged(WombatArea area)
             {
-                Bakery = bakery;
+                Area = area;
             }
         }
 

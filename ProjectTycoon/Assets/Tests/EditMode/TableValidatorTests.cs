@@ -11,14 +11,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 8)]
-        [TestCase("StringTable", 15)]
+        [TestCase("StringTable", 16)]
         [TestCase("BreadTable", 2)]
-        [TestCase("ActionTable", 6)]
-        [TestCase("InteractableTable", 6)]
-        [TestCase("DecorationTable", 3)]
+        [TestCase("ActionTable", 7)]
+        [TestCase("InteractableTable", 7)]
+        [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 3)]
-        [TestCase("ConfigTable", 2)]
-        [TestCase("BakeryConfigTable", 4)]
+        [TestCase("ConfigTable", 3)]
+        [TestCase("BakeryConfigTable", 5)]
         [TestCase("PlazaConfigTable", 1)]
         [TestCase("PlazaDecorTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -115,6 +115,16 @@ namespace ZooTycoon.Tests
             TableSet tables = TestTables.Load();
             UpgradeInfo upgrade = tables.Get<InteractableTable>("oven").Upgrade;
             upgrade.LookLevel = upgrade.MaxLevel + 1;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 설계 18: 살 수 있는 사물은 바닥 사각형과 자리가 있어야 한다
+        [Test]
+        public void Validate_WhenPlacedKindHasNoSpots_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<InteractableTable>("shelf").Spots.Clear();
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }

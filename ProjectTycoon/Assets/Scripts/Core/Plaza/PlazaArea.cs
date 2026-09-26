@@ -6,13 +6,15 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 11 3장 · 설계 13 · 리뷰 R2: 광장. 지상 계단으로 손님이 오고(도착 타이머), 빵집에서 나간 손님은 문에서 다시 나온다.
-    // 손님 한 명의 할 일은 PlazaVisitor, 여기는 손님 목록과 들를 곳 자리표. 사물은 빵집 문 하나(들어가기)
+    // 설계 11 3장 · 설계 13 · 리뷰 R2 · 설계 18: 광장. 지상 계단으로 손님이 오고(도착 타이머), 빵집에서 나간 손님은 문에서 다시 나온다.
+    // 손님 한 명의 할 일은 PlazaVisitor, 여기는 손님 목록과 들를 곳 자리표. 사물은 빵집 문 하나(들어가기). 장식은 자유 배치(WombatArea.Placement)
     public sealed class PlazaArea : WombatArea
     {
         private readonly PlazaConfigTable m_config;
         private readonly IRandom m_random;
         private readonly List<PlazaVisitor> m_visitors = new List<PlazaVisitor>();
+        private readonly List<DecorationData> m_decor = new List<DecorationData>();
+        private readonly List<IPlacedKind> m_shopKinds = new List<IPlacedKind>();
         private readonly HashSet<int> m_takenSpots = new HashSet<int>();
         private double m_arrivalElapsed;
         private int m_nextVisitorId;
@@ -20,11 +22,15 @@ namespace ZooTycoon.Core
         public PlazaLayout Layout { get; }
         public BakeryArea Bakery { get; }
         public IReadOnlyList<PlazaVisitor> Visitors => m_visitors;
+        public IReadOnlyList<DecorationData> Decor => m_decor;
+        public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
 
         protected override BurrowNav WombatNav => Layout.Nav;
         protected override Vector2 Entrance => Layout.DoorFloor;
+        protected override BurrowShape.Result Shape => Layout.Shape;
+        protected override IEnumerable<IPlaced> PlacedThings => m_decor;
 
-        // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다
+        // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다. 시작 장식은 PlazaDecorTable
         public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
         {
             m_config = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
@@ -34,6 +40,18 @@ namespace ZooTycoon.Core
             Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.DoorFloor));
             m_arrivalElapsed = m_config.ArrivalSeconds;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
+
+            foreach (DecorationTable row in tables.GetAll<DecorationTable>())
+            {
+                m_shopKinds.Add(row);
+            }
+
+            foreach (PlazaDecorTable placed in tables.GetAll<PlazaDecorTable>())
+            {
+                m_decor.Add(new DecorationData(tables.Get<DecorationTable>(placed.Decoration), new Vector2((float)placed.X, (float)placed.Y)));
+            }
+
+            Layout.Rebuild(m_decor);
         }
 
         // 들를 곳에서 머무는 초 · ♥를 띄울지
@@ -52,7 +70,7 @@ namespace ZooTycoon.Core
         {
             int count = Layout.Spots.Count;
 
-            if (m_takenSpots.Count >= count)
+            if (count == 0 || m_takenSpots.Count >= count)
             {
                 index = -1;
                 return false;
@@ -79,6 +97,37 @@ namespace ZooTycoon.Core
         {
             TickArrival(dt);
             TickVisitors(dt);
+        }
+
+        protected override IPlacedKind KindOf(string kindId)
+        {
+            return Tables.Get<DecorationTable>(kindId);
+        }
+
+        protected override IPlaced Create(IPlacedKind kind, Vector2 at)
+        {
+            DecorationData placed = new DecorationData((DecorationTable)kind, at);
+            m_decor.Add(placed);
+            return placed;
+        }
+
+        protected override void Destroy(IPlaced thing)
+        {
+            m_decor.Remove((DecorationData)thing);
+        }
+
+        // 들를 곳 번호가 바뀌므로 손님은 들르던 곳을 놓고 다음으로, 걷던 손님은 새 땅에서 길을 다시 찾는다
+        protected override void OnPlacementChanged()
+        {
+            Layout.Rebuild(m_decor);
+            m_takenSpots.Clear();
+
+            foreach (PlazaVisitor visitor in m_visitors)
+            {
+                visitor.Relayout();
+            }
+
+            Bus.Publish(new Events.LayoutChanged(this));
         }
 
         private void TickArrival(double dt)

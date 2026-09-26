@@ -3,16 +3,13 @@ using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 08·09·13: 오븐 한 대. 빈 오븐 → 굽는 중 → 다 구움(웜뱃이 꺼낼 때까지 대기) → 다 꺼내면 빈 오븐. 굽기 속도는 업그레이드
-    public sealed class OvenInteractable : Interactable
+    // 설계 08·09·13 · 설계 18: 오븐 한 대(자유 배치, 밑변 가운데 좌표). 빈 오븐 → 굽는 중 → 다 구움(웜뱃이 꺼낼 때까지 대기) → 다 꺼내면 빈 오븐. 굽기 속도는 업그레이드
+    public sealed class OvenInteractable : Interactable, IPlaced
     {
         public const string k_Id = "oven";
 
-        private readonly Vector2 m_base;
-
-        // 굴 격자 설계 v0.5: 놓인 칸
-        public Cell Cell { get; }
         public BakeryArea Bakery { get; }
+        public Vector2 Position { get; private set; }
         public BreadTable Bread { get; private set; }
         public double Remaining { get; private set; }
         public int Ready { get; private set; }
@@ -21,17 +18,22 @@ namespace ZooTycoon.Core
         public double Progress => IsEmpty ? 0d : 1d - Remaining / Bread.BakeSeconds;
         // 외형 2단계(굽기 속도 lookLevel 이상)
         public bool LookUpgraded => Table.Upgrade.LookLevel > 0 && UpgradeLevel >= Table.Upgrade.LookLevel;
+        public IPlacedKind Kind => Table;
 
-        public OvenInteractable(InteractableTable table, Cell cell, BakeryArea bakery) : base(table, bakery)
+        public OvenInteractable(InteractableTable table, Vector2 position, BakeryArea bakery) : base(table, bakery)
         {
-            Cell = cell;
             Bakery = bakery;
-            m_base = bakery.Layout.OvenBase(cell);
+            Position = position;
         }
 
         public override float DistanceTo(Vector2 p)
         {
-            return Vector2.Distance(p, m_base);
+            return Vector2.Distance(p, Position);
+        }
+
+        public void MoveTo(Vector2 position)
+        {
+            Position = position;
         }
 
         public bool TryStart(BreadTable bread)

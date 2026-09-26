@@ -2,7 +2,8 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 설계 09: 직교 카메라가 웜뱃을 부드럽게 따라가고, 가게 경계(판 칸 + 둘레 흙 한 칸) 밖을 비추지 않게 가둔다
+    // 설계 09: 직교 카메라가 웜뱃을 부드럽게 따라가고, 가게 경계(판 칸 + 둘레 흙 한 칸) 밖을 비추지 않게 가둔다.
+    // 설계 18: 편집 모드에서는 따라가지 않고 빈 곳 드래그로 팬(같은 경계 안)
     [RequireComponent(typeof(Camera))]
     public sealed class WorldCameraController : MonoBehaviour
     {
@@ -15,6 +16,7 @@ namespace ZooTycoon.World
         private Transform m_target;
         private Rect m_bounds;
         private Vector2 m_velocity;
+        private bool m_following = true;
 
         private void Awake()
         {
@@ -34,9 +36,21 @@ namespace ZooTycoon.World
             m_bounds = bounds;
         }
 
+        // 편집 모드: 멈춰 서서 팬만 받는다. 다시 따라갈 때는 제자리에서 부드럽게 붙는다
+        public void SetFollowing(bool following)
+        {
+            m_following = following;
+            m_velocity = Vector2.zero;
+        }
+
+        public void Pan(Vector2 delta)
+        {
+            Apply(Clamp((Vector2)transform.position + delta));
+        }
+
         private void LateUpdate()
         {
-            if (m_target == null)
+            if (m_target == null || !m_following)
             {
                 return;
             }
