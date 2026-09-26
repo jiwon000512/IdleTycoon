@@ -150,6 +150,13 @@ namespace ZooTycoon.Core
             Wombat.Mover.Place(position);
             Wombat.Mover.Facing = Facing.Down;
             WombatPresent = true;
+
+            // 들어온 자리가 통로 위라 자동 이동이 바로 되돌리지 않게
+            foreach (Interactable thing in Placed)
+            {
+                (thing as PassageInteractable)?.Disarm();
+            }
+
             RefreshTarget();
         }
 

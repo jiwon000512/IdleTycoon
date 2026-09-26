@@ -19,7 +19,7 @@ namespace ZooTycoon.Data
         };
         private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
-        private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter };
+        private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig };
         private static readonly string[] k_ConfigIds =
         {
             ConfigTable.k_StartCoins, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight, ConfigTable.k_EntranceHeight,
@@ -97,7 +97,7 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 설계 09 v0.4 · 설계 13 v0.5: 코드가 아는 행동이 모두 있고, manual이면 아이콘, 시트 열기·곳 옮기기는 manual만, 시트 줄 행동은 sheet만
+        // 설계 09 v0.4 · 설계 13 v0.5: 코드가 아는 행동이 모두 있고, manual이면 아이콘, 시트 열기는 manual만, 시트 줄 행동은 sheet만
         private static void ValidateActions(TableSet tables, List<string> errors)
         {
             foreach (ActionTable action in tables.GetAll<ActionTable>())
@@ -111,7 +111,7 @@ namespace ZooTycoon.Data
 
                 if (action.Mode != ActionMode.Manual && System.Array.IndexOf(k_ManualOnlyActionIds, action.Id) >= 0)
                 {
-                    errors.Add($"ActionTable '{action.Id}': 시트를 열거나 곳을 옮기는 행동은 manual만 된다.");
+                    errors.Add($"ActionTable '{action.Id}': 시트를 여는 행동은 manual만 된다.");
                 }
 
                 // 설계 13 v0.5: 행동 클래스가 있어야 하고, 시트 줄을 내놓는 클래스(SheetAction)면 mode sheet

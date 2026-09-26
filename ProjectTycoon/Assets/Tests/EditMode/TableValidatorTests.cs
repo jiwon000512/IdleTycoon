@@ -13,7 +13,7 @@ namespace ZooTycoon.Tests
         [TestCase("VisitorTable", 8)]
         [TestCase("StringTable", 15)]
         [TestCase("BreadTable", 2)]
-        [TestCase("ActionTable", 5)]
+        [TestCase("ActionTable", 6)]
         [TestCase("InteractableTable", 6)]
         [TestCase("DecorationTable", 3)]
         [TestCase("SoundTable", 3)]
@@ -134,11 +134,10 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 09 v0.4: 행동 표 — manual인데 아이콘 없음, 시트·곳 옮기기 행동을 auto(설계 11)
+        // 설계 09 v0.4: 행동 표 — manual인데 아이콘 없음, 시트 여는 행동을 auto
         [TestCase("take_out", ActionMode.Manual, null)]
         [TestCase("open", ActionMode.Auto, "Sprites/Actions/open")]
-        [TestCase("exit", ActionMode.Auto, "Sprites/Actions/exit")]
-        [TestCase("enter", ActionMode.Auto, "Sprites/Actions/enter")]
+        [TestCase("exit", ActionMode.Manual, null)]
         [TestCase("bake", ActionMode.Manual, "Sprites/Actions/open")]
         [TestCase("take_out", ActionMode.Sheet, null)]
         public void Validate_WhenActionRowInvalid_ReportsError(string id, ActionMode mode, string icon)
