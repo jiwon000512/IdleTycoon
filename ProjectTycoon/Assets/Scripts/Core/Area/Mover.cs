@@ -16,6 +16,9 @@ namespace ZooTycoon.Core
     // 꺾임점을 차례로 지나 일정한 빠르기로 움직인다(가게 원점 기준 유닛, y 위). 보는 방향은 지금 선분 방향
     public sealed class Mover
     {
+        // 이보다 짧은 선분(격자 점 → 격자 밖 자리의 마지막 한 걸음)에서는 보는 방향을 바꾸지 않는다(2026-09-26: 옆모습 한 프레임이 끼어들어 겹쳐 보였다)
+        private const float k_TurnMinDistance = 0.15f;
+
         private readonly List<Vector2> m_points = new List<Vector2>();
         private int m_next;
 
@@ -127,7 +130,7 @@ namespace ZooTycoon.Core
 
             Vector2 delta = m_points[m_next] - Position;
 
-            if (delta.LengthSquared() > 1e-8f)
+            if (delta.LengthSquared() >= k_TurnMinDistance * k_TurnMinDistance)
             {
                 Facing = FacingOf(delta);
             }

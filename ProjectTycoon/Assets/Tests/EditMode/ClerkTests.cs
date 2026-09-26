@@ -164,6 +164,28 @@ namespace ZooTycoon.Tests
             Assert.That(cycles, Is.GreaterThan(1), "바퀴가 두 번 이상 돌아야 한다");
         }
 
+        // 2026-09-26 사용자: 오븐 자리로 갈 때 마지막 한 걸음(격자 점 → 격자 밖 자리, 0.09)에서 옆모습이 끼어들었다. 자리 가까이에서는 옆을 보지 않는다
+        [Test]
+        public void Clerk_ApproachingSpot_DoesNotTurnSidewaysOnLastStep()
+        {
+            BakeryArea shop = Create();
+            Clerk clerk = Hire(shop, shop.Ovens[0]);
+            bool sideways = false;
+
+            for (double t = 0d; t < 30d && !clerk.Working; t += k_Dt)
+            {
+                shop.Tick(k_Dt);
+
+                if (clerk.Moving && Vector2.Distance(clerk.Position, clerk.WorkerSpot) < 0.3f)
+                {
+                    sideways |= clerk.Facing == Facing.Left || clerk.Facing == Facing.Right;
+                }
+            }
+
+            Assert.That(clerk.Working, Is.True);
+            Assert.That(sideways, Is.False, "자리 앞에서 옆모습이 됐다");
+        }
+
         // 2026-09-26 사용자 버그: 진열대가 가득 차면 자리에서 좌우로 떨렸다. 든 채로 자리에 서서 기다리다 자리가 나면 채운다(그동안 오븐은 계속 굽는다)
         [Test]
         public void OvenClerk_WhenShelvesFull_WaitsStillAndFillsWhenRoomAppears()
