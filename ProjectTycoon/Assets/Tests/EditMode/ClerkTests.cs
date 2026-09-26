@@ -52,6 +52,10 @@ namespace ZooTycoon.Tests
                 }
             }
 
+            // 딴짓 시간은 일머리로 정해지므로(설계 22) 테스트는 짧게, 외출은 끈다
+            ClerkConfigTable config = m_tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
+            config.IdleSecondsMax = config.IdleSecondsMin;
+            config.OutingChance = 0d;
             BakeryArea shop = new BakeryArea(m_state, m_tables, random ?? new ConstantRandom(1d), new Wombat(m_tables, m_state), m_bus);
             // 웜뱃은 계산대 자리에서 시작한다: 점원만 일하게 구멍 아래로 비킨다
             shop.Wombat.Mover.Place(shop.Layout.HoleFloor);

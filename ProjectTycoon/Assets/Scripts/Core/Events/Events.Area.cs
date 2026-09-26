@@ -61,6 +61,35 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 설계 22: 대화의 줄 하나. speaker 객체(Clerk·Wombat) 머리 위에 seconds 동안 글자 말풍선
+        public readonly struct DialogueLine
+        {
+            public readonly Dialogue Dialogue;
+            public readonly DialogueSpeaker Speaker;
+            public readonly object SpeakerObject;
+            public readonly string TextId;
+            public readonly double Seconds;
+
+            public DialogueLine(Dialogue dialogue, DialogueSpeaker speaker, object speakerObject, string textId, double seconds)
+            {
+                Dialogue = dialogue;
+                Speaker = speaker;
+                SpeakerObject = speakerObject;
+                TextId = textId;
+                Seconds = seconds;
+            }
+        }
+
+        public readonly struct DialogueEnded
+        {
+            public readonly Dialogue Dialogue;
+
+            public DialogueEnded(Dialogue dialogue)
+            {
+                Dialogue = dialogue;
+            }
+        }
+
         public readonly struct CoinsChanged
         {
             public readonly ZooState Wallet;

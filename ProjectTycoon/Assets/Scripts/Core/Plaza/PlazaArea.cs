@@ -18,6 +18,10 @@ namespace ZooTycoon.Core
         private readonly HashSet<int> m_takenSpots = new HashSet<int>();
         // 설계 21: 손님 외형(role customer)만
         private readonly List<VisitorTable> m_looks = new List<VisitorTable>();
+        // 설계 22 외출: 점원의 광장 그림과 그것을 감싼 사물(웜뱃이 광장에서 깨운다)
+        private readonly Dictionary<Clerk, PlazaVisitor> m_clerkFigures = new Dictionary<Clerk, PlazaVisitor>();
+        private readonly Dictionary<Clerk, ClerkInteractable> m_clerkThings = new Dictionary<Clerk, ClerkInteractable>();
+        private readonly float m_questionRange;
         private double m_arrivalElapsed;
         private int m_nextVisitorId;
 
@@ -41,7 +45,11 @@ namespace ZooTycoon.Core
             Layout = new PlazaLayout(tables);
             Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.DoorFloor));
             m_arrivalElapsed = m_config.ArrivalSeconds;
+            m_questionRange = (float)tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
+            bus.Subscribe<Events.ClerkWentOut>(Bus_ClerkWentOut);
+            bus.Subscribe<Events.ClerkReturning>(Bus_ClerkReturning);
+            bus.Subscribe<Events.ClerkFired>(Bus_ClerkFired);
 
             foreach (DecorationTable row in tables.GetAll<DecorationTable>())
             {
@@ -102,11 +110,96 @@ namespace ZooTycoon.Core
             m_takenSpots.Remove(index);
         }
 
-        // 매 프레임(웜뱃 다음). 순서: 도착 → 손님
+        // 매 프레임(웜뱃 다음). 순서: 도착 → 손님 → 외출 점원 말풍선
         protected override void TickArea(double dt)
         {
             TickArrival(dt);
             TickVisitors(dt);
+            TickClerkFigures();
+        }
+
+        // 외출한 점원의 광장 그림: 웜뱃이 가까우면 「?」와 웜뱃 쪽 보기, 아니면 딴짓 말풍선(점원의 말풍선 상태를 같이 쓴다)
+        private void TickClerkFigures()
+        {
+            foreach (KeyValuePair<Clerk, PlazaVisitor> pair in m_clerkFigures)
+            {
+                Clerk clerk = pair.Key;
+                PlazaVisitor figure = pair.Value;
+
+                if (!clerk.Idling || clerk.Leaving)
+                {
+                    continue;
+                }
+
+                if (WombatPresent && Vector2.Distance(Wombat.Mover.Position, figure.Position) <= m_questionRange)
+                {
+                    clerk.Bubble.Show(BubbleTable.k_Question);
+
+                    if (!figure.Moving)
+                    {
+                        figure.Mover.Facing = Mover.FacingOf(Wombat.Mover.Position - figure.Position);
+                    }
+                }
+                else
+                {
+                    clerk.Bubble.Show(clerk.IdleBubbleId);
+                }
+            }
+        }
+
+        private void Bus_ClerkWentOut(Events.ClerkWentOut e)
+        {
+            if (e.Clerk.Bakery != Bakery)
+            {
+                return;
+            }
+
+            Clerk clerk = e.Clerk;
+            PlazaVisitor figure = new PlazaVisitor(++m_nextVisitorId, clerk.Look, this, Layout.DoorInside, Layout.DoorFloor, int.MaxValue, false, clerk);
+            m_clerkFigures[clerk] = figure;
+            ClerkInteractable thing = new ClerkInteractable(Tables.Get<InteractableTable>(ClerkInteractable.k_Id), clerk, this, () => figure.Position);
+            m_clerkThings[clerk] = thing;
+            Placed.Insert(0, thing);
+            Spawn(figure);
+        }
+
+        // 돌아가는 그림은 더 깨울 수 없다: 사물을 뺀다
+        private void Bus_ClerkReturning(Events.ClerkReturning e)
+        {
+            if (m_clerkFigures.TryGetValue(e.Clerk, out PlazaVisitor figure))
+            {
+                figure.ReturnToDoor();
+            }
+
+            RemoveClerkThing(e.Clerk);
+        }
+
+        private void Bus_ClerkFired(Events.ClerkFired e)
+        {
+            if (m_clerkFigures.TryGetValue(e.Clerk, out PlazaVisitor figure))
+            {
+                figure.Dismiss();
+            }
+        }
+
+        private void ForgetFigure(PlazaVisitor visitor)
+        {
+            if (visitor.Clerk == null)
+            {
+                return;
+            }
+
+            m_clerkFigures.Remove(visitor.Clerk);
+            RemoveClerkThing(visitor.Clerk);
+        }
+
+        private void RemoveClerkThing(Clerk clerk)
+        {
+            if (m_clerkThings.TryGetValue(clerk, out ClerkInteractable thing))
+            {
+                Placed.Remove(thing);
+                m_clerkThings.Remove(clerk);
+            }
         }
 
         protected override IPlacedKind KindOf(string kindId)
@@ -188,6 +281,7 @@ namespace ZooTycoon.Core
 
                 m_visitors.RemoveAt(i);
                 i--;
+                ForgetFigure(visitor);
                 Bus.Publish(new Events.PlazaVisitorLeft(visitor));
             }
         }

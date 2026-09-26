@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using ZooTycoon.Core;
 
@@ -33,6 +34,12 @@ namespace ZooTycoon.World
         [Tooltip("나르는 빵이 날아가는 시간(초)과 포물선 높이(유닛)")]
         [SerializeField] private float m_flySeconds = 0.3f;
         [SerializeField] private float m_flyArc = 0.4f;
+        [Tooltip("설계 22: 머리 위 이모지 말풍선과 대화 글자 말풍선")]
+        [SerializeField] private SpriteRenderer m_bubble;
+        [SerializeField] private Sprite[] m_bubbleFrames;
+        [SerializeField] private SpriteRenderer m_say;
+        [SerializeField] private TextMeshPro m_sayText;
+        [SerializeField] private float m_sayPadding = 0.3f;
 
         // 나는 빵은 가게의 모든 그림 위에
         private const int k_FlyOrder = 1000;
@@ -49,6 +56,35 @@ namespace ZooTycoon.World
         private Sprite[] m_playing;
         private int m_shownCarry;
         private int m_lastCount;
+        private Coroutine m_saying;
+
+        // 굽기 때 켜진 채 저장된 말풍선·글 상자는 실행 시작에 끈다(Say·Bubble이 필요할 때만 켠다)
+        private void Awake()
+        {
+            m_bubble.enabled = false;
+            m_say.enabled = false;
+            m_sayText.enabled = false;
+        }
+
+        // 설계 22: 대화 글자 말풍선
+        public void Say(string text, float seconds)
+        {
+            if (m_saying != null)
+            {
+                StopCoroutine(m_saying);
+            }
+
+            m_saying = StartCoroutine(SayRoutine(text, seconds));
+        }
+
+        private IEnumerator SayRoutine(string text, float seconds)
+        {
+            Bubbles.ShowSay(m_say, m_sayText, text, m_sayPadding);
+            yield return new WaitForSeconds(seconds);
+            m_say.enabled = false;
+            m_sayText.enabled = false;
+            m_saying = null;
+        }
 
         public void Bind(BakeryArea shop, BakeryView view, FrameCache frames)
         {
@@ -113,8 +149,11 @@ namespace ZooTycoon.World
 
             if (!present)
             {
+                m_bubble.enabled = false;
                 return;
             }
+
+            Bubbles.Show(m_bubble, m_bubbleFrames, m_area.Wombat.Bubble, m_saying == null);
 
             System.Numerics.Vector2 p = m_area.Wombat.Mover.Position;
             transform.position = m_origin.position + new Vector3(p.X, p.Y, 0f);

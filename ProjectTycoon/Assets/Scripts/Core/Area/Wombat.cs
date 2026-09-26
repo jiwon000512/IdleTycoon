@@ -9,6 +9,8 @@ namespace ZooTycoon.Core
         public Mover Mover { get; }
         // v0.5: 행동하는 쪽(손 + 지갑)
         public Worker Worker { get; }
+        // 설계 22: 머리 위 이모지 말풍선(대화·감정)
+        public BubbleState Bubble { get; }
         // 조이스틱 걷기 속도(유닛/초)
         public double Speed { get; }
         // 조이스틱 방향(길이 1까지)
@@ -24,6 +26,7 @@ namespace ZooTycoon.Core
             Mover = new Mover(Vector2.Zero, Facing.Down);
             Worker = new Worker(new Hands((int)tables.Get<ConfigTable>(ConfigTable.k_CarryCapacity).Value), wallet);
             Speed = tables.Get<ConfigTable>(ConfigTable.k_WombatSpeed).Value;
+            Bubble = new BubbleState(tables);
         }
 
         public void SetInput(Vector2 input)
@@ -42,6 +45,8 @@ namespace ZooTycoon.Core
         // 보는 방향은 미끄러진 쪽이 아니라 조이스틱 쪽(2026-09-24 사용자 지적: 벽에 비비면 고개가 돌아간다)
         internal void Walk(BurrowNav nav, double dt)
         {
+            Bubble.Tick(dt);
+
             if (WaitingRelease)
             {
                 WaitingRelease = Input != Vector2.Zero;

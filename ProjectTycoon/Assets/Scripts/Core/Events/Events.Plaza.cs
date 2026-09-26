@@ -23,16 +23,5 @@ namespace ZooTycoon.Core
                 Visitor = visitor;
             }
         }
-
-        // 들를 곳에 멈춰 ♥를 띄운다
-        public readonly struct PlazaVisitorEmoted
-        {
-            public readonly PlazaVisitor Visitor;
-
-            public PlazaVisitorEmoted(PlazaVisitor visitor)
-            {
-                Visitor = visitor;
-            }
-        }
     }
 }

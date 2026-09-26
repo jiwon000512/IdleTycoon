@@ -37,6 +37,7 @@ namespace ZooTycoon.World
         private IDisposable[] m_subscriptions;
 
         public Transform Wombat => m_wombat.transform;
+        public WombatView WombatView => m_wombat;
 
         // 광장 둘레 + 좌·우·아래 흙 한 칸. 위는 첫 줄 윗변
         public Rect Bounds

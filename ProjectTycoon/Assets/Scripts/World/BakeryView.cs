@@ -81,6 +81,7 @@ namespace ZooTycoon.World
         }
 
         public Transform Wombat => m_wombatCounter.Wombat.transform;
+        public WombatView WombatView => m_wombatCounter.Wombat;
 
         public Vector3 OvenBreadPosition(OvenInteractable oven)
         {

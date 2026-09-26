@@ -15,7 +15,12 @@ namespace ZooTycoon.Data
         private static readonly string[] k_InteractableIds =
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
-            DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door,
+            DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id,
+        };
+        // 설계 22: 코드가 부르는 말풍선·대화
+        private static readonly string[] k_BubbleIds =
+        {
+            BubbleTable.k_Wait, BubbleTable.k_Note, BubbleTable.k_Question, BubbleTable.k_Alert, BubbleTable.k_Heart, BubbleTable.k_Angry, BubbleTable.k_Chat,
         };
         private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
@@ -33,6 +38,8 @@ namespace ZooTycoon.Data
             ValidateVisitors(tables, errors);
             ValidateClerks(tables, errors);
             ValidateClerkConfig(tables, errors);
+            ValidateBubbles(tables, errors);
+            ValidateDialogues(tables, errors);
             ValidateBreads(tables, errors);
             ValidateActions(tables, errors);
             ValidateInteractables(tables, errors);
@@ -143,9 +150,73 @@ namespace ZooTycoon.Data
                 {
                     errors.Add($"ClerkConfigTable '{config.Id}': names는 candidateCount 이상이어야 한다.");
                 }
+
+                // 설계 22
+                if (config.StrollRadius <= 0d || config.StrollChance < 0d || config.OutingChance < 0d || config.StrollChance + config.OutingChance > 1d || config.ChatOffset <= 0d || config.WakeSkips < 0)
+                {
+                    errors.Add($"ClerkConfigTable '{config.Id}': strollRadius·chatOffset은 0보다, strollChance·outingChance는 0 이상이고 합이 1 이하, wakeSkips는 0 이상이어야 한다.");
+                }
             }
 
             CheckRequired<ClerkConfigTable>(tables, new[] { ClerkConfigTable.k_Main }, errors);
+        }
+
+        // 설계 22: 말풍선 칸 번호·프레임·시간, 코드가 부르는 id 전부
+        private static void ValidateBubbles(TableSet tables, List<string> errors)
+        {
+            foreach (BubbleTable bubble in tables.GetAll<BubbleTable>())
+            {
+                CheckId("BubbleTable", bubble.Id, errors);
+
+                if (bubble.Frame < 0 || bubble.Frames < 1 || bubble.Seconds < 0d || bubble.Frames > 1 && bubble.FrameSeconds <= 0d)
+                {
+                    errors.Add($"BubbleTable '{bubble.Id}': frame·seconds는 0 이상, frames는 1 이상, 프레임이 여럿이면 frameSeconds는 0보다 커야 한다.");
+                }
+            }
+
+            CheckRequired<BubbleTable>(tables, k_BubbleIds, errors);
+        }
+
+        // 설계 22: 대화 줄의 문구는 StringTable에, 이모지는 BubbleTable에 있어야 한다
+        private static void ValidateDialogues(TableSet tables, List<string> errors)
+        {
+            HashSet<string> strings = Ids<StringTable>(tables);
+            HashSet<string> bubbles = Ids<BubbleTable>(tables);
+
+            foreach (DialogueTable dialogue in tables.GetAll<DialogueTable>())
+            {
+                CheckId("DialogueTable", dialogue.Id, errors);
+
+                if (dialogue.LineSeconds <= 0d || dialogue.Lines == null || dialogue.Lines.Count == 0)
+                {
+                    errors.Add($"DialogueTable '{dialogue.Id}': lineSeconds는 0보다 크고 lines가 있어야 한다.");
+                    continue;
+                }
+
+                foreach (DialogueLineData line in dialogue.Lines)
+                {
+                    if (line.Texts == null || line.Texts.Count == 0)
+                    {
+                        errors.Add($"DialogueTable '{dialogue.Id}': 줄의 texts가 비어 있다.");
+                        continue;
+                    }
+
+                    foreach (string text in line.Texts)
+                    {
+                        if (!strings.Contains(text))
+                        {
+                            errors.Add($"DialogueTable '{dialogue.Id}': 문구 '{text}'가 StringTable에 없다.");
+                        }
+                    }
+
+                    if (line.Bubble != null && !bubbles.Contains(line.Bubble))
+                    {
+                        errors.Add($"DialogueTable '{dialogue.Id}': 말풍선 '{line.Bubble}'이 BubbleTable에 없다.");
+                    }
+                }
+            }
+
+            CheckRequired<DialogueTable>(tables, new[] { DialogueTable.k_ClerkWake }, errors);
         }
 
         // 설계 08 v0.5

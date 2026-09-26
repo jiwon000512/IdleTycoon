@@ -39,6 +39,15 @@ namespace ZooTycoon.Core
         public bool Hopping => Phase == VisitorPhase.Entering || Phase == VisitorPhase.Exiting;
 
         internal Mover Mover { get; }
+        // 설계 22: 머리 위 이모지 말풍선. 외출한 점원의 광장 그림은 점원의 것을 같이 쓴다(ShareBubble, 시간은 주인만 센다)
+        public BubbleState Bubble { get; private set; }
+        private bool m_ownsBubble = true;
+
+        internal void ShareBubble(BubbleState bubble)
+        {
+            Bubble = bubble;
+            m_ownsBubble = false;
+        }
         // 집기·두리번·머물기·톡 뛰기의 남은 초
         protected double Timer { get; set; }
 
@@ -47,6 +56,7 @@ namespace ZooTycoon.Core
             Id = id;
             Look = look;
             Mover = new Mover(position, Facing.Down);
+            Bubble = new BubbleState(tables);
             m_walkSpeed = tables.Get<ConfigTable>(ConfigTable.k_WalkSpeed).Value;
             m_hopSeconds = tables.Get<ConfigTable>(ConfigTable.k_HopSeconds).Value;
         }
@@ -55,6 +65,12 @@ namespace ZooTycoon.Core
         public bool Tick(double dt)
         {
             Mover.Advance(m_walkSpeed * dt);
+
+            if (m_ownsBubble)
+            {
+                Bubble.Tick(dt);
+            }
+
             return Act(dt);
         }
 

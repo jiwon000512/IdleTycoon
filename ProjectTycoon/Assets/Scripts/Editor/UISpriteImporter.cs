@@ -22,6 +22,7 @@ namespace ZooTycoon.Editor
             public int w;
             public int h;
             public int[] border;
+            public float ppu;
         }
 
         [MenuItem("ZooTycoon/Bake/Import UI Sprites")]
@@ -31,7 +32,7 @@ namespace ZooTycoon.Editor
 
             foreach (KeyValuePair<string, Slice> pair in slices)
             {
-                Import(k_Dir + pair.Key + ".png", pair.Value.border, k_UiPpu);
+                Import(k_Dir + pair.Key + ".png", pair.Value.border, pair.Value.ppu > 0f ? pair.Value.ppu : k_UiPpu);
             }
 
             foreach (string path in Directory.GetFiles(k_ActionDir, "*.png"))

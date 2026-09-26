@@ -13,12 +13,18 @@ namespace ZooTycoon.UI
     // 표시와 입력 이벤트만, 규칙은 ClerkPresenter. 그림 경로(Resources)는 여기서 읽는다
     public sealed class ClerkPopupView : UIView
     {
+        // 줄 하나(시안 D1): 초상(경로, null = 빈 자리 점선 틀) · 배지 · 이름 · 자리 알약(null = 없음) · 두 칸 표(Skill < 0 = 없음) · 버튼
         public sealed class RowData
         {
             public string IconPath;
-            public Sprite Icon;
+            public ClerkBadge Badge;
+            public string BadgeText;
             public string Name;
-            public string Sub;
+            public string Slot;
+            public string SkillHeader;
+            public string WageHeader;
+            public int Skill = -1;
+            public string Wage;
             public string Button;
             public bool Enabled;
         }
@@ -36,17 +42,20 @@ namespace ZooTycoon.UI
         [SerializeField] private GameObject m_list;
         [SerializeField] private GameObject m_tabRow;
         [SerializeField] private TextMeshProUGUI m_tabLabel;
-        [SerializeField] private TextMeshProUGUI m_summary;
+        [SerializeField] private TextMeshProUGUI m_summaryLeft;
+        [SerializeField] private TextMeshProUGUI m_summaryRight;
+        [SerializeField] private RectTransform m_summaryRow;
         [SerializeField] private RectTransform m_rows;
         [SerializeField] private ClerkRowView m_rowTemplate;
         [SerializeField] private TextMeshProUGUI m_foot;
         [SerializeField] private Button m_footButton;
         [SerializeField] private TextMeshProUGUI m_footButtonLabel;
+        [SerializeField] private TextMeshProUGUI m_footButtonCost;
         [Tooltip("고용할까 작은 창")]
         [SerializeField] private GameObject m_ask;
         [SerializeField] private Image m_askIcon;
         [SerializeField] private TextMeshProUGUI m_askTitle;
-        [SerializeField] private TextMeshProUGUI m_askSub;
+        [SerializeField] private ClerkStatView m_askStat;
         [SerializeField] private Button m_askPlain;
         [SerializeField] private TextMeshProUGUI m_askPlainLabel;
         [SerializeField] private Button m_askNegotiate;
@@ -124,8 +133,8 @@ namespace ZooTycoon.UI
             m_ask.SetActive(false);
         }
 
-        // 목록 상태. tab이 null이면 탭 줄을 숨긴다(후보 목록). footButton이 null이면 바닥은 글
-        public void ShowList(string title, string tab, string summary, IReadOnlyList<RowData> rows, string foot, string footButton, bool footEnabled)
+        // 목록 상태. tab이 null이면 탭 줄을 숨긴다(후보 목록). 요약은 왼쪽·오른쪽 두 칸. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
+        public void ShowList(string title, string tab, string summaryLeft, string summaryRight, IReadOnlyList<RowData> rows, string foot, string footButton, string footCost, bool footEnabled)
         {
             m_title.text = title;
             m_list.SetActive(true);
@@ -133,12 +142,15 @@ namespace ZooTycoon.UI
             m_ask.SetActive(false);
             m_tabRow.SetActive(tab != null);
             m_tabLabel.text = tab ?? string.Empty;
-            m_summary.gameObject.SetActive(summary != null);
-            m_summary.text = summary ?? string.Empty;
+            m_summaryLeft.gameObject.SetActive(summaryLeft != null);
+            m_summaryLeft.text = summaryLeft ?? string.Empty;
+            m_summaryRight.gameObject.SetActive(summaryRight != null);
+            m_summaryRight.text = summaryRight ?? string.Empty;
             m_foot.gameObject.SetActive(footButton == null);
             m_foot.text = foot ?? string.Empty;
             m_footButton.gameObject.SetActive(footButton != null);
             m_footButtonLabel.text = footButton ?? string.Empty;
+            m_footButtonCost.text = footCost ?? string.Empty;
             m_footButton.interactable = footEnabled;
 
             while (m_rowViews.Count < rows.Count)
@@ -156,17 +168,18 @@ namespace ZooTycoon.UI
                     continue;
                 }
 
-                RowData data = rows[i];
-                m_rowViews[i].Show(data.Icon != null ? data.Icon : Load(data.IconPath), data.Name, data.Sub, data.Button, data.Enabled);
+                m_rowViews[i].Show(rows[i], Load(rows[i].IconPath));
             }
+
+            m_summaryRow.SetAsLastSibling();
         }
 
-        public void ShowAsk(string iconPath, string title, string sub, string plain, string negotiate, string cancel)
+        public void ShowAsk(string iconPath, string title, string skillHeader, string wageHeader, int skill, string wage, string plain, string negotiate, string cancel)
         {
             m_ask.SetActive(true);
             m_askIcon.sprite = Load(iconPath);
             m_askTitle.text = title;
-            m_askSub.text = sub;
+            m_askStat.Show(skillHeader, wageHeader, skill, wage);
             m_askPlainLabel.text = plain;
             m_askNegotiateLabel.text = negotiate;
             m_askCancelLabel.text = cancel;

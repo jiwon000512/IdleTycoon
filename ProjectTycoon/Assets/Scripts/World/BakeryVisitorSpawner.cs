@@ -12,8 +12,6 @@ namespace ZooTycoon.World
     public sealed class BakeryVisitorSpawner : MonoBehaviour
     {
         private const string k_CoinKey = "coin_popup";
-        private const string k_HappyKey = "emote_happy";
-        private const string k_FiredKey = "emote_fired";
 
         [SerializeField] private VisitorView m_prefab;
 
@@ -40,8 +38,8 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
                 bus.Subscribe<Events.BakeryVisitorLeft>(Bus_VisitorLeft),
                 bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired),
-                bus.Subscribe<Events.ClerkFired>(Bus_ClerkFired),
                 bus.Subscribe<Events.ClerkLeft>(Bus_ClerkLeft),
+                bus.Subscribe<Events.DialogueLine>(Bus_DialogueLine),
             };
         }
 
@@ -78,11 +76,24 @@ namespace ZooTycoon.World
             m_clerkHands[clerk] = handler;
         }
 
-        private void Bus_ClerkFired(Events.ClerkFired e)
+        // 설계 22: 대화 줄을 말하는 이(점원·웜뱃)의 머리 위에
+        private void Bus_DialogueLine(Events.DialogueLine e)
         {
-            if (e.Clerk.Bakery == m_shop && m_clerks.TryGetValue(e.Clerk, out VisitorView unit))
+            if (e.Dialogue.Clerk.Bakery != m_shop)
             {
-                unit.Emote(m_tables.Text(k_FiredKey));
+                return;
+            }
+
+            string text = m_tables.Text(e.TextId);
+
+            // 외출 중인 점원·다른 곳에 있는 웜뱃의 줄은 광장이 띄운다
+            if (e.SpeakerObject is Clerk clerk && !clerk.Away && m_clerks.TryGetValue(clerk, out VisitorView unit))
+            {
+                unit.Say(text, (float)e.Seconds);
+            }
+            else if (e.SpeakerObject is Wombat && m_shop.WombatPresent)
+            {
+                m_view.WombatView.Say(text, (float)e.Seconds);
             }
         }
 
@@ -132,7 +143,7 @@ namespace ZooTycoon.World
             if (Mine(e.Visitor))
             {
                 string amount = m_tables.Format(k_CoinKey, e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
-                m_units[e.Visitor].Pay(amount, m_tables.Text(k_HappyKey));
+                m_units[e.Visitor].Pay(amount);
             }
         }
 

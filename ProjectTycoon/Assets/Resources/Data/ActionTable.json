@@ -1,6 +1,6 @@
 {
   "table": "ActionTable",
-  "version": 7,
+  "version": 8,
   "notes": [
     "설계 09 v0.4 → 설계 13 v0.5: 웜뱃이 사물에서 하는 행동. 하는 일은 행동 클래스(ActionFactory 안 중첩 클래스, id로 만든다), 이 표는 어떻게 하는지(mode)와 버튼 아이콘. 어느 사물에서 되는지는 InteractableTable.json actions.",
     "mode: auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로 · manual = 상호작용 버튼(지금 할 수 있는 첫 manual 행동) · sheet = 시트의 한 줄(줄을 누르면 산다). take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
@@ -12,18 +12,64 @@
     "version 4 (2026-09-24, 설계 13 v0.5 행동을 객체로): mode에 sheet 추가, 시트 행동 5개(bake·upgrade·unlock·place_oven·dig). 파기 시트를 여는 버튼은 open_dig(삽 아이콘), dig는 시트의 파기 줄.",
     "version 5 (2026-09-26, 설계 17): unlock 삭제(빵 해금은 bake의 다음 빵 칩), place_shelf(빈 자리의 진열대 설치) 추가.",
     "version 6 (2026-09-26, 굴 이동 자동): exit·enter를 manual → auto(버튼 없이 구멍·문 앞에서 위로 밀면 넘어간다). 아이콘 삭제.",
-    "version 7 (2026-09-26, 설계 18 자유 배치): place_shelf·place_oven 삭제. 사물 설치는 행동이 아니라 편집 모드(WombatArea.Placement)."
+    "version 7 (2026-09-26, 설계 18 자유 배치): place_shelf·place_oven 삭제. 사물 설치는 행동이 아니라 편집 모드(WombatArea.Placement).",
+    "version 8 (2026-09-26, 설계 22): wake(manual, 삽 옆 아이콘 Actions/wake 더미) — 딴짓 중인 점원(clerk 사물)을 깨운다: 딴짓을 끊고 자리로, 다음 딴짓 판정 1회 건너뜀, 대화 clerk_wake."
   ],
   "rows": [
-    { "id": "take_out", "mode": "auto", "icon": null },
-    { "id": "fill", "mode": "auto", "icon": null },
-    { "id": "serve", "mode": "auto", "icon": null },
-    { "id": "open", "mode": "manual", "icon": "Sprites/Actions/open" },
-    { "id": "open_dig", "mode": "manual", "icon": "Sprites/Actions/dig" },
-    { "id": "exit", "mode": "auto", "icon": null },
-    { "id": "enter", "mode": "auto", "icon": null },
-    { "id": "bake", "mode": "sheet", "icon": null },
-    { "id": "upgrade", "mode": "sheet", "icon": null },
-    { "id": "dig", "mode": "sheet", "icon": null }
+    {
+      "id": "take_out",
+      "mode": "auto",
+      "icon": null
+    },
+    {
+      "id": "fill",
+      "mode": "auto",
+      "icon": null
+    },
+    {
+      "id": "serve",
+      "mode": "auto",
+      "icon": null
+    },
+    {
+      "id": "open",
+      "mode": "manual",
+      "icon": "Sprites/Actions/open"
+    },
+    {
+      "id": "open_dig",
+      "mode": "manual",
+      "icon": "Sprites/Actions/dig"
+    },
+    {
+      "id": "exit",
+      "mode": "auto",
+      "icon": null
+    },
+    {
+      "id": "enter",
+      "mode": "auto",
+      "icon": null
+    },
+    {
+      "id": "bake",
+      "mode": "sheet",
+      "icon": null
+    },
+    {
+      "id": "upgrade",
+      "mode": "sheet",
+      "icon": null
+    },
+    {
+      "id": "dig",
+      "mode": "sheet",
+      "icon": null
+    },
+    {
+      "id": "wake",
+      "mode": "manual",
+      "icon": "Sprites/Actions/wake"
+    }
   ]
 }

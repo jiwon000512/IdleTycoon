@@ -85,13 +85,15 @@ namespace ZooTycoon.Editor
             // 굴 환경 A2: 피벗 = 구멍 밑변 = 띠 밑변(입구 줄 바닥 윗변)
             Import(k_SpriteDir + "arch.png", bottom);
 
-            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "bubble", "wait" })
+            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "wait" })
             {
                 Import(k_SpriteDir + name + ".png", bottom);
             }
 
-            // 기다림 말풍선 시트(점이 하나씩 늘어남, 3프레임, 칸 폭 52px)
+            // 설계 22: 글자 말풍선 상자(9-slice, 꼬리 아래 가운데 = 피벗)와 이모지 말풍선 시트(9칸 52px, BubbleTable 칸 번호)
+            Import(k_SpriteDir + "bubble.png", bottom, k_Ppu, false, new Vector4(8f, 16f, 8f, 8f));
             VisitorSheetImporter.Import(k_SpriteDir + "wait_sheet.png", true, 52);
+            VisitorSheetImporter.Import(k_SpriteDir + "bubble_sheet.png", true, 52);
 
             foreach (string side in new[] { "front", "back", "side" })
             {
@@ -142,7 +144,7 @@ namespace ZooTycoon.Editor
             }
         }
 
-        static void Import(string path, Vector2 pivot, float ppu = k_Ppu, bool tile = false)
+        static void Import(string path, Vector2 pivot, float ppu = k_Ppu, bool tile = false, Vector4 border = default)
         {
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             TextureImporter ti = (TextureImporter)AssetImporter.GetAtPath(path);
@@ -159,6 +161,7 @@ namespace ZooTycoon.Editor
             settings.spriteAlignment = (int)SpriteAlignment.Custom;
             settings.spritePivot = pivot;
             settings.spriteMeshType = SpriteMeshType.FullRect;
+            settings.spriteBorder = border;
             ti.SetTextureSettings(settings);
             ti.SaveAndReimport();
         }
@@ -307,6 +310,9 @@ namespace ZooTycoon.Editor
                 SetSprites(mover, "m_" + side + "Idle", Frames("wombat_" + side, "", "_1", "_2", "_3"));
                 SetSprites(mover, "m_" + side + "Walk", Frames("wombat_" + side, "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
             }
+
+            // 설계 22: 머리 위 이모지 말풍선·글자 말풍선(웜뱃 키 1.1)
+            BakeBubbles(wombat.transform, mover, k_WombatHeight);
             // 설계 09: 든 빵 층(아래부터 5개, 앞발에서 위로). 크기는 부모 Carry가 정하고 층은 스케일 1(튀기 연출이 1로 되돌린다)
             GameObject carry = Child(wombat.transform, "Carry", new Vector3(0f, k_CarryHeight, 0f));
             carry.transform.localScale = Vector3.one * k_CarryScale;
@@ -370,14 +376,9 @@ namespace ZooTycoon.Editor
             SpriteAnimator animator = root.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", sprite);
 
-            // 기다림 말풍선(빈 진열대 앞, 점 셋 시트), 집은 빵, 결제 뒤 하트. 머리 높이는 외형마다 달라 실행 중에 맞춘다
-            Sprite[] wait = LoadFrames("wait_sheet");
-            SpriteRenderer bubble = Renderer(root.transform, "Bubble", wait[0], new Vector3(0f, 0.8f, 0f), 50);
+            // 집은 빵. 머리 위 말풍선(이모지 시트·글자 상자)은 BakeBubbles, 머리 높이는 외형마다 달라 실행 중에 맞춘다
             SpriteRenderer carry = Renderer(root.transform, "Carry", null, new Vector3(0f, 0.9f, 0f), 51);
             carry.transform.localScale = Vector3.one * 0.7f;
-            TextMeshPro emote = WorldText(root.transform, "Emote", new Vector3(0f, 1f, 0f), 52);
-            emote.fontSize = 3.5f;
-            emote.color = new Color(0.93f, 0.33f, 0.4f);
 
             VisitorView customer = root.AddComponent<VisitorView>();
             Set(customer, "m_modelRoot", model.transform);
@@ -385,11 +386,28 @@ namespace ZooTycoon.Editor
             Set(customer, "m_shadowRenderer", shadow);
             Set(customer, "m_animator", animator);
             Set(customer, "m_coinPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
-            Set(customer, "m_bubble", bubble);
-            SetSprites(customer, "m_waitFrames", wait);
             Set(customer, "m_carry", carry);
-            Set(customer, "m_emote", emote);
+            BakeBubbles(root.transform, customer, 0.8f);
             return Save(root, customer, "Visitor");
+        }
+
+        // 설계 22: 머리 위 이모지 말풍선(bubble_sheet 칸, order 50)과 글자 말풍선(bubble 9-slice 상자 53 + 글 54). 필드 이름은 VisitorView·WombatView 공통
+        const float k_WombatHeight = 1.15f;
+
+        static void BakeBubbles(Transform parent, Object view, float height)
+        {
+            Sprite[] frames = LoadFrames("bubble_sheet");
+            SpriteRenderer bubble = Renderer(parent, "Bubble", frames[0], new Vector3(0f, height, 0f), 50);
+            SpriteRenderer say = Renderer(parent, "Say", Load("bubble"), new Vector3(0f, height, 0f), 53);
+            say.drawMode = SpriteDrawMode.Sliced;
+            say.size = new Vector2(0.8f, 0.6f);
+            TextMeshPro sayText = WorldText(say.transform, "Text", new Vector3(0f, 0.4f, 0f), 54);
+            sayText.fontSize = 2.5f;
+            sayText.rectTransform.sizeDelta = new Vector2(3f, 0.4f);
+            Set(view, "m_bubble", bubble);
+            SetSprites(view, "m_bubbleFrames", frames);
+            Set(view, "m_say", say);
+            Set(view, "m_sayText", sayText);
         }
 
         // Shop 루트: 흙 배경(무한 벽 타일) + 굴 그림(실행 중 생성) + 입구 아치

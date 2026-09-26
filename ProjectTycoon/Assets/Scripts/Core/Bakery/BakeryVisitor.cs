@@ -44,6 +44,7 @@ namespace ZooTycoon.Core
         {
             Paid = true;
             CarriesBread = false;
+            Bubble.Show(BubbleTable.k_Heart);
         }
 
         protected override bool Act(double dt)
@@ -211,6 +212,7 @@ namespace ZooTycoon.Core
 
             Phase = VisitorPhase.Looking;
             Timer = Math.Min(Bakery.Config.LookSeconds, m_patience);
+            Bubble.Show(BubbleTable.k_Wait);
             return true;
         }
 
@@ -218,12 +220,20 @@ namespace ZooTycoon.Core
         {
             if (Shelf.Bread == Bread && Shelf.Stock > 0)
             {
+                Bubble.Clear();
                 return BtStatus.Success;
             }
 
             Timer -= dt;
             m_patience -= dt;
-            return Timer > 0d ? BtStatus.Running : BtStatus.Failure;
+
+            if (Timer > 0d)
+            {
+                return BtStatus.Running;
+            }
+
+            Bubble.Clear();
+            return BtStatus.Failure;
         }
 
         // 집은 순서대로 줄 번호를 받고 그 자리로 걷는다
@@ -262,6 +272,7 @@ namespace ZooTycoon.Core
         // 빵을 못 찾았다: 구멍으로
         private bool StartAngry()
         {
+            // 2026-09-25: 「!!」 말풍선 없이 그냥 나간다(설계 22에서 되살렸다가 2026-09-26 다시 뺌)
             Angry = true;
             HasSpot = false;
             Phase = VisitorPhase.Leaving;

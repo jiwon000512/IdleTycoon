@@ -12,11 +12,34 @@ namespace ZooTycoon.Core
         private readonly List<Clerk> m_leavingClerks = new List<Clerk>();
         private readonly List<Candidate> m_candidates = new List<Candidate>();
         private readonly List<VisitorTable> m_clerkLooks = new List<VisitorTable>();
+        // 설계 22: 딴짓 중인 점원을 감싼 사물(웜뱃이 깨운다). 딴짓 시작·끝에 사물 목록을 다시 맞춘다
+        private readonly Dictionary<Clerk, ClerkInteractable> m_clerkThings = new Dictionary<Clerk, ClerkInteractable>();
         private ClerkConfigTable m_clerkConfig;
         private int m_nextClerkId;
 
         public ClerkConfigTable ClerkConfig => m_clerkConfig;
         public IReadOnlyList<Clerk> Clerks => m_clerks;
+        // 설계 22: 지금 도는 대화(없으면 null). 새 대화가 앞 것을 대신한다
+        public Dialogue Dialogue { get; private set; }
+
+        // 나 말고 가게 안에서 딴짓 중인 점원(수다 상대). 없으면 null
+        public Clerk IdlingClerkOther(Clerk me)
+        {
+            foreach (Clerk clerk in m_clerks)
+            {
+                if (clerk != me && clerk.Idling && !clerk.Away && clerk.Idle != IdleKind.Outing)
+                {
+                    return clerk;
+                }
+            }
+
+            return null;
+        }
+
+        public void StartDialogue(string dialogueId, Clerk clerk)
+        {
+            Dialogue = new Dialogue(Tables.Get<DialogueTable>(dialogueId), Random, Bus, clerk, Wombat);
+        }
 
         public IReadOnlyList<Candidate> Candidates
         {
@@ -113,6 +136,13 @@ namespace ZooTycoon.Core
         private void InitClerks()
         {
             m_clerkConfig = Tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
+            Bus.Subscribe<Events.ClerkCameBack>(e =>
+            {
+                if (e.Clerk.Bakery == this)
+                {
+                    e.Clerk.ArriveBack();
+                }
+            });
 
             foreach (VisitorTable look in Tables.GetAll<VisitorTable>())
             {
@@ -149,6 +179,14 @@ namespace ZooTycoon.Core
                 clerk.Tick(dt);
             }
 
+            SyncClerkThings();
+            Dialogue?.Tick(dt);
+
+            if (Dialogue != null && Dialogue.Done)
+            {
+                Dialogue = null;
+            }
+
             for (int i = m_leavingClerks.Count - 1; i >= 0; i--)
             {
                 Clerk clerk = m_leavingClerks[i];
@@ -158,6 +196,35 @@ namespace ZooTycoon.Core
                     m_leavingClerks.RemoveAt(i);
                     Bus.Publish(new Events.ClerkLeft(clerk));
                 }
+            }
+        }
+
+        // 딴짓 중인 점원마다 사물 하나. 바뀌었을 때만 목록을 다시 맞춘다(대상은 다음 틱에 고른다)
+        private void SyncClerkThings()
+        {
+            bool changed = false;
+
+            foreach (Clerk clerk in new List<Clerk>(m_clerkThings.Keys))
+            {
+                if (!clerk.Idling || clerk.Away || !m_clerks.Contains(clerk))
+                {
+                    m_clerkThings.Remove(clerk);
+                    changed = true;
+                }
+            }
+
+            foreach (Clerk clerk in m_clerks)
+            {
+                if (clerk.Idling && !clerk.Away && !m_clerkThings.ContainsKey(clerk))
+                {
+                    m_clerkThings[clerk] = new ClerkInteractable(Tables.Get<InteractableTable>(ClerkInteractable.k_Id), clerk, this, () => clerk.Position);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                SyncThings();
             }
         }
 

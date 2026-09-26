@@ -304,7 +304,7 @@ namespace ZooTycoon.Core
             // 대상은 다음 Tick에 고른다. 여기서 고르면 LayoutChanged보다 TargetChanged가 먼저 나가 화면에 없는 사물(새 오븐·진열대)을 가리킨다
         }
 
-        // 팔 수 있는 칸은 칸 기준으로 맞춘다(있던 칸은 같은 객체를 둬 대상이 흔들리지 않는다). 목록 순서는 진열대 → 오븐 → 계산대 → 나가기 → 파기
+        // 팔 수 있는 칸은 칸 기준으로 맞춘다(있던 칸은 같은 객체를 둬 대상이 흔들리지 않는다). 목록 순서는 딴짓 점원 → 진열대 → 오븐 → 계산대 → 나가기 → 파기
         private void SyncThings()
         {
             List<Cell> digCells = new List<Cell>(Grid.Frontier());
@@ -326,6 +326,13 @@ namespace ZooTycoon.Core
             }
 
             Placed.Clear();
+
+            // 설계 22: 딴짓 중인 점원이 먼저 — 자리에 선 점원은 그 사물과 거리가 같아 앞에 있어야 대상이 된다(같은 거리면 먼저 것)
+            foreach (ClerkInteractable clerk in m_clerkThings.Values)
+            {
+                Placed.Add(clerk);
+            }
+
             Placed.AddRange(m_shelves);
             Placed.AddRange(m_ovens);
             Placed.AddRange(m_counters);

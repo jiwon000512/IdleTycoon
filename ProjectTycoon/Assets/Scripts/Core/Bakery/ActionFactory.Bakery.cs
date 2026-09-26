@@ -148,6 +148,31 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 설계 22: 딴짓 중인 점원 깨우기(버튼). 딴짓을 끊고 자리로 보내고 대화 clerk_wake를 건다
+        private sealed class Wake : InteractAction
+        {
+            public Wake(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is ClerkInteractable;
+            }
+
+            public override bool CanDo(Worker worker, Interactable target)
+            {
+                return target is ClerkInteractable clerk && clerk.Clerk.Idling;
+            }
+
+            public override void Do(Worker worker, Interactable target)
+            {
+                Clerk clerk = ((ClerkInteractable)target).Clerk;
+                clerk.WakeUp();
+                clerk.Bakery.StartDialogue(DialogueTable.k_ClerkWake, clerk);
+            }
+        }
+
         // 굴 격자 설계 v0.5: 그 칸 파기(시트 줄). 비용 = digBaseCost × digCostGrowth^(판 칸 수)
         private sealed class Dig : SheetAction
         {

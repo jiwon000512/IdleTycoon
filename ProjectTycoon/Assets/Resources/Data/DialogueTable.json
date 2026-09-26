@@ -1,0 +1,33 @@
+{
+  "table": "DialogueTable",
+  "version": 1,
+  "notes": [
+    "설계 22 (2026-09-26) 대화. 줄(lines)을 lineSeconds 간격으로 말하는 이의 머리 위 글자 말풍선에 차례로 띄운다(조작을 막지 않는다).",
+    "line.speaker: clerk(대화를 건 점원) · wombat(웜뱃) · visitor(예비). line.texts: StringTable id 목록, 하나를 균등 난수로 고른다. line.bubble: 같이 띄울 이모지(BubbleTable id, 없으면 null).",
+    "첫 쓰임 clerk_wake(깨우기). 손님·평론가 대화는 행을 더한다."
+  ],
+  "rows": [
+    {
+      "id": "clerk_wake",
+      "lineSeconds": 1.2,
+      "lines": [
+        {
+          "speaker": "clerk",
+          "texts": [
+            "say_clerk_wake_1",
+            "say_clerk_wake_2",
+            "say_clerk_wake_3"
+          ],
+          "bubble": null
+        },
+        {
+          "speaker": "wombat",
+          "texts": [
+            "say_wombat_wake"
+          ],
+          "bubble": null
+        }
+      ]
+    }
+  ]
+}

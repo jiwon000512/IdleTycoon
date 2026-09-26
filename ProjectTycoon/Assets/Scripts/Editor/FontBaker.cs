@@ -19,7 +19,7 @@ namespace ZooTycoon.Editor
         const string k_Dir = "Assets/Fonts/Galmuri/";
         const string k_DataDir = "Assets/Resources/Data/";
 
-        // (에셋 이름, TTF 파일, 픽셀 크기)
+        // (에셋 이름, TTF 파일, 픽셀 크기). 정자체는 1px 획 그대로(2026-09-26: 굵히기·그림자 모두 사용자가 반려 — 굵은체와 어울리지 않는다)
         static readonly (string asset, string file, int size)[] k_Fonts =
         {
             ("Galmuri9", "Galmuri9B", 9),
@@ -47,6 +47,7 @@ namespace ZooTycoon.Editor
                 asset.ClearFontAssetData();
                 asset.TryAddCharacters(characters, out string missing);
                 asset.atlasPopulationMode = AtlasPopulationMode.Static;
+
                 asset.atlasTexture.filterMode = FilterMode.Point;
                 EditorUtility.SetDirty(asset);
                 EditorUtility.SetDirty(asset.atlasTexture);

@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 17,
+  "version": 18,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -19,7 +19,9 @@
     "version 14 (2026-09-24, 설계 13 v0.6): 빈 자리 시트의 오븐 설치 줄 row_place_oven·row_place_oven_effect(업그레이드 줄 서식에서 분리).",
     "version 15 (2026-09-26, 설계 17 빈 진열대는 아무 빵): 빈 진열대 제목 sheet_shelf_empty_title, 굽기 시트 다음 빵 해금 칩 chip_unlock_sub, 빈 자리 진열대 설치 줄 row_place_shelf·row_place_shelf_effect 추가. chip_locked_sub·row_unlock·row_unlock_effect·row_unlock_blocked 삭제.",
     "version 16 (2026-09-26, 설계 18 자유 배치): 편집 모드 문구 edit_*(완료 버튼·보관 안내·보관 개수)와 상점 카드 이름 kind_<종류 id>(사물 3 + 장식 8) 추가. 빈 자리 시트 sheet_slot_*·설치 줄 row_place_* 삭제.",
-    "version 17 (2026-09-26, 설계 21 점원): 점원 팝업·후보·협상·해고 문구 clerk_*, 해고 말풍선 emote_fired 추가 점원은 구운 적 없는 오븐에서 첫 빵을 구우므로 clerk_no_bread는 두지 않는다."
+    "version 17 (2026-09-26, 설계 21 점원): 점원 팝업·후보·협상·해고 문구 clerk_*, 해고 말풍선 emote_fired 추가 점원은 구운 적 없는 오븐에서 첫 빵을 구우므로 clerk_no_bread는 두지 않는다.",
+    "version 18 (2026-09-26, 설계 22): 대사 say_*(깨우기) 추가. 결제 ♥·해고 !!·광장 기분 ♥ 글자(emote_happy·emote_fired)는 이모지 말풍선(BubbleTable)으로 바뀌어 삭제.",
+    "version 18 폴리싱 (2026-09-26 사용자: 한 글에 정보 하나, 「·」로 이어 붙이지 않는다): clerk_summary·clerk_slot_named·clerk_status·clerk_candidate_sub·clerk_ask_sub 삭제 → 요약 두 칸(clerk_summary_count·clerk_summary_wage), 표 머리글(clerk_col_*), 상태 배지(clerk_working·clerk_idling·clerk_away·clerk_empty). 제목·버튼에서 「·」 삭제. 상태 배지는 초상 아래 폭 32에 맞춰 두 글자(근무·딴짓·외출·비었음)."
   ],
   "rows": [
     {
@@ -107,10 +109,6 @@
       "ko": "파기 {0}"
     },
     {
-      "id": "emote_happy",
-      "ko": "♥"
-    },
-    {
       "id": "sign_bakery",
       "ko": "빵집"
     },
@@ -179,28 +177,20 @@
       "ko": "빵집"
     },
     {
-      "id": "clerk_summary",
-      "ko": "점원 {0}/{1} · 월급 합 {2}"
-    },
-    {
       "id": "clerk_slot",
       "ko": "{0} {1}"
     },
     {
       "id": "clerk_empty",
-      "ko": "비어 있음"
-    },
-    {
-      "id": "clerk_status",
-      "ko": "일머리 {0} · {1} · {2}"
+      "ko": "비었음"
     },
     {
       "id": "clerk_working",
-      "ko": "일하는 중"
+      "ko": "근무"
     },
     {
       "id": "clerk_idling",
-      "ko": "딴짓 중"
+      "ko": "딴짓"
     },
     {
       "id": "clerk_hire",
@@ -211,28 +201,12 @@
       "ko": "해고"
     },
     {
-      "id": "clerk_candidates_title",
-      "ko": "{0} · 후보"
-    },
-    {
-      "id": "clerk_candidate_sub",
-      "ko": "일머리 {0} · {1}"
-    },
-    {
       "id": "clerk_select",
       "ko": "선택"
     },
     {
-      "id": "clerk_refresh",
-      "ko": "새 후보 보기 · {0}"
-    },
-    {
       "id": "clerk_ask",
       "ko": "{0} 고용할까?"
-    },
-    {
-      "id": "clerk_ask_sub",
-      "ko": "일머리 {0} · 기본 월급 {1}"
     },
     {
       "id": "clerk_hire_plain",
@@ -245,10 +219,6 @@
     {
       "id": "clerk_cancel",
       "ko": "취소"
-    },
-    {
-      "id": "clerk_nego_title",
-      "ko": "{0} · 월급 협상"
     },
     {
       "id": "clerk_nego_hint",
@@ -287,12 +257,56 @@
       "ko": "월급을 못 냈다 · {0} 그만둠"
     },
     {
-      "id": "emote_fired",
-      "ko": "!!"
+      "id": "say_clerk_wake_1",
+      "ko": "앗, 사장님!"
     },
     {
-      "id": "clerk_slot_named",
-      "ko": "{0} · {1}"
+      "id": "say_clerk_wake_2",
+      "ko": "헉, 안 놀았어요"
+    },
+    {
+      "id": "say_clerk_wake_3",
+      "ko": "지금 가요!"
+    },
+    {
+      "id": "say_wombat_wake",
+      "ko": "일하자!"
+    },
+    {
+      "id": "clerk_summary_count",
+      "ko": "점원 {0}/{1}"
+    },
+    {
+      "id": "clerk_summary_wage",
+      "ko": "월급 합 {0}"
+    },
+    {
+      "id": "clerk_col_skill",
+      "ko": "일머리"
+    },
+    {
+      "id": "clerk_col_wage",
+      "ko": "월급"
+    },
+    {
+      "id": "clerk_col_base_wage",
+      "ko": "기본 월급"
+    },
+    {
+      "id": "clerk_away",
+      "ko": "외출"
+    },
+    {
+      "id": "clerk_candidates_title",
+      "ko": "{0} 후보"
+    },
+    {
+      "id": "clerk_refresh",
+      "ko": "새 후보 보기"
+    },
+    {
+      "id": "clerk_nego_title",
+      "ko": "월급 협상"
     }
   ]
 }

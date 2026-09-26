@@ -39,7 +39,7 @@ namespace ZooTycoon.World
             m_shopView.Expanded += BakeryView_Expanded;
 
             m_plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
-            m_plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, bus, tables, Frames);
+            m_plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, m_plazaView, bus, tables, Frames);
             m_plazaView.Bind(mall.Plaza, bus, Frames, tables);
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             FollowWombat();

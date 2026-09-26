@@ -136,30 +136,37 @@ namespace ZooTycoon.UI
                 {
                     m_rows.Add(new ClerkPopupView.RowData
                     {
-                        Icon = null,
                         IconPath = null,
+                        Badge = ClerkBadge.Empty,
+                        BadgeText = m_tables.Text("clerk_empty"),
                         Name = slotName,
-                        Sub = m_tables.Text("clerk_empty"),
+                        Slot = null,
                         Button = m_tables.Text("clerk_hire"),
                         Enabled = true,
                     });
                     continue;
                 }
 
-                string state = clerk.Idling ? m_tables.Text("clerk_idling") : m_tables.Text("clerk_working");
+                ClerkBadge badge = clerk.Away ? ClerkBadge.Away : clerk.Idling ? ClerkBadge.Idling : ClerkBadge.Working;
                 m_rows.Add(new ClerkPopupView.RowData
                 {
                     IconPath = clerk.Look.Sprite,
-                    Name = m_tables.Format("clerk_slot_named", slotName, clerk.Name),
-                    Sub = m_tables.Format("clerk_status", clerk.Skill, state, Wage(clerk.Wage)),
+                    Badge = badge,
+                    BadgeText = m_tables.Text(badge == ClerkBadge.Away ? "clerk_away" : badge == ClerkBadge.Idling ? "clerk_idling" : "clerk_working"),
+                    Name = clerk.Name,
+                    Slot = slotName,
+                    SkillHeader = m_tables.Text("clerk_col_skill"),
+                    WageHeader = m_tables.Text("clerk_col_wage"),
+                    Skill = clerk.Skill,
+                    Wage = Wage(clerk.Wage),
                     Button = m_tables.Text("clerk_fire"),
                     Enabled = true,
                 });
             }
 
             m_view.ShowList(m_tables.Text("clerk_title"), m_tables.Text("clerk_tab_bakery"),
-                m_tables.Format("clerk_summary", m_bakery.Clerks.Count, m_slots.Count, Wage(wageSum)),
-                m_rows, m_tables.Format("clerk_foot", m_bakery.ClerkConfig.WagePeriodSeconds), null, false);
+                m_tables.Format("clerk_summary_count", m_bakery.Clerks.Count, m_slots.Count), m_tables.Format("clerk_summary_wage", Wage(wageSum)),
+                m_rows, null, null, null, false);
         }
 
         // 같은 종류 안의 번호(오븐 1·오븐 2)
@@ -193,16 +200,21 @@ namespace ZooTycoon.UI
                 m_rows.Add(new ClerkPopupView.RowData
                 {
                     IconPath = candidate.Look.Sprite,
+                    Badge = ClerkBadge.None,
                     Name = candidate.Name,
-                    Sub = m_tables.Format("clerk_candidate_sub", candidate.Skill, Wage(m_bakery.WageFor(candidate, m_slot))),
+                    Slot = null,
+                    SkillHeader = m_tables.Text("clerk_col_skill"),
+                    WageHeader = m_tables.Text("clerk_col_base_wage"),
+                    Skill = candidate.Skill,
+                    Wage = Wage(m_bakery.WageFor(candidate, m_slot)),
                     Button = m_tables.Text("clerk_select"),
                     Enabled = true,
                 });
             }
 
             double refresh = m_bakery.ClerkConfig.RefreshCost;
-            m_view.ShowList(m_tables.Format("clerk_candidates_title", m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_slot.Table.Id), IndexAmongKind(m_slot))), null, null,
-                m_rows, null, m_tables.Format("clerk_refresh", BigNumberFormatter.Format(refresh)), m_bakery.Wombat.Worker.Wallet.Coins >= refresh);
+            m_view.ShowList(m_tables.Format("clerk_candidates_title", m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_slot.Table.Id), IndexAmongKind(m_slot))), null, null, null,
+                m_rows, null, m_tables.Text("clerk_refresh"), BigNumberFormatter.Format(refresh), m_bakery.Wombat.Worker.Wallet.Coins >= refresh);
 
             if (m_asking)
             {
@@ -214,7 +226,7 @@ namespace ZooTycoon.UI
         {
             m_asking = true;
             m_view.ShowAsk(m_candidate.Look.Sprite, m_tables.Format("clerk_ask", m_candidate.Name),
-                m_tables.Format("clerk_ask_sub", m_candidate.Skill, Wage(m_bakery.WageFor(m_candidate, m_slot))),
+                m_tables.Text("clerk_col_skill"), m_tables.Text("clerk_col_base_wage"), m_candidate.Skill, Wage(m_bakery.WageFor(m_candidate, m_slot)),
                 m_tables.Text("clerk_hire_plain"), m_tables.Text("clerk_negotiate"), m_tables.Text("clerk_cancel"));
         }
 
@@ -330,7 +342,7 @@ namespace ZooTycoon.UI
             m_asking = false;
             m_negotiation = m_bakery.Negotiate(m_candidate, m_slot);
             m_resultTimer = k_ResultSeconds;
-            m_view.ShowNegotiation(m_tables.Format("clerk_nego_title", m_candidate.Name), m_tables.Text("clerk_nego_hint"),
+            m_view.ShowNegotiation(m_tables.Text("clerk_nego_title"), m_tables.Text("clerk_nego_hint"),
                 m_candidate.Look.SideIdleSheet ?? m_candidate.Look.Sprite,
                 m_tables.Format("clerk_nego_offer", Wage(m_negotiation.BaseWage)), m_tables.Text("clerk_nego_think"));
         }

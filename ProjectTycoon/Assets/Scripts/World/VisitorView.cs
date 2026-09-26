@@ -18,21 +18,19 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_shadowRenderer;
         [SerializeField] private SpriteAnimator m_animator;
         [SerializeField] private CoinPopup m_coinPrefab;
-        [Tooltip("기다림 말풍선. 빈 진열대 앞에 서 있는 동안 점이 하나씩 늘어난다")]
+        [Tooltip("설계 22 이모지 말풍선(BubbleTable 칸 번호 = bubble_sheet 칸). Core Bubble 상태를 매 프레임 읽는다")]
         [SerializeField] private SpriteRenderer m_bubble;
-        [SerializeField] private Sprite[] m_waitFrames;
-        [SerializeField] private float m_waitFrameSeconds = 0.4f;
+        [SerializeField] private Sprite[] m_bubbleFrames;
         [Tooltip("집은 빵. 계산할 때까지 앞발(또는 머리 위)에")]
         [SerializeField] private SpriteRenderer m_carry;
-        [Tooltip("결제 뒤 하트")]
-        [SerializeField] private TextMeshPro m_emote;
+        [Tooltip("대화 글자 말풍선(9-slice 상자 + 글)")]
+        [SerializeField] private SpriteRenderer m_say;
+        [SerializeField] private TextMeshPro m_sayText;
+        [SerializeField] private float m_sayPadding = 0.3f;
         [Tooltip("톡 뛸 때 솟는 높이(유닛)")]
         [SerializeField] private float m_hopHeight = 0.15f;
         [Tooltip("빵이 진열대에서 드는 자리로 날아오는 시간(초)")]
         [SerializeField] private float m_carryFlySeconds = 0.3f;
-        [Tooltip("하트: 떠오르는 높이(유닛)와 시간(초)")]
-        [SerializeField] private float m_emoteRise = 0.5f;
-        [SerializeField] private float m_emoteSeconds = 0.9f;
         [Tooltip("carryAt hand: 집은 빵 가운데 높이 = 키 × 이 비율 + 빵 반(손님 앞발이 키의 약 1/3)")]
         [SerializeField] private float m_handRatio = 0.33f;
         [SerializeField] private float m_breadHalf = 0.18f;
@@ -58,7 +56,7 @@ namespace ZooTycoon.World
         private bool m_flying;
         private Facing m_facing = Facing.Down;
         private bool m_carryOnHead;
-        private float m_lookStart;
+        private Coroutine m_saying;
 
         private Vector3 HeadOffset => new Vector3(0f, m_height, 0f);
         // 2026-09-23: 집은 빵은 visitors.carryAt 자리에 든다. 앞발이면 옆모습에서 보는 쪽으로 내민다
@@ -85,10 +83,32 @@ namespace ZooTycoon.World
             m_height = m_frontIdle[0].bounds.size.y * (float)look.Scale;
             m_carryOnHead = look.CarryAt == CarryAt.Head;
             m_bubble.transform.localPosition = HeadOffset;
+            m_say.transform.localPosition = HeadOffset;
             m_bubble.enabled = false;
             m_carry.enabled = false;
-            m_emote.enabled = false;
+            m_say.enabled = false;
+            m_sayText.enabled = false;
             Update();
+        }
+
+        // 설계 22: 머리 위 글자 말풍선을 seconds 동안. 이모지 말풍선은 그동안 숨긴다
+        public void Say(string text, float seconds)
+        {
+            if (m_saying != null)
+            {
+                StopCoroutine(m_saying);
+            }
+
+            m_saying = StartCoroutine(SayRoutine(text, seconds));
+        }
+
+        private IEnumerator SayRoutine(string text, float seconds)
+        {
+            Bubbles.ShowSay(m_say, m_sayText, text, m_sayPadding);
+            yield return new WaitForSeconds(seconds);
+            m_say.enabled = false;
+            m_sayText.enabled = false;
+            m_saying = null;
         }
 
         // 집기: 빵 그림이 진열대(from, 월드)에서 드는 자리로 날아와 계산할 때까지 든다
@@ -106,19 +126,12 @@ namespace ZooTycoon.World
             m_carrying = bread != null;
         }
 
-        public void Pay(string amount, string heart)
+        // 결제 코인 팝업(♥ 말풍선은 Core Bubble이 띄운다)
+        public void Pay(string amount)
         {
             m_carrying = false;
             CoinPopup popup = Instantiate(m_coinPrefab, transform.position + HeadOffset + Vector3.right * m_coinSideOffset, Quaternion.identity, transform.parent);
             popup.Show(amount);
-            Emote(heart);
-        }
-
-        // 설계 11: 광장에서 들를 곳에 멈췄을 때 머리 위 ♥
-        public void Emote(string text)
-        {
-            m_emote.text = text;
-            StartCoroutine(EmoteRoutine());
         }
 
         private void Update()
@@ -139,18 +152,7 @@ namespace ZooTycoon.World
             transform.position = position;
             SetAlpha(alpha);
             Facing facing = m_walker.Facing;
-            // 빈 진열대 앞: 진열대를 본 채 기다림 말풍선. 선 순간부터 점이 하나씩(2026-09-25: 좌우 두리번·「!!」는 뺐다)
-            if (phase == VisitorPhase.Looking)
-            {
-                if (!m_bubble.enabled)
-                {
-                    m_lookStart = Time.time;
-                }
-
-                m_bubble.sprite = m_waitFrames[Mathf.FloorToInt((Time.time - m_lookStart) / m_waitFrameSeconds) % m_waitFrames.Length];
-            }
-
-            m_bubble.enabled = phase == VisitorPhase.Looking;
+            Bubbles.Show(m_bubble, m_bubbleFrames, m_walker.Bubble, m_saying == null && alpha > 0f);
             Show(facing, m_walker.Moving);
             m_facing = facing;
             m_carry.sortingOrder = m_carryOnHead ? k_CarryFrontOrder : Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder);
@@ -218,19 +220,5 @@ namespace ZooTycoon.World
             m_flying = false;
         }
 
-        private IEnumerator EmoteRoutine()
-        {
-            m_emote.enabled = true;
-
-            for (float t = 0f; t < m_emoteSeconds; t += Time.deltaTime)
-            {
-                float k = t / m_emoteSeconds;
-                m_emote.transform.localPosition = HeadOffset + Vector3.up * (0.2f + m_emoteRise * k);
-                m_emote.alpha = 1f - k * k;
-                yield return null;
-            }
-
-            m_emote.enabled = false;
-        }
     }
 }

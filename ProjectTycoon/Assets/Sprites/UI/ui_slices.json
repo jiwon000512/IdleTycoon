@@ -193,5 +193,161 @@
    5,
    5
   ]
+ },
+ "clerk_panel": {
+  "w": 13,
+  "h": 13,
+  "border": [
+   6,
+   6,
+   6,
+   6
+  ],
+  "ppu": 20
+ },
+ "clerk_close": {
+  "w": 17,
+  "h": 17,
+  "border": null,
+  "ppu": 20
+ },
+ "clerk_tab": {
+  "w": 15,
+  "h": 9,
+  "border": [
+   7,
+   4,
+   7,
+   4
+  ],
+  "ppu": 20
+ },
+ "clerk_card": {
+  "w": 11,
+  "h": 9,
+  "border": [
+   5,
+   4,
+   5,
+   4
+  ],
+  "ppu": 20
+ },
+ "clerk_frame": {
+  "w": 11,
+  "h": 11,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ],
+  "ppu": 20
+ },
+ "clerk_frame_empty": {
+  "w": 32,
+  "h": 29,
+  "border": null,
+  "ppu": 20
+ },
+ "clerk_badge_line": {
+  "w": 11,
+  "h": 11,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ],
+  "ppu": 20
+ },
+ "clerk_badge_fill": {
+  "w": 11,
+  "h": 11,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ],
+  "ppu": 20
+ },
+ "clerk_slot": {
+  "w": 9,
+  "h": 9,
+  "border": [
+   4,
+   4,
+   4,
+   4
+  ],
+  "ppu": 20
+ },
+ "clerk_table": {
+  "w": 91,
+  "h": 22,
+  "border": null,
+  "ppu": 20
+ },
+ "clerk_gauge": {
+  "w": 7,
+  "h": 7,
+  "border": [
+   3,
+   3,
+   3,
+   3
+  ],
+  "ppu": 20
+ },
+ "clerk_gauge_fill": {
+  "w": 3,
+  "h": 3,
+  "border": [
+   2,
+   1,
+   0,
+   1
+  ],
+  "ppu": 20
+ },
+ "clerk_coin": {
+  "w": 7,
+  "h": 7,
+  "border": null,
+  "ppu": 20
+ },
+ "clerk_btn": {
+  "w": 11,
+  "h": 11,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ],
+  "ppu": 20
+ },
+ "clerk_btn_pressed": {
+  "w": 11,
+  "h": 11,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ],
+  "ppu": 20
+ },
+ "clerk_btn_disabled": {
+  "w": 11,
+  "h": 11,
+  "border": [
+   5,
+   5,
+   5,
+   5
+  ],
+  "ppu": 20
  }
 }

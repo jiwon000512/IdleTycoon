@@ -1,13 +1,15 @@
 {
   "table": "ClerkConfigTable",
-  "version": 1,
+  "version": 3,
   "notes": [
     "설계 21 점원(2026-09-26): 월급·후보·일머리·협상 숫자 한 행(id main). 전부 시작값.",
     "wagePeriodSeconds: 월급 주기(초). 주기마다 점원마다 지갑에서 빼고, 모자라면 그 점원만 해고. 고용 즉시 첫 월급.",
     "candidateCount: 가게마다 대기 후보 수. refreshCost: 새 후보 보기 값. names: 후보 이름 풀(대기 후보와 겹치지 않게 뽑는다).",
     "일머리 1~100 = 1 + ⌊99 × r^skillSkew⌋(r 균등 난수): 클수록 높은 일머리가 드물다(2에서 절반이 25 아래). wagePerSkill: 일머리 100이면 월급 ×(1 + 이 값).",
     "idleSecondsMin·Max: 한 바퀴 끝날 때마다 확률 (100 − 일머리)/100로 딴짓(멍 때리기), 이 사이 균등 초.",
-    "협상(타이밍 바): 표시가 바 위를 왕복(markerSpeedMin~Max 바 폭/초, 일머리 1→100에 따라). negotiateSeconds 안에 탭하지 않으면 red. zones: 가운데에서 거리(halfWidth) 안이면 그 색(첫 맞는 것), keep·down·up은 유지·인하·인상 확률 가중치. 변동 금액 = 기본 월급 × changeMin~changeMax 균등 난수, 정수(최소 1)."
+    "협상(타이밍 바): 표시가 바 위를 왕복(markerSpeedMin~Max 바 폭/초, 일머리 1→100에 따라). negotiateSeconds 안에 탭하지 않으면 red. zones: 가운데에서 거리(halfWidth) 안이면 그 색(첫 맞는 것), keep·down·up은 유지·인하·인상 확률 가중치. 변동 금액 = 기본 월급 × changeMin~changeMax 균등 난수, 정수(최소 1).",
+    "version 2 (2026-09-26, 설계 22 딴짓 종류·깨우기): 다른 점원이 딴짓 중이면 수다(그 점원 옆 chatOffset 자리로 걸어가 마주 봄, 「chat」), 아니면 strollChance로 산책(자리에서 strollRadius 안 걷는 점 하나로 갔다가, 「note」) 또는 멍(「wait」). 깨우면 다음 딴짓 판정을 wakeSkips회 건너뛴다.",
+    "version 3 (2026-09-26, 사용자 피드백): 딴짓 시간은 일머리에 따라 = (idleSecondsMin + (idleSecondsMax − idleSecondsMin) × (100 − 일머리)/100) × 0.75~1.25 (일머리 1이면 1분 넘게). outingChance: 외출(구멍으로 나가 광장 들를 곳을 돌다 옴, 광장에서도 깨울 수 있다). 한 난수로 외출 → 산책(strollChance) → 멍."
   ],
   "rows": [
     {
@@ -18,7 +20,7 @@
       "skillSkew": 2,
       "wagePerSkill": 1.0,
       "idleSecondsMin": 3,
-      "idleSecondsMax": 6,
+      "idleSecondsMax": 90,
       "markerSpeedMin": 0.6,
       "markerSpeedMax": 1.1,
       "negotiateSeconds": 3,
@@ -47,6 +49,11 @@
           "up": 50
         }
       ],
+      "strollRadius": 3,
+      "strollChance": 0.35,
+      "chatOffset": 0.6,
+      "wakeSkips": 1,
+      "outingChance": 0.3,
       "names": [
         "구름",
         "자갈",

@@ -47,6 +47,13 @@ namespace ZooTycoon.Core
         public double ChangeMin { get; set; }
         public double ChangeMax { get; set; }
         public List<NegotiationZone> Zones { get; set; }
+        // 설계 22 딴짓 종류·깨우기: 산책 반지름(유닛)·산책 확률(수다가 안 될 때)·수다 옆자리 거리·깨운 뒤 건너뛸 딴짓 판정 수
+        public double StrollRadius { get; set; }
+        public double StrollChance { get; set; }
+        // 외출(구멍으로 나가 광장에서 놀다 옴) 확률. 한 난수로 외출 → 산책 → 멍
+        public double OutingChance { get; set; }
+        public double ChatOffset { get; set; }
+        public int WakeSkips { get; set; }
         public List<string> Names { get; set; }
     }
 }
