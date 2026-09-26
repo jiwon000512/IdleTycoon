@@ -16,6 +16,8 @@ namespace ZooTycoon.Core
         public bool Moving { get; private set; }
         // 곳에 들어온 직후: 누르고 있던 조이스틱을 놓을 때까지 걷지 않는다(굴을 등진 채 서고, 놓기 전에 통로 띠로 되돌아가지 않는다)
         public bool WaitingRelease { get; private set; }
+        // 시스템이 걷게 하는 중(계산대 붙기, 앞으로 미션 가이드). 조이스틱을 건드리면 그만둔다
+        public bool Guided => Mover.Moving;
 
         public Wombat(TableSet tables, ZooState wallet)
         {
@@ -30,6 +32,12 @@ namespace ZooTycoon.Core
             Input = length > 1f ? input / length : input;
         }
 
+        // 설계 19: 시스템 이동 — 길을 따라 target까지 걷고 arrive 쪽을 본다(계산대 자리 붙기, 미션 가이드). 조이스틱을 건드리면 그 자리에서 그만둔다
+        public void Guide(BurrowNav nav, Vector2 target, Facing arrive)
+        {
+            Mover.WalkTo(nav, target, arrive);
+        }
+
         // 설계 09 3장 · 설계 11: 조이스틱 방향으로 걷고, 막히면 X만·Y만 시도해 벽을 따라 미끄러진다.
         // 보는 방향은 미끄러진 쪽이 아니라 조이스틱 쪽(2026-09-24 사용자 지적: 벽에 비비면 고개가 돌아간다)
         internal void Walk(BurrowNav nav, double dt)
@@ -41,8 +49,16 @@ namespace ZooTycoon.Core
                 return;
             }
 
+            if (Input == Vector2.Zero && Guided)
+            {
+                Mover.Advance(Speed * dt);
+                Moving = true;
+                return;
+            }
+
             if (Input != Vector2.Zero)
             {
+                Mover.Place(Mover.Position);
                 Mover.Facing = Mover.FacingOf(Input);
             }
 
@@ -70,6 +86,7 @@ namespace ZooTycoon.Core
 
         internal void Stop()
         {
+            Mover.Place(Mover.Position);
             Moving = false;
         }
 

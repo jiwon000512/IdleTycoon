@@ -5,10 +5,12 @@ using System.Numerics;
 namespace ZooTycoon.Core
 {
     // 설계 08·09·13 · 리뷰 R2 · 설계 18: 계산대(자유 배치, 여러 대). 기준점은 계산대 뒤 웜뱃 자리(표의 worker 자리). 줄(빵을 집은 순서, 걸어오는 손님 포함)과 계산을 스스로 갖는다.
-    // serve가 auto면 웜뱃이 range 안에 있는 동안 줄 머리 계산 타이머가 흐르고(Tick), manual이면 버튼(Serve)으로만. 속도는 업그레이드. 줄 자리는 BakeryLayout이 계산대마다 만든다
+    // serve가 auto면 웜뱃이 range 안에 있는 동안 줄 머리 계산 타이머가 흐르고(Tick), manual이면 버튼(Serve)으로만. 속도는 업그레이드. 줄 자리는 BakeryLayout이 계산대마다 만든다.
+    // 설계 19: 계산은 웜뱃이 자리(WorkerSpot)에 붙어야 흐른다. range 안에서 대상인데 자리에 없고 조이스틱을 놓고 있으면 시스템이 자리까지 걷게 한다(Wombat.Guide)
     public sealed class CounterInteractable : Interactable, IPlaced
     {
         public const string k_Id = "counter";
+        private const float k_AtSpot = 0.05f;
 
         private readonly ZooState m_till;
         private readonly bool m_serveAuto;
@@ -47,11 +49,26 @@ namespace ZooTycoon.Core
             Position = position;
         }
 
+        // 웜뱃이 자리에 붙어 있다
+        public bool WombatAtSpot => Vector2.Distance(Area.Wombat.Mover.Position, WorkerSpot) <= k_AtSpot;
+
         // 줄 머리가 머리 자리에 선 뒤에만 계산이 흐른다. 웜뱃이 계산대 자리를 비우면 멈춘다
         public override void Tick(double dt)
         {
             if (!HeadWaiting || !m_serveAuto || !Area.IsInRange(this))
             {
+                return;
+            }
+
+            if (!WombatAtSpot)
+            {
+                Wombat wombat = Area.Wombat;
+
+                if (Area.Target == this && !wombat.Guided && wombat.Input == Vector2.Zero)
+                {
+                    wombat.Guide(Bakery.Layout.WombatNav, WorkerSpot, Facing.Down);
+                }
+
                 return;
             }
 

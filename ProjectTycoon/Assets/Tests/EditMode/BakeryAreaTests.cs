@@ -687,6 +687,57 @@ namespace ZooTycoon.Tests
             Assert.That(paid - back, Is.LessThanOrEqualTo(m_config.CheckoutSeconds + k_Tolerance));
         }
 
+        // 설계 19 검증 1: range 안이지만 자리에 붙지 않은 웜뱃은 계산이 흐르지 않고, 조이스틱을 놓으면 시스템이 자리까지 걷게 한 뒤 계산한다
+        [Test]
+        public void Checkout_WombatOffSpot_WalksToSpotThenServes()
+        {
+            BakeryArea shop = Create(c => m_arrivalSeconds = 1000d);
+            Stock(shop, "b01", 6);
+            BakeryVisitor customer = null;
+            m_bus.Subscribe<Events.BakeryVisitorArrived>(e => customer = e.Visitor);
+            RunUntil(shop, () => customer != null && customer.Phase == VisitorPhase.Queued);
+
+            Vector2 home = shop.Layout.WombatHome;
+            Vector2 aside = home + new Vector2(0.7f, 0f);
+            Steer(shop, aside);
+            double coins = m_state.Coins;
+            shop.Wombat.SetInput(new Vector2(0f, 0.001f));
+            Run(shop, m_config.CheckoutSeconds + 0.1d);
+            Assert.That(shop.IsInRange(shop.Counter), Is.True);
+            Assert.That(shop.Wombat.Guided, Is.False, "조이스틱을 쥐고 있으면 붙이지 않는다");
+            Assert.That(m_state.Coins, Is.EqualTo(coins), "자리에 없으면 계산이 흐르지 않는다");
+
+            shop.Wombat.SetInput(Vector2.Zero);
+            double released = m_time;
+            RunUntil(shop, () => shop.Wombat.Guided, 1d);
+            double paid = RunUntil(shop, () => m_state.Coins > coins);
+            Assert.That(Vector2.Distance(shop.Wombat.Mover.Position, home), Is.LessThan(0.01f));
+            Assert.That(shop.Wombat.Mover.Facing, Is.EqualTo(Facing.Down));
+            Assert.That(shop.Wombat.Guided, Is.False);
+            Assert.That(paid - released, Is.GreaterThanOrEqualTo(m_config.CheckoutSeconds + 0.7d / Config(ConfigTable.k_WombatSpeed) - k_Tolerance));
+        }
+
+        // 설계 19 검증 2: 시스템 이동 중 조이스틱을 밀면 그 자리에서 그만두고 조이스틱대로 걷는다
+        [Test]
+        public void Guide_CancelledByJoystick()
+        {
+            BakeryArea shop = Create(c => m_arrivalSeconds = 1000d);
+            Vector2 home = shop.Layout.WombatHome;
+            Vector2 aside = home + new Vector2(0.8f, 0f);
+            Steer(shop, aside);
+            shop.Wombat.SetInput(Vector2.Zero);
+            shop.Wombat.Guide(shop.Layout.WombatNav, home, Facing.Down);
+            Run(shop, 0.1d);
+            Assert.That(shop.Wombat.Guided, Is.True);
+            Vector2 midway = shop.Wombat.Mover.Position;
+            Assert.That(midway.X, Is.LessThan(aside.X));
+
+            shop.Wombat.SetInput(new Vector2(1f, 0f));
+            Run(shop, 0.1d);
+            Assert.That(shop.Wombat.Guided, Is.False);
+            Assert.That(shop.Wombat.Mover.Position.X, Is.GreaterThan(midway.X));
+        }
+
         // 설계 09 v0.4 검증 1: 진열대 앞에 서 있는 동안 손님이 집어 자리가 나면 든 빵으로 또 채운다
         [Test]
         public void Fill_WhileStanding_RefillsWhenCustomerPicks()
