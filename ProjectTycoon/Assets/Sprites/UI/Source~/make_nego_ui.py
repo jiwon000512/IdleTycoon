@@ -10,17 +10,16 @@ from PIL import Image
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 OUT = '../'
 slices = json.load(open(f'{OUT}ui_slices.json', encoding='utf-8'))
-src = np.asarray(Image.open('raw/nego_c_clean.png').convert('RGB')).astype(int)
-H, W = src.shape[:2]
+P = 4.454   # 시안 D1과 같은 격자(Codex가 D1 참조 크기 941×1672 그대로 그렸다). FFT(period)는 5.0을 잡아 결이 뭉개진다
 
 
-def edges(axis):
+def edges(src, axis):
     d = np.abs(np.diff(src, axis=axis)).sum(2)
     return (d > 40).sum(axis=1 - axis).astype(float)
 
 
-def period(axis):   # 참고용: 새 시안의 격자를 잴 때
-    e = edges(axis)
+def period(src, axis):   # 참고용: 새 시안의 격자를 잴 때
+    e = edges(src, axis)
     e -= e.mean()
     f = np.abs(np.fft.rfft(e))
     fr = np.fft.rfftfreq(len(e))
@@ -28,8 +27,8 @@ def period(axis):   # 참고용: 새 시안의 격자를 잴 때
     return 1 / fr[m][np.argmax(f[m])]
 
 
-def phase(axis, p):
-    e = edges(axis)
+def phase(src, axis, p):
+    e = edges(src, axis)
     best = None
     for off in np.arange(0, p, 0.1):
         score = sum(e[i] for i in (int(round(x)) for x in np.arange(off, len(e), p)) if i < len(e))
@@ -38,26 +37,35 @@ def phase(axis, p):
     return best[1]
 
 
-p = 4.454   # 시안 D1과 같은 격자(Codex가 D1 참조 크기 941×1672 그대로 그렸다). FFT는 5.0을 잡아 무대 결이 뭉개진다
-ox, oy = phase(1, p), phase(0, p)
-xs = np.arange(ox + 1, W, p)
-ys = np.arange(oy + 1, H, p)
-m = np.zeros((len(ys), len(xs), 3), int)
-for j, y in enumerate(ys):
-    y0, y1 = int(round(y)), int(round(y + p))
-    for i, x in enumerate(xs):
-        x0, x1 = int(round(x)), int(round(x + p))
-        cell = src[y0 + 1:max(y0 + 2, y1 - 1), x0 + 1:max(x0 + 2, x1 - 1)].reshape(-1, 3)
-        m[j, i] = np.median(cell, axis=0)
-print('grid %.3f cells %dx%d' % (p, m.shape[1], m.shape[0]))
+class Grid:
+    # 시안 한 장을 칸(중앙값 색)으로 줄인다. box(px) → 칸 RGBA
+    def __init__(self, path, p=P):
+        src = np.asarray(Image.open(path).convert('RGB')).astype(int)
+        H, W = src.shape[:2]
+        self.p = p
+        self.ox, self.oy = phase(src, 1, p), phase(src, 0, p)
+        xs = np.arange(self.ox + 1, W, p)
+        ys = np.arange(self.oy + 1, H, p)
+        self.m = np.zeros((len(ys), len(xs), 3), int)
+        for j, y in enumerate(ys):
+            y0, y1 = int(round(y)), int(round(y + p))
+            for i, x in enumerate(xs):
+                x0, x1 = int(round(x)), int(round(x + p))
+                cell = src[y0 + 1:max(y0 + 2, y1 - 1), x0 + 1:max(x0 + 2, x1 - 1)].reshape(-1, 3)
+                self.m[j, i] = np.median(cell, axis=0)
+        print('%s grid %.3f cells %dx%d' % (path, p, self.m.shape[1], self.m.shape[0]))
+
+    def crop(self, px0, py0, px1, py1):
+        x0, y0 = int((px0 - self.ox - 1) // self.p), int((py0 - self.oy - 1) // self.p)
+        x1, y1 = int((px1 - self.ox - 1) // self.p) + 1, int((py1 - self.oy - 1) // self.p) + 1
+        a = np.zeros((y1 - y0, x1 - x0, 4), np.uint8)
+        a[..., :3] = self.m[y0:y1, x0:x1]
+        a[..., 3] = 255
+        return a
 
 
-def cell_x(px):
-    return int((px - ox - 1) // p)
-
-
-def cell_y(py):
-    return int((py - oy - 1) // p)
+clean = Grid('raw/nego_c_clean.png')   # 웜뱃·말풍선을 지운 판(무대)
+mock = Grid('raw/nego_c.png')          # 시안 원본(리본)
 
 
 def quantize(a, th=28):
@@ -130,10 +138,7 @@ def trim_band(a):
     while band(a[:, -1]): a = a[:, :-1]
     return a
 # 빵집 무대: 시안 틀(진갈색 선 + 크림 띠, 픽셀 x 73..867 · y 355..920)은 버리고 안쪽 장면(x 82..858 · y 364..916)만 잘라 공통 외곽선을 두른다
-x0, y0, x1, y1 = cell_x(82), cell_y(364), cell_x(858) + 1, cell_y(916) + 1
-inner = np.zeros((y1 - y0, x1 - x0, 4), np.uint8)
-inner[..., :3] = m[y0:y1, x0:x1]
-inner[..., 3] = 255
+inner = clean.crop(82, 364, 858, 916)
 inner = trim_band(inner)
 save('nego_scene', framed(inner), clear=False)
 
@@ -177,6 +182,35 @@ save_raw('nego_bubble_tail', pattern([
     '#o#....',
     '##.....',
 ]))
+
+def clear_bg(a):
+    # 가장자리에서 이어진 옅은 무채색 칸(시안 크림 바탕과 그 번짐)을 투명으로 → 빈 줄·열을 깎는다
+    rgb = a[..., :3].astype(int)
+    bg = (rgb.max(2) - rgb.min(2) < 45) & (rgb.sum(2) > 450)
+    h, w = bg.shape
+    seen = np.zeros_like(bg)
+    q = [(y, x) for y in range(h) for x in (0, w - 1)] + [(y, x) for x in range(w) for y in (0, h - 1)]
+    while q:
+        y, x = q.pop()
+        if 0 <= y < h and 0 <= x < w and bg[y, x] and not seen[y, x]:
+            seen[y, x] = True
+            q += [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)]
+    a = a.copy()
+    a[seen] = 0
+    ys, xs = np.nonzero(a[..., 3])
+    return a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+
+
+ribbon = clear_bg(mock.crop(256, 958, 700, 1042))
+# 리본 안내문(시안 C 그림 그대로, 글자만 지움): 띠 안쪽(2~13줄 · 5~91열)을 글자 없는 띠 칸의 중앙값 한 색으로. 양 끝 접힌 부분 5칸·위 2줄·아래 3줄은 늘어나지 않는다
+band = ribbon[2:14, 5:92, :3].reshape(-1, 3).astype(int)
+ribbon[2:14, 5:92, :3] = np.median(band[band.sum(1) > 400], axis=0)
+if __name__ == '__main__' and os.environ.get('DUMP'):
+    for y in range(ribbon.shape[0]):
+        print('%2d ' % y + ''.join('.' if ribbon[y, x, 3] == 0 else ('#' if ribbon[y, x, :3].astype(int).sum() < 250 else ('t' if ribbon[y, x, :3].astype(int).sum() < 400 else 'o')) for x in range(ribbon.shape[1])))
+    raise SystemExit
+
+save_raw('nego_ribbon', quantize(ribbon), border=(5, 3, 5, 2))
 
 # 타이밍 바(시안 C 나무 자): 색은 시안에서 뽑았다. h 밝은 줄 · p 판 · s 그늘 · n 못 · d 화살표 · l 화살표 밝은 면
 WOOD = {'#': OUTLINE, 'h': (193, 133, 90), 'p': (172, 120, 82), 's': (101, 64, 47), 'n': (49, 32, 30),

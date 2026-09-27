@@ -75,6 +75,9 @@ namespace ZooTycoon.UI
         [Tooltip("바 구간 5개(빨강·흰·초록·흰·빨강). 폭은 SetZones가 정한다")]
         [SerializeField] private RectTransform[] m_zones;
         [SerializeField] private Button m_tapArea;
+        [Tooltip("탭 버튼(「지금!」): 화면 탭과 같다")]
+        [SerializeField] private Button m_nowButton;
+        [SerializeField] private TextMeshProUGUI m_nowLabel;
         [Tooltip("해고 토스트")]
         [SerializeField] private GameObject m_toast;
         [SerializeField] private TextMeshProUGUI m_toastText;
@@ -106,6 +109,7 @@ namespace ZooTycoon.UI
             m_askNegotiate.onClick.AddListener(() => AskNegotiateClicked?.Invoke());
             m_askCancel.onClick.AddListener(() => AskCancelClicked?.Invoke());
             m_tapArea.onClick.AddListener(() => Tapped?.Invoke());
+            m_nowButton.onClick.AddListener(() => Tapped?.Invoke());
             m_rowTemplate.gameObject.SetActive(false);
             m_candidateRowTemplate.gameObject.SetActive(false);
             m_root.SetActive(false);
@@ -203,13 +207,14 @@ namespace ZooTycoon.UI
         }
 
         // 협상 상태. candidatePath = 후보 옆모습 시트(첫 칸을 좌우 뒤집어 왼쪽을 본다)
-        public void ShowNegotiation(string title, string hint, string candidatePath, string left, string right)
+        public void ShowNegotiation(string title, string hint, string now, string candidatePath, string left, string right)
         {
             m_title.text = title;
             m_list.SetActive(false);
             m_ask.SetActive(false);
             m_nego.SetActive(true);
             m_negoHint.text = hint;
+            m_nowLabel.text = now;
             m_negoCandidate.sprite = Load(candidatePath);
             NativeSize(m_negoWombat);
             NativeSize(m_negoCandidate);

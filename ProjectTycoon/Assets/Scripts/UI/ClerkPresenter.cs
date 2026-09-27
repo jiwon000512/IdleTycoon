@@ -342,7 +342,7 @@ namespace ZooTycoon.UI
             m_asking = false;
             m_negotiation = m_bakery.Negotiate(m_candidate, m_slot);
             m_resultTimer = k_ResultSeconds;
-            m_view.ShowNegotiation(m_tables.Text("clerk_nego_title"), m_tables.Text("clerk_nego_hint"),
+            m_view.ShowNegotiation(m_tables.Text("clerk_nego_title"), m_tables.Text("clerk_nego_hint"), m_tables.Text("clerk_nego_now"),
                 m_candidate.Look.SideIdleSheet ?? m_candidate.Look.Sprite,
                 m_tables.Format("clerk_nego_offer", Wage(m_negotiation.BaseWage)), m_tables.Text("clerk_nego_think"));
         }
@@ -355,7 +355,13 @@ namespace ZooTycoon.UI
 
         private void View_Tapped()
         {
-            m_negotiation?.Stop();
+            if (m_negotiation == null || m_negotiation.Done)
+            {
+                return;
+            }
+
+            m_negotiation.Stop();
+            ShowResult();
         }
 
         // 표시를 움직이고, 결과가 나오면 후보 말풍선을 바꾼 뒤 잠시 보여 주고 고용한다
@@ -377,8 +383,7 @@ namespace ZooTycoon.UI
 
             if (!wasDone)
             {
-                string key = m_negotiation.Outcome == NegotiationOutcome.Keep ? "clerk_nego_keep" : m_negotiation.Outcome == NegotiationOutcome.Down ? "clerk_nego_down" : "clerk_nego_up";
-                m_view.SetBubbles(m_tables.Format("clerk_nego_offer", Wage(m_negotiation.BaseWage)), m_tables.Format(key, Wage(m_negotiation.Wage)));
+                ShowResult();
             }
 
             m_resultTimer -= dt;
@@ -387,6 +392,13 @@ namespace ZooTycoon.UI
             {
                 Hire(m_negotiation.Wage);
             }
+        }
+
+        // 결과가 나온 순간(탭 또는 시간 초과) 후보 말풍선을 결과로 바꾼다
+        private void ShowResult()
+        {
+            string key = m_negotiation.Outcome == NegotiationOutcome.Keep ? "clerk_nego_keep" : m_negotiation.Outcome == NegotiationOutcome.Down ? "clerk_nego_down" : "clerk_nego_up";
+            m_view.SetBubbles(m_tables.Format("clerk_nego_offer", Wage(m_negotiation.BaseWage)), m_tables.Format(key, Wage(m_negotiation.Wage)));
         }
 
         private void Bus_ClerkFired(Events.ClerkFired e)
