@@ -4,7 +4,7 @@
 # 사용: make_ui.py (이 폴더에서). 슬라이스 임포트는 에디터 메뉴 ZooTycoon/Bake/Import UI Sprites
 import os, json
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 from collections import deque
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -76,7 +76,7 @@ for (x0, y0, x1, y1), n in zip(components(btn), names):
     elif n == 'btn_close':
         save(n, part)
     elif n == 'pill_topbar':
-        continue                                    # 상단 HUD 시안 C(2026-09-23)부터 pill_hud를 쓴다
+        continue                                    # 상단 HUD는 공용 알약 pill(make_pill.py)을 쓴다
     else:
         save(n, part, border=(6, 5, 6, 5))
 
@@ -90,37 +90,8 @@ for (x0, y0, x1, y1), n in zip(components(ic, 10), [None, 'icon_lock', None, Non
 # ---------- 시트 B 부품 ----------
 row = trim(snap(load('part_row_px')))              # 96×18: 행 배경. 높이 24로 9-slice
 save('row', row, border=(6, 5, 6, 5))
-pill = trim(snap(load('part_pill_px')))            # 30×12: 비용 pill(코인 왼쪽 고정)
-save('pill_cost', pill, border=(13, 3, 3, 3))
-
-# 상단 HUD 코인 캡슐(2026-09-23, 시안 C): 흰 둥근 사각 16×16, 모서리 반지름 4. 색·알파는 Image.color(진갈색 140/255)
-cap = Image.new('RGBA', (16, 16))
-ImageDraw.Draw(cap).rounded_rectangle((0, 0, 15, 15), radius=4, fill=(255, 255, 255, 255))
-save('pill_hud', np.array(cap), border=(5, 5, 5, 5))
-
 # 딤(시트 뒤)·단색 사각(상단 바 배경)은 흰 1×1: 색은 Image.color
 save('white', np.full((4, 4, 4), 255, np.uint8))
-
-GOLD, ORANGE, CREAM = (0xF2, 0xC1, 0x4E), (0xD8, 0x78, 0x48), (0xF0, 0xE4, 0xD8)
-
-# 비용 칸 코인은 원본에 외곽선이 없어 9×9칸으로 새로 그린다(발가락 셋 + 패드, 오른쪽 아래 그늘). 자리는 크림으로 먼저 지운다
-COIN_S = ['...###...',
-          '.##hyy##.',
-          '.#oyoyo#.',
-          '#yyyyyyy#',
-          '#yyoooyy#',
-          '#yyoooyr#',
-          '.#yyyyr#.',
-          '.##rrr##.',
-          '...###...']
-COL = {'#': (0x34, 0x20, 0x20), 'y': GOLD, 'o': ORANGE, 'h': CREAM, 'r': (0xB8, 0x5E, 0x38)}
-a = np.array(Image.open(f'{OUT}pill_cost.png').convert('RGBA'))
-a[2:11, 2:11] = CREAM + (255,)
-for dy, row in enumerate(COIN_S):
-    for dx, ch in enumerate(row):
-        if ch in COL:
-            a[2 + dy, 2 + dx] = COL[ch] + (255,)
-Image.fromarray(a).save(f'{OUT}pill_cost.png')
 
 json.dump(slices, open(f'{OUT}ui_slices.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('ui_slices.json', len(slices))
