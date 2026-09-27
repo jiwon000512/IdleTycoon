@@ -152,12 +152,8 @@ def erase(a, box, sample):
 # ---------- 부품(칸 좌표는 시안 D1 211×375 기준) ----------
 # 패널 틀 192×282(x 9..201, y 43..325): 주황 띠 + 진갈색 선, 안은 크림
 save('clerk_panel', nine(m, (9, 43, 201, 325), (6, 6, 6, 6), (105, 230)), border=(6, 6, 6, 6), clear=False)
-# 닫기 17×17(X 그림 포함)
-save('clerk_close', crop(m, (176, 51, 193, 68)))
 # 가게 탭 51×16: 글자 없는 열(x 25)·줄(y 78)에서 변을 뽑는다
 save('clerk_tab', nine(m, (16, 71, 67, 87), (7, 4, 7, 4), (25, 78)), border=(7, 4, 7, 4))
-# 명찰 카드 178×49
-save('clerk_card', nine(m, (16, 90, 194, 139), (5, 4, 5, 4), (100, 95)), border=(5, 4, 5, 4))
 # 초상 틀 32×29(안은 웜뱃 정지 그림을 얹는다): 웜뱃 왼쪽 열(x 24)·위 줄(y 98)에서 변을 뽑는다
 frame = nine(m, (21, 95, 53, 124), (5, 5, 5, 5), (24, 98))
 frame[-5:] = frame[:5][::-1]   # 시안은 아래 변이 배지에 가려 열려 있다: 배지 없는 후보 줄에서도 닫힌 틀이 되게 위 변을 뒤집어 붙인다
@@ -193,15 +189,6 @@ save('clerk_table', table, clear=False)
 # 게이지 틀 30×7: 왼쪽 끝은 채움에 가려 있어 오른쪽 끝을 뒤집어 쓴다. 채움 19×5는 위 밝은 줄·아래 어두운 줄 포함
 save('clerk_gauge', nine(m, (63, 126, 93, 133), (3, 3, 3, 3), (88, 129), mirror_left=True), border=(3, 3, 3, 3))
 save('clerk_gauge_fill', nine(m, (64, 127, 83, 132), (2, 1, 0, 1), (75, 129)), border=(2, 1, 0, 1))
-# 버튼 36×17 + 눌림(위 밝은 줄 없음) + 비활성(회색)
-btn = nine(m, (153, 100, 189, 117), (5, 5, 5, 5), (171, 108))
-save('clerk_btn', btn, border=(5, 5, 5, 5))
-pressed = btn.copy(); pressed[1, 1:-1] = pressed[2, 1:-1]
-save('clerk_btn_pressed', pressed, border=(5, 5, 5, 5))
-disabled = btn.copy()
-g = (disabled[..., :3] * [0.3, 0.59, 0.11]).sum(2, keepdims=True)
-disabled[..., :3] = np.clip(g * 0.85 + 30, 0, 255)
-save('clerk_btn_disabled', disabled, border=(5, 5, 5, 5))
 
 json.dump(slices, open(f'{OUT}ui_slices.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('ui_slices.json', len(slices))

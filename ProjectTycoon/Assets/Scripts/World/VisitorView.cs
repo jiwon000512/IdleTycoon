@@ -84,7 +84,7 @@ namespace ZooTycoon.World
             m_carryOnHead = look.CarryAt == CarryAt.Head;
             m_handRatio = (float)look.HandRatio;
             m_bubble.transform.localPosition = HeadOffset;
-            m_say.transform.localPosition = HeadOffset;
+            m_say.transform.localPosition = HeadOffset + Vector3.up * Bubbles.SayLift;
             m_bubble.enabled = false;
             m_carry.enabled = false;
             m_say.enabled = false;

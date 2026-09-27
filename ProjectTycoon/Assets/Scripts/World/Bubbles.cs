@@ -7,8 +7,9 @@ namespace ZooTycoon.World
     // 설계 22: 머리 위 말풍선 그리기(손님·점원·웜뱃 공용). 이모지는 Core BubbleState(BubbleTable 칸 번호·프레임·경과)를 읽고, 글자는 9-slice 상자를 글 폭에 맞춘다
     public static class Bubbles
     {
-        // 상자 높이(꼬리 포함, 유닛)와 글자 폭 최소
-        private const float k_SayHeight = 0.6f;
+        // 글자 상자 높이(꼬리 빼고, 유닛)와 글자 폭 최소. 상자는 꼬리(bubble_tail 6칸 - 겹침 1칸)만큼 머리 위로 뜬다
+        public const float SayLift = 0.125f;
+        private const float k_SayHeight = 0.4f;
         private const float k_SayMinWidth = 0.8f;
 
         public static void Show(SpriteRenderer renderer, Sprite[] frames, BubbleState state, bool visible)

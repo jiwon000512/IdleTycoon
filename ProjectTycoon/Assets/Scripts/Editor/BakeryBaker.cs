@@ -90,8 +90,7 @@ namespace ZooTycoon.Editor
                 Import(k_SpriteDir + name + ".png", bottom);
             }
 
-            // 설계 22: 글자 말풍선 상자(9-slice, 꼬리 아래 가운데 = 피벗)와 이모지 말풍선 시트(9칸 52px, BubbleTable 칸 번호)
-            Import(k_SpriteDir + "bubble.png", bottom, k_Ppu, false, new Vector4(8f, 16f, 8f, 8f));
+            // 설계 22: 이모지 말풍선 시트(9칸 52px, BubbleTable 칸 번호). 글자 말풍선(bubble·bubble_tail)은 UI 공용 조각의 복사본이라 Import UI Sprites가 임포트한다
             VisitorSheetImporter.Import(k_SpriteDir + "wait_sheet.png", true, 52);
             VisitorSheetImporter.Import(k_SpriteDir + "bubble_sheet.png", true, 52);
 
@@ -398,10 +397,11 @@ namespace ZooTycoon.Editor
         {
             Sprite[] frames = LoadFrames("bubble_sheet");
             SpriteRenderer bubble = Renderer(parent, "Bubble", frames[0], new Vector3(0f, height, 0f), 50);
-            SpriteRenderer say = Renderer(parent, "Say", Load("bubble"), new Vector3(0f, height, 0f), 53);
+            SpriteRenderer say = Renderer(parent, "Say", Load("bubble"), new Vector3(0f, height + Bubbles.SayLift, 0f), 53);
             say.drawMode = SpriteDrawMode.Sliced;
-            say.size = new Vector2(0.8f, 0.6f);
-            TextMeshPro sayText = WorldText(say.transform, "Text", new Vector3(0f, 0.4f, 0f), 54);
+            say.size = new Vector2(0.8f, 0.4f);
+            Renderer(say.transform, "Tail", Load("bubble_tail"), new Vector3(0f, 0.025f, 0f), 54);
+            TextMeshPro sayText = WorldText(say.transform, "Text", new Vector3(0f, 0.2f, 0f), 55);
             sayText.fontSize = 2.5f;
             sayText.rectTransform.sizeDelta = new Vector2(3f, 0.4f);
             Set(view, "m_bubble", bubble);

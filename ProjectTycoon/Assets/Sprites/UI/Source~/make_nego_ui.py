@@ -164,7 +164,7 @@ def save_raw(name, a, border=None):
 
 
 # 몸통 9-slice: 모서리 둥글기 2칸, 경계 3칸
-save_raw('nego_bubble', pattern([
+save_raw('bubble', pattern([
     '..###..',
     '.#ooo#.',
     '#ooooo#',
@@ -174,7 +174,7 @@ save_raw('nego_bubble', pattern([
     '..###..',
 ]), border=(3, 3, 3, 3))
 # 꼬리: 첫 줄이 몸통 아래 선 위에 겹쳐 선을 끊는다. 왼쪽 변은 곧고 오른쪽이 비스듬(시안 C 왼쪽 말풍선). 오른쪽 말풍선은 좌우 뒤집어 쓴다
-save_raw('nego_bubble_tail', pattern([
+save_raw('bubble_tail', pattern([
     '#ooooo#',
     '#oooo#.',
     '#ooo#..',
