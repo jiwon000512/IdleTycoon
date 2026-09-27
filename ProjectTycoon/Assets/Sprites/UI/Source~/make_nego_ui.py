@@ -137,5 +137,45 @@ inner[..., 3] = 255
 inner = trim_band(inner)
 save('nego_scene', framed(inner), clear=False)
 
+# 말풍선(시안 C 꼬리 달린 말풍선을 칸 무늬로 다시 그림: 시안 칸은 잡티가 많다). # = 외곽선, o = 크림(시안 243,235,225), . = 투명
+CREAM = (243, 235, 225)
+
+
+def pattern(rows):
+    a = np.zeros((len(rows), len(rows[0]), 4), np.uint8)
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch != '.':
+                a[y, x, :3] = OUTLINE if ch == '#' else CREAM
+                a[y, x, 3] = 255
+    return a
+
+
+def save_raw(name, a, border=None):
+    Image.fromarray(a).save(f'{OUT}{name}.png')
+    slices[name] = {'w': int(a.shape[1]), 'h': int(a.shape[0]), 'border': list(border) if border else None, 'ppu': 20}
+    print(f'{name:24s} {a.shape[1]:3d} x {a.shape[0]:3d}  border={border}')
+
+
+# 몸통 9-slice: 모서리 둥글기 2칸, 경계 3칸
+save_raw('nego_bubble', pattern([
+    '..###..',
+    '.#ooo#.',
+    '#ooooo#',
+    '#ooooo#',
+    '#ooooo#',
+    '.#ooo#.',
+    '..###..',
+]), border=(3, 3, 3, 3))
+# 꼬리: 첫 줄이 몸통 아래 선 위에 겹쳐 선을 끊는다. 왼쪽 변은 곧고 오른쪽이 비스듬(시안 C 왼쪽 말풍선). 오른쪽 말풍선은 좌우 뒤집어 쓴다
+save_raw('nego_bubble_tail', pattern([
+    '#ooooo#',
+    '#oooo#.',
+    '#ooo#..',
+    '#oo#...',
+    '#o#....',
+    '##.....',
+]))
+
 json.dump(slices, open(f'{OUT}ui_slices.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('ui_slices.json', len(slices))

@@ -355,5 +355,22 @@
   "h": 125,
   "border": null,
   "ppu": 20
+ },
+ "nego_bubble": {
+  "w": 7,
+  "h": 7,
+  "border": [
+   3,
+   3,
+   3,
+   3
+  ],
+  "ppu": 20
+ },
+ "nego_bubble_tail": {
+  "w": 7,
+  "h": 6,
+  "border": null,
+  "ppu": 20
  }
 }
