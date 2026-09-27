@@ -81,6 +81,7 @@ namespace ZooTycoon.UI
         [Tooltip("해고 토스트")]
         [SerializeField] private GameObject m_toast;
         [SerializeField] private TextMeshProUGUI m_toastText;
+        [SerializeField] private TextMeshProUGUI m_toastReason;
 
         private readonly List<ClerkRowView> m_rowViews = new List<ClerkRowView>();
         private readonly List<ClerkRowView> m_candidateViews = new List<ClerkRowView>();
@@ -256,9 +257,11 @@ namespace ZooTycoon.UI
             }
         }
 
-        public void ShowToast(string text)
+        // 두 줄: 무슨 일(「진흙 그만둠」) · 까닭(「월급을 못 냈다」). 한 글에 정보 하나
+        public void ShowToast(string text, string reason)
         {
             m_toastText.text = text;
+            m_toastReason.text = reason;
             StopAllCoroutines();
             StartCoroutine(ToastRoutine());
         }

@@ -135,7 +135,8 @@ namespace ZooTycoon.UI
                 {
                     SpritePath = bread.Sprite,
                     Label = m_tables.Format("chip_bread", bread.Name),
-                    Sub = m_tables.Format("chip_unlock_sub", BigNumberFormatter.Format(option.Cost)),
+                    Sub = m_tables.Text("chip_unlock"),
+                    SubRight = BigNumberFormatter.Format(option.Cost),
                     Enabled = enabled,
                 };
             }
@@ -146,7 +147,8 @@ namespace ZooTycoon.UI
             {
                 SpritePath = bread.Sprite,
                 Label = m_tables.Format("chip_bread", bread.Name),
-                Sub = m_tables.Format("chip_bread_sub", stock, bread.BakeSeconds),
+                Sub = m_tables.Format("chip_bread_stock", stock),
+                SubRight = m_tables.Format("chip_bread_seconds", bread.BakeSeconds),
                 Highlighted = enabled && stock == 0,
                 Enabled = enabled,
             };

@@ -410,7 +410,7 @@ namespace ZooTycoon.UI
 
             if (e.Reason == FireReason.Unpaid)
             {
-                m_view.ShowToast(m_tables.Format("clerk_fired_toast", e.Clerk.Name));
+                m_view.ShowToast(m_tables.Format("clerk_fired_toast", e.Clerk.Name), m_tables.Text("clerk_fired_reason"));
             }
 
             RefreshIfOpen();

@@ -20,7 +20,8 @@ namespace ZooTycoon.UI
     {
         public string SpritePath;
         public string Label;
-        public string Sub;
+        public string Sub;        // 아래 줄 왼쪽(재고 「×5」, 해금 칩은 「해금」)
+        public string SubRight;   // 아래 줄 오른쪽(굽는 시간 「8초」, 해금 칩은 값). 한 글에 정보 하나
         public bool Highlighted;
         public bool Enabled = true;
     }
@@ -106,6 +107,7 @@ namespace ZooTycoon.UI
 
                 button.transform.Find("Label").GetComponent<TMP_Text>().text = chip.Label;
                 button.transform.Find("Sub").GetComponent<TMP_Text>().text = chip.Sub;
+                button.transform.Find("SubRight").GetComponent<TMP_Text>().text = chip.SubRight;
                 CanvasGroup group = button.GetComponent<CanvasGroup>();
                 group.alpha = chip.Enabled ? 1f : 0.5f;
             }
