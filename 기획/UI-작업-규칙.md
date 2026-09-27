@@ -24,7 +24,7 @@
 | 말풍선 | `bubble` + `bubble_tail` | 9-slice 몸통 + 꼬리(웜뱃 쪽으로 옮기고, 오른쪽은 좌우 뒤집기) |
 | 코인 | `World/coin` | UI·월드 공용 |
 | 주 버튼 | `btn_primary` (+ `_pressed`, `_disabled`) | 버튼 이미지와 Button 상태 스프라이트 세 장을 같이 쓴다 |
-| 팝업 틀 | 예정(Codex) | 지금 `sheet_frame`·`clerk_panel` 두 벌 → 하나로 |
+| 팝업 틀 | `panel` | 9-slice 경계 8칸(1칸 4px). 원본 `Source~/make_panel.py`(Codex 시안 A) |
 | 탭·선택 칩 | 예정(Codex) | `clerk_tab`·`chip_hi`·`chip` 대체 |
 | 알약 | 예정(Codex) | `clerk_slot`·`pill_cost`·`pill_hud` 대체. 코인·아이콘은 따로 얹는다 |
 | 보조 버튼 | `btn_secondary` | |
