@@ -302,7 +302,7 @@ namespace ZooTycoon.Editor
 
             // 상태 배지: 흰 채움(색은 ClerkRowView가 상태색으로) 위에 진갈색 선
             RectTransform badge = Panel(row, "Badge", Sprite("clerk_badge_fill"), Color.white);
-            TopLeft(badge, 4 * k_Cell, 33 * k_Cell, 36 * k_Cell, 12 * k_Cell);
+            TopLeft(badge, 3 * k_Cell, 33 * k_Cell, 36 * k_Cell, 12 * k_Cell);   // 초상 틀(5~37)과 가운데 21칸을 맞춘다
             badge.GetComponent<Image>().raycastTarget = false;
             RectTransform badgeLine = Panel(badge, "Line", Sprite("clerk_badge_line"), Color.white);
             Stretch(badgeLine, Vector4.zero);
