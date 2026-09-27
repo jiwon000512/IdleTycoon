@@ -193,8 +193,6 @@ save('clerk_table', table, clear=False)
 # 게이지 틀 30×7: 왼쪽 끝은 채움에 가려 있어 오른쪽 끝을 뒤집어 쓴다. 채움 19×5는 위 밝은 줄·아래 어두운 줄 포함
 save('clerk_gauge', nine(m, (63, 126, 93, 133), (3, 3, 3, 3), (88, 129), mirror_left=True), border=(3, 3, 3, 3))
 save('clerk_gauge_fill', nine(m, (64, 127, 83, 132), (2, 1, 0, 1), (75, 129)), border=(2, 1, 0, 1))
-# 코인 7×7
-save('clerk_coin', crop(m, (115, 126, 122, 133)))
 # 버튼 36×17 + 눌림(위 밝은 줄 없음) + 비활성(회색)
 btn = nine(m, (153, 100, 189, 117), (5, 5, 5, 5), (171, 108))
 save('clerk_btn', btn, border=(5, 5, 5, 5))

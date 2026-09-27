@@ -311,12 +311,6 @@
   ],
   "ppu": 20
  },
- "clerk_coin": {
-  "w": 7,
-  "h": 7,
-  "border": null,
-  "ppu": 20
- },
  "clerk_btn": {
   "w": 11,
   "h": 11,
