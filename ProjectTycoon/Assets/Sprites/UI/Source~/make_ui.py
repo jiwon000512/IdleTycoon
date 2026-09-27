@@ -88,10 +88,6 @@ for (x0, y0, x1, y1), n in zip(components(ic, 10), [None, 'icon_lock', None, Non
         save(n, trim(ic[y0:y1, x0:x1]))
 
 # ---------- 시트 B 부품 ----------
-chip = trim(snap(load('part_chip_px')))            # 44×55 → 44×48: 가운데(아이콘 칸) 단색 줄을 줄인다
-save('chip', crop_rows(chip, 30, 14, 48), border=(6, 6, 6, 6))
-chip_hi = trim(snap(load('part_chip_hi_px')))      # 44×52 → 44×48
-save('chip_hi', crop_rows(chip_hi, 30, 14, 48), border=(6, 6, 6, 6))
 row = trim(snap(load('part_row_px')))              # 96×18: 행 배경. 높이 24로 9-slice
 save('row', row, border=(6, 5, 6, 5))
 pill = trim(snap(load('part_pill_px')))            # 30×12: 비용 pill(코인 왼쪽 고정)

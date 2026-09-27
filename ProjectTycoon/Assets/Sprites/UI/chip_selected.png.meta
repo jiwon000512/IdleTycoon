@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 9c84eda6e2c55a54b96119621894824a
+guid: d2c4e44a69629064a8afae5d794f2611
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7642939373962513176
-    second: clerk_tab_0
+      213: 5263462119092175484
+    second: chip_selected_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,8 +51,8 @@ TextureImporter:
   spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 20
-  spriteBorder: {x: 7, y: 4, z: 7, w: 4}
+  spritePixelsToUnits: 25
+  spriteBorder: {x: 6, y: 6, z: 6, w: 6}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: clerk_tab_0
+      name: chip_selected_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 15
-        height: 9
+        width: 30
+        height: 29
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 81bc1e8dddc211a60800000000000000
-      internalID: 7642939373962513176
+      spriteID: c72c63909e29b0940800000000000000
+      internalID: 5263462119092175484
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      clerk_tab_0: 7642939373962513176
+      chip_selected_0: 5263462119092175484
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

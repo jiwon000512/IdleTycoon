@@ -860,7 +860,7 @@ MonoBehaviour:
   m_chipRow: {fileID: 7673219126561622060}
   m_chipTemplate: {fileID: 8545709513674229517}
   m_chipSprite: {fileID: 21300000, guid: d2a36e560a7c98949adfc497ad875dcd, type: 3}
-  m_chipHighlightSprite: {fileID: 21300000, guid: ce045570588ebed42ab3f61d533ca443, type: 3}
+  m_chipHighlightSprite: {fileID: 21300000, guid: d2c4e44a69629064a8afae5d794f2611, type: 3}
   m_rowList: {fileID: 5887673733562820252}
   m_rowTemplate: {fileID: 6687468710004693134}
 --- !u!1 &6041293700404116514
