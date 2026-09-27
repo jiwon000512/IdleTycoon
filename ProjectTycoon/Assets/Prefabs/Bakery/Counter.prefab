@@ -1149,6 +1149,7 @@ MonoBehaviour:
   - {fileID: -639695686, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -994334760, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   m_say: {fileID: 7333302024843203671}
+  m_sayTail: {fileID: 3222311634107784188}
   m_sayText: {fileID: 3050412301587017209}
   m_sayPadding: 0.3
 --- !u!1 &7674414482667552499

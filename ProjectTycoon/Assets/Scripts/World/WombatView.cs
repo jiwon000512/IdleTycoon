@@ -38,6 +38,7 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_bubble;
         [SerializeField] private Sprite[] m_bubbleFrames;
         [SerializeField] private SpriteRenderer m_say;
+        [SerializeField] private SpriteRenderer m_sayTail;
         [SerializeField] private TextMeshPro m_sayText;
         [SerializeField] private float m_sayPadding = 0.3f;
 
@@ -62,8 +63,7 @@ namespace ZooTycoon.World
         private void Awake()
         {
             m_bubble.enabled = false;
-            m_say.enabled = false;
-            m_sayText.enabled = false;
+            Bubbles.HideSay(m_say, m_sayTail, m_sayText);
         }
 
         // 설계 22: 대화 글자 말풍선
@@ -79,10 +79,9 @@ namespace ZooTycoon.World
 
         private IEnumerator SayRoutine(string text, float seconds)
         {
-            Bubbles.ShowSay(m_say, m_sayText, text, m_sayPadding);
+            Bubbles.ShowSay(m_say, m_sayTail, m_sayText, text, m_sayPadding);
             yield return new WaitForSeconds(seconds);
-            m_say.enabled = false;
-            m_sayText.enabled = false;
+            Bubbles.HideSay(m_say, m_sayTail, m_sayText);
             m_saying = null;
         }
 

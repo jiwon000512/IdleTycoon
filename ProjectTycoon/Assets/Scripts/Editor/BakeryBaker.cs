@@ -400,13 +400,14 @@ namespace ZooTycoon.Editor
             SpriteRenderer say = Renderer(parent, "Say", Load("bubble"), new Vector3(0f, height + Bubbles.SayLift, 0f), 53);
             say.drawMode = SpriteDrawMode.Sliced;
             say.size = new Vector2(0.8f, 0.4f);
-            Renderer(say.transform, "Tail", Load("bubble_tail"), new Vector3(0f, 0.025f, 0f), 54);
+            SpriteRenderer sayTail = Renderer(say.transform, "Tail", Load("bubble_tail"), new Vector3(0f, 0.025f, 0f), 54);
             TextMeshPro sayText = WorldText(say.transform, "Text", new Vector3(0f, 0.2f, 0f), 55);
             sayText.fontSize = 2.5f;
             sayText.rectTransform.sizeDelta = new Vector2(3f, 0.4f);
             Set(view, "m_bubble", bubble);
             SetSprites(view, "m_bubbleFrames", frames);
             Set(view, "m_say", say);
+            Set(view, "m_sayTail", sayTail);
             Set(view, "m_sayText", sayText);
         }
 

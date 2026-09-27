@@ -25,6 +25,7 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_carry;
         [Tooltip("대화 글자 말풍선(9-slice 상자 + 글)")]
         [SerializeField] private SpriteRenderer m_say;
+        [SerializeField] private SpriteRenderer m_sayTail;
         [SerializeField] private TextMeshPro m_sayText;
         [SerializeField] private float m_sayPadding = 0.3f;
         [Tooltip("톡 뛸 때 솟는 높이(유닛)")]
@@ -87,8 +88,7 @@ namespace ZooTycoon.World
             m_say.transform.localPosition = HeadOffset + Vector3.up * Bubbles.SayLift;
             m_bubble.enabled = false;
             m_carry.enabled = false;
-            m_say.enabled = false;
-            m_sayText.enabled = false;
+            Bubbles.HideSay(m_say, m_sayTail, m_sayText);
             Update();
         }
 
@@ -105,10 +105,9 @@ namespace ZooTycoon.World
 
         private IEnumerator SayRoutine(string text, float seconds)
         {
-            Bubbles.ShowSay(m_say, m_sayText, text, m_sayPadding);
+            Bubbles.ShowSay(m_say, m_sayTail, m_sayText, text, m_sayPadding);
             yield return new WaitForSeconds(seconds);
-            m_say.enabled = false;
-            m_sayText.enabled = false;
+            Bubbles.HideSay(m_say, m_sayTail, m_sayText);
             m_saying = null;
         }
 

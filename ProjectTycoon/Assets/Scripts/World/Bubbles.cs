@@ -27,13 +27,22 @@ namespace ZooTycoon.World
             renderer.enabled = true;
         }
 
-        public static void ShowSay(SpriteRenderer box, TextMeshPro text, string say, float padding)
+        // 글자 말풍선: 몸통·꼬리·글자는 늘 함께 켜고 끈다(꼬리는 몸통의 자식 그림이라 몸통을 꺼도 따로 남는다)
+        public static void ShowSay(SpriteRenderer box, SpriteRenderer tail, TextMeshPro text, string say, float padding)
         {
             text.text = say;
             text.enabled = true;
             text.ForceMeshUpdate();
             box.size = new Vector2(Mathf.Max(k_SayMinWidth, text.preferredWidth + padding), k_SayHeight);
             box.enabled = true;
+            tail.enabled = true;
+        }
+
+        public static void HideSay(SpriteRenderer box, SpriteRenderer tail, TextMeshPro text)
+        {
+            box.enabled = false;
+            tail.enabled = false;
+            text.enabled = false;
         }
     }
 }
