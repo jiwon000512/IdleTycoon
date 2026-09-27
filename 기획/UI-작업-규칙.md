@@ -23,12 +23,14 @@
 | 카드·줄 | `row` | 목록 한 줄(점원 카드·사물 시트 줄) |
 | 말풍선 | `bubble` + `bubble_tail` | 9-slice 몸통 + 꼬리(웜뱃 쪽으로 옮기고, 오른쪽은 좌우 뒤집기) |
 | 코인 | `World/coin` | UI·월드 공용 |
-| 주 버튼 | 예정(Codex) | 지금 `btn_primary`·`clerk_btn` 두 벌 → 하나로 |
+| 주 버튼 | `btn_primary` (+ `_pressed`, `_disabled`) | 버튼 이미지와 Button 상태 스프라이트 세 장을 같이 쓴다 |
 | 팝업 틀 | 예정(Codex) | 지금 `sheet_frame`·`clerk_panel` 두 벌 → 하나로 |
 | 탭·선택 칩 | 예정(Codex) | `clerk_tab`·`chip_hi`·`chip` 대체 |
 | 알약 | 예정(Codex) | `clerk_slot`·`pill_cost`·`pill_hud` 대체. 코인·아이콘은 따로 얹는다 |
 | 보조 버튼 | `btn_secondary` | |
 | 행동 버튼(원형) | `btn_act` | |
+
+예외: 머리 위 이모지 말풍선 `World/Shop/bubble_sheet`(틀과 이모지가 한 칸)은 지금 그림을 그대로 쓴다(2026-09-27 사용자). 새로 만드는 조각에는 3번 원칙을 지킨다.
 
 화면 전용(공용 아님): 협상 `nego_scene`·`nego_bar`·`nego_bar_tick`·`nego_arrow`·`nego_ribbon`, 점원 `clerk_frame`·`clerk_frame_empty`·`clerk_badge_*`·`clerk_table`·`clerk_gauge*`.
 
