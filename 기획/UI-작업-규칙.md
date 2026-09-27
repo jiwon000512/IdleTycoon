@@ -25,7 +25,7 @@
 | 코인 | `World/coin` | UI·월드 공용 |
 | 주 버튼 | `btn_primary` (+ `_pressed`, `_disabled`) | 버튼 이미지와 Button 상태 스프라이트 세 장을 같이 쓴다 |
 | 팝업 틀 | `panel` | 9-slice 경계 8칸(1칸 4px). 원본 `Source~/make_panel.py`(Codex 시안 A) |
-| 탭·선택 칩 | 예정(Codex) | `clerk_tab`·`chip_hi`·`chip` 대체 |
+| 칩·탭·카드 | `chip`(평소) · `chip_selected`(선택) | 9-slice 경계 6칸. 사물 시트 칩·편집 모드 카드·팝업 탭. 원본 `Source~/make_chip.py`(Codex 시안 C) |
 | 알약 | 예정(Codex) | `clerk_slot`·`pill_cost`·`pill_hud` 대체. 코인·아이콘은 따로 얹는다 |
 | 보조 버튼 | `btn_secondary` | |
 | 행동 버튼(원형) | `btn_act` | |
