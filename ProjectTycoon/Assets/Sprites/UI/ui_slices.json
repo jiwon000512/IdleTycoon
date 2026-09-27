@@ -372,5 +372,28 @@
   "h": 6,
   "border": null,
   "ppu": 20
+ },
+ "nego_bar": {
+  "w": 11,
+  "h": 14,
+  "border": [
+   5,
+   6,
+   5,
+   7
+  ],
+  "ppu": 20
+ },
+ "nego_bar_tick": {
+  "w": 20,
+  "h": 3,
+  "border": null,
+  "ppu": 20
+ },
+ "nego_arrow": {
+  "w": 11,
+  "h": 10,
+  "border": null,
+  "ppu": 20
  }
 }

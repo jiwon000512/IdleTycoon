@@ -141,12 +141,13 @@ save('nego_scene', framed(inner), clear=False)
 CREAM = (243, 235, 225)
 
 
-def pattern(rows):
+def pattern(rows, palette=None):
+    palette = palette or {'#': OUTLINE, 'o': CREAM}
     a = np.zeros((len(rows), len(rows[0]), 4), np.uint8)
     for y, row in enumerate(rows):
         for x, ch in enumerate(row):
             if ch != '.':
-                a[y, x, :3] = OUTLINE if ch == '#' else CREAM
+                a[y, x, :3] = palette[ch]
                 a[y, x, 3] = 255
     return a
 
@@ -176,6 +177,46 @@ save_raw('nego_bubble_tail', pattern([
     '#o#....',
     '##.....',
 ]))
+
+# 타이밍 바(시안 C 나무 자): 색은 시안에서 뽑았다. h 밝은 줄 · p 판 · s 그늘 · n 못 · d 화살표 · l 화살표 밝은 면
+WOOD = {'#': OUTLINE, 'h': (193, 133, 90), 'p': (172, 120, 82), 's': (101, 64, 47), 'n': (49, 32, 30),
+        'd': (79, 50, 43), 'l': (140, 93, 69)}
+# 판 9-slice: 가운데 칸(홈 안)만 늘어난다. 위 7칸(선·밝은 줄·판 4·홈 선), 아래 6칸(홈 선·판 3·그늘·선), 좌우 5칸. 게임에서 높이 24칸 = 120px, 홈 안 11칸
+save_raw('nego_bar', pattern([
+    '.#########.',
+    '#hhhhhhhhh#',
+    '#hnpppppns#',
+    '#hppppppps#',
+    '#hppppppps#',
+    '#hppppppps#',
+    '#hpp###pps#',
+    '#hpp#p#pps#',
+    '#hpp###pps#',
+    '#hppppppps#',
+    '#hppppppps#',
+    '#hnpppppns#',
+    '#sssssssss#',
+    '.#########.',
+], WOOD), border=(5, 6, 5, 7))
+# 눈금: 20칸마다 세 칸 높이 한 줄(Tiled로 깐다)
+save_raw('nego_bar_tick', pattern([
+    '..........n.........',
+    '..........n.........',
+    '..........n.........',
+], WOOD))
+# 매달린 화살표: 끝(마지막 줄)이 홈 윗선에 닿는다
+save_raw('nego_arrow', pattern([
+    '...#####...',
+    '...#ldd#...',
+    '...#ldd#...',
+    '...#ldd#...',
+    '.###ldd###.',
+    '.#ldddddd#.',
+    '..#ldddd#..',
+    '...#ldd#...',
+    '....#d#....',
+    '.....#.....',
+], WOOD))
 
 json.dump(slices, open(f'{OUT}ui_slices.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('ui_slices.json', len(slices))
