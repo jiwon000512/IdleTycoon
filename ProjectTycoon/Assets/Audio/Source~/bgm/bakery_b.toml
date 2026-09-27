@@ -1,0 +1,11 @@
+caption = "lo-fi bossa nova jazz for a cozy pixel-art bakery game, nylon guitar comping, soft Rhodes, upright bass, light shaker and brushes, small 8-bit chiptune arpeggio sparkles, warm, gentle, morning coffee mood, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 96
+keyscale = "D major"
+timesignature = "4"
+seed = 2202
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_b"
+audio_format = "wav"
+backend = "pt"

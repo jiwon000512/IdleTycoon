@@ -1,0 +1,11 @@
+caption = "cozy jazz cafe background music for a warm pixel-art bakery game, soft Rhodes electric piano chords, upright double bass walking line, gentle brushed drums, mellow vibraphone melody doubled by a quiet 8-bit square-wave chiptune lead, relaxed, warm, intimate, lo-fi, instrumental, steady groove, loopable"
+instrumental = true
+duration = 90
+bpm = 88
+keyscale = "F major"
+timesignature = "4"
+seed = 1101
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_a"
+audio_format = "wav"
+backend = "pt"

@@ -1,0 +1,11 @@
+caption = "cozy swing jazz trio arranged for a retro game console, mellow square-wave piano chords, triangle-wave walking bass, soft noise-channel brush drums, cute and warm, pixel-art bakery shop theme, relaxed tempo, chiptune jazz, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 100
+keyscale = "Bb major"
+timesignature = "4"
+seed = 3303
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_c"
+audio_format = "wav"
+backend = "pt"
