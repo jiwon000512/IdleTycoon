@@ -47,9 +47,12 @@ namespace ZooTycoon.UI
             m_portrait.sprite = icon;
             m_portrait.enabled = icon != null;
             m_emptyFrame.gameObject.SetActive(icon == null);
-            m_badge.gameObject.SetActive(data.Badge != ClerkBadge.None);
-            m_badge.color = BadgeColor(data.Badge);
-            m_badgeText.text = data.BadgeText ?? string.Empty;
+            if (m_badge != null)   // 후보 줄 템플릿에는 상태 배지가 없다
+            {
+                m_badge.gameObject.SetActive(data.Badge != ClerkBadge.None);
+                m_badge.color = BadgeColor(data.Badge);
+                m_badgeText.text = data.BadgeText ?? string.Empty;
+            }
             m_name.text = data.Name;
             m_slotPill.SetActive(data.Slot != null);
             m_slotText.text = data.Slot ?? string.Empty;

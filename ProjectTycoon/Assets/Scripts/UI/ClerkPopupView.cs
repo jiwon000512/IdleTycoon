@@ -47,6 +47,8 @@ namespace ZooTycoon.UI
         [SerializeField] private RectTransform m_summaryRow;
         [SerializeField] private RectTransform m_rows;
         [SerializeField] private ClerkRowView m_rowTemplate;
+        [Tooltip("후보 줄: 상태 배지 없이 초상 틀이 크고 카드 높이 가운데")]
+        [SerializeField] private ClerkRowView m_candidateRowTemplate;
         [SerializeField] private TextMeshProUGUI m_foot;
         [SerializeField] private Button m_footButton;
         [SerializeField] private TextMeshProUGUI m_footButtonLabel;
@@ -78,6 +80,7 @@ namespace ZooTycoon.UI
         [SerializeField] private TextMeshProUGUI m_toastText;
 
         private readonly List<ClerkRowView> m_rowViews = new List<ClerkRowView>();
+        private readonly List<ClerkRowView> m_candidateViews = new List<ClerkRowView>();
         private readonly Dictionary<string, Sprite> m_sprites = new Dictionary<string, Sprite>();
 
         public event Action OpenClicked;
@@ -104,6 +107,7 @@ namespace ZooTycoon.UI
             m_askCancel.onClick.AddListener(() => AskCancelClicked?.Invoke());
             m_tapArea.onClick.AddListener(() => Tapped?.Invoke());
             m_rowTemplate.gameObject.SetActive(false);
+            m_candidateRowTemplate.gameObject.SetActive(false);
             m_root.SetActive(false);
             m_toast.SetActive(false);
         }
@@ -133,7 +137,7 @@ namespace ZooTycoon.UI
             m_ask.SetActive(false);
         }
 
-        // 목록 상태. tab이 null이면 탭 줄을 숨긴다(후보 목록). 요약은 왼쪽·오른쪽 두 칸. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
+        // 목록 상태. tab이 null이면 후보 목록: 탭 줄을 숨기고 후보 줄 템플릿을 쓴다. 요약은 왼쪽·오른쪽 두 칸. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
         public void ShowList(string title, string tab, string summaryLeft, string summaryRight, IReadOnlyList<RowData> rows, string foot, string footButton, string footCost, bool footEnabled)
         {
             m_title.text = title;
@@ -146,6 +150,7 @@ namespace ZooTycoon.UI
             m_summaryLeft.text = summaryLeft ?? string.Empty;
             m_summaryRight.gameObject.SetActive(summaryRight != null);
             m_summaryRight.text = summaryRight ?? string.Empty;
+            m_summaryRow.gameObject.SetActive(summaryLeft != null || summaryRight != null);
             m_foot.gameObject.SetActive(footButton == null);
             m_foot.text = foot ?? string.Empty;
             m_footButton.gameObject.SetActive(footButton != null);
@@ -153,22 +158,29 @@ namespace ZooTycoon.UI
             m_footButtonCost.text = footCost ?? string.Empty;
             m_footButton.interactable = footEnabled;
 
-            while (m_rowViews.Count < rows.Count)
+            bool candidates = tab == null;
+            List<ClerkRowView> views = candidates ? m_candidateViews : m_rowViews;
+            foreach (ClerkRowView other in candidates ? m_rowViews : m_candidateViews)
             {
-                ClerkRowView row = Instantiate(m_rowTemplate, m_rows);
-                row.ButtonClicked += Row_ButtonClicked;
-                m_rowViews.Add(row);
+                other.gameObject.SetActive(false);
             }
 
-            for (int i = 0; i < m_rowViews.Count; i++)
+            while (views.Count < rows.Count)
+            {
+                ClerkRowView row = Instantiate(candidates ? m_candidateRowTemplate : m_rowTemplate, m_rows);
+                row.ButtonClicked += Row_ButtonClicked;
+                views.Add(row);
+            }
+
+            for (int i = 0; i < views.Count; i++)
             {
                 if (i >= rows.Count)
                 {
-                    m_rowViews[i].gameObject.SetActive(false);
+                    views[i].gameObject.SetActive(false);
                     continue;
                 }
 
-                m_rowViews[i].Show(rows[i], Load(rows[i].IconPath));
+                views[i].Show(rows[i], Load(rows[i].IconPath));
             }
 
             m_summaryRow.SetAsLastSibling();
@@ -274,7 +286,8 @@ namespace ZooTycoon.UI
 
         private void Row_ButtonClicked(ClerkRowView row)
         {
-            RowButtonClicked?.Invoke(m_rowViews.IndexOf(row));
+            int index = m_rowViews.IndexOf(row);
+            RowButtonClicked?.Invoke(index >= 0 ? index : m_candidateViews.IndexOf(row));
         }
     }
 }

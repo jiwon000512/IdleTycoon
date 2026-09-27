@@ -188,6 +188,7 @@ save('clerk_slot', nine(m, (87, 98, 120, 110), (4, 4, 4, 4), (90, 104)), border=
 table = crop(m, (59, 113, 150, 135))
 for box in ((2, 1, 48, 10), (50, 1, 89, 10), (2, 11, 48, 21), (50, 11, 89, 21)):
     erase(table, box, box)
+table[-1] = table[0]   # 시안은 표 아래가 카드 테두리에 붙어 선이 없다. 카드 안에 뜨므로 위 선을 아래에도 긋는다(2026-09-27)
 save('clerk_table', table, clear=False)
 # 게이지 틀 30×7: 왼쪽 끝은 채움에 가려 있어 오른쪽 끝을 뒤집어 쓴다. 채움 19×5는 위 밝은 줄·아래 어두운 줄 포함
 save('clerk_gauge', nine(m, (63, 126, 93, 133), (3, 3, 3, 3), (88, 129), mirror_left=True), border=(3, 3, 3, 3))

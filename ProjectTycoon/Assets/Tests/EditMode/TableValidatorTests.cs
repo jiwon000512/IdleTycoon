@@ -13,7 +13,7 @@ namespace ZooTycoon.Tests
         [TestCase("VisitorTable", 9)]
         [TestCase("StringTable", 18)]
         [TestCase("ClerkTable", 1)]
-        [TestCase("ClerkConfigTable", 3)]
+        [TestCase("ClerkConfigTable", 4)]
         [TestCase("BubbleTable", 1)]
         [TestCase("DialogueTable", 1)]
         [TestCase("BreadTable", 2)]
