@@ -1880,6 +1880,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1d837a47a557e641a1f9661d874abda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.ClerkRowView
+  m_frame: {fileID: 338783453966723587}
   m_portrait: {fileID: 6555010010950577123}
   m_emptyFrame: {fileID: 1784354157310097430}
   m_badge: {fileID: 1059391969133485795}
@@ -9335,6 +9336,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1d837a47a557e641a1f9661d874abda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.UI::ZooTycoon.UI.ClerkRowView
+  m_frame: {fileID: 8759640111086547714}
   m_portrait: {fileID: 2289778754504500300}
   m_emptyFrame: {fileID: 6090183083697893991}
   m_badge: {fileID: 0}

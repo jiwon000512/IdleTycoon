@@ -34,5 +34,7 @@ namespace ZooTycoon.Core
         public double MoveFrameRate { get; set; }
         public double Scale { get; set; }
         public CarryAt CarryAt { get; set; }
+        // carryAt hand: 앞발 높이 / 키. 든 빵 가운데 = 키 × 이 값 + 빵 반쯤(VisitorView). 종마다 몸 비율이 달라 행에 둔다
+        public double HandRatio { get; set; }
     }
 }

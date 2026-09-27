@@ -32,7 +32,6 @@ namespace ZooTycoon.World
         [Tooltip("빵이 진열대에서 드는 자리로 날아오는 시간(초)")]
         [SerializeField] private float m_carryFlySeconds = 0.3f;
         [Tooltip("carryAt hand: 집은 빵 가운데 높이 = 키 × 이 비율 + 빵 반(손님 앞발이 키의 약 1/3)")]
-        [SerializeField] private float m_handRatio = 0.33f;
         [SerializeField] private float m_breadHalf = 0.18f;
         [Tooltip("옆모습일 때 빵을 보는 쪽으로 내미는 거리(유닛)")]
         [SerializeField] private float m_handReach = 0.2f;
@@ -51,6 +50,7 @@ namespace ZooTycoon.World
         private float m_moveFrameRate;
         private Sprite[] m_playing;
         private float m_height;
+        private float m_handRatio;
         private float m_shadowAlpha;
         private bool m_carrying;
         private bool m_flying;
@@ -82,6 +82,7 @@ namespace ZooTycoon.World
             m_modelRoot.localScale = Vector3.one * (float)look.Scale;
             m_height = m_frontIdle[0].bounds.size.y * (float)look.Scale;
             m_carryOnHead = look.CarryAt == CarryAt.Head;
+            m_handRatio = (float)look.HandRatio;
             m_bubble.transform.localPosition = HeadOffset;
             m_say.transform.localPosition = HeadOffset;
             m_bubble.enabled = false;

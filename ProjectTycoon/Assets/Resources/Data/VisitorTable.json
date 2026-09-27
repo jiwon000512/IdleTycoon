@@ -1,6 +1,6 @@
 {
   "table": "VisitorTable",
-  "version": 9,
+  "version": 10,
   "notes": [
     "기획서 4장 관광객(v0.14). v1.14부터 빵집 손님 외형 전용: 손님이 들어올 때마다 한 행을 고른다.",
     "sprite·idleSheet·moveSheet·backIdleSheet·backMoveSheet는 Resources/ 기준 경로(확장자 없음). idle·move 시트가 null이면 sprite 1장, back 시트가 null이면 앞모습 시트를 쓴다.",
@@ -11,7 +11,8 @@
     "version 6 (2026-09-23): carryAt 추가 — 집은 물건(빵 등)을 드는 자리. hand = 앞발에서 위로(몸 앞, 뒷모습이면 몸 뒤), head = 머리 위(날개를 벌린 펭귄). 앞발 높이 비율 등 연출 숫자는 ShopCustomer 프리팹.",
     "version 7 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
     "version 8 (2026-09-24, 리뷰 R2): 읽는 코드가 없던 moveSpeed·viewSecondsMin·viewSecondsMax·weight·sortOrder 삭제(손님 외형은 행 중 균등 난수, 걷는 속도는 ConfigTable walkSpeed).",
-    "version 9 (2026-09-26, 설계 21 점원): role 추가 — customer(광장 도착 손님 외형, 균등 난수) · clerk(점원 외형, 후보마다 clerk 행 중 균등 난수). v05 회색 웜뱃(남부 털코웜뱃 회갈색 gray_d): 빵집 웜뱃 24장의 털 5색만 바꾼 시트(Shop/Source~/make_wombat_palette.py, 칸 폭 104px). 새 점원 외형 = 시트 한 벌 + clerk 행 하나."
+    "version 9 (2026-09-26, 설계 21 점원): role 추가 — customer(광장 도착 손님 외형, 균등 난수) · clerk(점원 외형, 후보마다 clerk 행 중 균등 난수). v05 회색 웜뱃(남부 털코웜뱃 회갈색 gray_d): 빵집 웜뱃 24장의 털 5색만 바꾼 시트(Shop/Source~/make_wombat_palette.py, 칸 폭 104px). 새 점원 외형 = 시트 한 벌 + clerk 행 하나.",
+    "version 10 (2026-09-27, 버그: 점원이 빵을 손보다 높이 듦): handRatio 추가 — 앞발 높이 / 키(든 빵 가운데 = 키 × handRatio + 빵 반쯤). 손님 공통 프리팹 값 0.33을 행으로 옮겼다. 콩 모양 웜뱃(v05)은 0.17(키 1.025 → 빵 0.35, 빵집 웜뱃 m_handHeight와 같음)."
   ],
   "rows": [
     {
@@ -28,7 +29,8 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "carryAt": "hand"
+      "carryAt": "hand",
+      "handRatio": 0.33
     },
     {
       "id": "v02",
@@ -44,7 +46,8 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "carryAt": "head"
+      "carryAt": "head",
+      "handRatio": 0.33
     },
     {
       "id": "v03",
@@ -60,7 +63,8 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "carryAt": "hand"
+      "carryAt": "hand",
+      "handRatio": 0.33
     },
     {
       "id": "v04",
@@ -76,7 +80,8 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "carryAt": "hand"
+      "carryAt": "hand",
+      "handRatio": 0.33
     },
     {
       "id": "v05",
@@ -92,7 +97,8 @@
       "idleFrameRate": 2.5,
       "moveFrameRate": 8,
       "scale": 1,
-      "carryAt": "hand"
+      "carryAt": "hand",
+      "handRatio": 0.17
     }
   ]
 }

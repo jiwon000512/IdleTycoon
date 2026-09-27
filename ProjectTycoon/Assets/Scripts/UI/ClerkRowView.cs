@@ -23,6 +23,8 @@ namespace ZooTycoon.UI
         private static readonly Color k_Away = new Color32(0x5B, 0x5A, 0xA8, 255);
         private static readonly Color k_Empty = new Color32(0x93, 0x83, 0x7C, 255);
 
+        [Tooltip("초상 틀: 빈 자리면 끈다(점선 틀 뒤에 겹쳐 눌림 때 드러나지 않게)")]
+        [SerializeField] private GameObject m_frame;
         [SerializeField] private Image m_portrait;
         [SerializeField] private Button m_emptyFrame;   // 빈 자리 점선 틀: 눌러도 줄 버튼(고용)과 같다
         [SerializeField] private Image m_badge;
@@ -45,7 +47,7 @@ namespace ZooTycoon.UI
         public void Show(ClerkPopupView.RowData data, Sprite icon)
         {
             m_portrait.sprite = icon;
-            m_portrait.enabled = icon != null;
+            m_frame.SetActive(icon != null);
             m_emptyFrame.gameObject.SetActive(icon == null);
             if (m_badge != null)   // 후보 줄 템플릿에는 상태 배지가 없다
             {
