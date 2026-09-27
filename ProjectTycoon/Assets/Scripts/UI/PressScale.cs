@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace ZooTycoon.UI
 {
-    // 설계 10: 공용 버튼 눌림. 누르는 동안 0.95배(막힌 버튼은 그대로). UIBaker가 모든 버튼에 붙인다
+    // 설계 10: 공용 버튼 눌림. 누르는 동안 0.95배(막힌 버튼은 그대로). 모든 UI 버튼에 붙어 있다
     [RequireComponent(typeof(Button))]
     public sealed class PressScale : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {

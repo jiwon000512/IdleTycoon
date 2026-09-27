@@ -23,7 +23,7 @@ Tycoon/
       │  └─ Editor/  에디터 전용 도구 (Editor 폴더라 빌드에서 제외됨)
       ├─ Resources/Data/     JSON 테이블 11개 (XXTable.json = 행 클래스 이름: ConfigTable·BakeryConfigTable·VisitorTable·BreadTable 등)
       ├─ Resources/Sprites/Animals/<종>/  동물 아트: 정지 1장 + idle·move 시트. 경로는 animals.json 칼럼. 임포트 규칙은 데이터-테이블-규칙 5장
-      ├─ Prefabs/Bakery/ (빵집·광장·사물·손님 프리팹, Bake/Bakery가 굽는다), Resources/UI/ (UI 프리팹, Bake/UI)
+      ├─ Prefabs/Bakery/ (빵집·광장·사물·손님 프리팹, Bake/Bakery가 굽는다), Resources/UI/ (UI 프리팹. 프리팹이 원본, 직접 수정)
       ├─ Sprites/UI/, Fonts/, Audio/
       └─ Tests/EditMode/     Core 로직 유닛 테스트 (Unity Test Framework)
 ```
@@ -56,7 +56,7 @@ Assets 바로 아래에 종류별 폴더를 둔다. Scripts의 각 폴더와 Tes
 - 게임 규칙은 Core 서비스에만. MonoBehaviour는 생명주기 훅에서 서비스를 호출하는 얇은 어댑터. `static` 가변 상태·`Find...` 금지. 싱글턴은 GameKit Manager와 `GameManager`만. 의존은 생성자로, 서비스 조립은 `GameManager.Init`, Presenter 조립은 씬 스크립트(`MainScene`)에서만.
 - UI는 MVP. View는 표시 메서드와 입력 이벤트만, Presenter가 모델 이벤트를 구독해 View를 갱신한다. UI는 모델을 직접 바꾸지 않는다.
 - 기능 하나 = 세션 하나. ① 설계(`기획/설계/NN-*.md`: 코드 설계 + 검증 항목)를 사용자와 확정 → ② Unity CLI를 최대한 써서 한 번에 구현(스크립트·씬·프리팹·게임오브젝트·더미 리소스까지) → ③ **에이전트가 1회 실행해 검증**: 컴파일 0·콘솔 0, EditMode 테스트(`run_tests`는 플레이 모드가 아닐 때만), 플레이 모드 진입 후 캡처로 결과 확인. 이것이 "개발 완성"이다 → ④ 짧게 보고(만든 것·검증 결과·달라진 점)하고 `기획/진행상황.md`와 `기획/포트폴리오.md`(4장에 기능 한 절: 기술 포인트·AI가 한 일, 5장 숫자) 갱신, 보고한다. **커밋은 묻지 않는다**: 사용자가 다음 작업을 언급하면 검증이 끝난 앞 작업을 알아서 커밋 + 푸시한다(미커밋·피드백 대기 상태를 세션 너머로 남기지 않는다). 테스트 방법 문서는 쓰지 않고, 문서화는 최소한만. 구현 중에는 사용자를 기다리지 않는다. 전체 규칙은 `기획/코드-규칙.md`.
-- 프리팹을 통째로 만드는 에디터 스크립트는 `Scripts/Editor`에 `[MenuItem("ZooTycoon/Bake/...")]`로 남긴다(현재 UI·Bakery·Fonts·Import UI Sprites·Import Visitor Sheets). 일회성 조립·조회 스크립트만 scratchpad. 규칙 문서 개정은 기능 구현과 커밋을 나눈다.
+- 프리팹을 통째로 만드는 에디터 스크립트는 `Scripts/Editor`에 `[MenuItem("ZooTycoon/Bake/...")]`로 남긴다(현재 Bakery·Fonts·Import UI Sprites·Import Visitor Sheets). **UI 프리팹은 예외(2026-09-27)**: 새 화면·구조 변경 때만 scratchpad 스크립트로 한 번 굽고, 그 뒤 수정은 프리팹을 직접 고친다(`PrefabUtility.LoadPrefabContents` → 값 → 저장). 값 하나 때문에 UI 전체를 다시 굽지 않는다. 일회성 조립·조회 스크립트만 scratchpad. 규칙 문서 개정은 기능 구현과 커밋을 나눈다.
 - 기획 회차는 같은 주제로 2회를 넘기지 않는다. 2회차 뒤에는 후보 하나를 별도 씬 1주 프로토타입으로 검증한다.
 - 아트는 `기획/아트-프롬프트.md` 0장 스타일 가이드를 모든 프롬프트 앞에 붙이고(동물은 웜뱃이 아니라 사물 참조 + 문장으로 종 지정, 후처리 `make_pixel.py`로 격자 강제, 한 화면 한 칸 크기: 지상 4px), **시안 3장 → 캡처 위 합성 비교 → 사용자 1회 선택 → 굽기 1회** 순서로 한다. 굽기 전에는 프리팹을 건드리지 않는다.
 - 기획서의 숫자는 코드에 하드코딩하지 않고 `ConfigTable.json` 등 JSON 테이블에 둔다. 행 클래스(`XXTable`)에는 기획서 표 번호(예: 6.3)를 주석에 남긴다.

@@ -74,7 +74,7 @@ namespace ZooTycoon.Editor
             BakeShop(shelf, shelfSign, oven, counter, digTag, customer);
             BakePlaza(customer);
             AssetDatabase.SaveAssets();
-            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·SlotMarker·Bakery·Visitor·Plaza (UI 프리팹은 ZooTycoon/Bake/UI)";
+            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·SlotMarker·Bakery·Visitor·Plaza";
         }
 
         static void ImportSprites()

@@ -34,7 +34,7 @@ namespace ZooTycoon.UI
     }
 
     // 사물 터치 기획(2026-09-23): 하단 시트 한 벌. 헤더(이름·상태·닫기) + 칩 줄(선택) + 행 목록(구매).
-    // 모양은 UI-디자인-규칙 v1.0, 프리팹은 UIBaker가 굽는다. 표시와 입력 이벤트만 갖고 규칙은 Presenter에
+    // 모양은 UI-디자인-규칙 v1.0, 프리팹은 Resources/UI/ObjectSheetView. 표시와 입력 이벤트만 갖고 규칙은 Presenter에
     public sealed class ObjectSheetView : UIView
     {
         private const float k_OpenSeconds = 0.15f;
