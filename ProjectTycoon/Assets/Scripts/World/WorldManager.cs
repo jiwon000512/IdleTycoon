@@ -15,6 +15,9 @@ namespace ZooTycoon.World
     {
         // 광장 원점(빵집 원점에서 떨어진 곳. 두 곳이 한 화면에 같이 보이지 않게)
         private static readonly Vector3 k_PlazaOrigin = new Vector3(0f, 60f, 0f);
+        // 고용한 점원이 굴에서 나오는 모습을 당겨서 보여 주는 시간(초)과 발끝에서 몸 가운데까지(유닛)
+        private const float k_HireSpotSeconds = 1.8f;
+        private const float k_BodyCenter = 0.5f;
 
         [SerializeField] private WorldCameraController m_camera;
         [Tooltip("빵집 프리팹(설계 08 v0.5). 씬에는 두지 않고 실행 중에 원점에 생성한다")]
@@ -26,6 +29,7 @@ namespace ZooTycoon.World
         private PlazaView m_plazaView;
         private Mall m_mall;
         private IDisposable m_areaChanged;
+        private IDisposable m_clerkHired;
 
         public FrameCache Frames { get; } = new FrameCache();
 
@@ -43,6 +47,7 @@ namespace ZooTycoon.World
             m_plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, m_plazaView, bus, tables, Frames);
             m_plazaView.Bind(mall.Plaza, bus, Frames, tables);
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
+            m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
             FollowWombat();
         }
 
@@ -105,6 +110,7 @@ namespace ZooTycoon.World
             }
 
             m_areaChanged?.Dispose();
+            m_clerkHired?.Dispose();
 
             base.OnDestroy();
         }
@@ -132,6 +138,19 @@ namespace ZooTycoon.World
         private void Bus_AreaChanged(Events.AreaChanged e)
         {
             FollowWombat();
+        }
+
+        // 웜뱃이 그 가게에 있을 때만. 조이스틱을 움직이면 바로 웜뱃에게 돌아온다(조작을 빼앗지 않는다)
+        private void Bus_ClerkHired(Events.ClerkHired e)
+        {
+            if (m_mall.Active != m_mall.Bakery || e.Clerk.Bakery != m_mall.Bakery)
+            {
+                return;
+            }
+
+            Clerk clerk = e.Clerk;
+            m_camera.Spot(() => (Vector2)m_shopView.ToWorld(clerk.Position) + Vector2.up * k_BodyCenter, k_HireSpotSeconds,
+                () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
         }
     }
 }

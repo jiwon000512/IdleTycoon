@@ -20,7 +20,7 @@ namespace ZooTycoon.World
         private readonly Dictionary<BakeryVisitor, VisitorView> m_units = new Dictionary<BakeryVisitor, VisitorView>();
         private readonly Dictionary<Clerk, VisitorView> m_clerks = new Dictionary<Clerk, VisitorView>();
         private readonly Dictionary<Clerk, System.Action<Interactable>> m_clerkHands = new Dictionary<Clerk, System.Action<Interactable>>();
-        // 고용되어 자리로 가는 중(처음 도착하면 사물이 튀고 이름 말풍선)
+        // 고용되어 자리로 가는 중(처음 도착하면 사물이 튄다)
         private readonly List<Clerk> m_arriving = new List<Clerk>();
         private BakeryArea m_shop;
         private BakeryView m_view;
@@ -80,6 +80,8 @@ namespace ZooTycoon.World
             clerk.Worker.Hands.Changed += handler;
             m_clerkHands[clerk] = handler;
             m_arriving.Add(clerk);
+            // 굴에서 나오면서 이름을 말한다(카메라가 당겨 비추는 동안)
+            unit.Say(clerk.Name, k_HelloSeconds);
         }
 
         private void Update()
@@ -91,7 +93,6 @@ namespace ZooTycoon.World
                 if (clerk.Working)
                 {
                     m_arriving.RemoveAt(i);
-                    m_clerks[clerk].Say(clerk.Name, k_HelloSeconds);
                     m_view.Bounce(clerk.Thing);
                 }
             }
