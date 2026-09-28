@@ -42,7 +42,7 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 
 - 말풍선 몸통·꼬리·글자는 늘 함께 켜고 끈다.
 - 예외: 머리 위 이모지 말풍선 `World/Shop/bubble_sheet`(틀과 이모지가 한 칸)는 지금 그림을 쓴다.
-- 화면 전용: 협상 `nego_scene`·`nego_bar`·`nego_bar_tick`·`nego_arrow`·`nego_ribbon`, 점원 `clerk_frame`·`clerk_frame_empty`·`clerk_badge_*`·`clerk_table`·`clerk_gauge*`(채움은 일머리 주황 · 월급날 초록 `_green`).
+- 화면 전용: 협상 `nego_scene`·`nego_bar`·`nego_bar_tick`·`nego_arrow`·`nego_ribbon`, 점원 `clerk_frame`·`clerk_frame_empty`·`clerk_badge_*`·`clerk_table`·`clerk_gauge*`(채움은 일머리 · 월급 모자람 주황, 월급날 초록 `_green`).
 - 새 공용 조각이 생기면 이 표를 고치고, 옛 조각은 쓰던 곳을 모두 바꾼 뒤 PNG·생성 스크립트 줄·`ui_slices.json` 항목을 지운다.
 
 ## 3. 단위와 임포트
