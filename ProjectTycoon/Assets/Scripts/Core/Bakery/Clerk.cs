@@ -64,6 +64,7 @@ namespace ZooTycoon.Core
         private bool m_returning;
 
         public BakeryArea Bakery { get; }
+        protected override WombatArea Area => Bakery;
         public Interactable Thing { get; }
         public ClerkTable Role { get; }
         public string Name { get; }

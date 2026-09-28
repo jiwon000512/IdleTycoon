@@ -58,6 +58,10 @@ namespace ZooTycoon.Core
         private readonly int[] m_closed;
         private readonly MinHeap m_open = new MinHeap();
         private int m_search;
+        // 비켜 가는 탐색 동안만: 이 원 안의 점은 지나지 않는다(도착점은 예외)
+        private bool m_avoiding;
+        private Vector2 m_avoid;
+        private float m_avoidRadius;
 
         public float Step => m_step;
 
@@ -164,6 +168,17 @@ namespace ZooTycoon.Core
 
             found = around;
             return false;
+        }
+
+        // avoid 둘레 radius 안을 지나지 않는 길(웜뱃 비켜 가기). 그런 길이 없으면 빈 목록
+        public List<Vector2> FindPath(Vector2 from, Vector2 to, Vector2 avoid, float radius)
+        {
+            m_avoiding = true;
+            m_avoid = avoid;
+            m_avoidRadius = radius;
+            List<Vector2> path = FindPath(from, to);
+            m_avoiding = false;
+            return path;
         }
 
         // from에서 to까지 가로·세로로만 걷는 길. 돌려주는 점은 from 다음 꺾임점부터 to까지. 닿을 수 없으면 빈 목록
@@ -291,6 +306,11 @@ namespace ZooTycoon.Core
                     int nj = j + k_Dy[d];
 
                     if (ni < 0 || nj < 0 || ni >= m_width || nj >= m_height || !m_walkable[nj * m_width + ni])
+                    {
+                        continue;
+                    }
+
+                    if (m_avoiding && nj * m_width + ni != target && Vector2.Distance(NodePosition(ni, nj), m_avoid) < m_avoidRadius)
                     {
                         continue;
                     }

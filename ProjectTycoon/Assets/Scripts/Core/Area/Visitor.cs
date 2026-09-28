@@ -21,10 +21,20 @@ namespace ZooTycoon.Core
     // 위치·보는 방향은 Mover, 구멍·문에서 톡 뛰기(hop)는 여기, 무엇을 할지는 자식이 Act로 정한다
     public abstract class Visitor
     {
+        // 웜뱃 비켜 가기: 웜뱃 둘레 이 거리 안으로 걸어 들어가지 않는다(발밑 원 둘). 앞길은 k_YieldLook까지만 본다
+        internal const float k_YieldRadius = 0.8f;
+        private const float k_YieldLook = 1f;
+        // 웜뱃이 설 자리(일하는 자리·진열대 앞)에 서 있으면 비킬 때까지 기다린다. 길만 막혔거나 드나드는 곳(구멍·문·계단)이면 돌아갈 길이 없을 때 이 시간(초)만 기다리고 지나간다(가게가 멈추지 않게)
+        private const double k_YieldSeconds = 1.5;
+        private const double k_DetourGap = 0.3;
+
         private readonly double m_walkSpeed;
         private readonly double m_hopSeconds;
         private Vector2 m_hopFrom;
         private Vector2 m_hopTo;
+        private double m_yielded;
+        private double m_detourWait;
+        private bool m_passing;
 
         public int Id { get; }
         public VisitorTable Look { get; }
@@ -37,6 +47,10 @@ namespace ZooTycoon.Core
         public Facing Facing => Mover.Facing;
         public bool Moving => Mover.Moving;
         public bool Hopping => Phase == VisitorPhase.Entering || Phase == VisitorPhase.Exiting;
+        // 웜뱃이 비키기를 기다리며 서 있다(길은 남아 있다)
+        public bool Yielding { get; private set; }
+        // 지금 있는 곳(웜뱃이 어디 있는지 안다)
+        protected abstract WombatArea Area { get; }
 
         internal Mover Mover { get; }
         // 설계 22: 머리 위 이모지 말풍선. 외출한 점원의 광장 그림은 점원의 것을 같이 쓴다(ShareBubble, 시간은 주인만 센다)
@@ -64,7 +78,12 @@ namespace ZooTycoon.Core
         // 매 프레임: 길을 걷고 할 일을 한다. false면 곳을 떠났다
         public bool Tick(double dt)
         {
-            Mover.Advance(m_walkSpeed * dt);
+            Yielding = Yield(dt);
+
+            if (!Yielding)
+            {
+                Mover.Advance(m_walkSpeed * dt);
+            }
 
             if (m_ownsBubble)
             {
@@ -72,6 +91,82 @@ namespace ZooTycoon.Core
             }
 
             return Act(dt);
+        }
+
+        // 앞길이 웜뱃에 막혔으면 돌아가는 길로 바꾸고, 없으면 기다린다. true면 이번 프레임은 걷지 않는다
+        private bool Yield(double dt)
+        {
+            m_detourWait -= dt;
+
+            if (!Moving || Hopping || !Area.WombatPresent)
+            {
+                m_yielded = 0d;
+                m_passing = false;
+                return false;
+            }
+
+            // 기다리다 지나가기로 했으면 웜뱃 둘레를 벗어날 때까지 다시 서지 않는다
+            if (m_passing)
+            {
+                m_passing = Blocked() || Vector2.Distance(Position, Area.Wombat.Mover.Position) < k_YieldRadius;
+                return false;
+            }
+
+            if (!Blocked())
+            {
+                m_yielded = 0d;
+                return false;
+            }
+
+            if (Vector2.Distance(Mover.Destination, Area.Wombat.Mover.Position) < k_YieldRadius && !Area.IsPassage(Mover.Destination))
+            {
+                return true;
+            }
+
+            if (m_detourWait <= 0d)
+            {
+                m_detourWait = k_DetourGap;
+
+                if (Mover.Detour(Area.Wombat.Mover.Position, Reach()) && !Blocked())
+                {
+                    m_yielded = 0d;
+                    return false;
+                }
+            }
+
+            m_yielded += dt;
+
+            if (m_yielded < k_YieldSeconds)
+            {
+                return true;
+            }
+
+            m_yielded = 0d;
+            m_passing = true;
+            return false;
+        }
+
+        // 이미 웜뱃 가까이 있으면(웜뱃이 다가왔다) 지금보다 더 가까워지지만 않으면 된다
+        private float Reach()
+        {
+            return Math.Min(k_YieldRadius, Vector2.Distance(Position, Area.Wombat.Mover.Position) - 0.01f);
+        }
+
+        // 지금 걷는 선분의 앞 k_YieldLook 안에서 웜뱃 둘레로 들어가는가
+        private bool Blocked()
+        {
+            Vector2 wombat = Area.Wombat.Mover.Position;
+            Vector2 ahead = Mover.NextNode - Position;
+            float length = ahead.Length();
+
+            if (length < 1e-4f)
+            {
+                return false;
+            }
+
+            Vector2 dir = ahead / length;
+            float along = Math.Clamp(Vector2.Dot(wombat - Position, dir), 0f, Math.Min(length, k_YieldLook));
+            return along > 0f && Vector2.Distance(Position + dir * along, wombat) < Reach();
         }
 
         // 곳에서 할 일. false면 떠난다

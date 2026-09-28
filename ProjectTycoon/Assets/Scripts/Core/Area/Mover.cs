@@ -21,6 +21,8 @@ namespace ZooTycoon.Core
 
         private readonly List<Vector2> m_points = new List<Vector2>();
         private int m_next;
+        // 마지막으로 길을 찾은 걷는 땅(돌아가는 길도 여기서 찾는다)
+        private BurrowNav m_nav;
 
         public Vector2 Position { get; private set; }
         public Facing Facing { get; set; }
@@ -86,6 +88,7 @@ namespace ZooTycoon.Core
         // 걷는 중이면 지금 선분을 마저 걷고 그 끝점에서 새 길을 찾는다. 닿을 수 없으면 곧장(ponytail: 막힌 배치에서만 생김)
         public void WalkTo(BurrowNav nav, Vector2 target, Facing arrive)
         {
+            m_nav = nav;
             Vector2 from = NextNode;
 
             // 이미 그 자리면 길이 없다(2026-09-26: 격자 밖 자리에서 격자 점을 거쳐 되돌아오는 한 걸음이 좌우 떨림이 됐다)
@@ -108,6 +111,26 @@ namespace ZooTycoon.Core
             }
 
             Follow(path, arrive);
+        }
+
+        // 걷는 중에 avoid 둘레 radius를 피해 같은 목적지로 가는 길로 바꾼다. 그런 길이 없으면 그대로 두고 false
+        public bool Detour(Vector2 avoid, float radius)
+        {
+            if (!Moving || m_nav == null)
+            {
+                return false;
+            }
+
+            // 지금 선분을 마저 걷지 않는다(그 끝이 웜뱃 너머일 수 있다). 가장 가까운 격자 점에서 다시 찾는다
+            List<Vector2> path = m_nav.FindPath(Position, Destination, avoid, radius);
+
+            if (path.Count == 0)
+            {
+                return false;
+            }
+
+            Follow(path, ArriveFacing);
+            return true;
         }
 
         public static Facing FacingOf(Vector2 delta)

@@ -40,6 +40,11 @@ namespace ZooTycoon.Core
 
         protected override BurrowNav WombatNav => Layout.WombatNav;
         protected override Vector2 Entrance => Layout.HoleFloor;
+
+        internal override bool IsPassage(Vector2 p)
+        {
+            return Vector2.DistanceSquared(p, Layout.HoleFloor) < 1e-4f;
+        }
         protected override BurrowShape.Result Shape => Layout.Shape;
 
         protected override IEnumerable<IPlaced> PlacedThings

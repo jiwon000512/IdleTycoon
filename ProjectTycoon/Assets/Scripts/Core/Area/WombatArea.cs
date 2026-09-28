@@ -62,6 +62,9 @@ namespace ZooTycoon.Core
         protected abstract BurrowNav WombatNav { get; }
         protected abstract Vector2 Entrance { get; }
 
+        // 손님·점원이 곳을 드나드는 바닥 점(구멍·문·계단 아래). 웜뱃이 여기 서 있어도 드나드는 길은 막지 않는다
+        internal abstract bool IsPassage(Vector2 p);
+
         protected WombatArea(TableSet tables, Wombat wombat, EventBus bus)
         {
             Tables = tables;

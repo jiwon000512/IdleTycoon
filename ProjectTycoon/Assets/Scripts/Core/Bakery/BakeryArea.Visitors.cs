@@ -124,8 +124,14 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 웜뱃이 서 있는 자리도 찬 자리다(손님이 웜뱃 위에 서지 않게)
         private bool SpotTaken(Vector2 p)
         {
+            if (WombatPresent && Vector2.Distance(Wombat.Mover.Position, p) < Visitor.k_YieldRadius)
+            {
+                return true;
+            }
+
             foreach (BakeryVisitor other in m_visitors)
             {
                 if (other.HasSpot && Vector2.DistanceSquared(other.Spot, p) < 0.01f)

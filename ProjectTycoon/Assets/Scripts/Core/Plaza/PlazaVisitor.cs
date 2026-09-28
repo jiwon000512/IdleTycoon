@@ -27,6 +27,7 @@ namespace ZooTycoon.Core
         private bool m_dismissed;
 
         public PlazaArea Plaza { get; }
+        protected override WombatArea Area => Plaza;
         // 외출한 점원의 광장 그림이면 그 점원(말풍선을 같이 쓴다)
         public Clerk Clerk { get; }
 

@@ -159,7 +159,7 @@ namespace ZooTycoon.World
             SetAlpha(alpha);
             Facing facing = m_walker.Facing;
             Bubbles.Show(m_bubble, m_bubbleFrames, m_walker.Bubble, m_saying == null && alpha > 0f);
-            Show(facing, m_walker.Moving);
+            Show(facing, m_walker.Moving && !m_walker.Yielding);
             m_facing = facing;
             m_carry.sortingOrder = m_carryOnHead ? k_CarryFrontOrder : Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder);
 

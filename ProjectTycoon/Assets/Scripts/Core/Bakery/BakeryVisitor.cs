@@ -13,6 +13,7 @@ namespace ZooTycoon.Core
         private double m_patience;
 
         public BakeryArea Bakery { get; }
+        protected override WombatArea Area => Bakery;
         // 지금 찾는 빵과 그 진열대
         public BreadTable Bread { get; private set; }
         public ShelfInteractable Shelf { get; private set; }
