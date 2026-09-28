@@ -190,11 +190,11 @@ namespace ZooTycoon.World
 
             m_spriteRenderer.flipX = facing == Facing.Left;
 
-            // 같은 프레임 배열이면 다시 시작하지 않는다(숨쉬기·걷기가 끊기지 않게)
+            // 같은 프레임 배열이면 다시 시작하지 않는다(숨쉬기·걷기가 끊기지 않게). 시작 박자는 무작위(손님 여럿이 같은 박자로 움직이지 않게)
             if (m_playing != frames)
             {
                 m_playing = frames;
-                m_animator.Play(frames, moving ? m_moveFrameRate : m_idleFrameRate);
+                m_animator.Play(frames, moving ? m_moveFrameRate : m_idleFrameRate, Random.value);
             }
         }
 

@@ -94,9 +94,10 @@ namespace ZooTycoon.Editor
             VisitorSheetImporter.Import(k_SpriteDir + "wait_sheet.png", true, 52);
             VisitorSheetImporter.Import(k_SpriteDir + "bubble_sheet.png", true, 52);
 
+            // 웜뱃 숨쉬기 4 · 걷기 8 · 눈 감은 숨쉬기 4(앞·옆). Source~/make_anim.py
             foreach (string side in new[] { "front", "back", "side" })
             {
-                foreach (string suffix in new[] { "", "_1", "_2", "_3", "_walk_0", "_walk_1", "_walk_2", "_walk_3" })
+                foreach (string suffix in IdleSuffixes.Concat(WalkSuffixes).Concat(side == "back" ? new string[0] : BlinkSuffixes))
                 {
                     string path = k_SpriteDir + "wombat_" + side + suffix + ".png";
                     Import(path, CellBottom(path), k_UnitPpu);
@@ -291,24 +292,31 @@ namespace ZooTycoon.Editor
             return Save(root, counter, "Counter");
         }
 
-        // 웜뱃(빵집 계산대·광장 공용). 정면·뒷모습: 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 0 → 1 → 2 → 3(Source~/make_breath_frames.py)
+        static readonly string[] IdleSuffixes = { "", "_1", "_2", "_3" };
+        static readonly string[] WalkSuffixes = { "_walk_0", "_walk_1", "_walk_2", "_walk_3", "_walk_4", "_walk_5", "_walk_6", "_walk_7" };
+        static readonly string[] BlinkSuffixes = { "_blink_0", "_blink_1", "_blink_2", "_blink_3" };
+
+        // 웜뱃(빵집 계산대·광장 공용). 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 4 · 걷기 8(2026-09-29 B3, Source~/make_anim.py)
         static WombatView BakeWombat(Transform parent, Vector3 position)
         {
             SpriteRenderer wombat = Renderer(parent, "Wombat", Load("wombat_front"), position, 0);
             SpriteAnimator animator = wombat.gameObject.AddComponent<SpriteAnimator>();
             Set(animator, "m_renderer", wombat);
             SpriteRenderer shadow = Shadow(wombat.transform);
-            // 걷기(v0.6): 딛기 → 왼발 → 딛기 → 오른발(Source~/make_walk_frames.py)
+            // 프레임 시간은 WombatView 기본값(m_idleSeconds · m_walkSeconds)
             WombatView mover = wombat.gameObject.AddComponent<WombatView>();
             Set(mover, "m_animator", animator);
             Set(mover, "m_renderer", wombat);
             Set(mover, "m_shadow", shadow);
-            // 옆모습(손님 동선 설계 v0.2): 오른쪽 보는 그림, 왼쪽은 뒤집기. 실제 아트 전까지 앞모습 사본(더미)
+            // 옆모습(손님 동선 설계 v0.2): 오른쪽 보는 그림, 왼쪽은 뒤집기
             foreach (string side in new[] { "front", "back", "side" })
             {
-                SetSprites(mover, "m_" + side + "Idle", Frames("wombat_" + side, "", "_1", "_2", "_3"));
-                SetSprites(mover, "m_" + side + "Walk", Frames("wombat_" + side, "_walk_0", "_walk_1", "_walk_2", "_walk_3"));
+                SetSprites(mover, "m_" + side + "Idle", Frames("wombat_" + side, IdleSuffixes));
+                SetSprites(mover, "m_" + side + "Walk", Frames("wombat_" + side, WalkSuffixes));
             }
+
+            SetSprites(mover, "m_frontBlink", Frames("wombat_front", BlinkSuffixes));
+            SetSprites(mover, "m_sideBlink", Frames("wombat_side", BlinkSuffixes));
 
             // 설계 22: 머리 위 이모지 말풍선·글자 말풍선(웜뱃 키 1.1)
             BakeBubbles(wombat.transform, mover, k_WombatHeight);

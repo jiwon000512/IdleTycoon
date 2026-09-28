@@ -1,6 +1,7 @@
 # 점원 웜뱃(설계 21): 빵집 웜뱃 24장(앞·뒤·옆 × 정지·숨쉬기 3·걷기 4)의 털 5색만 바꿔 손님 시트 형식(Resources/Sprites/Visitors/<이름>/, 칸 폭 104px)으로 뽑는다.
 # 외곽선·눈·코·귀 안은 그대로. 팔레트를 더하면 VisitorTable에 role clerk 행을 하나 더 두면 된다(외형은 clerk 행 중 균등 난수).
 # 사용: python make_wombat_palette.py [gray_d ...]  (인자 없으면 PALETTES 전부)
+# 주의(2026-09-29): 웜뱃 걷기가 8프레임(make_anim.py)이 됐다. 다시 뽑기 전에 SHEETS의 Move를 8칸으로, VisitorTable 속도를 맞춘다
 import os
 import sys
 from PIL import Image

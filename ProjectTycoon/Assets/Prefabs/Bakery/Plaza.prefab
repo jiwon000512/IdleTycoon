@@ -365,7 +365,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.05, y: 1.025}
+  m_Size: {x: 1.3, y: 1.175}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -418,18 +418,55 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 07825182dacdb4a4fa7ca509dd247f83, type: 3}
   - {fileID: 21300000, guid: 087fb2d8f3b52484aae79532f6883458, type: 3}
   - {fileID: 21300000, guid: af52e8e95f4449a40a1909c3a71dd023, type: 3}
+  - {fileID: 21300000, guid: ef98d410dfeb9b6478771408c9b95097, type: 3}
+  - {fileID: 21300000, guid: f65e67774e9e0744aa28530f3099ee46, type: 3}
+  - {fileID: 21300000, guid: 7bdc7a34995c3c84186f5ab80053c46e, type: 3}
+  - {fileID: 21300000, guid: 7ef3237911bf21d4f99593bf5e2b7796, type: 3}
   m_backWalk:
   - {fileID: 21300000, guid: a7b3fd8315ff2ba4d8f57aed20bbf5e4, type: 3}
   - {fileID: 21300000, guid: ac439e4df2997ac448bac35961428cfe, type: 3}
   - {fileID: 21300000, guid: 6f34576e0f835874998447c252d2412f, type: 3}
   - {fileID: 21300000, guid: 183e0d43c4fb475479a8c577568bb459, type: 3}
+  - {fileID: 21300000, guid: 8868f8ebb8a733a429277aa342dd31d9, type: 3}
+  - {fileID: 21300000, guid: e9e39957a1194c04aae436eef7b55731, type: 3}
+  - {fileID: 21300000, guid: 28a39ffbf03c17140bd3883278cd1b7f, type: 3}
+  - {fileID: 21300000, guid: 27e294223c05fc842b51b4f6687d747c, type: 3}
   m_sideWalk:
   - {fileID: 21300000, guid: ee757e1c3fbeab84aacad5a9fb12b791, type: 3}
   - {fileID: 21300000, guid: 43feb1ac278ab2b4fb1fe678362e6054, type: 3}
   - {fileID: 21300000, guid: a90c8f23e501934449d29c7966439c4f, type: 3}
   - {fileID: 21300000, guid: 4bf15313ef0afb9449384015c10e4623, type: 3}
-  m_idleFrameRate: 2.5
-  m_walkFrameRate: 8
+  - {fileID: 21300000, guid: 0631c39bf253d9149a670a5d277037a9, type: 3}
+  - {fileID: 21300000, guid: 862900f09bbf72148aff629b4179d26c, type: 3}
+  - {fileID: 21300000, guid: a90545f078a4bc04dac9359bb5eddb24, type: 3}
+  - {fileID: 21300000, guid: 4c42faec93030e846b5e1e9f5ad01797, type: 3}
+  m_frontBlink:
+  - {fileID: 21300000, guid: f2dbec3590873344981239b49db482eb, type: 3}
+  - {fileID: 21300000, guid: a96ce1149a5d28c41bf4c0274ba76d65, type: 3}
+  - {fileID: 21300000, guid: 13324926693a68d40bab45cfc5b4aba8, type: 3}
+  - {fileID: 21300000, guid: 88358626f850afa44afe8f891bf95d4e, type: 3}
+  m_sideBlink:
+  - {fileID: 21300000, guid: fee8dc9bab4f11a44b548de835678325, type: 3}
+  - {fileID: 21300000, guid: f51d15e4ffe83ec4e90c29f395643178, type: 3}
+  - {fileID: 21300000, guid: 62d8bf4e01a04e5489a22c895ff7b33f, type: 3}
+  - {fileID: 21300000, guid: 1104ee6b57a466441bbc824666a11f85, type: 3}
+  m_idleSeconds:
+  - 0.5
+  - 0.16
+  - 0.52
+  - 0.16
+  m_walkSeconds:
+  - 0.08
+  - 0.065
+  - 0.065
+  - 0.065
+  - 0.08
+  - 0.065
+  - 0.065
+  - 0.065
+  m_walkBob: 00000000ffffffff010000000000000000000000ffffffff0100000000000000
+  m_blinkEvery: {x: 3, y: 6}
+  m_blinkSeconds: 0.12
   m_carry:
   - {fileID: 8422958896092884290}
   - {fileID: 919152843379424522}

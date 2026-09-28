@@ -21,10 +21,18 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_frontWalk;
         [SerializeField] private Sprite[] m_backWalk;
         [SerializeField] private Sprite[] m_sideWalk;
-        [Tooltip("숨쉬기 초당 프레임. 4프레임 ÷ 숨 한 번 1.6초")]
-        [SerializeField] private float m_idleFrameRate = 2.5f;
-        [Tooltip("걷기 초당 프레임")]
-        [SerializeField] private float m_walkFrameRate = 8f;
+        [Tooltip("눈 감은 숨쉬기(앞·옆, 숨쉬기와 같은 순서). 뒷모습은 없다")]
+        [SerializeField] private Sprite[] m_frontBlink;
+        [SerializeField] private Sprite[] m_sideBlink;
+        [Tooltip("숨쉬기 프레임 시간(초): 기본 · 늘어남 · 늘어난 채 머묾 · 돌아옴(Source~/make_anim.py)")]
+        [SerializeField] private float[] m_idleSeconds = { 0.5f, 0.16f, 0.52f, 0.16f };
+        [Tooltip("걷기 프레임 시간(초): 딛기(0·4)는 조금 길게")]
+        [SerializeField] private float[] m_walkSeconds = { 0.08f, 0.065f, 0.065f, 0.065f, 0.08f, 0.065f, 0.065f, 0.065f };
+        [Tooltip("걷기 프레임마다 몸이 뜬 칸(+ 위). 든 빵도 같이 오르내린다(Source~/make_anim.py의 body_y)")]
+        [SerializeField] private int[] m_walkBob = { 0, -1, 1, 0, 0, -1, 1, 0 };
+        [Tooltip("눈 깜빡임: 서 있을 때 이 사이 무작위 초마다 · 감는 시간(초)")]
+        [SerializeField] private Vector2 m_blinkEvery = new Vector2(3f, 6f);
+        [SerializeField] private float m_blinkSeconds = 0.12f;
         [Tooltip("든 빵 층(아래부터). 보이는 층 수의 상한")]
         [SerializeField] private SpriteRenderer[] m_carry;
         [Tooltip("맨 아래 빵 가운데 높이(유닛, 발끝 기준) = 앞발 0.21 + 빵 반쯤")]
@@ -42,6 +50,8 @@ namespace ZooTycoon.World
         [SerializeField] private TextMeshPro m_sayText;
         [SerializeField] private float m_sayPadding = 0.3f;
 
+        // 그림 한 칸(2px ÷ PPU 80)
+        private const float k_Cell = 0.025f;
         // 나는 빵은 가게의 모든 그림 위에
         private const int k_FlyOrder = 1000;
         // 든 빵 층 순서: 몸(0) 앞 51~, 뒷모습이면 몸 뒤 -10~
@@ -67,6 +77,7 @@ namespace ZooTycoon.World
         private int m_shownCarry;
         private int m_lastCount;
         private Coroutine m_saying;
+        private float m_blinkIn;
         private Sprite m_square;
         private float m_dustTimer;
 
@@ -201,7 +212,8 @@ namespace ZooTycoon.World
             }
 
             m_renderer.flipX = facing == Facing.Left;
-            m_carry[0].transform.parent.localPosition = Fx.HandOffset(facing, m_handHeight, m_handReach);
+            float bob = moving && m_playing == frames ? m_walkBob[m_animator.Index % m_walkBob.Length] * k_Cell : 0f;
+            m_carry[0].transform.parent.localPosition = Fx.HandOffset(facing, m_handHeight + bob, m_handReach);
 
             for (int i = 0; i < m_carry.Length; i++)
             {
@@ -212,7 +224,16 @@ namespace ZooTycoon.World
             if (m_playing != frames)
             {
                 m_playing = frames;
-                m_animator.Play(frames, moving ? m_walkFrameRate : m_idleFrameRate);
+                m_animator.Play(frames, moving ? m_walkSeconds : m_idleSeconds);
+            }
+
+            // 서 있을 때만 가끔 눈을 감는다(뒷모습은 눈이 없다)
+            m_blinkIn -= Time.deltaTime;
+
+            if (!moving && m_blinkIn <= 0f)
+            {
+                m_blinkIn = Random.Range(m_blinkEvery.x, m_blinkEvery.y);
+                m_animator.Overlay(facing == Facing.Down ? m_frontBlink : facing == Facing.Up ? null : m_sideBlink, m_blinkSeconds);
             }
         }
 
