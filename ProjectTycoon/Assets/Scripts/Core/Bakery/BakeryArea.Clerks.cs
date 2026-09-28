@@ -38,26 +38,48 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 22: 지금 도는 대화(없으면 null). 새 대화가 앞 것을 대신한다
-        public Dialogue Dialogue { get; private set; }
+        // 설계 22: 지금 도는 대화들(깨우기 · 수다가 동시에 돈다). 새 대화는 같은 점원이 낀 앞 대화를 대신한다
+        private readonly List<Dialogue> m_dialogues = new List<Dialogue>();
 
-        // 나 말고 가게 안에서 딴짓 중인 점원(수다 상대). 없으면 null
-        public Clerk IdlingClerkOther(Clerk me)
+        // 이 점원이 낀 대화. 없으면 null
+        public Dialogue DialogueOf(Clerk clerk)
         {
+            return m_dialogues.Find(d => d.Involves(clerk));
+        }
+
+        // 수다 상대: 나 말고 가게 안에 서 있는 가장 가까운 점원(일하는 중이어도 된다. 외출·퇴장·들어오는 중·이미 수다 중은 뺀다). 없으면 null
+        internal Clerk ChatPartnerFor(Clerk me)
+        {
+            Clerk best = null;
+
             foreach (Clerk clerk in m_clerks)
             {
-                if (clerk != me && clerk.Idling && !clerk.Away && clerk.Idle != IdleKind.Outing)
+                if (clerk != me && clerk.CanChat && (best == null || System.Numerics.Vector2.Distance(clerk.Position, me.Position) < System.Numerics.Vector2.Distance(best.Position, me.Position)))
                 {
-                    return clerk;
+                    best = clerk;
                 }
             }
 
-            return null;
+            return best;
         }
 
-        public void StartDialogue(string dialogueId, Clerk clerk)
+        public Dialogue StartDialogue(string dialogueId, Clerk clerk, Clerk partner = null)
         {
-            Dialogue = new Dialogue(Tables.Get<DialogueTable>(dialogueId), Random, Bus, clerk);
+            StopDialogue(clerk);
+
+            if (partner != null)
+            {
+                StopDialogue(partner);
+            }
+
+            Dialogue dialogue = new Dialogue(Tables.Get<DialogueTable>(dialogueId), Random, Bus, clerk, partner);
+            m_dialogues.Add(dialogue);
+            return dialogue;
+        }
+
+        internal void StopDialogue(Clerk clerk)
+        {
+            m_dialogues.RemoveAll(d => d.Involves(clerk));
         }
 
         public IReadOnlyList<Candidate> Candidates
@@ -215,12 +237,12 @@ namespace ZooTycoon.Core
             }
 
             SyncClerkThings();
-            Dialogue?.Tick(dt);
-
-            if (Dialogue != null && Dialogue.Done)
+            foreach (Dialogue dialogue in m_dialogues.ToArray())
             {
-                Dialogue = null;
+                dialogue.Tick(dt);
             }
+
+            m_dialogues.RemoveAll(d => d.Done);
 
             for (int i = m_leavingClerks.Count - 1; i >= 0; i--)
             {

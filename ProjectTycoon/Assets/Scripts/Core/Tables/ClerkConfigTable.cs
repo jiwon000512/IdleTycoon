@@ -52,7 +52,13 @@ namespace ZooTycoon.Core
         public double StrollChance { get; set; }
         // 외출(구멍으로 나가 광장에서 놀다 옴) 확률. 한 난수로 외출 → 산책 → 멍
         public double OutingChance { get; set; }
+        // 수다 확률(한 난수로 수다 → 외출 → 산책 → 멍). 상대가 없으면 수다 몫은 나머지 딴짓 비율대로
+        public double ChatChance { get; set; }
+        // 수다에 쓰는 대화(DialogueTable id). 하나를 균등 난수로
+        public List<string> ChatDialogues { get; set; }
         public double ChatOffset { get; set; }
+        // 딴짓 점원에 「?」가 뜬 순간 제자리에 서 있는 시간(초)
+        public double QuestionHoldSeconds { get; set; }
         public int WakeSkips { get; set; }
         public List<string> Names { get; set; }
     }

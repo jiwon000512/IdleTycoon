@@ -62,6 +62,11 @@ namespace ZooTycoon.Core
         // 외출: 구멍에서 톡 뛰는 중 · 돌아오는 중(깨웠거나 시간이 다 됐다. 자리에 돌아와 딴짓이 끝날 때까지)
         private bool m_hopping;
         private bool m_returning;
+        // 수다: 상대 · 상대가 불러 세웠다(하던 바퀴를 멈추고 선다) · 멈출 때 걷던 중이었다 · 대화
+        private Clerk m_partner;
+        private bool m_pulled;
+        private bool m_resumeWalk;
+        private Dialogue m_chat;
 
         public BakeryArea Bakery { get; }
         protected override WombatArea Area => Bakery;
@@ -80,6 +85,8 @@ namespace ZooTycoon.Core
         // 딴짓 종류의 말풍선(광장이 외출 점원에게 띄운다)
         public string IdleBubbleId => IdleBubble();
         // 자리에 붙어 일하는 중(걷기·딴짓·퇴장 아님). 계산대는 이때만 계산을 돌린다
+        // 수다 상대가 될 수 있다: 가게 안에 서 있고 수다·외출·퇴장 중이 아니다
+        internal bool CanChat => m_entered && !Leaving && !Away && !m_hopping && !m_returning && m_partner == null && Idle != IdleKind.Outing;
         public bool Working => !Leaving && !m_idling && !Moving && Vector2.Distance(Position, WorkerSpot) <= k_AtSpot;
 
         public Vector2 WorkerSpot => Placement.SpotOf((IPlaced)Thing, SpotRole.Worker);
@@ -105,6 +112,7 @@ namespace ZooTycoon.Core
         // 그만둔다: 하던 일을 놓고 구멍으로. 외출 중이면 다음 틱에 그대로 사라진다(광장 그림은 광장이 계단으로 보낸다)
         internal void Leave()
         {
+            EndChat();
             Leaving = true;
             m_idling = false;
             Idle = IdleKind.None;
@@ -123,7 +131,11 @@ namespace ZooTycoon.Core
             m_skipIdle = m_config.WakeSkips;
             Bakery.Bus.Publish(new Events.ClerkWoke(this));
 
-            if (Away || m_hopping)
+            if (m_partner != null)
+            {
+                EndChat();
+            }
+            else if (Away || m_hopping)
             {
                 RequestReturn();
             }
@@ -172,6 +184,13 @@ namespace ZooTycoon.Core
             if (!m_entered)
             {
                 m_entered = m_enter.Tick(this, dt) == BtStatus.Success;
+                return true;
+            }
+
+            // 불려 선 동안은 하던 바퀴를 멈춘다(끝나면 멈춘 곳에서 잇는다)
+            if (m_pulled)
+            {
+                ShowIdleBubble();
                 return true;
             }
 
@@ -332,19 +351,20 @@ namespace ZooTycoon.Core
             double bySkill = m_config.IdleSecondsMin + (m_config.IdleSecondsMax - m_config.IdleSecondsMin) * (100 - Skill) / 100d;
             m_idleLeft = bySkill * (1d - k_IdleJitter * 0.5 + k_IdleJitter * Bakery.Random.NextDouble());
             BurrowNav nav = Bakery.Layout.WombatNav;
-            Clerk other = Bakery.IdlingClerkOther(this);
+            double roll = Bakery.Random.NextDouble();
+            Clerk other = roll < m_config.ChatChance ? Bakery.ChatPartnerFor(this) : null;
 
             if (other != null)
             {
-                Idle = IdleKind.Chat;
-                float side = Position.X >= other.Position.X ? 1f : -1f;
-                Vector2 beside = nav.Snap(other.Position + new Vector2(side * (float)m_config.ChatOffset, 0f));
-                Mover.WalkTo(nav, nav.IsWalkable(beside) || !nav.TryNearestFree(beside, _ => false, k_StandSearch, out Vector2 free) ? beside : free, side > 0f ? Facing.Left : Facing.Right);
-                Bubble.Show(IdleBubble());
+                StartChat(nav, other);
                 return true;
             }
 
-            double roll = Bakery.Random.NextDouble();
+            // 수다가 아니면(상대가 없을 때 포함) 같은 난수를 나머지 딴짓 구간(외출 → 산책 → 멍, 합 1 − chatChance)에 다시 편다
+            double rest = 1d - m_config.ChatChance;
+            roll = roll < m_config.ChatChance ? roll / m_config.ChatChance : (roll - m_config.ChatChance) / rest;
+            roll *= rest;
+
 
             if (roll < m_config.OutingChance)
             {
@@ -372,7 +392,99 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 딴짓 중: 웜뱃이 가까이 오면 그쪽을 보며 「?」, 멀어지면 딴짓 말풍선으로. 시간이 다 되면 끝. 외출은 따로
+        // 수다 걸기: 상대를 불러 세우고 그 옆으로 걸어간다. 도착하면 대화(TickChat)
+        private void StartChat(BurrowNav nav, Clerk other)
+        {
+            Idle = IdleKind.Chat;
+            m_partner = other;
+            other.JoinChat(this);
+            float side = Position.X >= other.Position.X ? 1f : -1f;
+            Vector2 beside = nav.Snap(other.Position + new Vector2(side * (float)m_config.ChatOffset, 0f));
+            Mover.WalkTo(nav, nav.IsWalkable(beside) || !nav.TryNearestFree(beside, _ => false, k_StandSearch, out Vector2 free) ? beside : free, side > 0f ? Facing.Left : Facing.Right);
+            Bubble.Clear();
+        }
+
+        // 수다에 불렸다: 하던 걸음·딴짓을 멈추고 그 자리에 선다
+        private void JoinChat(Clerk from)
+        {
+            m_partner = from;
+            m_pulled = true;
+            m_resumeWalk = Moving;
+            Mover.Place(Position);
+            m_idling = true;
+            Idle = IdleKind.Chat;
+            Bubble.Clear();
+        }
+
+        // 수다 끝(대화 끝 · 둘 중 하나를 깨움 · 해고): 둘 다 딴짓을 끝내고 하던 일로
+        private void EndChat()
+        {
+            Clerk partner = m_partner;
+
+            if (partner == null)
+            {
+                return;
+            }
+
+            Bakery.StopDialogue(this);
+            LeaveChat();
+            partner.LeaveChat();
+        }
+
+        private void LeaveChat()
+        {
+            m_partner = null;
+            m_chat = null;
+
+            if (m_idling)
+            {
+                EndIdle();
+            }
+
+            if (!m_pulled)
+            {
+                return;
+            }
+
+            m_pulled = false;
+
+            // 걷던 중이었거나 자리에서 일하던 중이면 그 목표로 다시 걷는다(TickWalk·TickServe가 이어진다)
+            if (!Leaving && (m_resumeWalk || m_goal == Goal.Spot))
+            {
+                WalkToGoal(m_goal);
+            }
+        }
+
+        // 수다 건 쪽: 옆에 닿으면 마주 보고 대화를 시작하고, 대화가 끝나면 둘 다 끝
+        private BtStatus TickChat()
+        {
+            ShowIdleBubble();
+
+            if (Moving)
+            {
+                return BtStatus.Running;
+            }
+
+            if (m_chat == null)
+            {
+                System.Collections.Generic.List<string> ids = m_config.ChatDialogues;
+                string id = ids[Math.Min(ids.Count - 1, (int)(Bakery.Random.NextDouble() * ids.Count))];
+                Mover.Facing = Mover.FacingOf(m_partner.Position - Position);
+                m_partner.Mover.Facing = Mover.FacingOf(Position - m_partner.Position);
+                m_chat = Bakery.StartDialogue(id, this, m_partner);
+                return BtStatus.Running;
+            }
+
+            if (!m_chat.Done)
+            {
+                return BtStatus.Running;
+            }
+
+            EndChat();
+            return BtStatus.Success;
+        }
+
+        // 딴짓 중: 웜뱃이 가까이 오면 그쪽을 보며 「?」, 멀어지면 딴짓 말풍선으로. 시간이 다 되면 끝. 외출·수다는 따로
         private BtStatus TickIdle(double dt)
         {
             if (!m_idling)
@@ -381,6 +493,11 @@ namespace ZooTycoon.Core
             }
 
             m_idleLeft -= dt;
+
+            if (m_partner != null)
+            {
+                return TickChat();
+            }
 
             if (Idle == IdleKind.Outing)
             {
@@ -474,12 +591,23 @@ namespace ZooTycoon.Core
 
             if (Bakery.WombatPresent && Vector2.Distance(wombat, Position) <= m_questionRange)
             {
+                // 「?」가 뜬 순간 잠깐 멈춰 웜뱃을 본다(깨우기 쉽게)
+                if (Bubble.Id != BubbleTable.k_Question)
+                {
+                    Hold(m_config.QuestionHoldSeconds);
+                }
+
                 Bubble.Show(BubbleTable.k_Question);
 
-                if (!Moving)
+                if (!Moving || Held)
                 {
                     Mover.Facing = Mover.FacingOf(wombat - Position);
                 }
+            }
+            // 수다는 이모지 없이 대사 말풍선만(말하지 않는 동안 비워 둔다)
+            else if (Idle == IdleKind.Chat)
+            {
+                Bubble.Clear();
             }
             else
             {

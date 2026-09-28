@@ -7,6 +7,8 @@ namespace ZooTycoon.Core
     {
         // 웜뱃은 말하지 않는다(기획서 v0.15: 과묵한 주인공)
         Clerk,
+        // 대화 상대 점원(수다)
+        Partner,
         Visitor,
     }
 

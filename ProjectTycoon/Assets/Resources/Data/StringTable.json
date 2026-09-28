@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 24,
+  "version": 25,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -27,7 +27,8 @@
     "version 21 (2026-09-28, 고용할까 창 명함 카드): clerk_ask는 이름 없이 「고용할까?」(이름은 카드에 따로), clerk_nego_risk(협상 안내) 추가, clerk_cancel 삭제(취소는 닫기 버튼).",
     "version 22 (2026-09-28, 월급 표기 A): clerk_wage(「{0}/분」) 삭제 — 월급은 단위 없이 숫자만, 주기는 요약 줄 월급날 게이지(clerk_payday)가 알린다. clerk_summary_wage는 글만(값은 코인 그림 옆 칸).",
     "version 23 (2026-09-28, 점원 연출 1단계): 해고 확인 창 clerk_fire_ask·clerk_fire_cancel·clerk_fire_hint, 협상 결과 리본 clerk_nego_result_keep·down·up 추가. say_wombat_wake 삭제(웜뱃은 말하지 않는다). clerk_nego_think 삭제, clerk_nego_offer(「{0} 어때?」)는 후보가 부르는 값(협상 화면의 웜뱃 말풍선 삭제).",
-    "version 24 (2026-09-28, 점원 연출 2단계): 점원 버튼 배지 clerk_badge_short(「!」, 다음 월급날에 코인이 모자란다) 추가. 딴짓 수 배지는 숫자만."
+    "version 24 (2026-09-28, 점원 연출 2단계): 점원 버튼 배지 clerk_badge_short(「!」, 다음 월급날에 코인이 모자란다) 추가. 딴짓 수 배지는 숫자만.",
+    "version 25 (2026-09-28, 점원 수다): 수다 대사 say_chat_* 추가(DialogueTable clerk_chat_*)."
   ],
   "rows": [
     {
@@ -345,6 +346,50 @@
     {
       "id": "clerk_nego_title",
       "ko": "월급 협상"
+    },
+    {
+      "id": "say_chat_weather_1a",
+      "ko": "밖에 비 온대"
+    },
+    {
+      "id": "say_chat_weather_1b",
+      "ko": "오늘 밖에 바람 분대"
+    },
+    {
+      "id": "say_chat_weather_2a",
+      "ko": "굴 안은 뽀송해"
+    },
+    {
+      "id": "say_chat_weather_3a",
+      "ko": "역시 굴이 최고야"
+    },
+    {
+      "id": "say_chat_bread_1a",
+      "ko": "빵 냄새 좋다"
+    },
+    {
+      "id": "say_chat_bread_1b",
+      "ko": "갓 구운 냄새!"
+    },
+    {
+      "id": "say_chat_bread_2a",
+      "ko": "하나만 먹을까?"
+    },
+    {
+      "id": "say_chat_bread_3a",
+      "ko": "사장님 보신다!"
+    },
+    {
+      "id": "say_chat_customer_1a",
+      "ko": "아까 그 여우 봤어?"
+    },
+    {
+      "id": "say_chat_customer_2a",
+      "ko": "빵을 다섯 개나!"
+    },
+    {
+      "id": "say_chat_customer_3a",
+      "ko": "부자인가 봐"
     }
   ]
 }

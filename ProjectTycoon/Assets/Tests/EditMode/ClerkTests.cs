@@ -56,6 +56,7 @@ namespace ZooTycoon.Tests
             ClerkConfigTable config = m_tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
             config.IdleSecondsMax = config.IdleSecondsMin;
             config.OutingChance = 0d;
+            config.ChatChance = 0d;
             BakeryArea shop = new BakeryArea(m_state, m_tables, random ?? new ConstantRandom(1d), new Wombat(m_tables, m_state), m_bus);
             // 웜뱃은 계산대 자리에서 시작한다: 점원만 일하게 구멍 아래로 비킨다
             shop.Wombat.Mover.Place(shop.Layout.HoleFloor);

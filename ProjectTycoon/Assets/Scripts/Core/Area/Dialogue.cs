@@ -14,14 +14,22 @@ namespace ZooTycoon.Core
         private int m_next;
 
         public Clerk Clerk { get; }
+        // 수다 상대(speaker partner 줄을 말한다). 없으면 null
+        public Clerk Partner { get; }
         public bool Done { get; private set; }
 
-        public Dialogue(DialogueTable table, IRandom random, EventBus bus, Clerk clerk)
+        public Dialogue(DialogueTable table, IRandom random, EventBus bus, Clerk clerk, Clerk partner = null)
         {
             m_table = table;
             m_random = random;
             m_bus = bus;
             Clerk = clerk;
+            Partner = partner;
+        }
+
+        public bool Involves(Clerk clerk)
+        {
+            return Clerk == clerk || Partner == clerk;
         }
 
         // 첫 틱에 첫 줄
@@ -49,13 +57,15 @@ namespace ZooTycoon.Core
             DialogueLineData line = m_table.Lines[m_next++];
             string text = line.Texts[Math.Min(line.Texts.Count - 1, (int)(m_random.NextDouble() * line.Texts.Count))];
 
+            Clerk speaker = line.Speaker == DialogueSpeaker.Partner ? Partner : Clerk;
+
             if (line.Bubble != null)
             {
-                Clerk.Bubble.Show(line.Bubble);
+                speaker.Bubble.Show(line.Bubble);
             }
 
             m_untilNext = m_table.LineSeconds;
-            m_bus.Publish(new Events.DialogueLine(this, line.Speaker, Clerk, text, m_table.LineSeconds));
+            m_bus.Publish(new Events.DialogueLine(this, line.Speaker, speaker, text, m_table.LineSeconds));
         }
     }
 }

@@ -138,9 +138,14 @@ namespace ZooTycoon.Core
 
                 if (WombatPresent && Vector2.Distance(Wombat.Mover.Position, figure.Position) <= m_questionRange)
                 {
+                    if (clerk.Bubble.Id != BubbleTable.k_Question)
+                    {
+                        figure.Hold(clerk.Bakery.ClerkConfig.QuestionHoldSeconds);
+                    }
+
                     clerk.Bubble.Show(BubbleTable.k_Question);
 
-                    if (!figure.Moving)
+                    if (!figure.Moving || figure.Held)
                     {
                         figure.Mover.Facing = Mover.FacingOf(Wombat.Mover.Position - figure.Position);
                     }

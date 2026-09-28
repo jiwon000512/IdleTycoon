@@ -1,11 +1,12 @@
 {
   "table": "DialogueTable",
-  "version": 2,
+  "version": 3,
   "notes": [
     "설계 22 (2026-09-26) 대화. 줄(lines)을 lineSeconds 간격으로 말하는 이의 머리 위 글자 말풍선에 차례로 띄운다(조작을 막지 않는다).",
-    "line.speaker: clerk(대화를 건 점원) · visitor(예비). line.texts: StringTable id 목록, 하나를 균등 난수로 고른다. line.bubble: 같이 띄울 이모지(BubbleTable id, 없으면 null).",
+    "line.speaker: clerk(대화를 건 점원) · partner(수다 상대 점원) · visitor(예비). line.texts: StringTable id 목록, 하나를 균등 난수로 고른다. line.bubble: 같이 띄울 이모지(BubbleTable id, 없으면 null).",
     "첫 쓰임 clerk_wake(깨우기). 손님·평론가 대화는 행을 더한다.",
-    "version 2 (2026-09-28, 기획서 v0.15 과묵한 주인공): 웜뱃은 말하지 않는다 — speaker wombat 삭제, clerk_wake는 점원 한 줄."
+    "version 2 (2026-09-28, 기획서 v0.15 과묵한 주인공): 웜뱃은 말하지 않는다 — speaker wombat 삭제, clerk_wake는 점원 한 줄.",
+    "version 3 (2026-09-28, 점원 수다): speaker partner 추가, 수다 대화 clerk_chat_* 3개(어느 것을 쓸지는 ClerkConfigTable chatDialogues). 수다 건 점원(clerk)과 상대(partner)가 번갈아 말한다."
   ],
   "rows": [
     {
@@ -18,6 +19,89 @@
             "say_clerk_wake_1",
             "say_clerk_wake_2",
             "say_clerk_wake_3"
+          ],
+          "bubble": null
+        }
+      ]
+    },
+    {
+      "id": "clerk_chat_weather",
+      "lineSeconds": 1.4,
+      "lines": [
+        {
+          "speaker": "clerk",
+          "texts": [
+            "say_chat_weather_1a",
+            "say_chat_weather_1b"
+          ],
+          "bubble": null
+        },
+        {
+          "speaker": "partner",
+          "texts": [
+            "say_chat_weather_2a"
+          ],
+          "bubble": null
+        },
+        {
+          "speaker": "clerk",
+          "texts": [
+            "say_chat_weather_3a"
+          ],
+          "bubble": null
+        }
+      ]
+    },
+    {
+      "id": "clerk_chat_bread",
+      "lineSeconds": 1.4,
+      "lines": [
+        {
+          "speaker": "clerk",
+          "texts": [
+            "say_chat_bread_1a",
+            "say_chat_bread_1b"
+          ],
+          "bubble": null
+        },
+        {
+          "speaker": "partner",
+          "texts": [
+            "say_chat_bread_2a"
+          ],
+          "bubble": null
+        },
+        {
+          "speaker": "clerk",
+          "texts": [
+            "say_chat_bread_3a"
+          ],
+          "bubble": null
+        }
+      ]
+    },
+    {
+      "id": "clerk_chat_customer",
+      "lineSeconds": 1.4,
+      "lines": [
+        {
+          "speaker": "clerk",
+          "texts": [
+            "say_chat_customer_1a"
+          ],
+          "bubble": null
+        },
+        {
+          "speaker": "partner",
+          "texts": [
+            "say_chat_customer_2a"
+          ],
+          "bubble": null
+        },
+        {
+          "speaker": "clerk",
+          "texts": [
+            "say_chat_customer_3a"
           ],
           "bubble": null
         }

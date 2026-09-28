@@ -152,9 +152,26 @@ namespace ZooTycoon.Data
                 }
 
                 // 설계 22
-                if (config.StrollRadius <= 0d || config.StrollChance < 0d || config.OutingChance < 0d || config.StrollChance + config.OutingChance > 1d || config.ChatOffset <= 0d || config.WakeSkips < 0)
+                if (config.StrollRadius <= 0d || config.StrollChance < 0d || config.OutingChance < 0d || config.ChatChance < 0d
+                    || config.StrollChance + config.OutingChance + config.ChatChance > 1d || config.ChatOffset <= 0d || config.WakeSkips < 0 || config.QuestionHoldSeconds < 0d)
                 {
-                    errors.Add($"ClerkConfigTable '{config.Id}': strollRadius·chatOffset은 0보다, strollChance·outingChance는 0 이상이고 합이 1 이하, wakeSkips는 0 이상이어야 한다.");
+                    errors.Add($"ClerkConfigTable '{config.Id}': strollRadius·chatOffset은 0보다, strollChance·outingChance·chatChance는 0 이상이고 합이 1 이하, wakeSkips·questionHoldSeconds는 0 이상이어야 한다.");
+                }
+
+                // 수다: 대화가 DialogueTable에 있고 상대(partner) 줄이 있어야 주고받는다
+                if (config.ChatChance > 0d && (config.ChatDialogues == null || config.ChatDialogues.Count == 0))
+                {
+                    errors.Add($"ClerkConfigTable '{config.Id}': chatChance가 0보다 크면 chatDialogues가 있어야 한다.");
+                }
+
+                foreach (string id in config.ChatDialogues ?? new List<string>())
+                {
+                    DialogueTable dialogue = System.Linq.Enumerable.FirstOrDefault(tables.GetAll<DialogueTable>(), d => d.Id == id);
+
+                    if (dialogue == null || dialogue.Lines == null || !dialogue.Lines.Exists(l => l.Speaker == DialogueSpeaker.Partner))
+                    {
+                        errors.Add($"ClerkConfigTable '{config.Id}': 수다 대화 '{id}'가 DialogueTable에 없거나 partner 줄이 없다.");
+                    }
                 }
             }
 

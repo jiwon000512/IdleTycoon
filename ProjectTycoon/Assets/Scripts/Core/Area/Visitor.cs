@@ -35,6 +35,13 @@ namespace ZooTycoon.Core
         private double m_yielded;
         private double m_detourWait;
         private bool m_passing;
+        private double m_hold;
+
+        // seconds 동안 제자리에 선다(걷던 길은 이어 간다)
+        internal void Hold(double seconds)
+        {
+            m_hold = seconds;
+        }
 
         public int Id { get; }
         public VisitorTable Look { get; }
@@ -49,6 +56,10 @@ namespace ZooTycoon.Core
         public bool Hopping => Phase == VisitorPhase.Entering || Phase == VisitorPhase.Exiting;
         // 웜뱃이 비키기를 기다리며 서 있다(길은 남아 있다)
         public bool Yielding { get; private set; }
+        // 잠깐 멈춤(딴짓 점원에 「?」가 뜬 순간). 길은 남아 있다
+        public bool Held => m_hold > 0d;
+        // 길이 남았지만 이번 프레임은 걷지 않는다(그림은 서 있는 모습)
+        public bool Paused => Yielding || Held;
         // 지금 있는 곳(웜뱃이 어디 있는지 안다)
         protected abstract WombatArea Area { get; }
 
@@ -78,9 +89,10 @@ namespace ZooTycoon.Core
         // 매 프레임: 길을 걷고 할 일을 한다. false면 곳을 떠났다
         public bool Tick(double dt)
         {
+            m_hold -= dt;
             Yielding = Yield(dt);
 
-            if (!Yielding)
+            if (!Paused)
             {
                 Mover.Advance(m_walkSpeed * dt);
             }
