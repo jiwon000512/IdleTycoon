@@ -1,0 +1,12 @@
+caption = "cozy little market street theme for a cute pixel-art game, a small village fair in an underground town square under red and cream striped awnings, soft melodica melody, ukulele and acoustic guitar strums, bouncy upright bass, soft chiptune accents, cheerful and friendly, animals strolling and chatting, gentle, simple melody, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 100
+keyscale = "G major"
+timesignature = "4"
+seed = 9202
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/plaza_b"
+audio_format = "wav"
+backend = "pt"
+thinking = false

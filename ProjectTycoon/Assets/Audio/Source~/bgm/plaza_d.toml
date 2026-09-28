@@ -1,0 +1,12 @@
+caption = "warm quiet theme for an underground town square lit by warm lanterns deep inside a burrow, bright but gentle major key, low warm pad chords, soft felt piano in the low and middle register, gentle cello and upright bass, sparse soft glockenspiel notes like distant little lights, slow calm strolling pace, cozy cave echo, peaceful and quiet, simple melody, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 84
+keyscale = "F major"
+timesignature = "4"
+seed = 9404
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/plaza_d"
+audio_format = "wav"
+backend = "pt"
+thinking = false

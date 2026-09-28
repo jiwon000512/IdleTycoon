@@ -5,7 +5,8 @@
 #   나머지(멜로디·코드): 어택 누르기(빠른 컴프레서) + 3kHz 위 −6dB + 8kHz 위 걷기 + 작은 방 잔향 20%
 #   베이스: 4kHz 위 걷기
 # 를 다시 섞고, 버스 컴프레서로 크기를 고른 뒤 RMS −21dBFS·피크 0.7 안으로 맞춘다.
-# 실행(ACE-Step venv): .venv\Scripts\python.exe mellow.py <원곡 wav> <출력 경로(확장자 없이)>
+# 실행(ACE-Step venv): .venv\Scripts\python.exe mellow.py <원곡 wav> <출력 경로(확장자 없이)> [잔향 초=1.2] [잔향 비율=0.2] [고음 걷기 Hz=8000]
+#   굴 속 광장(2026-09-28): 2.0 0.3 7000 — 더 길고 많은 울림, 고음 조금 더 걷기
 import sys
 import numpy as np
 import soundfile as sf
@@ -50,7 +51,7 @@ def room(x, sr, seconds=1.2, wet=0.2, seed=7):
     return (1 - wet) * x + wet * tail
 
 
-def main(src_path, out_base):
+def main(src_path, out_base, room_seconds=1.2, wet=0.2, top_hz=8000):
     x, sr = sf.read(src_path, dtype='float32')
     model = get_model('htdemucs')
     model.eval()
@@ -64,8 +65,8 @@ def main(src_path, out_base):
     other = s['other'] + s['vocals']
     other = compress(other, sr, -24, 4, 2, 120)
     other = treble_cut(other, sr, 3000, -6)
-    other = lowpass(other, sr, 8000)
-    other = room(other, sr)
+    other = lowpass(other, sr, top_hz)
+    other = room(other, sr, room_seconds, wet)
     mix = drums + bass + other
     mix = compress(mix, sr, -18, 2, 10, 250)
     rms = np.sqrt(np.mean(mix ** 2))
@@ -83,4 +84,4 @@ def main(src_path, out_base):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], *[float(a) for a in sys.argv[3:6]])

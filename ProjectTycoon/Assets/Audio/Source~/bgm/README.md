@@ -9,3 +9,4 @@
   3. (선택) `lower.py <입력> <반음> <출력>` — 테이프 속도식으로 곡 전체를 낮춤
 - 원본 WAV는 저장소 밖 `C:\project\ACE-Step-1.5\output\tycoon\`. 게임에는 루프 OGG만 `Resources/Audio/`에 넣는다.
 - 결정(2026-09-28): 빵집 굴 = `bakery_f.toml`(말랑한 칩튠 가게, 108 BPM F장조) → mellow → loop 4~32마디(62.2초). 다른 시안 설정(a~k)은 기록으로 둔다. 프롬프트의 「drumless/no drums」는 잘 안 먹혀 드럼은 mellow.py(Demucs)로 줄인다.
+- 결정(2026-09-28): 광장 = `plaza_d.toml`(등불 광장, 84 BPM F장조, 굴 속이라 낮은 음 중심) → `mellow.py <wav> <출력> 2.0 0.3 7000`(굴 울림) → loop 5~22마디(48.6초, 최소 16마디). 시안 plaza_a~f는 기록.

@@ -1,0 +1,12 @@
+caption = "calm cozy stroll through an underground plaza in a cute pixel-art game, low marimba and kalimba in the lower octave, soft triangle-wave bass, muted nylon guitar, warm and quiet, bright major key but soft and hushed, gentle cave reverb, slow relaxed walking rhythm, simple melody, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 88
+keyscale = "D major"
+timesignature = "4"
+seed = 9505
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/plaza_e"
+audio_format = "wav"
+backend = "pt"
+thinking = false

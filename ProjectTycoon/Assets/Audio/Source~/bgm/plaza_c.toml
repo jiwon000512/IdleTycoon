@@ -1,0 +1,12 @@
+caption = "soft chiptune town square theme for a cute pixel-art game, sister theme of a cozy chiptune bakery, gentle square and triangle waves, warm pad chords for an open spacious feel, light kalimba and soft chiptune arpeggios like a fountain, relaxed strolling rhythm, airy and peaceful, simple singable melody, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 96
+keyscale = "Bb major"
+timesignature = "4"
+seed = 9303
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/plaza_c"
+audio_format = "wav"
+backend = "pt"
+thinking = false

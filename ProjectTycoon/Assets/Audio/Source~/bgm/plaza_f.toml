@@ -1,0 +1,12 @@
+caption = "soft low chiptune theme for a warm underground town square, gentle triangle waves and muted square waves in the lower octave, warm analog pad, deep round bass, sparse bright little bell accents, quiet, cozy and calm, bright major key, gentle echo like a cave, slow strolling pace, simple melody, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 90
+keyscale = "Bb major"
+timesignature = "4"
+seed = 9606
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/plaza_f"
+audio_format = "wav"
+backend = "pt"
+thinking = false

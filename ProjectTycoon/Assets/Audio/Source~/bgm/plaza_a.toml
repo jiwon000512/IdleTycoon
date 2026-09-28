@@ -1,0 +1,12 @@
+caption = "gentle strolling town-square theme for a cute pixel-art game, an underground plaza with a little fountain, benches, flower pots and street lamps where small animal shoppers wander between shops, light plucked acoustic guitar, pizzicato strings walking bass, glockenspiel melody, soft sparkling chiptune arpeggios like fountain water, airy and open, peaceful afternoon, simple melody, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 92
+keyscale = "C major"
+timesignature = "4"
+seed = 9101
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/plaza_a"
+audio_format = "wav"
+backend = "pt"
+thinking = false
