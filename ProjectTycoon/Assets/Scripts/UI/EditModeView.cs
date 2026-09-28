@@ -33,6 +33,7 @@ namespace ZooTycoon.UI
         [SerializeField] private Button m_doneButton;
         [SerializeField] private GameObject m_panel;
         [SerializeField] private RectTransform m_panelRect;
+        [SerializeField] private CanvasGroup m_panelGroup;
         [SerializeField] private RectTransform m_cardsRoot;
         [SerializeField] private EditCardView m_cardTemplate;
         [SerializeField] private PointerRelay m_dragArea;
@@ -44,6 +45,8 @@ namespace ZooTycoon.UI
         private readonly List<EditCardView> m_cards = new List<EditCardView>();
         private readonly Dictionary<string, Sprite> m_icons = new Dictionary<string, Sprite>();
         private Camera m_camera;
+        private Vector2 m_panelRest;
+        private Coroutine m_panelFx;
 
         public event Action EditClicked;
         public event Action DoneClicked;
@@ -61,12 +64,25 @@ namespace ZooTycoon.UI
             m_dragArea.Dragged += data => WorldPointerMoved?.Invoke(World(data));
             m_dragArea.PointerUp += data => WorldPointerUp?.Invoke(World(data), OverPanel(data));
             m_cardTemplate.gameObject.SetActive(false);
+            m_panelRest = m_panelRect.anchoredPosition;
+            m_panel.SetActive(false);
             SetEditing(false);
         }
 
+        // 패널은 공용 등장·퇴장(UiFx)
         public void SetEditing(bool editing)
         {
-            m_panel.SetActive(editing);
+            if (editing != m_panel.activeSelf)
+            {
+                if (m_panelFx != null)
+                {
+                    StopCoroutine(m_panelFx);
+                }
+
+                m_panel.SetActive(true);
+                m_panelFx = StartCoroutine(editing ? UiFx.Appear(m_panelGroup, m_panelRect, m_panelRest, 0f) : UiFx.Vanish(m_panelGroup, m_panel));
+            }
+
             m_dragArea.gameObject.SetActive(editing);
             m_editButton.gameObject.SetActive(!editing);
         }

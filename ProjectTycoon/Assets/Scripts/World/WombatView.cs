@@ -47,6 +47,15 @@ namespace ZooTycoon.World
         // 든 빵 층 순서: 몸(0) 앞 51~, 뒷모습이면 몸 뒤 -10~
         private const int k_CarryFrontOrder = 51;
         private const int k_CarryBackOrder = -10;
+        // 걷는 동안 발밑에서 이는 먼지(k_DustGap초마다 알갱이 k_DustCount개가 천천히 떠오른다)
+        private static readonly Color k_Dust = new Color32(0xC8, 0xA8, 0x8C, 255);
+        private const float k_DustGap = 0.2f;
+        private const int k_DustCount = 3;
+        private const int k_DustCells = 6;
+        private const float k_DustSpread = 0.3f;
+        private const float k_DustLift = 0.5f;
+        private const float k_DustUp = 0.05f;
+        private const float k_DustSeconds = 0.4f;
 
         private WombatArea m_area;
         private Transform m_origin;
@@ -58,6 +67,8 @@ namespace ZooTycoon.World
         private int m_shownCarry;
         private int m_lastCount;
         private Coroutine m_saying;
+        private Sprite m_square;
+        private float m_dustTimer;
 
         // 굽기 때 켜진 채 저장된 말풍선·글 상자는 실행 시작에 끈다(Say·Bubble이 필요할 때만 켠다)
         private void Awake()
@@ -158,6 +169,15 @@ namespace ZooTycoon.World
             transform.position = m_origin.position + new Vector3(p.X, p.Y, 0f);
             bool moving = m_area.Wombat.Moving;
             Facing facing = m_area.Wombat.Mover.Facing;
+            m_dustTimer = moving ? m_dustTimer - Time.deltaTime : 0f;
+
+            if (moving && m_dustTimer <= 0f)
+            {
+                m_dustTimer = k_DustGap;
+                m_square = m_square != null ? m_square : Fx.NewSquare();
+                // 발끝보다 조금 위(몸 뒤로 정렬)
+                StartCoroutine(Fx.Burst(m_origin, m_square, transform.position + Vector3.up * k_DustUp, k_DustCount, k_DustSpread, k_DustLift, 0f, k_DustSeconds, k_DustCells, k_Dust, 0));
+            }
 
             // 계산대 뒤(위)에서 줄 머리가 서 있으면 계산 중 앞모습(손님은 아래)
             if (!moving && m_shop != null && ServingAtCounter())

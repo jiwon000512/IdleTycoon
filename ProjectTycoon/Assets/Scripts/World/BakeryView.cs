@@ -36,6 +36,15 @@ namespace ZooTycoon.World
 
         private const int k_DirtOrder = -1990;
         private static readonly Color k_Dirt = new Color(0.45f, 0.3f, 0.18f);
+        // 굴을 판 순간 새 칸에서 튀는 흙덩이(두 빛깔 × k_ClodCount개, 모든 그림 위)
+        private static readonly Color k_DirtDark = new Color32(52, 32, 32, 255);
+        private const int k_ClodCells = 12;
+        private const int k_ClodCount = 12;
+        private const float k_ClodSpread = 2.4f;
+        private const float k_ClodLift = 4f;
+        private const float k_ClodGravity = 12f;
+        private const float k_ClodSeconds = 0.6f;
+        private const int k_ClodOrder = 1000;
 
         private readonly Dictionary<ShelfInteractable, ShelfView> m_shelves = new Dictionary<ShelfInteractable, ShelfView>();
         private readonly Dictionary<ShelfInteractable, ShelfSignView> m_signs = new Dictionary<ShelfInteractable, ShelfSignView>();
@@ -386,6 +395,9 @@ namespace ZooTycoon.World
 
             Repaint();
             StartCoroutine(DigRoutine(e.Cell));
+            Vector3 center = CellCenter(e.Cell);
+            StartCoroutine(Fx.Burst(transform, White, center, k_ClodCount, k_ClodSpread, k_ClodLift, k_ClodGravity, k_ClodSeconds, k_ClodCells, k_Dirt, k_ClodOrder));
+            StartCoroutine(Fx.Burst(transform, White, center, k_ClodCount, k_ClodSpread, k_ClodLift, k_ClodGravity, k_ClodSeconds, k_ClodCells, k_DirtDark, k_ClodOrder));
             OnExpanded();
         }
 
@@ -436,7 +448,7 @@ namespace ZooTycoon.World
             {
                 if (m_white == null)
                 {
-                    m_white = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 4f, 4f), new Vector2(0.5f, 0.5f), 4f);
+                    m_white = Fx.NewSquare();
                 }
 
                 return m_white;

@@ -1090,6 +1090,7 @@ GameObject:
   - component: {fileID: 8382387341775109070}
   - component: {fileID: 5020245306471088701}
   - component: {fileID: 6074979677840820888}
+  - component: {fileID: 5727263490688733608}
   m_Layer: 0
   m_Name: Panel
   m_TagString: Untagged
@@ -1157,6 +1158,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!225 &5727263490688733608
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4452819490744028041}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &5477297253468589068
 GameObject:
   m_ObjectHideFlags: 0
@@ -1555,6 +1568,7 @@ MonoBehaviour:
   m_doneButton: {fileID: 4811157861743807779}
   m_panel: {fileID: 4452819490744028041}
   m_panelRect: {fileID: 8382387341775109070}
+  m_panelGroup: {fileID: 5727263490688733608}
   m_cardsRoot: {fileID: 3728199757394735967}
   m_cardTemplate: {fileID: 6084462945156379170}
   m_dragArea: {fileID: 6952810715637929269}
