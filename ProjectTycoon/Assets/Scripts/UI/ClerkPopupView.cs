@@ -65,7 +65,10 @@ namespace ZooTycoon.UI
         [SerializeField] private Button m_askNegotiate;
         [SerializeField] private TextMeshProUGUI m_askNegotiateLabel;
         [SerializeField] private Button m_askCancel;
-        [SerializeField] private TextMeshProUGUI m_askCancelLabel;
+        [Tooltip("고용할까 창(명함 카드): 이름 · 자리 이름표 · 협상 안내")]
+        [SerializeField] private TextMeshProUGUI m_askName;
+        [SerializeField] private TextMeshProUGUI m_askSlot;
+        [SerializeField] private TextMeshProUGUI m_askHint;
         [Tooltip("협상 상태")]
         [SerializeField] private GameObject m_nego;
         [SerializeField] private Image m_negoWombat;
@@ -203,15 +206,18 @@ namespace ZooTycoon.UI
             m_summaryRow.SetAsLastSibling();
         }
 
-        public void ShowAsk(string iconPath, string title, string skillHeader, string wageHeader, int skill, string wage, string plain, string negotiate, string cancel)
+        // 고용할까 창. 취소는 오른쪽 위 닫기 버튼(AskCancelClicked)
+        public void ShowAsk(string iconPath, string title, string name, string slot, string skillHeader, string wageHeader, int skill, string wage, string plain, string negotiate, string hint)
         {
             m_ask.SetActive(true);
             m_askIcon.sprite = Load(iconPath);
             m_askTitle.text = title;
+            m_askName.text = name;
+            m_askSlot.text = slot;
             m_askStat.Show(skillHeader, wageHeader, skill, wage);
             m_askPlainLabel.text = plain;
             m_askNegotiateLabel.text = negotiate;
-            m_askCancelLabel.text = cancel;
+            m_askHint.text = hint;
         }
 
         public void HideAsk()

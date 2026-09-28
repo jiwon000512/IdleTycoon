@@ -225,9 +225,10 @@ namespace ZooTycoon.UI
         private void ShowAsk()
         {
             m_asking = true;
-            m_view.ShowAsk(m_candidate.Look.Sprite, m_tables.Format("clerk_ask", m_candidate.Name),
+            m_view.ShowAsk(m_candidate.Look.Sprite, m_tables.Text("clerk_ask"), m_candidate.Name,
+                m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_slot.Table.Id), IndexAmongKind(m_slot)),
                 m_tables.Text("clerk_col_skill"), m_tables.Text("clerk_col_base_wage"), m_candidate.Skill, Wage(m_bakery.WageFor(m_candidate, m_slot)),
-                m_tables.Text("clerk_hire_plain"), m_tables.Text("clerk_negotiate"), m_tables.Text("clerk_cancel"));
+                m_tables.Text("clerk_hire_plain"), m_tables.Text("clerk_negotiate"), m_tables.Text("clerk_nego_risk"));
         }
 
         private void Hire(int wage)
