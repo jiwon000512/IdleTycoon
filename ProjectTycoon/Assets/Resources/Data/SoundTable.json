@@ -1,16 +1,35 @@
 {
   "table": "SoundTable",
-  "version": 3,
+  "version": 4,
   "notes": [
-    "설계 10: 효과음. id는 코드(SoundTable.k_*)와 같아야 하고, 어느 사건에 나는지는 코드(World BakerySound)가 정한다.",
+    "설계 10·23: 효과음. id는 코드(SoundTable.k_*)와 같아야 하고, 어느 사건에 나는지는 코드(World WorldSound · UI View)가 정한다. 재생은 GameKit SoundManager(GameManager.Init이 이 표를 등록한다).",
     "clip: Resources/ 기준 경로(확장자 없음). Assets/Audio/Source~/make_sfx.py로 합성한 실제 소리(2026-09-24 사용자 선택). 바꿀 때는 같은 경로에 덮어쓴다.",
     "minGap: 마지막 재생 뒤 이 초 안이면 건너뛴다. comboSeconds 안에 이어 나면 피치 = min(pitchMax, 1 + pitchStep × 이어진 횟수), 지나면 1로. 0이면 피치 고정.",
     "pay comboSeconds 1.0 → 2.5 (2026-09-24, 설계 10 v0.2): 업그레이드 전 결제 간격이 약 1.9초(계산 1.5 + 줄 머리로 걷기 0.36)라 1초로는 줄을 계속 받아도 피치가 오르지 않았다.",
     "version 2 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
-    "version 3 (2026-09-25): give_up 삭제. 빵을 못 찾은 손님은 소리·「!!」 없이 그냥 나간다(자연스럽게 둘러보다 가는 느낌)."
+    "version 3 (2026-09-25): give_up 삭제. 빵을 못 찾은 손님은 소리·「!!」 없이 그냥 나간다(자연스럽게 둘러보다 가는 느낌).",
+    "version 4 (2026-09-28, 효과음 1차): 18개 추가 — 계산 receipt(사용자 요청: 영수증이 올라오는 소리, 출력기 그림이 한 칸 오를 때마다), 빵집 bake_start·take_out·put·pick·dig·upgrade·place, 점원 clerk_hired·clerk_fired·wake, 이동 passage, 대화 say, UI ui_tap·ui_open·ui_close·nego_good·nego_bad. 에이전트가 1차로 판단해 넣었고 사용자 플레이 피드백으로 하나씩 고친다."
   ],
   "rows": [
     { "id": "pay", "clip": "Audio/pay", "volume": 0.6, "minGap": 0.1, "comboSeconds": 2.5, "pitchStep": 0.05, "pitchMax": 1.3 },
-    { "id": "oven_done", "clip": "Audio/oven_done", "volume": 0.7, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
+    { "id": "oven_done", "clip": "Audio/oven_done", "volume": 0.7, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "receipt", "clip": "Audio/receipt", "volume": 0.3, "minGap": 0.04, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "bake_start", "clip": "Audio/bake_start", "volume": 0.45, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "take_out", "clip": "Audio/take_out", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "put", "clip": "Audio/put", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "pick", "clip": "Audio/pick", "volume": 0.3, "minGap": 0.15, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "dig", "clip": "Audio/dig", "volume": 0.6, "minGap": 0.05, "comboSeconds": 1.0, "pitchStep": 0.04, "pitchMax": 1.2 },
+    { "id": "upgrade", "clip": "Audio/upgrade", "volume": 0.6, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "place", "clip": "Audio/place", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "clerk_hired", "clip": "Audio/clerk_hired", "volume": 0.6, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "clerk_fired", "clip": "Audio/clerk_fired", "volume": 0.55, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "wake", "clip": "Audio/wake", "volume": 0.55, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "passage", "clip": "Audio/passage", "volume": 0.4, "minGap": 0.3, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "say", "clip": "Audio/say", "volume": 0.3, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "ui_tap", "clip": "Audio/ui_tap", "volume": 0.35, "minGap": 0.03, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "ui_open", "clip": "Audio/ui_open", "volume": 0.4, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "ui_close", "clip": "Audio/ui_close", "volume": 0.4, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "nego_good", "clip": "Audio/nego_good", "volume": 0.6, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "nego_bad", "clip": "Audio/nego_bad", "volume": 0.5, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
   ]
 }

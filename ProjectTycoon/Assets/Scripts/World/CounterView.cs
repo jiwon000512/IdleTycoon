@@ -1,4 +1,6 @@
 using UnityEngine;
+using GameKit.Audio;
+using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
@@ -11,12 +13,23 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_timer;
         [SerializeField] private Sprite[] m_timerFrames;
 
+        private int m_frame;
+
         public WombatView Wombat => m_wombat;
         public SpriteRenderer Body => m_body;
 
+        // 영수증이 한 칸 올라올 때마다 출력기 소리
         public void SetProgress(float progress, bool serving)
         {
-            m_timer.sprite = m_timerFrames[serving ? 1 + Mathf.RoundToInt(Mathf.Clamp01(progress) * (m_timerFrames.Length - 2)) : 0];
+            int frame = serving ? 1 + Mathf.RoundToInt(Mathf.Clamp01(progress) * (m_timerFrames.Length - 2)) : 0;
+
+            if (frame > m_frame)
+            {
+                SoundManager.Instance.Play(SoundTable.k_Receipt);
+            }
+
+            m_frame = frame;
+            m_timer.sprite = m_timerFrames[frame];
         }
 
         public void Bounce()

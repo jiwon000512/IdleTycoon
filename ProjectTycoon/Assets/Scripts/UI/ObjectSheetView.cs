@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using GameKit.UI;
+using GameKit.Audio;
+using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
@@ -140,6 +142,7 @@ namespace ZooTycoon.UI
                 m_dim.gameObject.SetActive(true);
                 m_panel.gameObject.SetActive(true);
                 Slide(m_hiddenY, 0f, k_OpenSeconds, false);
+                SoundManager.Instance.Play(SoundTable.k_UiOpen);
             }
         }
 
@@ -148,6 +151,7 @@ namespace ZooTycoon.UI
             if (m_panel.gameObject.activeSelf)
             {
                 Slide(m_panel.anchoredPosition.y, m_hiddenY, k_CloseSeconds, true);
+                SoundManager.Instance.Play(SoundTable.k_UiClose);
             }
         }
 

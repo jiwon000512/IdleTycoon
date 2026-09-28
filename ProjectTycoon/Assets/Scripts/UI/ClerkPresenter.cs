@@ -399,6 +399,7 @@ namespace ZooTycoon.UI
         {
             string key = m_negotiation.Outcome == NegotiationOutcome.Keep ? "clerk_nego_keep" : m_negotiation.Outcome == NegotiationOutcome.Down ? "clerk_nego_down" : "clerk_nego_up";
             m_view.SetBubbles(m_tables.Format("clerk_nego_offer", Wage(m_negotiation.BaseWage)), m_tables.Format(key, Wage(m_negotiation.Wage)));
+            m_view.PlayResult(m_negotiation.Outcome != NegotiationOutcome.Up);
         }
 
         private void Bus_ClerkFired(Events.ClerkFired e)

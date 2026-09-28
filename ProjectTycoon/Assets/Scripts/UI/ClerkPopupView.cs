@@ -5,6 +5,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using GameKit.UI;
+using GameKit.Audio;
+using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
@@ -133,11 +135,21 @@ namespace ZooTycoon.UI
 
         public void Open()
         {
+            if (!m_root.activeSelf)
+            {
+                SoundManager.Instance.Play(SoundTable.k_UiOpen);
+            }
+
             m_root.SetActive(true);
         }
 
         public void Close()
         {
+            if (m_root.activeSelf)
+            {
+                SoundManager.Instance.Play(SoundTable.k_UiClose);
+            }
+
             m_root.SetActive(false);
             m_ask.SetActive(false);
         }
@@ -227,6 +239,12 @@ namespace ZooTycoon.UI
         {
             image.SetNativeSize();
             image.rectTransform.sizeDelta *= k_ScenePixel;
+        }
+
+        // 협상 결과 소리: 월급이 그대로거나 내려가면 good
+        public void PlayResult(bool good)
+        {
+            SoundManager.Instance.Play(good ? SoundTable.k_NegoGood : SoundTable.k_NegoBad);
         }
 
         public void SetBubbles(string left, string right)

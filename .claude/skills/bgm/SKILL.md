@@ -43,4 +43,9 @@ description: 배경음악(BGM)이나 효과음을 새로 만들거나 고칠 때
 
 ## 효과음
 
-`Assets/Audio/Source~/make_sfx.py`가 numpy로 합성한다(칩튠 결). 소리마다 시안 3개 → 선택. 표는 `SoundTable.json`, 어느 사건에 나는지는 `World/BakerySound`, 재생은 GameKit `SoundManager.PlaySfx`.
+- `Assets/Audio/Source~/make_sfx.py`가 numpy로 합성해 `Resources/Audio/<id>.wav`에 쓴다(칩튠 결, 44.1kHz 모노). 도구: `sweep`(미끄러지는 음) · `note` · `noise`(띠 통과 잡음) · `seq`(이어 붙이기) · `soft`(첫소리 부드럽게) · `bell`.
+- 표는 `SoundTable.json`(음량·최소 간격·연속 피치). 어느 사건에 나는지는 `World/WorldSound`(월드 사건)와 UI(`PressScale`·View). 재생은 어디서든 `SoundManager.Instance.Play(SoundTable.k_*)`.
+- 새 효과음: `make_sfx.py`에 한 줄 → 표에 행 → `SoundTable.cs`에 `k_*`와 `Ids` → 사건에 연결. 표에 없는 id를 부르면 예외가 난다.
+- 소리 하나만 고칠 때는 `make_sfx.py`의 그 줄만 바꿔 다시 돌린다(다른 소리는 그대로 나온다). 음량·간격만이면 표만 고친다.
+- 2026-09-28의 17개는 에이전트가 1차로 판단해 넣었다. 사용자가 플레이로 듣고 하나씩 피드백한다. 방향은 BGM과 같다: 은은하게, 첫소리가 튀지 않게, 짧게.
+- 확인: 플레이 중 `SoundManager`의 `m_cues`에서 `Last`가 찍힌 id를 읽으면 실제로 난 소리를 알 수 있다.

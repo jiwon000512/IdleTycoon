@@ -22,7 +22,6 @@ namespace ZooTycoon.Data
         {
             BubbleTable.k_Wait, BubbleTable.k_Note, BubbleTable.k_Question, BubbleTable.k_Alert, BubbleTable.k_Heart, BubbleTable.k_Angry, BubbleTable.k_Chat,
         };
-        private static readonly string[] k_SoundIds = { SoundTable.k_Pay, SoundTable.k_OvenDone };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
         private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig };
         private static readonly string[] k_ConfigIds =
@@ -278,7 +277,7 @@ namespace ZooTycoon.Data
             CheckRequired<ActionTable>(tables, ActionFactory.Ids, errors);
         }
 
-        // 설계 10: 코드가 아는 효과음 3개가 모두 있고, volume 0~1, 간격·피치 증가 ≥ 0, pitchMax ≥ 1
+        // 설계 10·23: 코드가 아는 효과음(SoundTable.Ids)이 모두 있고, volume 0~1, 간격·피치 증가 ≥ 0, pitchMax ≥ 1
         private static void ValidateSounds(TableSet tables, List<string> errors)
         {
             foreach (SoundTable sound in tables.GetAll<SoundTable>())
@@ -306,7 +305,7 @@ namespace ZooTycoon.Data
                 }
             }
 
-            CheckRequired<SoundTable>(tables, k_SoundIds, errors);
+            CheckRequired<SoundTable>(tables, SoundTable.Ids, errors);
         }
 
         // 설계 23: 곳 배경음악 — 빵집 행은 꼭 있고, clip이 있고, volume 0~1

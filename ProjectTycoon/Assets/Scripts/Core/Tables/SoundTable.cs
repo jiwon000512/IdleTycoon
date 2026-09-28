@@ -2,12 +2,55 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 10 · 데이터-테이블-규칙 8.12: 효과음(SoundTable.json 행). 어느 사건에 나는지는 코드(World BakerySound)
+    // 설계 10·23 · 데이터-테이블-규칙 8.12: 효과음(SoundTable.json 행). 어느 사건에 나는지는 코드(World WorldSound · UI View)
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class SoundTable : Table<string>
     {
         public const string k_Pay = "pay";
         public const string k_OvenDone = "oven_done";
+        public const string k_Receipt = "receipt";
+        public const string k_BakeStart = "bake_start";
+        public const string k_TakeOut = "take_out";
+        public const string k_Put = "put";
+        public const string k_Pick = "pick";
+        public const string k_Dig = "dig";
+        public const string k_Upgrade = "upgrade";
+        public const string k_Place = "place";
+        public const string k_ClerkHired = "clerk_hired";
+        public const string k_ClerkFired = "clerk_fired";
+        public const string k_Wake = "wake";
+        public const string k_Passage = "passage";
+        public const string k_Say = "say";
+        public const string k_UiTap = "ui_tap";
+        public const string k_UiOpen = "ui_open";
+        public const string k_UiClose = "ui_close";
+        public const string k_NegoGood = "nego_good";
+        public const string k_NegoBad = "nego_bad";
+
+        // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
+        public static readonly string[] Ids =
+        {
+            k_Pay,
+            k_OvenDone,
+            k_Receipt,
+            k_BakeStart,
+            k_TakeOut,
+            k_Put,
+            k_Pick,
+            k_Dig,
+            k_Upgrade,
+            k_Place,
+            k_ClerkHired,
+            k_ClerkFired,
+            k_Wake,
+            k_Passage,
+            k_Say,
+            k_UiTap,
+            k_UiOpen,
+            k_UiClose,
+            k_NegoGood,
+            k_NegoBad,
+        };
 
         // Resources/ 기준, 확장자 없음
         public string Clip { get; set; }

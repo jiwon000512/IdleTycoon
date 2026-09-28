@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using GameKit.Audio;
 using GameKit.Events;
 using GameKit.Singleton;
 using GameKit.Tables;
@@ -33,6 +34,12 @@ namespace ZooTycoon.Game
             if (errors.Count > 0)
             {
                 throw new InvalidOperationException($"테이블 검증 실패:{Environment.NewLine}{string.Join(Environment.NewLine, errors)}");
+            }
+
+            foreach (SoundTable sound in Tables.GetAll<SoundTable>())
+            {
+                SoundManager.Instance.Register(sound.Id, Resources.Load<AudioClip>(sound.Clip), (float)sound.Volume,
+                    (float)sound.MinGap, (float)sound.ComboSeconds, (float)sound.PitchStep, (float)sound.PitchMax);
             }
 
             Bus = new EventBus();
