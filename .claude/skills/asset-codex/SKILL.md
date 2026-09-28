@@ -52,6 +52,7 @@ echo "<프롬프트> Save the image as x.png in the current working directory an
 | `Assets/Sprites/UI/Source~/make_nego_ui.py` | `Grid`(시안 → 칸), `pattern`(칸 무늬), `framed`, `trim_band`, `clear_bg` |
 | `Assets/Sprites/UI/Source~/make_panel.py` · `make_chip.py` · `make_pill.py` | 조각 하나를 시안에서 줄이는 짧은 본보기 |
 | `Assets/Sprites/World/Source~/make_pixel.py` | 월드 그림 격자 강제(`--px --cells --thin --th`) |
+| `Assets/Sprites/World/Shop/Source~/make_anim.py` · `anim_parts.py` · `anim_specs.py` | 정지 그림 한 장 → 걷기·숨쉬기·깜빡임 프레임(부위 조립, 자동 검사 포함) |
 | `Assets/Scripts/Editor/UISpriteImporter.cs` | `ui_slices.json` → 임포트, 월드 복사본(`tag_cost`·`bubble`·`bubble_tail`) |
 | `Assets/Scripts/Editor/VisitorSheetImporter.cs` | 캐릭터 시트 자르기(칸 폭 104px) |
 
