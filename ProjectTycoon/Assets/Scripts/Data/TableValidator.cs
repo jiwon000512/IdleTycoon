@@ -44,6 +44,7 @@ namespace ZooTycoon.Data
             ValidateActions(tables, errors);
             ValidateInteractables(tables, errors);
             ValidateSounds(tables, errors);
+            ValidateBgms(tables, errors);
             ValidateDecorations(tables, errors);
             ValidateStrings(tables, errors);
             ValidateConfig(tables, errors);
@@ -306,6 +307,27 @@ namespace ZooTycoon.Data
             }
 
             CheckRequired<SoundTable>(tables, k_SoundIds, errors);
+        }
+
+        // 설계 23: 곳 배경음악 — 빵집 행은 꼭 있고, clip이 있고, volume 0~1
+        private static void ValidateBgms(TableSet tables, List<string> errors)
+        {
+            foreach (BgmTable bgm in tables.GetAll<BgmTable>())
+            {
+                CheckId("BgmTable", bgm.Id, errors);
+
+                if (string.IsNullOrEmpty(bgm.Clip))
+                {
+                    errors.Add($"BgmTable '{bgm.Id}': clip이 있어야 한다.");
+                }
+
+                if (bgm.Volume < 0d || bgm.Volume > 1d)
+                {
+                    errors.Add($"BgmTable '{bgm.Id}': volume은 0~1이어야 한다.");
+                }
+            }
+
+            CheckRequired<BgmTable>(tables, new[] { BgmTable.k_Bakery }, errors);
         }
 
         // 설계 09 v0.4: 코드의 사물 종류 5개가 모두 있고, range > 0, actions가 1개 이상이며 모두 ActionTable에 있다

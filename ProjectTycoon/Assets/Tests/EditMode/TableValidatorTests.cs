@@ -21,6 +21,7 @@ namespace ZooTycoon.Tests
         [TestCase("InteractableTable", 8)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 3)]
+        [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 3)]
         [TestCase("BakeryConfigTable", 5)]
         [TestCase("PlazaConfigTable", 1)]
@@ -177,8 +178,20 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
+        // 설계 23: 배경음악 표 — 음량 범위 밖
+        [TestCase(1.5)]
+        [TestCase(-0.1)]
+        public void Validate_WhenBgmVolumeOutOfRange_ReportsError(double volume)
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<BgmTable>(BgmTable.k_Bakery).Volume = volume;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
         // 코드가 Id로 부르는 행이 빠짐
         [TestCase("SoundTable", "pay")]
+        [TestCase("BgmTable", "bakery")]
         [TestCase("ActionTable", "serve")]
         [TestCase("InteractableTable", "dig")]
         public void Validate_WhenRequiredRowMissing_ReportsError(string table, string id)

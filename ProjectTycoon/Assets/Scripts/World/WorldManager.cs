@@ -36,6 +36,7 @@ namespace ZooTycoon.World
             m_shopView.Bind(mall.Bakery, bus, Frames, tables);
             m_shopView.GetComponent<BakeryVisitorSpawner>().Initialize(mall.Bakery, m_shopView, bus, tables, Frames);
             m_shopView.gameObject.AddComponent<BakerySound>().Initialize(mall.Bakery, bus, tables);
+            gameObject.AddComponent<AreaBgm>().Initialize(mall, bus, tables);
             m_shopView.Expanded += BakeryView_Expanded;
 
             m_plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
