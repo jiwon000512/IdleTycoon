@@ -105,9 +105,10 @@ namespace ZooTycoon.UI
             return null;
         }
 
-        private string Wage(int wage)
+        // 단위 없이 숫자만(코인 그림이 옆에 있다). 주기는 요약 줄의 월급날 게이지가 알린다
+        private static string Wage(int wage)
         {
-            return m_tables.Format("clerk_wage", wage);
+            return wage.ToString();
         }
 
         private void ShowSlots()
@@ -165,8 +166,9 @@ namespace ZooTycoon.UI
             }
 
             m_view.ShowList(m_tables.Text("clerk_title"), m_tables.Text("clerk_tab_bakery"),
-                m_tables.Format("clerk_summary_count", m_bakery.Clerks.Count, m_slots.Count), m_tables.Format("clerk_summary_wage", Wage(wageSum)),
+                m_tables.Format("clerk_summary_count", m_bakery.Clerks.Count, m_slots.Count), m_tables.Text("clerk_summary_wage"), Wage(wageSum),
                 m_rows, null, null, null, false);
+            m_view.SetPayday(m_bakery.Clerks.Count > 0 ? m_tables.Text("clerk_payday") : null, (float)m_bakery.PaydayProgress);
         }
 
         // 같은 종류 안의 번호(오븐 1·오븐 2)
@@ -213,7 +215,7 @@ namespace ZooTycoon.UI
             }
 
             double refresh = m_bakery.ClerkConfig.RefreshCost;
-            m_view.ShowList(m_tables.Format("clerk_candidates_title", m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_slot.Table.Id), IndexAmongKind(m_slot))), null, null, null,
+            m_view.ShowList(m_tables.Format("clerk_candidates_title", m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_slot.Table.Id), IndexAmongKind(m_slot))), null, null, null, null,
                 m_rows, null, m_tables.Text("clerk_refresh"), BigNumberFormatter.Format(refresh), m_bakery.Wombat.Worker.Wallet.Coins >= refresh);
 
             if (m_asking)
@@ -370,6 +372,11 @@ namespace ZooTycoon.UI
         {
             if (m_negotiation == null)
             {
+                if (m_mode == Mode.Slots && m_bakery.Clerks.Count > 0)
+                {
+                    m_view.SetPayday(m_tables.Text("clerk_payday"), (float)m_bakery.PaydayProgress);
+                }
+
                 return;
             }
 

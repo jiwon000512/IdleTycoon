@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ZooTycoon.Core
 {
-    // 설계 21: 빵집 점원 명부. 자리(오븐·계산대)마다 점원 하나, 가게마다 대기 후보 N명, 월급은 주기마다 지갑에서(모자라면 그 점원만 해고).
+    // 설계 21: 빵집 점원 명부. 자리(오븐·계산대)마다 점원 하나, 가게마다 대기 후보 N명, 월급은 가게 공통 월급날마다 지갑에서(모자라면 그 점원만 해고).
     // 후보는 처음 볼 때 채운다(생성자에서 난수를 쓰지 않는다). 점원 한 명의 할 일은 Clerk
     public sealed partial class BakeryArea
     {
@@ -16,9 +16,12 @@ namespace ZooTycoon.Core
         private readonly Dictionary<Clerk, ClerkInteractable> m_clerkThings = new Dictionary<Clerk, ClerkInteractable>();
         private ClerkConfigTable m_clerkConfig;
         private int m_nextClerkId;
+        private double m_untilPayday;
 
         public ClerkConfigTable ClerkConfig => m_clerkConfig;
         public IReadOnlyList<Clerk> Clerks => m_clerks;
+        // 다음 월급날까지 찬 정도(0~1)
+        public double PaydayProgress => 1d - m_untilPayday / m_clerkConfig.WagePeriodSeconds;
         // 설계 22: 지금 도는 대화(없으면 null). 새 대화가 앞 것을 대신한다
         public Dialogue Dialogue { get; private set; }
 
@@ -90,12 +93,17 @@ namespace ZooTycoon.Core
             return new Negotiation(m_clerkConfig, Random, candidate.Skill, WageFor(candidate, thing));
         }
 
-        // 고용: 첫 월급을 내고 구멍에서 나온다. 자리가 찼거나 코인이 모자라면 실패
+        // 고용: 첫 월급을 내고 구멍에서 나온다. 다음부터는 공통 월급날(첫 점원이면 그때부터 센다). 자리가 찼거나 코인이 모자라면 실패
         public bool TryHire(Candidate candidate, Interactable thing, int wage)
         {
             if (!CanStaff(thing) || ClerkOf(thing) != null || !m_state.TrySpendCoins(wage))
             {
                 return false;
+            }
+
+            if (m_clerks.Count == 0)
+            {
+                m_untilPayday = m_clerkConfig.WagePeriodSeconds;
             }
 
             Clerk clerk = new Clerk(++m_nextClerkId, candidate, thing, wage, this);
@@ -136,6 +144,7 @@ namespace ZooTycoon.Core
         private void InitClerks()
         {
             m_clerkConfig = Tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
+            m_untilPayday = m_clerkConfig.WagePeriodSeconds;
             Bus.Subscribe<Events.ClerkCameBack>(e =>
             {
                 if (e.Clerk.Bakery == this)
@@ -153,24 +162,21 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 월급(점원마다 주기) → 점원 틱 → 나간 점원 정리
+        // 월급날(모두 같은 날) → 점원 틱 → 나간 점원 정리
         private void TickClerks(double dt)
         {
-            for (int i = m_clerks.Count - 1; i >= 0; i--)
+            m_untilPayday -= dt;
+
+            if (m_untilPayday <= 0d)
             {
-                Clerk clerk = m_clerks[i];
-                clerk.UntilPay -= dt;
+                m_untilPayday += m_clerkConfig.WagePeriodSeconds;
 
-                if (clerk.UntilPay > 0d)
+                for (int i = m_clerks.Count - 1; i >= 0; i--)
                 {
-                    continue;
-                }
-
-                clerk.UntilPay += m_clerkConfig.WagePeriodSeconds;
-
-                if (!m_state.TrySpendCoins(clerk.Wage))
-                {
-                    Fire(clerk, FireReason.Unpaid);
+                    if (!m_state.TrySpendCoins(m_clerks[i].Wage))
+                    {
+                        Fire(m_clerks[i], FireReason.Unpaid);
+                    }
                 }
             }
 

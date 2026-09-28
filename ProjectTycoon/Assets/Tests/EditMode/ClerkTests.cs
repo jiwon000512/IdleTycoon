@@ -288,6 +288,23 @@ namespace ZooTycoon.Tests
             Assert.That(m_state.Coins, Is.EqualTo(coins - clerk.Wage));
         }
 
+        // 월급날은 가게 공통: 주기 중간에 들어온 점원도 같은 날 받는다
+        [Test]
+        public void Payroll_LateHireIsPaidOnTheSharedPayday()
+        {
+            BakeryArea shop = Create();
+            double period = shop.ClerkConfig.WagePeriodSeconds;
+            Clerk first = Hire(shop, shop.Counter);
+            Run(shop, period / 2d);
+            Clerk late = Hire(shop, shop.Ovens[0]);
+            double coins = m_state.Coins;
+
+            Assert.That(shop.PaydayProgress, Is.EqualTo(0.5).Within(0.01));
+            Run(shop, period / 2d + 1d);
+
+            Assert.That(m_state.Coins, Is.EqualTo(coins - first.Wage - late.Wage));
+        }
+
         // 검증 4: 첫 월급을 내고 고용, 후보는 빠진 자리가 채워져 5명, 찬 자리·모자란 코인이면 실패
         [Test]
         public void Hire_SpendsFirstWage_RefillsCandidates_RejectsOccupiedOrPoor()

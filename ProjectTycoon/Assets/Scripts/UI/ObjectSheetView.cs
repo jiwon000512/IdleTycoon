@@ -126,11 +126,9 @@ namespace ZooTycoon.UI
                 button.interactable = row.State == SheetRowState.Enabled;
                 button.transform.Find("Name").GetComponent<TMP_Text>().text = row.Name;
                 button.transform.Find("Effect").GetComponent<TMP_Text>().text = row.Effect;
-                TMP_Text cost = button.transform.Find("Pill/Cost").GetComponent<TMP_Text>();
-                Image pill = button.transform.Find("Pill").GetComponent<Image>();
+                TMP_Text cost = button.transform.Find("Price/Cost").GetComponent<TMP_Text>();
                 cost.text = row.Cost;
                 cost.color = row.State == SheetRowState.Enabled ? k_CostOk : row.State == SheetRowState.Poor ? k_CostPoor : k_CostMuted;
-                pill.enabled = row.State != SheetRowState.Blocked;
                 button.GetComponent<CanvasGroup>().alpha = row.State == SheetRowState.Poor ? 0.55f : row.State == SheetRowState.Enabled ? 1f : 0.7f;
             }
         }

@@ -46,7 +46,15 @@ namespace ZooTycoon.UI
         [SerializeField] private TextMeshProUGUI m_tabLabel;
         [SerializeField] private TextMeshProUGUI m_summaryLeft;
         [SerializeField] private TextMeshProUGUI m_summaryRight;
+        [Tooltip("요약 오른쪽: 글(m_summaryRight) + 코인 + 값을 담은 묶음과 그 값")]
+        [SerializeField] private GameObject m_summaryValueGroup;
+        [SerializeField] private TextMeshProUGUI m_summaryValue;
         [SerializeField] private RectTransform m_summaryRow;
+        [Tooltip("요약 줄 가운데: 월급날 글 + 차오르는 게이지(안쪽 폭은 캔버스 px)")]
+        [SerializeField] private GameObject m_payday;
+        [SerializeField] private TextMeshProUGUI m_paydayLabel;
+        [SerializeField] private RectTransform m_paydayFill;
+        [SerializeField] private float m_paydayWidth;
         [SerializeField] private RectTransform m_rows;
         [SerializeField] private ClerkRowView m_rowTemplate;
         [Tooltip("후보 줄: 상태 배지 없이 초상 틀이 크고 카드 높이 가운데")]
@@ -124,7 +132,7 @@ namespace ZooTycoon.UI
 
         private void Update()
         {
-            if (m_root.activeSelf && m_nego.activeSelf)
+            if (m_root.activeSelf)
             {
                 Ticked?.Invoke(Time.deltaTime);
             }
@@ -157,8 +165,8 @@ namespace ZooTycoon.UI
             m_ask.SetActive(false);
         }
 
-        // 목록 상태. tab이 null이면 후보 목록: 탭 줄을 숨기고 후보 줄 템플릿을 쓴다. 요약은 왼쪽·오른쪽 두 칸. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
-        public void ShowList(string title, string tab, string summaryLeft, string summaryRight, IReadOnlyList<RowData> rows, string foot, string footButton, string footCost, bool footEnabled)
+        // 목록 상태. tab이 null이면 후보 목록: 탭 줄을 숨기고 후보 줄 템플릿을 쓴다. 요약은 왼쪽 글 · 오른쪽 글 + 코인 값. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
+        public void ShowList(string title, string tab, string summaryLeft, string summaryRight, string summaryValue, IReadOnlyList<RowData> rows, string foot, string footButton, string footCost, bool footEnabled)
         {
             m_title.text = title;
             m_list.SetActive(true);
@@ -168,8 +176,9 @@ namespace ZooTycoon.UI
             m_tabLabel.text = tab ?? string.Empty;
             m_summaryLeft.gameObject.SetActive(summaryLeft != null);
             m_summaryLeft.text = summaryLeft ?? string.Empty;
-            m_summaryRight.gameObject.SetActive(summaryRight != null);
+            m_summaryValueGroup.SetActive(summaryRight != null);
             m_summaryRight.text = summaryRight ?? string.Empty;
+            m_summaryValue.text = summaryValue ?? string.Empty;
             m_summaryRow.gameObject.SetActive(summaryLeft != null || summaryRight != null);
             m_foot.gameObject.SetActive(footButton == null);
             m_foot.text = foot ?? string.Empty;
@@ -204,6 +213,14 @@ namespace ZooTycoon.UI
             }
 
             m_summaryRow.SetAsLastSibling();
+        }
+
+        // 월급날 게이지. label이 null이면 숨긴다(점원이 없다 · 후보 목록)
+        public void SetPayday(string label, float progress)
+        {
+            m_payday.SetActive(label != null);
+            m_paydayLabel.text = label ?? string.Empty;
+            m_paydayFill.sizeDelta = new Vector2(Mathf.Round(m_paydayWidth * Mathf.Clamp01(progress)), m_paydayFill.sizeDelta.y);
         }
 
         // 고용할까 창. 취소는 오른쪽 위 닫기 버튼(AskCancelClicked)

@@ -78,9 +78,6 @@ namespace ZooTycoon.Core
         public bool Away { get; private set; }
         // 딴짓 종류의 말풍선(광장이 외출 점원에게 띄운다)
         public string IdleBubbleId => IdleBubble();
-        // 다음 월급까지 남은 초(곳이 센다)
-        internal double UntilPay { get; set; }
-
         // 자리에 붙어 일하는 중(걷기·딴짓·퇴장 아님). 계산대는 이때만 계산을 돌린다
         public bool Working => !Leaving && !m_idling && !Moving && Vector2.Distance(Position, WorkerSpot) <= k_AtSpot;
 
@@ -97,7 +94,6 @@ namespace ZooTycoon.Core
             Worker = new Worker(new Hands((int)bakery.Tables.Get<ConfigTable>(ConfigTable.k_CarryCapacity).Value), bakery.Wombat.Worker.Wallet);
             m_config = bakery.Tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
             m_questionRange = (float)bakery.Tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
-            UntilPay = m_config.WagePeriodSeconds;
             m_enter = new BtAction<Clerk>(c => c.StartEnter(), (c, dt) => c.TickHopStatus(dt));
             m_cycle = thing is CounterInteractable ? BuildCounterCycle() : BuildOvenCycle();
             m_leave = new BtSequence<Clerk>(

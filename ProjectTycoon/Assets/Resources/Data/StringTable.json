@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 21,
+  "version": 22,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -24,7 +24,8 @@
     "version 18 폴리싱 (2026-09-26 사용자: 한 글에 정보 하나, 「·」로 이어 붙이지 않는다): clerk_summary·clerk_slot_named·clerk_status·clerk_candidate_sub·clerk_ask_sub 삭제 → 요약 두 칸(clerk_summary_count·clerk_summary_wage), 표 머리글(clerk_col_*), 상태 배지(clerk_working·clerk_idling·clerk_away·clerk_empty). 제목·버튼에서 「·」 삭제. 상태 배지는 초상 아래 폭 32에 맞춰 두 글자(근무·딴짓·외출·비었음).",
     "version 19 (2026-09-27, 협상 폴리싱): 협상 탭 버튼 clerk_nego_now(「지금!」) 추가. 화면 어디든 탭도 그대로 된다.",
     "version 20 (2026-09-28, UI 작업 규칙: 한 글에 정보 하나): chip_bread_sub(×{0} · {1}초) → chip_bread_stock·chip_bread_seconds(칩 아래 줄 왼쪽·오른쪽), chip_unlock_sub(해금 {0}) → chip_unlock(왼쪽, 값은 오른쪽), clerk_fired_toast를 「{0} 그만둠」과 clerk_fired_reason(「월급을 못 냈다」) 두 줄로.",
-    "version 21 (2026-09-28, 고용할까 창 명함 카드): clerk_ask는 이름 없이 「고용할까?」(이름은 카드에 따로), clerk_nego_risk(협상 안내) 추가, clerk_cancel 삭제(취소는 닫기 버튼)."
+    "version 21 (2026-09-28, 고용할까 창 명함 카드): clerk_ask는 이름 없이 「고용할까?」(이름은 카드에 따로), clerk_nego_risk(협상 안내) 추가, clerk_cancel 삭제(취소는 닫기 버튼).",
+    "version 22 (2026-09-28, 월급 표기 A): clerk_wage(「{0}/분」) 삭제 — 월급은 단위 없이 숫자만, 주기는 요약 줄 월급날 게이지(clerk_payday)가 알린다. clerk_summary_wage는 글만(값은 코인 그림 옆 칸)."
   ],
   "rows": [
     {
@@ -256,8 +257,8 @@
       "ko": "{0}은 줘야지"
     },
     {
-      "id": "clerk_wage",
-      "ko": "{0}/분"
+      "id": "clerk_payday",
+      "ko": "월급날"
     },
     {
       "id": "clerk_foot",
@@ -293,7 +294,7 @@
     },
     {
       "id": "clerk_summary_wage",
-      "ko": "월급 합 {0}"
+      "ko": "월급 합"
     },
     {
       "id": "clerk_col_skill",

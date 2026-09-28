@@ -183,6 +183,12 @@ save('clerk_table', table, clear=False)
 # 게이지 틀 30×7: 왼쪽 끝은 채움에 가려 있어 오른쪽 끝을 뒤집어 쓴다. 채움 19×5는 위 밝은 줄·아래 어두운 줄 포함
 save('clerk_gauge', nine(m, (63, 126, 93, 133), (3, 3, 3, 3), (88, 129), mirror_left=True), border=(3, 3, 3, 3))
 save('clerk_gauge_fill', nine(m, (64, 127, 83, 132), (2, 1, 0, 1), (75, 129)), border=(2, 1, 0, 1))
+# 월급날 게이지(2026-09-28): 채움의 네 색만 초록으로 바꾼 것
+GREEN = {(0x93, 0x45, 0x33): (0x2F, 0x5A, 0x38), (0xB4, 0x5A, 0x3C): (0x3E, 0x7A, 0x4C), (0xCC, 0x65, 0x3C): (0x4E, 0x94, 0x60), (0xE7, 0x8E, 0x60): (0x7D, 0xB8, 0x8A)}
+fill = Image.open(f'{OUT}clerk_gauge_fill.png').convert('RGBA')
+fill.putdata([GREEN[c[:3]] + (c[3],) for c in fill.getdata()])
+fill.save(f'{OUT}clerk_gauge_fill_green.png')
+slices['clerk_gauge_fill_green'] = slices['clerk_gauge_fill']
 
 json.dump(slices, open(f'{OUT}ui_slices.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('ui_slices.json', len(slices))

@@ -206,6 +206,17 @@
   ],
   "ppu": 20
  },
+ "clerk_gauge_fill_green": {
+  "w": 3,
+  "h": 3,
+  "border": [
+   2,
+   1,
+   0,
+   1
+  ],
+  "ppu": 20
+ },
  "nego_scene": {
   "w": 175,
   "h": 125,
