@@ -22,6 +22,22 @@ namespace ZooTycoon.Core
         public IReadOnlyList<Clerk> Clerks => m_clerks;
         // 다음 월급날까지 찬 정도(0~1)
         public double PaydayProgress => 1d - m_untilPayday / m_clerkConfig.WagePeriodSeconds;
+        // 지금 코인으로는 다음 월급날에 모두의 월급을 낼 수 없다(누군가 해고된다)
+        public bool PaydayShort
+        {
+            get
+            {
+                double wages = 0d;
+
+                foreach (Clerk clerk in m_clerks)
+                {
+                    wages += clerk.Wage;
+                }
+
+                return m_state.Coins < wages;
+            }
+        }
+
         // 설계 22: 지금 도는 대화(없으면 null). 새 대화가 앞 것을 대신한다
         public Dialogue Dialogue { get; private set; }
 

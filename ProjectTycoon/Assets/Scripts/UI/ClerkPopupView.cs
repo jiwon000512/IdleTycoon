@@ -39,7 +39,14 @@ namespace ZooTycoon.UI
         private const float k_HopHeight = 24f;
         private const float k_BlinkSeconds = 0.07f;
 
+        // 점원 버튼 배지: 딴짓 수는 주황, 월급 모자람은 빨강(팔레트 「부족」)
+        private static readonly Color k_BadgeIdling = new Color32(0xD8, 0x78, 0x48, 255);
+        private static readonly Color k_BadgeShort = new Color32(0xA6, 0x4B, 0x3C, 255);
+
         [SerializeField] private Button m_openButton;
+        [Tooltip("점원 버튼 오른쪽 위 배지")]
+        [SerializeField] private Image m_buttonBadge;
+        [SerializeField] private TextMeshProUGUI m_buttonBadgeText;
         [SerializeField] private GameObject m_root;
         [Tooltip("등장·퇴장: 팝업 전체가 나타나고 패널이 올라온다(UiFx)")]
         [SerializeField] private CanvasGroup m_rootGroup;
@@ -64,6 +71,8 @@ namespace ZooTycoon.UI
         [SerializeField] private TextMeshProUGUI m_paydayLabel;
         [SerializeField] private RectTransform m_paydayFill;
         [SerializeField] private float m_paydayWidth;
+        [Tooltip("월급이 모자랄 때의 게이지 채움")]
+        [SerializeField] private Sprite m_paydayShortFill;
         [SerializeField] private RectTransform m_rows;
         [SerializeField] private ClerkRowView m_rowTemplate;
         [Tooltip("후보 줄: 상태 배지 없이 초상 틀이 크고 카드 높이 가운데")]
@@ -109,6 +118,8 @@ namespace ZooTycoon.UI
         private readonly List<ClerkRowView> m_candidateViews = new List<ClerkRowView>();
         private readonly Dictionary<string, Sprite> m_sprites = new Dictionary<string, Sprite>();
 
+        private Image m_paydayFillImage;
+        private Sprite m_paydayFillSprite;
         private Vector2 m_panelRest;
         private Vector2 m_askRest;
         private bool m_open;
@@ -125,7 +136,7 @@ namespace ZooTycoon.UI
         public event Action AskNegotiateClicked;
         public event Action AskCancelClicked;
         public event Action Tapped;
-        // 협상 화면이 보이는 동안 매 프레임(초)
+        // 매 프레임(초). 팝업이 닫혀 있어도 온다(버튼 배지)
         public event Action<float> Ticked;
 
         public bool IsVisible => m_open;
@@ -145,16 +156,30 @@ namespace ZooTycoon.UI
             m_candidateRowTemplate.gameObject.SetActive(false);
             m_panelRest = m_panel.anchoredPosition;
             m_askRest = m_askBox.anchoredPosition;
+            m_paydayFillImage = m_paydayFill.GetComponent<Image>();
+            m_paydayFillSprite = m_paydayFillImage.sprite;
             m_root.SetActive(false);
             m_toast.SetActive(false);
+            m_buttonBadge.gameObject.SetActive(false);
         }
 
         private void Update()
         {
-            if (m_open)
-            {
-                Ticked?.Invoke(Time.deltaTime);
-            }
+            Ticked?.Invoke(Time.deltaTime);
+        }
+
+        // text가 null이면 숨긴다. alert = 월급 모자람(빨강), 아니면 딴짓 수(주황)
+        public void SetButtonBadge(string text, bool alert)
+        {
+            m_buttonBadge.gameObject.SetActive(text != null);
+            m_buttonBadge.color = alert ? k_BadgeShort : k_BadgeIdling;
+            m_buttonBadgeText.text = text ?? string.Empty;
+        }
+
+        // 자리 목록의 줄 하나가 옅어진다(해고). 이어 오는 ShowList의 내용은 옅어진 뒤에 그려진다
+        public void PlayRowOut(int index)
+        {
+            m_rowViews[index].Leave();
         }
 
         // 편집 모드에서는 점원 버튼을 숨긴다
@@ -258,9 +283,10 @@ namespace ZooTycoon.UI
             m_summaryRow.SetAsLastSibling();
         }
 
-        // 월급날 게이지. label이 null이면 숨긴다(점원이 없다 · 후보 목록)
-        public void SetPayday(string label, float progress)
+        // 월급날 게이지. label이 null이면 숨긴다(점원이 없다 · 후보 목록). 모자라면(low) 채움이 빨강
+        public void SetPayday(string label, float progress, bool low)
         {
+            m_paydayFillImage.sprite = low ? m_paydayShortFill : m_paydayFillSprite;
             m_payday.SetActive(label != null);
             m_paydayLabel.text = label ?? string.Empty;
             m_paydayFill.sizeDelta = new Vector2(Mathf.Round(m_paydayWidth * Mathf.Clamp01(progress)), m_paydayFill.sizeDelta.y);

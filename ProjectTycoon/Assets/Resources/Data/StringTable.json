@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 23,
+  "version": 24,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -26,7 +26,8 @@
     "version 20 (2026-09-28, UI 작업 규칙: 한 글에 정보 하나): chip_bread_sub(×{0} · {1}초) → chip_bread_stock·chip_bread_seconds(칩 아래 줄 왼쪽·오른쪽), chip_unlock_sub(해금 {0}) → chip_unlock(왼쪽, 값은 오른쪽), clerk_fired_toast를 「{0} 그만둠」과 clerk_fired_reason(「월급을 못 냈다」) 두 줄로.",
     "version 21 (2026-09-28, 고용할까 창 명함 카드): clerk_ask는 이름 없이 「고용할까?」(이름은 카드에 따로), clerk_nego_risk(협상 안내) 추가, clerk_cancel 삭제(취소는 닫기 버튼).",
     "version 22 (2026-09-28, 월급 표기 A): clerk_wage(「{0}/분」) 삭제 — 월급은 단위 없이 숫자만, 주기는 요약 줄 월급날 게이지(clerk_payday)가 알린다. clerk_summary_wage는 글만(값은 코인 그림 옆 칸).",
-    "version 23 (2026-09-28, 점원 연출 1단계): 해고 확인 창 clerk_fire_ask·clerk_fire_cancel·clerk_fire_hint, 협상 결과 리본 clerk_nego_result_keep·down·up 추가. say_wombat_wake 삭제(웜뱃은 말하지 않는다). clerk_nego_think 삭제, clerk_nego_offer(「{0} 어때?」)는 후보가 부르는 값(협상 화면의 웜뱃 말풍선 삭제)."
+    "version 23 (2026-09-28, 점원 연출 1단계): 해고 확인 창 clerk_fire_ask·clerk_fire_cancel·clerk_fire_hint, 협상 결과 리본 clerk_nego_result_keep·down·up 추가. say_wombat_wake 삭제(웜뱃은 말하지 않는다). clerk_nego_think 삭제, clerk_nego_offer(「{0} 어때?」)는 후보가 부르는 값(협상 화면의 웜뱃 말풍선 삭제).",
+    "version 24 (2026-09-28, 점원 연출 2단계): 점원 버튼 배지 clerk_badge_short(「!」, 다음 월급날에 코인이 모자란다) 추가. 딴짓 수 배지는 숫자만."
   ],
   "rows": [
     {
@@ -220,6 +221,10 @@
     {
       "id": "clerk_fire_hint",
       "ko": "다시 부를 수 없다"
+    },
+    {
+      "id": "clerk_badge_short",
+      "ko": "!"
     },
     {
       "id": "clerk_nego_result_keep",

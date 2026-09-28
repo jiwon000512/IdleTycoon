@@ -36,6 +36,8 @@ namespace ZooTycoon.UI
         private Clerk m_firing;
         private Negotiation m_negotiation;
         private double m_resultTimer;
+        // 버튼 배지에 지금 떠 있는 것: 0 = 없음, -1 = 월급 모자람, 그 밖 = 딴짓 수
+        private int m_badge;
 
         public ClerkPresenter(ClerkPopupView view, Mall mall, EventBus bus, TableSet tables)
         {
@@ -183,7 +185,7 @@ namespace ZooTycoon.UI
                 m_view.HideAsk();
             }
 
-            m_view.SetPayday(m_bakery.Clerks.Count > 0 ? m_tables.Text("clerk_payday") : null, (float)m_bakery.PaydayProgress);
+            m_view.SetPayday(m_bakery.Clerks.Count > 0 ? m_tables.Text("clerk_payday") : null, (float)m_bakery.PaydayProgress, m_bakery.PaydayShort);
         }
 
         // 같은 종류 안의 번호(오븐 1·오븐 2)
@@ -416,11 +418,18 @@ namespace ZooTycoon.UI
         // 표시를 움직이고, 결과가 나오면 후보 말풍선을 바꾼 뒤 잠시 보여 주고 고용한다
         private void View_Ticked(float dt)
         {
+            RefreshBadge();
+
+            if (!m_view.IsVisible)
+            {
+                return;
+            }
+
             if (m_negotiation == null)
             {
                 if (m_mode == Mode.Slots && m_bakery.Clerks.Count > 0)
                 {
-                    m_view.SetPayday(m_tables.Text("clerk_payday"), (float)m_bakery.PaydayProgress);
+                    m_view.SetPayday(m_tables.Text("clerk_payday"), (float)m_bakery.PaydayProgress, m_bakery.PaydayShort);
                 }
 
                 return;
@@ -450,6 +459,35 @@ namespace ZooTycoon.UI
             }
         }
 
+        // 월급 모자람이 딴짓 수보다 먼저다(해고는 되돌릴 수 없다)
+        private void RefreshBadge()
+        {
+            int badge = 0;
+
+            if (m_bakery.PaydayShort)
+            {
+                badge = -1;
+            }
+            else
+            {
+                foreach (Clerk clerk in m_bakery.Clerks)
+                {
+                    if (clerk.Idling || clerk.Away)
+                    {
+                        badge++;
+                    }
+                }
+            }
+
+            if (badge == m_badge)
+            {
+                return;
+            }
+
+            m_badge = badge;
+            m_view.SetButtonBadge(badge == 0 ? null : badge < 0 ? m_tables.Text("clerk_badge_short") : badge.ToString(), badge < 0);
+        }
+
         // 결과가 나온 순간(탭 또는 시간 초과) 후보 말풍선을 결과로 바꾼다
         private void ShowResult()
         {
@@ -477,6 +515,11 @@ namespace ZooTycoon.UI
             if (e.Reason == FireReason.Unpaid)
             {
                 m_view.ShowToast(m_tables.Format("clerk_fired_toast", e.Clerk.Name), m_tables.Text("clerk_fired_reason"));
+            }
+
+            if (m_view.IsVisible && m_mode == Mode.Slots && m_negotiation == null && m_slots.Contains(e.Clerk.Thing))
+            {
+                m_view.PlayRowOut(m_slots.IndexOf(e.Clerk.Thing));
             }
 
             RefreshIfOpen();
