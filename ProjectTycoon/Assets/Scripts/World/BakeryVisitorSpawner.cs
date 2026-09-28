@@ -11,6 +11,8 @@ namespace ZooTycoon.World
     // 설계 21: 점원(Clerk)도 같은 프리팹(외형은 VisitorTable clerk 행). 고용되면 만들고, 든 빵을 보이고, 해고 말풍선, 구멍으로 사라지면 지운다
     public sealed class BakeryVisitorSpawner : MonoBehaviour
     {
+        private const float k_HelloSeconds = 1.2f;
+
         private const string k_CoinKey = "coin_popup";
 
         [SerializeField] private VisitorView m_prefab;
@@ -18,6 +20,8 @@ namespace ZooTycoon.World
         private readonly Dictionary<BakeryVisitor, VisitorView> m_units = new Dictionary<BakeryVisitor, VisitorView>();
         private readonly Dictionary<Clerk, VisitorView> m_clerks = new Dictionary<Clerk, VisitorView>();
         private readonly Dictionary<Clerk, System.Action<Interactable>> m_clerkHands = new Dictionary<Clerk, System.Action<Interactable>>();
+        // 고용되어 자리로 가는 중(처음 도착하면 사물이 튀고 이름 말풍선)
+        private readonly List<Clerk> m_arriving = new List<Clerk>();
         private BakeryArea m_shop;
         private BakeryView m_view;
         private TableSet m_tables;
@@ -39,6 +43,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorLeft>(Bus_VisitorLeft),
                 bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired),
                 bus.Subscribe<Events.ClerkLeft>(Bus_ClerkLeft),
+                bus.Subscribe<Events.ClerkPaid>(Bus_ClerkPaid),
                 bus.Subscribe<Events.DialogueLine>(Bus_DialogueLine),
             };
         }
@@ -74,9 +79,34 @@ namespace ZooTycoon.World
             System.Action<Interactable> handler = _ => unit.ShowCarry(clerk.Worker.Hands.Bread != null ? m_frames.Get(clerk.Worker.Hands.Bread.Sprite)[0] : null);
             clerk.Worker.Hands.Changed += handler;
             m_clerkHands[clerk] = handler;
+            m_arriving.Add(clerk);
         }
 
-        // 설계 22: 대화 줄을 말하는 이(점원·웜뱃)의 머리 위에
+        private void Update()
+        {
+            for (int i = m_arriving.Count - 1; i >= 0; i--)
+            {
+                Clerk clerk = m_arriving[i];
+
+                if (clerk.Working)
+                {
+                    m_arriving.RemoveAt(i);
+                    m_clerks[clerk].Say(clerk.Name, k_HelloSeconds);
+                    m_view.Bounce(clerk.Thing);
+                }
+            }
+        }
+
+        // 외출 중이면 가게에 그림이 없어 띄우지 않는다
+        private void Bus_ClerkPaid(Events.ClerkPaid e)
+        {
+            if (e.Clerk.Bakery == m_shop && !e.Clerk.Away && m_clerks.TryGetValue(e.Clerk, out VisitorView unit))
+            {
+                unit.PopCoin(m_tables.Format(k_CoinKey, e.Wage.ToString()));
+            }
+        }
+
+        // 설계 22: 대화 줄을 말하는 점원의 머리 위에
         private void Bus_DialogueLine(Events.DialogueLine e)
         {
             if (e.Dialogue.Clerk.Bakery != m_shop)
@@ -86,14 +116,10 @@ namespace ZooTycoon.World
 
             string text = m_tables.Text(e.TextId);
 
-            // 외출 중인 점원·다른 곳에 있는 웜뱃의 줄은 광장이 띄운다
+            // 외출 중인 점원의 줄은 광장이 띄운다
             if (e.SpeakerObject is Clerk clerk && !clerk.Away && m_clerks.TryGetValue(clerk, out VisitorView unit))
             {
                 unit.Say(text, (float)e.Seconds);
-            }
-            else if (e.SpeakerObject is Wombat && m_shop.WombatPresent)
-            {
-                m_view.WombatView.Say(text, (float)e.Seconds);
             }
         }
 
@@ -104,6 +130,7 @@ namespace ZooTycoon.World
                 return;
             }
 
+            m_arriving.Remove(e.Clerk);
             e.Clerk.Worker.Hands.Changed -= m_clerkHands[e.Clerk];
             m_clerkHands.Remove(e.Clerk);
             Destroy(unit.gameObject);

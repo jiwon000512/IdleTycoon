@@ -219,7 +219,7 @@ namespace ZooTycoon.World
             }
         }
 
-        private void Bounce(Interactable target)
+        public void Bounce(Interactable target)
         {
             switch (target)
             {

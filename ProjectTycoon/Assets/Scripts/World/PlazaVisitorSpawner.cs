@@ -48,10 +48,6 @@ namespace ZooTycoon.World
                     }
                 }
             }
-            else if (e.SpeakerObject is Wombat && m_plaza.WombatPresent)
-            {
-                m_view.WombatView.Say(text, (float)e.Seconds);
-            }
         }
 
         private void OnDestroy()

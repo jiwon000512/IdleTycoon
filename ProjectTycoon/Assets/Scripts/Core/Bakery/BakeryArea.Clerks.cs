@@ -41,7 +41,7 @@ namespace ZooTycoon.Core
 
         public void StartDialogue(string dialogueId, Clerk clerk)
         {
-            Dialogue = new Dialogue(Tables.Get<DialogueTable>(dialogueId), Random, Bus, clerk, Wombat);
+            Dialogue = new Dialogue(Tables.Get<DialogueTable>(dialogueId), Random, Bus, clerk);
         }
 
         public IReadOnlyList<Candidate> Candidates
@@ -170,13 +170,26 @@ namespace ZooTycoon.Core
             if (m_untilPayday <= 0d)
             {
                 m_untilPayday += m_clerkConfig.WagePeriodSeconds;
+                bool paid = false;
 
                 for (int i = m_clerks.Count - 1; i >= 0; i--)
                 {
-                    if (!m_state.TrySpendCoins(m_clerks[i].Wage))
+                    Clerk clerk = m_clerks[i];
+
+                    if (m_state.TrySpendCoins(clerk.Wage))
                     {
-                        Fire(m_clerks[i], FireReason.Unpaid);
+                        paid = true;
+                        Bus.Publish(new Events.ClerkPaid(clerk, clerk.Wage));
                     }
+                    else
+                    {
+                        Fire(clerk, FireReason.Unpaid);
+                    }
+                }
+
+                if (paid)
+                {
+                    Bus.Publish(new Events.Payday(this));
                 }
             }
 

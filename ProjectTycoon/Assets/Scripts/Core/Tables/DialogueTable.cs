@@ -5,8 +5,8 @@ namespace ZooTycoon.Core
 {
     public enum DialogueSpeaker
     {
+        // 웜뱃은 말하지 않는다(기획서 v0.15: 과묵한 주인공)
         Clerk,
-        Wombat,
         Visitor,
     }
 

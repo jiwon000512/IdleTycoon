@@ -10,8 +10,13 @@ namespace ZooTycoon.UI
     public sealed class TopBarView : UIView
     {
         private const float k_CountSeconds = 0.25f;
+        private const float k_SpentSeconds = 0.8f;
+        private const float k_SpentFade = 0.3f;
 
         [SerializeField] private TMP_Text m_coinsText;
+        [Tooltip("코인을 쓴 순간 캡슐 아래에 잠깐 뜨는 「-24」(작은 코인 캡슐)")]
+        [SerializeField] private CanvasGroup m_spent;
+        [SerializeField] private TMP_Text m_spentText;
 
         private Func<double, string> m_format;
         private double m_from;
@@ -19,6 +24,22 @@ namespace ZooTycoon.UI
         private double m_shown;
         private float m_t = 1f;
         private bool m_first = true;
+        private float m_spentLeft;
+
+        public bool SpentVisible => m_spentLeft > 0f;
+
+        private void Awake()
+        {
+            m_spent.gameObject.SetActive(false);
+        }
+
+        public void ShowSpent(string text)
+        {
+            m_spentText.text = text;
+            m_spent.alpha = 1f;
+            m_spent.gameObject.SetActive(true);
+            m_spentLeft = k_SpentSeconds;
+        }
 
         public void SetCoins(double target, Func<double, string> format)
         {
@@ -32,6 +53,13 @@ namespace ZooTycoon.UI
 
         private void Update()
         {
+            if (m_spentLeft > 0f)
+            {
+                m_spentLeft -= Time.unscaledDeltaTime;
+                m_spent.alpha = Mathf.Clamp01(m_spentLeft / k_SpentFade);
+                m_spent.gameObject.SetActive(m_spentLeft > 0f);
+            }
+
             if (m_t >= 1f)
             {
                 return;

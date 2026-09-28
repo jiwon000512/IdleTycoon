@@ -34,9 +34,18 @@ namespace ZooTycoon.UI
         private const float k_ToastSeconds = 2.5f;
         // 협상 장면의 웜뱃·후보 그림: 스프라이트 1px = 캔버스 2px(둘 다 같은 배율, 시트 칸 여백 포함)
         private const float k_ScenePixel = 2f;
+        // 협상 결과: 이긴 쪽이 두 번 폴짝(캔버스 px, 4의 배수로 움직인다) · 맞은 구간이 깜빡
+        private const float k_HopSeconds = 0.5f;
+        private const float k_HopHeight = 24f;
+        private const float k_BlinkSeconds = 0.07f;
 
         [SerializeField] private Button m_openButton;
         [SerializeField] private GameObject m_root;
+        [Tooltip("등장·퇴장: 팝업 전체가 나타나고 패널이 올라온다(UiFx)")]
+        [SerializeField] private CanvasGroup m_rootGroup;
+        [SerializeField] private RectTransform m_panel;
+        [SerializeField] private CanvasGroup m_askGroup;
+        [SerializeField] private RectTransform m_askBox;
         [SerializeField] private Button m_dim;
         [SerializeField] private Button m_closeButton;
         [SerializeField] private TextMeshProUGUI m_title;
@@ -81,7 +90,7 @@ namespace ZooTycoon.UI
         [SerializeField] private GameObject m_nego;
         [SerializeField] private Image m_negoWombat;
         [SerializeField] private Image m_negoCandidate;
-        [SerializeField] private TextMeshProUGUI m_negoLeft;
+        [Tooltip("후보 말풍선. 웜뱃은 말하지 않아 말풍선이 없다")]
         [SerializeField] private TextMeshProUGUI m_negoRight;
         [SerializeField] private TextMeshProUGUI m_negoHint;
         [SerializeField] private RectTransform m_marker;
@@ -100,6 +109,14 @@ namespace ZooTycoon.UI
         private readonly List<ClerkRowView> m_candidateViews = new List<ClerkRowView>();
         private readonly Dictionary<string, Sprite> m_sprites = new Dictionary<string, Sprite>();
 
+        private Vector2 m_panelRest;
+        private Vector2 m_askRest;
+        private bool m_open;
+        private bool m_askOpen;
+        private Coroutine m_rootFx;
+        private Coroutine m_askFx;
+        private Coroutine m_toastFx;
+
         public event Action OpenClicked;
         public event Action CloseClicked;
         public event Action<int> RowButtonClicked;
@@ -111,7 +128,7 @@ namespace ZooTycoon.UI
         // 협상 화면이 보이는 동안 매 프레임(초)
         public event Action<float> Ticked;
 
-        public bool IsVisible => m_root.activeSelf;
+        public bool IsVisible => m_open;
 
         private void Awake()
         {
@@ -126,13 +143,15 @@ namespace ZooTycoon.UI
             m_nowButton.onClick.AddListener(() => Tapped?.Invoke());
             m_rowTemplate.gameObject.SetActive(false);
             m_candidateRowTemplate.gameObject.SetActive(false);
+            m_panelRest = m_panel.anchoredPosition;
+            m_askRest = m_askBox.anchoredPosition;
             m_root.SetActive(false);
             m_toast.SetActive(false);
         }
 
         private void Update()
         {
-            if (m_root.activeSelf)
+            if (m_open)
             {
                 Ticked?.Invoke(Time.deltaTime);
             }
@@ -146,32 +165,56 @@ namespace ZooTycoon.UI
 
         public void Open()
         {
-            if (!m_root.activeSelf)
+            if (m_open)
             {
-                SoundManager.Instance.Play(SoundTable.k_UiOpen);
+                return;
             }
 
+            m_open = true;
+            SoundManager.Instance.Play(SoundTable.k_UiOpen);
             m_root.SetActive(true);
+            Run(ref m_rootFx, UiFx.Appear(m_rootGroup, m_panel, m_panelRest, 0f));
         }
 
         public void Close()
         {
-            if (m_root.activeSelf)
+            if (!m_open)
             {
-                SoundManager.Instance.Play(SoundTable.k_UiClose);
+                return;
             }
 
-            m_root.SetActive(false);
-            m_ask.SetActive(false);
+            m_open = false;
+            SoundManager.Instance.Play(SoundTable.k_UiClose);
+            Run(ref m_rootFx, UiFx.Vanish(m_rootGroup, m_root));
         }
 
-        // 목록 상태. tab이 null이면 후보 목록: 탭 줄을 숨기고 후보 줄 템플릿을 쓴다. 요약은 왼쪽 글 · 오른쪽 글 + 코인 값. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
+        private void Run(ref Coroutine slot, IEnumerator routine)
+        {
+            if (slot != null)
+            {
+                StopCoroutine(slot);
+            }
+
+            slot = StartCoroutine(routine);
+        }
+
+        // 목록이 바뀐 순간(열기 · 자리 ↔ 후보 · 새 후보)에만 부른다. 값만 고쳐 그릴 때는 부르지 않는다
+        public void PlayRows()
+        {
+            int shown = 0;
+
+            foreach (ClerkRowView row in m_rows.GetComponentsInChildren<ClerkRowView>())
+            {
+                row.Appear(shown++ * UiFx.k_RowGap);
+            }
+        }
+
+        // 목록 상태(고용할까 창은 건드리지 않는다). tab이 null이면 후보 목록: 탭 줄을 숨기고 후보 줄 템플릿을 쓴다. 요약은 왼쪽 글 · 오른쪽 글 + 코인 값. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
         public void ShowList(string title, string tab, string summaryLeft, string summaryRight, string summaryValue, IReadOnlyList<RowData> rows, string foot, string footButton, string footCost, bool footEnabled)
         {
             m_title.text = title;
             m_list.SetActive(true);
             m_nego.SetActive(false);
-            m_ask.SetActive(false);
             m_tabRow.SetActive(tab != null);
             m_tabLabel.text = tab ?? string.Empty;
             m_summaryLeft.gameObject.SetActive(summaryLeft != null);
@@ -223,10 +266,16 @@ namespace ZooTycoon.UI
             m_paydayFill.sizeDelta = new Vector2(Mathf.Round(m_paydayWidth * Mathf.Clamp01(progress)), m_paydayFill.sizeDelta.y);
         }
 
-        // 고용할까 창. 취소는 오른쪽 위 닫기 버튼(AskCancelClicked)
+        // 고용할까 · 해고할까 창. 취소는 오른쪽 위 닫기 버튼(AskCancelClicked). 이미 떠 있으면 글만 고친다
         public void ShowAsk(string iconPath, string title, string name, string slot, string skillHeader, string wageHeader, int skill, string wage, string plain, string negotiate, string hint)
         {
-            m_ask.SetActive(true);
+            if (!m_askOpen)
+            {
+                m_askOpen = true;
+                m_ask.SetActive(true);
+                Run(ref m_askFx, UiFx.Appear(m_askGroup, m_askBox, m_askRest, 0f));
+            }
+
             m_askIcon.sprite = Load(iconPath);
             m_askTitle.text = title;
             m_askName.text = name;
@@ -239,22 +288,26 @@ namespace ZooTycoon.UI
 
         public void HideAsk()
         {
-            m_ask.SetActive(false);
+            if (m_askOpen)
+            {
+                m_askOpen = false;
+                Run(ref m_askFx, UiFx.Vanish(m_askGroup, m_ask));
+            }
         }
 
         // 협상 상태. candidatePath = 후보 옆모습 시트(첫 칸을 좌우 뒤집어 왼쪽을 본다)
-        public void ShowNegotiation(string title, string hint, string now, string candidatePath, string left, string right)
+        public void ShowNegotiation(string title, string hint, string now, string candidatePath, string bubble)
         {
             m_title.text = title;
             m_list.SetActive(false);
-            m_ask.SetActive(false);
+            HideAsk();
             m_nego.SetActive(true);
             m_negoHint.text = hint;
             m_nowLabel.text = now;
             m_negoCandidate.sprite = Load(candidatePath);
             NativeSize(m_negoWombat);
             NativeSize(m_negoCandidate);
-            SetBubbles(left, right);
+            SetBubble(bubble);
             SetMarker(0f);
         }
 
@@ -264,16 +317,52 @@ namespace ZooTycoon.UI
             image.rectTransform.sizeDelta *= k_ScenePixel;
         }
 
-        // 협상 결과 소리: 월급이 그대로거나 내려가면 good
-        public void PlayResult(bool good)
+        // 협상 결과: 월급이 그대로거나 내려가면 good(웜뱃이 폴짝), 오르면 후보가 폴짝. 리본 글이 결과로 바뀌고 표시가 선 구간이 깜빡인다
+        public void PlayResult(bool good, string ribbon)
         {
             SoundManager.Instance.Play(good ? SoundTable.k_NegoGood : SoundTable.k_NegoBad);
+            m_negoHint.text = ribbon;
+            StartCoroutine(HopRoutine((good ? m_negoWombat : m_negoCandidate).rectTransform));
+            float at = m_marker.anchorMin.x;
+
+            foreach (RectTransform zone in m_zones)
+            {
+                if (at >= zone.anchorMin.x && at <= zone.anchorMax.x)
+                {
+                    StartCoroutine(BlinkRoutine(zone.GetComponent<Image>()));
+                    break;
+                }
+            }
         }
 
-        public void SetBubbles(string left, string right)
+        private static IEnumerator HopRoutine(RectTransform target)
         {
-            m_negoLeft.text = left;
-            m_negoRight.text = right;
+            Vector2 rest = target.anchoredPosition;
+
+            for (float t = 0f; t < k_HopSeconds; t += Time.unscaledDeltaTime)
+            {
+                float height = Mathf.Abs(Mathf.Sin(t / k_HopSeconds * 2f * Mathf.PI)) * k_HopHeight;
+                target.anchoredPosition = rest + Vector2.up * (Mathf.Round(height / 4f) * 4f);
+                yield return null;
+            }
+
+            target.anchoredPosition = rest;
+        }
+
+        private static IEnumerator BlinkRoutine(Image zone)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                zone.enabled = i % 2 == 1;
+                yield return new WaitForSecondsRealtime(k_BlinkSeconds);
+            }
+
+            zone.enabled = true;
+        }
+
+        public void SetBubble(string text)
+        {
+            m_negoRight.text = text;
         }
 
         // 0~1
@@ -303,8 +392,7 @@ namespace ZooTycoon.UI
         {
             m_toastText.text = text;
             m_toastReason.text = reason;
-            StopAllCoroutines();
-            StartCoroutine(ToastRoutine());
+            Run(ref m_toastFx, ToastRoutine());
         }
 
         private IEnumerator ToastRoutine()

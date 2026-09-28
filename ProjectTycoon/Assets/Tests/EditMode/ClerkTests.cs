@@ -298,11 +298,17 @@ namespace ZooTycoon.Tests
             Run(shop, period / 2d);
             Clerk late = Hire(shop, shop.Ovens[0]);
             double coins = m_state.Coins;
+            int paid = 0;
+            int paydays = 0;
+            m_bus.Subscribe<Events.ClerkPaid>(_ => paid++);
+            m_bus.Subscribe<Events.Payday>(_ => paydays++);
 
             Assert.That(shop.PaydayProgress, Is.EqualTo(0.5).Within(0.01));
             Run(shop, period / 2d + 1d);
 
             Assert.That(m_state.Coins, Is.EqualTo(coins - first.Wage - late.Wage));
+            Assert.That(paid, Is.EqualTo(2));
+            Assert.That(paydays, Is.EqualTo(1));
         }
 
         // 검증 4: 첫 월급을 내고 고용, 후보는 빠진 자리가 채워져 5명, 찬 자리·모자란 코인이면 실패

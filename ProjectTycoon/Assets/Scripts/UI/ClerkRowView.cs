@@ -23,6 +23,7 @@ namespace ZooTycoon.UI
         private static readonly Color k_Away = new Color32(0x5B, 0x5A, 0xA8, 255);
         private static readonly Color k_Empty = new Color32(0x93, 0x83, 0x7C, 255);
 
+        [SerializeField] private CanvasGroup m_group;
         [Tooltip("초상 틀: 빈 자리면 끈다(점선 틀 뒤에 겹쳐 눌림 때 드러나지 않게)")]
         [SerializeField] private GameObject m_frame;
         [SerializeField] private Image m_portrait;
@@ -72,6 +73,13 @@ namespace ZooTycoon.UI
             m_button.interactable = data.Enabled;
             m_emptyFrame.interactable = data.Enabled;
             gameObject.SetActive(true);
+        }
+
+        // 목록이 바뀔 때 줄이 차례로 나타난다
+        public void Appear(float delay)
+        {
+            StopAllCoroutines();
+            StartCoroutine(UiFx.Appear(m_group, null, default, delay));
         }
 
         private static Color BadgeColor(ClerkBadge badge)

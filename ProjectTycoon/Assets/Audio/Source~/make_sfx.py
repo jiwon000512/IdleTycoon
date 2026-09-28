@@ -111,6 +111,8 @@ save('receipt', soft(noise(0.035, 900, 3200, 21) * np.exp(-t_of(0.035) / 0.009),
 
 # 점원·이동·대화
 save('clerk_hired', seq([note(784, 0.25, 0.1), note(1047, 0.4, 0.16)], 0.11), 0.5)
+# 월급날: 코인 세 닢이 내려놓이는 소리(점원 수와 무관하게 한 번)
+save('payday', seq([note(1568, 0.12, 0.05), note(1319, 0.12, 0.05), note(1047, 0.3, 0.12)], 0.07), 0.45)
 save('clerk_fired', seq([note(659, 0.25, 0.1), note(494, 0.45, 0.18)], 0.14), 0.45)
 t = t_of(0.26)
 save('wake', soft(np.sin(2 * np.pi * np.cumsum(300 * (700 / 300) ** (t / 0.26) * (1 + 0.04 * np.sin(2 * np.pi * 28 * t))) / R) * np.exp(-t / 0.12)), 0.5)

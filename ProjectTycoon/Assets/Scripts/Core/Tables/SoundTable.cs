@@ -18,6 +18,7 @@ namespace ZooTycoon.Core
         public const string k_Place = "place";
         public const string k_ClerkHired = "clerk_hired";
         public const string k_ClerkFired = "clerk_fired";
+        public const string k_Payday = "payday";
         public const string k_Wake = "wake";
         public const string k_Passage = "passage";
         public const string k_Say = "say";
@@ -42,6 +43,7 @@ namespace ZooTycoon.Core
             k_Place,
             k_ClerkHired,
             k_ClerkFired,
+            k_Payday,
             k_Wake,
             k_Passage,
             k_Say,

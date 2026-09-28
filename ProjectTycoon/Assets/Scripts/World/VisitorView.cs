@@ -130,6 +130,12 @@ namespace ZooTycoon.World
         public void Pay(string amount)
         {
             m_carrying = false;
+            PopCoin(amount);
+        }
+
+        // 머리 위 코인 + 금액(손님 결제 · 점원 월급)
+        public void PopCoin(string amount)
+        {
             CoinPopup popup = Instantiate(m_coinPrefab, transform.position + HeadOffset + Vector3.right * m_coinSideOffset, Quaternion.identity, transform.parent);
             popup.Show(amount);
         }

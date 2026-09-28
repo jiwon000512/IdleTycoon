@@ -61,7 +61,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 22: 대화의 줄 하나. speaker 객체(Clerk·Wombat) 머리 위에 seconds 동안 글자 말풍선
+        // 설계 22: 대화의 줄 하나. speaker 객체(Clerk) 머리 위에 seconds 동안 글자 말풍선
         public readonly struct DialogueLine
         {
             public readonly Dialogue Dialogue;

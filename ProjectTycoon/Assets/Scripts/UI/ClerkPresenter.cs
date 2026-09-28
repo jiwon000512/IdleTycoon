@@ -18,6 +18,8 @@ namespace ZooTycoon.UI
 
         // 협상 결과를 보여 주고 닫기까지
         private const double k_ResultSeconds = 1.2;
+        // 결과 말풍선의 월급이 처음 값에서 결과 값으로 세어 가는 시간
+        private const double k_CountSeconds = 0.4;
 
         private readonly ClerkPopupView m_view;
         private readonly BakeryArea m_bakery;
@@ -30,6 +32,8 @@ namespace ZooTycoon.UI
         private Interactable m_slot;
         private Candidate m_candidate;
         private bool m_asking;
+        // 해고할까 창에 올라 있는 점원
+        private Clerk m_firing;
         private Negotiation m_negotiation;
         private double m_resultTimer;
 
@@ -168,6 +172,17 @@ namespace ZooTycoon.UI
             m_view.ShowList(m_tables.Text("clerk_title"), m_tables.Text("clerk_tab_bakery"),
                 m_tables.Format("clerk_summary_count", m_bakery.Clerks.Count, m_slots.Count), m_tables.Text("clerk_summary_wage"), Wage(wageSum),
                 m_rows, null, null, null, false);
+
+            if (m_firing != null && m_bakery.ClerkOf(m_firing.Thing) == m_firing)
+            {
+                ShowFireAsk();
+            }
+            else
+            {
+                m_firing = null;
+                m_view.HideAsk();
+            }
+
             m_view.SetPayday(m_bakery.Clerks.Count > 0 ? m_tables.Text("clerk_payday") : null, (float)m_bakery.PaydayProgress);
         }
 
@@ -233,6 +248,15 @@ namespace ZooTycoon.UI
                 m_tables.Text("clerk_hire_plain"), m_tables.Text("clerk_negotiate"), m_tables.Text("clerk_nego_risk"));
         }
 
+        // 해고는 되돌릴 수 없어 한 번 묻는다(기획서 v0.14). 고용할까 창과 같은 틀: 왼쪽 취소 · 오른쪽 해고
+        private void ShowFireAsk()
+        {
+            m_view.ShowAsk(m_firing.Look.Sprite, m_tables.Text("clerk_fire_ask"), m_firing.Name,
+                m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_firing.Thing.Table.Id), IndexAmongKind(m_firing.Thing)),
+                m_tables.Text("clerk_col_skill"), m_tables.Text("clerk_col_wage"), m_firing.Skill, Wage(m_firing.Wage),
+                m_tables.Text("clerk_fire_cancel"), m_tables.Text("clerk_fire"), m_tables.Text("clerk_fire_hint"));
+        }
+
         private void Hire(int wage)
         {
             m_bakery.TryHire(m_candidate, m_slot, wage);
@@ -243,6 +267,8 @@ namespace ZooTycoon.UI
         {
             m_negotiation = null;
             m_asking = false;
+            m_firing = null;
+            m_view.HideAsk();
             m_view.Close();
         }
 
@@ -287,6 +313,7 @@ namespace ZooTycoon.UI
         {
             m_view.Open();
             ShowSlots();
+            m_view.PlayRows();
         }
 
         private void View_CloseClicked()
@@ -299,6 +326,7 @@ namespace ZooTycoon.UI
             if (m_mode == Mode.Candidates)
             {
                 ShowSlots();
+                m_view.PlayRows();
                 return;
             }
 
@@ -314,12 +342,14 @@ namespace ZooTycoon.UI
 
                 if (clerk != null)
                 {
-                    m_bakery.Fire(clerk, FireReason.Fired);
+                    m_firing = clerk;
+                    ShowFireAsk();
                     return;
                 }
 
                 m_slot = slot;
                 ShowCandidates();
+                m_view.PlayRows();
                 return;
             }
 
@@ -329,30 +359,46 @@ namespace ZooTycoon.UI
 
         private void View_FootClicked()
         {
-            if (m_mode == Mode.Candidates)
+            if (m_mode == Mode.Candidates && m_bakery.TryRefreshCandidates())
             {
-                m_bakery.TryRefreshCandidates();
+                m_view.PlayRows();
             }
         }
 
         private void View_AskPlainClicked()
         {
+            if (m_firing != null)
+            {
+                View_AskCancelClicked();
+                return;
+            }
+
             Hire(m_bakery.WageFor(m_candidate, m_slot));
         }
 
         private void View_AskNegotiateClicked()
         {
+            if (m_firing != null)
+            {
+                Clerk clerk = m_firing;
+                m_firing = null;
+                m_view.HideAsk();
+                m_bakery.Fire(clerk, FireReason.Fired);
+                return;
+            }
+
             m_asking = false;
             m_negotiation = m_bakery.Negotiate(m_candidate, m_slot);
             m_resultTimer = k_ResultSeconds;
             m_view.ShowNegotiation(m_tables.Text("clerk_nego_title"), m_tables.Text("clerk_nego_hint"), m_tables.Text("clerk_nego_now"),
                 m_candidate.Look.SideIdleSheet ?? m_candidate.Look.Sprite,
-                m_tables.Format("clerk_nego_offer", Wage(m_negotiation.BaseWage)), m_tables.Text("clerk_nego_think"));
+                m_tables.Format("clerk_nego_offer", Wage(m_negotiation.BaseWage)));
         }
 
         private void View_AskCancelClicked()
         {
             m_asking = false;
+            m_firing = null;
             m_view.HideAsk();
         }
 
@@ -395,6 +441,8 @@ namespace ZooTycoon.UI
             }
 
             m_resultTimer -= dt;
+            double counted = Math.Min(1d, (k_ResultSeconds - m_resultTimer) / k_CountSeconds);
+            ShowResultBubble((int)Math.Round(m_negotiation.BaseWage + (m_negotiation.Wage - m_negotiation.BaseWage) * counted));
 
             if (m_resultTimer <= 0d)
             {
@@ -405,9 +453,18 @@ namespace ZooTycoon.UI
         // 결과가 나온 순간(탭 또는 시간 초과) 후보 말풍선을 결과로 바꾼다
         private void ShowResult()
         {
-            string key = m_negotiation.Outcome == NegotiationOutcome.Keep ? "clerk_nego_keep" : m_negotiation.Outcome == NegotiationOutcome.Down ? "clerk_nego_down" : "clerk_nego_up";
-            m_view.SetBubbles(m_tables.Format("clerk_nego_offer", Wage(m_negotiation.BaseWage)), m_tables.Format(key, Wage(m_negotiation.Wage)));
-            m_view.PlayResult(m_negotiation.Outcome != NegotiationOutcome.Up);
+            ShowResultBubble(m_negotiation.BaseWage);
+            m_view.PlayResult(m_negotiation.Outcome != NegotiationOutcome.Up, m_tables.Text("clerk_nego_result_" + OutcomeKey()));
+        }
+
+        private string OutcomeKey()
+        {
+            return m_negotiation.Outcome == NegotiationOutcome.Keep ? "keep" : m_negotiation.Outcome == NegotiationOutcome.Down ? "down" : "up";
+        }
+
+        private void ShowResultBubble(int wage)
+        {
+            m_view.SetBubble(m_tables.Format("clerk_nego_" + OutcomeKey(), Wage(wage)));
         }
 
         private void Bus_ClerkFired(Events.ClerkFired e)

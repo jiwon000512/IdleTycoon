@@ -160,6 +160,30 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 월급날에 이 점원이 월급을 받았다(머리 위 코인)
+        public readonly struct ClerkPaid
+        {
+            public readonly Clerk Clerk;
+            public readonly int Wage;
+
+            public ClerkPaid(Clerk clerk, int wage)
+            {
+                Clerk = clerk;
+                Wage = wage;
+            }
+        }
+
+        // 월급날이 지나갔다(한 명 이상 받았다). 소리는 점원 수와 무관하게 한 번
+        public readonly struct Payday
+        {
+            public readonly BakeryArea Bakery;
+
+            public Payday(BakeryArea bakery)
+            {
+                Bakery = bakery;
+            }
+        }
+
         // 대기 후보가 바뀌었다(고용·새 후보 보기)
         public readonly struct CandidatesChanged
         {

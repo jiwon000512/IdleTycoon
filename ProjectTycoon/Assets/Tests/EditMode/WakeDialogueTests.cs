@@ -229,14 +229,13 @@ namespace ZooTycoon.Tests
             Assert.That(lines[0].TextId, Is.EqualTo(table.Lines[0].Texts[0]));
             Assert.That(lines[0].Seconds, Is.EqualTo(table.LineSeconds));
 
+            // 웜뱃은 말하지 않는다: 점원 한 줄로 끝난다
+            Assert.That(table.Lines.Count, Is.EqualTo(1));
             Run(shop, table.LineSeconds - 0.1);
-            Assert.That(lines.Count, Is.EqualTo(1));
-            Run(shop, 0.2);
-            Assert.That(lines.Count, Is.EqualTo(2));
-            Assert.That(lines[1].Speaker, Is.EqualTo(DialogueSpeaker.Wombat));
-            Assert.That(lines[1].SpeakerObject, Is.SameAs(shop.Wombat));
+            Assert.That(ended, Is.EqualTo(0));
 
-            Run(shop, table.LineSeconds + 0.1);
+            Run(shop, 0.2);
+            Assert.That(lines.Count, Is.EqualTo(1));
             Assert.That(ended, Is.EqualTo(1));
             Assert.That(shop.Dialogue, Is.Null);
 
