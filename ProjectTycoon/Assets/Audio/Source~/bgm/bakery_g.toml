@@ -1,0 +1,12 @@
+caption = "drumless cute cozy bakery shop background music for a pixel-art idle game about a round little wombat baking bread in an underground burrow, playful and gentle, simple catchy melody on toy piano and marimba, soft ukulele strumming carries the rhythm, plucky pizzicato bass, a few soft 8-bit chiptune blips, no drums, no claps, quiet and soft, happy, homey, childlike, simple major-key harmony, sparse melody, relaxed, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 104
+keyscale = "C major"
+timesignature = "4"
+seed = 4404
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_g"
+audio_format = "wav"
+backend = "pt"
+thinking = false

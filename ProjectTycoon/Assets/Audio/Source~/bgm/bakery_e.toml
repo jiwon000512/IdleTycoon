@@ -1,0 +1,12 @@
+caption = "warm earthy acoustic tune for a cozy underground burrow bakery in a cute pixel-art game, plucky acoustic guitar, bright xylophone melody, soft melodica, bouncy upright bass, brushed snare shuffle, whimsical and cheerful, handmade folk feeling like a small village shop, gentle chiptune pulse underneath, simple and friendly, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 100
+keyscale = "G major"
+timesignature = "4"
+seed = 5505
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_e"
+audio_format = "wav"
+backend = "pt"
+thinking = false

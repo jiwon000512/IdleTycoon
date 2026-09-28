@@ -1,0 +1,12 @@
+caption = "drumless soft chiptune shop theme for a cute pixel-art management game, gentle square and triangle wave melody, round chiptune bass and soft arpeggios carry the rhythm, simple singable melody, warm and cozy rather than energetic, blended with a real kalimba so it sounds soft and round, no drums, no hi-hats, no claps, toy-like, happy bakery mood, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 108
+keyscale = "F major"
+timesignature = "4"
+seed = 6606
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_i"
+audio_format = "wav"
+backend = "pt"
+thinking = false

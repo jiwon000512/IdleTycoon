@@ -1,0 +1,12 @@
+caption = "very soft cozy chiptune shop theme in a low register for a cute pixel-art bakery in an underground burrow, gentle muted square-wave melody in the lower octave, deep round triangle-wave bass, warm low kalimba, slow soft arpeggios, calm and warm, dark-toned and mellow, simple melody, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 96
+keyscale = "D major"
+timesignature = "4"
+seed = 7707
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_j"
+audio_format = "wav"
+backend = "pt"
+thinking = false

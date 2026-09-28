@@ -1,0 +1,12 @@
+caption = "cute cozy bakery shop background music for a pixel-art idle game about a round little wombat baking bread in an underground burrow, bouncy and playful, simple catchy melody on toy piano and marimba, ukulele strumming, plucky pizzicato bass, light shaker and woodblock, a few soft 8-bit chiptune blips, happy, homey, childlike, simple major-key harmony, sparse melody, steady relaxed groove, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 104
+keyscale = "C major"
+timesignature = "4"
+seed = 4404
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_d"
+audio_format = "wav"
+backend = "pt"
+thinking = false

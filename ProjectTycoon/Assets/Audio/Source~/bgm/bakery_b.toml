@@ -9,3 +9,4 @@ batch_size = 1
 save_dir = "C:/project/ACE-Step-1.5/output/tycoon/bakery_b"
 audio_format = "wav"
 backend = "pt"
+thinking = false
