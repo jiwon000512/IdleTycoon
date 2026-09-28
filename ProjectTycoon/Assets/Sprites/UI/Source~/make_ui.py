@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# UI 부품 최종본 생성(UI-디자인-규칙 v1.0). 원본은 Codex 시안(raw/*.png, 시트 B·버튼 A·아이콘 A)을 make_pixel.py로 격자 강제한 raw/*_px.png.
+# UI 부품 최종본 생성(UI 규칙(.claude/rules/ui.md)). 원본은 Codex 시안(raw/*.png, 시트 B·버튼 A·아이콘 A)을 make_pixel.py로 격자 강제한 raw/*_px.png.
 # 1 px = 1 UI px(화면 4px, PPU 25). 팔레트를 규칙 12색(+나무 2색)으로 스냅하고, 규칙 크기로 자르거나 9-slice 경계를 정해 ../<이름>.png와 ../ui_slices.json에 쓴다.
 # 사용: make_ui.py (이 폴더에서). 슬라이스 임포트는 에디터 메뉴 ZooTycoon/Bake/Import UI Sprites
 import os, json

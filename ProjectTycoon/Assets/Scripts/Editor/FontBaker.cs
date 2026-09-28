@@ -8,7 +8,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Editor
 {
-    // UI-디자인-규칙 v1.0 F1: 갈무리 픽셀 폰트를 TMP 비트맵(래스터) 폰트 에셋으로 만든다.
+    // UI 규칙(.claude/rules/ui.md): 갈무리 픽셀 폰트를 TMP 비트맵(래스터) 폰트 에셋으로 만든다.
     // 원본은 비트맵 스트라이크가 든 *Bitmap TTF(Galmuri9B 등): 샘플링 = 스트라이크 픽셀 크기라 획이 그대로 찍힌다(벡터판은 얇은 획이 끊겼다, 2026-09-23).
     // 아틀라스는 Point 필터(확대 시 번짐 없음), 셰이더는 TextMeshPro/Bitmap.
     // 2026-09-24 정적 아틀라스: 동적이면 플레이마다 글자가 에셋에 더해져 파일이 바뀌고, 되돌리면 글자가 깨졌다.

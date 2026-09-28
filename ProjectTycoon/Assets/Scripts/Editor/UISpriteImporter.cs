@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace ZooTycoon.Editor
 {
-    // UI-디자인-규칙 v1.0: Sprites/UI/*.png(1px = 1 UI px = 화면 4px)를 PPU 25·Point·비압축으로, ui_slices.json의 border로 9-slice 임포트.
+    // UI 규칙(.claude/rules/ui.md): Sprites/UI/*.png(1px = 1 UI px = 화면 4px)를 PPU 25·Point·비압축으로, ui_slices.json의 border로 9-slice 임포트.
     // 월드 태그(tag_cost)·말풍선(bubble 몸통·bubble_tail 꼬리, UI와 같은 그림)은 Sprites/World/Shop에 복사본을 두고 PPU 40(1px = 월드 한 칸)으로 임포트한다.
     // 말풍선 몸통 피벗은 아래 가운데(글 폭만큼 좌우로 늘어난다), 꼬리는 위 가운데(몸통 아랫선에 한 칸 겹친다)
     public static class UISpriteImporter
