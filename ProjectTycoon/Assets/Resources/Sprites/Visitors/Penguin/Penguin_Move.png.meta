@@ -128,7 +128,7 @@ TextureImporter:
         x: 0
         y: 0
         width: 104
-        height: 72
+        height: 74
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a841208104165d143836f0860a4ff1f0
+      spriteID: 1e237f5dbfd9c2241a202944452f3845
       internalID: -1959514587799669810
       vertices: []
       indices: 
@@ -150,7 +150,7 @@ TextureImporter:
         x: 104
         y: 0
         width: 104
-        height: 72
+        height: 74
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 682b918c1dffeea42916726f7e87ec8a
+      spriteID: cb3308efbe2dbc9498841e7246bbe237
       internalID: -9054401109089231825
       vertices: []
       indices: 
@@ -172,7 +172,7 @@ TextureImporter:
         x: 208
         y: 0
         width: 104
-        height: 72
+        height: 74
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f173e70aeec8f5044afb29520ff4029c
+      spriteID: 72d618e51f94f664e8310693a79de645
       internalID: 8353487946802272902
       vertices: []
       indices: 
@@ -194,7 +194,7 @@ TextureImporter:
         x: 312
         y: 0
         width: 104
-        height: 72
+        height: 74
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -203,8 +203,96 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f4bd815fee95c33488639f1abb5279b2
+      spriteID: 80c117981d6516f49a8860ab769c4f21
       internalID: 656939039084629493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Penguin_Move_4
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 0
+        width: 104
+        height: 74
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f952dfd9726f084ba2709623e040a39
+      internalID: -536527852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Penguin_Move_5
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 0
+        width: 104
+        height: 74
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 859868f8cf0dcbb4b819e1c9f8696ad5
+      internalID: 221022454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Penguin_Move_6
+      rect:
+        serializedVersion: 2
+        x: 624
+        y: 0
+        width: 104
+        height: 74
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b571192962b68da4d90d8db0ac52df72
+      internalID: -1799812447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Penguin_Move_7
+      rect:
+        serializedVersion: 2
+        x: 728
+        y: 0
+        width: 104
+        height: 74
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7397cfcc8967a064aa5e8a6870941303
+      internalID: 1977947560
       vertices: []
       indices: 
       edges: []
@@ -227,6 +315,10 @@ TextureImporter:
       Penguin_Move_1: -9054401109089231825
       Penguin_Move_2: 8353487946802272902
       Penguin_Move_3: 656939039084629493
+      Penguin_Move_4: -536527852
+      Penguin_Move_5: 221022454
+      Penguin_Move_6: -1799812447
+      Penguin_Move_7: 1977947560
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

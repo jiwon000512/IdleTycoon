@@ -128,7 +128,7 @@ TextureImporter:
         x: 0
         y: 0
         width: 104
-        height: 78
+        height: 80
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 775859618bdd6c1479b09d0f71711cbf
+      spriteID: bbed3ef5dec432b419d1bf99c108f08a
       internalID: 5560098342527635369
       vertices: []
       indices: 
@@ -150,7 +150,7 @@ TextureImporter:
         x: 104
         y: 0
         width: 104
-        height: 78
+        height: 80
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5b7d49911f22c04419a15b355d06be82
+      spriteID: 380e9de55b09646499774d31c365c10a
       internalID: 106240305607021008
       vertices: []
       indices: 
@@ -172,7 +172,7 @@ TextureImporter:
         x: 208
         y: 0
         width: 104
-        height: 78
+        height: 80
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0184e5b847d194a42843f1a01a0f001f
+      spriteID: c84aeaa12f97bcc449f858c3d187e88d
       internalID: -5131046935992213675
       vertices: []
       indices: 
@@ -194,7 +194,7 @@ TextureImporter:
         x: 312
         y: 0
         width: 104
-        height: 78
+        height: 80
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -203,8 +203,96 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c3184bdd6f2752b449f5b1b23b405d2d
+      spriteID: 38f796256e2d170429c9548c7643f727
       internalID: 4662988980018473735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackMove_4
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 0
+        width: 104
+        height: 80
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3931317ec76dbaf4abc42fcd281788da
+      internalID: -523702978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackMove_5
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 0
+        width: 104
+        height: 80
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aacff09605e758841a4aca0d30665f2c
+      internalID: -920938661
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackMove_6
+      rect:
+        serializedVersion: 2
+        x: 624
+        y: 0
+        width: 104
+        height: 80
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ba97814b9b59dc446a494aef2fb636bd
+      internalID: -549104635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_BackMove_7
+      rect:
+        serializedVersion: 2
+        x: 728
+        y: 0
+        width: 104
+        height: 80
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7b2446f3294ec34a80a432f2dbd7044
+      internalID: -1889035149
       vertices: []
       indices: 
       edges: []
@@ -227,6 +315,10 @@ TextureImporter:
       Rabbit_BackMove_1: 106240305607021008
       Rabbit_BackMove_2: -5131046935992213675
       Rabbit_BackMove_3: 4662988980018473735
+      Rabbit_BackMove_4: -523702978
+      Rabbit_BackMove_5: -920938661
+      Rabbit_BackMove_6: -549104635
+      Rabbit_BackMove_7: -1889035149
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

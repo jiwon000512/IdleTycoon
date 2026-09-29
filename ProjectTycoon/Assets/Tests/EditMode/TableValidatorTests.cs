@@ -10,7 +10,7 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("VisitorTable", 10)]
+        [TestCase("VisitorTable", 12)]
         [TestCase("StringTable", 25)]
         [TestCase("ClerkTable", 1)]
         [TestCase("ClerkConfigTable", 6)]

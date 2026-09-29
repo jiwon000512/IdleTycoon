@@ -128,7 +128,7 @@ TextureImporter:
         x: 0
         y: 0
         width: 104
-        height: 84
+        height: 86
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 94a30243ab999aa4c9baba47f4a9aba8
+      spriteID: f2f8f8b189ecfbe469e391b20cf62458
       internalID: -2768192132516389839
       vertices: []
       indices: 
@@ -150,7 +150,7 @@ TextureImporter:
         x: 104
         y: 0
         width: 104
-        height: 84
+        height: 86
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9c634b040eb0d664fac4dedaa4dd4d4c
+      spriteID: 9599d35c76cc3174b87c3fd84dcbf6a5
       internalID: 8484965390081095598
       vertices: []
       indices: 
@@ -172,7 +172,7 @@ TextureImporter:
         x: 208
         y: 0
         width: 104
-        height: 84
+        height: 86
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 156385d2184f7f245a5a4529e0166b04
+      spriteID: f57b16de14ea13f4b90bca2fa309e335
       internalID: -8520832063456969544
       vertices: []
       indices: 
@@ -194,7 +194,7 @@ TextureImporter:
         x: 312
         y: 0
         width: 104
-        height: 84
+        height: 86
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -203,8 +203,96 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6c10564d153c3ae449a2fbe99ad47b30
+      spriteID: f1d45180b421fd74399f3db0909916bc
       internalID: -1623114653836937521
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_Move_4
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 0
+        width: 104
+        height: 86
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b212587c79ba8d4f9cd4bff22f9da7d
+      internalID: -1994183396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_Move_5
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 0
+        width: 104
+        height: 86
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 570d1e3801a78424c88166c356efd29d
+      internalID: 1098585974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_Move_6
+      rect:
+        serializedVersion: 2
+        x: 624
+        y: 0
+        width: 104
+        height: 86
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7d40f1a4f2d95854295a38396e40f920
+      internalID: -1020938595
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rabbit_Move_7
+      rect:
+        serializedVersion: 2
+        x: 728
+        y: 0
+        width: 104
+        height: 86
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dd1cfc517de697a4693d07017bec3be0
+      internalID: 2041113971
       vertices: []
       indices: 
       edges: []
@@ -227,6 +315,10 @@ TextureImporter:
       Rabbit_Move_1: 8484965390081095598
       Rabbit_Move_2: -8520832063456969544
       Rabbit_Move_3: -1623114653836937521
+      Rabbit_Move_4: -1994183396
+      Rabbit_Move_5: 1098585974
+      Rabbit_Move_6: -1020938595
+      Rabbit_Move_7: 2041113971
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

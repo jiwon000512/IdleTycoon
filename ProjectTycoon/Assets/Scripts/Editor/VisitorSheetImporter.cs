@@ -6,7 +6,7 @@ using UnityEditor.U2D.Sprites;
 
 namespace ZooTycoon.Editor
 {
-    // 손님 시트(make_visitor_sheets.py: 가로 1행, 칸 폭 104px, 발끝 = 아래 끝)를 칸마다 자른다. 정지 그림은 Single.
+    // 손님 시트(Shop/Source~/make_anim.py: 가로 1행, 칸 폭 104px, 발끝 = 아래 끝)를 칸마다 자른다. 정지 그림은 Single.
     // 가게 유닛 기본 크기(BakeryBaker.k_UnitPpu = 80), 피벗 하단 중앙
     public static class VisitorSheetImporter
     {

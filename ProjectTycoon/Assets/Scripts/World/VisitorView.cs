@@ -12,6 +12,8 @@ namespace ZooTycoon.World
         // 집은 빵 순서: 몸(0) 앞, 뒷모습이면 몸 뒤
         private const int k_CarryFrontOrder = 51;
         private const int k_CarryBackOrder = -1;
+        // 그림 한 칸(2px ÷ PPU 80)
+        private const float k_Cell = 0.025f;
 
         [SerializeField] private Transform m_modelRoot;
         [SerializeField] private SpriteRenderer m_spriteRenderer;
@@ -38,6 +40,19 @@ namespace ZooTycoon.World
         [SerializeField] private float m_handReach = 0.2f;
         [Tooltip("코인 팝업을 머리 옆으로 비키는 거리(유닛)")]
         [SerializeField] private float m_coinSideOffset = 0.7f;
+        [Tooltip("숨쉬기 · 걷기 프레임 시간(초). 모든 손님 공통(Shop/Source~/make_anim.py 순서, 웜뱃과 같은 값)")]
+        [SerializeField] private float[] m_idleSeconds = { 0.5f, 0.16f, 0.52f, 0.16f };
+        [SerializeField] private float[] m_walkSeconds = { 0.08f, 0.065f, 0.065f, 0.065f, 0.08f, 0.065f, 0.065f, 0.065f };
+        [Tooltip("걷기 프레임마다 몸이 뜬 칸(+ 위). 든 빵도 같이 오르내린다")]
+        [SerializeField] private int[] m_walkBob = { 0, -1, 1, 0, 0, -1, 1, 0 };
+        [Tooltip("숨쉬기 프레임마다 몸이 뜬 칸(+ 위). 든 빵도 같이 오르내린다")]
+        [SerializeField] private int[] m_idleBob = { 0, -1, -1, 0 };
+        [Tooltip("눈 깜빡임: 서 있을 때 이 사이 무작위 초마다 · 감는 시간(초)")]
+        [SerializeField] private Vector2 m_blinkEvery = new Vector2(3f, 6f);
+        [SerializeField] private float m_blinkSeconds = 0.12f;
+        [Tooltip("딴짓(VisitorTable fidgetSheet, 종 · 방향마다 한 벌): 서 있으면 이 사이 무작위 초마다 한 번 · 한 칸 시간(초)")]
+        [SerializeField] private Vector2 m_fidgetEvery = new Vector2(4f, 9f);
+        [SerializeField] private float m_fidgetFrameSeconds = 0.08f;
 
         private Visitor m_walker;
         private Transform m_origin;
@@ -47,8 +62,13 @@ namespace ZooTycoon.World
         private Sprite[] m_backMove;
         private Sprite[] m_sideIdle;
         private Sprite[] m_sideMove;
-        private float m_idleFrameRate;
-        private float m_moveFrameRate;
+        private Sprite[] m_frontBlink;
+        private Sprite[] m_sideBlink;
+        private float m_blinkIn;
+        private Sprite[] m_frontFidget;
+        private Sprite[] m_backFidget;
+        private Sprite[] m_sideFidget;
+        private float m_fidgetIn;
         private Sprite[] m_playing;
         private float m_height;
         private float m_handRatio;
@@ -78,8 +98,13 @@ namespace ZooTycoon.World
             m_backMove = look.BackMoveSheet != null ? frames.Get(look.BackMoveSheet) : m_frontMove;
             m_sideIdle = look.SideIdleSheet != null ? frames.Get(look.SideIdleSheet) : m_frontIdle;
             m_sideMove = look.SideMoveSheet != null ? frames.Get(look.SideMoveSheet) : m_frontMove;
-            m_idleFrameRate = (float)look.IdleFrameRate;
-            m_moveFrameRate = (float)look.MoveFrameRate;
+            m_frontBlink = look.BlinkSheet != null ? frames.Get(look.BlinkSheet) : null;
+            m_sideBlink = look.SideBlinkSheet != null ? frames.Get(look.SideBlinkSheet) : null;
+            m_blinkIn = Random.Range(m_blinkEvery.x, m_blinkEvery.y);
+            m_frontFidget = look.FidgetSheet != null ? frames.Get(look.FidgetSheet) : null;
+            m_backFidget = look.BackFidgetSheet != null ? frames.Get(look.BackFidgetSheet) : null;
+            m_sideFidget = look.SideFidgetSheet != null ? frames.Get(look.SideFidgetSheet) : null;
+            m_fidgetIn = Random.Range(m_fidgetEvery.x, m_fidgetEvery.y);
             m_modelRoot.localScale = Vector3.one * (float)look.Scale;
             m_height = m_frontIdle[0].bounds.size.y * (float)look.Scale;
             m_carryOnHead = look.CarryAt == CarryAt.Head;
@@ -165,7 +190,11 @@ namespace ZooTycoon.World
 
             if (!m_flying)
             {
-                m_carry.transform.localPosition = CarryOffset;
+                // 든 빵도 몸과 같이 오르내린다(걷기 · 숨쉬기 프레임만, 딴짓은 몸 높이가 그대로)
+                int[] bobs = m_walker.Moving && !m_walker.Paused ? m_walkBob : m_idleBob;
+                bool bobbing = m_playing != null && m_playing.Length == bobs.Length && !m_animator.Interjecting;
+                float bob = bobbing ? bobs[m_animator.Index] * k_Cell * m_modelRoot.localScale.y : 0f;
+                m_carry.transform.localPosition = CarryOffset + Vector3.up * bob;
             }
 
             m_carry.enabled = m_carrying;
@@ -194,7 +223,25 @@ namespace ZooTycoon.World
             if (m_playing != frames)
             {
                 m_playing = frames;
-                m_animator.Play(frames, moving ? m_moveFrameRate : m_idleFrameRate, Random.value);
+                m_animator.Play(frames, moving ? m_walkSeconds : m_idleSeconds, Random.value);
+            }
+
+            // 서 있을 때만 가끔 눈을 감는다(뒷모습은 눈이 없다)
+            m_blinkIn -= Time.deltaTime;
+
+            if (!moving && m_blinkIn <= 0f)
+            {
+                m_blinkIn = Random.Range(m_blinkEvery.x, m_blinkEvery.y);
+                m_animator.Overlay(facing == Facing.Down ? m_frontBlink : facing == Facing.Up ? null : m_sideBlink, m_blinkSeconds);
+            }
+
+            // 서 있으면 가끔 딴짓을 한 번(멈춘 뒤 적어도 m_fidgetEvery.x초 뒤, 숨쉬기 한 바퀴가 끝날 때 시작)
+            m_fidgetIn = moving ? Mathf.Max(m_fidgetIn, m_fidgetEvery.x) : m_fidgetIn - Time.deltaTime;
+
+            if (!moving && m_fidgetIn <= 0f)
+            {
+                m_fidgetIn = Random.Range(m_fidgetEvery.x, m_fidgetEvery.y);
+                m_animator.Interject(facing == Facing.Down ? m_frontFidget : facing == Facing.Up ? m_backFidget : m_sideFidget, m_fidgetFrameSeconds);
             }
         }
 

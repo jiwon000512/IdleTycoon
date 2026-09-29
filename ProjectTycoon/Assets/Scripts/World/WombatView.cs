@@ -24,8 +24,10 @@ namespace ZooTycoon.World
         [Tooltip("눈 감은 숨쉬기(앞·옆, 숨쉬기와 같은 순서). 뒷모습은 없다")]
         [SerializeField] private Sprite[] m_frontBlink;
         [SerializeField] private Sprite[] m_sideBlink;
-        [Tooltip("숨쉬기 프레임 시간(초): 기본 · 늘어남 · 늘어난 채 머묾 · 돌아옴(Source~/make_anim.py)")]
+        [Tooltip("숨쉬기 프레임 시간(초): 기본 · 내려앉기 · 내려앉은 채 머묾 · 돌아옴(Source~/make_anim.py)")]
         [SerializeField] private float[] m_idleSeconds = { 0.5f, 0.16f, 0.52f, 0.16f };
+        [Tooltip("숨쉬기 프레임마다 몸이 뜬 칸(+ 위). 든 빵도 같이 오르내린다")]
+        [SerializeField] private int[] m_idleBob = { 0, -1, -1, 0 };
         [Tooltip("걷기 프레임 시간(초): 딛기(0·4)는 조금 길게")]
         [SerializeField] private float[] m_walkSeconds = { 0.08f, 0.065f, 0.065f, 0.065f, 0.08f, 0.065f, 0.065f, 0.065f };
         [Tooltip("걷기 프레임마다 몸이 뜬 칸(+ 위). 든 빵도 같이 오르내린다(Source~/make_anim.py의 body_y)")]
@@ -33,6 +35,12 @@ namespace ZooTycoon.World
         [Tooltip("눈 깜빡임: 서 있을 때 이 사이 무작위 초마다 · 감는 시간(초)")]
         [SerializeField] private Vector2 m_blinkEvery = new Vector2(3f, 6f);
         [SerializeField] private float m_blinkSeconds = 0.12f;
+        [Tooltip("딴짓(두리번 · 앞발 비비기 · 발 구르기 · 엉덩이 흔들기, 방향마다 한 벌): 서 있으면 이 사이 무작위 초마다 한 번 · 한 칸 시간(초). 늘 서 있는 주인공이라 손님(4~9초)보다 드물게")]
+        [SerializeField] private Sprite[] m_frontFidget;
+        [SerializeField] private Sprite[] m_backFidget;
+        [SerializeField] private Sprite[] m_sideFidget;
+        [SerializeField] private Vector2 m_fidgetEvery = new Vector2(6f, 12f);
+        [SerializeField] private float m_fidgetFrameSeconds = 0.08f;
         [Tooltip("든 빵 층(아래부터). 보이는 층 수의 상한")]
         [SerializeField] private SpriteRenderer[] m_carry;
         [Tooltip("맨 아래 빵 가운데 높이(유닛, 발끝 기준) = 앞발 0.21 + 빵 반쯤")]
@@ -78,6 +86,7 @@ namespace ZooTycoon.World
         private int m_lastCount;
         private Coroutine m_saying;
         private float m_blinkIn;
+        private float m_fidgetIn;
         private Sprite m_square;
         private float m_dustTimer;
 
@@ -86,6 +95,7 @@ namespace ZooTycoon.World
         {
             m_bubble.enabled = false;
             Bubbles.HideSay(m_say, m_sayTail, m_sayText);
+            m_fidgetIn = m_fidgetEvery.x;
         }
 
         // 설계 22: 대화 글자 말풍선
@@ -212,7 +222,9 @@ namespace ZooTycoon.World
             }
 
             m_renderer.flipX = facing == Facing.Left;
-            float bob = moving && m_playing == frames ? m_walkBob[m_animator.Index % m_walkBob.Length] * k_Cell : 0f;
+            // 든 빵도 몸과 같이 오르내린다(걷기 · 숨쉬기 프레임만, 딴짓은 몸 높이가 그대로)
+            int[] bobs = moving ? m_walkBob : m_idleBob;
+            float bob = m_playing == frames && !m_animator.Interjecting ? bobs[m_animator.Index % bobs.Length] * k_Cell : 0f;
             m_carry[0].transform.parent.localPosition = Fx.HandOffset(facing, m_handHeight + bob, m_handReach);
 
             for (int i = 0; i < m_carry.Length; i++)
@@ -234,6 +246,15 @@ namespace ZooTycoon.World
             {
                 m_blinkIn = Random.Range(m_blinkEvery.x, m_blinkEvery.y);
                 m_animator.Overlay(facing == Facing.Down ? m_frontBlink : facing == Facing.Up ? null : m_sideBlink, m_blinkSeconds);
+            }
+
+            // 서 있으면 가끔 딴짓을 한 번(멈춘 뒤 적어도 m_fidgetEvery.x초 뒤, 숨쉬기 한 바퀴가 끝날 때 시작)
+            m_fidgetIn = moving ? Mathf.Max(m_fidgetIn, m_fidgetEvery.x) : m_fidgetIn - Time.deltaTime;
+
+            if (!moving && m_fidgetIn <= 0f)
+            {
+                m_fidgetIn = Random.Range(m_fidgetEvery.x, m_fidgetEvery.y);
+                m_animator.Interject(facing == Facing.Down ? m_frontFidget : facing == Facing.Up ? m_backFidget : m_sideFidget, m_fidgetFrameSeconds);
             }
         }
 

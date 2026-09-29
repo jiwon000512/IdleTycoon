@@ -1,24 +1,41 @@
 # -*- coding: utf-8 -*-
-# 웜뱃 숨쉬기 · 걷기 · 눈 깜빡임 프레임(부위 조립, anim_parts.py). 2026-09-29 걷기 시안 B3 확정.
-#   숨쉬기 4: 기본 → 늘어남(귀 늦게) → 늘어난 채 머묾 → 기본(귀 늦게)
+# 캐릭터 숨쉬기 · 걷기 · 눈 깜빡임 · 딴짓 프레임(부위 조립, anim_parts.py). 2026-09-29 걷기 시안 B3 확정.
+#   숨쉬기 4: 기본 → 몸 전체 1칸 내려앉기(귀 · 꼬리 늦게) → 머묾 → 기본(귀 · 꼬리 늦게)
 #   걷기 8: 딛기 → 내려앉기(몸 1칸 아래) → 지나가기(1칸 위, 다리 보임, 드는 발 2칸) → 올라오기, 반대 발로 한 번 더.
 #           기울기는 발밑 축 1칸(앞·뒤는 디딘 발 쪽, 옆은 딛을 때 앞으로), 귀·앞발·꼬리는 한 박자 늦게
-#   깜빡임: 숨쉬기 프레임마다 눈 감은 판(앞·옆, 뒷모습은 눈이 없다)
-# 프레임 시간은 게임(WombatView m_idleSeconds · m_walkSeconds)이 갖는다. 여기 DUR은 미리보기용으로 같은 값
-# 사용: python make_anim.py [미리보기 폴더]  → ../wombat_<방향>{,_1,_2,_3}.png · _walk_0~7 · _blink_0~3
+#   깜빡임: 숨쉬기 프레임마다 눈 감은 판(눈이 있는 방향만)
+#   딴짓: 동물 · 방향마다 한 벌(FIDGETS). 게임이 서 있을 때 가끔 숨쉬기 사이에 한 번 끼워 넣는다
+# 프레임 시간은 게임(WombatView · VisitorView의 m_idleSeconds · m_walkSeconds · m_fidgetFrameSeconds)이 갖는다. 여기 DUR · TICK은 미리보기용으로 같은 값
+# 결과
+#   웜뱃: ../wombat_<방향>{,_1,_2,_3}.png · _walk_0~7 · _blink_0~3 · _fidget(시트) (BakeryBaker가 임포트)
+#   손님: Resources/Sprites/Visitors/<이름>/<이름>_{Idle,Move,BackIdle,BackMove,SideIdle,SideMove,Blink,SideBlink,Fidget,BackFidget,SideFidget}.png
+#         (가로 1행, 칸 폭 104px, 발끝 = 아래 끝. 슬라이스는 ZooTycoon/Bake/Import Visitor Sheets)
+#   점원 회색 웜뱃: 웜뱃 프레임의 털 5색만 바꾼 같은 시트(WombatGray)
+# 사용: python make_anim.py [미리보기 폴더]
 import os
 import sys
 import numpy as np
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from anim_parts import Sprite, save
-from anim_specs import WOMBAT
+from anim_parts import Sprite, save, opaque
+from anim_specs import WOMBAT, VISITORS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, '..')
+SHOP = os.path.join(HERE, '..')
+SHEETS = os.path.join(HERE, '..', '..', '..', '..', 'Resources', 'Sprites', 'Visitors')
+CELL = 52   # 시트 칸 폭(칸) = 104px
 IDLE_DUR = [500, 160, 520, 160]
 WALK_DUR = [80, 65, 65, 65, 80, 65, 65, 65]
+FOLDERS = {'rabbit': 'Rabbit', 'penguin': 'Penguin', 'fox': 'Fox', 'hedgehog': 'Hedgehog'}
+# 점원 회색 웜뱃(2026-09-26 gray_d): 빵집 웜뱃 털 5색 → 남부 털코웜뱃 회갈색. 외곽선·눈·코·귀 안은 그대로
+GRAY = ('WombatGray', {
+    (192, 168, 144): (178, 170, 156),   # 밝은 털(앞·옆)
+    (204, 168, 156): (188, 178, 166),   # 밝은 털(뒤)
+    (156, 120, 108): (136, 126, 112),   # 그늘
+    (132, 96, 84): (100, 92, 82),       # 어두운 그늘
+    (168, 132, 120): (156, 146, 134),   # 뒷모습 꼬리
+})
 
 
 def sgn(v):
@@ -31,18 +48,117 @@ def lag(motion):
 
 
 def idle_frames():
-    return [dict(body_mode=b, ear=e) for b, e in zip([0, 1, 1, 0], [0, 1, 0, -1])]
+    """숨쉬기 4: 발 위 몸 전체가 1칸 내려앉았다 올라온다(든 빵도 같이, 게임 m_idleBob). 귀 · 꼬리는 한 박자 늦게"""
+    body_y = [0, -1, -1, 0]
+    late = lag(body_y)
+    return [dict(body_y=body_y[t], ear=late[t], tail=late[t]) for t in range(4)]
 
 
-def walk_frames(view):
+# 딴짓(2026-09-29): 서 있을 때 가끔 한 번 보이는 동작. 한 칸 TICK ms, 머묾은 같은 프레임을 되풀이한다.
+# 몸 높이는 바꾸지 않는다(든 빵이 따로 놀지 않게). 눈이 없는 방향(뒤)은 look이 빠지고 기울기만 남는다
+TICK = 80
+REST = ({}, 1)
+
+
+def seq(steps):
+    return [dict(f) for f, n in steps for _ in range(n)]
+
+
+def look_around():
+    """두리번: 눈을 먼저 돌리고 몸이 따라 기운다(왼쪽 → 오른쪽)"""
+    return [(dict(look=(-1, 0)), 1), (dict(look=(-1, 0), tilt_cells=-1), 7), REST,
+            (dict(look=(1, 0)), 1), (dict(look=(1, 0), tilt_cells=1), 7), REST]
+
+
+def look_up():
+    """옆모습 올려다보기: 눈을 올리고 몸을 뒤로 젖힌다"""
+    return [(dict(look=(0, -1)), 2), (dict(look=(0, -1), tilt_cells=-1), 8), (dict(look=(0, -1)), 1), REST]
+
+
+def tap(i, n=2):
+    """발 구르기: i번 발을 1칸 들었다 딛기"""
+    return [(dict(lifts=(1, 0) if i == 0 else (0, 1)), 1), REST] * n
+
+
+def thump(i):
+    """토끼 발 구르기: 높이 들었다가 쿵"""
+    return [(dict(lifts=(1, 0) if i == 0 else (0, 1)), 1), (dict(lifts=(2, 0) if i == 0 else (0, 2)), 3), REST, REST]
+
+
+def waddle(n=2):
+    """뒤뚱: 기운 쪽 발로 딛고 반대 발을 든다"""
+    return [(dict(tilt_cells=-1, lifts=(0, 1)), 3), REST, (dict(tilt_cells=1, lifts=(1, 0)), 3), REST] * n
+
+
+def shake(n=3):
+    """부르르: 좌우로 빠르게"""
+    return [(dict(tilt_cells=-1), 1), (dict(tilt_cells=1), 1)] * n + [REST]
+
+
+def sniff(n=3):
+    """킁킁: 앞으로 살짝 숙였다 든다(옆모습)"""
+    return [(dict(tilt_cells=1), 1), REST] * n
+
+
+def wag(part, right=2, left=2, n=2):
+    """꼬리 살랑: 양쪽으로(칸 폭 104px에 걸리는 쪽은 덜)"""
+    return [(dict(swing={part: right}), 2), REST, (dict(swing={part: -left}), 2), REST] * n
+
+
+def flick(parts, n=2):
+    """귀 쫑긋 · 날개 파닥: 바깥으로 갔다 돌아온다. parts = {부위: 칸}"""
+    return [(dict(swing=parts), 2), REST] * n
+
+
+def rub(n=3):
+    """앞발 비비기(웜뱃 앞모습, 앞발 블록 1칸 위)"""
+    return [(dict(paw=-1), 1), REST] * n
+
+
+FIDGETS = {
+    'wombat': {
+        'front': look_around() + rub() + [REST],
+        'back': [(dict(tilt_cells=-1, tail=-1), 2), REST, (dict(tilt_cells=1, tail=-1), 2), REST] * 2 + [(dict(ear=-1), 2), REST],
+        'side': tap(0) + look_up(),
+    },
+    'rabbit': {
+        'front': flick({'ear_r': 2}) + flick({'ear_l': -2}, 1) + thump(0),
+        'back': flick({'ear_l': -2}) + flick({'ear_r': 2}, 1) + thump(1),
+        'side': flick({'ears': -2}) + thump(0),
+    },
+    'penguin': {
+        'front': waddle() + flick({'fl_l': 2, 'fl_r': -2}, 3),
+        'back': waddle() + flick({'fl_l': 2, 'fl_r': -2}, 3),
+        'side': sniff(2) + tap(1),
+    },
+    'fox': {
+        'front': wag('tail', right=1) + look_around(),
+        'back': wag('tail', n=3) + [(dict(ear=(-1, 0)), 2), REST, (dict(ear=(0, -1)), 2), REST],
+        'side': wag('tail') + look_up(),
+    },
+    'hedgehog': {
+        'front': shake() + look_around(),
+        'back': shake() + tap(0) + tap(1),
+        'side': sniff() + shake(2),
+    },
+}
+
+
+def walk_frames(view, far_foot):
+    """far_foot: 옆모습 먼 발을 가까운 발로 만들었나(웜뱃). 아니면 두 발을 원본에서 떼어 앞·뒤로 옮긴다(손님: 왼쪽 = 뒷발)"""
     body_y = [0, -1, 1, 0, 0, -1, 1, 0]
     ear = lag(body_y)
     if view == 'side':
-        near_x, near_l = [3, 2, 0, -2, -3, -2, 0, 2], [0, 0, 0, 0, 0, 1, 2, 1]
-        far_x, far_l = [-3, -2, 0, 2, 3, 2, 0, -2], [0, 1, 2, 1, 0, 0, 0, 0]
+        front_x, front_l = [3, 2, 0, -2, -3, -2, 0, 2], [0, 0, 0, 0, 0, 1, 2, 1]
+        back_x, back_l = [-3, -2, 0, 2, 3, 2, 0, -2], [0, 1, 2, 1, 0, 0, 0, 0]
         lean = [1, 1, 0, 0, 1, 1, 0, 0]
-        frames = [dict(body_y=body_y[t], lifts=(near_l[t], far_l[t]), xs=(near_x[t], far_x[t]), ear=ear[t], tilt_cells=lean[t]) for t in range(8)]
-        return frames, [t for t in range(8) if near_l[t]]
+        if far_foot:
+            xs, lifts = list(zip(front_x, back_x)), list(zip(front_l, back_l))
+        else:
+            xs, lifts = list(zip(back_x, front_x)), list(zip(back_l, front_l))
+        frames = [dict(body_y=body_y[t], lifts=lifts[t], xs=xs[t], ear=ear[t], tilt_cells=lean[t]) for t in range(8)]
+        lifted = [t for t in range(8) if lifts[t][0] and lifts[t][1] == 0 or lifts[t][1] and lifts[t][0] == 0]
+        return frames, lifted
     lifts = [(0, 0), (0, 0), (2, 0), (1, 0), (0, 0), (0, 0), (0, 2), (0, 1)]
     lean = [0, 0, 1, 1, 0, 0, -1, -1]
     drag = [-body_y[t - 1] for t in range(8)]
@@ -50,33 +166,94 @@ def walk_frames(view):
     return frames, []
 
 
+def animate(path, spec, view, name, issues):
+    sp = Sprite(path, spec)
+    idle = [sp.frame(**f) for f in idle_frames()]
+    walk_spec, lifted = walk_frames(view, any(f.get('far') for f in spec['feet']))
+    walk = [sp.frame(**f) for f in walk_spec]
+    blink = [sp.frame(blink=True, **f) for f in idle_frames()] if 'blink' in sp.s else []
+    fidget_spec = seq(FIDGETS[name][view])
+    fidget = [sp.frame(**f) for f in fidget_spec]
+    issues += sp.check(idle, f'{name} {view} idle') + sp.check(walk, f'{name} {view} walk', lifted) + sp.check(blink, f'{name} {view} blink')
+    issues += sp.check(fidget, f'{name} {view} fidget', [i for i, f in enumerate(fidget_spec) if any(f.get('lifts', ()))])
+    if sp.look_bad:
+        issues.append(f'{name} {view} look covers {sp.look_bad} non-fur cells')
+    return idle, walk, blink, fidget
+
+
+def recolor(a, table):
+    b = a.copy()
+    for src, dst in table.items():
+        b[(b[..., :3] == src).all(-1) & opaque(b), :3] = dst
+    return b
+
+
+def sheet(frames, path):
+    """칸 폭 104px 가로 1행. 위 빈 줄은 잘라 시트 높이 = 가장 높은 프레임. 가로는 캔버스 가운데가 칸 가운데(BakeryBaker.CellBottom과 같은 규칙)"""
+    top = min(np.nonzero(opaque(f).any(1))[0].min() for f in frames)
+    frames = [f[top:] for f in frames]
+    w = frames[0].shape[1]
+    if w > CELL:
+        cut = (w - CELL + 1) // 2
+        assert not any(opaque(f)[:, :cut].any() or opaque(f)[:, w - cut:].any() for f in frames), f'{path}: 칸 폭 104px를 넘는다'
+        frames = [f[:, cut:w - cut] for f in frames]
+        w = frames[0].shape[1]
+    h = max(f.shape[0] for f in frames)
+    out = np.zeros((h, CELL * len(frames), 4), np.uint8)
+    x0 = CELL // 2 - w // 2
+    for i, f in enumerate(frames):
+        out[h - f.shape[0]:, i * CELL + x0:i * CELL + x0 + w] = f
+    save(out, path)
+
+
+def sheets(folder, views):
+    """views: 방향 → (숨쉬기, 걷기, 깜빡임, 딴짓)"""
+    d = os.path.join(SHEETS, folder)
+    os.makedirs(d, exist_ok=True)
+    for view, tag in (('front', ''), ('back', 'Back'), ('side', 'Side')):
+        idle, walk, blink, fidget = views[view]
+        sheet(idle, os.path.join(d, f'{folder}_{tag}Idle.png'))
+        sheet(walk, os.path.join(d, f'{folder}_{tag}Move.png'))
+        sheet(fidget, os.path.join(d, f'{folder}_{tag}Fidget.png'))
+        if blink:
+            sheet(blink, os.path.join(d, f'{folder}_{tag}Blink.png'))
+
+
 def main():
     issues = []
     made = {}
+    # 웜뱃(빵집 웜뱃 그림은 한 장씩, BakeryBaker가 임포트)
+    wombat = {}
     for view, spec in WOMBAT.items():
-        sp = Sprite(os.path.join(HERE, f'wombat_{view}_base.png'), spec)
-        idle = [sp.frame(**f) for f in idle_frames()]
-        walk_spec, lifted = walk_frames(view)
-        walk = [sp.frame(**f) for f in walk_spec]
-        issues += sp.check(idle, f'{view} idle') + sp.check(walk, f'{view} walk', lifted)
+        idle, walk, blink, fidget = animate(os.path.join(HERE, f'wombat_{view}_base.png'), spec, view, 'wombat', issues)
         for i, f in enumerate(idle):
-            save(f, os.path.join(OUT, f'wombat_{view}{"" if i == 0 else f"_{i}"}.png'))
+            save(f, os.path.join(SHOP, f'wombat_{view}{"" if i == 0 else f"_{i}"}.png'))
         for i, f in enumerate(walk):
-            save(f, os.path.join(OUT, f'wombat_{view}_walk_{i}.png'))
-        blink = []
-        if 'blink' in spec:
-            blink = [sp.frame(blink=True, **f) for f in idle_frames()]
-            issues += sp.check(blink, f'{view} blink')
-            for i, f in enumerate(blink):
-                save(f, os.path.join(OUT, f'wombat_{view}_blink_{i}.png'))
-        made[view] = (idle, walk, blink)
+            save(f, os.path.join(SHOP, f'wombat_{view}_walk_{i}.png'))
+        for i, f in enumerate(blink):
+            save(f, os.path.join(SHOP, f'wombat_{view}_blink_{i}.png'))
+        # 딴짓은 프레임이 많아 시트 한 장(칸 폭 104px, BakeryBaker가 자른다)
+        sheet(fidget, os.path.join(SHOP, f'wombat_{view}_fidget.png'))
+        wombat[view] = (idle, walk, blink, fidget)
+    made['wombat'] = wombat
+    # 점원 회색 웜뱃: 같은 프레임의 털색만
+    folder, table = GRAY
+    gray = {v: tuple([recolor(f, table) for f in group] for group in frames) for v, frames in wombat.items()}
+    sheets(folder, gray)
+    sheet([gray['front'][0][0]], os.path.join(SHEETS, folder, folder + '.png'))
+    made['gray'] = gray
+    # 손님
+    for animal, views in VISITORS.items():
+        frames = {v: animate(os.path.join(HERE, f'{animal}_{v}.png'), spec, v, animal, issues) for v, spec in views.items()}
+        sheets(FOLDERS[animal], frames)
+        made[animal] = frames
     print('checks:', issues or 'ok')
     if len(sys.argv) > 1:
         preview(made, sys.argv[1])
 
 
 def preview(made, folder):
-    """확인용 GIF(한 칸 = 6px)"""
+    """확인용 GIF(한 칸 = 6px). stand = 게임에서 서 있을 때(숨쉬기 두 번 → 딴짓 → 숨쉬기)"""
     os.makedirs(folder, exist_ok=True)
 
     def im(a):
@@ -84,10 +261,13 @@ def preview(made, folder):
         bg.alpha_composite(Image.fromarray(a, 'RGBA').resize(bg.size, Image.NEAREST))
         return bg.convert('RGB')
 
-    for view, (idle, walk, blink) in made.items():
-        for name, frames, dur in (('idle', idle, IDLE_DUR), ('walk', walk, WALK_DUR)):
-            ims = [im(f) for f in frames]
-            ims[0].save(os.path.join(folder, f'{view}_{name}.gif'), save_all=True, append_images=ims[1:], duration=dur, loop=0)
+    for who, views in made.items():
+        for view, (idle, walk, blink, fidget) in views.items():
+            stand = idle * 2 + fidget + idle
+            for name, frames, dur in (('idle', idle, IDLE_DUR), ('walk', walk, WALK_DUR), ('fidget', fidget, [TICK] * len(fidget)),
+                                      ('stand', stand, IDLE_DUR * 2 + [TICK] * len(fidget) + IDLE_DUR)):
+                ims = [im(f) for f in frames]
+                ims[0].save(os.path.join(folder, f'{who}_{view}_{name}.gif'), save_all=True, append_images=ims[1:], duration=dur, loop=0)
 
 
 if __name__ == '__main__':

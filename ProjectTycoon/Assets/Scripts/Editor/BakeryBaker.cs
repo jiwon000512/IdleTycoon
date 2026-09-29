@@ -94,7 +94,7 @@ namespace ZooTycoon.Editor
             VisitorSheetImporter.Import(k_SpriteDir + "wait_sheet.png", true, 52);
             VisitorSheetImporter.Import(k_SpriteDir + "bubble_sheet.png", true, 52);
 
-            // 웜뱃 숨쉬기 4 · 걷기 8 · 눈 감은 숨쉬기 4(앞·옆). Source~/make_anim.py
+            // 웜뱃 숨쉬기 4 · 걷기 8 · 눈 감은 숨쉬기 4(앞·옆) · 딴짓(시트 한 장, 칸 폭 104px). Source~/make_anim.py
             foreach (string side in new[] { "front", "back", "side" })
             {
                 foreach (string suffix in IdleSuffixes.Concat(WalkSuffixes).Concat(side == "back" ? new string[0] : BlinkSuffixes))
@@ -102,6 +102,8 @@ namespace ZooTycoon.Editor
                     string path = k_SpriteDir + "wombat_" + side + suffix + ".png";
                     Import(path, CellBottom(path), k_UnitPpu);
                 }
+
+                VisitorSheetImporter.Import(k_SpriteDir + "wombat_" + side + "_fidget.png", true);
             }
 
             for (int i = 0; i < k_TimerFrames; i++)
@@ -178,10 +180,11 @@ namespace ZooTycoon.Editor
             return AssetDatabase.LoadAssetAtPath<Sprite>(k_SpriteDir + name + ".png");
         }
 
-        // 시트의 잘린 칸들을 이름(_0, _1, …) 순으로
+        // 시트의 잘린 칸들을 번호(_0, _1, …, _10) 순으로(이름 순이면 _10이 _2 앞에 온다)
         static Sprite[] LoadFrames(string name)
         {
-            return AssetDatabase.LoadAllAssetRepresentationsAtPath(k_SpriteDir + name + ".png").OfType<Sprite>().OrderBy(s => s.name).ToArray();
+            return AssetDatabase.LoadAllAssetRepresentationsAtPath(k_SpriteDir + name + ".png").OfType<Sprite>()
+                .OrderBy(s => int.Parse(s.name.Substring(s.name.LastIndexOf('_') + 1))).ToArray();
         }
 
         // ---------- 사물 ----------
@@ -296,7 +299,7 @@ namespace ZooTycoon.Editor
         static readonly string[] WalkSuffixes = { "_walk_0", "_walk_1", "_walk_2", "_walk_3", "_walk_4", "_walk_5", "_walk_6", "_walk_7" };
         static readonly string[] BlinkSuffixes = { "_blink_0", "_blink_1", "_blink_2", "_blink_3" };
 
-        // 웜뱃(빵집 계산대·광장 공용). 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 4 · 걷기 8(2026-09-29 B3, Source~/make_anim.py)
+        // 웜뱃(빵집 계산대·광장 공용). 가게 유닛 기본 크기(k_UnitPpu), 스케일 1. 숨쉬기 4 · 걷기 8 · 딴짓(2026-09-29 B3, Source~/make_anim.py)
         static WombatView BakeWombat(Transform parent, Vector3 position)
         {
             SpriteRenderer wombat = Renderer(parent, "Wombat", Load("wombat_front"), position, 0);
@@ -313,6 +316,7 @@ namespace ZooTycoon.Editor
             {
                 SetSprites(mover, "m_" + side + "Idle", Frames("wombat_" + side, IdleSuffixes));
                 SetSprites(mover, "m_" + side + "Walk", Frames("wombat_" + side, WalkSuffixes));
+                SetSprites(mover, "m_" + side + "Fidget", LoadFrames("wombat_" + side + "_fidget"));
             }
 
             SetSprites(mover, "m_frontBlink", Frames("wombat_front", BlinkSuffixes));

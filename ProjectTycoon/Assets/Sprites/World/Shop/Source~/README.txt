@@ -56,3 +56,13 @@
 - 재료 품질 시안 3벌: A 스크립트(바닥 알갱이 무늬 옮김) · B·C Codex 재료 시트(shop_raw/burrow_mat_{b,c}.png, 프롬프트 burrow_mat_prompt_{b,c}.txt). 선택: 입구 B, 지층 띠·바깥 흙 C.
 - make_burrow_a.py: 시트에서 세 덩어리를 잘라 make_pixel.py로 칸 격자(띠 세로 40칸, 흙 32칸, 입구 가로 60칸, --th=0.001) → 띠는 이음이 가장 매끄러운 64칸 구간 + 맨 아래 그늘 한 줄 → 드문 색을 합쳐 7색 → ../wall_face.png(64×40) · ../wall_tile.png(32×32) · ../arch.png(60×49칸 × 2px). 방 둘레 턱 색은 입구 턱 (168,120,96)에 맞춰 BurrowPainter.k_Ledge.
 - make_arch.py·shop_raw/arch_hole.png(옛 구멍 입구)는 삭제. make_burrow_tiles.py는 floor_tile·slot_empty만 만든다.
+
+캐릭터 애니메이션 B3 (2026-09-29)
+- 숨쉬기·걷기·눈 깜빡임은 make_anim.py 하나가 만든다(부위 조립: anim_parts.py, 부위 좌표 anim_specs.py). 정지 그림 <종>_<방향>.png(웜뱃은 wombat_<방향>_base.png)이 원본이다.
+- 옛 make_breath_frames.py · make_walk_frames.py · make_visitor_sheets.py · make_wombat_palette.py · preview_side_frames.py와 그 결과 프레임(_1~3, _walk_0~3)은 지웠다(git 이력에 있다). 위 기록의 low·foot·귀 값은 anim_specs.py로 옮겼다.
+
+숨쉬기 · 딴짓 (2026-09-29)
+- 사용자 「숨쉬기 깜빡임에서 모든 동물이 상반신 내지 머리만 움직임. 좀 다채롭게」. 숨쉬기 4는 늘어날 줄 겹치기 대신 발 위 몸 전체가 1칸 내려앉았다 올라온다(귀 · 꼬리 늦게). 게임 m_idleBob이 든 빵을 같이 내린다.
+- 딴짓은 make_anim.py FIDGETS(동물 · 방향마다 한 벌, 한 칸 TICK 80ms, 머묾은 같은 프레임 되풀이): 웜뱃 두리번 + 앞발 비비기 / 엉덩이 흔들기 / 발 구르기 + 올려다보기, 토끼 귀 쫑긋 + 발 구르기, 펭귄 뒤뚱 + 날개 파닥 / 킁킁, 여우 꼬리 살랑 + 두리번, 고슴도치 부르르 + 두리번 / 킁킁.
+  결과: 웜뱃 ../wombat_<방향>_fidget.png(시트), 손님 <종>_{,Back,Side}Fidget.png. 게임이 서 있을 때 몇 초마다 숨쉬기 한 바퀴 끝에 한 번 끼워 넣는다.
+- 부위 흔들기(anim_specs parts): 귀 · 날개는 사각형으로, 여우 꼬리는 외곽선 안쪽 seed로 떼어 줄마다 axis 행에서 먼 만큼 가로로 민다. 처음엔 돌리기(8×8 다수결)였으나 가는 선이 끊기고 몸과 같이 쓰던 외곽선이 떨어진 조각으로 남아 바꿨다. 여우 앞모습 꼬리는 칸 폭 104px 때문에 바깥으로 1칸만.

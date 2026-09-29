@@ -1,10 +1,10 @@
 {
   "table": "VisitorTable",
-  "version": 10,
+  "version": 12,
   "notes": [
     "기획서 4장 관광객(v0.14). v1.14부터 빵집 손님 외형 전용: 손님이 들어올 때마다 한 행을 고른다.",
     "sprite·idleSheet·moveSheet·backIdleSheet·backMoveSheet는 Resources/ 기준 경로(확장자 없음). idle·move 시트가 null이면 sprite 1장, back 시트가 null이면 앞모습 시트를 쓴다.",
-    "version 2 (2026-09-21): 토끼 손님. 뒷모습 시트 2칸 추가(위로 걸으면 뒷모습), frameRate를 idleFrameRate·moveFrameRate로 나눔(웜뱃과 같은 2.5·8). 시트는 Shop/Source~/make_visitor_sheets.py, 슬라이스는 ZooTycoon/Bake/Import Visitor Sheets.",
+    "version 2 (2026-09-21): 토끼 손님. 뒷모습 시트 2칸 추가(위로 걸으면 뒷모습), frameRate를 idleFrameRate·moveFrameRate로 나눔(웜뱃과 같은 2.5·8). 시트는 Shop/Source~/make_anim.py(2026-09-29부터, 옛 make_visitor_sheets.py 삭제), 슬라이스는 ZooTycoon/Bake/Import Visitor Sheets.",
     "version 4 (2026-09-23): 여우 v03·고슴도치 v04 추가. 시트 칸 폭 80 → 88px(여우 걷기 86px).",
     "version 3 (2026-09-23): 펭귄 손님 v02 추가. 손님 외형은 행 중 균등 난수.",
     "version 5 (2026-09-23, 손님 동선 설계 v0.2): sideIdleSheet·sideMoveSheet 추가. 오른쪽 보는 옆모습(가로로 걸을 때·두리번·진열대 옆), 왼쪽은 좌우 뒤집기. 실제 아트 전까지는 같은 경로에 앞모습 사본(더미).",
@@ -12,7 +12,9 @@
     "version 7 (2026-09-24 코드 리뷰 R1): 파일·table 값 = 행 클래스 이름(XXTable). 문자열 enum 칸은 대소문자 무관하게 enum으로 읽는다.",
     "version 8 (2026-09-24, 리뷰 R2): 읽는 코드가 없던 moveSpeed·viewSecondsMin·viewSecondsMax·weight·sortOrder 삭제(손님 외형은 행 중 균등 난수, 걷는 속도는 ConfigTable walkSpeed).",
     "version 9 (2026-09-26, 설계 21 점원): role 추가 — customer(광장 도착 손님 외형, 균등 난수) · clerk(점원 외형, 후보마다 clerk 행 중 균등 난수). v05 회색 웜뱃(남부 털코웜뱃 회갈색 gray_d): 빵집 웜뱃 24장의 털 5색만 바꾼 시트(Shop/Source~/make_wombat_palette.py, 칸 폭 104px). 새 점원 외형 = 시트 한 벌 + clerk 행 하나.",
-    "version 10 (2026-09-27, 버그: 점원이 빵을 손보다 높이 듦): handRatio 추가 — 앞발 높이 / 키(든 빵 가운데 = 키 × handRatio + 빵 반쯤). 손님 공통 프리팹 값 0.33을 행으로 옮겼다. 콩 모양 웜뱃(v05)은 0.17(키 1.025 → 빵 0.35, 빵집 웜뱃 m_handHeight와 같음)."
+    "version 10 (2026-09-27, 버그: 점원이 빵을 손보다 높이 듦): handRatio 추가 — 앞발 높이 / 키(든 빵 가운데 = 키 × handRatio + 빵 반쯤). 손님 공통 프리팹 값 0.33을 행으로 옮겼다. 콩 모양 웜뱃(v05)은 0.17(키 1.025 → 빵 0.35, 빵집 웜뱃 m_handHeight와 같음).",
+    "version 11 (2026-09-29, 캐릭터 애니메이션 B3): idleFrameRate·moveFrameRate 삭제 — 프레임마다 다른 시간(숨쉬기 4 · 걷기 8)을 손님 프리팹(VisitorView m_idleSeconds · m_walkSeconds)이 갖는다. blinkSheet·sideBlinkSheet 추가(눈 감은 숨쉬기, 눈이 없으면 null). 시트는 Shop/Source~/make_anim.py(부위 조립)가 만든다.",
+    "version 12 (2026-09-29, 딴짓): fidgetSheet·backFidgetSheet·sideFidgetSheet 추가 — 서 있을 때 가끔 숨쉬기 사이에 한 번 끼워 넣는 동작(두리번 · 귀 쫑긋 · 꼬리 살랑 등, 종 · 방향마다 한 벌, 없으면 null). 한 칸 시간 · 간격은 손님 프리팹(VisitorView m_fidgetFrameSeconds · m_fidgetEvery). 시트는 Shop/Source~/make_anim.py."
   ],
   "rows": [
     {
@@ -26,8 +28,11 @@
       "backMoveSheet": "Sprites/Visitors/Rabbit/Rabbit_BackMove",
       "sideIdleSheet": "Sprites/Visitors/Rabbit/Rabbit_SideIdle",
       "sideMoveSheet": "Sprites/Visitors/Rabbit/Rabbit_SideMove",
-      "idleFrameRate": 2.5,
-      "moveFrameRate": 8,
+      "blinkSheet": "Sprites/Visitors/Rabbit/Rabbit_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/Rabbit/Rabbit_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/Rabbit/Rabbit_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/Rabbit/Rabbit_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/Rabbit/Rabbit_SideFidget",
       "scale": 1,
       "carryAt": "hand",
       "handRatio": 0.33
@@ -43,8 +48,11 @@
       "backMoveSheet": "Sprites/Visitors/Penguin/Penguin_BackMove",
       "sideIdleSheet": "Sprites/Visitors/Penguin/Penguin_SideIdle",
       "sideMoveSheet": "Sprites/Visitors/Penguin/Penguin_SideMove",
-      "idleFrameRate": 2.5,
-      "moveFrameRate": 8,
+      "blinkSheet": "Sprites/Visitors/Penguin/Penguin_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/Penguin/Penguin_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/Penguin/Penguin_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/Penguin/Penguin_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/Penguin/Penguin_SideFidget",
       "scale": 1,
       "carryAt": "head",
       "handRatio": 0.33
@@ -60,8 +68,11 @@
       "backMoveSheet": "Sprites/Visitors/Fox/Fox_BackMove",
       "sideIdleSheet": "Sprites/Visitors/Fox/Fox_SideIdle",
       "sideMoveSheet": "Sprites/Visitors/Fox/Fox_SideMove",
-      "idleFrameRate": 2.5,
-      "moveFrameRate": 8,
+      "blinkSheet": "Sprites/Visitors/Fox/Fox_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/Fox/Fox_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/Fox/Fox_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/Fox/Fox_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/Fox/Fox_SideFidget",
       "scale": 1,
       "carryAt": "hand",
       "handRatio": 0.33
@@ -77,8 +88,11 @@
       "backMoveSheet": "Sprites/Visitors/Hedgehog/Hedgehog_BackMove",
       "sideIdleSheet": "Sprites/Visitors/Hedgehog/Hedgehog_SideIdle",
       "sideMoveSheet": "Sprites/Visitors/Hedgehog/Hedgehog_SideMove",
-      "idleFrameRate": 2.5,
-      "moveFrameRate": 8,
+      "blinkSheet": "Sprites/Visitors/Hedgehog/Hedgehog_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/Hedgehog/Hedgehog_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/Hedgehog/Hedgehog_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/Hedgehog/Hedgehog_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/Hedgehog/Hedgehog_SideFidget",
       "scale": 1,
       "carryAt": "hand",
       "handRatio": 0.33
@@ -94,8 +108,11 @@
       "backMoveSheet": "Sprites/Visitors/WombatGray/WombatGray_BackMove",
       "sideIdleSheet": "Sprites/Visitors/WombatGray/WombatGray_SideIdle",
       "sideMoveSheet": "Sprites/Visitors/WombatGray/WombatGray_SideMove",
-      "idleFrameRate": 2.5,
-      "moveFrameRate": 8,
+      "blinkSheet": "Sprites/Visitors/WombatGray/WombatGray_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/WombatGray/WombatGray_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/WombatGray/WombatGray_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/WombatGray/WombatGray_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/WombatGray/WombatGray_SideFidget",
       "scale": 1,
       "carryAt": "hand",
       "handRatio": 0.17

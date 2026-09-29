@@ -30,8 +30,13 @@ namespace ZooTycoon.Core
         // 손님 동선 설계 v0.2: 오른쪽 보는 옆모습(왼쪽은 뒤집기)
         public string SideIdleSheet { get; set; }
         public string SideMoveSheet { get; set; }
-        public double IdleFrameRate { get; set; }
-        public double MoveFrameRate { get; set; }
+        // 2026-09-29: 눈 감은 숨쉬기(숨쉬기와 같은 프레임 수). 눈이 없는 방향·종은 null. 프레임 시간은 손님 프리팹(VisitorView)
+        public string BlinkSheet { get; set; }
+        public string SideBlinkSheet { get; set; }
+        // 2026-09-29: 딴짓(서 있을 때 가끔 한 번, 종 · 방향마다 한 벌). 없으면 null. 한 칸 시간은 손님 프리팹(VisitorView)
+        public string FidgetSheet { get; set; }
+        public string BackFidgetSheet { get; set; }
+        public string SideFidgetSheet { get; set; }
         public double Scale { get; set; }
         public CarryAt CarryAt { get; set; }
         // carryAt hand: 앞발 높이 / 키. 든 빵 가운데 = 키 × 이 값 + 빵 반쯤(VisitorView). 종마다 몸 비율이 달라 행에 둔다

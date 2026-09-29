@@ -15,7 +15,7 @@ namespace ZooTycoon.Tests
         {
             foreach (VisitorTable visitor in TestTables.Load().GetAll<VisitorTable>())
             {
-                foreach (string path in new[] { visitor.Sprite, visitor.IdleSheet, visitor.MoveSheet, visitor.BackIdleSheet, visitor.BackMoveSheet, visitor.SideIdleSheet, visitor.SideMoveSheet })
+                foreach (string path in new[] { visitor.Sprite, visitor.IdleSheet, visitor.MoveSheet, visitor.BackIdleSheet, visitor.BackMoveSheet, visitor.SideIdleSheet, visitor.SideMoveSheet, visitor.BlinkSheet, visitor.SideBlinkSheet, visitor.FidgetSheet, visitor.BackFidgetSheet, visitor.SideFidgetSheet })
                 {
                     if (path == null)
                     {

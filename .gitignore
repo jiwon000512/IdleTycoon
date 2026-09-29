@@ -57,3 +57,6 @@ desktop.ini
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+
+# 파이썬 캐시(Source~ 그림 스크립트를 돌리면 생긴다)
+__pycache__/

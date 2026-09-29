@@ -78,9 +78,9 @@ namespace ZooTycoon.Data
                     errors.Add($"VisitorTable '{visitor.Id}': sprite 경로가 비어 있다.");
                 }
 
-                if (visitor.IdleFrameRate <= 0d || visitor.MoveFrameRate <= 0d || visitor.Scale <= 0d || visitor.HandRatio <= 0d)
+                if (visitor.Scale <= 0d || visitor.HandRatio <= 0d)
                 {
-                    errors.Add($"VisitorTable '{visitor.Id}': idleFrameRate·moveFrameRate·scale·handRatio는 0보다 커야 한다.");
+                    errors.Add($"VisitorTable '{visitor.Id}': scale·handRatio는 0보다 커야 한다.");
                 }
             }
 
