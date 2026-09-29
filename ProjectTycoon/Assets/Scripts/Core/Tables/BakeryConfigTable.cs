@@ -19,5 +19,11 @@ namespace ZooTycoon.Core
         // 굴 격자 설계 v0.5: 파기 비용 = digBaseCost × digCostGrowth^(판 칸 수)
         public double DigBaseCost { get; set; }
         public double DigCostGrowth { get; set; }
+        // 설계 24: 웜뱃이 poopEvery 유닛 걸을 때마다 poopChance로 똥 하나(바닥에 poopMax까지, 다른 똥 poopGap 안이면 건너뜀). 손님은 똥 둘레 poopAvoidRadius 안을 걷지 않는다
+        public double PoopEvery { get; set; }
+        public double PoopChance { get; set; }
+        public int PoopMax { get; set; }
+        public double PoopGap { get; set; }
+        public double PoopAvoidRadius { get; set; }
     }
 }

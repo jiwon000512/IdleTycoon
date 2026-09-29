@@ -20,6 +20,8 @@ namespace ZooTycoon.Core
         public bool WaitingRelease { get; private set; }
         // 시스템이 걷게 하는 중(계산대 붙기, 앞으로 미션 가이드). 조이스틱을 건드리면 그만둔다
         public bool Guided => Mover.Moving;
+        // 설계 24: 이번 틱에 걸은 거리(조이스틱 · 시스템 이동만. 순간 이동 Place는 세지 않는다)
+        public double Walked { get; private set; }
 
         public Wombat(TableSet tables, ZooState wallet)
         {
@@ -46,6 +48,7 @@ namespace ZooTycoon.Core
         internal void Walk(BurrowNav nav, double dt)
         {
             Bubble.Tick(dt);
+            Walked = 0d;
 
             if (WaitingRelease)
             {
@@ -56,7 +59,9 @@ namespace ZooTycoon.Core
 
             if (Input == Vector2.Zero && Guided)
             {
+                Vector2 before = Mover.Position;
                 Mover.Advance(Speed * dt);
+                Walked = Vector2.Distance(before, Mover.Position);
                 Moving = true;
                 return;
             }
@@ -86,6 +91,7 @@ namespace ZooTycoon.Core
             if (Moving)
             {
                 Mover.Place(to);
+                Walked = Vector2.Distance(from, to);
             }
         }
 
@@ -93,6 +99,7 @@ namespace ZooTycoon.Core
         {
             Mover.Place(Mover.Position);
             Moving = false;
+            Walked = 0d;
         }
 
         internal void WaitRelease()

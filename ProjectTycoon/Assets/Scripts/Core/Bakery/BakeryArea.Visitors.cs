@@ -124,10 +124,19 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 웜뱃이 서 있는 자리도 찬 자리다(손님이 웜뱃 위에 서지 않게)
+        // 설계 24: 똥에 막혀 포기한 손님은 줄에서 빠진다
+        internal void LeaveQueue(BakeryVisitor visitor)
+        {
+            foreach (CounterInteractable counter in m_counters)
+            {
+                counter.Leave(visitor);
+            }
+        }
+
+        // 웜뱃이 서 있는 자리, 똥 둘레 안 자리도 찬 자리다(손님이 웜뱃·똥 위에 서지 않게)
         private bool SpotTaken(Vector2 p)
         {
-            if (WombatPresent && Vector2.Distance(Wombat.Mover.Position, p) < Visitor.k_YieldRadius)
+            if ((WombatPresent && Vector2.Distance(Wombat.Mover.Position, p) < Visitor.k_YieldRadius) || NearPoop(p))
             {
                 return true;
             }

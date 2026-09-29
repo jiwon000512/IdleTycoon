@@ -40,6 +40,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorArrived>(Bus_VisitorArrived),
                 bus.Subscribe<Events.BakeryVisitorPicked>(Bus_VisitorPicked),
                 bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
+                bus.Subscribe<Events.BakeryVisitorGaveUp>(Bus_VisitorGaveUp),
                 bus.Subscribe<Events.BakeryVisitorLeft>(Bus_VisitorLeft),
                 bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired),
                 bus.Subscribe<Events.ClerkLeft>(Bus_ClerkLeft),
@@ -172,6 +173,15 @@ namespace ZooTycoon.World
             {
                 string amount = m_tables.Format(k_CoinKey, e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
                 m_units[e.Visitor].Pay(amount);
+            }
+        }
+
+        // 설계 24: 똥에 막혀 포기하면 든 빵도 버린다
+        private void Bus_VisitorGaveUp(Events.BakeryVisitorGaveUp e)
+        {
+            if (Mine(e.Visitor))
+            {
+                m_units[e.Visitor].ShowCarry(null);
             }
         }
 

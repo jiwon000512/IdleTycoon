@@ -27,6 +27,9 @@ namespace ZooTycoon.Core
         public const string k_UiClose = "ui_close";
         public const string k_NegoGood = "nego_good";
         public const string k_NegoBad = "nego_bad";
+        // 설계 24: 똥 떨어짐 · 치움
+        public const string k_Poop = "poop";
+        public const string k_Clean = "clean";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -52,6 +55,8 @@ namespace ZooTycoon.Core
             k_UiClose,
             k_NegoGood,
             k_NegoBad,
+            k_Poop,
+            k_Clean,
         };
 
         // Resources/ 기준, 확장자 없음

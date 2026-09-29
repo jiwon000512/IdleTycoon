@@ -8,7 +8,7 @@ namespace ZooTycoon.Core
 {
     // 설계 08 v0.5 → 설계 13 → 설계 18: 빵집. 사물(진열대·오븐·계산대·나가기·파기)을 조립하고 사물 사이(오븐 → 웜뱃 손 → 진열대 → 손님 → 계산대)를 잇는다.
     // 설계 18: 진열대·오븐·계산대는 자유 배치(밑변 가운데 좌표). 사고 옮기고 보관하는 규칙은 WombatArea.Placement. 굴 파기는 칸 그대로.
-    // 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs.
+    // 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs. 설계 24 웜뱃 똥은 BakeryArea.Poops.cs.
     // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기로 광장에 간다(없는 동안 계산이 멈춘다)
     public sealed partial class BakeryArea : WombatArea
     {
@@ -191,6 +191,7 @@ namespace ZooTycoon.Core
         {
             TickVisitors(dt);
             TickClerks(dt);
+            TickPoops();
         }
 
         protected override bool IsStaffed(Interactable thing)
@@ -288,6 +289,7 @@ namespace ZooTycoon.Core
         private void RebuildLayout()
         {
             Layout.Rebuild(Grid.Cells, m_shelves, m_ovens, m_counters, m_config.MaxCustomers);
+            ClearBuriedPoops();
             SyncThings();
             RepathVisitors();
             RepathClerks();
@@ -309,7 +311,7 @@ namespace ZooTycoon.Core
             // 대상은 다음 Tick에 고른다. 여기서 고르면 LayoutChanged보다 TargetChanged가 먼저 나가 화면에 없는 사물(새 오븐·진열대)을 가리킨다
         }
 
-        // 팔 수 있는 칸은 칸 기준으로 맞춘다(있던 칸은 같은 객체를 둬 대상이 흔들리지 않는다). 목록 순서는 딴짓 점원 → 진열대 → 오븐 → 계산대 → 나가기 → 파기
+        // 팔 수 있는 칸은 칸 기준으로 맞춘다(있던 칸은 같은 객체를 둬 대상이 흔들리지 않는다). 목록 순서는 딴짓 점원 → 똥 → 진열대 → 오븐 → 계산대 → 나가기 → 파기
         private void SyncThings()
         {
             List<Cell> digCells = new List<Cell>(Grid.Frontier());
@@ -338,6 +340,7 @@ namespace ZooTycoon.Core
                 Placed.Add(clerk);
             }
 
+            Placed.AddRange(m_poops);
             Placed.AddRange(m_shelves);
             Placed.AddRange(m_ovens);
             Placed.AddRange(m_counters);

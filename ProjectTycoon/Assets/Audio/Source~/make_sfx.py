@@ -119,3 +119,9 @@ save('wake', soft(np.sin(2 * np.pi * np.cumsum(300 * (700 / 300) ** (t / 0.26) *
 t = t_of(0.45)
 save('passage', soft(noise(0.45, 200, 1400, 3) * np.sin(np.pi * t / 0.45) ** 2, 0.02), 0.4)
 save('say', note(740, 0.06, 0.02, 'square'), 0.3)
+
+# 설계 24 웜뱃 똥(2026-09-29 1차, 에이전트 판단 · 시안 비교 전): 떨어질 때 낮게 「뽁」, 치울 때 「쓱싹」 두 번 + 작은 반짝
+save('poop', sweep(360, 120, 0.13, 0.04) + np.pad(soft(noise(0.02, 200, 1200, 31) * np.exp(-t_of(0.02) / 0.006), 0.001) * 0.4, (0, int(R * 0.13) - int(R * 0.02))), 0.45)
+t = t_of(0.09)
+swish = [soft(noise(0.09, 2500, 7000, 40 + i) * np.sin(np.pi * t / 0.09) ** 2, 0.004) for i in range(2)]
+save('clean', seq(swish + [note(2093, 0.22, 0.07) * 0.35], 0.1), 0.45)

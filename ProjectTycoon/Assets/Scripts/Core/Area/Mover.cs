@@ -85,8 +85,9 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 걷는 중이면 지금 선분을 마저 걷고 그 끝점에서 새 길을 찾는다. 닿을 수 없으면 곧장(ponytail: 막힌 배치에서만 생김)
-        public void WalkTo(BurrowNav nav, Vector2 target, Facing arrive)
+        // 걷는 중이면 지금 선분을 마저 걷고 그 끝점에서 새 길을 찾는다. 닿을 수 없으면 곧장(ponytail: 막힌 배치에서만 생김).
+        // 설계 24: 똥 둘레 때문에만 닿을 수 없으면 그 자리에 서고 false. pass면 둘레를 무시한 길로 지나간다
+        public bool WalkTo(BurrowNav nav, Vector2 target, Facing arrive, bool pass = false)
         {
             m_nav = nav;
             Vector2 from = NextNode;
@@ -95,14 +96,22 @@ namespace ZooTycoon.Core
             if (!Moving && Vector2.DistanceSquared(Position, target) < 1e-6f)
             {
                 Follow(System.Array.Empty<Vector2>(), arrive);
-                return;
+                return true;
             }
 
             List<Vector2> path = nav.FindPath(from, target);
 
             if (path.Count == 0 && Vector2.DistanceSquared(from, target) > 1e-6f)
             {
-                path.Add(target);
+                List<Vector2> through = nav.FindPath(from, target, true);
+
+                if (through.Count > 0 && !pass)
+                {
+                    Place(Position);
+                    return false;
+                }
+
+                path = through.Count > 0 ? through : new List<Vector2> { target };
             }
 
             if (Moving)
@@ -111,6 +120,7 @@ namespace ZooTycoon.Core
             }
 
             Follow(path, arrive);
+            return true;
         }
 
         // 걷는 중에 avoid 둘레 radius를 피해 같은 목적지로 가는 길로 바꾼다. 그런 길이 없으면 그대로 두고 false
@@ -131,6 +141,18 @@ namespace ZooTycoon.Core
 
             Follow(path, ArriveFacing);
             return true;
+        }
+
+        // 보는 쪽 한 걸음(y 위)
+        public static Vector2 Direction(Facing facing)
+        {
+            switch (facing)
+            {
+                case Facing.Up: return Vector2.UnitY;
+                case Facing.Down: return -Vector2.UnitY;
+                case Facing.Left: return -Vector2.UnitX;
+                default: return Vector2.UnitX;
+            }
         }
 
         public static Facing FacingOf(Vector2 delta)

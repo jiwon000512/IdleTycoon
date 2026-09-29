@@ -26,6 +26,8 @@ namespace ZooTycoon.Core
         public const string k_Dig = "dig";
         // 설계 22: 딴짓 중인 점원 깨우기
         public const string k_Wake = "wake";
+        // 설계 24: 똥 치우기
+        public const string k_Clean = "clean";
 
         public ActionMode Mode { get; set; }
         // 버튼 아이콘(Resources/ 기준, 확장자 없음). manual만, 나머지는 null

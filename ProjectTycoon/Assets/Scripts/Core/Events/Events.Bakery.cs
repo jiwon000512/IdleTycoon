@@ -81,6 +81,30 @@ namespace ZooTycoon.Core
             }
         }
 
+        // ---------- 설계 24 똥 ----------
+
+        // 웜뱃이 똥을 떨궜다(그림 · 흙먼지 · 소리)
+        public readonly struct PoopDropped
+        {
+            public readonly PoopInteractable Poop;
+
+            public PoopDropped(PoopInteractable poop)
+            {
+                Poop = poop;
+            }
+        }
+
+        // 똥이 치워졌다(치우기 버튼 · 사물 밑에 깔림). 그림을 지운다
+        public readonly struct PoopCleaned
+        {
+            public readonly PoopInteractable Poop;
+
+            public PoopCleaned(PoopInteractable poop)
+            {
+                Poop = poop;
+            }
+        }
+
         // ---------- 설계 21 점원 ----------
 
         // 점원을 고용했다(구멍에서 톡 나와 자리로 간다)

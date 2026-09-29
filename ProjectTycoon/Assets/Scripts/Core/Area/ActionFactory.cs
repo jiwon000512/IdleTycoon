@@ -12,7 +12,7 @@ namespace ZooTycoon.Core
         {
             ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter, ActionTable.k_Upgrade,
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
-            ActionTable.k_Wake,
+            ActionTable.k_Wake, ActionTable.k_Clean,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -30,6 +30,7 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Bake: return new Bake(table);
                 case ActionTable.k_Dig: return new Dig(table);
                 case ActionTable.k_Wake: return new Wake(table);
+                case ActionTable.k_Clean: return new Clean(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");
             }
         }

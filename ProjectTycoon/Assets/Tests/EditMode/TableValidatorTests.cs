@@ -14,16 +14,16 @@ namespace ZooTycoon.Tests
         [TestCase("StringTable", 25)]
         [TestCase("ClerkTable", 1)]
         [TestCase("ClerkConfigTable", 6)]
-        [TestCase("BubbleTable", 1)]
+        [TestCase("BubbleTable", 2)]
         [TestCase("DialogueTable", 3)]
         [TestCase("BreadTable", 2)]
-        [TestCase("ActionTable", 8)]
-        [TestCase("InteractableTable", 8)]
+        [TestCase("ActionTable", 9)]
+        [TestCase("InteractableTable", 9)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 5)]
+        [TestCase("SoundTable", 6)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 3)]
-        [TestCase("BakeryConfigTable", 5)]
+        [TestCase("BakeryConfigTable", 6)]
         [TestCase("PlazaConfigTable", 1)]
         [TestCase("PlazaDecorTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -64,6 +64,17 @@ namespace ZooTycoon.Tests
         {
             TableSet tables = TestTables.Load();
             tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).LookSeconds = 0d;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 설계 24: 똥 확률은 0~1
+        [TestCase(1.5)]
+        [TestCase(-0.1)]
+        public void Validate_WhenPoopChanceOutOfRange_ReportsError(double chance)
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).PoopChance = chance;
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
@@ -194,6 +205,8 @@ namespace ZooTycoon.Tests
         [TestCase("BgmTable", "bakery")]
         [TestCase("ActionTable", "serve")]
         [TestCase("InteractableTable", "dig")]
+        [TestCase("InteractableTable", "poop")]
+        [TestCase("BubbleTable", "yuck")]
         public void Validate_WhenRequiredRowMissing_ReportsError(string table, string id)
         {
             Assert.That(TableValidator.Validate(TestTables.LoadWithout(table, id)), Is.Not.Empty);

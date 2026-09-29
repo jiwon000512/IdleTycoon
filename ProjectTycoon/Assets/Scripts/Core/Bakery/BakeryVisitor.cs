@@ -5,12 +5,15 @@ using System.Numerics;
 namespace ZooTycoon.Core
 {
     // 설계 08 v0.5 · 손님 동선 설계 v0.2 5·6·7장 · 리뷰 R2: 빵집 손님 한 명. 할 일은 자기 행동 트리(Brain)와 잎 행동으로 스스로 정한다.
-    // 구멍에서 톡 나와 → 빵을 고르고 진열대로 → 집기(비었으면 기다림) → 줄 → 계산 → 구멍으로. 빵을 못 찾으면 그냥 나간다
+    // 구멍에서 톡 나와 → 빵을 고르고 진열대로 → 집기(비었으면 기다림) → 줄 → 계산 → 구멍으로. 빵을 못 찾으면 그냥 나간다.
+    // 설계 24: 똥 둘레를 피해 걷고, 가려는 곳까지 길이 없으면 🤢 → 빵을 포기하고 구멍으로(나가는 길은 막혀도 지나간다)
     public sealed class BakeryVisitor : Visitor
     {
         private readonly BtNode<BakeryVisitor> m_brain;
         private readonly HashSet<string> m_tried = new HashSet<string>();
         private double m_patience;
+        // 똥 둘레에 길이 막혀 이번 걸음을 못 간다(걷던 잎이 실패해 포기 가지로 넘어간다)
+        private bool m_blocked;
 
         public BakeryArea Bakery { get; }
         protected override WombatArea Area => Bakery;
@@ -19,6 +22,8 @@ namespace ZooTycoon.Core
         public ShelfInteractable Shelf { get; private set; }
         public bool CarriesBread { get; private set; }
         public bool Angry { get; private set; }
+        // 설계 24: 똥에 길이 막혀 빵을 포기했다
+        public bool Disgusted { get; private set; }
         public bool Paid { get; private set; }
         // 진열대 앞 서는 자리를 잡고 있다(다른 손님이 같은 자리에 서지 않게 곳이 본다)
         public bool HasSpot { get; private set; }
@@ -36,8 +41,22 @@ namespace ZooTycoon.Core
         {
             if (Moving && Phase != VisitorPhase.ToQueue && Phase != VisitorPhase.Queued)
             {
-                Mover.WalkTo(Bakery.Layout.Nav, Mover.Destination, Mover.ArriveFacing);
+                WalkTo(Mover.Destination, Mover.ArriveFacing);
             }
+        }
+
+        // 설계 24: 똥 둘레를 피해 걷는다. 길이 없으면 사러 가는 중엔 🤢(걷던 잎이 실패해 포기 가지로), 나가는 중엔 둘레를 무시하고 지나간다(가게가 멈추지 않게)
+        internal void WalkTo(Vector2 target, Facing arrive)
+        {
+            if (Mover.WalkTo(Bakery.Layout.Nav, target, arrive, Phase == VisitorPhase.Leaving))
+            {
+                return;
+            }
+
+            m_blocked = true;
+            m_patience = 0d;
+            Disgusted = true;
+            Bubble.Show(BubbleTable.k_Yuck);
         }
 
         // 계산대가 값을 받았다
@@ -167,12 +186,17 @@ namespace ZooTycoon.Core
             HasSpot = false;
             Spot = Bakery.FreeSpot(Shelf);
             HasSpot = true;
-            Mover.WalkTo(Bakery.Layout.Nav, Spot, Bakery.Layout.ShelfFacing(Shelf, Spot));
+            WalkTo(Spot, Bakery.Layout.ShelfFacing(Shelf, Spot));
             return true;
         }
 
         private BtStatus TickWalk()
         {
+            if (m_blocked)
+            {
+                return BtStatus.Failure;
+            }
+
             return Moving ? BtStatus.Running : BtStatus.Success;
         }
 
@@ -248,6 +272,11 @@ namespace ZooTycoon.Core
 
         private BtStatus TickToQueue()
         {
+            if (m_blocked)
+            {
+                return BtStatus.Failure;
+            }
+
             if (Moving)
             {
                 return BtStatus.Running;
@@ -257,27 +286,36 @@ namespace ZooTycoon.Core
             return BtStatus.Success;
         }
 
-        // 앞사람이 빠지면 계산대가 한 칸씩 앞으로 걷게 한다. 계산이 끝나면 성공
+        // 앞사람이 빠지면 계산대가 한 칸씩 앞으로 걷게 한다. 계산이 끝나면 성공(그 길이 똥에 막히면 실패)
         private BtStatus TickWaitCheckout()
         {
-            return Paid ? BtStatus.Success : BtStatus.Running;
+            if (Paid)
+            {
+                return BtStatus.Success;
+            }
+
+            return m_blocked ? BtStatus.Failure : BtStatus.Running;
         }
 
         private bool StartLeave()
         {
+            m_blocked = false;
             Phase = VisitorPhase.Leaving;
-            Mover.WalkTo(Bakery.Layout.Nav, Bakery.Layout.HoleFloor, Facing.Up);
+            WalkTo(Bakery.Layout.HoleFloor, Facing.Up);
             return true;
         }
 
-        // 빵을 못 찾았다: 구멍으로
+        // 빵을 못 찾았거나 똥에 길이 막혔다: 줄에서 빠지고(든 빵은 사라진다) 구멍으로
         private bool StartAngry()
         {
-            // 2026-09-25: 「!!」 말풍선 없이 그냥 나간다(설계 22에서 되살렸다가 2026-09-26 다시 뺌)
+            // 2026-09-25: 「!!」 말풍선 없이 그냥 나간다(설계 22에서 되살렸다가 2026-09-26 다시 뺌). 똥에 막혔으면 🤢는 WalkTo가 띄웠다
             Angry = true;
             HasSpot = false;
+            CarriesBread = false;
+            m_blocked = false;
+            Bakery.LeaveQueue(this);
             Phase = VisitorPhase.Leaving;
-            Mover.WalkTo(Bakery.Layout.Nav, Bakery.Layout.HoleFloor, Facing.Up);
+            WalkTo(Bakery.Layout.HoleFloor, Facing.Up);
             Bakery.Bus.Publish(new Events.BakeryVisitorGaveUp(this));
             return true;
         }

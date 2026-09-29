@@ -15,12 +15,13 @@ namespace ZooTycoon.Data
         private static readonly string[] k_InteractableIds =
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
-            DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id,
+            DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
         {
             BubbleTable.k_Wait, BubbleTable.k_Note, BubbleTable.k_Question, BubbleTable.k_Alert, BubbleTable.k_Heart, BubbleTable.k_Angry, BubbleTable.k_Chat,
+            BubbleTable.k_Yuck,
         };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
         private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig };
@@ -346,7 +347,7 @@ namespace ZooTycoon.Data
             CheckRequired<BgmTable>(tables, new[] { BgmTable.k_Bakery }, errors);
         }
 
-        // 설계 09 v0.4: 코드의 사물 종류 5개가 모두 있고, range > 0, actions가 1개 이상이며 모두 ActionTable에 있다
+        // 설계 09 v0.4: 코드의 사물 종류(k_InteractableIds)가 모두 있고, range > 0, actions가 1개 이상이며 모두 ActionTable에 있다
         private static void ValidateInteractables(TableSet tables, List<string> errors)
         {
             HashSet<string> actionIds = Ids<ActionTable>(tables);
@@ -527,6 +528,12 @@ namespace ZooTycoon.Data
                 if (bakery.DigBaseCost <= 0d || bakery.DigCostGrowth < 1d)
                 {
                     errors.Add($"BakeryConfigTable '{bakery.Id}': digBaseCost는 0보다, digCostGrowth는 1 이상이어야 한다.");
+                }
+
+                // 설계 24
+                if (bakery.PoopEvery <= 0d || bakery.PoopChance < 0d || bakery.PoopChance > 1d || bakery.PoopMax < 0 || bakery.PoopGap < 0d || bakery.PoopAvoidRadius < 0d)
+                {
+                    errors.Add($"BakeryConfigTable '{bakery.Id}': poopEvery는 0보다, poopChance는 0~1, poopMax·poopGap·poopAvoidRadius는 0 이상이어야 한다.");
                 }
             }
 

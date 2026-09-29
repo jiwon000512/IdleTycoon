@@ -32,6 +32,8 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.Payday>(_ => Play(SoundTable.k_Payday)),
                 bus.Subscribe<Events.AreaChanged>(_ => Play(SoundTable.k_Passage)),
                 bus.Subscribe<Events.DialogueLine>(_ => Play(SoundTable.k_Say)),
+                bus.Subscribe<Events.PoopDropped>(_ => Play(SoundTable.k_Poop)),
+                bus.Subscribe<Events.PoopCleaned>(_ => Play(SoundTable.k_Clean)),
             };
         }
 

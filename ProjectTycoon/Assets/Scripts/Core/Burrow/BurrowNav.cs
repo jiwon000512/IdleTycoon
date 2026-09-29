@@ -62,6 +62,10 @@ namespace ZooTycoon.Core
         private bool m_avoiding;
         private Vector2 m_avoid;
         private float m_avoidRadius;
+        // 설계 24: 똥 둘레(손님 땅만). 탐색마다 시작점 기준 둘레(m_obstacleReach)를 다시 잰다
+        private readonly List<Vector2> m_obstacles = new List<Vector2>();
+        private readonly List<float> m_obstacleReach = new List<float>();
+        private float m_obstacleRadius;
 
         public float Step => m_step;
 
@@ -170,6 +174,19 @@ namespace ZooTycoon.Core
             return false;
         }
 
+        // 설계 24: 똥 둘레. 길찾기가 이 원들 안을 지나지 않는다(도착점은 예외, 시작점이 이미 안이면 지금보다 가까워지지만 않으면 된다)
+        public void SetObstacles(IReadOnlyList<Vector2> centers, float radius)
+        {
+            m_obstacles.Clear();
+
+            foreach (Vector2 center in centers)
+            {
+                m_obstacles.Add(center);
+            }
+
+            m_obstacleRadius = radius;
+        }
+
         // avoid 둘레 radius 안을 지나지 않는 길(웜뱃 비켜 가기). 그런 길이 없으면 빈 목록
         public List<Vector2> FindPath(Vector2 from, Vector2 to, Vector2 avoid, float radius)
         {
@@ -181,14 +198,22 @@ namespace ZooTycoon.Core
             return path;
         }
 
-        // from에서 to까지 가로·세로로만 걷는 길. 돌려주는 점은 from 다음 꺾임점부터 to까지. 닿을 수 없으면 빈 목록
-        public List<Vector2> FindPath(Vector2 from, Vector2 to)
+        // from에서 to까지 가로·세로로만 걷는 길. 돌려주는 점은 from 다음 꺾임점부터 to까지. 닿을 수 없으면 빈 목록.
+        // 똥 둘레는 피한다(throughObstacles면 무시한다)
+        public List<Vector2> FindPath(Vector2 from, Vector2 to, bool throughObstacles = false)
         {
             List<Vector2> path = new List<Vector2>();
 
             if (!TryNode(from, out int si, out int sj) || !TryNode(to, out int ti, out int tj))
             {
                 return path;
+            }
+
+            m_obstacleReach.Clear();
+
+            for (int k = 0; k < m_obstacles.Count && !throughObstacles; k++)
+            {
+                m_obstacleReach.Add(Math.Min(m_obstacleRadius, Vector2.Distance(from, m_obstacles[k]) - 0.01f));
             }
 
             // 막힌 곳(계산대 뒤 웜뱃 자리 등)에서 나가고 들어오는 한 걸음
@@ -315,6 +340,11 @@ namespace ZooTycoon.Core
                         continue;
                     }
 
+                    if (nj * m_width + ni != target && Obstructed(NodePosition(ni, nj)))
+                    {
+                        continue;
+                    }
+
                     int next = (nj * m_width + ni) * 5 + d;
                     float g = m_g[state] + m_step + (dir != k_None && dir != d ? m_turnPenalty : 0f);
 
@@ -344,6 +374,20 @@ namespace ZooTycoon.Core
 
             nodes.Reverse();
             return nodes;
+        }
+
+        // 설계 24: 이번 탐색의 똥 둘레 안인가
+        private bool Obstructed(Vector2 p)
+        {
+            for (int k = 0; k < m_obstacleReach.Count; k++)
+            {
+                if (Vector2.Distance(p, m_obstacles[k]) < m_obstacleReach[k])
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private float Heuristic(int node, int target)

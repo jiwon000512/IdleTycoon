@@ -9,7 +9,7 @@ using ZooTycoon.World;
 namespace ZooTycoon.Editor
 {
     // 설계 08 v0.5 · 굴 격자 설계 v0.5 · 손님 동선 설계 v0.2: 빵집 프리팹을 통째로 다시 만든다. 사물 자리 숫자는 Core BakeryLayout과 같은 값을 쓴다.
-    // 사물 프리팹(진열대·오븐·계산대) + 표시(파기 태그·빈 자리) + Shop(BakeryView·손님 스포너·흙 배경·굴 그림·입구 아치) + VisitorView.
+    // 사물 프리팹(진열대·오븐·계산대) + 표시(파기 태그·빈 자리) + 똥 + Shop(BakeryView·손님 스포너·흙 배경·굴 그림·입구 아치) + VisitorView.
     // 스프라이트는 한 칸 2px·PPU 80(Sprites/World/Shop, Resources/Sprites/Shop/Breads, 원본 Shop/Source~). 굴 그림 재료(타일·빈 자리)는 한 칸 1px·PPU 40
     public static class BakeryBaker
     {
@@ -69,12 +69,13 @@ namespace ZooTycoon.Editor
             OvenView oven = BakeOven();
             CounterView counter = BakeCounter();
             MarkerView digTag = BakeDigTag();
+            SpriteAnimator poop = BakePoop();
             BakeCoinPopup();
             VisitorView customer = BakeCustomer();
-            BakeShop(shelf, shelfSign, oven, counter, digTag, customer);
+            BakeShop(shelf, shelfSign, oven, counter, digTag, poop, customer);
             BakePlaza(customer);
             AssetDatabase.SaveAssets();
-            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·SlotMarker·Bakery·Visitor·Plaza";
+            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza";
         }
 
         static void ImportSprites()
@@ -85,12 +86,13 @@ namespace ZooTycoon.Editor
             // 굴 환경 A2: 피벗 = 구멍 밑변 = 띠 밑변(입구 줄 바닥 윗변)
             Import(k_SpriteDir + "arch.png", bottom);
 
-            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "wait" })
+            // 설계 24: 똥(poop_0·1 = 냄새 김 2프레임, Source~/make_poop.py)
+            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "wait", "poop_0", "poop_1" })
             {
                 Import(k_SpriteDir + name + ".png", bottom);
             }
 
-            // 설계 22: 이모지 말풍선 시트(9칸 52px, BubbleTable 칸 번호). 글자 말풍선(bubble·bubble_tail)은 UI 공용 조각의 복사본이라 Import UI Sprites가 임포트한다
+            // 설계 22 · 24: 이모지 말풍선 시트(10칸 52px, BubbleTable 칸 번호). 글자 말풍선(bubble·bubble_tail)은 UI 공용 조각의 복사본이라 Import UI Sprites가 임포트한다
             VisitorSheetImporter.Import(k_SpriteDir + "wait_sheet.png", true, 52);
             VisitorSheetImporter.Import(k_SpriteDir + "bubble_sheet.png", true, 52);
 
@@ -354,6 +356,17 @@ namespace ZooTycoon.Editor
             return Save(root, view, "DigTag");
         }
 
+        // 설계 24: 웜뱃 똥. 발끝 가운데 피벗(깊이는 발끝 정렬), 냄새 김 프레임은 BakeryView가 돌린다
+        static SpriteAnimator BakePoop()
+        {
+            GameObject root = new GameObject("Poop");
+            SpriteRenderer body = root.AddComponent<SpriteRenderer>();
+            body.sprite = Load("poop_0");
+            SpriteAnimator animator = root.AddComponent<SpriteAnimator>();
+            Set(animator, "m_renderer", body);
+            return Save(root, animator, "Poop");
+        }
+
 
         // ---------- 손님 · 가게 ----------
 
@@ -425,7 +438,7 @@ namespace ZooTycoon.Editor
         }
 
         // Shop 루트: 흙 배경(무한 벽 타일) + 굴 그림(실행 중 생성) + 입구 아치
-        static void BakeShop(ShelfView shelf, ShelfSignView shelfSign, OvenView oven, CounterView counter, MarkerView digTag, VisitorView customer)
+        static void BakeShop(ShelfView shelf, ShelfSignView shelfSign, OvenView oven, CounterView counter, MarkerView digTag, SpriteAnimator poop, VisitorView customer)
         {
             GameObject root = new GameObject("Bakery");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -442,6 +455,8 @@ namespace ZooTycoon.Editor
             Set(view, "m_ovenPrefab", oven);
             Set(view, "m_counterPrefab", counter);
             Set(view, "m_digTagPrefab", digTag);
+            Set(view, "m_poopPrefab", poop);
+            SetSprites(view, "m_poopFrames", Frames("poop", "_0", "_1"));
             Set(view, "m_ghostShelf", Load("shelf"));
             Set(view, "m_ghostOven", Load("oven"));
             Set(view, "m_ghostCounter", Load("counter"));

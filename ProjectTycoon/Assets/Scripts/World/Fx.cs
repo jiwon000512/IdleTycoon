@@ -23,18 +23,22 @@ namespace ZooTycoon.World
         private const float k_BounceSeconds = 0.15f;
         private const float k_BounceScale = 1.05f;
 
+        // 튀는 사이 대상이 없어질 수 있다(설계 24: 치운 똥)
         public static IEnumerator Bounce(Transform target)
         {
             Vector3 original = Vector3.one;
 
-            for (float t = 0f; t < k_BounceSeconds; t += Time.deltaTime)
+            for (float t = 0f; t < k_BounceSeconds && target != null; t += Time.deltaTime)
             {
                 float k = Mathf.Sin(t / k_BounceSeconds * Mathf.PI);
                 target.localScale = original * (1f + (k_BounceScale - 1f) * k);
                 yield return null;
             }
 
-            target.localScale = original;
+            if (target != null)
+            {
+                target.localScale = original;
+            }
         }
 
         // 월드 한 칸(2px ÷ PPU 80)

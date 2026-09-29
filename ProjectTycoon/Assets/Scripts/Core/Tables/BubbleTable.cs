@@ -13,6 +13,8 @@ namespace ZooTycoon.Core
         public const string k_Heart = "heart";
         public const string k_Angry = "angry";
         public const string k_Chat = "chat";
+        // 설계 24: 똥에 길이 막힌 손님
+        public const string k_Yuck = "yuck";
 
         public int Frame { get; set; }
         public int Frames { get; set; }

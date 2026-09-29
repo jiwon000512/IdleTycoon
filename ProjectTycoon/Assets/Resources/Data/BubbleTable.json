@@ -1,10 +1,11 @@
 {
   "table": "BubbleTable",
-  "version": 1,
+  "version": 2,
   "notes": [
     "설계 22 (2026-09-26) 이모지 말풍선. 손님·점원·웜뱃 머리 위 한 자리에 하나. 그림은 Sprites/World/Shop/bubble_sheet.png(칸 폭 52px, 지금 wait_sheet 틀)의 칸 번호.",
     "frame: 첫 칸 번호. frames: 프레임 수(1이면 정지). frameSeconds: 프레임 간격(초). seconds: 보이는 시간(초), 0 = 상태형(다음 말풍선·지우기까지).",
-    "쓰임: wait = 손님 두리번·점원 멍 · note = 산책 · question = 웜뱃이 가까이 옴 · alert = 깨어남 · heart = 결제·광장 기분 · angry = 해고(손님이 빵을 못 찾고 나갈 때는 띄우지 않는다, 2026-09-25 결정) · chat = 수다. 코드는 id로만 부른다. 더미 글리프는 Shop/Source~/make_bubble_sheet.py, 실제 시트는 아트방."
+    "쓰임: wait = 손님 두리번·점원 멍 · note = 산책 · question = 웜뱃이 가까이 옴 · alert = 깨어남 · heart = 결제·광장 기분 · angry = 해고(손님이 빵을 못 찾고 나갈 때는 띄우지 않는다, 2026-09-25 결정) · chat = 수다. 코드는 id로만 부른다. 더미 글리프는 Shop/Source~/make_bubble_sheet.py, 실제 시트는 아트방.",
+    "version 2 (2026-09-29, 설계 24 웜뱃 똥): yuck — 똥에 길이 막혀 빵을 포기한 손님(찡그림, 1.5초). 시트 10번째 칸(더미 글리프)."
   ],
   "rows": [
     {
@@ -55,6 +56,13 @@
       "frames": 1,
       "frameSeconds": 0,
       "seconds": 0
+    },
+    {
+      "id": "yuck",
+      "frame": 9,
+      "frames": 1,
+      "frameSeconds": 0,
+      "seconds": 1.5
     }
   ]
 }

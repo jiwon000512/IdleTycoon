@@ -1247,6 +1247,7 @@ MonoBehaviour:
   - {fileID: 1087479234, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -639695686, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -994334760, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1161175582, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   m_say: {fileID: 7333302024843203671}
   m_sayTail: {fileID: 3222311634107784188}
   m_sayText: {fileID: 3050412301587017209}

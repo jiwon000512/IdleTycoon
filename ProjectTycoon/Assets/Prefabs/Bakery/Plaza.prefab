@@ -550,6 +550,7 @@ MonoBehaviour:
   - {fileID: 1087479234, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -639695686, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -994334760, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1161175582, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   m_say: {fileID: 3784831059275839219}
   m_sayTail: {fileID: 1620884422943483083}
   m_sayText: {fileID: 5996512448952586232}

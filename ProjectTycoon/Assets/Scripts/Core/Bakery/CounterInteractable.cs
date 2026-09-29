@@ -126,6 +126,18 @@ namespace ZooTycoon.Core
             OnChanged();
         }
 
+        // 설계 24: 똥에 막혀 줄을 포기한 손님을 뺀다(뒷사람은 한 칸씩 당긴다)
+        internal void Leave(BakeryVisitor visitor)
+        {
+            if (!m_queue.Remove(visitor))
+            {
+                return;
+            }
+
+            Repath();
+            OnChanged();
+        }
+
         // 배치가 바뀌거나 앞사람이 빠지면 줄에 선(서러 가는) 손님은 새 줄 자리로
         internal void Repath()
         {
@@ -135,10 +147,11 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 길이 똥에 막혔는지는 손님이 본다(설계 24)
         private void WalkToSlot(int index)
         {
             BakeryLayout layout = Bakery.Layout;
-            m_queue[index].Mover.WalkTo(layout.Nav, layout.QueueSlots(this)[index], layout.QueueFacing(this, index));
+            m_queue[index].WalkTo(layout.QueueSlots(this)[index], layout.QueueFacing(this, index));
         }
     }
 }
