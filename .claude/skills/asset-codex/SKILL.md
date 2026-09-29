@@ -30,7 +30,7 @@ echo "<프롬프트> Save the image as x.png in the current working directory an
 - ChatGPT 구독 한도를 쓴다. 필요한 장수만.
 - **참조**: 결을 맞출 확정 시안이나 게임 캡처를 준다. 캐릭터를 뽑을 때 웜뱃을 단독 참조로 주면 다른 종도 웜뱃처럼 나온다 → 사물·배경을 결 참조로 주고 종·자세는 글로.
 - **지우기 편집**: 시안에서 캐릭터·글자만 지운 판이 필요하면 그 그림을 `-i`로 주고 「remove …, keep everything else exactly the same」.
-- 프롬프트에 넣을 것: 굵은 사각 픽셀·안티에일리어싱 없음·그라데이션 없음·평면 5~7색·진갈색 외곽선 1칸·순백 배경·글자와 아이콘 없음. UI 조각은 「9-slice용: 모서리에만 장식, 변은 길이 방향으로 균일, 안은 한 색」.
+- 프롬프트에 넣을 것: 굵은 사각 픽셀·안티에일리어싱 없음·그라데이션 없음·평면 5~7색·진갈색 외곽선 1칸·순백 배경·글자와 아이콘 없음. 시점은 「orthographic three-quarter top-down, parallel projection, no vanishing point, vertical edges stay vertical, never seen from below」를 따로 강하게 쓰고, 판 · 다리가 있는 가구는 **시점 블록아웃 그림**(`Shop/Source~/shop_raw/view_blockout.png`, `make_view_blockout.py`)을 `-i` 참조로 준다(말로만 시키면 판을 사다리꼴로 그린다, `art.md` 시점). UI 조각은 「9-slice용: 모서리에만 장식, 변은 길이 방향으로 균일, 안은 한 색」.
 - 재질(흙·돌·나무결)은 「재료 시트」 한 장에 항목을 넓은 간격으로 그리게 하면 팔레트가 맞는다.
 
 ## 격자 (칸 단위로 줄이기)
