@@ -51,7 +51,7 @@ description: 이 프로젝트(ProjectTycoon)의 Unity 에디터를 CLI로 다룰
 - 콘솔은 세션을 넘어 남는다. 판정 전에 `clear_console`. 잘못된 명령을 부르면 그 호출이 콘솔 오류 1건으로 남는다.
 - 콘솔의 `Failed to handle /api/exec request: Main thread operation timed out`은 도메인 리로드 중에 보낸 명령이 기다리다 난 도구 오류다(게임 오류 아님). `compile.sh`를 한 번 더 돌리면 사라진다.
 - 콘솔의 `TreeViewController NullReference`·`GUIClips`는 에디터 내부 오류다. 게임 오류는 `error CS`와 게임 스택만 본다.
-- 에디터가 포커스를 잃으면 플레이 프레임이 멈춘다 → 플레이 중 `Application.runInBackground = true`(`play.sh`가 켠다).
+- Run In Background는 프로젝트 설정으로 늘 켠다(`ProjectSettings.asset` `runInBackground: 1`, 2026-09-29 사용자). 에디터가 포커스를 잃어도 플레이가 돈다. 0으로 바뀐 diff는 되돌리지 말고 1로 고친다. 플레이 중에 바꾼 값은 플레이가 끝나면 에디터가 되돌리므로, 멈춘 상태에서 `PlayerSettings.runInBackground` + `AssetDatabase.SaveAssets()`로 바꾼다.
 - 재굽기는 fileID를 새로 만들어 diff가 커진다. 내용이 같은 부산물(손님 시트 메타, `CoinPopup.prefab` 등)은 `git checkout` 뒤 `AssetDatabase.Refresh`.
 - 같은 경로에 에셋을 다시 만들 때는 기존 파일에 덮어써 GUID를 지킨다(프리팹 참조가 그대로 넘어간다). 이름만 바꿀 때는 `AssetDatabase.MoveAsset`.
 - `GetComponent ?? AddComponent`는 가짜 null로 실패한다 → `TryGetComponent`.
