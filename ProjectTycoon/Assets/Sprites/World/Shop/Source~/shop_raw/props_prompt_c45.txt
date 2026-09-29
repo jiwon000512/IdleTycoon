@@ -1,0 +1,24 @@
+Pixel-art prop sheet for a cozy mobile bakery tycoon game that takes place inside a wombat's underground burrow.
+
+Draw exactly FIVE separate objects on a pure white background, in ONE row from left to right, with wide empty white space between them:
+1. a small bakery oven (level 1)
+2. an upgraded, bigger bakery oven (level 2)
+3. a bread display shelf
+4. a long shop counter
+5. one loaf of white sandwich bread (Japanese shokupan), drawn smaller than the others (about 40% of the oven width)
+
+Reference image 1 is the CHOSEN design. Keep its materials, palette, pixel style and designs: oven level 1 = packed-earth clay dome with round pebbles pressed into it and a short clay chimney; oven level 2 = bigger oven of stacked round river stones with clay mortar, a thick curved tree root arching over the mouth, a stone chimney; shelf = two thick flat wooden slab shelves held by sturdy root-wood posts at the corners; counter = a split log counter: a thick log cut FLAT on top (the flat cut top is a light wood band seen from above), resting on a base of stacked flat stones, a little moss. Reference image 2 is a screenshot of the game with the animal characters: match its pixel size feel and cute chunky style.
+
+CAMERA (the most important rule, it replaces the camera of reference 1): an orthographic three-quarter top-down view, the classic cozy top-down pixel game view (like the furniture in Stardew Valley). The camera is in front of the objects and above them, looking DOWN at about 45 degrees: the top surfaces are about as tall as the front faces. It is a PARALLEL projection: NO perspective, NO vanishing point. Every vertical edge is perfectly vertical and parallel. The left and right sides of each object are straight vertical lines that never lean inward or outward. The back of an object is exactly as wide as its front, so every flat top surface (shelf boards, the counter's flat top, the oven base) is a plain horizontal band with parallel left and right ends, not a trapezoid. We always look at top surfaces from above and never see any underside: nothing may look like it is seen from below or from eye level. Front faces are visible below the top surfaces.
+
+Gameplay rules for the drawing:
+- Each oven has an arched fire mouth on its front. Draw the mouth DARK and EMPTY (no fire, no bread); the game draws the fire itself.
+- The shelf is EMPTY (no bread, no food). Its two slab shelves are stacked with an open space between them.
+- The counter top is clear on its left half (the game puts a receipt printer there). A small clay pot may sit on the far right end only.
+- The loaf: golden domed top crust seen from above, soft white cut face toward the viewer, sitting on its bottom.
+
+Keep the widths in this ratio: oven level 1 : oven level 2 : shelf : counter : loaf = 60 : 60 : 55 : 84 : 26. Heights follow from the camera.
+
+Style: chunky square pixels, no anti-aliasing, no gradients, no dithering, no blur. Flat colors, 5 to 8 colors per object. One darker tone on the shadow side, one small white highlight stroke on the top-left. A 1-pixel dark brown outline (#301818) around every object.
+
+Do NOT draw: text, letters, numbers, floor, ground shadow, border, frame, background scenery, characters, or any food except the one loaf.

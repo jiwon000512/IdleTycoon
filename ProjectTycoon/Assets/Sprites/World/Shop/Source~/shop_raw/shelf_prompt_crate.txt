@@ -1,0 +1,15 @@
+Pixel-art BREAD DISPLAY SHELF for a cozy bakery inside a wombat's underground burrow. Draw ONE object only, centered on a pure white background.
+
+CAMERA: exactly the camera of reference image 1 (a gray blockout of a table and a box). It is a straight-on orthographic view from the front and above:
+- we see only TOP faces and FRONT faces, never the left or right side faces, never any underside;
+- parallel projection: no perspective, no vanishing point; every vertical edge is perfectly vertical; the back edge of every board is exactly as long as its front edge (rectangles, never trapezoids);
+- legs are straight and vertical; the two front legs stand at the front corners and reach the ground; the two back legs are behind them, slightly inward, and end higher up than the front legs because they are farther back, exactly like the blockout table.
+
+STYLE: match reference image 2, a screenshot of the game with the chosen props (a packed-earth clay oven with pebbles, a split-log counter on round river stones, a warm burrow palette, chunky square pixels, cute and soft). Flat colors, 6 to 8 colors, one darker tone for shadow, one small white highlight stroke on the top-left, a 1-pixel dark brown outline (#301818) around the object. No anti-aliasing, no gradients, no dithering.
+
+GAMEPLAY: it must have a clear, EMPTY, flat display surface where one bread will be placed by the game (draw no bread and no food). Keep the bounding box about 55 wide by 45 tall.
+
+Do NOT draw: text, letters, numbers, price tags, floor, ground shadow, border, background, characters, bread or food.
+
+DESIGN:
+WOODEN BREAD CRATE STAND. A low wooden stand made of planks on four short legs, holding two open wooden bread crates side by side (slatted sides, visible empty insides seen from above), lined with a cream cloth. The crates are the bread display: they are EMPTY. Warm wood with darker slats and a light top rim.

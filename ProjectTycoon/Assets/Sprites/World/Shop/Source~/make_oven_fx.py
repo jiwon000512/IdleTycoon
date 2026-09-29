@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # 오븐 연출(2026-09-23 사용자 선택: 시안 C 불빛 일렁임 + 굴뚝 연기, 빵 아이콘 없음). AI 없이 칸 단위(1칸 = 2px)로 그린다.
-# 입력: oven_lit.png·oven_2_lit.png(아궁이에 불이 그려진 원본). 출력(../):
-#   oven.png·oven_2.png        아궁이를 식힌 몸통(빈 오븐·다 구움 공용). 피벗 하단 가운데
+# 입력: ../oven.png·../oven_2.png(몸통, 2026-09-29부터 make_shop_props.py가 만든다. 아궁이 = 상자 안 외곽선 색 칸). 출력(../):
 #   oven_fire_0~3·oven_2_fire_0~3  굽는 중 아궁이 불빛 + 불똥, 몸통과 같은 캔버스(몸통 위에 겹침), 8fps
 #   smoke_gray_00~11           굽는 중 굴뚝 회색 연기, 40×28칸, 피벗 하단 가운데 = 굴뚝 입구, 먼저 오른쪽으로 빠져 타이머를 비켜 오름, 8fps
 #   smoke_white_00~11          다 구움 굴뚝 흰 연기(불은 꺼짐), 같은 캔버스, 더 크고 많음, 8fps
@@ -14,28 +13,25 @@ R, O, Y, W = (0xB8, 0x40, 0x28), (0xF0, 0x84, 0x38), (0xF8, 0xC8, 0x50), (0xFF, 
 GLOW = (0x6C, 0x30, 0x24)
 GRAY, GRAY_D, GRAY_LINE = (0xB8, 0xB0, 0xAC), (0x98, 0x90, 0x8C), (0x70, 0x66, 0x62)
 WHITE, WHITE_D, WHITE_LINE = (0xF8, 0xF2, 0xEA), (0xDC, 0xD2, 0xC8), (0x9C, 0x8C, 0x84)
-# 이름, 아궁이 상자(x0,x1,y0,y1 칸), 불 색, 아궁이 안 어두운 색
-OVENS = [('oven', (20, 39, 29, 43), [(252, 144, 72)], (48, 24, 24)),
-         ('oven_2', (20, 40, 35, 48), [(252, 156, 60), (192, 96, 36)], (48, 36, 36))]
+# 이름, 아궁이 상자(x0,x1,y0,y1 칸). 아궁이 안 = 외곽선 색
+OVENS = [('oven', (19, 41, 30, 44)), ('oven_2', (18, 40, 35, 49))]
+DARK = (48, 24, 24)
 
 
 def up(a):
     return Image.fromarray(a).resize((a.shape[1] * 2, a.shape[0] * 2), Image.NEAREST)
 
 
-def mouth(name, box, fire, dark):
-    a = np.asarray(Image.open(name + '_lit.png').convert('RGBA'))[::2, ::2].copy()
+def mouth(name, box):
+    a = np.asarray(Image.open(f'../{name}.png').convert('RGBA'))[::2, ::2]
     x0, x1, y0, y1 = box
     reg = np.zeros(a.shape[:2], bool)
     for y in range(y0, y1 + 1):
         for x in range(x0, x1 + 1):
-            c = tuple(int(v) for v in a[y, x, :3])
-            reg[y, x] = a[y, x, 3] > 0 and (c in fire or c == dark)
+            reg[y, x] = a[y, x, 3] > 0 and tuple(int(v) for v in a[y, x, :3]) == DARK
     fill = reg.copy()    # 가장자리 1칸은 아궁이 외곽선으로 남긴다
     fill[1:] &= reg[:-1]; fill[:-1] &= reg[1:]; fill[:, 1:] &= reg[:, :-1]; fill[:, :-1] &= reg[:, 1:]
-    cold = a.copy()
-    cold[reg, :3] = dark
-    return cold, fill
+    return fill
 
 
 def fire(fill, t):
@@ -76,9 +72,8 @@ def smoke(t, count, rmax, col, col_d, line, early=1.0):
     return L
 
 
-for name, box, fire_cols, dark in OVENS:
-    cold, fill = mouth(name, box, fire_cols, dark)
-    up(cold).save(f'../{name}.png')
+for name, box in OVENS:
+    fill = mouth(name, box)
     for t in range(4):
         up(fire(fill, t)).save(f'../{name}_fire_{t}.png')
 for t in range(12):

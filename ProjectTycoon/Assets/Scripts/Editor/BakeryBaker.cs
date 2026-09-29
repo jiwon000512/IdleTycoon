@@ -189,13 +189,14 @@ namespace ZooTycoon.Editor
 
         // ---------- 사물 ----------
 
-        // 진열대 하나. 피벗 = 밑변 가운데. 손님이 서는 자리는 Core BakeryLayout
+        // 진열대 하나. 피벗 = 밑변 가운데. 손님이 서는 자리는 Core BakeryLayout.
+        // 빵 아이콘은 밑이 빵 상자 바닥에 앉는다(ShelfView.m_seat, 높이는 빵을 놓을 때 정한다. 여기는 식빵 자리)
         static ShelfView BakeShelf()
         {
             GameObject go = new GameObject("Shelf");
             go.AddComponent<SortingGroup>();
             SpriteRenderer body = Renderer(go.transform, "Body", Load("shelf"), Vector3.zero, 0);
-            SpriteRenderer icon = Renderer(go.transform, "Icon", null, new Vector3(0f, 0.62f, 0f), 1);
+            SpriteRenderer icon = Renderer(go.transform, "Icon", null, new Vector3(0f, 1.04f, 0f), 1);
 
             ShelfView view = go.AddComponent<ShelfView>();
             Set(view, "m_body", body);
@@ -281,7 +282,7 @@ namespace ZooTycoon.Editor
             Set(counter, "m_body", counterBody);
             Set(counter, "m_wombat", BakeWombat(root.transform, new Vector3(0f, 0.4f, 0f)));
             // 2026-09-25 사용자 선택 C: 영수증 출력기(Source~/make_counter_timer.py). 늘 계산대 위에 있고 계산 중에 영수증이 올라온다.
-            // 자리는 계산대 왼쪽, 출력기 밑 외곽선이 금전등록기 밑변과 같은 줄(계산대 밑에서 15칸 위)에 서게 가운데 = (−0.6, +0.725)
+            // 자리는 계산대 왼쪽, 출력기 밑 외곽선이 통나무 켠 윗면 앞쪽(계산대 밑에서 16칸 위, 2026-09-29 소품 C)에 서게 가운데 = (−0.6, +0.75)
             Sprite[] timerFrames = new Sprite[k_TimerFrames];
 
             for (int i = 0; i < k_TimerFrames; i++)
@@ -289,7 +290,7 @@ namespace ZooTycoon.Editor
                 timerFrames[i] = Load(CounterTimerFrame(i));
             }
 
-            SpriteRenderer timer = Renderer(body.transform, "Timer", timerFrames[0], new Vector3(-0.6f, 0.725f, 0f), 3);
+            SpriteRenderer timer = Renderer(body.transform, "Timer", timerFrames[0], new Vector3(-0.6f, 0.75f, 0f), 3);
             Set(counter, "m_timer", timer);
             SetSprites(counter, "m_timerFrames", timerFrames);
             return Save(root, counter, "Counter");

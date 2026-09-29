@@ -1,0 +1,28 @@
+Pixel-art prop sheet for a cozy mobile bakery tycoon game that takes place inside a wombat's underground burrow.
+
+Draw exactly FOUR separate objects on a pure white background, in ONE row from left to right, with wide empty white space between them:
+1. a small bakery oven (level 1)
+2. an upgraded, bigger bakery oven (level 2)
+3. a bread display shelf
+4. a long shop counter
+
+Reference image 1 shows the CURRENT four props in the same order (clay dome oven, brick dome oven, two-tier wooden shelf, wooden counter). Reference image 2 is a screenshot of the game: match its camera, its pixel size feel, its warm burrow palette and the cute chunky style of the animal characters. The new props must look clearly better and more crafted than reference image 1, but they must still read at a glance as the same four objects.
+
+Camera: seen from the front and slightly from above (about 30 degrees down), exactly like the reference props: you see the front face and a little of the top surface. No perspective distortion, symmetric left-right where it makes sense.
+
+Proportions (width : height of each object's bounding box), keep them close:
+- oven level 1: 60 : 52 (dome shape, a short chimney on top)
+- oven level 2: 60 : 59 (same width, a bit taller than level 1, looks like a clear upgrade)
+- shelf: 55 : 47
+- counter: 84 : 29 (long and low; the flat top surface starts at about half of the height, the front face is the lower half)
+
+Gameplay rules for the drawing:
+- Each oven has an arched fire mouth at the bottom center. Draw the mouth DARK and EMPTY (no fire, no bread inside); the game draws the fire itself.
+- The shelf is EMPTY (no bread, no food on it). It has two display tiers; the upper tier surface is at about half of the shelf height.
+- The counter top is clear on its left half (the game puts a receipt printer there). A small item may sit on the far right end only.
+
+Style: chunky square pixels, no anti-aliasing, no gradients, no dithering, no blur. Flat pastel colors, 5 to 7 colors per object. One darker tone on the shadow side, one small white highlight stroke on the top-left. A 1-pixel dark brown outline (#342020) around every object. Soft and cute, rounded chunky edges, like the characters.
+
+Do NOT draw: text, letters, numbers, price tags with writing, floor, ground shadow, border, frame, background scenery, characters, bread or food.
+
+Direction for this sheet:
