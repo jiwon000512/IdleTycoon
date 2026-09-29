@@ -20,6 +20,8 @@ namespace ZooTycoon.Core
         public IReadOnlyList<PlazaSpot> Spots => m_spots;
         public Vector2 DoorInside { get; }
         public Vector2 DoorFloor { get; }
+        // 설계 25: 농장 문(계단 오른쪽 칸 가운데, 빵집 문과 마주 본다)
+        public Vector2 FarmDoorFloor { get; }
         public Vector2 StairsInside { get; }
         public Vector2 StairsFloor { get; }
         // 광장 크기(유닛): 가로는 가운데 정렬, 세로는 원점부터 아래로
@@ -32,19 +34,7 @@ namespace ZooTycoon.Core
             double cellWidth = tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
             double cellHeight = tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;
             double entranceHeight = tables.Get<ConfigTable>(ConfigTable.k_EntranceHeight).Value;
-            int unit = (int)BurrowShape.k_PixelsPerUnit;
-            int firstCol = -plaza.Cols / 2;
-            HashSet<Cell> cells = new HashSet<Cell>();
-
-            for (int row = 0; row < plaza.Rows; row++)
-            {
-                for (int col = firstCol; col < firstCol + plaza.Cols; col++)
-                {
-                    cells.Add(new Cell(col, row));
-                }
-            }
-
-            Shape = BurrowShape.Build(cells, (int)Math.Round(cellWidth * unit), (int)Math.Round(cellHeight * unit), (int)Math.Round(entranceHeight * unit));
+            Shape = BurrowShape.Room(tables, plaza.Cols, plaza.Rows);
             Width = (float)(plaza.Cols * cellWidth);
             Height = (float)(entranceHeight + (plaza.Rows - 1) * cellHeight);
 
@@ -52,6 +42,7 @@ namespace ZooTycoon.Core
             float doorX = (float)(-0.5 * cellWidth);
             DoorInside = new Vector2(doorX, inside);
             DoorFloor = new Vector2(doorX, k_HoleFloorY);
+            FarmDoorFloor = new Vector2(-doorX, k_HoleFloorY);
             StairsInside = new Vector2(0f, inside);
             StairsFloor = new Vector2(0f, k_HoleFloorY);
             Rebuild(new List<DecorationData>());

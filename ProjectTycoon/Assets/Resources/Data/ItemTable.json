@@ -1,0 +1,11 @@
+{
+  "table": "ItemTable",
+  "version": 1,
+  "notes": [
+    "설계 25 밀 농사: 재료. id는 CropTable item · BreadTable ingredients가 가리킨다. 창고(ZooState)가 id로 세고, 사고팔지 않는다(재화는 코인 하나).",
+    "icon: Resources/ 기준 경로(확장자 없음). 상단 바 재료 알약 · 굽기 칩 레시피 · 거두기 팝업이 같은 그림을 쓴다. start: 새 게임 창고에 든 개수(시작값)."
+  ],
+  "rows": [
+    { "id": "wheat", "name": "밀", "icon": "Sprites/Items/wheat", "start": 10 }
+  ]
+}

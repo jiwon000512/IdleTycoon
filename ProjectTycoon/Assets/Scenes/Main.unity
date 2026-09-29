@@ -151,6 +151,7 @@ MonoBehaviour:
   m_camera: {fileID: 519420033}
   m_shopPrefab: {fileID: 3832975021042575414, guid: 54489519bab15ab4eaade689f269211f, type: 3}
   m_plazaPrefab: {fileID: 7418904398767101469, guid: 4384faa82dbaa024da4f3d2c84ba8440, type: 3}
+  m_farmPrefab: {fileID: 4671188732164137163, guid: 72a732a754efea640bbbe48eb7239172, type: 3}
 --- !u!4 &19269923
 Transform:
   m_ObjectHideFlags: 0
@@ -317,6 +318,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.CameraPanController
   m_followSeconds: 0.15
+  m_spotZoom: 2
+  m_spotSeconds: 0.25
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0

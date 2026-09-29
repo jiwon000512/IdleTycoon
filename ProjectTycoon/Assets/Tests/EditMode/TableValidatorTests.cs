@@ -11,21 +11,24 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 12)]
-        [TestCase("StringTable", 25)]
+        [TestCase("StringTable", 26)]
         [TestCase("ClerkTable", 1)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 2)]
         [TestCase("DialogueTable", 3)]
-        [TestCase("BreadTable", 2)]
-        [TestCase("ActionTable", 9)]
-        [TestCase("InteractableTable", 9)]
+        [TestCase("BreadTable", 3)]
+        [TestCase("ActionTable", 10)]
+        [TestCase("InteractableTable", 10)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 6)]
+        [TestCase("SoundTable", 7)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 3)]
         [TestCase("BakeryConfigTable", 6)]
         [TestCase("PlazaConfigTable", 1)]
         [TestCase("PlazaDecorTable", 1)]
+        [TestCase("ItemTable", 1)]
+        [TestCase("CropTable", 1)]
+        [TestCase("FarmConfigTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -91,6 +94,7 @@ namespace ZooTycoon.Tests
         [TestCase("ConfigTable", ConfigTable.k_WalkSpeed)]
         [TestCase("BakeryConfigTable", BakeryConfigTable.k_Bakery)]
         [TestCase("PlazaConfigTable", PlazaConfigTable.k_Main)]
+        [TestCase("FarmConfigTable", FarmConfigTable.k_Main)]
         public void Validate_WhenConfigRowMissing_ReportsError(string table, string id)
         {
             Assert.That(TableValidator.Validate(TestTables.LoadWithout(table, id)), Is.Not.Empty);
@@ -207,9 +211,29 @@ namespace ZooTycoon.Tests
         [TestCase("InteractableTable", "dig")]
         [TestCase("InteractableTable", "poop")]
         [TestCase("BubbleTable", "yuck")]
+        [TestCase("InteractableTable", "plot")]
+        [TestCase("ActionTable", "harvest")]
+        [TestCase("SoundTable", "plant")]
         public void Validate_WhenRequiredRowMissing_ReportsError(string table, string id)
         {
             Assert.That(TableValidator.Validate(TestTables.LoadWithout(table, id)), Is.Not.Empty);
+        }
+
+        // 설계 25: 레시피가 없는 재료를 가리킴, 작물 그림 단계 1, 작물 없음, 시작 밭이 최대보다 많음
+        [Test]
+        public void Validate_WhenFarmDataInvalid_ReportsError()
+        {
+            TableSet unknownItem = TestTables.Load();
+            unknownItem.GetAll<BreadTable>()[0].Ingredients[0].Item = "milk";
+            TableSet oneStage = TestTables.Load();
+            oneStage.GetAll<CropTable>()[0].Stages = 1;
+            TableSet tooManyPlots = TestTables.Load();
+            tooManyPlots.Get<FarmConfigTable>(FarmConfigTable.k_Main).StartPlots = 7;
+
+            Assert.That(TableValidator.Validate(unknownItem), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(oneStage), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(TestTables.Load("CropTable", rows => rows.Clear())), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(tooManyPlots), Is.Not.Empty);
         }
 
         // 설계 11: 장식 그림 경로 없음, 광장에 없는 장식

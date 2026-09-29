@@ -81,7 +81,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 09 → 설계 17: 굽기(시트 칩). 해금된 빵마다 한 칩(빈 오븐일 때만 고를 수 있음) + 다음 빵 해금 칩(값 = unlockCost, 사면 열리고 빈 오븐이면 바로 굽는다)
+        // 설계 09 → 설계 17: 굽기(시트 칩). 해금된 빵마다 한 칩(빈 오븐이고 레시피 재료가 창고에 다 있을 때만 고를 수 있음, 설계 25) + 다음 빵 해금 칩(값 = unlockCost, 사면 열리고 빈 오븐이면 바로 굽는다)
         private sealed class Bake : SheetAction
         {
             public Bake(ActionTable table) : base(table)
@@ -100,7 +100,9 @@ namespace ZooTycoon.Core
 
                 foreach (BreadTable bread in oven.Bakery.UnlockedBreads)
                 {
-                    options.Add(new SheetOption(bread.Id, oven.IsEmpty ? SheetOptionState.Enabled : SheetOptionState.Blocked));
+                    SheetOptionState state = !oven.IsEmpty ? SheetOptionState.Blocked
+                        : worker.Wallet.Has(bread.Ingredients) ? SheetOptionState.Enabled : SheetOptionState.Lacking;
+                    options.Add(new SheetOption(bread.Id, state));
                 }
 
                 BreadTable next = oven.Bakery.NextBread;

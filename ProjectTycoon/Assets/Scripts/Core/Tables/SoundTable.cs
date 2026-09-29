@@ -30,6 +30,9 @@ namespace ZooTycoon.Core
         // 설계 24: 똥 떨어짐 · 치움
         public const string k_Poop = "poop";
         public const string k_Clean = "clean";
+        // 설계 25: 밭에 심음 · 거둠
+        public const string k_Plant = "plant";
+        public const string k_Harvest = "harvest";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -57,6 +60,8 @@ namespace ZooTycoon.Core
             k_NegoBad,
             k_Poop,
             k_Clean,
+            k_Plant,
+            k_Harvest,
         };
 
         // Resources/ 기준, 확장자 없음

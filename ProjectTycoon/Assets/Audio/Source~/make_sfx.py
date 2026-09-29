@@ -125,3 +125,9 @@ save('poop', sweep(360, 120, 0.13, 0.04) + np.pad(soft(noise(0.02, 200, 1200, 31
 t = t_of(0.09)
 swish = [soft(noise(0.09, 2500, 7000, 40 + i) * np.sin(np.pi * t / 0.09) ** 2, 0.004) for i in range(2)]
 save('clean', seq(swish + [note(2093, 0.22, 0.07) * 0.35], 0.1), 0.45)
+
+# 설계 25 농사 1차(에이전트 판단, 시안 비교 전): 심기 = 흙 톡톡 두 번 + 낮은 퐁, 거두기 = 사각 잎 스침 + 밝은 두 음(도 · 솔)
+save('plant', seq([soft(noise(0.06, 150, 1200, 41 + i) * np.exp(-t_of(0.06) / 0.018), 0.002) for i in range(2)]
+                  + [sweep(300, 480, 0.12, 0.05, 'tri') * 0.7], 0.06), 0.45)
+save('harvest', seq([soft(noise(0.12, 1500, 6000, 51) * np.sin(np.pi * t_of(0.12) / 0.12) ** 2, 0.005) * 0.5,
+                     note(1047, 0.2, 0.08), note(1568, 0.3, 0.12)], 0.07), 0.45)

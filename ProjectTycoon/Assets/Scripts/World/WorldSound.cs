@@ -7,12 +7,14 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 10·23: 월드 사건 → 효과음 이름(SoundTable). 소리의 음량·간격·연속 피치는 표가, 재생은 GameKit SoundManager가 맡는다.
+    // 설계 10·23·25: 월드 사건 → 효과음 이름(SoundTable). 소리의 음량·간격·연속 피치는 표가, 재생은 GameKit SoundManager가 맡는다.
     // WorldManager가 붙인다
     public sealed class WorldSound : MonoBehaviour
     {
         private readonly Dictionary<OvenInteractable, (bool Baking, int Ready)> m_ovens = new Dictionary<OvenInteractable, (bool, int)>();
         private readonly Dictionary<ShelfInteractable, int> m_shelves = new Dictionary<ShelfInteractable, int>();
+        // 설계 25: 밭이 빈 밭이었나(심을 때만 소리)
+        private readonly Dictionary<PlotInteractable, bool> m_plots = new Dictionary<PlotInteractable, bool>();
         private IDisposable[] m_subscriptions;
         private int m_dugFrame = -1;
 
@@ -34,6 +36,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.DialogueLine>(_ => Play(SoundTable.k_Say)),
                 bus.Subscribe<Events.PoopDropped>(_ => Play(SoundTable.k_Poop)),
                 bus.Subscribe<Events.PoopCleaned>(_ => Play(SoundTable.k_Clean)),
+                bus.Subscribe<Events.Harvested>(_ => Play(SoundTable.k_Harvest)),
             };
         }
 
@@ -75,6 +78,18 @@ namespace ZooTycoon.World
                 }
 
                 m_ovens[oven] = (baking, oven.Ready);
+            }
+            else if (e.Thing is PlotInteractable plot)
+            {
+                // 처음 보는 밭은 빈 밭(밭의 첫 사건은 심기다)
+                bool wasEmpty = !m_plots.TryGetValue(plot, out bool empty) || empty;
+
+                if (wasEmpty && !plot.IsEmpty)
+                {
+                    Play(SoundTable.k_Plant);
+                }
+
+                m_plots[plot] = plot.IsEmpty;
             }
             else if (e.Thing is ShelfInteractable shelf)
             {

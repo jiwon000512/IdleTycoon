@@ -11,7 +11,7 @@ namespace ZooTycoon.World
     // 설계 08 v0.5 · 굴 격자 설계 v0.5 · 설계 13 · 설계 18: 빵집 굴 화면. 굴 그림은 Core 마스크를 칠하고, 사물(진열대·오븐·계산대)은 Core 목록을 객체 키로 맞춘다
     // (놓이면 만들고, 옮기면 옮기고, 치우면 지운다 — 전부 LayoutChanged 한 번에). 웜뱃 그림은 첫 계산대 프리팹의 것 하나만 쓴다(웜뱃은 하나).
     // 편집 모드(설계 18): 끌고 있는 사물 그림자, 팔 수 있는 흙의 파기 태그 상시
-    public sealed class BakeryView : MonoBehaviour
+    public sealed class BakeryView : MonoBehaviour, IAreaView
     {
         [SerializeField] private ShelfView m_shelfPrefab;
         [Tooltip("진열대 재고 표지판(칠판 입간판). 진열대 왼쪽 앞 모서리에 따로 선다")]
@@ -100,6 +100,7 @@ namespace ZooTycoon.World
             }
         }
 
+        public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombatCounter.Wombat.transform;
         public WombatView WombatView => m_wombatCounter.Wombat;
 

@@ -38,9 +38,10 @@ namespace ZooTycoon.Core
             Position = position;
         }
 
+        // 설계 25: 레시피 재료를 창고에서 꺼내야 굽는다
         public bool TryStart(BreadTable bread)
         {
-            if (!IsEmpty)
+            if (!IsEmpty || !Bakery.Wallet.TrySpendItems(bread.Ingredients))
             {
                 return false;
             }

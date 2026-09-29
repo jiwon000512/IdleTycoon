@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GameKit.Tables;
 
 namespace ZooTycoon.Core
@@ -13,5 +14,7 @@ namespace ZooTycoon.Core
         public double Price { get; set; }
         public int Weight { get; set; }
         public double UnlockCost { get; set; }
+        // 설계 25: 한 판 굽는 데 드는 재료(레시피). 굽기 시작할 때 창고에서 빠진다
+        public List<IngredientData> Ingredients { get; set; }
     }
 }

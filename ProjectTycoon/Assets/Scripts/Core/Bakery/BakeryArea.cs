@@ -12,9 +12,6 @@ namespace ZooTycoon.Core
     // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기로 광장에 간다(없는 동안 계산이 멈춘다)
     public sealed partial class BakeryArea : WombatArea
     {
-        // 웜뱃이 끼인 자리(배치가 바뀜)에서 걷는 땅을 찾는 거리(맨해튼)
-        private const float k_UnstuckDistance = 3f;
-
         private readonly BakeryConfigTable m_config;
         private readonly ZooState m_state;
         private readonly List<BreadTable> m_unlocked = new List<BreadTable>();
@@ -24,6 +21,8 @@ namespace ZooTycoon.Core
         private readonly List<IPlacedKind> m_shopKinds = new List<IPlacedKind>();
         private readonly Dictionary<Cell, DigInteractable> m_digs = new Dictionary<Cell, DigInteractable>();
         private readonly PassageInteractable m_exit;
+
+        public const string k_Id = "bakery";
 
         public BakeryConfigTable Config => m_config;
         public BurrowGrid Grid { get; }
@@ -36,6 +35,9 @@ namespace ZooTycoon.Core
         public CounterInteractable Counter => m_counters[0];
         public BreadTable NextBread => m_unlocked.Count < Tables.GetAll<BreadTable>().Count ? Tables.GetAll<BreadTable>()[m_unlocked.Count] : null;
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
+        public override string Id => k_Id;
+        // 설계 25: 오븐이 재료를 꺼내는 창고
+        public ZooState Wallet => m_state;
         internal IRandom Random { get; }
 
         protected override BurrowNav WombatNav => Layout.WombatNav;
@@ -78,14 +80,12 @@ namespace ZooTycoon.Core
             bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new BakeryLayout(tables);
             InitClerks();
-            m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor);
+            m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
 
-            foreach (InteractableTable row in tables.GetAll<InteractableTable>())
+            // 설계 25: 밭도 price가 있어 빵집이 파는 종류를 적는다(Create와 같은 셋)
+            foreach (string id in new[] { ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id })
             {
-                if (row.Price != null)
-                {
-                    m_shopKinds.Add(row);
-                }
+                m_shopKinds.Add(Row(id));
             }
 
             // 시작 배치(옛 칸 자리 그대로): 왼쪽 열(−1) 자리 줄에 빈 진열대와 오븐, 계산대 줄 가운데에 계산대. 첫 빵은 해금된 채 시작(설계 17)
@@ -293,20 +293,7 @@ namespace ZooTycoon.Core
             SyncThings();
             RepathVisitors();
             RepathClerks();
-
-            if (!WombatPresent)
-            {
-                return;
-            }
-
-            // 새 사물이 웜뱃 발밑에 놓이면 가까운 걷는 땅으로 비켜 선다
-            BurrowNav nav = Layout.WombatNav;
-            Vector2 wombat = Wombat.Mover.Position;
-
-            if (!nav.IsWalkable(wombat) && nav.TryNearestFree(wombat, _ => false, k_UnstuckDistance, out Vector2 free))
-            {
-                Wombat.Mover.Place(free);
-            }
+            Unstick();
 
             // 대상은 다음 Tick에 고른다. 여기서 고르면 LayoutChanged보다 TargetChanged가 먼저 나가 화면에 없는 사물(새 오븐·진열대)을 가리킨다
         }

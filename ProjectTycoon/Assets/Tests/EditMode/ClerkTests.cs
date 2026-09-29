@@ -139,6 +139,27 @@ namespace ZooTycoon.Tests
             Assert.That(RunUntil(shop, () => !oven.IsEmpty && oven.Ready == 0, 20d), Is.True, "다시 굽지 않았다");
         }
 
+        // 설계 25: 창고에 밀이 모자라면 오븐 점원은 빈 오븐 앞에서 「…」로 기다리고, 밀이 들어오면 지우고 굽는다
+        [Test]
+        public void OvenClerk_WaitsWhileLackingIngredients()
+        {
+            BakeryArea shop = Create();
+            OvenInteractable oven = shop.Ovens[0];
+            m_state.TrySpendItems(new List<IngredientData> { new IngredientData { Item = "wheat", Count = m_state.Count("wheat") } });
+            Clerk clerk = Hire(shop, oven);
+
+            Assert.That(RunUntil(shop, () => clerk.Bubble.Id == BubbleTable.k_Wait), Is.True);
+            Run(shop, 2d);
+            Assert.That(oven.IsEmpty, Is.True);
+            Assert.That(clerk.Bubble.Id, Is.EqualTo(BubbleTable.k_Wait));
+
+            m_state.AddItem("wheat", 2);
+
+            Assert.That(RunUntil(shop, () => !oven.IsEmpty, 1d), Is.True);
+            Assert.That(clerk.Bubble.Id, Is.Null);
+            Assert.That(m_state.Count("wheat"), Is.EqualTo(0));
+        }
+
         // 2026-09-26 사용자 버그: 한 바퀴가 끝날 때마다 구멍에서 다시 나왔다. 들어온 뒤로는 톡 뛰기·구멍 안 위치가 다시 없어야 한다
         [Test]
         public void Clerk_AfterEntering_NeverHopsAgainWhileWorking()

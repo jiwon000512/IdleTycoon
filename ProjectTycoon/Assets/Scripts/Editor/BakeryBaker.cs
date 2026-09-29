@@ -10,6 +10,7 @@ namespace ZooTycoon.Editor
 {
     // 설계 08 v0.5 · 굴 격자 설계 v0.5 · 손님 동선 설계 v0.2: 빵집 프리팹을 통째로 다시 만든다. 사물 자리 숫자는 Core BakeryLayout과 같은 값을 쓴다.
     // 사물 프리팹(진열대·오븐·계산대) + 표시(파기 태그·빈 자리) + 똥 + Shop(BakeryView·손님 스포너·흙 배경·굴 그림·입구 아치) + VisitorView.
+    // 설계 25: 밭(Plot) + 농장(Farm: 굴 그림·구멍 아치·웜뱃), 광장 농장 문.
     // 스프라이트는 한 칸 2px·PPU 80(Sprites/World/Shop, Resources/Sprites/Shop/Breads, 원본 Shop/Source~). 굴 그림 재료(타일·빈 자리)는 한 칸 1px·PPU 40
     public static class BakeryBaker
     {
@@ -19,6 +20,12 @@ namespace ZooTycoon.Editor
         const string k_ShadowPath = "Assets/Sprites/World/shadow.png";
         const string k_PlazaDir = "Assets/Sprites/World/Plaza/";
         const string k_DecorDir = "Assets/Resources/Sprites/Decor/";
+        // 설계 25: 밭 그림(Farm/Source~/make_farm.py), 작물 단계 그림(CropTable sprite), 재료 아이콘(ItemTable icon)
+        const string k_FarmDir = "Assets/Sprites/World/Farm/";
+        const string k_CropDir = "Assets/Resources/Sprites/Farm/";
+        const string k_ItemDir = "Assets/Resources/Sprites/Items/";
+        // 밭 타이머·빈 밭 화살표 높이(밭 밑변에서, 다 자란 밀 위)
+        const float k_PlotMarkHeight = 0.95f;
         // 설계 11 광장 빵집 문(원점 = 구멍 밑변 가운데, 유닛): 차양은 아치 윗부분을 덮고, 간판은 문 왼쪽 띠 가운데
         const float k_AwningHeight = 1.0f;
         const float k_SignOffsetX = 1.3f;
@@ -74,8 +81,9 @@ namespace ZooTycoon.Editor
             VisitorView customer = BakeCustomer();
             BakeShop(shelf, shelfSign, oven, counter, digTag, poop, customer);
             BakePlaza(customer);
+            BakeFarm(BakePlot());
             AssetDatabase.SaveAssets();
-            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza";
+            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza·Plot·Farm";
         }
 
         static void ImportSprites()
@@ -136,6 +144,19 @@ namespace ZooTycoon.Editor
             foreach (string path in System.IO.Directory.GetFiles(k_DecorDir, "*.png"))
             {
                 Import(path.Replace('\\', '/'), bottom);
+            }
+
+            // 설계 25: 밭·작물 단계는 아래 가운데(같은 밑변에 겹친다), 재료 아이콘은 가운데
+            Import(k_FarmDir + "plot.png", bottom);
+
+            foreach (string path in System.IO.Directory.GetFiles(k_CropDir, "*.png"))
+            {
+                Import(path.Replace('\\', '/'), bottom);
+            }
+
+            foreach (string path in System.IO.Directory.GetFiles(k_ItemDir, "*.png"))
+            {
+                Import(path.Replace('\\', '/'), center);
             }
             // 타일: 굴 그림이 픽셀을 읽고, 흙 배경은 Tiled로 깐다(왼쪽 위 피벗)
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
@@ -481,10 +502,11 @@ namespace ZooTycoon.Editor
             GameObject door = Child(root.transform, "BakeryDoor", Vector3.zero);
             Renderer(door.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
             Renderer(door.transform, "Awning", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "awning.png"), new Vector3(0f, k_AwningHeight, 0f), k_ArchOrder + 1);
-            Renderer(door.transform, "Sign", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "sign.png"), new Vector3(-k_SignOffsetX, k_SignHeight, 0f), k_ArchOrder + 1);
-            TextMeshPro sign = WorldText(door.transform, "SignText", new Vector3(-k_SignOffsetX, k_SignHeight, 0f), k_ArchOrder + 2);
-            sign.rectTransform.sizeDelta = new Vector2(1f, 0.35f);
-            sign.color = new Color32(0xF4, 0xDF, 0xBF, 255);
+            TextMeshPro sign = DoorSign(door.transform, -k_SignOffsetX);
+            // 설계 25: 농장 문(계단 오른쪽). 간판은 빵집 문과 마주 보게 오른쪽
+            GameObject farmDoor = Child(root.transform, "FarmDoor", Vector3.zero);
+            Renderer(farmDoor.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
+            TextMeshPro farmSign = DoorSign(farmDoor.transform, k_SignOffsetX);
             SpriteRenderer stairs = Renderer(root.transform, "Stairs", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png"), Vector3.zero, k_ArchOrder);
             WombatView wombat = BakeWombat(root.transform, Vector3.zero);
 
@@ -493,11 +515,73 @@ namespace ZooTycoon.Editor
             SetBurrowTextures(view);
             Set(view, "m_door", door.transform);
             Set(view, "m_sign", sign);
+            Set(view, "m_farmDoor", farmDoor.transform);
+            Set(view, "m_farmSign", farmSign);
             Set(view, "m_stairs", stairs.transform);
             Set(view, "m_wombat", wombat);
             PlazaVisitorSpawner spawner = root.AddComponent<PlazaVisitorSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Plaza");
+        }
+
+        // 광장 문 간판(판자 + 글). x = 문 가운데에서 간판 가운데까지
+        static TextMeshPro DoorSign(Transform door, float x)
+        {
+            Renderer(door, "Sign", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "sign.png"), new Vector3(x, k_SignHeight, 0f), k_ArchOrder + 1);
+            TextMeshPro text = WorldText(door, "SignText", new Vector3(x, k_SignHeight, 0f), k_ArchOrder + 2);
+            text.rectTransform.sizeDelta = new Vector2(1f, 0.35f);
+            text.color = new Color32(0xF4, 0xDF, 0xBF, 255);
+            return text;
+        }
+
+        // 설계 25: 밭 하나. 흙 틀(몸체) + 작물(같은 밑변) + 오븐과 같은 타이머·빈 밭 화살표(밀 위)
+        static PlotView BakePlot()
+        {
+            GameObject go = new GameObject("Plot");
+            go.AddComponent<SortingGroup>();
+            SpriteRenderer body = Renderer(go.transform, "Body", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "plot.png"), Vector3.zero, 0);
+            SpriteRenderer crop = Renderer(go.transform, "Crop", null, Vector3.zero, 1);
+            Sprite[] timerFrames = new Sprite[k_TimerFrames];
+
+            for (int i = 0; i < k_TimerFrames; i++)
+            {
+                timerFrames[i] = Load(TimerFrame(i));
+            }
+
+            SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, k_PlotMarkHeight, 0f), 3);
+            timer.enabled = false;
+            SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, k_PlotMarkHeight, 0f), 3);
+
+            PlotView view = go.AddComponent<PlotView>();
+            Set(view, "m_body", body);
+            Set(view, "m_crop", crop);
+            Set(view, "m_timer", timer);
+            SetSprites(view, "m_timerFrames", timerFrames);
+            Set(view, "m_emptyMark", emptyMark);
+            return Save(go, view, "Plot");
+        }
+
+        // 설계 25: 농장 굴. 굴 그림·구멍 아치·밭 자리는 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다
+        static void BakeFarm(PlotView plot)
+        {
+            GameObject root = new GameObject("Farm");
+            SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
+            backdrop.drawMode = SpriteDrawMode.Tiled;
+            backdrop.tileMode = SpriteTileMode.Continuous;
+            backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
+            SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
+            SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
+            WombatView wombat = BakeWombat(root.transform, Vector3.zero);
+
+            FarmView view = root.AddComponent<FarmView>();
+            Set(view, "m_burrow", burrow);
+            SetBurrowTextures(view);
+            Set(view, "m_arch", arch.transform);
+            Set(view, "m_plotPrefab", plot);
+            Set(view, "m_ghostPlot", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "plot.png"));
+            Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
+            Set(view, "m_wombat", wombat);
+            Save(root, view, "Farm");
         }
 
         static void SetBurrowTextures(Object view)

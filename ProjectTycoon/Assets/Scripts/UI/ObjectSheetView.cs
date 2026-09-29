@@ -26,6 +26,16 @@ namespace ZooTycoon.UI
         public string SubRight;   // 아래 줄 오른쪽(굽는 시간 「8초」, 해금 칩은 값). 한 글에 정보 하나
         public bool Highlighted;
         public bool Enabled = true;
+        // 설계 25: 레시피(칩 왼쪽 위에 재료마다 한 줄)
+        public List<ChipIngredient> Ingredients = new List<ChipIngredient>();
+    }
+
+    public sealed class ChipIngredient
+    {
+        public string IconPath;
+        public string Count;
+        // 창고에 모자라면 부족 색
+        public bool Short;
     }
 
     public sealed class SheetRow
@@ -47,6 +57,7 @@ namespace ZooTycoon.UI
         private static readonly Color k_CostOk = new Color32(0x3E, 0x7A, 0x4C, 255);
         private static readonly Color k_CostPoor = new Color32(0xA6, 0x4B, 0x3C, 255);
         private static readonly Color k_CostMuted = new Color32(0x9A, 0x8A, 0x7C, 255);
+        private static readonly Color k_Sub = new Color32(0x5C, 0x4C, 0x42, 255);
 
         [SerializeField] private Button m_dim;
         [SerializeField] private RectTransform m_panel;
@@ -110,6 +121,7 @@ namespace ZooTycoon.UI
                 button.transform.Find("Label").GetComponent<TMP_Text>().text = chip.Label;
                 button.transform.Find("Sub").GetComponent<TMP_Text>().text = chip.Sub;
                 button.transform.Find("SubRight").GetComponent<TMP_Text>().text = chip.SubRight;
+                SetRecipe(button.transform.Find("Recipe"), chip.Ingredients);
                 CanvasGroup group = button.GetComponent<CanvasGroup>();
                 group.alpha = chip.Enabled ? 1f : 0.5f;
             }
@@ -158,6 +170,33 @@ namespace ZooTycoon.UI
             if (index < m_rows.Count)
             {
                 StartCoroutine(FlashRoutine(m_rows[index].image));
+            }
+        }
+
+        // 레시피 줄(Icon + Count)을 재료 수만큼. 첫 자식이 틀이고 모자라면 복제한다
+        private static void SetRecipe(Transform recipe, IReadOnlyList<ChipIngredient> ingredients)
+        {
+            Transform template = recipe.GetChild(0);
+
+            while (recipe.childCount < ingredients.Count)
+            {
+                Instantiate(template, recipe);
+            }
+
+            for (int i = 0; i < recipe.childCount; i++)
+            {
+                Transform line = recipe.GetChild(i);
+                line.gameObject.SetActive(i < ingredients.Count);
+
+                if (i >= ingredients.Count)
+                {
+                    continue;
+                }
+
+                line.Find("Icon").GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredients[i].IconPath);
+                TMP_Text count = line.Find("Count").GetComponent<TMP_Text>();
+                count.text = ingredients[i].Count;
+                count.color = ingredients[i].Short ? k_CostPoor : k_Sub;
             }
         }
 

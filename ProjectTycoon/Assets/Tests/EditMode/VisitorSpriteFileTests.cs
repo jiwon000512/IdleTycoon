@@ -5,7 +5,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 데이터-테이블-규칙 7장: VisitorTable의 sprite·시트 경로, ActionTable의 icon·SoundTable의 clip·DecorationTable의 sprite 경로에 파일이 있어야 한다
+    // 데이터-테이블-규칙 7장: VisitorTable의 sprite·시트 경로, ActionTable의 icon·SoundTable의 clip·DecorationTable의 sprite·ItemTable의 icon·CropTable의 단계 그림 경로에 파일이 있어야 한다
     public sealed class VisitorSpriteFileTests
     {
         private const string k_ResourcesPath = "Assets/Resources";
@@ -81,6 +81,25 @@ namespace ZooTycoon.Tests
                 {
                     string frame = Path.GetFileName(decor.Sprite) + "_" + i + ".png";
                     Assert.That(File.Exists(Path.Combine(directory, frame)), Is.True, $"DecorationTable '{decor.Id}': {frame} 파일이 없다.");
+                }
+            }
+        }
+
+        // 설계 25: 재료 아이콘, 작물 단계 그림(sprite_0 ~ _(stages − 1))
+        [Test]
+        public void Icon_OfEveryItem_AndStages_OfEveryCrop_ExistUnderResources()
+        {
+            foreach (ItemTable item in TestTables.Load().GetAll<ItemTable>())
+            {
+                Assert.That(File.Exists(Path.Combine(k_ResourcesPath, item.Icon + ".png")), Is.True, $"ItemTable '{item.Id}': {item.Icon} 파일이 없다.");
+            }
+
+            foreach (CropTable crop in TestTables.Load().GetAll<CropTable>())
+            {
+                for (int i = 0; i < crop.Stages; i++)
+                {
+                    string stage = crop.Sprite + "_" + i + ".png";
+                    Assert.That(File.Exists(Path.Combine(k_ResourcesPath, stage)), Is.True, $"CropTable '{crop.Id}': {stage} 파일이 없다.");
                 }
             }
         }

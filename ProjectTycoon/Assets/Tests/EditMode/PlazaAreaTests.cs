@@ -19,6 +19,7 @@ namespace ZooTycoon.Tests
         private EventBus m_bus;
         private BakeryArea m_shop;
         private PlazaArea m_plaza;
+        private FarmArea m_farm;
         private Mall m_mall;
 
         private void Create(Action<BakeryConfigTable> tweak = null)
@@ -30,7 +31,8 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(m_tables, state);
             m_shop = new BakeryArea(state, m_tables, new SequenceRandom(new double[2000]), wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), wombat, m_bus);
-            m_mall = new Mall(m_shop, m_plaza, m_bus);
+            m_farm = new FarmArea(m_tables, wombat, m_bus);
+            m_mall = new Mall(m_shop, m_plaza, m_farm, m_bus);
         }
 
         private void Run(double seconds)
@@ -237,12 +239,12 @@ namespace ZooTycoon.Tests
             int changes = 0;
             m_bus.Subscribe<Events.AreaChanged>(_ => changes++);
 
-            m_bus.Publish(new Events.Passed(other));
+            m_bus.Publish(new Events.Passed(other, PlazaArea.k_Id));
 
             Assert.That(changes, Is.EqualTo(0));
             Assert.That(m_mall.Active, Is.SameAs(m_shop));
 
-            m_bus.Publish(new Events.Passed(m_shop));
+            m_bus.Publish(new Events.Passed(m_shop, PlazaArea.k_Id));
 
             Assert.That(changes, Is.EqualTo(1));
             Assert.That(m_mall.Active, Is.SameAs(m_plaza));
@@ -254,7 +256,7 @@ namespace ZooTycoon.Tests
         {
             Create();
 
-            foreach (WombatArea area in new WombatArea[] { m_shop, m_plaza })
+            foreach (WombatArea area in new WombatArea[] { m_shop, m_plaza, m_farm })
             {
                 foreach (Interactable thing in area.Things)
                 {

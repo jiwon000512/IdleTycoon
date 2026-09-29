@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 설계 06 P8: 머리 위에서 떠올라 사라지는 코인 연출. 연출 1차: 금액 글자("+10")를 함께 띄운다
+    // 설계 06 P8: 머리 위에서 떠올라 사라지는 코인 연출. 연출 1차: 금액 글자("+10")를 함께 띄운다. 설계 25: 코인 대신 재료 아이콘(거두기)
     public sealed class CoinPopup : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer m_renderer;
@@ -13,9 +13,14 @@ namespace ZooTycoon.World
 
         private float m_elapsed;
 
-        public void Show(string amount)
+        public void Show(string amount, Sprite icon = null)
         {
             m_amountText.text = amount;
+
+            if (icon != null)
+            {
+                m_renderer.sprite = icon;
+            }
         }
 
         private void Update()

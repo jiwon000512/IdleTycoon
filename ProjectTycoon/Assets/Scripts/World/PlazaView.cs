@@ -9,11 +9,12 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 11 · 설계 18: 굴 밖 광장. 굴 그림은 빵집과 같은 BurrowPainter로 칠하고, 빵집 문(아치·차양·간판)·지상 계단은 Core PlazaLayout이 정한 자리에 놓는다.
-    // 장식은 Core PlazaArea.Decor를 객체 키로 맞춘다(놓이면 만들고 옮기면 옮기고 치우면 지운다). 웜뱃이 문 앞에 서면(대상이 문) 문이 한 번 튄다
-    public sealed class PlazaView : MonoBehaviour
+    // 설계 11 · 설계 18: 굴 밖 광장. 굴 그림은 빵집과 같은 BurrowPainter로 칠하고, 빵집 문(아치·차양·간판)·농장 문(아치·간판, 설계 25)·지상 계단은 Core PlazaLayout이 정한 자리에 놓는다.
+    // 장식은 Core PlazaArea.Decor를 객체 키로 맞춘다(놓이면 만들고 옮기면 옮기고 치우면 지운다). 웜뱃이 문 앞에 서면(대상이 문) 그 문이 한 번 튄다
+    public sealed class PlazaView : MonoBehaviour, IAreaView
     {
         private const string k_SignKey = "sign_bakery";
+        private const string k_FarmSignKey = "sign_farm";
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -24,6 +25,9 @@ namespace ZooTycoon.World
         [Tooltip("빵집 문(아치 + 차양 + 간판). 원점 = 구멍 밑변 가운데")]
         [SerializeField] private Transform m_door;
         [SerializeField] private TextMeshPro m_sign;
+        [Tooltip("농장 문(아치 + 간판). 원점 = 구멍 밑변 가운데")]
+        [SerializeField] private Transform m_farmDoor;
+        [SerializeField] private TextMeshPro m_farmSign;
         [Tooltip("지상 계단. 원점 = 띠 밑변 가운데")]
         [SerializeField] private Transform m_stairs;
         [SerializeField] private WombatView m_wombat;
@@ -36,6 +40,7 @@ namespace ZooTycoon.World
         private IPlaced m_held;
         private IDisposable[] m_subscriptions;
 
+        public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombat.transform;
         public WombatView WombatView => m_wombat;
 
@@ -63,6 +68,8 @@ namespace ZooTycoon.World
             m_door.localPosition = new Vector3(layout.DoorFloor.X, wallBottom, 0f);
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
             m_sign.text = tables.Text(k_SignKey);
+            m_farmDoor.localPosition = new Vector3(layout.FarmDoorFloor.X, wallBottom, 0f);
+            m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);
             Build();
 
@@ -196,9 +203,9 @@ namespace ZooTycoon.World
 
         private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            if (e.Area == m_plaza && m_plaza.Target is PassageInteractable)
+            if (e.Area == m_plaza && m_plaza.Target is PassageInteractable passage)
             {
-                StartCoroutine(Fx.Bounce(m_door));
+                StartCoroutine(Fx.Bounce(passage.To == FarmArea.k_Id ? m_farmDoor : m_door));
             }
         }
     }

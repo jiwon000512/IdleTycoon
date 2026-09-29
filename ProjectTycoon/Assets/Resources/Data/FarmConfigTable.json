@@ -1,0 +1,12 @@
+{
+  "table": "FarmConfigTable",
+  "version": 1,
+  "notes": [
+    "설계 25 밀 농사: 농장 굴 숫자. id = 농장(지금 main 하나). 광장 계단 오른쪽 문과 이어지고, 처음부터 열려 있다.",
+    "cols·rows: 방 크기(칸 수, 빵집·광장과 같은 칸, 가로 가운데 정렬, 첫 줄은 입구 줄). 파지 않는다.",
+    "startPlots: 새 게임에 놓여 있는 밭 수(입구 줄 아래 칸 가운데에 왼쪽부터). 밭 가격·최대 수는 InteractableTable plot price."
+  ],
+  "rows": [
+    { "id": "main", "cols": 2, "rows": 3, "startPlots": 2 }
+  ]
+}

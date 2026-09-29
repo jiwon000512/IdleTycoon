@@ -255,22 +255,40 @@ namespace ZooTycoon.Core
             return BtStatus.Success;
         }
 
-        // 빈 오븐이면 마지막 빵을 굽는다. 아직 이 오븐에서 구운 적이 없으면 해금된 첫 빵(2026-09-26 사용자: 기다리지 말고 일해야 한다)
+        // 빈 오븐이면 마지막 빵을 굽는다. 아직 이 오븐에서 구운 적이 없으면 해금된 첫 빵(2026-09-26 사용자: 기다리지 말고 일해야 한다).
+        // 설계 25: 재료가 모자라 못 구우면 「…」를 띄우고, 구우면 지운다
         private BtStatus Bake()
         {
             OvenInteractable oven = (OvenInteractable)Thing;
 
-            if (oven.IsEmpty)
+            if (!oven.IsEmpty)
             {
-                oven.TryStart(oven.LastBread ?? Bakery.UnlockedBreads[0]);
+                return BtStatus.Success;
+            }
+
+            if (!oven.TryStart(oven.LastBread ?? Bakery.UnlockedBreads[0]))
+            {
+                Bubble.Show(BubbleTable.k_Wait);
+            }
+            else if (Bubble.Id == BubbleTable.k_Wait)
+            {
+                Bubble.Clear();
             }
 
             return BtStatus.Success;
         }
 
+        // 재료가 들어올 때까지 빈 오븐을 다시 굽는다
         private BtStatus TickWaitReady()
         {
-            return ((OvenInteractable)Thing).Ready > 0 ? BtStatus.Success : BtStatus.Running;
+            OvenInteractable oven = (OvenInteractable)Thing;
+
+            if (oven.IsEmpty)
+            {
+                Bake();
+            }
+
+            return oven.Ready > 0 ? BtStatus.Success : BtStatus.Running;
         }
 
         private BtStatus TakeOut()

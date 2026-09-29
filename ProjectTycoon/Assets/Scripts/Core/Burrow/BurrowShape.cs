@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
@@ -46,6 +47,23 @@ namespace ZooTycoon.Core
             {
                 return Mask[x, y] && WallRow[x, y] == 0;
             }
+        }
+
+        // 파지 않는 방(광장·농장, 설계 25): 가로 cols칸(가운데 정렬) × 세로 rows칸(첫 줄은 입구 줄). 칸 크기는 ConfigTable
+        public static Result Room(TableSet tables, int cols, int rows)
+        {
+            int firstCol = -cols / 2;
+            HashSet<Cell> cells = new HashSet<Cell>();
+
+            for (int row = 0; row < rows; row++)
+            {
+                for (int col = firstCol; col < firstCol + cols; col++)
+                {
+                    cells.Add(new Cell(col, row));
+                }
+            }
+
+            return Build(cells, Pixels(tables, ConfigTable.k_CellWidth), Pixels(tables, ConfigTable.k_CellHeight), Pixels(tables, ConfigTable.k_EntranceHeight));
         }
 
         public static Result Build(IReadOnlyCollection<Cell> cells, int cellWidth, int cellHeight, int entranceHeight)
@@ -172,6 +190,11 @@ namespace ZooTycoon.Core
                     }
                 }
             }
+        }
+
+        private static int Pixels(TableSet tables, string configId)
+        {
+            return (int)Math.Round(tables.Get<ConfigTable>(configId).Value * k_PixelsPerUnit);
         }
     }
 }

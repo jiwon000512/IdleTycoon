@@ -17,7 +17,7 @@ namespace ZooTycoon.Game
         // 설계 16: 도메인 사건 버스. 게임 상태와 같이 만들고 Core에는 생성자로 넘긴다
         public EventBus Bus { get; private set; }
         public ZooState State { get; private set; }
-        // 설계 11: 빵집 + 굴 밖 광장, 웜뱃이 오가는 곳
+        // 설계 11: 빵집 + 굴 밖 광장 + 농장(설계 25), 웜뱃이 오가는 곳
         public Mall Mall { get; private set; }
 
         // 씬을 다시 열어도 상태는 한 번만 만든다(싱글턴이 씬 사이에서 살아남는 이유)
@@ -47,7 +47,7 @@ namespace ZooTycoon.Game
             SystemRandom random = new SystemRandom();
             Wombat wombat = new Wombat(Tables, State);
             BakeryArea bakery = new BakeryArea(State, Tables, random, wombat, Bus);
-            Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), Bus);
+            Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), new FarmArea(Tables, wombat, Bus), Bus);
         }
 
         // 손님 동선 설계 v0.2: 가게 시뮬은 매 프레임(손님 행동 트리·조이스틱 웜뱃이 멈칫하지 않게). 설계 11: 빵집과 광장을 함께

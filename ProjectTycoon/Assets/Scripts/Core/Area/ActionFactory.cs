@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ZooTycoon.Core
 {
-    // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일, 빵집: ActionFactory.Bakery.cs).
+    // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일, 빵집: ActionFactory.Bakery.cs, 농장: ActionFactory.Farm.cs).
     // 새 행동 = 그 sim 파일에 중첩 클래스 하나 + 여기 case 한 줄과 Ids 한 칸 + ActionTable 한 줄
     public static partial class ActionFactory
     {
@@ -12,7 +12,7 @@ namespace ZooTycoon.Core
         {
             ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter, ActionTable.k_Upgrade,
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
-            ActionTable.k_Wake, ActionTable.k_Clean,
+            ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_Plant, ActionTable.k_Harvest,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -31,6 +31,8 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Dig: return new Dig(table);
                 case ActionTable.k_Wake: return new Wake(table);
                 case ActionTable.k_Clean: return new Clean(table);
+                case ActionTable.k_Plant: return new Plant(table);
+                case ActionTable.k_Harvest: return new Harvest(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");
             }
         }

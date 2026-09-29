@@ -16,6 +16,7 @@ namespace ZooTycoon.Data
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
+            PlotInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -40,7 +41,9 @@ namespace ZooTycoon.Data
             ValidateClerkConfig(tables, errors);
             ValidateBubbles(tables, errors);
             ValidateDialogues(tables, errors);
+            ValidateItems(tables, errors);
             ValidateBreads(tables, errors);
+            ValidateCrops(tables, errors);
             ValidateActions(tables, errors);
             ValidateInteractables(tables, errors);
             ValidateSounds(tables, errors);
@@ -50,6 +53,7 @@ namespace ZooTycoon.Data
             ValidateConfig(tables, errors);
             ValidateBakeryConfig(tables, errors);
             ValidatePlazaConfig(tables, errors);
+            ValidateFarmConfig(tables, errors);
 
             return errors;
         }
@@ -240,6 +244,8 @@ namespace ZooTycoon.Data
         // 설계 08 v0.5
         private static void ValidateBreads(TableSet tables, List<string> errors)
         {
+            HashSet<string> itemIds = Ids<ItemTable>(tables);
+
             if (tables.GetAll<BreadTable>().Count == 0)
             {
                 errors.Add("BreadTable: 행이 하나도 없다.");
@@ -260,6 +266,61 @@ namespace ZooTycoon.Data
                 if (bread.BakeSeconds <= 0d || bread.BatchSize < 1 || bread.Price <= 0d || bread.Weight < 1 || bread.UnlockCost < 0d)
                 {
                     errors.Add($"BreadTable '{bread.Id}': bakeSeconds·price는 0보다, batchSize·weight는 1 이상, unlockCost는 0 이상이어야 한다.");
+                }
+
+                // 설계 25: 레시피는 있는 재료를 1개 이상씩(재료 없는 빵은 빈 목록)
+                if (bread.Ingredients == null)
+                {
+                    errors.Add($"BreadTable '{bread.Id}': ingredients가 없다.");
+                    continue;
+                }
+
+                foreach (IngredientData ingredient in bread.Ingredients)
+                {
+                    if (!itemIds.Contains(ingredient.Item) || ingredient.Count < 1)
+                    {
+                        errors.Add($"BreadTable '{bread.Id}': 재료 '{ingredient.Item}'이 ItemTable에 없거나 count가 1보다 작다.");
+                    }
+                }
+            }
+        }
+
+        // 설계 25: 재료는 이름·아이콘이 있고 시작 개수는 0 이상
+        private static void ValidateItems(TableSet tables, List<string> errors)
+        {
+            foreach (ItemTable item in tables.GetAll<ItemTable>())
+            {
+                CheckId("ItemTable", item.Id, errors);
+
+                if (string.IsNullOrEmpty(item.Name) || string.IsNullOrEmpty(item.Icon) || item.Start < 0)
+                {
+                    errors.Add($"ItemTable '{item.Id}': name·icon이 있고 start는 0 이상이어야 한다.");
+                }
+            }
+        }
+
+        // 설계 25: 작물은 하나 이상(심기는 첫 행), 거두는 재료가 ItemTable에 있고, 자라는 그림은 2단계 이상
+        private static void ValidateCrops(TableSet tables, List<string> errors)
+        {
+            HashSet<string> itemIds = Ids<ItemTable>(tables);
+
+            if (tables.GetAll<CropTable>().Count == 0)
+            {
+                errors.Add("CropTable: 행이 하나도 없다.");
+            }
+
+            foreach (CropTable crop in tables.GetAll<CropTable>())
+            {
+                CheckId("CropTable", crop.Id, errors);
+
+                if (!itemIds.Contains(crop.Item))
+                {
+                    errors.Add($"CropTable '{crop.Id}': 재료 '{crop.Item}'이 ItemTable에 없다.");
+                }
+
+                if (crop.GrowSeconds <= 0d || crop.Yield < 1 || string.IsNullOrEmpty(crop.Sprite) || crop.Stages < 2)
+                {
+                    errors.Add($"CropTable '{crop.Id}': growSeconds는 0보다, yield는 1 이상, sprite가 있고 stages는 2 이상이어야 한다.");
                 }
             }
         }
@@ -562,6 +623,22 @@ namespace ZooTycoon.Data
             }
 
             CheckRequired<PlazaConfigTable>(tables, new[] { PlazaConfigTable.k_Main }, errors);
+        }
+
+        // 설계 25: 방은 가로 1칸·세로 2칸(입구 줄 + 밭 줄) 이상, 시작 밭은 밭 최대 수 안
+        private static void ValidateFarmConfig(TableSet tables, List<string> errors)
+        {
+            PriceInfo plot = System.Linq.Enumerable.FirstOrDefault(tables.GetAll<InteractableTable>(), row => row.Id == PlotInteractable.k_Id)?.Price;
+
+            foreach (FarmConfigTable farm in tables.GetAll<FarmConfigTable>())
+            {
+                if (farm.Cols < 1 || farm.Rows < 2 || farm.StartPlots < 0 || plot != null && farm.StartPlots > plot.Max)
+                {
+                    errors.Add($"FarmConfigTable '{farm.Id}': cols는 1 이상, rows는 2 이상, startPlots는 0 ~ 밭 최대 수여야 한다.");
+                }
+            }
+
+            CheckRequired<FarmConfigTable>(tables, new[] { FarmConfigTable.k_Main }, errors);
         }
 
         private static void CheckId(string table, string id, List<string> errors)

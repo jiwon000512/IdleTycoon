@@ -193,9 +193,12 @@ namespace ZooTycoon.Core
                 return PlacementCheck.OutsideFloor;
             }
 
-            if (rect.Contains(Entrance, BurrowNav.k_Clearance))
+            foreach (Vector2 door in Doors)
             {
-                return PlacementCheck.Overlaps;
+                if (rect.Contains(door, BurrowNav.k_Clearance))
+                {
+                    return PlacementCheck.Overlaps;
+                }
             }
 
             List<NavRect> blocked = new List<NavRect>();

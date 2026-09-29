@@ -1,6 +1,6 @@
 {
   "table": "SoundTable",
-  "version": 6,
+  "version": 7,
   "notes": [
     "설계 10·23: 효과음. id는 코드(SoundTable.k_*)와 같아야 하고, 어느 사건에 나는지는 코드(World WorldSound · UI View)가 정한다. 재생은 GameKit SoundManager(GameManager.Init이 이 표를 등록한다).",
     "clip: Resources/ 기준 경로(확장자 없음). Assets/Audio/Source~/make_sfx.py로 합성한 실제 소리(2026-09-24 사용자 선택). 바꿀 때는 같은 경로에 덮어쓴다.",
@@ -10,7 +10,8 @@
     "version 3 (2026-09-25): give_up 삭제. 빵을 못 찾은 손님은 소리·「!!」 없이 그냥 나간다(자연스럽게 둘러보다 가는 느낌).",
     "version 4 (2026-09-28, 효과음 1차): 18개 추가 — 계산 receipt(사용자 요청: 영수증이 올라오는 소리, 출력기 그림이 한 칸 오를 때마다), 빵집 bake_start·take_out·put·pick·dig·upgrade·place, 점원 clerk_hired·clerk_fired·wake, 이동 passage, 대화 say, UI ui_tap·ui_open·ui_close·nego_good·nego_bad. 에이전트가 1차로 판단해 넣었고 사용자 플레이 피드백으로 하나씩 고친다.",
     "version 5 (2026-09-28, 점원 연출 1단계): payday(월급날에 한 번, 점원 수와 무관) 추가.",
-    "version 6 (2026-09-29, 설계 24 웜뱃 똥): poop(똥이 떨어짐) · clean(치움. 여러 개를 한 번에 치워도 minGap으로 한 번) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전)."
+    "version 6 (2026-09-29, 설계 24 웜뱃 똥): poop(똥이 떨어짐) · clean(치움. 여러 개를 한 번에 치워도 minGap으로 한 번) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전).",
+    "version 7 (2026-09-29, 설계 25 밀 농사): plant(밭에 심음) · harvest(거둠) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전)."
   ],
   "rows": [
     { "id": "pay", "clip": "Audio/pay", "volume": 0.6, "minGap": 0.1, "comboSeconds": 2.5, "pitchStep": 0.05, "pitchMax": 1.3 },
@@ -35,6 +36,8 @@
     { "id": "nego_good", "clip": "Audio/nego_good", "volume": 0.6, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "nego_bad", "clip": "Audio/nego_bad", "volume": 0.5, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "poop", "clip": "Audio/poop", "volume": 0.45, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
-    { "id": "clean", "clip": "Audio/clean", "volume": 0.5, "minGap": 0.15, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
+    { "id": "clean", "clip": "Audio/clean", "volume": 0.5, "minGap": 0.15, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "plant", "clip": "Audio/plant", "volume": 0.5, "minGap": 0.15, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "harvest", "clip": "Audio/harvest", "volume": 0.55, "minGap": 0.1, "comboSeconds": 1.5, "pitchStep": 0.05, "pitchMax": 1.2 }
   ]
 }

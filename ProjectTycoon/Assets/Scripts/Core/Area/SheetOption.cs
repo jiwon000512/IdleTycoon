@@ -1,12 +1,13 @@
 namespace ZooTycoon.Core
 {
-    // 시트 줄의 상태: 살 수 있음 · 코인 부족 · 최대 · 지금은 못 함(오븐이 굽는 중)
+    // 시트 줄의 상태: 살 수 있음 · 코인 부족 · 최대 · 지금은 못 함(오븐이 굽는 중) · 재료 부족(설계 25)
     public enum SheetOptionState
     {
         Enabled,
         Poor,
         Max,
         Blocked,
+        Lacking,
     }
 
     // 설계 13 v0.5: 시트 한 줄의 데이터. 글자는 UI가 행동 id별 서식으로 만든다

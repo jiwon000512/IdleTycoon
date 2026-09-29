@@ -38,6 +38,7 @@ namespace ZooTycoon.UI
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.CoinsChanged>(Bus_CoinsChanged),
+                bus.Subscribe<Events.ItemsChanged>(Bus_ItemsChanged),
             };
         }
 
@@ -123,7 +124,7 @@ namespace ZooTycoon.UI
             return m_tables.Text("sheet_oven_empty");
         }
 
-        // 굽기 칩: 해금된 빵(빈 오븐일 때만 고를 수 있고, 재고가 없으면 강조) · 다음 빵 해금(값, 설계 17)
+        // 굽기 칩: 해금된 빵(빈 오븐이고 재료가 있을 때만 고를 수 있고, 재고가 없으면 강조) · 다음 빵 해금(값, 설계 17). 둘 다 레시피(설계 25)
         private SheetChip Chip(SheetOption option)
         {
             BreadTable bread = m_tables.Get<BreadTable>(option.Option);
@@ -138,6 +139,7 @@ namespace ZooTycoon.UI
                     Sub = m_tables.Text("chip_unlock"),
                     SubRight = BigNumberFormatter.Format(option.Cost),
                     Enabled = enabled,
+                    Ingredients = Recipe(bread),
                 };
             }
 
@@ -151,7 +153,25 @@ namespace ZooTycoon.UI
                 SubRight = m_tables.Format("chip_bread_seconds", bread.BakeSeconds),
                 Highlighted = enabled && stock == 0,
                 Enabled = enabled,
+                Ingredients = Recipe(bread),
             };
+        }
+
+        private List<ChipIngredient> Recipe(BreadTable bread)
+        {
+            List<ChipIngredient> recipe = new List<ChipIngredient>();
+
+            foreach (IngredientData ingredient in bread.Ingredients)
+            {
+                recipe.Add(new ChipIngredient
+                {
+                    IconPath = m_tables.Get<ItemTable>(ingredient.Item).Icon,
+                    Count = m_tables.Format("chip_ingredient", ingredient.Count),
+                    Short = m_shop.Wallet.Count(ingredient.Item) < ingredient.Count,
+                });
+            }
+
+            return recipe;
         }
 
         private SheetRow Row(string actionId, SheetOption option)
@@ -272,6 +292,11 @@ namespace ZooTycoon.UI
         }
 
         private void Bus_CoinsChanged(Events.CoinsChanged e)
+        {
+            RefreshIfOpen();
+        }
+
+        private void Bus_ItemsChanged(Events.ItemsChanged e)
         {
             RefreshIfOpen();
         }

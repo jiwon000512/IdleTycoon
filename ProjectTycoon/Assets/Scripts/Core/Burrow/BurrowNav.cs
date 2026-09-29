@@ -29,6 +29,14 @@ namespace ZooTycoon.Core
         {
             return p.X > XMin - margin && p.X < XMax + margin && p.Y > YMin - margin && p.Y < YMax + margin;
         }
+
+        // 사각형까지 거리(안이면 0)
+        public float DistanceTo(Vector2 p)
+        {
+            float dx = Math.Max(Math.Max(XMin - p.X, p.X - XMax), 0f);
+            float dy = Math.Max(Math.Max(YMin - p.Y, p.Y - YMax), 0f);
+            return (float)Math.Sqrt(dx * dx + dy * dy);
+        }
     }
 
     // 손님 동선 설계 v0.2 4장: 굴 마스크 위 격자(간격 step)의 걷는 땅과 4방향 A*.

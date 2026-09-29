@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GameKit.Events;
 using GameKit.Singleton;
 using UnityEngine;
@@ -10,11 +11,13 @@ namespace ZooTycoon.World
     // 월드 매니저(2026-09-16: WorldView + WorldPresenter 통합. MVP는 UI에만 둔다). 설계 09: 지상 없이 빵집 굴 하나를 실행 중 생성하고 카메라가 웜뱃을 따라가게 한다.
     // 설계 11: 굴 밖 광장도 실행 중 생성(빵집 위쪽 멀리)하고, 웜뱃이 옮겨 가면 카메라 대상·경계를 그곳으로 바꾼다.
     // 설계 18: 편집 모드(카메라 멈춤·팬, 놓을 자리 그림자, 파기 태그 상시)를 곳 화면에 넘긴다. 곳 좌표 ↔ 월드 좌표는 곳 원점 차이뿐.
+    // 설계 25: 농장도 실행 중 생성(광장 위쪽 멀리). 곳마다 화면 하나(IAreaView)를 두고 웜뱃이 있는 곳의 화면을 쓴다.
     // 씬의 World 오브젝트에 붙어 있고 MainScene.Awake가 GameManager.Init 뒤에 Initialize로 서비스를 넘긴다
     public sealed class WorldManager : MonoSingleton<WorldManager>
     {
         // 광장 원점(빵집 원점에서 떨어진 곳. 두 곳이 한 화면에 같이 보이지 않게)
         private static readonly Vector3 k_PlazaOrigin = new Vector3(0f, 60f, 0f);
+        private static readonly Vector3 k_FarmOrigin = new Vector3(0f, 120f, 0f);
         // 고용한 점원이 굴에서 나오는 모습을 당겨서 보여 주는 시간(초)과 발끝에서 몸 가운데까지(유닛)
         private const float k_HireSpotSeconds = 1.8f;
         private const float k_BodyCenter = 0.5f;
@@ -24,9 +27,11 @@ namespace ZooTycoon.World
         [SerializeField] private BakeryView m_shopPrefab;
         [Tooltip("광장 프리팹(설계 11). 씬에는 두지 않고 실행 중에 생성한다")]
         [SerializeField] private PlazaView m_plazaPrefab;
+        [Tooltip("농장 프리팹(설계 25). 씬에는 두지 않고 실행 중에 생성한다")]
+        [SerializeField] private FarmView m_farmPrefab;
 
+        private readonly Dictionary<WombatArea, IAreaView> m_views = new Dictionary<WombatArea, IAreaView>();
         private BakeryView m_shopView;
-        private PlazaView m_plazaView;
         private Mall m_mall;
         private IDisposable m_areaChanged;
         private IDisposable m_clerkHired;
@@ -43,9 +48,14 @@ namespace ZooTycoon.World
             gameObject.AddComponent<AreaBgm>().Initialize(mall, bus, tables);
             m_shopView.Expanded += BakeryView_Expanded;
 
-            m_plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
-            m_plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, m_plazaView, bus, tables, Frames);
-            m_plazaView.Bind(mall.Plaza, bus, Frames, tables);
+            PlazaView plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
+            plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, plazaView, bus, tables, Frames);
+            plazaView.Bind(mall.Plaza, bus, Frames, tables);
+            FarmView farmView = Instantiate(m_farmPrefab, k_FarmOrigin, Quaternion.identity, transform);
+            farmView.Bind(mall.Farm, bus, Frames, tables);
+            m_views[mall.Bakery] = m_shopView;
+            m_views[mall.Plaza] = plazaView;
+            m_views[mall.Farm] = farmView;
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
             FollowWombat();
@@ -54,7 +64,7 @@ namespace ZooTycoon.World
         // 곳 원점(월드). 곳 좌표 = 월드 − 원점
         public System.Numerics.Vector2 OriginOf(WombatArea area)
         {
-            Vector3 origin = area == m_mall.Plaza ? k_PlazaOrigin : Vector3.zero;
+            Vector3 origin = m_views[area].Origin;
             return new System.Numerics.Vector2(origin.x, origin.y);
         }
 
@@ -62,8 +72,11 @@ namespace ZooTycoon.World
         public void SetEditing(bool editing)
         {
             m_camera.SetFollowing(!editing);
-            m_shopView.SetEditing(editing);
-            m_plazaView.SetEditing(editing);
+
+            foreach (IAreaView view in m_views.Values)
+            {
+                view.SetEditing(editing);
+            }
 
             if (!editing)
             {
@@ -74,8 +87,10 @@ namespace ZooTycoon.World
         // 잡은 사물(null이면 없음)의 외곽선을 노랗게
         public void SetHeld(IPlaced held)
         {
-            m_shopView.SetHeld(held);
-            m_plazaView.SetHeld(held);
+            foreach (IAreaView view in m_views.Values)
+            {
+                view.SetHeld(held);
+            }
         }
 
         public void Pan(System.Numerics.Vector2 delta)
@@ -86,20 +101,15 @@ namespace ZooTycoon.World
         // 끌고 있는 사물의 그림자(놓을 수 있으면 초록, 아니면 빨강)를 웜뱃이 있는 곳에 그린다
         public void ShowGhost(IPlacedKind kind, System.Numerics.Vector2 at, bool ok)
         {
-            if (m_mall.Active == m_mall.Bakery)
-            {
-                m_shopView.ShowGhost(kind, at, ok);
-            }
-            else
-            {
-                m_plazaView.ShowGhost(kind, at, ok);
-            }
+            m_views[m_mall.Active].ShowGhost(kind, at, ok);
         }
 
         public void HideGhost()
         {
-            m_shopView.HideGhost();
-            m_plazaView.HideGhost();
+            foreach (IAreaView view in m_views.Values)
+            {
+                view.HideGhost();
+            }
         }
 
         protected override void OnDestroy()
@@ -117,14 +127,8 @@ namespace ZooTycoon.World
 
         private void FollowWombat()
         {
-            if (m_mall.Active == m_mall.Bakery)
-            {
-                m_camera.Follow(m_shopView.Wombat, m_shopView.Bounds);
-            }
-            else
-            {
-                m_camera.Follow(m_plazaView.Wombat, m_plazaView.Bounds);
-            }
+            IAreaView view = m_views[m_mall.Active];
+            m_camera.Follow(view.Wombat, view.Bounds);
         }
 
         private void BakeryView_Expanded()

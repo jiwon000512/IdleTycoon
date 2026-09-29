@@ -7,9 +7,11 @@ using GameKit.Tables;
 namespace ZooTycoon.Core
 {
     // 설계 11 3장 · 설계 13 · 리뷰 R2 · 설계 18: 광장. 지상 계단으로 손님이 오고(도착 타이머), 빵집에서 나간 손님은 문에서 다시 나온다.
-    // 손님 한 명의 할 일은 PlazaVisitor, 여기는 손님 목록과 들를 곳 자리표. 사물은 빵집 문 하나(들어가기). 장식은 자유 배치(WombatArea.Placement)
+    // 손님 한 명의 할 일은 PlazaVisitor, 여기는 손님 목록과 들를 곳 자리표. 사물은 빵집 문·농장 문(설계 25, 들어가기). 장식은 자유 배치(WombatArea.Placement)
     public sealed class PlazaArea : WombatArea
     {
+        public const string k_Id = "plaza";
+
         private readonly PlazaConfigTable m_config;
         private readonly IRandom m_random;
         private readonly List<PlazaVisitor> m_visitors = new List<PlazaVisitor>();
@@ -30,13 +32,30 @@ namespace ZooTycoon.Core
         public IReadOnlyList<PlazaVisitor> Visitors => m_visitors;
         public IReadOnlyList<DecorationData> Decor => m_decor;
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
+        public override string Id => k_Id;
 
         protected override BurrowNav WombatNav => Layout.Nav;
         protected override Vector2 Entrance => Layout.DoorFloor;
 
+        protected override IEnumerable<Vector2> Doors
+        {
+            get
+            {
+                yield return Layout.DoorFloor;
+                yield return Layout.FarmDoorFloor;
+            }
+        }
+
         internal override bool IsPassage(Vector2 p)
         {
-            return Vector2.DistanceSquared(p, Layout.DoorFloor) < 1e-4f || Vector2.DistanceSquared(p, Layout.StairsFloor) < 1e-4f;
+            return Vector2.DistanceSquared(p, Layout.DoorFloor) < 1e-4f || Vector2.DistanceSquared(p, Layout.StairsFloor) < 1e-4f
+                || Vector2.DistanceSquared(p, Layout.FarmDoorFloor) < 1e-4f;
+        }
+
+        // 설계 25: 농장에서 오면 농장 문 앞에 선다
+        protected override Vector2 EntranceFrom(WombatArea from)
+        {
+            return from is FarmArea ? Layout.FarmDoorFloor : Layout.DoorFloor;
         }
         protected override BurrowShape.Result Shape => Layout.Shape;
         protected override IEnumerable<IPlaced> PlacedThings => m_decor;
@@ -48,7 +67,8 @@ namespace ZooTycoon.Core
             m_random = random;
             Bakery = bakery;
             Layout = new PlazaLayout(tables);
-            Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.DoorFloor));
+            Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.DoorFloor, BakeryArea.k_Id));
+            Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.FarmDoorFloor, FarmArea.k_Id));
             m_arrivalElapsed = m_config.ArrivalSeconds;
             m_questionRange = (float)tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);

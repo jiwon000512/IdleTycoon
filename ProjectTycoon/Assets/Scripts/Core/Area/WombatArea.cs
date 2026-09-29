@@ -11,6 +11,9 @@ namespace ZooTycoon.Core
     // v0.5: 행동은 ActionTable 행마다 행동 객체(ActionFactory). 굴은 모른다: 걷는 땅(WombatNav)과 들어오는 곳(Entrance)만 곳이 알려 준다
     public abstract partial class WombatArea
     {
+        // 웜뱃이 끼인 자리(배치가 바뀜)에서 걷는 땅을 찾는 거리(맨해튼)
+        private const float k_UnstuckDistance = 3f;
+
         private readonly Dictionary<string, InteractAction> m_actions = new Dictionary<string, InteractAction>();
         private readonly Dictionary<string, int> m_upgradeLevels = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly List<Interactable> m_inRange = new List<Interactable>();
@@ -59,11 +62,29 @@ namespace ZooTycoon.Core
             return false;
         }
 
+        // 설계 25: 곳 id(통로가 가는 곳 · BgmTable 행). 곳 클래스의 k_Id
+        public abstract string Id { get; }
+
         protected abstract BurrowNav WombatNav { get; }
         protected abstract Vector2 Entrance { get; }
 
+        // 설계 25: 편집 배치가 막으면 안 되는 문 아래 바닥들. 기본은 입구 하나(광장은 문이 둘)
+        protected virtual IEnumerable<Vector2> Doors
+        {
+            get
+            {
+                yield return Entrance;
+            }
+        }
+
         // 손님·점원이 곳을 드나드는 바닥 점(구멍·문·계단 아래). 웜뱃이 여기 서 있어도 드나드는 길은 막지 않는다
         internal abstract bool IsPassage(Vector2 p);
+
+        // 설계 25: 온 곳(from)에서 들어설 때 서는 바닥. 기본은 입구(광장은 그 곳의 문 앞)
+        protected virtual Vector2 EntranceFrom(WombatArea from)
+        {
+            return Entrance;
+        }
 
         protected WombatArea(TableSet tables, Wombat wombat, EventBus bus)
         {
@@ -155,10 +176,11 @@ namespace ZooTycoon.Core
             Bus.Publish(new Events.Upgraded(this, interactableId));
         }
 
-        // 설계 11: 다른 곳에서 들어온다. 입구 아래 바닥(통로 띠 바로 밑)에 서고, 누르고 있던 조이스틱을 놓을 때까지 걷지 않는다(굴을 등진 채. 놓기 전에 띠로 되돌아가지 않게)
-        public void Enter()
+        // 설계 11: 다른 곳에서 들어온다. 입구 아래 바닥(통로 띠 바로 밑)에 서고, 누르고 있던 조이스틱을 놓을 때까지 걷지 않는다(굴을 등진 채. 놓기 전에 띠로 되돌아가지 않게).
+        // 설계 25: 온 곳(from)의 문 앞에 선다(없으면 입구)
+        public void Enter(WombatArea from = null)
         {
-            EnterAt(Entrance);
+            EnterAt(from == null ? Entrance : EntranceFrom(from));
             Wombat.WaitRelease();
         }
 
@@ -180,6 +202,17 @@ namespace ZooTycoon.Core
 
         protected virtual void TickArea(double dt)
         {
+        }
+
+        // 새 사물이 웜뱃 발밑에 놓이면 가까운 걷는 땅으로 비켜 선다(배치를 다시 만든 뒤)
+        protected void Unstick()
+        {
+            Vector2 wombat = Wombat.Mover.Position;
+
+            if (WombatPresent && !WombatNav.IsWalkable(wombat) && WombatNav.TryNearestFree(wombat, _ => false, k_UnstuckDistance, out Vector2 free))
+            {
+                Wombat.Mover.Place(free);
+            }
         }
 
         // 조이스틱으로 걸은 뒤 대상을 다시 고른다

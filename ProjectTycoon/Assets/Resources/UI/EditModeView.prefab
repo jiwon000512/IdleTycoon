@@ -1581,3 +1581,5 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: 43047affed36862478ec26e8982b63db, type: 3}
   - Id: counter
     Sprite: {fileID: 21300000, guid: 7ca5ce5a7d8f6344eb407c4c20c9d5f4, type: 3}
+  - Id: plot
+    Sprite: {fileID: 21300000, guid: 14b6c43800a462541a581cd3861273a6, type: 3}

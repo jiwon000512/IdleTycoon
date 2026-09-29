@@ -39,14 +39,16 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 웜뱃이 통로(나가기·문)를 지났다. Mall이 다른 곳으로 옮긴다
+        // 웜뱃이 통로(나가기·문)를 지났다. Mall이 가는 곳(To, 곳 id)으로 옮긴다
         public readonly struct Passed
         {
             public readonly WombatArea From;
+            public readonly string To;
 
-            public Passed(WombatArea from)
+            public Passed(WombatArea from, string to)
             {
                 From = from;
+                To = to;
             }
         }
 
@@ -95,6 +97,17 @@ namespace ZooTycoon.Core
             public readonly ZooState Wallet;
 
             public CoinsChanged(ZooState wallet)
+            {
+                Wallet = wallet;
+            }
+        }
+
+        // 설계 25: 창고 재료가 바뀌었다(거두기 · 굽기)
+        public readonly struct ItemsChanged
+        {
+            public readonly ZooState Wallet;
+
+            public ItemsChanged(ZooState wallet)
             {
                 Wallet = wallet;
             }

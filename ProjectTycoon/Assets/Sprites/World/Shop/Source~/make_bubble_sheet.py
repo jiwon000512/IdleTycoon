@@ -1,6 +1,6 @@
 # 설계 22 이모지 말풍선 더미 시트: wait_sheet(52×36, 점 셋 3프레임)의 빈 틀 위에 글리프를 칸(2px) 단위로 찍는다.
 # 칸 순서 = BubbleTable frame: 0~2 점(그대로) · 3 ♪ · 4 ? · 5 ! · 6 ♥ · 7 !! · 8 💬(작은 말풍선 둘) · 9 🤢(설계 24: 똥 + 냄새 김). 실제 아트는 아트방(같은 틀·같은 칸 순서).
-# 깨우기 · 치우기(설계 24) 버튼 아이콘(Resources/Sprites/Actions/wake.png · clean.png, 18×18)도 같은 팔레트로 더미를 찍는다.
+# 깨우기 · 치우기(설계 24) · 심기(설계 25) 버튼 아이콘(Resources/Sprites/Actions/wake.png · clean.png · plant.png, 18×18)도 같은 팔레트로 더미를 찍는다.
 import os
 from PIL import Image
 
@@ -16,6 +16,8 @@ PINK = (222, 96, 108, 255)
 POOP = (108, 76, 52, 255)
 STINK = (132, 150, 96, 255)
 STRAW = (214, 170, 96, 255)
+LEAF = (86, 128, 64, 255)
+SOIL = (108, 76, 52, 255)
 
 GLYPHS = {
     'note': [
@@ -180,7 +182,32 @@ def make_clean_icon():
     print('clean icon')
 
 
+def make_plant_icon():
+    # 설계 25 심기: 둥근 크림 바탕 + 흙 둔덕 위 두 잎 새싹
+    im = Image.new('RGBA', (18, 18), (0, 0, 0, 0))
+    px = im.load()
+    for y in range(18):
+        for x in range(18):
+            dx, dy = x - 8.5, y - 8.5
+            d = dx * dx + dy * dy
+            if d <= 64:
+                px[x, y] = CREAM if d <= 49 else INK
+    for y in range(12, 15):
+        half = 2 + (y - 12)
+        for x in range(9 - half, 9 + half):
+            px[x, y] = SOIL
+    for y in range(7, 12):
+        px[8, y] = LEAF
+        px[9, y] = LEAF
+    for x, y in ((6, 6), (7, 6), (5, 5), (6, 5), (7, 7), (10, 5), (11, 5), (11, 4), (12, 4), (10, 6)):
+        px[x, y] = LEAF
+    os.makedirs(ACTIONS, exist_ok=True)
+    im.save(os.path.join(ACTIONS, 'plant.png'))
+    print('plant icon')
+
+
 if __name__ == '__main__':
     make_sheet()
     make_wake_icon()
     make_clean_icon()
+    make_plant_icon()
