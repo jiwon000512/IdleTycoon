@@ -56,7 +56,9 @@ def idle_frames():
 
 # 딴짓(2026-09-29): 서 있을 때 가끔 한 번 보이는 동작. 한 칸 TICK ms, 머묾은 같은 프레임을 되풀이한다.
 # 몸 높이는 바꾸지 않는다(든 빵이 따로 놀지 않게). 눈이 없는 방향(뒤)은 look이 빠지고 기울기만 남는다
+# ponytail: 머묾을 되풀이로 만들어 시트가 넓다(4096px = 39칸까지, VisitorSheetImporter 최대 크기). 더 길어지면 겹친 프레임을 합치고 프레임별 시간으로
 TICK = 80
+SHEET_MAX = 4096
 REST = ({}, 1)
 
 
@@ -65,9 +67,10 @@ def seq(steps):
 
 
 def look_around():
-    """두리번: 눈을 먼저 돌리고 몸이 따라 기운다(왼쪽 → 오른쪽)"""
-    return [(dict(look=(-1, 0)), 1), (dict(look=(-1, 0), tilt_cells=-1), 7), REST,
-            (dict(look=(1, 0)), 1), (dict(look=(1, 0), tilt_cells=1), 7), REST]
+    """두리번: 눈이 먼저 1칸 돌아가고 몸이 따라 기운다(왼쪽 → 오른쪽). 기울면 눈이 몸과 같이 1칸 가므로 그때는 눈을 제자리로
+    (둘을 겹치면 눈이 2칸씩 가서 사용자 「눈이 너무 좌우로 움직임」)"""
+    return [(dict(look=(-1, 0)), 2), (dict(tilt_cells=-1), 6), REST,
+            (dict(look=(1, 0)), 2), (dict(tilt_cells=1), 6), REST]
 
 
 def look_up():
@@ -199,6 +202,7 @@ def sheet(frames, path):
         frames = [f[:, cut:w - cut] for f in frames]
         w = frames[0].shape[1]
     h = max(f.shape[0] for f in frames)
+    assert CELL * len(frames) * 2 <= SHEET_MAX, f'{path}: 시트 폭 {CELL * len(frames) * 2}px > {SHEET_MAX}px(Unity가 줄여 칸이 잘린다)'
     out = np.zeros((h, CELL * len(frames), 4), np.uint8)
     x0 = CELL // 2 - w // 2
     for i, f in enumerate(frames):

@@ -81,7 +81,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -137,7 +137,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f8801573570fe644ca55c648fa3e97f5
+      spriteID: 5b0c09f0262b59d4e900fe392c152a9b
       internalID: -152170147323622605
       vertices: []
       indices: 
@@ -159,7 +159,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b286de8e75e595849b5b0f65c0827d10
+      spriteID: 6d8480d530d8c5c4bad0a2f1112b3e3e
       internalID: -393562714527155775
       vertices: []
       indices: 
@@ -181,7 +181,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 11b847e1fc5dca84e8e31e811267cd94
+      spriteID: fb82823bb84205546ad4088d7bb1a597
       internalID: -6146308469218388188
       vertices: []
       indices: 
@@ -203,7 +203,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2e32f9c280b98dd40a95fe7cfe384658
+      spriteID: b69b818511d3f904b8c7b84c6e733ea4
       internalID: 2686610482459372829
       vertices: []
       indices: 
