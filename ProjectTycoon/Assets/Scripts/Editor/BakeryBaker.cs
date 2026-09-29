@@ -196,7 +196,7 @@ namespace ZooTycoon.Editor
             GameObject go = new GameObject("Shelf");
             go.AddComponent<SortingGroup>();
             SpriteRenderer body = Renderer(go.transform, "Body", Load("shelf"), Vector3.zero, 0);
-            SpriteRenderer icon = Renderer(go.transform, "Icon", null, new Vector3(0f, 1.04f, 0f), 1);
+            SpriteRenderer icon = Renderer(go.transform, "Icon", null, new Vector3(0f, 0.86f, 0f), 1);
 
             ShelfView view = go.AddComponent<ShelfView>();
             Set(view, "m_body", body);

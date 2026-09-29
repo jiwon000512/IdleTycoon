@@ -255,7 +255,8 @@ def crate_shelf(tmp):
     b = a.copy()
     for y in range(20):
         b[y] = np.concatenate([a[y, :13], np.repeat(a[y, 13:14], 29, axis=0), a[y, 42:]])
-    return b
+    # 다리를 7줄 줄인다(사용자 「진열대 높이가 높다」): 앞 · 뒷다리가 같이 있는 27~29줄, 앞다리만 있는 33~36줄을 뺀다(뒷다리가 위에서 끝나는 깊이감은 남는다)
+    return np.stack([b[y] for y in range(b.shape[0]) if y not in (27, 28, 29, 33, 34, 35, 36)])
 
 
 def main():

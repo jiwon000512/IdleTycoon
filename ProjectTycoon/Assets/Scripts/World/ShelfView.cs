@@ -8,7 +8,7 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_body;
         [SerializeField] private SpriteRenderer m_icon;
         [Tooltip("빵 밑이 앉는 높이(유닛, 진열대 발끝 기준) = 빵 상자 바닥(천 위, Source~/make_shop_props.py)")]
-        [SerializeField] private float m_seat = 0.75f;
+        [SerializeField] private float m_seat = 0.575f;
 
         // 빵 그림 자리(월드). 설계 10: 웜뱃이 채울 때 빵이 날아가는 곳
         public Vector3 IconPosition => m_icon.transform.position;
