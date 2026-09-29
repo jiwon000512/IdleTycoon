@@ -1,6 +1,6 @@
 # 사업가 웜뱃 (Project Tycoon)
 
-1인 개발 모바일 방치형 경영 타이쿤. 웜뱃이 굴을 파고 가게를 연다. 굴 하나 = 업종 하나, 지금은 빵집 굴과 굴 속 광장. Unity로 만들어 Android(우선)·iOS 출시가 목표.
+1인 개발 모바일 방치형 경영 타이쿤. 웜뱃이 굴을 파고 가게를 연다. 굴 하나 = 업종 하나, 지금은 빵집 굴 · 농장 굴 · 굴 속 광장. Unity로 만들어 Android(우선)·iOS 출시가 목표.
 저장소 루트 `C:\project\Tycoon`, 원격 https://github.com/jiwon000512/IdleTycoon (main). 코드의 이름(`ZooTycoon`, `ProjectTycoon`)은 옛 제목 「동물원 타이쿤」에서 온 것으로 그대로 쓴다.
 
 ## 지금 상태
@@ -38,7 +38,7 @@ Tycoon/
    ├─ Scenes/Main.unity     단일 씬(조립 지점만)
    ├─ Scripts/  Core · Data · Game · UI · World · Editor
    ├─ Tests/EditMode/       Core·Data 유닛 테스트
-   ├─ Resources/  Data(JSON 표 16개) · UI(UI 프리팹) · Sprites · Audio · Shaders
+   ├─ Resources/  Data(JSON 표 19개) · UI(UI 프리팹) · Sprites · Audio · Shaders
    ├─ Prefabs/Bakery/       월드 프리팹(메뉴 Bake/Bakery가 굽는다)
    ├─ Sprites/  UI · World  조각 원본과 만드는 스크립트는 각 Source~/
    └─ Audio/Source~/        효과음·BGM 원본 스크립트
