@@ -39,9 +39,11 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 | 말풍선 | `bubble` + `bubble_tail` | 꼬리는 말하는 쪽으로 옮기고 오른쪽은 좌우 뒤집기. 월드도 같은 그림(복사본 `World/Shop/`) |
 | 코인 | `World/coin` | UI·월드 공용, 40×44 |
 | 코인 값 | 프리팹 `Prefabs/UI/CoinPill` · `CoinValue` | 월드 위(HUD)는 `CoinPill`: 어두운 회색 반투명 `pill` + 코인 + 금색 값. 밝은 바탕(버튼·줄) 위는 `CoinValue`: 캡슐 없이 코인 + 진갈색 값. 값 글자는 둘 다 `Cost`, 폭은 글자에 맞춰 늘어난다 |
+| 값 표식(월드) | `tag_cost` | 크림 알약 40×17칸 + 글자색 글자(파기 · 갈기 값, `DigTag` 프리팹). `make_tag_cost.py`, 월드 복사본은 `Import UI Sprites`가 `World/Shop/`에 |
 
 - 말풍선 몸통·꼬리·글자는 늘 함께 켜고 끈다.
 - 예외: 머리 위 이모지 말풍선 `World/Shop/bubble_sheet`(틀과 이모지가 한 칸)는 지금 그림을 쓴다.
+- 정보 창(창고 시안 A, 2026-09-30): 틀 이름은 `pill_tag` 이름표를 틀 윗변 왼쪽에 걸치고, 큰 아이콘은 `chip` 칸 안에, 값은 `pill` 안에, 목록 줄 사이는 그늘색 4px 구분선. 줄 아이콘은 고정 폭 칸 가운데에 둔다(이름 시작을 맞춘다).
 - 화면 전용: 협상 `nego_scene`·`nego_bar`·`nego_bar_tick`·`nego_arrow`·`nego_ribbon`, 점원 `clerk_frame`·`clerk_frame_empty`·`clerk_badge_*`·`clerk_table`·`clerk_gauge*`(채움은 일머리 · 월급 모자람 주황, 월급날 초록 `_green`).
 - 새 공용 조각이 생기면 이 표를 고치고, 옛 조각은 쓰던 곳을 모두 바꾼 뒤 PNG·생성 스크립트 줄·`ui_slices.json` 항목을 지운다.
 

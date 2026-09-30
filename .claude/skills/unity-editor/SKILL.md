@@ -31,7 +31,7 @@ description: 이 프로젝트(ProjectTycoon)의 Unity 에디터를 CLI로 다룰
 
 ## 프리팹 직접 수정
 
-`scripts/PrefabEdit.cs`를 scratchpad에 복사해 `Edit()` 안만 고쳐 `run_script`로 돌린다. 직렬화 필드 연결은 `SerializedObject`로. 프리팹 diff가 몇 줄로 끝나야 정상이다.
+`scripts/PrefabEdit.cs`를 scratchpad에 복사해 `Edit()` 안만 고쳐 `run_script`로 돌린다. 직렬화 필드 연결은 `SerializedObject`로. 프리팹 diff가 몇 줄로 끝나야 정상이다. 스크립트로 붙인 `HorizontalLayoutGroup`·`VerticalLayoutGroup`은 `childControlWidth/Height`를 직접 켠다(에디터의 `AddComponent`는 `Reset()`이 둘을 끈다. 플레이 중 목업에서는 켜져 있어 결과가 달라진다).
 
 ## 플레이 검증
 
