@@ -1,6 +1,6 @@
 # 사업가 웜뱃 (Project Tycoon)
 
-1인 개발 모바일 방치형 경영 타이쿤. 웜뱃이 굴을 파고 가게를 연다. 굴 하나 = 업종 하나, 지금은 빵집 굴 · 농장 굴 · 굴 속 광장. Unity로 만들어 Android(우선)·iOS 출시가 목표.
+1인 개발 모바일 방치형 경영 타이쿤. 웜뱃이 굴을 파고 가게를 연다. 지금은 빵집 굴 · 농장 굴 · 굴 속 광장이고, 같은 업종의 굴이 여럿일 수 있다. Unity로 만들어 Android(우선)·iOS 출시가 목표.
 저장소 루트 `C:\project\Tycoon`, 원격 https://github.com/jiwon000512/IdleTycoon (main). 코드의 이름(`ZooTycoon`, `ProjectTycoon`)은 옛 제목 「동물원 타이쿤」에서 온 것으로 그대로 쓴다.
 
 ## 지금 상태
