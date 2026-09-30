@@ -147,6 +147,7 @@ namespace ZooTycoon.Editor
             Import(k_PlazaDir + "awning.png", bottom);
             Import(k_PlazaDir + "sign.png", center);
             Import(k_PlazaDir + "stairs.png", bottom);
+            Import(k_PlazaDir + "statue.png", bottom);
 
             foreach (string path in System.IO.Directory.GetFiles(k_DecorDir, "*.png"))
             {
@@ -526,6 +527,9 @@ namespace ZooTycoon.Editor
             TextMeshPro farmSign = DoorSign(farmDoor.transform, k_SignOffsetX);
             SpriteRenderer stairs = Renderer(root.transform, "Stairs", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png"), Vector3.zero, k_ArchOrder);
             WombatView wombat = BakeWombat(root.transform, Vector3.zero);
+            // 설계 29: 웜뱃 석상(분수 자리, 발끝으로 깊이 정렬)
+            SpriteRenderer statue = Renderer(root.transform, "Statue", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "statue.png"), Vector3.zero, 0);
+            statue.spriteSortPoint = SpriteSortPoint.Pivot;
 
             PlazaView view = root.AddComponent<PlazaView>();
             Set(view, "m_burrow", burrow);
@@ -536,6 +540,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_farmSign", farmSign);
             Set(view, "m_stairs", stairs.transform);
             Set(view, "m_wombat", wombat);
+            Set(view, "m_statue", statue.transform);
             PlazaVisitorSpawner spawner = root.AddComponent<PlazaVisitorSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Plaza");

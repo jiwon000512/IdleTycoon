@@ -67,12 +67,13 @@ namespace ZooTycoon.Core
             OnChanged();
         }
 
-        // 익은 작물을 거둬 창고에 넣는다(빈 밭이 된다). 덤은 bonusChance(거름 준 밭은 × manureBonusScale)로 하나
+        // 익은 작물을 거둬 창고에 넣는다(빈 밭이 된다). 덤은 bonusChance(+ 석상 덤 능력, 거름 준 밭은 × manureBonusScale)로 하나
         public void Harvest(ZooState wallet, IRandom random)
         {
             CropTable crop = Crop;
             FarmConfigTable config = Farm.Config;
-            bool bonus = random.NextDouble() < config.BonusChance * (IsFertilized ? config.ManureBonusScale : 1d);
+            double chance = config.BonusChance + wallet.Statue.Boost(StatueTable.k_Bonus);
+            bool bonus = random.NextDouble() < chance * (IsFertilized ? config.ManureBonusScale : 1d);
             Crop = null;
             IsFertilized = false;
             wallet.AddItem(crop.Item, crop.Yield);
@@ -95,7 +96,8 @@ namespace ZooTycoon.Core
             }
 
             int before = Stage;
-            Remaining = Math.Max(0d, Remaining - dt);
+            // 설계 29: 석상 밭 자람 능력
+            Remaining = Math.Max(0d, Remaining - dt * (1d + Farm.Wombat.Worker.Wallet.Statue.Boost(StatueTable.k_Grow)));
 
             if (Stage != before)
             {

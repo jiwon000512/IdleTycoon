@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -16,7 +17,7 @@ namespace ZooTycoon.Data
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
-            PlotInteractable.k_Id,
+            PlotInteractable.k_Id, StatueInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -53,6 +54,7 @@ namespace ZooTycoon.Data
             ValidateConfig(tables, errors);
             ValidateBakeryConfig(tables, errors);
             ValidatePlazaConfig(tables, errors);
+            ValidateStatues(tables, errors);
             ValidateFarmConfig(tables, errors);
 
             return errors;
@@ -637,6 +639,57 @@ namespace ZooTycoon.Data
             }
 
             CheckRequired<PlazaConfigTable>(tables, new[] { PlazaConfigTable.k_Main }, errors);
+        }
+
+        // 설계 29: 석상 능력(코드가 거는 일곱이 다 있고, 값은 등급 셋이 0보다 크고 올라가며, 비중 합 > 0) · 광장 석상 값(재료 · 비용 · 잠금 · 등급 비중) · 석상 사물은 바닥 사각형이 있다
+        private static void ValidateStatues(TableSet tables, List<string> errors)
+        {
+            HashSet<string> strings = Ids<StringTable>(tables);
+            double weights = 0d;
+
+            foreach (StatueTable ability in tables.GetAll<StatueTable>())
+            {
+                CheckId("StatueTable", ability.Id, errors);
+                weights += ability.Weight;
+                List<double> v = ability.Values;
+
+                if (!strings.Contains(ability.Name ?? string.Empty) || !strings.Contains(ability.Format ?? string.Empty))
+                {
+                    errors.Add($"StatueTable '{ability.Id}': name · format이 StringTable에 없다.");
+                }
+
+                if (v == null || v.Count != 3 || v[0] <= 0d || v[1] < v[0] || v[2] < v[1] || ability.Weight < 0d)
+                {
+                    errors.Add($"StatueTable '{ability.Id}': values는 등급 셋이 0보다 크고 보통 ≤ 드묾 ≤ 전설, weight는 0 이상이어야 한다.");
+                }
+            }
+
+            if (weights <= 0d)
+            {
+                errors.Add("StatueTable: weight 합이 0보다 커야 한다.");
+            }
+
+            CheckRequired<StatueTable>(tables, StatueTable.Ids, errors);
+            HashSet<string> itemIds = Ids<ItemTable>(tables);
+
+            foreach (PlazaConfigTable plaza in tables.GetAll<PlazaConfigTable>())
+            {
+                List<double> grades = plaza.StatueGradeWeights;
+
+                if (!itemIds.Contains(plaza.StatueItem ?? string.Empty) || plaza.StatueRollCost < 1 || plaza.StatueLockCost < 0
+                    || plaza.StatueMaxLocks < 0 || plaza.StatueMaxLocks >= Statue.k_Lines
+                    || grades == null || grades.Count != 3 || grades.Exists(g => g < 0d) || grades.Sum() <= 0d)
+                {
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': statueItem은 ItemTable에, statueRollCost는 1 이상, statueLockCost는 0 이상, statueMaxLocks는 0 ~ {Statue.k_Lines - 1}, statueGradeWeights는 0 이상 셋(합 > 0)이어야 한다.");
+                }
+            }
+
+            InteractableTable statue = tables.GetAll<InteractableTable>().FirstOrDefault(t => t.Id == StatueInteractable.k_Id);
+
+            if (statue != null && (statue.HalfWidth <= 0d || statue.Depth <= 0d))
+            {
+                errors.Add("InteractableTable 'statue': 길을 막는 halfWidth · depth가 0보다 커야 한다.");
+            }
         }
 
         // 설계 27: 층은 시작 칸(가운데 두 열 × startRows줄, 입구 줄 포함)을 담아야 하고, 시작 밭은 시작 칸의 밭 줄 안, 값은 0보다 크고 증가율은 1 이상

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ZooTycoon.Core
 {
-    // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일 — 열기·통로·업그레이드·굴 파기, 빵집: ActionFactory.Bakery.cs, 농장: ActionFactory.Farm.cs).
+    // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일 — 열기·통로·업그레이드·굴 파기, 빵집: ActionFactory.Bakery.cs, 농장: ActionFactory.Farm.cs, 광장: ActionFactory.Plaza.cs).
     // 새 행동 = 그 sim 파일에 중첩 클래스 하나 + 여기 case 한 줄과 Ids 한 칸 + ActionTable 한 줄
     public static partial class ActionFactory
     {
@@ -12,7 +12,7 @@ namespace ZooTycoon.Core
         {
             ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter, ActionTable.k_Upgrade,
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
-            ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till,
+            ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -34,6 +34,7 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Plant: return new Plant(table);
                 case ActionTable.k_Harvest: return new Harvest(table);
                 case ActionTable.k_Till: return new Till(table);
+                case ActionTable.k_Statue: return new OpenStatue(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");
             }
         }

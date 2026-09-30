@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using GameKit.Events;
 using GameKit.Tables;
@@ -58,7 +59,11 @@ namespace ZooTycoon.Core
             return from is FarmArea ? Layout.FarmDoorFloor : Layout.DoorFloor;
         }
         protected override BurrowShape.Result Shape => Layout.Shape;
-        protected override IEnumerable<IPlaced> PlacedThings => m_decor;
+        // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt)
+        protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue);
+        public StatueInteractable Statue { get; }
+        // 손님이 계단으로 오는 간격(석상 손님 능력이면 짧아진다)
+        private double ArrivalSeconds => m_config.ArrivalSeconds / (1d + Wombat.Worker.Wallet.Statue.Boost(StatueTable.k_Visitors));
 
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다. 시작 장식은 PlazaDecorTable
         public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
@@ -69,6 +74,8 @@ namespace ZooTycoon.Core
             Layout = new PlazaLayout(tables);
             Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.DoorFloor, BakeryArea.k_Id));
             Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.FarmDoorFloor, FarmArea.k_Id));
+            Statue = new StatueInteractable(tables.Get<InteractableTable>(StatueInteractable.k_Id), this, new Vector2((float)m_config.StatueX, (float)m_config.StatueY), random);
+            Placed.Add(Statue);
             m_arrivalElapsed = m_config.ArrivalSeconds;
             m_questionRange = (float)tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
@@ -94,7 +101,7 @@ namespace ZooTycoon.Core
                 m_decor.Add(new DecorationData(tables.Get<DecorationTable>(placed.Decoration), new Vector2((float)placed.X, (float)placed.Y)));
             }
 
-            Layout.Rebuild(m_decor);
+            Layout.Rebuild(PlacedThings);
         }
 
         // 들를 곳에서 머무는 초 · ♥를 띄울지
@@ -252,7 +259,7 @@ namespace ZooTycoon.Core
         // 들를 곳 번호가 바뀌므로 손님은 들르던 곳을 놓고 다음으로, 걷던 손님은 새 땅에서 길을 다시 찾는다
         protected override void OnPlacementChanged()
         {
-            Layout.Rebuild(m_decor);
+            Layout.Rebuild(PlacedThings);
             m_takenSpots.Clear();
 
             foreach (PlazaVisitor visitor in m_visitors)
@@ -265,9 +272,9 @@ namespace ZooTycoon.Core
 
         private void TickArrival(double dt)
         {
-            m_arrivalElapsed = Math.Min(m_arrivalElapsed + dt, m_config.ArrivalSeconds);
+            m_arrivalElapsed = Math.Min(m_arrivalElapsed + dt, ArrivalSeconds);
 
-            if (m_arrivalElapsed < m_config.ArrivalSeconds || m_visitors.Count >= m_config.MaxVisitors)
+            if (m_arrivalElapsed < ArrivalSeconds || m_visitors.Count >= m_config.MaxVisitors)
             {
                 return;
             }

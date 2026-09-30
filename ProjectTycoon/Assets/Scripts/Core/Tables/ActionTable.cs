@@ -33,6 +33,8 @@ namespace ZooTycoon.Core
         public const string k_Harvest = "harvest";
         // 설계 27: 판 흙 칸 갈기(버튼)
         public const string k_Till = "till";
+        // 설계 29: 광장 석상 팝업 열기(버튼)
+        public const string k_Statue = "statue";
 
         public ActionMode Mode { get; set; }
         // 버튼 아이콘(Resources/ 기준, 확장자 없음). manual만, 나머지는 null

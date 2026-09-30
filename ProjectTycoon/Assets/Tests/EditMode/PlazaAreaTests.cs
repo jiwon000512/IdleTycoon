@@ -147,16 +147,17 @@ namespace ZooTycoon.Tests
         public void Visitor_VisitsSpotsThenEntersShop_WithSameLook()
         {
             Create();
-            PlazaVisitor first = null;
-            m_bus.Subscribe<Events.PlazaVisitorArrived>(e => first ??= e.Visitor);
+            // 빵집 문으로 먼저 들어간 광장 손님(들를 곳 자리에 따라 첫 손님이 아닐 수 있다 — 설계 29 뒤 첫 손님은 먼 구석부터 들른다)
+            PlazaVisitor entered = null;
+            m_bus.Subscribe<Events.PlazaVisitorLeft>(e => entered ??= e.Visitor);
 
             double time = RunUntil(() => m_shop.Visitors.Count > 0);
 
-            Assert.That(first, Is.Not.Null);
-            Assert.That(m_shop.Visitors[0].Look, Is.SameAs(first.Look));
+            Assert.That(entered, Is.Not.Null);
+            Assert.That(m_shop.Visitors[0].Look, Is.SameAs(entered.Look));
             // 두 곳에서 3.25초씩 머문 뒤에야 들어간다
             Assert.That(time, Is.GreaterThan(2 * 3.25));
-            Assert.That(m_plaza.Visitors, Has.No.Member(first));
+            Assert.That(m_plaza.Visitors, Has.No.Member(entered));
         }
 
         [Test]

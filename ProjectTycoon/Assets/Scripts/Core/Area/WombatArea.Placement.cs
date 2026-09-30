@@ -102,14 +102,14 @@ namespace ZooTycoon.Core
             return CountOf(kindId) >= KindOf(kindId).Price.Max;
         }
 
-        // 편집에서 집기: 그 점 위에 그려진 사물(뒤에 있는 것 = 위쪽부터 그려지므로 마지막 것)
+        // 편집에서 집기: 그 점 위에 그려진 사물(뒤에 있는 것 = 위쪽부터 그려지므로 마지막 것). 값이 없는 종류(석상)는 고정이라 집지 않는다
         public IPlaced ThingAt(Vector2 p)
         {
             IPlaced found = null;
 
             foreach (IPlaced thing in PlacedThings)
             {
-                if (Placement.ContainsPick(thing, p) && (found == null || thing.Position.Y <= found.Position.Y))
+                if (thing.Kind.Price != null && Placement.ContainsPick(thing, p) && (found == null || thing.Position.Y <= found.Position.Y))
                 {
                     found = thing;
                 }

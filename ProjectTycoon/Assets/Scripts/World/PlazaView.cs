@@ -15,6 +15,17 @@ namespace ZooTycoon.World
     {
         private const string k_SignKey = "sign_bakery";
         private const string k_FarmSignKey = "sign_farm";
+        // 설계 29: 석상 굴리기 반짝 알갱이(거두기 덤과 같은 두 빛깔)
+        private static readonly Color k_SparkLight = new Color32(0xFB, 0xF4, 0xE6, 255);
+        private static readonly Color k_SparkGold = new Color32(0xF0, 0xD8, 0x90, 255);
+        private const float k_StatueSparkHeight = 1.3f;
+        private const int k_SparkCount = 8;
+        private const float k_SparkSpread = 1.6f;
+        private const float k_SparkLift = 3.2f;
+        private const float k_SparkGravity = 10f;
+        private const float k_SparkSeconds = 0.5f;
+        private const int k_SparkCells = 5;
+        private const int k_SparkOrder = 1000;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -31,6 +42,8 @@ namespace ZooTycoon.World
         [Tooltip("지상 계단. 원점 = 띠 밑변 가운데")]
         [SerializeField] private Transform m_stairs;
         [SerializeField] private WombatView m_wombat;
+        [Tooltip("설계 29: 웜뱃 석상(자리는 Core 석상 기준점)")]
+        [SerializeField] private Transform m_statue;
 
         private readonly Dictionary<DecorationData, GameObject> m_decor = new Dictionary<DecorationData, GameObject>();
         private PlazaArea m_plaza;
@@ -39,6 +52,7 @@ namespace ZooTycoon.World
         private bool m_editing;
         private IPlaced m_held;
         private IDisposable[] m_subscriptions;
+        private Sprite m_square;
 
         public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombat.transform;
@@ -71,6 +85,7 @@ namespace ZooTycoon.World
             m_farmDoor.localPosition = new Vector3(layout.FarmDoorFloor.X, wallBottom, 0f);
             m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);
+            m_statue.localPosition = new Vector3(plaza.Statue.Position.X, plaza.Statue.Position.Y, 0f);
             Build();
 
             m_wombat.Bind(plaza, transform, frames);
@@ -78,6 +93,7 @@ namespace ZooTycoon.World
             {
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
+                bus.Subscribe<Events.StatueChanged>(Bus_StatueChanged),
             };
         }
 
@@ -207,6 +223,26 @@ namespace ZooTycoon.World
             {
                 StartCoroutine(Fx.Bounce(passage.To == FarmArea.k_Id ? m_farmDoor : m_door));
             }
+
+            if (e.Area == m_plaza && m_plaza.Target is StatueInteractable)
+            {
+                StartCoroutine(Fx.Bounce(m_statue));
+            }
+        }
+
+        // 설계 29: 굴리면 석상이 톡 튀고 머리 위에서 반짝 알갱이가 튄다
+        private void Bus_StatueChanged(Events.StatueChanged e)
+        {
+            if (!e.Rolled)
+            {
+                return;
+            }
+
+            StartCoroutine(Fx.Bounce(m_statue));
+            m_square = m_square != null ? m_square : Fx.NewSquare();
+            Vector3 at = m_statue.position + Vector3.up * k_StatueSparkHeight;
+            StartCoroutine(Fx.Burst(transform, m_square, at, k_SparkCount, k_SparkSpread, k_SparkLift, k_SparkGravity, k_SparkSeconds, k_SparkCells, k_SparkLight, k_SparkOrder));
+            StartCoroutine(Fx.Burst(transform, m_square, at, k_SparkCount, k_SparkSpread, k_SparkLift, k_SparkGravity, k_SparkSeconds, k_SparkCells, k_SparkGold, k_SparkOrder));
         }
     }
 }

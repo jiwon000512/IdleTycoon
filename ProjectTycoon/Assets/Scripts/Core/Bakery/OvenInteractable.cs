@@ -62,7 +62,7 @@ namespace ZooTycoon.Core
             }
 
             double before = Math.Ceiling(Remaining);
-            double speed = UpgradeValue(UpgradeLevel);
+            double speed = UpgradeValue(UpgradeLevel) * (1d + Bakery.Wallet.Statue.Boost(StatueTable.k_Bake));
             Remaining = Math.Max(0d, Remaining - dt * speed);
 
             if (Remaining == 0d)

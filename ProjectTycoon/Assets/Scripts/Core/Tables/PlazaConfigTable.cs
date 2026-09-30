@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GameKit.Tables;
 
 namespace ZooTycoon.Core
@@ -21,5 +22,13 @@ namespace ZooTycoon.Core
         // 가게 없이 구경만 하고 떠나는 비율, 들를 곳에서 ♥를 띄우는 비율
         public double BrowseChance { get; set; }
         public double EmoteChance { get; set; }
+        // 설계 29: 웜뱃 석상 자리(분수 자리, 밑변 가운데) · 바치는 재료 · 굴리기 값(rollCost + 잠근 줄마다 lockCost) · 최대 잠금 · 등급 비중 [보통, 드묾, 전설]
+        public double StatueX { get; set; }
+        public double StatueY { get; set; }
+        public string StatueItem { get; set; }
+        public int StatueRollCost { get; set; }
+        public int StatueLockCost { get; set; }
+        public int StatueMaxLocks { get; set; }
+        public List<double> StatueGradeWeights { get; set; }
     }
 }

@@ -48,12 +48,12 @@ namespace ZooTycoon.Core
             Rebuild(new List<DecorationData>());
         }
 
-        // 장식 바닥을 막고, 들를 곳은 격자에 붙이되 걷는 땅이 아니면 뺀다(장식이 벽에 붙어 있을 때)
-        public void Rebuild(IReadOnlyList<DecorationData> decor)
+        // 장식 · 석상 바닥을 막고, 들를 곳은 격자에 붙이되 걷는 땅이 아니면 뺀다(장식이 벽에 붙어 있을 때)
+        public void Rebuild(IEnumerable<IPlaced> decor)
         {
             List<NavRect> blocked = new List<NavRect>();
 
-            foreach (DecorationData placed in decor)
+            foreach (IPlaced placed in decor)
             {
                 blocked.Add(Placement.Rect(placed));
             }
@@ -61,7 +61,7 @@ namespace ZooTycoon.Core
             Nav = new BurrowNav(Shape, blocked);
             m_spots.Clear();
 
-            foreach (DecorationData placed in decor)
+            foreach (IPlaced placed in decor)
             {
                 foreach (SpotOffset spot in placed.Kind.Spots)
                 {

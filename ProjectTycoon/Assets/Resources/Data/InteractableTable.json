@@ -1,6 +1,6 @@
 {
   "table": "InteractableTable",
-  "version": 11,
+  "version": 12,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
     "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상. 통로(exit·door)는 바닥선에서 0.25 이상 올라간 띠(코드 PassageInteractable.k_Enter) 안에서 가로 거리만 잰다 — 거리만으로 넘어간다(2026-09-26).",
@@ -15,7 +15,8 @@
     "version 8 (2026-09-26, 설계 22): clerk — 딴짓 중인 점원(기준점 = 점원 위치, range 1.0, 웜뱃이 range 안이면 점원이 「?」를 띄우고 웜뱃을 본다). 딴짓이 끝나면 사물 목록에서 빠진다. 놓는 사물이 아니라 price·halfWidth 없음.",
     "version 9 (2026-09-29, 설계 24 웜뱃 똥): poop — 웜뱃이 떨군 똥(기준점 = 똥 자리, range 0.8). 웜뱃이 range 안이면 버튼이 치우기(clean)가 되고, 누르면 range 안 똥을 전부 치운다. 빵집이 목록을 맞추는 사물이라 price·halfWidth 없음.",
     "version 10 (2026-09-29, 설계 25 밀 농사): plot — 농장 밭(기준점 = 밑변 가운데, 거리는 밭 바닥 사각형까지). actions: plant(빈 밭이면 버튼으로 심기) · harvest(익으면 range 안에서 저절로 거둬 창고로). 편집 모드 농장 상점에서 산다(price, 시작 2칸은 FarmConfigTable startPlots). worker 자리(앞 0.4)는 밭이 입구에서 닿는지 보는 데만 쓴다. 빵집·농장은 파는 종류를 코드(Create와 같은 셋)로 고른다.",
-    "version 11 (2026-09-30, 설계 27 칸 밭): plot — 판 칸(입구 줄 제외)마다 하나인 밭 칸(기준점 = 칸 밑변 가운데, 거리는 칸 사각형까지라 칸에 서면 대상, range 0.3). actions: till(흙 칸이면 버튼으로 갈기, 값 FarmConfigTable tillCost) · plant(밭이고 비었으면 버튼으로 심기) · harvest(익으면 밟으면 거둬 창고로). 놓는 사물이 아니라 halfWidth·depth·spots·price 삭제(편집 모드 밭 카드 없음, 시작 밭은 FarmConfigTable startFields). dig는 빵집·농장 공용(DigSet)."
+    "version 11 (2026-09-30, 설계 27 칸 밭): plot — 판 칸(입구 줄 제외)마다 하나인 밭 칸(기준점 = 칸 밑변 가운데, 거리는 칸 사각형까지라 칸에 서면 대상, range 0.3). actions: till(흙 칸이면 버튼으로 갈기, 값 FarmConfigTable tillCost) · plant(밭이고 비었으면 버튼으로 심기) · harvest(익으면 밟으면 거둬 창고로). 놓는 사물이 아니라 halfWidth·depth·spots·price 삭제(편집 모드 밭 카드 없음, 시작 밭은 FarmConfigTable startFields). dig는 빵집·농장 공용(DigSet).",
+    "version 12 (2026-09-30, 설계 29 웜뱃 석상): statue — 광장 분수 자리에 고정된 석상(기준점 밑변 가운데, range 1.2, 행동 statue = 팝업). 값(price)이 없어 편집 모드에서 집지 않고, 바닥 사각형은 길을 막으며 spots는 광장 손님이 들르는 자리."
   ],
   "rows": [
     {
@@ -195,6 +196,22 @@
         "harvest"
       ],
       "upgrade": null
+    },
+    {
+      "id": "statue",
+      "range": 1.2,
+      "actions": [
+        "statue"
+      ],
+      "upgrade": null,
+      "halfWidth": 0.7,
+      "depth": 0.5,
+      "spots": [
+        { "dx": -0.5, "dy": -0.4, "face": "up" },
+        { "dx": 0.5, "dy": -0.4, "face": "up" },
+        { "dx": -1.05, "dy": 0.25, "face": "right" },
+        { "dx": 1.05, "dy": 0.25, "face": "left" }
+      ]
     }
   ]
 }

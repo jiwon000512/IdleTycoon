@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 29,
+  "version": 30,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -32,7 +32,8 @@
     "version 26 (2026-09-29, 설계 25 밀 농사): 광장 농장 문 간판 sign_farm, 상점 카드 kind_plot, 상단 바 재료 알약 topbar_item, 굽기 칩 레시피 개수 chip_ingredient, 거두기 팝업 harvest_popup 추가.",
     "version 27 (2026-09-29, 설계 26 창고 화면): 상단 바 재료 알약을 걷어 topbar_item 삭제. 창고 inventory_title · inventory_count · inventory_source(획득처) · inventory_uses(사용처) · inventory_none · inventory_farm · inventory_seconds · inventory_yield · inventory_have 추가.",
     "version 28 (2026-09-30, 설계 27 칸 밭): 갈기 값 표식 tag_till, 농장 편집 모드 안내 edit_dig_hint 추가. 편집 모드 밭 카드가 없어져 kind_plot 삭제.",
-    "version 29 (2026-09-30, 설계 28 똥 거름 · 덤): 창고 정보 창의 획득처 · 사용처 글(ItemTable source · use가 가리킨다) inventory_source_clean · inventory_use_plant · inventory_source_harvest · inventory_use_statue 추가."
+    "version 29 (2026-09-30, 설계 28 똥 거름 · 덤): 창고 정보 창의 획득처 · 사용처 글(ItemTable source · use가 가리킨다) inventory_source_clean · inventory_use_plant · inventory_source_harvest · inventory_use_statue 추가.",
+    "version 30 (2026-09-30, 설계 29 웜뱃 석상): 석상 팝업 statue_*(제목 · 굴리기 · 잠금 · 빈 줄 · 등급 셋 · 보유 · 안내 · 모자람), 능력 이름 일곱 · 줄 형식 둘(StatueTable name · format이 가리킨다) 추가. inventory_use_statue 글에서 「(준비 중)」을 뺐다."
   ],
   "rows": [
     {
@@ -465,7 +466,87 @@
     },
     {
       "id": "inventory_use_statue",
-      "ko": "광장 석상(준비 중)"
+      "ko": "광장 석상"
+    },
+    {
+      "id": "statue_title",
+      "ko": "웜뱃 석상"
+    },
+    {
+      "id": "statue_roll",
+      "ko": "굴리기"
+    },
+    {
+      "id": "statue_lock",
+      "ko": "잠금"
+    },
+    {
+      "id": "statue_locked",
+      "ko": "잠김"
+    },
+    {
+      "id": "statue_empty",
+      "ko": "빈 줄"
+    },
+    {
+      "id": "statue_grade_common",
+      "ko": "보통"
+    },
+    {
+      "id": "statue_grade_rare",
+      "ko": "드묾"
+    },
+    {
+      "id": "statue_grade_legend",
+      "ko": "전설"
+    },
+    {
+      "id": "statue_have",
+      "ko": "반짝돌 {0}개"
+    },
+    {
+      "id": "statue_hint",
+      "ko": "잠근 줄은 두고 나머지만 다시 굴린다"
+    },
+    {
+      "id": "statue_short",
+      "ko": "반짝돌이 모자라다"
+    },
+    {
+      "id": "statue_bake",
+      "ko": "굽기 속도"
+    },
+    {
+      "id": "statue_checkout",
+      "ko": "계산 속도"
+    },
+    {
+      "id": "statue_price",
+      "ko": "빵 값"
+    },
+    {
+      "id": "statue_visitors",
+      "ko": "손님"
+    },
+    {
+      "id": "statue_walk",
+      "ko": "웜뱃 걸음"
+    },
+    {
+      "id": "statue_grow",
+      "ko": "밭 자람"
+    },
+    {
+      "id": "statue_bonus",
+      "ko": "덤 확률"
+    },
+    {
+      "id": "statue_format_percent",
+      "ko": "{0} +{1}%"
+    },
+    {
+      "id": "statue_format_point",
+      "ko": "{0} +{1}%p"
     }
   ]
 }
