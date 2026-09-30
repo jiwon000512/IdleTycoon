@@ -199,18 +199,18 @@
     },
     {
       "id": "statue",
-      "range": 1.2,
+      "range": 1.5,
       "actions": [
         "statue"
       ],
       "upgrade": null,
-      "halfWidth": 0.7,
-      "depth": 0.5,
+      "halfWidth": 1.05,
+      "depth": 0.75,
       "spots": [
-        { "dx": -0.5, "dy": -0.4, "face": "up" },
-        { "dx": 0.5, "dy": -0.4, "face": "up" },
-        { "dx": -1.05, "dy": 0.25, "face": "right" },
-        { "dx": 1.05, "dy": 0.25, "face": "left" }
+        { "dx": -0.75, "dy": -0.4, "face": "up" },
+        { "dx": 0.75, "dy": -0.4, "face": "up" },
+        { "dx": -1.75, "dy": 0.4, "face": "right" },
+        { "dx": 1.75, "dy": 0.4, "face": "left" }
       ]
     }
   ]

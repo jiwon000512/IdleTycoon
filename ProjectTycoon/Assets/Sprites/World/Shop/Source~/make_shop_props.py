@@ -5,7 +5,8 @@
 #   진열대: 받침대 위 나무 빵 상자 하나(사용자 선택 3-1). Codex(shop_raw/shelf_crate_raw.png, 프롬프트 shelf_prompt_crate.txt)에
 #     시점 블록아웃(shop_raw/view_blockout.png, make_view_blockout.py)을 참조로 줬다. Codex는 말로만 평행 투영을 시키면 판을 사다리꼴로 그렸다
 #   계산대 통나무 · 흙 단지: 칸 무늬로 직접 그린다(Codex는 통나무 끝에 나이테 면을 그려 「아래에서 올려다본 듯」). 윗면 깊이 = TOP 줄
-# 순서(Codex 그림): 시트에서 왼쪽부터 자름 → make_pixel.py(한 칸 2px, 가로 칸 수 = 옛 그림) → 색 줄이기(가중 k-평균) → 외곽선 (48,24,24) → 외톨이 칸 정리
+# 순서(Codex 그림): 시트에서 왼쪽부터 자름 → 오븐 둘 · 식빵은 원본 격자 그대로(snap_codex, 2026-09-30 규칙) · 외곽선 (48,24,24).
+#   진열대 상자 · 계산대 돌 받침은 옛 순서(make_pixel.py 가로 칸 수 고정 → 색 줄이기(가중 k-평균) → 외곽선 → 외톨이 칸 정리). 진열대는 사용자 요청으로 손본 모양
 # 출력: ../oven.png · ../oven_2.png · ../shelf.png · ../counter.png, Resources/Sprites/Shop/Breads/b01.png. 다음: make_oven_fx.py(불빛 · 연기)
 import os
 import subprocess
@@ -19,6 +20,8 @@ SHOP = os.path.join(HERE, '..')
 BREAD = os.path.join(HERE, '..', '..', '..', '..', 'Resources', 'Sprites', 'Shop', 'Breads', 'b01.png')
 MAKE_PIXEL = os.path.join(HERE, '..', '..', 'Source~', 'make_pixel.py')
 OUTLINE = (48, 24, 24)   # 가게 소품 공통 외곽선(옛 소품 · 입구 · 식빵과 같다)
+sys.path.insert(0, os.path.join(HERE, '..', '..', 'Source~'))
+import snap_codex  # noqa: E402
 TOP = 6                  # 계산대 통나무 윗면 줄 수(내려다보는 각도). 크면 더 위에서 본다
 
 
@@ -154,6 +157,16 @@ def mend_outline(a):
     return b
 
 
+def faithful_prop(crop, tmp):
+    # 원본 격자 그대로(World/Source~/snap_codex.py, 2026-09-30 규칙). 외곽선은 가게 소품 색으로(오븐 불빛이 이 색으로 아궁이를 찾는다)
+    raw = os.path.join(tmp, 'raw.png')
+    crop.save(raw)
+    a, _ = snap_codex.snap(raw, 12)
+    line = (a[..., 3] > 0) & (a[..., :3] == snap_codex.LINE).all(-1)
+    a[line, :3] = OUTLINE
+    return a
+
+
 def codex_prop(crop, cells, k, tmp):
     raw, px = os.path.join(tmp, 'raw.png'), os.path.join(tmp, 'px.png')
     crop.save(raw)
@@ -262,13 +275,13 @@ def crate_shelf(tmp):
 def main():
     with tempfile.TemporaryDirectory() as tmp:
         c = cut(Image.open(os.path.join(HERE, 'shop_raw', 'props_c_sheet.png')), 4)
-        for (name, cells, k), crop in zip((('oven', 60, 8), ('oven_2', 60, 9)), c[:2]):
-            a = codex_prop(crop, cells, k, tmp)
+        for name, crop in zip(('oven', 'oven_2'), c[:2]):
+            a = faithful_prop(crop, tmp)
             save_cells(a, os.path.join(SHOP, name + '.png'))
             print(name, a.shape[1], 'x', a.shape[0])
         c45 = cut(Image.open(os.path.join(HERE, 'shop_raw', 'props_c45_sheet.png')), 5)
         codex_counter = codex_prop(c45[3], 84, 9, tmp)
-        loaf = codex_prop(c45[4], 20, 8, tmp)          # 식빵 가로 20칸(26칸은 「너무 크다」, 사용자)
+        loaf = faithful_prop(c45[4], tmp)               # 식빵: 원본 격자 그대로 20칸(26칸은 「너무 크다」, 사용자)
         shelf = crate_shelf(tmp)
     # Codex 계산대에서는 돌 받침(밑 8줄)만 가져온다
     stones = codex_counter[-8:, :, :].copy()

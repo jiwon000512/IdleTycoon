@@ -22,6 +22,11 @@ SHEETS = {
     'b': {'tl': (DECOR + 'fountain_tile', 76, 8), 'tr': (DECOR + 'bench_iron', 64, 8), 'bl': (DECOR + 'plant_box', 40, 10), 'br': (DECOR + 'lamp_globe', 16, 8)},
     'f': {'top': (PLAZA + 'awning', 68, 8), 'bl': (PLAZA + 'sign', 40, 8), 'br': (PLAZA + 'stairs', 48, 8)},
 }
+# 원본 격자 그대로 옮기는 것(World/Source~/snap_codex.py, 2026-09-30 규칙). 크기는 원본 칸 수 그대로(분수 · 벤치 · 화분은 옛 크기보다 20~25% 작고,
+# DecorationTable halfWidth · depth · spots를 그림에 맞춘다). 등 둘은 원본이 웜뱃보다 낮아(가로등으로 안 읽힘) 옛 방식(칸 수 고정)으로 둔다. 차양 · 계단도 옛 방식
+FAITHFUL = {'plant_box', 'sign', 'fountain_stone', 'fountain_tile', 'bench_log', 'bench_iron', 'plant_pot'}
+sys.path.insert(0, os.path.join(HERE, '..', '..', 'Source~'))
+import snap_codex  # noqa: E402
 RING = {'fountain_stone': (108, 180, 216), 'fountain_tile': (156, 204, 224)}
 
 
@@ -139,10 +144,16 @@ for key, items in SHEETS.items():
     for box in blobs(im):
         q = quadrant(box, im.size, key == 'f')
         rel, width, colors = items[q]
-        a = pixel(im, box, width)
-        if rel.endswith('awning'):
-            a = trim_board(a)
-        a = reduce_close(a, colors)
+        if os.path.basename(rel) in FAITHFUL:
+            pad = (max(box[0] - 6, 0), max(box[1] - 6, 0), box[2] + 6, box[3] + 6)
+            src = os.path.join(TMP, 'src.png')
+            im.crop(pad).save(src)
+            a, _ = snap_codex.snap(src, 12)
+        else:
+            a = pixel(im, box, width)
+            if rel.endswith('awning'):
+                a = trim_board(a)
+            a = reduce_close(a, colors)
         name = os.path.basename(rel)
         if name in RING:
             frames = ripple_frames(a, RING[name])

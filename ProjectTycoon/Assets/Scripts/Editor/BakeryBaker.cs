@@ -278,11 +278,11 @@ namespace ZooTycoon.Editor
             fire.enabled = false;
             SpriteAnimator fireAnimator = fire.gameObject.AddComponent<SpriteAnimator>();
             Set(fireAnimator, "m_renderer", fire);
-            SpriteRenderer smoke = Renderer(go.transform, "Smoke", null, new Vector3(0f, 1.25f, 0f), 2);
+            SpriteRenderer smoke = Renderer(go.transform, "Smoke", null, new Vector3(0f, 1.425f, 0f), 2);
             smoke.enabled = false;
             SpriteAnimator smokeAnimator = smoke.gameObject.AddComponent<SpriteAnimator>();
             Set(smokeAnimator, "m_renderer", smoke);
-            // 굽기 타이머(20칸 원): 오븐 윗변(1.3) 위 3칸 띄움
+            // 굽기 타이머(20칸 원): 흙 오븐 굴뚝(1.425) 위 0.37(2026-09-30 원본 격자 오븐, 아트방)
             Sprite[] timerFrames = new Sprite[k_TimerFrames];
 
             for (int i = 0; i < k_TimerFrames; i++)
@@ -290,13 +290,13 @@ namespace ZooTycoon.Editor
                 timerFrames[i] = Load(TimerFrame(i));
             }
 
-            SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, 1.62f, 0f), 3);
+            SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, 1.795f, 0f), 3);
             // 설계 10: 빈 오븐 화살표·다 구움 원판은 타이머 자리, 개수 글자는 원판 오른쪽 아래
-            SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, 1.62f, 0f), 3);
+            SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, 1.795f, 0f), 3);
             emptyMark.enabled = false;
-            SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", Load("oven_ready_mark"), new Vector3(0f, 1.62f, 0f), 3);
+            SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", Load("oven_ready_mark"), new Vector3(0f, 1.795f, 0f), 3);
             readyMark.enabled = false;
-            TextMeshPro ready = WorldText(go.transform, "Ready", new Vector3(0.4f, 1.42f, 0f), 4);
+            TextMeshPro ready = WorldText(go.transform, "Ready", new Vector3(0.4f, 1.595f, 0f), 4);
 
             OvenView view = go.AddComponent<OvenView>();
             Set(view, "m_body", body);
@@ -535,7 +535,7 @@ namespace ZooTycoon.Editor
             TextMeshPro farmSign = DoorSign(farmDoor.transform, k_SignOffsetX);
             SpriteRenderer stairs = Renderer(root.transform, "Stairs", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png"), Vector3.zero, k_ArchOrder);
             WombatView wombat = BakeWombat(root.transform, Vector3.zero);
-            // 설계 29: 웜뱃 석상(분수 자리, 발끝으로 깊이 정렬)
+            // 설계 29: 웜뱃 석상(분수 자리, 발끝으로 깊이 정렬). 크기는 그림 칸 수로(2026-09-30 처음의 1.5배, 스케일 1)
             SpriteRenderer statue = Renderer(root.transform, "Statue", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "statue.png"), Vector3.zero, 0);
             statue.spriteSortPoint = SpriteSortPoint.Pivot;
 

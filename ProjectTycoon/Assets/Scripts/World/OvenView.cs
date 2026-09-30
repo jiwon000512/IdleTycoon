@@ -31,8 +31,8 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_graySmoke;
         [SerializeField] private Sprite[] m_whiteSmoke;
         [Tooltip("굴뚝 입구 높이(유닛): 흙 오븐, 벽돌 오븐")]
-        [SerializeField] private float m_baseChimney = 1.25f;
-        [SerializeField] private float m_upgradedChimney = 1.425f;
+        [SerializeField] private float m_baseChimney = 1.425f;
+        [SerializeField] private float m_upgradedChimney = 1.70f;
         [Tooltip("불빛·연기 초당 프레임")]
         [SerializeField] private float m_fxFrameRate = 8f;
 

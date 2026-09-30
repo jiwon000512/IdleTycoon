@@ -34,10 +34,10 @@ def outline_cell(dark):
     return float(smooth.argmax())
 
 
-def grid(edges, around):
-    # 대략의 칸 크기 ±15% 안에서, 칸 경계(밝기가 크게 바뀌는 곳)를 가장 잘 짚는 (주기, 시작점)
+def grid(edges, around, span=0.15):
+    # 대략의 칸 크기 ±span 안에서, 칸 경계(밝기가 크게 바뀌는 곳)를 가장 잘 짚는 (주기, 시작점)
     top = (0.0, around, 0.0)
-    for period in np.arange(around * 0.85, around * 1.15, 0.02):
+    for period in np.arange(around * (1 - span), around * (1 + span), 0.02):
         for phase in np.arange(0, period, 0.25):
             idx = np.round(np.arange(phase, len(edges), period)).astype(int)
             score = edges[idx[idx < len(edges)]].mean()
@@ -60,19 +60,25 @@ def merge_colors(a, mask, limit):
         a[mask & (a[..., :3] == cols[src]).all(2), :3] = cols[dst]
 
 
-def snap(path, max_colors=12, cell=None, fixed=None):
+def snap(path, max_colors=12, cell=None, fixed=None, square=False):
+    # square: 원본 픽셀이 정사각형인 그림(한 장에 큰 물체 하나). 세로 주기를 가로 주기 ±2% 안에서만 찾아, 가로 · 세로가 따로 잡혀 찌그러지는 것을 막는다
     a = np.asarray(Image.open(path).convert('RGB')).astype(float)
     h, w = a.shape[:2]
     g = a.mean(2)
     dark = a.sum(2) < 250
     # cell: 대략의 칸 크기를 직접 줄 때(외곽선이 얇게 그려져 최빈값이 틀린 원본, 또는 이미 고른 크기를 지킬 때)
-    cx, cy = (cell, cell) if isinstance(cell, (int, float)) else (cell or (None, None))
+    if isinstance(cell, (int, float)):
+        cell = (cell,)
+    cx, cy = (cell * 2)[:2] if cell else (None, None)
     if fixed:
         # 이미 고른 그림을 그대로 다시 만들 때: (가로 주기, 가로 시작, 세로 주기, 세로 시작)
         px_, phx, py_, phy = fixed
     else:
         px_, phx = grid(np.abs(np.diff(g, axis=1)).sum(0), cx or outline_cell(dark))
-        py_, phy = grid(np.abs(np.diff(g, axis=0)).sum(1), cy or outline_cell(dark.T))
+        if square:
+            py_, phy = grid(np.abs(np.diff(g, axis=0)).sum(1), px_, 0.02)
+        else:
+            py_, phy = grid(np.abs(np.diff(g, axis=0)).sum(1), cy or outline_cell(dark.T))
     xs, ys = np.arange(phx + 1, w, px_), np.arange(phy + 1, h, py_)
     cw, ch = len(xs) - 1, len(ys) - 1
     cells = np.zeros((ch, cw, 3))
