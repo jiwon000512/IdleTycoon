@@ -25,5 +25,7 @@ namespace ZooTycoon.Core
         public int PoopMax { get; set; }
         public double PoopGap { get; set; }
         public double PoopAvoidRadius { get; set; }
+        // 설계 28: 치우기 버튼으로 치운 똥 하나가 되는 재료(ItemTable id)
+        public string PoopItem { get; set; }
     }
 }

@@ -35,6 +35,8 @@ namespace ZooTycoon.Core
         public const string k_Harvest = "harvest";
         // 웜뱃 걸음(걷기 프레임 1 · 5)
         public const string k_Step = "step";
+        // 설계 28: 거둘 때 덤이 나옴
+        public const string k_Bonus = "bonus";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -65,6 +67,7 @@ namespace ZooTycoon.Core
             k_Plant,
             k_Harvest,
             k_Step,
+            k_Bonus,
         };
 
         // Resources/ 기준, 확장자 없음

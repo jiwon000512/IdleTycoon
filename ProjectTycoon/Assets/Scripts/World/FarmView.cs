@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using GameKit.Events;
@@ -30,6 +31,12 @@ namespace ZooTycoon.World
         private const float k_GrainSeconds = 0.5f;
         private const int k_GrainCells = 5;
         private const int k_GrainOrder = 1000;
+        // 설계 28: 거름을 섞어 심는 순간 거름 알갱이가 튀고, 덤은 거두기 팝업 위로 한 박자 늦게 뜨며 반짝 알갱이가 튄다
+        private static readonly Color k_Manure = new Color32(0x4A, 0x30, 0x22, 255);
+        private static readonly Color k_ManureLight = new Color32(0x6E, 0x4C, 0x30, 255);
+        private static readonly Color k_Spark = new Color32(0xFB, 0xF4, 0xE6, 255);
+        private const float k_BonusDelay = 0.25f;
+        private const float k_BonusRise = 0.5f;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -106,6 +113,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.Dug>(Bus_Dug),
                 bus.Subscribe<Events.Tilled>(Bus_Tilled),
                 bus.Subscribe<Events.Harvested>(Bus_Harvested),
+                bus.Subscribe<Events.BonusFound>(Bus_BonusFound),
             };
         }
 
@@ -226,7 +234,7 @@ namespace ZooTycoon.World
                 }
             }
 
-            view.Show(plot.IsTilled, crops, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe);
+            view.Show(plot.IsTilled, crops, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe, plot.IsFertilized);
         }
 
         // 흙 칸(갈기 전)마다 「갈기 값」 표식을 늘 보인다. 갈면 사라진다
@@ -270,7 +278,7 @@ namespace ZooTycoon.World
             }
         }
 
-        // 심은 순간(작물이 생기고 아직 첫 단계)은 톡 튄다. 자라는 단계 변화·거두기·갈기는 각자 연출
+        // 심은 순간(작물이 생기고 아직 첫 단계)은 톡 튄다(거름을 섞었으면 거름 알갱이도). 자라는 단계 변화·거두기·갈기는 각자 연출
         private void Plot_Changed(Interactable thing)
         {
             PlotInteractable plot = (PlotInteractable)thing;
@@ -279,6 +287,11 @@ namespace ZooTycoon.World
             if (!plot.IsEmpty && plot.Stage == 0)
             {
                 m_plots[plot].Bounce();
+
+                if (plot.IsFertilized)
+                {
+                    Burst(ToWorld(m_farm.Layout.Cells.CellCenter(plot.Cell)), k_Manure, k_ManureLight);
+                }
             }
         }
 
@@ -355,13 +368,40 @@ namespace ZooTycoon.World
             }
 
             // 거두는 것은 밟은 웜뱃이므로 팝업은 웜뱃 머리 위에서 떠오른다(그림이 아니라 sim 자리: 그림은 한 프레임 늦다). 밭에서는 낟알이 튄다
-            CoinPopup popup = Instantiate(m_popupPrefab, ToWorld(m_farm.Wombat.Mover.Position) + Vector3.up * k_PopupHeight, Quaternion.identity, transform);
-            popup.Show(m_tables.Format(k_PopupKey, e.Count), m_frames.Get(m_tables.Get<ItemTable>(e.Item).Icon)[0]);
+            Popup(ToWorld(m_farm.Wombat.Mover.Position) + Vector3.up * k_PopupHeight, e.Item, e.Count);
             m_plots[e.Plot].Bounce();
+            Burst(ToWorld(m_farm.Layout.Cells.CellCenter(e.Plot.Cell)), k_Grain, k_GrainLight);
+        }
+
+        // 설계 28: 덤이 나왔다. 거두기 팝업이 뜬 뒤 그 위로 하나 더 뜨고 반짝 알갱이가 튄다
+        private void Bus_BonusFound(Events.BonusFound e)
+        {
+            if (e.Plot.Farm == m_farm)
+            {
+                StartCoroutine(BonusRoutine(e));
+            }
+        }
+
+        private IEnumerator BonusRoutine(Events.BonusFound e)
+        {
+            yield return new WaitForSeconds(k_BonusDelay);
+            Vector3 at = ToWorld(m_farm.Wombat.Mover.Position) + Vector3.up * (k_PopupHeight + k_BonusRise);
+            Popup(at, e.Item, e.Count);
+            Burst(at, k_Spark, k_GrainLight);
+        }
+
+        private void Popup(Vector3 at, string item, int count)
+        {
+            CoinPopup popup = Instantiate(m_popupPrefab, at, Quaternion.identity, transform);
+            popup.Show(m_tables.Format(k_PopupKey, count), m_frames.Get(m_tables.Get<ItemTable>(item).Icon)[0]);
+        }
+
+        // 네모 알갱이 두 빛깔이 튄다(낟알 · 거름 · 반짝)
+        private void Burst(Vector3 at, Color first, Color second)
+        {
             m_square = m_square != null ? m_square : Fx.NewSquare();
-            Vector3 center = ToWorld(m_farm.Layout.Cells.CellCenter(e.Plot.Cell));
-            StartCoroutine(Fx.Burst(transform, m_square, center, k_GrainCount, k_GrainSpread, k_GrainLift, k_GrainGravity, k_GrainSeconds, k_GrainCells, k_Grain, k_GrainOrder));
-            StartCoroutine(Fx.Burst(transform, m_square, center, k_GrainCount, k_GrainSpread, k_GrainLift, k_GrainGravity, k_GrainSeconds, k_GrainCells, k_GrainLight, k_GrainOrder));
+            StartCoroutine(Fx.Burst(transform, m_square, at, k_GrainCount, k_GrainSpread, k_GrainLift, k_GrainGravity, k_GrainSeconds, k_GrainCells, first, k_GrainOrder));
+            StartCoroutine(Fx.Burst(transform, m_square, at, k_GrainCount, k_GrainSpread, k_GrainLift, k_GrainGravity, k_GrainSeconds, k_GrainCells, second, k_GrainOrder));
         }
     }
 }

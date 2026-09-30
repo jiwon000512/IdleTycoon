@@ -13,5 +13,8 @@ namespace ZooTycoon.Core
         public string Icon { get; set; }
         // 새 게임 창고에 든 개수
         public int Start { get; set; }
+        // 설계 28: 작물 · 빵 표에서 찾을 수 없는 획득처 · 사용처 글(StringTable 키, 없으면 null)
+        public string Source { get; set; }
+        public string Use { get; set; }
     }
 }

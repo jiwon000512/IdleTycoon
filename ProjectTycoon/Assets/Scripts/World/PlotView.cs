@@ -7,6 +7,8 @@ namespace ZooTycoon.World
     public sealed class PlotView : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer m_body;
+        [Tooltip("설계 28: 거름 준 밭의 알갱이(흙판 바로 위)")]
+        [SerializeField] private SpriteRenderer m_manure;
         [Tooltip("작물 줄(뒷줄부터). 줄마다 그림이 다르다")]
         [SerializeField] private SpriteRenderer[] m_crops;
         [SerializeField] private SpriteRenderer m_timer;
@@ -48,10 +50,11 @@ namespace ZooTycoon.World
             }
         }
 
-        // tilled: 밭 칸인가(흙 칸이면 흙판·작물·표식 전부 숨김). crops: 줄마다 지금 단계 그림(빈 밭은 null). growing: 타이머, ripe: 다 익음 표시
-        public void Show(bool tilled, Sprite[] crops, bool growing, bool ripe)
+        // tilled: 밭 칸인가(흙 칸이면 흙판·작물·표식 전부 숨김). crops: 줄마다 지금 단계 그림(빈 밭은 null). growing: 타이머, ripe: 다 익음 표시, fertilized: 거름 알갱이
+        public void Show(bool tilled, Sprite[] crops, bool growing, bool ripe, bool fertilized)
         {
             m_body.enabled = tilled;
+            m_manure.enabled = tilled && fertilized;
 
             for (int i = 0; i < m_crops.Length; i++)
             {

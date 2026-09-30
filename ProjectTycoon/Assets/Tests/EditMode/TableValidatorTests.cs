@@ -11,7 +11,7 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 12)]
-        [TestCase("StringTable", 28)]
+        [TestCase("StringTable", 29)]
         [TestCase("ClerkTable", 1)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 2)]
@@ -20,15 +20,15 @@ namespace ZooTycoon.Tests
         [TestCase("ActionTable", 11)]
         [TestCase("InteractableTable", 11)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 8)]
+        [TestCase("SoundTable", 9)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 3)]
-        [TestCase("BakeryConfigTable", 6)]
+        [TestCase("BakeryConfigTable", 7)]
         [TestCase("PlazaConfigTable", 1)]
         [TestCase("PlazaDecorTable", 1)]
-        [TestCase("ItemTable", 2)]
+        [TestCase("ItemTable", 3)]
         [TestCase("CropTable", 2)]
-        [TestCase("FarmConfigTable", 3)]
+        [TestCase("FarmConfigTable", 4)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -235,7 +235,23 @@ namespace ZooTycoon.Tests
             freeTill.Get<FarmConfigTable>(FarmConfigTable.k_Main).TillCost = 0d;
             TableSet wideInset = TestTables.Load();
             wideInset.Get<FarmConfigTable>(FarmConfigTable.k_Main).FieldInset = 1d;
+            // 설계 28: 거름 재료가 표에 없음, 덤 확률 1 초과, 거름 배율 0, 치운 똥 재료 없음, 획득처 글 없음
+            TableSet noManure = TestTables.Load();
+            noManure.Get<FarmConfigTable>(FarmConfigTable.k_Main).ManureItem = "milk";
+            TableSet sureBonus = TestTables.Load();
+            sureBonus.Get<FarmConfigTable>(FarmConfigTable.k_Main).BonusChance = 1.5d;
+            TableSet frozenManure = TestTables.Load();
+            frozenManure.Get<FarmConfigTable>(FarmConfigTable.k_Main).ManureGrowScale = 0d;
+            TableSet noPoopItem = TestTables.Load();
+            noPoopItem.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).PoopItem = "milk";
+            TableSet noSourceText = TestTables.Load();
+            noSourceText.GetAll<ItemTable>()[0].Source = "inventory_nowhere";
 
+            Assert.That(TableValidator.Validate(noManure), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(sureBonus), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(frozenManure), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noPoopItem), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noSourceText), Is.Not.Empty);
             Assert.That(TableValidator.Validate(wideInset), Is.Not.Empty);
             Assert.That(TableValidator.Validate(unknownItem), Is.Not.Empty);
             Assert.That(TableValidator.Validate(oneStage), Is.Not.Empty);

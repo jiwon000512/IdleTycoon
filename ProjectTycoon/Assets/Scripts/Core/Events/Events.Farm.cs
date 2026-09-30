@@ -28,5 +28,20 @@ namespace ZooTycoon.Core
                 Count = count;
             }
         }
+
+        // 설계 28: 거둘 때 덤(bonusItem)이 나왔다(팝업 · 반짝 알갱이 · 소리)
+        public readonly struct BonusFound
+        {
+            public readonly PlotInteractable Plot;
+            public readonly string Item;
+            public readonly int Count;
+
+            public BonusFound(PlotInteractable plot, string item, int count)
+            {
+                Plot = plot;
+                Item = item;
+                Count = count;
+            }
+        }
     }
 }

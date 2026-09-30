@@ -40,6 +40,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.PoopDropped>(e => PlayIn(e.Poop.Area, SoundTable.k_Poop)),
                 bus.Subscribe<Events.PoopCleaned>(e => PlayIn(e.Poop.Area, SoundTable.k_Clean)),
                 bus.Subscribe<Events.Harvested>(e => PlayIn(e.Plot.Area, SoundTable.k_Harvest)),
+                bus.Subscribe<Events.BonusFound>(e => PlayIn(e.Plot.Area, SoundTable.k_Bonus)),
                 // 설계 27: 갈기는 파기 소리(더미)
                 bus.Subscribe<Events.Tilled>(e => PlayIn(e.Plot.Area, SoundTable.k_Dig)),
             };

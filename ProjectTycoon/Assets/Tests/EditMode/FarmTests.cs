@@ -25,16 +25,24 @@ namespace ZooTycoon.Tests
 
         private FarmConfigTable Config => m_tables.Get<FarmConfigTable>(FarmConfigTable.k_Main);
 
-        private void Create()
+        // roll: 거둘 때마다 굴리는 덤 난수(기본은 안 나오는 값)
+        private void Create(double roll = 0.99)
         {
             m_tables = TestTables.Load();
             m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).MaxCustomers = 0;
             m_bus = new EventBus();
             m_state = ZooState.CreateNew(m_tables, m_bus);
+
+            // 테스트 표는 재료를 넉넉히 준다(TestTables.k_PlentyItems). 거름 · 덤은 0에서 시작해야 규칙이 보인다
+            foreach (string item in new[] { Config.ManureItem, Config.BonusItem })
+            {
+                m_state.TrySpendItem(item, m_state.Count(item));
+            }
+
             Wombat wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, new SequenceRandom(new double[2000]), wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), wombat, m_bus);
-            m_farm = new FarmArea(m_tables, wombat, m_bus);
+            m_farm = new FarmArea(m_tables, new SequenceRandom(Enumerable.Repeat(roll, 200).ToArray()), wombat, m_bus);
             m_mall = new Mall(m_shop, m_plaza, m_farm, m_bus);
         }
 
@@ -239,6 +247,81 @@ namespace ZooTycoon.Tests
             Run(k_Dt);
             Assert.That(plot.IsEmpty, Is.True);
             Assert.That(m_state.Count(k_Wheat), Is.EqualTo(wheat + plot.Farm.Crop.Yield));
+        }
+
+        // 칸 윗변 여백(칸 안 · 밭 몸통 밖): 기다리는 동안 거두지 않는 자리
+        private Vector2 MarginOf(Cell cell)
+        {
+            CellMetrics cells = m_farm.Layout.Cells;
+            Vector2 center = cells.CellCenter(cell);
+            return new Vector2(center.X, center.Y + cells.CellHeight * 0.5f - (float)Config.FieldInset * 0.5f);
+        }
+
+        // 설계 28: 창고에 거름이 있으면 심을 때 하나 쓰고 그 밭은 manureGrowScale만큼 빨리 익는다. 거름이 없으면 그대로
+        [Test]
+        public void Plant_WithManure_SpendsOneAndGrowsFaster()
+        {
+            Create();
+            GoToFarm();
+            PlotInteractable fertilized = m_farm.Plots[0];
+            PlotInteractable plain = m_farm.Plots[1];
+            CropTable crop = m_farm.Crop;
+            m_state.AddItem(Config.ManureItem, 1);
+
+            m_farm.Wombat.Mover.Place(CenterOf(fertilized.Cell));
+            Run(k_Dt);
+            Assert.That(m_farm.TryInteract(), Is.True);
+            Assert.That(fertilized.IsFertilized, Is.True);
+            Assert.That(m_state.Count(Config.ManureItem), Is.EqualTo(0));
+
+            m_farm.Wombat.Mover.Place(CenterOf(plain.Cell));
+            Run(k_Dt);
+            Assert.That(m_farm.TryInteract(), Is.True);
+            Assert.That(plain.IsFertilized, Is.False);
+
+            m_farm.Wombat.Mover.Place(MarginOf(plain.Cell));
+            Run(crop.GrowSeconds * Config.ManureGrowScale + 0.1);
+            Assert.That(fertilized.IsRipe, Is.True);
+            Assert.That(plain.IsRipe, Is.False);
+
+            Run(crop.GrowSeconds * (1d - Config.ManureGrowScale));
+            Assert.That(plain.IsRipe, Is.True);
+        }
+
+        // 설계 28: 덤은 bonusChance로, 거름 준 밭은 × manureBonusScale. 난수 0.3이면 보통 밭은 없고(0.3 ≥ 0.2) 거름 밭은 하나 나온다(0.3 < 0.4). 거두면 거름은 꺼진다
+        [Test]
+        public void Harvest_BonusChance_DoublesOnFertilizedField()
+        {
+            Create(0.3);
+            GoToFarm();
+            PlotInteractable plot = m_farm.Plots[0];
+            List<Events.BonusFound> found = new List<Events.BonusFound>();
+            m_bus.Subscribe<Events.BonusFound>(e => found.Add(e));
+
+            PlantGrowHarvest(plot);
+            Assert.That(m_state.Count(Config.BonusItem), Is.EqualTo(0));
+            Assert.That(found, Is.Empty);
+
+            m_state.AddItem(Config.ManureItem, 1);
+            PlantGrowHarvest(plot);
+            Assert.That(m_state.Count(Config.BonusItem), Is.EqualTo(1));
+            Assert.That(found.Count, Is.EqualTo(1));
+            Assert.That(found[0].Item, Is.EqualTo(Config.BonusItem));
+            Assert.That(plot.IsFertilized, Is.False);
+        }
+
+        // 몸통에서 심고 → 여백에서 익히고 → 몸통을 밟아 거둔다
+        private void PlantGrowHarvest(PlotInteractable plot)
+        {
+            m_farm.Wombat.Mover.Place(CenterOf(plot.Cell));
+            Run(k_Dt);
+            Assert.That(m_farm.TryInteract(), Is.True);
+            m_farm.Wombat.Mover.Place(MarginOf(plot.Cell));
+            Run(m_farm.Crop.GrowSeconds + k_Dt);
+            Assert.That(plot.IsRipe, Is.True);
+            m_farm.Wombat.Mover.Place(CenterOf(plot.Cell));
+            Run(k_Dt);
+            Assert.That(plot.IsEmpty, Is.True);
         }
 
         // 파기: 붙은 흙 칸의 시트 행동으로 코인을 치르면 굴이 넓어지고 그 칸에 흙 밭 사물이 생긴다(파기 대상에서는 빠진다).

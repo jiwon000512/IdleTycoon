@@ -1,6 +1,6 @@
 {
   "table": "SoundTable",
-  "version": 8,
+  "version": 9,
   "notes": [
     "설계 10·23: 효과음. id는 코드(SoundTable.k_*)와 같아야 하고, 어느 사건에 나는지는 코드(World WorldSound · UI View)가 정한다. 재생은 GameKit SoundManager(GameManager.Init이 이 표를 등록한다).",
     "clip: Resources/ 기준 경로(확장자 없음). Assets/Audio/Source~/make_sfx.py로 합성한 실제 소리(2026-09-24 사용자 선택). 바꿀 때는 같은 경로에 덮어쓴다.",
@@ -12,7 +12,8 @@
     "version 5 (2026-09-28, 점원 연출 1단계): payday(월급날에 한 번, 점원 수와 무관) 추가.",
     "version 6 (2026-09-29, 설계 24 웜뱃 똥): poop(똥이 떨어짐) · clean(치움. 여러 개를 한 번에 치워도 minGap으로 한 번) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전).",
     "version 7 (2026-09-29, 설계 25 밀 농사): plant(밭에 심음) · harvest(거둠) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전).",
-    "version 8 (2026-09-30, 사용자 요청): step(웜뱃 걸음, 걷기 프레임 1 · 5마다, WombatView) 추가. 같은 날부터 곳에 매인 소리(사물 · 파기 · 밭 · 똥 · 점원 수다)는 웜뱃이 있는 곳의 것만 난다(WorldSound)."
+    "version 8 (2026-09-30, 사용자 요청): step(웜뱃 걸음, 걷기 프레임 1 · 5마다, WombatView) 추가. 같은 날부터 곳에 매인 소리(사물 · 파기 · 밭 · 똥 · 점원 수다)는 웜뱃이 있는 곳의 것만 난다(WorldSound).",
+    "version 9 (2026-09-30, 설계 28 똥 거름 · 덤): bonus(거둘 때 덤이 나옴: 밝은 두 음) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전)."
   ],
   "rows": [
     { "id": "pay", "clip": "Audio/pay", "volume": 0.6, "minGap": 0.1, "comboSeconds": 2.5, "pitchStep": 0.05, "pitchMax": 1.3 },
@@ -40,6 +41,7 @@
     { "id": "clean", "clip": "Audio/clean", "volume": 0.5, "minGap": 0.15, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "plant", "clip": "Audio/plant", "volume": 0.5, "minGap": 0.15, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "harvest", "clip": "Audio/harvest", "volume": 0.55, "minGap": 0.1, "comboSeconds": 1.5, "pitchStep": 0.05, "pitchMax": 1.2 },
-    { "id": "step", "clip": "Audio/step", "volume": 0.16, "minGap": 0.12, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
+    { "id": "step", "clip": "Audio/step", "volume": 0.16, "minGap": 0.12, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "bonus", "clip": "Audio/bonus", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
   ]
 }

@@ -219,10 +219,15 @@ namespace ZooTycoon.UI
 
             for (int i = 0; i < sources.Count; i++)
             {
+                // 글만 있는 획득처(설계 28: 똥 치우기 등)는 시계 · 초 · 아이콘 · 개수 칸을 숨긴다
                 Transform line = m_sources[i];
                 line.Find("Place").GetComponent<TMP_Text>().text = sources[i].Place;
+                line.Find("Clock").gameObject.SetActive(sources[i].Seconds != null);
+                line.Find("Seconds").gameObject.SetActive(sources[i].Seconds != null);
                 line.Find("Seconds").GetComponent<TMP_Text>().text = sources[i].Seconds;
+                line.Find("Icon").gameObject.SetActive(sources[i].IconPath != null);
                 SetIcon(line.Find("Icon").GetComponent<Image>(), sources[i].IconPath, k_LineIconScale, m_sourceIconBox);
+                line.Find("Yield").gameObject.SetActive(sources[i].Yield != null);
                 line.Find("Yield").GetComponent<TMP_Text>().text = sources[i].Yield;
             }
 
@@ -232,6 +237,7 @@ namespace ZooTycoon.UI
             for (int i = 0; i < uses.Count; i++)
             {
                 Transform use = m_uses[i];
+                use.Find("Icon").gameObject.SetActive(uses[i].IconPath != null);
                 SetIcon(use.Find("Icon").GetComponent<Image>(), uses[i].IconPath, k_LineIconScale, m_useIconBox);
                 use.Find("Name").GetComponent<TMP_Text>().text = uses[i].Name;
                 use.Find("Count").GetComponent<TMP_Text>().text = uses[i].Count;

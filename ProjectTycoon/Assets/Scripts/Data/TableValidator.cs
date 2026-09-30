@@ -288,6 +288,8 @@ namespace ZooTycoon.Data
         // 설계 25 · 26: 재료는 이름·설명·아이콘이 있고 시작 개수는 0 이상
         private static void ValidateItems(TableSet tables, List<string> errors)
         {
+            HashSet<string> strings = Ids<StringTable>(tables);
+
             foreach (ItemTable item in tables.GetAll<ItemTable>())
             {
                 CheckId("ItemTable", item.Id, errors);
@@ -295,6 +297,12 @@ namespace ZooTycoon.Data
                 if (string.IsNullOrEmpty(item.Name) || string.IsNullOrEmpty(item.Desc) || string.IsNullOrEmpty(item.Icon) || item.Start < 0)
                 {
                     errors.Add($"ItemTable '{item.Id}': name·desc·icon이 있고 start는 0 이상이어야 한다.");
+                }
+
+                // 설계 28: 획득처 · 사용처 글은 있으면 StringTable에
+                if ((item.Source != null && !strings.Contains(item.Source)) || (item.Use != null && !strings.Contains(item.Use)))
+                {
+                    errors.Add($"ItemTable '{item.Id}': source·use 글이 StringTable에 없다.");
                 }
             }
         }
@@ -596,6 +604,12 @@ namespace ZooTycoon.Data
                 {
                     errors.Add($"BakeryConfigTable '{bakery.Id}': poopEvery는 0보다, poopChance는 0~1, poopMax·poopGap·poopAvoidRadius는 0 이상이어야 한다.");
                 }
+
+                // 설계 28
+                if (bakery.PoopItem == null || !Ids<ItemTable>(tables).Contains(bakery.PoopItem))
+                {
+                    errors.Add($"BakeryConfigTable '{bakery.Id}': poopItem '{bakery.PoopItem}'이 ItemTable에 없다.");
+                }
             }
 
             CheckRequired<BakeryConfigTable>(tables, new[] { BakeryConfigTable.k_Bakery }, errors);
@@ -628,8 +642,17 @@ namespace ZooTycoon.Data
         // 설계 27: 층은 시작 칸(가운데 두 열 × startRows줄, 입구 줄 포함)을 담아야 하고, 시작 밭은 시작 칸의 밭 줄 안, 값은 0보다 크고 증가율은 1 이상
         private static void ValidateFarmConfig(TableSet tables, List<string> errors)
         {
+            HashSet<string> itemIds = Ids<ItemTable>(tables);
+
             foreach (FarmConfigTable farm in tables.GetAll<FarmConfigTable>())
             {
+                // 설계 28
+                if (farm.ManureItem == null || !itemIds.Contains(farm.ManureItem) || farm.BonusItem == null || !itemIds.Contains(farm.BonusItem)
+                    || farm.ManureGrowScale <= 0d || farm.ManureGrowScale > 1d || farm.BonusChance < 0d || farm.BonusChance > 1d || farm.ManureBonusScale < 1d)
+                {
+                    errors.Add($"FarmConfigTable '{farm.Id}': manureItem·bonusItem은 ItemTable에 있고, manureGrowScale은 0 초과 1 이하, bonusChance는 0~1, manureBonusScale은 1 이상이어야 한다.");
+                }
+
                 if (farm.FloorCols < 2 || farm.StartRows < 2 || farm.StartRows > farm.FloorRows || farm.StartFields < 0 || farm.StartFields > 2 * (farm.StartRows - 1)
                     || farm.DigBaseCost <= 0d || farm.DigCostGrowth < 1d || farm.TillCost <= 0d || farm.FieldInset < 0d || farm.FieldInset >= 1d)
                 {

@@ -23,6 +23,8 @@ namespace ZooTycoon.Core
         private readonly PassageInteractable m_exit;
 
         public FarmConfigTable Config => m_config;
+        // 덤 굴리기(설계 28)
+        internal IRandom Random { get; }
         public BurrowGrid Grid { get; }
         public FarmLayout Layout { get; }
         // 판 순서(시작 칸은 줄 → 열 순)
@@ -41,9 +43,10 @@ namespace ZooTycoon.Core
             get { yield break; }
         }
 
-        public FarmArea(TableSet tables, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
+        public FarmArea(TableSet tables, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
         {
             m_config = tables.Get<FarmConfigTable>(FarmConfigTable.k_Main);
+            Random = random;
             Layout = new FarmLayout(tables);
             Crop = tables.GetAll<CropTable>()[0];
             Grid = new BurrowGrid(BurrowGrid.Columns(k_StartCols, m_config.StartRows), m_config.DigBaseCost, m_config.DigCostGrowth,

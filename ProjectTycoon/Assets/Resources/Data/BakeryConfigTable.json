@@ -1,6 +1,6 @@
 {
   "table": "BakeryConfigTable",
-  "version": 6,
+  "version": 7,
   "notes": [
     "빵집 시뮬 숫자. id = 빵집 종류(지금 bakery 하나). 시간은 초.",
     "patienceSeconds: 빈 진열대 앞 두리번 시간 합계(다 쓰면 「!!」로 나감). lookSeconds: 한 진열대 두리번 최대. pickSeconds: 빵 집기.",
@@ -10,9 +10,10 @@
     "version 3 (2026-09-24, 리뷰 R2): carryCapacity는 ConfigTable로(웜뱃의 값). ovenCount 삭제(시작 오븐은 코드의 시작 배치 1대, 오븐 설치 가격은 그 뒤로 산 수로 오른다).",
     "version 4 (2026-09-26, 설계 17): 진열대 설치 가격 shelfBaseCost·shelfCostGrowth(설치 가격 = shelfBaseCost × shelfCostGrowth^(시작 뒤 설치한 수), 시작 진열대는 코드의 시작 배치 1대)와 전체 진열대 수 상한 shelfMax. 오븐보다 싸게 150 × 2^n, 최대 4대.",
     "version 5 (2026-09-26, 설계 18 자유 배치): oven*·shelf* 삭제 — 사물 가격은 InteractableTable price로.",
-    "version 6 (2026-09-29, 설계 24 웜뱃 똥): poopEvery(웜뱃이 빵집 안을 이만큼 걸을 때마다 한 번 굴린다, 유닛) · poopChance(그때 등 뒤에 똥을 떨굴 확률, 평균 poopEvery ÷ poopChance 유닛에 하나) · poopMax(바닥에 이만큼 있으면 더 싸지 않는다) · poopGap(다른 똥에서 이만큼 안이면 이번은 건너뛴다) · poopAvoidRadius(손님이 걸어 들어가지 않는 똥 둘레, 막힘의 세기)."
+    "version 6 (2026-09-29, 설계 24 웜뱃 똥): poopEvery(웜뱃이 빵집 안을 이만큼 걸을 때마다 한 번 굴린다, 유닛) · poopChance(그때 등 뒤에 똥을 떨굴 확률, 평균 poopEvery ÷ poopChance 유닛에 하나) · poopMax(바닥에 이만큼 있으면 더 싸지 않는다) · poopGap(다른 똥에서 이만큼 안이면 이번은 건너뛴다) · poopAvoidRadius(손님이 걸어 들어가지 않는 똥 둘레, 막힘의 세기).",
+    "version 7 (2026-09-30, 설계 28 똥 거름 · 덤): poopItem = 치우기 버튼으로 치운 똥 하나가 되는 재료(ItemTable id, 창고로). 사물 밑에 깔려 사라진 똥은 주지 않는다."
   ],
   "rows": [
-    {"id": "bakery", "maxCustomers": 8, "patienceSeconds": 6, "lookSeconds": 2, "checkoutSeconds": 1.5, "shelfCapacity": 8, "pickSeconds": 0.4, "digBaseCost": 150, "digCostGrowth": 1.4, "poopEvery": 10, "poopChance": 0.25, "poopMax": 5, "poopGap": 0.6, "poopAvoidRadius": 0.5}
+    {"id": "bakery", "maxCustomers": 8, "patienceSeconds": 6, "lookSeconds": 2, "checkoutSeconds": 1.5, "shelfCapacity": 8, "pickSeconds": 0.4, "digBaseCost": 150, "digCostGrowth": 1.4, "poopEvery": 10, "poopChance": 0.25, "poopMax": 5, "poopGap": 0.6, "poopAvoidRadius": 0.5, "poopItem": "manure"}
   ]
 }

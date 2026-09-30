@@ -8,6 +8,7 @@ namespace ZooTycoon.UI
 {
     // 설계 26 창고(인벤토리): 칸 = ItemTable 행 순서(0개는 흐리게, 4열을 채우도록 빈 칸, 최소 두 줄). 처음에는 아무 칸도 고르지 않는다.
     // 칸을 누르면 정보 창: 이름 · 개수 · 설명(ItemTable), 획득처 = 그 재료를 거두는 작물(CropTable: 농장 밭 · 자라는 초 · 한 번에 몇 개), 사용처 = 레시피에 그 재료가 든 빵(BreadTable).
+    // 설계 28: 작물 · 빵 표에서 찾을 수 없는 획득처 · 사용처(똥 치우기 · 심을 때 자동 · 거둘 때 덤 · 석상)는 ItemTable source · use 글 한 줄.
     // 열린 동안 ItemsChanged로 갱신, 편집 모드에서는 버튼을 숨긴다
     public sealed class InventoryPresenter : IDisposable
     {
@@ -100,6 +101,11 @@ namespace ZooTycoon.UI
                 }
             }
 
+            if (item.Source != null)
+            {
+                sources.Add(new InventoryView.SourceData { Place = m_tables.Text(item.Source) });
+            }
+
             List<InventoryView.UseData> uses = new List<InventoryView.UseData>();
 
             foreach (BreadTable bread in m_tables.GetAll<BreadTable>())
@@ -111,6 +117,11 @@ namespace ZooTycoon.UI
                         uses.Add(new InventoryView.UseData { IconPath = bread.Sprite, Name = bread.Name, Count = m_tables.Format("inventory_yield", ingredient.Count) });
                     }
                 }
+            }
+
+            if (item.Use != null)
+            {
+                uses.Add(new InventoryView.UseData { Name = m_tables.Text(item.Use) });
             }
 
             m_view.ShowInfo(item.Icon, item.Name, m_tables.Format("inventory_have", m_state.Count(item.Id)), item.Desc, sources, uses);

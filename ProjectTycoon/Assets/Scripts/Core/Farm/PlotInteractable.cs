@@ -4,7 +4,8 @@ using System.Numerics;
 namespace ZooTycoon.Core
 {
     // 설계 25 → 설계 27: 판 칸 하나의 밭. 흙 칸 → 갈기(버튼, 코인) → 빈 밭 → 심기(버튼) → 자라는 중 → 익음 → 거두기(밟으면) → 빈 밭.
-    // 거리는 칸 사각형까지(안이면 0)라 칸에 서면 대상이 된다. 기준점(Position)은 칸 밑변 가운데(그림 발끝)
+    // 거리는 칸 사각형까지(안이면 0)라 칸에 서면 대상이 된다. 기준점(Position)은 칸 밑변 가운데(그림 발끝).
+    // 설계 28: 심을 때 거름을 쓰면 거름 준 밭(빨리 자라고 덤이 잘 나온다), 거두면 꺼진다
     public sealed class PlotInteractable : Interactable
     {
         public const string k_Id = "plot";
@@ -17,14 +18,18 @@ namespace ZooTycoon.Core
         // 심은 작물. 빈 밭이면 null
         public CropTable Crop { get; private set; }
         public double Remaining { get; private set; }
+        public bool IsFertilized { get; private set; }
         public bool IsEmpty => Crop == null;
         public bool IsRipe => !IsEmpty && Remaining <= 0d;
         // 0~1
-        public double Progress => IsEmpty ? 0d : 1d - Remaining / Crop.GrowSeconds;
+        public double Progress => IsEmpty ? 0d : 1d - Remaining / m_growSeconds;
         // 자라는 그림 번호: 자라는 동안 0 ~ stages − 2를 고르게, 익으면 마지막. 빈 밭은 −1
         public int Stage => IsEmpty ? -1 : IsRipe ? Crop.Stages - 1 : Math.Min(Crop.Stages - 2, (int)(Progress * (Crop.Stages - 1)));
         // 밟고 서는 사물: 곁의 흙 칸(파기)·통로에 대상을 양보한다(QA A)
         public override int TargetPriority => 1;
+
+        // 이번에 심은 작물이 익는 데 걸리는 시간(거름 배율이 든 값)
+        private double m_growSeconds;
 
         public PlotInteractable(InteractableTable table, Cell cell, FarmArea farm, bool tilled) : base(table, farm)
         {
@@ -53,21 +58,32 @@ namespace ZooTycoon.Core
             Area.Bus.Publish(new Events.Tilled(this));
         }
 
-        public void Plant(CropTable crop)
+        public void Plant(CropTable crop, bool fertilized)
         {
             Crop = crop;
-            Remaining = crop.GrowSeconds;
+            IsFertilized = fertilized;
+            m_growSeconds = crop.GrowSeconds * (fertilized ? Farm.Config.ManureGrowScale : 1d);
+            Remaining = m_growSeconds;
             OnChanged();
         }
 
-        // 익은 작물을 거둬 창고에 넣는다(빈 밭이 된다)
-        public void Harvest(ZooState wallet)
+        // 익은 작물을 거둬 창고에 넣는다(빈 밭이 된다). 덤은 bonusChance(거름 준 밭은 × manureBonusScale)로 하나
+        public void Harvest(ZooState wallet, IRandom random)
         {
             CropTable crop = Crop;
+            FarmConfigTable config = Farm.Config;
+            bool bonus = random.NextDouble() < config.BonusChance * (IsFertilized ? config.ManureBonusScale : 1d);
             Crop = null;
+            IsFertilized = false;
             wallet.AddItem(crop.Item, crop.Yield);
             OnChanged();
             Area.Bus.Publish(new Events.Harvested(this, crop.Item, crop.Yield));
+
+            if (bonus)
+            {
+                wallet.AddItem(config.BonusItem, 1);
+                Area.Bus.Publish(new Events.BonusFound(this, config.BonusItem, 1));
+            }
         }
 
         // 그림 번호가 바뀔 때만 알린다

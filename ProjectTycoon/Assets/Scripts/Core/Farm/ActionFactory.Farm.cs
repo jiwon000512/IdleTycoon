@@ -31,7 +31,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 심기(버튼): 갈아 놓은 빈 밭에 농장 작물을
+        // 심기(버튼): 갈아 놓은 빈 밭에 농장 작물을. 창고에 거름이 있으면 하나 써서 거름 준 밭으로(설계 28)
         private sealed class Plant : InteractAction
         {
             public Plant(ActionTable table) : base(table)
@@ -51,7 +51,7 @@ namespace ZooTycoon.Core
             public override void Do(Worker worker, Interactable target)
             {
                 PlotInteractable plot = (PlotInteractable)target;
-                plot.Plant(plot.Farm.Crop);
+                plot.Plant(plot.Farm.Crop, worker.Wallet.TrySpendItem(plot.Farm.Config.ManureItem, 1));
             }
         }
 
@@ -74,7 +74,8 @@ namespace ZooTycoon.Core
 
             public override void Do(Worker worker, Interactable target)
             {
-                ((PlotInteractable)target).Harvest(worker.Wallet);
+                PlotInteractable plot = (PlotInteractable)target;
+                plot.Harvest(worker.Wallet, plot.Farm.Random);
             }
         }
     }

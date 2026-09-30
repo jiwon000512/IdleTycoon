@@ -47,7 +47,7 @@ namespace ZooTycoon.Game
             SystemRandom random = new SystemRandom();
             Wombat wombat = new Wombat(Tables, State);
             BakeryArea bakery = new BakeryArea(State, Tables, random, wombat, Bus);
-            Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), new FarmArea(Tables, wombat, Bus), Bus);
+            Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), new FarmArea(Tables, random, wombat, Bus), Bus);
         }
 
         // 손님 동선 설계 v0.2: 가게 시뮬은 매 프레임(손님 행동 트리·조이스틱 웜뱃이 멈칫하지 않게). 설계 11: 빵집과 광장을 함께

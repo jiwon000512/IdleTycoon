@@ -44,7 +44,7 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(m_tables, m_state);
             BakeryArea bakery = new BakeryArea(m_state, m_tables, random, wombat, m_bus);
             PlazaArea plaza = new PlazaArea(m_tables, bakery, random, wombat, m_bus);
-            m_mall = new Mall(bakery, plaza, new FarmArea(m_tables, wombat, m_bus), m_bus);
+            m_mall = new Mall(bakery, plaza, new FarmArea(m_tables, random, wombat, m_bus), m_bus);
             wombat.Mover.Place(bakery.Layout.HoleFloor + new Vector2(2f, -1f));
             return bakery;
         }

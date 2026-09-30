@@ -155,6 +155,7 @@ namespace ZooTycoon.Editor
 
             // 설계 25: 밭·작물 단계는 아래 가운데(같은 밑변에 겹친다), 재료 아이콘은 가운데. 농사 타이머 · 다 익음 표시는 오븐 표시처럼 가운데
             Import(k_FarmDir + "plot.png", bottom);
+            Import(k_FarmDir + "plot_manure.png", bottom);
 
             for (int i = 0; i < k_TimerFrames; i++)
             {
@@ -553,6 +554,9 @@ namespace ZooTycoon.Editor
         {
             GameObject go = new GameObject("Plot");
             SpriteRenderer body = Renderer(go.transform, "Body", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "plot.png"), Vector3.zero, k_FieldOrder);
+            // 설계 28: 거름 준 밭의 알갱이(흙판 바로 위, 아치 아래)
+            SpriteRenderer manure = Renderer(go.transform, "Manure", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "plot_manure.png"), Vector3.zero, k_FieldOrder + 1);
+            manure.enabled = false;
             SpriteRenderer[] crops = new SpriteRenderer[k_CropOffsets.Length];
 
             for (int i = 0; i < crops.Length; i++)
@@ -575,6 +579,7 @@ namespace ZooTycoon.Editor
 
             PlotView view = go.AddComponent<PlotView>();
             Set(view, "m_body", body);
+            Set(view, "m_manure", manure);
             SetArray(view, "m_crops", crops);
             Set(view, "m_timer", timer);
             SetArray(view, "m_timerFrames", timerFrames);

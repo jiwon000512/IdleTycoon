@@ -39,22 +39,23 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 치우기 버튼: 웜뱃 range 안 똥 전부
+        // 치우기 버튼: 웜뱃 range 안 똥 전부. 치운 만큼 거름(poopItem)이 창고로 간다(설계 28. 사물 밑에 깔려 사라진 똥은 주지 않는다)
         internal void CleanAround()
         {
-            bool cleaned = false;
+            int cleaned = 0;
 
             for (int i = m_poops.Count - 1; i >= 0; i--)
             {
                 if (IsInRange(m_poops[i]))
                 {
                     RemovePoop(i);
-                    cleaned = true;
+                    cleaned++;
                 }
             }
 
-            if (cleaned)
+            if (cleaned > 0)
             {
+                m_state.AddItem(m_config.PoopItem, cleaned);
                 OnPoopsChanged();
             }
         }

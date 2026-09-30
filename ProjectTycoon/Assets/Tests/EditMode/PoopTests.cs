@@ -268,7 +268,7 @@ namespace ZooTycoon.Tests
             Assert.That(Vector2.Distance(visitor.Spot, first), Is.GreaterThanOrEqualTo((float)m_config.PoopAvoidRadius));
         }
 
-        // 똥이 대상이면 버튼은 치우기, 누르면 range 안 똥만 전부 치운다
+        // 똥이 대상이면 버튼은 치우기, 누르면 range 안 똥만 전부 치운다. 치운 만큼 거름이 창고로 간다(설계 28)
         [Test]
         public void CleanButton_ClearsEveryPoopInRange()
         {
@@ -281,25 +281,29 @@ namespace ZooTycoon.Tests
             shop.TryDropPoop(wombat + new Vector2(-0.4f, 0f));
             shop.TryDropPoop(new Vector2(-2f, -7f));
             shop.Tick(k_Dt);
+            int manure = shop.Wallet.Count(m_config.PoopItem);
 
             Assert.That(shop.Target, Is.InstanceOf<PoopInteractable>());
             Assert.That(shop.TargetAction.Id, Is.EqualTo(ActionTable.k_Clean));
             Assert.That(shop.TryInteract(), Is.True);
             Assert.That(cleaned.Count, Is.EqualTo(2));
             Assert.That(shop.Poops.Count, Is.EqualTo(1));
+            Assert.That(shop.Wallet.Count(m_config.PoopItem), Is.EqualTo(manure + 2));
             Assert.That(shop.Things, Has.No.Member(cleaned[0]));
         }
 
-        // 사물을 똥 위에 놓으면 그 똥은 치운 셈
+        // 사물을 똥 위에 놓으면 그 똥은 치운 셈(거름은 안 된다)
         [Test]
         public void PlacingAThingOnPoop_ClearsIt()
         {
             BakeryArea shop = Create();
             Assert.That(shop.TryFindSpot(ShelfInteractable.k_Id, new Vector2(1.7f, -3.6f), out Vector2 spot), Is.True);
             shop.TryDropPoop(spot + new Vector2(0f, 0.2f));
+            int manure = shop.Wallet.Count(m_config.PoopItem);
 
             Assert.That(shop.TryBuy(ShelfInteractable.k_Id, spot), Is.True);
             Assert.That(shop.Poops, Is.Empty);
+            Assert.That(shop.Wallet.Count(m_config.PoopItem), Is.EqualTo(manure));
         }
     }
 }

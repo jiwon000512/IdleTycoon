@@ -95,6 +95,19 @@ namespace ZooTycoon.Core
             return true;
         }
 
+        // 한 가지 재료를 count개 뺀다. 모자라면 빼지 않고 false
+        public bool TrySpendItem(string itemId, int count)
+        {
+            if (Count(itemId) < count)
+            {
+                return false;
+            }
+
+            m_items[itemId] = Count(itemId) - count;
+            OnItemsChanged();
+            return true;
+        }
+
         private void OnCoinsChanged()
         {
             m_bus.Publish(new Events.CoinsChanged(this));

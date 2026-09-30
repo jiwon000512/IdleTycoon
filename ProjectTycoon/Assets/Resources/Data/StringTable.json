@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 28,
+  "version": 29,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -31,7 +31,8 @@
     "version 25 (2026-09-28, 점원 수다): 수다 대사 say_chat_* 추가(DialogueTable clerk_chat_*).",
     "version 26 (2026-09-29, 설계 25 밀 농사): 광장 농장 문 간판 sign_farm, 상점 카드 kind_plot, 상단 바 재료 알약 topbar_item, 굽기 칩 레시피 개수 chip_ingredient, 거두기 팝업 harvest_popup 추가.",
     "version 27 (2026-09-29, 설계 26 창고 화면): 상단 바 재료 알약을 걷어 topbar_item 삭제. 창고 inventory_title · inventory_count · inventory_source(획득처) · inventory_uses(사용처) · inventory_none · inventory_farm · inventory_seconds · inventory_yield · inventory_have 추가.",
-    "version 28 (2026-09-30, 설계 27 칸 밭): 갈기 값 표식 tag_till, 농장 편집 모드 안내 edit_dig_hint 추가. 편집 모드 밭 카드가 없어져 kind_plot 삭제."
+    "version 28 (2026-09-30, 설계 27 칸 밭): 갈기 값 표식 tag_till, 농장 편집 모드 안내 edit_dig_hint 추가. 편집 모드 밭 카드가 없어져 kind_plot 삭제.",
+    "version 29 (2026-09-30, 설계 28 똥 거름 · 덤): 창고 정보 창의 획득처 · 사용처 글(ItemTable source · use가 가리킨다) inventory_source_clean · inventory_use_plant · inventory_source_harvest · inventory_use_statue 추가."
   ],
   "rows": [
     {
@@ -449,6 +450,22 @@
     {
       "id": "inventory_have",
       "ko": "{0}개"
+    },
+    {
+      "id": "inventory_source_clean",
+      "ko": "빵집 똥 치우기"
+    },
+    {
+      "id": "inventory_use_plant",
+      "ko": "밭에 심을 때 자동 1개"
+    },
+    {
+      "id": "inventory_source_harvest",
+      "ko": "밭을 거둘 때 가끔"
+    },
+    {
+      "id": "inventory_use_statue",
+      "ko": "광장 석상(준비 중)"
     }
   ]
 }

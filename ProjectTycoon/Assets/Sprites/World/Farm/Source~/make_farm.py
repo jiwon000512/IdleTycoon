@@ -37,5 +37,47 @@ def icon():
     print(os.path.relpath(path, HERE), 'cells', out.shape[1], 'x', out.shape[0], 'palette', len(pal))
 
 
+# 설계 28 거름 · 반짝돌 아이콘(더미, 시안 전): 칸 무늬 12×12. 거름 = 짙은 흙더미, 반짝돌 = 모난 밝은 돌 + 빛 한 점
+DUMMY_PAL = {'#': (52, 32, 32), 'm': (96, 60, 36), 'M': (72, 44, 28), 'l': (144, 96, 60),
+             'g': (240, 208, 120), 'G': (200, 160, 80), 'w': (251, 244, 230), 'c': (250, 232, 176)}
+MANURE = ['............',
+          '.....##.....',
+          '....#ml#....',
+          '...#mmMm#...',
+          '..##mMmm##..',
+          '.#lm#mm#ml#.',
+          '#mmMm##mMmm#',
+          '#mMmmmMmmmM#',
+          '#mmmMmmmMmm#',
+          '.#MmmmMmmm#.',
+          '..########..',
+          '............']
+GEM = ['............',
+       '....####....',
+       '...#wccg#...',
+       '..#wcccgG#..',
+       '.#wccccggG#.',
+       '.#cccccggG#.',
+       '.#gccgggGG#.',
+       '..#gggGGG#..',
+       '...#gGGG#...',
+       '....#GG#....',
+       '.....##.....',
+       '............']
+
+
+def dummy(rows, name):
+    out = np.zeros((len(rows), len(rows[0]), 4), np.uint8)
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch in DUMMY_PAL:
+                out[y, x] = DUMMY_PAL[ch] + (255,)
+    path = os.path.join(RES, 'Items', name + '.png')
+    Image.fromarray(np.repeat(np.repeat(out, PX, axis=0), PX, axis=1)).save(path)
+    print(os.path.relpath(path, HERE))
+
+
 if __name__ == '__main__':
     icon()
+    dummy(MANURE, 'manure')
+    dummy(GEM, 'gem')

@@ -1,0 +1,1534 @@
+fileFormatVersion: 2
+guid: 16812462a4dfdb343afddf6270e07632
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -915146481439283887
+    second: plot_manure_0
+  - first:
+      213: -2864887292333094095
+    second: plot_manure_1
+  - first:
+      213: -3029737512179274266
+    second: plot_manure_2
+  - first:
+      213: -7476505226804131027
+    second: plot_manure_3
+  - first:
+      213: -791607991485503318
+    second: plot_manure_4
+  - first:
+      213: -7986828190990288518
+    second: plot_manure_5
+  - first:
+      213: -7250321655812531229
+    second: plot_manure_6
+  - first:
+      213: 5419382634475167119
+    second: plot_manure_7
+  - first:
+      213: -1081213742487310323
+    second: plot_manure_8
+  - first:
+      213: 8076595635808561957
+    second: plot_manure_9
+  - first:
+      213: 3284269662853347110
+    second: plot_manure_10
+  - first:
+      213: 4375807193540241529
+    second: plot_manure_11
+  - first:
+      213: 5412240014983594151
+    second: plot_manure_12
+  - first:
+      213: 933943951496429037
+    second: plot_manure_13
+  - first:
+      213: -7742147122878653463
+    second: plot_manure_14
+  - first:
+      213: 7914780576246537979
+    second: plot_manure_15
+  - first:
+      213: 5305221121772584232
+    second: plot_manure_16
+  - first:
+      213: -4888987107299277066
+    second: plot_manure_17
+  - first:
+      213: -3488182595206200688
+    second: plot_manure_18
+  - first:
+      213: 4210066508672127002
+    second: plot_manure_19
+  - first:
+      213: -6715640791801031386
+    second: plot_manure_20
+  - first:
+      213: 7720734758177633234
+    second: plot_manure_21
+  - first:
+      213: -1297390591766062939
+    second: plot_manure_22
+  - first:
+      213: 2568628771498736912
+    second: plot_manure_23
+  - first:
+      213: 4979174811065847269
+    second: plot_manure_24
+  - first:
+      213: -8100786312981235892
+    second: plot_manure_25
+  - first:
+      213: 3526062706824497978
+    second: plot_manure_26
+  - first:
+      213: -8329036098059112590
+    second: plot_manure_27
+  - first:
+      213: -7100900288821703951
+    second: plot_manure_28
+  - first:
+      213: -777571227207228496
+    second: plot_manure_29
+  - first:
+      213: -6915105874357958636
+    second: plot_manure_30
+  - first:
+      213: -281877168994489718
+    second: plot_manure_31
+  - first:
+      213: -7354868381376826827
+    second: plot_manure_32
+  - first:
+      213: 1380568398821501344
+    second: plot_manure_33
+  - first:
+      213: 2840160369636658652
+    second: plot_manure_34
+  - first:
+      213: 7348980234977981710
+    second: plot_manure_35
+  - first:
+      213: 7610759586919924865
+    second: plot_manure_36
+  - first:
+      213: -1839343810644690972
+    second: plot_manure_37
+  - first:
+      213: -9120502749986444605
+    second: plot_manure_38
+  - first:
+      213: -388713197318308872
+    second: plot_manure_39
+  - first:
+      213: 5738081030635522649
+    second: plot_manure_40
+  - first:
+      213: 9190217039518254325
+    second: plot_manure_41
+  - first:
+      213: -3506405346878397070
+    second: plot_manure_42
+  - first:
+      213: -639972345408333062
+    second: plot_manure_43
+  - first:
+      213: -348276021247863979
+    second: plot_manure_44
+  - first:
+      213: -8436787980276598309
+    second: plot_manure_45
+  - first:
+      213: 5846354809336113895
+    second: plot_manure_46
+  - first:
+      213: 5428857769122654059
+    second: plot_manure_47
+  - first:
+      213: 1362877716167998055
+    second: plot_manure_48
+  - first:
+      213: -356319160285374298
+    second: plot_manure_49
+  - first:
+      213: -9157140142662932076
+    second: plot_manure_50
+  - first:
+      213: -7074877283359305155
+    second: plot_manure_51
+  - first:
+      213: 150686827876688103
+    second: plot_manure_52
+  - first:
+      213: -6968634041185938276
+    second: plot_manure_53
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 9
+  spritePivot: {x: 0.5, y: 0}
+  spritePixelsToUnits: 80
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: plot_manure_0
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 159
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 155ec50bf1fbc43f0800000000000000
+      internalID: -915146481439283887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_1
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 157
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13b84fabf20ed38d0800000000000000
+      internalID: -2864887292333094095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_2
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 157
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ede0efe8c534f5d0800000000000000
+      internalID: -3029737512179274266
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_3
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 157
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2b0df2cb1e1e3890800000000000000
+      internalID: -7476505226804131027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_4
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 153
+        width: 10
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa86522d9b4a305f0800000000000000
+      internalID: -791607991485503318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_5
+      rect:
+        serializedVersion: 2
+        x: 185
+        y: 157
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a79b2f98316192190800000000000000
+      internalID: -7986828190990288518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_6
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 155
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ebd8fd2edea16b90800000000000000
+      internalID: -7250321655812531229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_7
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 153
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8d10ddfac3853b40800000000000000
+      internalID: 5419382634475167119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_8
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 147
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d00f5c864d1cef0f0800000000000000
+      internalID: -1081213742487310323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_9
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 147
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52be6da60f4d51070800000000000000
+      internalID: 8076595635808561957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_10
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 145
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62737f88bd1149d20800000000000000
+      internalID: 3284269662853347110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_11
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 141
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 978a090657df9bc30800000000000000
+      internalID: 4375807193540241529
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_12
+      rect:
+        serializedVersion: 2
+        x: 107
+        y: 151
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a0804c4e932c1b40800000000000000
+      internalID: 5412240014983594151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_13
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 149
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dedb11d531906fc00800000000000000
+      internalID: 933943951496429037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_14
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 137
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9eb510e163e5e8490800000000000000
+      internalID: -7742147122878653463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_15
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 137
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfe1652fff2f6dd60800000000000000
+      internalID: 7914780576246537979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_16
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 137
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82d7722808eef9940800000000000000
+      internalID: 5305221121772584232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_17
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 139
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f646fdf024d62cb0800000000000000
+      internalID: -4888987107299277066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_18
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 143
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 092c80d296c779fc0800000000000000
+      internalID: -3488182595206200688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_19
+      rect:
+        serializedVersion: 2
+        x: 215
+        y: 139
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a10db2a0f292d6a30800000000000000
+      internalID: 4210066508672127002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_20
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 127
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6259395e7404dc2a0800000000000000
+      internalID: -6715640791801031386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_21
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 127
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d3703a3b5f852b60800000000000000
+      internalID: 7720734758177633234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_22
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 123
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a899d2712ebefde0800000000000000
+      internalID: -1297390591766062939
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_23
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 109
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01db70d224a95a320800000000000000
+      internalID: 2568628771498736912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_24
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 107
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ed07202c15991540800000000000000
+      internalID: 4979174811065847269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_25
+      rect:
+        serializedVersion: 2
+        x: 55
+        y: 105
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c473865a4c9349f80800000000000000
+      internalID: -8100786312981235892
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_26
+      rect:
+        serializedVersion: 2
+        x: 187
+        y: 101
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3bc60899571fe030800000000000000
+      internalID: 3526062706824497978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_27
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 95
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27fe7c54cc1596c80800000000000000
+      internalID: -8329036098059112590
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_28
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 101
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1fa405b3fc8847d90800000000000000
+      internalID: -7100900288821703951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_29
+      rect:
+        serializedVersion: 2
+        x: 159
+        y: 97
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b3afbea6138535f0800000000000000
+      internalID: -777571227207228496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_30
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 89
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4184da658db9800a0800000000000000
+      internalID: -6915105874357958636
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_31
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 93
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8a6acf4532961cf0800000000000000
+      internalID: -281877168994489718
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_32
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 87
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5323846cc224ee990800000000000000
+      internalID: -7354868381376826827
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_33
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 87
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a9a2e7e4a3c82310800000000000000
+      internalID: 1380568398821501344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_34
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 93
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cddc551fec64a6720800000000000000
+      internalID: 2840160369636658652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_35
+      rect:
+        serializedVersion: 2
+        x: 59
+        y: 85
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e05ba3f4692dcf560800000000000000
+      internalID: 7348980234977981710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_36
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 85
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 184c2415589de9960800000000000000
+      internalID: 7610759586919924865
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_37
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 81
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e7b5baac865976e0800000000000000
+      internalID: -1839343810644690972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_38
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 83
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3caa51642177d6180800000000000000
+      internalID: -9120502749986444605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_39
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 83
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8fbf55218630b9af0800000000000000
+      internalID: -388713197318308872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_40
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 75
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95a0073bb42c1af40800000000000000
+      internalID: 5738081030635522649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_41
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 77
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f44a31a4b53a8f70800000000000000
+      internalID: 9190217039518254325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_42
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 75
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27568cc2aeeb65fc0800000000000000
+      internalID: -3506405346878397070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_43
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 77
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afadcd5ea8c5e17f0800000000000000
+      internalID: -639972345408333062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_44
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 59
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5531cbdcdccaa2bf0800000000000000
+      internalID: -348276021247863979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_45
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 65
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd9f35e28028aea80800000000000000
+      internalID: -8436787980276598309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_46
+      rect:
+        serializedVersion: 2
+        x: 155
+        y: 45
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ea206949bc622150800000000000000
+      internalID: 5846354809336113895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_47
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 47
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b67eca0b06d275b40800000000000000
+      internalID: 5428857769122654059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_48
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 49
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76a3d70ef0ae9e210800000000000000
+      internalID: 1362877716167998055
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_49
+      rect:
+        serializedVersion: 2
+        x: 59
+        y: 41
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a856809c991e0bf0800000000000000
+      internalID: -356319160285374298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_50
+      rect:
+        serializedVersion: 2
+        x: 117
+        y: 37
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4992b1e8e8d4be080800000000000000
+      internalID: -9157140142662932076
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_51
+      rect:
+        serializedVersion: 2
+        x: 229
+        y: 41
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3253e7589cf0dd90800000000000000
+      internalID: -7074877283359305155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_52
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 29
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e0abef1fd8571200800000000000000
+      internalID: 150686827876688103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: plot_manure_53
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 25
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c94da6dc2407a4f90800000000000000
+      internalID: -6968634041185938276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      plot_manure_0: -915146481439283887
+      plot_manure_1: -2864887292333094095
+      plot_manure_10: 3284269662853347110
+      plot_manure_11: 4375807193540241529
+      plot_manure_12: 5412240014983594151
+      plot_manure_13: 933943951496429037
+      plot_manure_14: -7742147122878653463
+      plot_manure_15: 7914780576246537979
+      plot_manure_16: 5305221121772584232
+      plot_manure_17: -4888987107299277066
+      plot_manure_18: -3488182595206200688
+      plot_manure_19: 4210066508672127002
+      plot_manure_2: -3029737512179274266
+      plot_manure_20: -6715640791801031386
+      plot_manure_21: 7720734758177633234
+      plot_manure_22: -1297390591766062939
+      plot_manure_23: 2568628771498736912
+      plot_manure_24: 4979174811065847269
+      plot_manure_25: -8100786312981235892
+      plot_manure_26: 3526062706824497978
+      plot_manure_27: -8329036098059112590
+      plot_manure_28: -7100900288821703951
+      plot_manure_29: -777571227207228496
+      plot_manure_3: -7476505226804131027
+      plot_manure_30: -6915105874357958636
+      plot_manure_31: -281877168994489718
+      plot_manure_32: -7354868381376826827
+      plot_manure_33: 1380568398821501344
+      plot_manure_34: 2840160369636658652
+      plot_manure_35: 7348980234977981710
+      plot_manure_36: 7610759586919924865
+      plot_manure_37: -1839343810644690972
+      plot_manure_38: -9120502749986444605
+      plot_manure_39: -388713197318308872
+      plot_manure_4: -791607991485503318
+      plot_manure_40: 5738081030635522649
+      plot_manure_41: 9190217039518254325
+      plot_manure_42: -3506405346878397070
+      plot_manure_43: -639972345408333062
+      plot_manure_44: -348276021247863979
+      plot_manure_45: -8436787980276598309
+      plot_manure_46: 5846354809336113895
+      plot_manure_47: 5428857769122654059
+      plot_manure_48: 1362877716167998055
+      plot_manure_49: -356319160285374298
+      plot_manure_5: -7986828190990288518
+      plot_manure_50: -9157140142662932076
+      plot_manure_51: -7074877283359305155
+      plot_manure_52: 150686827876688103
+      plot_manure_53: -6968634041185938276
+      plot_manure_6: -7250321655812531229
+      plot_manure_7: 5419382634475167119
+      plot_manure_8: -1081213742487310323
+      plot_manure_9: 8076595635808561957
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

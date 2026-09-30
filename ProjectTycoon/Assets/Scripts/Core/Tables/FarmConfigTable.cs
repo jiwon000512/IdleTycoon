@@ -20,5 +20,12 @@ namespace ZooTycoon.Core
         public double TillCost { get; set; }
         // 밭 몸통 여백(유닛, 칸 둘레): 익은 밭은 발이 몸통 안에 들 때만 거둔다(여백은 걷는 길)
         public double FieldInset { get; set; }
+        // 설계 28: 심을 때 창고에 있으면 1개 쓰는 거름 재료와 그 밭의 자라는 시간 배율(0 초과 1 이하)
+        public string ManureItem { get; set; }
+        public double ManureGrowScale { get; set; }
+        // 거둘 때 bonusChance로 하나 나오는 덤 재료. 거름 준 밭은 확률 × manureBonusScale
+        public string BonusItem { get; set; }
+        public double BonusChance { get; set; }
+        public double ManureBonusScale { get; set; }
     }
 }

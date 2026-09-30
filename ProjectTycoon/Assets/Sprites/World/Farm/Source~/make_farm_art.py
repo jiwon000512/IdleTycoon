@@ -44,6 +44,8 @@ SOIL = (96, 60, 36)
 SOIL_LIGHT = (144, 96, 60)
 SOIL_DARK = (72, 36, 24)
 SOIL_PALE = (192, 132, 96)
+MANURE = (48, 28, 24)
+MANURE_LIGHT = (104, 72, 44)
 
 # 표시 색: 초록은 밀 줄기 단계 팔레트, 이삭은 익음 단계 팔레트
 GREEN = (120, 132, 36)
@@ -282,7 +284,27 @@ def marks():
     save(ready, os.path.join(FARM, 'farm_ready_mark.png'))
 
 
+def manure():
+    # 설계 28 거름 준 밭의 알갱이(더미, 시안 전): 흙판 속에 짙은 거름 덩이를 흩뿌린 겹 그림(흙판과 같은 크기 · 같은 밑변). 이랑 선과 테두리는 비운다
+    out = np.zeros((CELL_H, CELL_W, 4), np.uint8)
+    rng = np.random.RandomState(28)
+    top, bottom = INSET + RIM + 1, CELL_H - INSET - RIM - 2
+    left, right = INSET + RIM + 1, CELL_W - INSET - RIM - 3
+    bed = (CELL_H - 2 * (INSET + RIM)) // BEDS
+    lines = [CELL_H - INSET - RIM - 1 - bed * b for b in range(1, BEDS)]
+    # 멀리서도 거름 밭이 보이게 덩이는 3×2칸, 촘촘히(처음 2×2 · 70개는 캡처에서 안 보였다)
+    for _ in range(150):
+        y, x = rng.randint(top, bottom), rng.randint(left, right - 1)
+        if any(abs(y - line) <= 1 or abs(y + 1 - line) <= 1 for line in lines):
+            continue
+        out[y, x:x + 3] = MANURE + (255,)
+        out[y + 1, x:x + 3] = MANURE + (255,)
+        out[y, x + 1] = MANURE_LIGHT + (255,)
+    save(out, os.path.join(FARM, 'plot_manure.png'))
+
+
 if __name__ == '__main__':
     soil()
+    manure()
     wheat()
     marks()
