@@ -174,11 +174,12 @@ fill[line[..., 3] > 0] = (255, 255, 255, 255)   # 선 자리도 채워 두어 �
 save('clerk_badge_line', nine(line, (0, 0, 36, 12), (5, 5, 5, 5), (18, 6)), border=(5, 5, 5, 5), clear=False)
 save('clerk_badge_fill', nine(fill, (0, 0, 36, 12), (5, 5, 5, 5), (18, 6)), border=(5, 5, 5, 5), clear=False)
 print('badge green', tuple(m[128, 23]), 'gray', tuple(m[182, 23]))
-# 두 칸 표 91×22(x 59..150, y 113..135): 머리글 두 칸·값 두 칸 안을 각 칸 밝은 색 중앙값으로 지운다
+# 두 칸 표 91×24(시안 x 59..150, y 113..135의 91×22에서 머리글을 2칸 키움): 머리글 두 칸·값 두 칸 안을 각 칸 밝은 색 중앙값으로 지운다
 table = crop(m, (59, 113, 150, 135))
 for box in ((2, 1, 48, 10), (50, 1, 89, 10), (2, 11, 48, 21), (50, 11, 89, 21)):
     erase(table, box, box)
 table[-1] = table[0]   # 시안은 표 아래가 카드 테두리에 붙어 선이 없다. 카드 안에 뜨므로 위 선을 아래에도 긋는다(2026-09-27)
+table = np.concatenate([table[:6], table[5:6], table[5:6], table[6:]], axis=0)   # 머리글 칸 9 → 11칸: 굵은 11 글자(44px)가 들게 안쪽 한 줄을 두 번 더(2026-09-30 UI 글자 규칙)
 save('clerk_table', table, clear=False)
 # 게이지 틀 30×7: 왼쪽 끝은 채움에 가려 있어 오른쪽 끝을 뒤집어 쓴다. 채움 19×5는 위 밝은 줄·아래 어두운 줄 포함
 save('clerk_gauge', nine(m, (63, 126, 93, 133), (3, 3, 3, 3), (88, 129), mirror_left=True), border=(3, 3, 3, 3))

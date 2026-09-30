@@ -19,13 +19,12 @@ namespace ZooTycoon.Editor
         const string k_Dir = "Assets/Fonts/Galmuri/";
         const string k_DataDir = "Assets/Resources/Data/";
 
-        // (에셋 이름, TTF 파일, 픽셀 크기). 정자체는 1px 획 그대로(2026-09-26: 굵히기·그림자 모두 사용자가 반려 — 굵은체와 어울리지 않는다)
+        // (에셋 이름, TTF 파일, 픽셀 크기). 정자체는 1px 획 그대로(2026-09-26: 굵히기·그림자 모두 사용자가 반려 — 굵은체와 어울리지 않는다).
+        // 글자는 굵은 11 · 보통 9 두 벌(UI 규칙 1장 10, 2026-09-30: 쓰는 곳이 없어진 Galmuri14 · 보통 Galmuri11은 지웠다)
         static readonly (string asset, string file, int size)[] k_Fonts =
         {
             ("Galmuri9", "Galmuri9B", 9),
-            ("Galmuri11", "Galmuri11B", 11),
             ("Galmuri11-Bold", "Galmuri11B-Bold", 11),
-            ("Galmuri14", "Galmuri14B", 14),
         };
 
         [MenuItem("ZooTycoon/Bake/Fonts")]
@@ -58,11 +57,6 @@ namespace ZooTycoon.Editor
                 }
             }
 
-            // 11px의 굵은 글씨 = Galmuri11-Bold 에셋(가짜 굵기 대신 실제 굵은 스트라이크)
-            TMP_FontAsset regular = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(k_Dir + "Galmuri11.asset");
-            TMP_FontAsset bold = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(k_Dir + "Galmuri11-Bold.asset");
-            regular.fontWeightTable[7].regularTypeface = bold;
-            EditorUtility.SetDirty(regular);
             AssetDatabase.SaveAssets();
             Debug.Log($"Galmuri font assets {k_Fonts.Length}, characters {characters.Length}");
         }
