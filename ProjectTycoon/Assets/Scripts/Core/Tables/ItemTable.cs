@@ -7,6 +7,8 @@ namespace ZooTycoon.Core
     public sealed class ItemTable : Table<string>
     {
         public string Name { get; set; }
+        // 설계 26: 창고 화면의 설명 한두 줄
+        public string Desc { get; set; }
         // 아이콘(Resources/ 기준, 확장자 없음). 상단 바 알약 · 굽기 칩 · 거두기 팝업
         public string Icon { get; set; }
         // 새 게임 창고에 든 개수

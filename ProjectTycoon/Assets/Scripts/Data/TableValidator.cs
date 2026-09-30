@@ -285,16 +285,16 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 설계 25: 재료는 이름·아이콘이 있고 시작 개수는 0 이상
+        // 설계 25 · 26: 재료는 이름·설명·아이콘이 있고 시작 개수는 0 이상
         private static void ValidateItems(TableSet tables, List<string> errors)
         {
             foreach (ItemTable item in tables.GetAll<ItemTable>())
             {
                 CheckId("ItemTable", item.Id, errors);
 
-                if (string.IsNullOrEmpty(item.Name) || string.IsNullOrEmpty(item.Icon) || item.Start < 0)
+                if (string.IsNullOrEmpty(item.Name) || string.IsNullOrEmpty(item.Desc) || string.IsNullOrEmpty(item.Icon) || item.Start < 0)
                 {
-                    errors.Add($"ItemTable '{item.Id}': name·icon이 있고 start는 0 이상이어야 한다.");
+                    errors.Add($"ItemTable '{item.Id}': name·desc·icon이 있고 start는 0 이상이어야 한다.");
                 }
             }
         }

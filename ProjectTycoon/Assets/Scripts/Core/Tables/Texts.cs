@@ -41,6 +41,13 @@ namespace ZooTycoon.Core
                 Add(chars, row.Name);
             }
 
+            // 설계 26: 창고 화면의 재료 이름 · 설명
+            foreach (ItemTable row in tables.GetAll<ItemTable>())
+            {
+                Add(chars, row.Name);
+                Add(chars, row.Desc);
+            }
+
             // 설계 21: 점원 역할 이름과 후보 이름 풀
             foreach (ClerkTable row in tables.GetAll<ClerkTable>())
             {

@@ -1,11 +1,12 @@
 {
   "table": "ItemTable",
-  "version": 1,
+  "version": 2,
   "notes": [
     "설계 25 밀 농사: 재료. id는 CropTable item · BreadTable ingredients가 가리킨다. 창고(ZooState)가 id로 세고, 사고팔지 않는다(재화는 코인 하나).",
-    "icon: Resources/ 기준 경로(확장자 없음). 상단 바 재료 알약 · 굽기 칩 레시피 · 거두기 팝업이 같은 그림을 쓴다. start: 새 게임 창고에 든 개수(시작값)."
+    "icon: Resources/ 기준 경로(확장자 없음). 상단 바 재료 알약 · 굽기 칩 레시피 · 거두기 팝업이 같은 그림을 쓴다. start: 새 게임 창고에 든 개수(시작값).",
+    "version 2 (2026-09-29, 설계 26 창고 화면): desc = 창고에서 칸을 누르면 보이는 설명. 획득처 · 사용처는 CropTable · BreadTable에서 찾는다."
   ],
   "rows": [
-    { "id": "wheat", "name": "밀", "icon": "Sprites/Items/wheat", "start": 10 }
+    { "id": "wheat", "name": "밀", "desc": "밭에서 자라는 노란 곡식. 빵 반죽의 기본 재료다.", "icon": "Sprites/Items/wheat", "start": 10 }
   ]
 }

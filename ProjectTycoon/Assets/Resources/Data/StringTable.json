@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 26,
+  "version": 27,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -29,7 +29,8 @@
     "version 23 (2026-09-28, 점원 연출 1단계): 해고 확인 창 clerk_fire_ask·clerk_fire_cancel·clerk_fire_hint, 협상 결과 리본 clerk_nego_result_keep·down·up 추가. say_wombat_wake 삭제(웜뱃은 말하지 않는다). clerk_nego_think 삭제, clerk_nego_offer(「{0} 어때?」)는 후보가 부르는 값(협상 화면의 웜뱃 말풍선 삭제).",
     "version 24 (2026-09-28, 점원 연출 2단계): 점원 버튼 배지 clerk_badge_short(「!」, 다음 월급날에 코인이 모자란다) 추가. 딴짓 수 배지는 숫자만.",
     "version 25 (2026-09-28, 점원 수다): 수다 대사 say_chat_* 추가(DialogueTable clerk_chat_*).",
-    "version 26 (2026-09-29, 설계 25 밀 농사): 광장 농장 문 간판 sign_farm, 상점 카드 kind_plot, 상단 바 재료 알약 topbar_item, 굽기 칩 레시피 개수 chip_ingredient, 거두기 팝업 harvest_popup 추가."
+    "version 26 (2026-09-29, 설계 25 밀 농사): 광장 농장 문 간판 sign_farm, 상점 카드 kind_plot, 상단 바 재료 알약 topbar_item, 굽기 칩 레시피 개수 chip_ingredient, 거두기 팝업 harvest_popup 추가.",
+    "version 27 (2026-09-29, 설계 26 창고 화면): 상단 바 재료 알약을 걷어 topbar_item 삭제. 창고 inventory_title · inventory_count · inventory_source(획득처) · inventory_uses(사용처) · inventory_none · inventory_farm · inventory_seconds · inventory_yield · inventory_have 추가."
   ],
   "rows": [
     {
@@ -401,16 +402,48 @@
       "ko": "밭"
     },
     {
-      "id": "topbar_item",
-      "ko": "{0}"
-    },
-    {
       "id": "chip_ingredient",
       "ko": "{0}"
     },
     {
       "id": "harvest_popup",
       "ko": "+{0}"
+    },
+    {
+      "id": "inventory_title",
+      "ko": "창고"
+    },
+    {
+      "id": "inventory_count",
+      "ko": "{0}"
+    },
+    {
+      "id": "inventory_source",
+      "ko": "획득처"
+    },
+    {
+      "id": "inventory_uses",
+      "ko": "사용처"
+    },
+    {
+      "id": "inventory_none",
+      "ko": "없음"
+    },
+    {
+      "id": "inventory_farm",
+      "ko": "농장 밭"
+    },
+    {
+      "id": "inventory_seconds",
+      "ko": "{0}초"
+    },
+    {
+      "id": "inventory_yield",
+      "ko": "×{0}"
+    },
+    {
+      "id": "inventory_have",
+      "ko": "{0}개"
     }
   ]
 }
