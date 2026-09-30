@@ -46,8 +46,8 @@ namespace ZooTycoon.UI
         private const float k_BigIconScale = 4f;
         private const float k_LineIconScale = 2f;
         private const float k_IconBoxSlack = 0.25f;
-        private const float k_EmptyAlpha = 0.35f;
-        private const float k_DimAlpha = 0.5f;
+        // 빈 칸과 0개 칸은 같은 세기로 흐리게(시안 A, 2026-09-30)
+        private const float k_FadedAlpha = 0.6f;
         private const int k_UseRowsVisible = 3;
 
         [SerializeField] private Button m_openButton;
@@ -118,7 +118,7 @@ namespace ZooTycoon.UI
             m_slotIconBox = Box(m_slotTemplate.transform);
             m_infoIconBox = m_infoIcon.rectTransform.sizeDelta.y;
             m_sourceIconBox = Box(m_sourceTemplate);
-            m_useIconBox = Box(m_useTemplate);
+            m_useIconBox = Box(m_useTemplate.Find("IconCell"));
             m_info.SetActive(false);
             m_root.SetActive(false);
         }
@@ -191,7 +191,7 @@ namespace ZooTycoon.UI
                 SlotData data = slots[i];
                 bool empty = data.IconPath == null;
                 slot.interactable = !empty;
-                slot.GetComponent<CanvasGroup>().alpha = empty ? k_EmptyAlpha : data.Dim ? k_DimAlpha : 1f;
+                slot.GetComponent<CanvasGroup>().alpha = empty || data.Dim ? k_FadedAlpha : 1f;
                 SetIcon(slot.transform.Find("Icon").GetComponent<Image>(), data.IconPath, k_SlotIconScale, m_slotIconBox);
                 slot.transform.Find("CountBadge").gameObject.SetActive(!empty);
                 slot.transform.Find("CountBadge/Count").GetComponent<TMP_Text>().text = data.Count;
@@ -234,20 +234,32 @@ namespace ZooTycoon.UI
             Fill(m_uses, m_useTemplate, uses.Count);
             m_usesNone.gameObject.SetActive(uses.Count == 0);
 
+            // 보이는 창 높이 = 앞에서 k_UseRowsVisible줄까지의 줄 높이 + 사이. 줄 높이 · 사이는 프리팹 값, 글만 있는 줄은 획득처 줄 높이
+            float row = m_useTemplate.GetComponent<LayoutElement>().preferredHeight;
+            float textRow = m_sourceTemplate.GetComponent<LayoutElement>().preferredHeight;
+            float gap = m_useTemplate.parent.GetComponent<VerticalLayoutGroup>().spacing;
+            float height = 0f;
+
             for (int i = 0; i < uses.Count; i++)
             {
+                // 그림은 고정 폭 칸 가운데(이름 시작을 맞춘다), 글만 있는 사용처는 칸째 숨긴다. 줄 사이 구분선은 둘째 줄부터
                 Transform use = m_uses[i];
-                use.Find("Icon").gameObject.SetActive(uses[i].IconPath != null);
-                SetIcon(use.Find("Icon").GetComponent<Image>(), uses[i].IconPath, k_LineIconScale, m_useIconBox);
+                bool pictured = uses[i].IconPath != null;
+                float rowHeight = pictured ? row : textRow;
+                use.GetComponent<LayoutElement>().preferredHeight = rowHeight;
+                use.Find("IconCell").gameObject.SetActive(pictured);
+                SetIcon(use.Find("IconCell/Icon").GetComponent<Image>(), uses[i].IconPath, k_LineIconScale, m_useIconBox);
+                use.Find("Divider").gameObject.SetActive(i > 0);
                 use.Find("Name").GetComponent<TMP_Text>().text = uses[i].Name;
                 use.Find("Count").GetComponent<TMP_Text>().text = uses[i].Count;
+
+                if (i < k_UseRowsVisible)
+                {
+                    height += rowHeight + (i > 0 ? gap : 0f);
+                }
             }
 
-            // 보이는 창 높이 = 줄 수(최대 k_UseRowsVisible) × 줄 높이 + 사이. 줄 높이 · 사이는 프리팹 값
-            int shown = Mathf.Clamp(uses.Count, 1, k_UseRowsVisible);
-            float row = m_useTemplate.GetComponent<LayoutElement>().preferredHeight;
-            float gap = m_useTemplate.parent.GetComponent<VerticalLayoutGroup>().spacing;
-            m_usesViewport.preferredHeight = shown * row + (shown - 1) * gap;
+            m_usesViewport.preferredHeight = height;
             m_usesViewport.gameObject.SetActive(uses.Count > 0);
             m_usesScroll.verticalNormalizedPosition = 1f;
 
