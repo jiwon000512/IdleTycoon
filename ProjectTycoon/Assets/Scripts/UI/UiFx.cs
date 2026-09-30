@@ -43,6 +43,22 @@ namespace ZooTycoon.UI
             }
         }
 
+        // 값이 바뀐 칸이 한 번 부푼다(1 → 1.12 → 1, 0.18초). 눌림 PressScale과 같은 결
+        public static IEnumerator Pulse(RectTransform body)
+        {
+            const float seconds = 0.18f;
+            const float peak = 0.12f;
+
+            for (float t = 0f; t < seconds; t += Time.unscaledDeltaTime)
+            {
+                float k = Mathf.Sin(t / seconds * Mathf.PI);
+                body.localScale = Vector3.one * (1f + peak * k);
+                yield return null;
+            }
+
+            body.localScale = Vector3.one;
+        }
+
         public static IEnumerator Vanish(CanvasGroup group, GameObject hide)
         {
             float from = group.alpha;

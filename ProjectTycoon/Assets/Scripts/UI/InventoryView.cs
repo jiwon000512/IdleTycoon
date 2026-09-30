@@ -40,7 +40,8 @@ namespace ZooTycoon.UI
             public string Count;
         }
 
-        // 월드 그림(한 칸 2px)을 정수 배로(UI 규칙 8): 칸 · 정보 아이콘은 한 칸 = 캔버스 8px, 줄 아이콘은 4px
+        // 월드 그림(한 칸 2px)을 정수 배로(UI 규칙 8): 칸 아이콘은 한 칸 = 캔버스 10px(칸을 채우게, QA 2026-09-30), 정보 아이콘 8px, 줄 아이콘 4px
+        private const float k_SlotIconScale = 5f;
         private const float k_BigIconScale = 4f;
         private const float k_LineIconScale = 2f;
         private const float k_EmptyAlpha = 0.35f;
@@ -73,6 +74,8 @@ namespace ZooTycoon.UI
         [SerializeField] private TextMeshProUGUI m_usesNone;
 
         private readonly List<Button> m_slots = new List<Button>();
+        // 칸마다 마지막에 보인 개수 글(열린 채 바뀌면 그 칸이 부푼다)
+        private readonly List<string> m_counts = new List<string>();
         private readonly List<RectTransform> m_sources = new List<RectTransform>();
         private readonly List<RectTransform> m_uses = new List<RectTransform>();
         private readonly Dictionary<string, Sprite> m_sprites = new Dictionary<string, Sprite>();
@@ -143,6 +146,7 @@ namespace ZooTycoon.UI
             SoundManager.Instance.Play(SoundTable.k_UiClose);
         }
 
+        // 칸: 아이콘(5배) + 오른쪽 아래 개수 배지(빈 칸은 숨김) + 이름. 열린 채 개수가 바뀐 칸은 한 번 부푼다
         public void SetSlots(IReadOnlyList<SlotData> slots)
         {
             while (m_slots.Count < slots.Count)
@@ -151,6 +155,7 @@ namespace ZooTycoon.UI
                 Button slot = Instantiate(m_slotTemplate, m_slotTemplate.transform.parent);
                 slot.onClick.AddListener(() => SlotClicked?.Invoke(index));
                 m_slots.Add(slot);
+                m_counts.Add(null);
             }
 
             for (int i = 0; i < m_slots.Count; i++)
@@ -167,9 +172,17 @@ namespace ZooTycoon.UI
                 bool empty = data.IconPath == null;
                 slot.interactable = !empty;
                 slot.GetComponent<CanvasGroup>().alpha = empty ? k_EmptyAlpha : data.Dim ? k_DimAlpha : 1f;
-                SetIcon(slot.transform.Find("Icon").GetComponent<Image>(), data.IconPath, k_BigIconScale);
-                slot.transform.Find("Count").GetComponent<TMP_Text>().text = data.Count;
+                SetIcon(slot.transform.Find("Icon").GetComponent<Image>(), data.IconPath, k_SlotIconScale);
+                slot.transform.Find("CountBadge").gameObject.SetActive(!empty);
+                slot.transform.Find("CountBadge/Count").GetComponent<TMP_Text>().text = data.Count;
                 slot.transform.Find("Name").GetComponent<TMP_Text>().text = data.Name;
+
+                if (!empty && m_root.activeSelf && m_counts[i] != null && m_counts[i] != data.Count)
+                {
+                    StartCoroutine(UiFx.Pulse((RectTransform)slot.transform));
+                }
+
+                m_counts[i] = empty ? null : data.Count;
             }
         }
 

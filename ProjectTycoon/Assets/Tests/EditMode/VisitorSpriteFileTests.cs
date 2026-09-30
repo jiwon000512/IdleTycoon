@@ -85,7 +85,7 @@ namespace ZooTycoon.Tests
             }
         }
 
-        // 설계 25: 재료 아이콘, 작물 단계 그림(sprite_0 ~ _(stages − 1))
+        // 설계 25 · 27: 재료 아이콘, 작물 단계 그림(sprite_단계_반쪽, 단계 0 ~ stages − 1 × 반쪽 0 · 1)
         [Test]
         public void Icon_OfEveryItem_AndStages_OfEveryCrop_ExistUnderResources()
         {
@@ -98,8 +98,11 @@ namespace ZooTycoon.Tests
             {
                 for (int i = 0; i < crop.Stages; i++)
                 {
-                    string stage = crop.Sprite + "_" + i + ".png";
-                    Assert.That(File.Exists(Path.Combine(k_ResourcesPath, stage)), Is.True, $"CropTable '{crop.Id}': {stage} 파일이 없다.");
+                    for (int half = 0; half < 2; half++)
+                    {
+                        string stage = crop.Sprite + "_" + i + "_" + half + ".png";
+                        Assert.That(File.Exists(Path.Combine(k_ResourcesPath, stage)), Is.True, $"CropTable '{crop.Id}': {stage} 파일이 없다.");
+                    }
                 }
             }
         }

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 53e460a42b49c1f4c847a10d2d7623c6
+guid: 9c625f768cb31bb41b53098bdf17bb88
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 511386403849076434
-    second: wheat_2_0
+      213: 130556525436615429
+    second: wheat_1_1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: wheat_2_0
+      name: wheat_1_1_0
       rect:
         serializedVersion: 2
-        x: 9
-        y: 19
-        width: 116
-        height: 50
+        x: 0
+        y: 0
+        width: 240
+        height: 42
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2de7360993fc81700800000000000000
-      internalID: 511386403849076434
+      spriteID: 50b32c9d774dfc100800000000000000
+      internalID: 130556525436615429
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      wheat_2_0: 511386403849076434
+      wheat_1_1_0: 130556525436615429
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

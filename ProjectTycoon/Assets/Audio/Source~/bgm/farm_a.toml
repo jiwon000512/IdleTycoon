@@ -1,0 +1,12 @@
+caption = "warm pastoral theme for a small underground wheat field lit by soft sunbeams falling through cracks in the ceiling, gentle ukulele and plucked acoustic guitar, soft kalimba melody, low warm pad and upright bass, light airy flute phrases like distant birds, relaxed walking pace, bright but calm major key, cozy and simple, sparse melody, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 92
+keyscale = "G major"
+timesignature = "4"
+seed = 2501
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/farm_a"
+audio_format = "wav"
+backend = "pt"
+thinking = false

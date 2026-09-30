@@ -10,3 +10,4 @@
 - 원본 WAV는 저장소 밖 `C:\project\ACE-Step-1.5\output\tycoon\`. 게임에는 루프 OGG만 `Resources/Audio/`에 넣는다.
 - 결정(2026-09-28): 빵집 굴 = `bakery_f.toml`(말랑한 칩튠 가게, 108 BPM F장조) → mellow → loop 4~32마디(62.2초). 다른 시안 설정(a~k)은 기록으로 둔다. 프롬프트의 「drumless/no drums」는 잘 안 먹혀 드럼은 mellow.py(Demucs)로 줄인다.
 - 결정(2026-09-28): 광장 = `plaza_d.toml`(등불 광장, 84 BPM F장조, 굴 속이라 낮은 음 중심) → `mellow.py <wav> <출력> 2.0 0.3 7000`(굴 울림) → loop 5~22마디(48.6초, 최소 16마디). 시안 plaza_a~f는 기록.
+- 결정(2026-09-30, 에이전트 선택 · 사용자 피드백 대기): 농장 = `farm_c.toml`(굴 속 들판, 80 BPM D장조: 뜯는 기타 · 마림바 · 칼림바 · 리코더 · 낮은 첼로) → `mellow.py 2.0 0.3 7000` → loop 11~25마디(42.0초, 최소 12마디, 이음새 0.938). 8마디 24초(0.948) · 17마디 51초(0.920) · 24마디 72초(0.898)도 `output/tycoon/farm_c/loop_*.ogg`에 둠. 수치(`metrics.py`, mellow 기준): a 튀는 음 7.3dB · 무게중심 313Hz, b 14.1dB · 388Hz(칩튠이라 튐), c 6.3dB · 310Hz → c.

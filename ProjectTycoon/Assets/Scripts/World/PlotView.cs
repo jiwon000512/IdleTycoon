@@ -7,7 +7,7 @@ namespace ZooTycoon.World
     public sealed class PlotView : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer m_body;
-        [Tooltip("작물 포기(뒷줄부터)")]
+        [Tooltip("작물 줄(뒷줄부터). 줄마다 그림이 다르다")]
         [SerializeField] private SpriteRenderer[] m_crops;
         [SerializeField] private SpriteRenderer m_timer;
         [SerializeField] private Sprite[] m_timerFrames;
@@ -20,6 +20,9 @@ namespace ZooTycoon.World
         private float m_markY;
         private bool m_empty;
         private bool m_markHidden;
+
+        // 작물 줄 수(곳 화면이 줄마다 그림을 준다)
+        public int Rows => m_crops.Length;
 
         private void Awake()
         {
@@ -45,20 +48,20 @@ namespace ZooTycoon.World
             }
         }
 
-        // tilled: 밭 칸인가(흙 칸이면 흙판·작물·표식 전부 숨김). crop: 지금 단계 그림(빈 밭은 null). growing: 타이머, ripe: 다 익음 표시
-        public void Show(bool tilled, Sprite crop, bool growing, bool ripe)
+        // tilled: 밭 칸인가(흙 칸이면 흙판·작물·표식 전부 숨김). crops: 줄마다 지금 단계 그림(빈 밭은 null). growing: 타이머, ripe: 다 익음 표시
+        public void Show(bool tilled, Sprite[] crops, bool growing, bool ripe)
         {
             m_body.enabled = tilled;
 
-            foreach (SpriteRenderer renderer in m_crops)
+            for (int i = 0; i < m_crops.Length; i++)
             {
-                renderer.sprite = crop;
-                renderer.enabled = tilled && crop != null;
+                m_crops[i].sprite = crops == null ? null : crops[i];
+                m_crops[i].enabled = tilled && crops != null;
             }
 
             m_timer.enabled = tilled && growing;
             m_readyMark.enabled = tilled && ripe;
-            m_empty = tilled && crop == null;
+            m_empty = tilled && crops == null;
             m_emptyMark.enabled = m_empty && !m_markHidden;
         }
 

@@ -1,0 +1,12 @@
+caption = "soft cute chiptune farming theme for a pixel-art management game, gentle triangle-wave flute melody like a simple folk tune, round square-wave plucks, warm low chiptune bass, blended with real marimba and light acoustic guitar, calm sunny field mood inside a cozy burrow, major key, simple singable melody, not energetic, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 100
+keyscale = "C major"
+timesignature = "4"
+seed = 2502
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/farm_b"
+audio_format = "wav"
+backend = "pt"
+thinking = false

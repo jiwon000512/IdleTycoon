@@ -8,6 +8,7 @@ namespace ZooTycoon.Core
     {
         public const string k_Bakery = "bakery";
         public const string k_Plaza = "plaza";
+        public const string k_Farm = "farm";
 
         // Resources/ 기준, 확장자 없음
         public string Clip { get; set; }

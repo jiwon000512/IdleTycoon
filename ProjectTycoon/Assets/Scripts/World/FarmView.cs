@@ -13,6 +13,8 @@ namespace ZooTycoon.World
     public sealed class FarmView : MonoBehaviour, IAreaView
     {
         private const string k_PopupKey = "harvest_popup";
+        // 작물 그림 반쪽 수(make_farm_art.py가 한 줄을 둘로 나눈다)
+        private const int k_CropHalves = 2;
         // 거두기 팝업이 뜨는 높이(거둔 웜뱃 발끝에서 머리 위)
         private const float k_PopupHeight = 1.4f;
         // 갈기 값 표식(흙 칸마다 늘 보인다 — QA B): 웜뱃이 그 칸에 서기도 하므로 칸 윗변 바로 아래에, 모든 그림 위에
@@ -197,10 +199,23 @@ namespace ZooTycoon.World
             RefreshTillTags();
         }
 
+        // 작물 그림은 CropTable sprite + _단계_반쪽(0·1). 줄마다 반쪽을 번갈아 얹어 같은 그림이 반복되지 않는다
         private void Refresh(PlotInteractable plot)
         {
-            Sprite crop = plot.IsEmpty ? null : m_frames.Get(plot.Crop.Sprite + "_" + plot.Stage)[0];
-            m_plots[plot].Show(plot.IsTilled, crop, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe);
+            PlotView view = m_plots[plot];
+            Sprite[] crops = null;
+
+            if (!plot.IsEmpty)
+            {
+                crops = new Sprite[view.Rows];
+
+                for (int i = 0; i < crops.Length; i++)
+                {
+                    crops[i] = m_frames.Get(plot.Crop.Sprite + "_" + plot.Stage + "_" + i % k_CropHalves)[0];
+                }
+            }
+
+            view.Show(plot.IsTilled, crops, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe);
         }
 
         // 흙 칸(갈기 전)마다 「갈기 값」 표식을 늘 보인다. 갈면 사라진다

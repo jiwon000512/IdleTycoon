@@ -24,14 +24,14 @@ namespace ZooTycoon.Editor
         const string k_FarmDir = "Assets/Sprites/World/Farm/";
         const string k_CropDir = "Assets/Resources/Sprites/Farm/";
         const string k_ItemDir = "Assets/Resources/Sprites/Items/";
-        // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 포기 네 자리(칸 밑변 기준, 뒷줄부터).
+        // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 줄 셋(칸 밑변 기준, 뒷줄부터. 줄 그림은 120칸 폭 · 익으면 26칸 높이라 줄 사이 0.8이면 겹치지 않는다).
         // 타이머·다 익음 표시는 작물 위(칸 윗변 바로 아래), 빈 밭 화살표는 칸 가운데(작물이 없을 때만 보인다).
         // 표식은 캐릭터와 같은 층(0)에서 발끝 깊이로 정렬 — 웜뱃이 그 칸에 서면 웜뱃이 앞에 온다(QA 2026-09-30: 위 층이면 웜뱃 얼굴을 덮는다)
         const int k_FieldOrder = -1997;
         const int k_PlotMarkOrder = 0;
         const float k_PlotMarkHeight = 2.3f;
         const float k_PlotEmptyMarkHeight = 1.5f;
-        static readonly Vector3[] k_CropOffsets = { new Vector3(-0.85f, 1.2f, 0f), new Vector3(0.85f, 1.2f, 0f), new Vector3(-0.85f, 0.2f, 0f), new Vector3(0.85f, 0.2f, 0f) };
+        static readonly Vector3[] k_CropOffsets = { new Vector3(0f, 1.75f, 0f), new Vector3(0f, 0.95f, 0f), new Vector3(0f, 0.15f, 0f) };
         // 설계 11 광장 빵집 문(원점 = 구멍 밑변 가운데, 유닛): 차양은 아치 윗부분을 덮고, 간판은 문 왼쪽 띠 가운데
         const float k_AwningHeight = 1.0f;
         const float k_SignOffsetX = 1.3f;

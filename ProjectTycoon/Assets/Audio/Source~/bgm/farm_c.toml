@@ -1,0 +1,12 @@
+caption = "calm sunny meadow theme heard from inside a quiet earthen burrow, fingerpicked acoustic guitar, soft marimba and kalimba, gentle recorder melody, low cello drone and soft felt piano in the low register, slow peaceful pace, warm and simple, major key, sparse notes, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 80
+keyscale = "D major"
+timesignature = "4"
+seed = 2503
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/farm_c"
+audio_format = "wav"
+backend = "pt"
+thinking = false
