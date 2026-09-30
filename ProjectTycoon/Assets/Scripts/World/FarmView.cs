@@ -31,12 +31,11 @@ namespace ZooTycoon.World
         private const float k_GrainSeconds = 0.5f;
         private const int k_GrainCells = 5;
         private const int k_GrainOrder = 1000;
-        // 설계 28: 거름을 섞어 심는 순간 거름 알갱이가 튀고, 덤은 거두기 팝업 위로 한 박자 늦게 뜨며 반짝 알갱이가 튄다
+        // 설계 28: 거름을 섞어 심는 순간 거름 알갱이가 튀고, 덤은 한 박자 늦게 떠서 거두기 팝업 위에 쌓이며(CoinPopup) 반짝 알갱이가 튄다
         private static readonly Color k_Manure = new Color32(0x4A, 0x30, 0x22, 255);
         private static readonly Color k_ManureLight = new Color32(0x6E, 0x4C, 0x30, 255);
         private static readonly Color k_Spark = new Color32(0xFB, 0xF4, 0xE6, 255);
         private const float k_BonusDelay = 0.25f;
-        private const float k_BonusRise = 0.5f;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -373,7 +372,7 @@ namespace ZooTycoon.World
             Burst(ToWorld(m_farm.Layout.Cells.CellCenter(e.Plot.Cell)), k_Grain, k_GrainLight);
         }
 
-        // 설계 28: 덤이 나왔다. 거두기 팝업이 뜬 뒤 그 위로 하나 더 뜨고 반짝 알갱이가 튄다
+        // 설계 28: 덤이 나왔다. 거두기 팝업이 뜬 뒤 같은 자리에 하나 더 띄우면 그 위에 쌓이고, 쌓인 자리에서 반짝 알갱이가 튄다
         private void Bus_BonusFound(Events.BonusFound e)
         {
             if (e.Plot.Farm == m_farm)
@@ -385,12 +384,11 @@ namespace ZooTycoon.World
         private IEnumerator BonusRoutine(Events.BonusFound e)
         {
             yield return new WaitForSeconds(k_BonusDelay);
-            Vector3 at = ToWorld(m_farm.Wombat.Mover.Position) + Vector3.up * (k_PopupHeight + k_BonusRise);
-            Popup(at, e.Item, e.Count);
-            Burst(at, k_Spark, k_GrainLight);
+            CoinPopup popup = Popup(ToWorld(m_farm.Wombat.Mover.Position) + Vector3.up * k_PopupHeight, e.Item, e.Count);
+            Burst(popup.transform.position, k_Spark, k_GrainLight);
         }
 
-        private void Popup(Vector3 at, string item, int count)
+        private CoinPopup Popup(Vector3 at, string item, int count)
         {
             CoinPopup popup = Instantiate(m_popupPrefab, at, Quaternion.identity, transform);
             popup.Show(m_tables.Format(k_PopupKey, count), m_frames.Get(m_tables.Get<ItemTable>(item).Icon)[0]);
@@ -398,6 +396,7 @@ namespace ZooTycoon.World
 
         // 네모 알갱이 두 빛깔이 튄다(낟알 · 거름 · 반짝)
         private void Burst(Vector3 at, Color first, Color second)
+            return popup;
         {
             m_square = m_square != null ? m_square : Fx.NewSquare();
             StartCoroutine(Fx.Burst(transform, m_square, at, k_GrainCount, k_GrainSpread, k_GrainLift, k_GrainGravity, k_GrainSeconds, k_GrainCells, first, k_GrainOrder));
