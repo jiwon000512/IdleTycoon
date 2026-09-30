@@ -15,10 +15,11 @@ namespace ZooTycoon.World
     {
         private const string k_SignKey = "sign_bakery";
         private const string k_FarmSignKey = "sign_farm";
-        // 설계 29: 석상 굴리기 반짝 알갱이(거두기 덤과 같은 두 빛깔)
+        // 설계 29 · 30: 석상에 빌 때 반짝 알갱이(거두기 덤과 같은 두 빛깔). 축복이 걸린 동안은 k_GlowSeconds마다 금빛 알갱이 몇 개
         private static readonly Color k_SparkLight = new Color32(0xFB, 0xF4, 0xE6, 255);
         private static readonly Color k_SparkGold = new Color32(0xF0, 0xD8, 0x90, 255);
-        private const float k_StatueSparkHeight = 1.3f;
+        // 알갱이가 튀는 높이: 석상 그림 높이의 이 비율(머리 위쪽)
+        private const float k_StatueSparkHeight = 0.88f;
         private const int k_SparkCount = 8;
         private const float k_SparkSpread = 1.6f;
         private const float k_SparkLift = 3.2f;
@@ -26,6 +27,10 @@ namespace ZooTycoon.World
         private const float k_SparkSeconds = 0.5f;
         private const int k_SparkCells = 5;
         private const int k_SparkOrder = 1000;
+        private const float k_GlowSeconds = 1.4f;
+        private const int k_GlowCount = 3;
+        private const float k_GlowSpread = 1.0f;
+        private const float k_GlowLift = 1.8f;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -53,6 +58,7 @@ namespace ZooTycoon.World
         private IPlaced m_held;
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
+        private float m_glow;
 
         public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombat.transform;
@@ -93,7 +99,7 @@ namespace ZooTycoon.World
             {
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
-                bus.Subscribe<Events.StatueChanged>(Bus_StatueChanged),
+                bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged),
             };
         }
 
@@ -230,17 +236,46 @@ namespace ZooTycoon.World
             }
         }
 
-        // 설계 29: 굴리면 석상이 톡 튀고 머리 위에서 반짝 알갱이가 튄다
-        private void Bus_StatueChanged(Events.StatueChanged e)
+        private Vector3 StatueSparkPoint
         {
-            if (!e.Rolled)
+            get
+            {
+                Bounds body = m_statue.GetComponentInChildren<SpriteRenderer>().bounds;
+                return new Vector3(m_statue.position.x, body.min.y + body.size.y * k_StatueSparkHeight, m_statue.position.z);
+            }
+        }
+
+        private void Update()
+        {
+            if (m_plaza == null || m_plaza.Statue.Blessing.Active == null)
+            {
+                return;
+            }
+
+            m_glow -= Time.deltaTime;
+
+            if (m_glow > 0f)
+            {
+                return;
+            }
+
+            m_glow = k_GlowSeconds;
+            m_square = m_square != null ? m_square : Fx.NewSquare();
+            Vector3 at = StatueSparkPoint;
+            StartCoroutine(Fx.Burst(transform, m_square, at, k_GlowCount, k_GlowSpread, k_GlowLift, k_SparkGravity, k_SparkSeconds, k_SparkCells, k_SparkGold, k_SparkOrder));
+        }
+
+        // 설계 30: 빌면 석상이 톡 튀고 머리 위에서 반짝 알갱이가 튄다
+        private void Bus_BlessingChanged(Events.BlessingChanged e)
+        {
+            if (!e.Prayed || !isActiveAndEnabled)
             {
                 return;
             }
 
             StartCoroutine(Fx.Bounce(m_statue));
             m_square = m_square != null ? m_square : Fx.NewSquare();
-            Vector3 at = m_statue.position + Vector3.up * k_StatueSparkHeight;
+            Vector3 at = StatueSparkPoint;
             StartCoroutine(Fx.Burst(transform, m_square, at, k_SparkCount, k_SparkSpread, k_SparkLift, k_SparkGravity, k_SparkSeconds, k_SparkCells, k_SparkLight, k_SparkOrder));
             StartCoroutine(Fx.Burst(transform, m_square, at, k_SparkCount, k_SparkSpread, k_SparkLift, k_SparkGravity, k_SparkSeconds, k_SparkCells, k_SparkGold, k_SparkOrder));
         }

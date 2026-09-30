@@ -63,7 +63,7 @@ namespace ZooTycoon.Core
         protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue);
         public StatueInteractable Statue { get; }
         // 손님이 계단으로 오는 간격(석상 손님 능력이면 짧아진다)
-        private double ArrivalSeconds => m_config.ArrivalSeconds / (1d + Wombat.Worker.Wallet.Statue.Boost(StatueTable.k_Visitors));
+        private double ArrivalSeconds => m_config.ArrivalSeconds / (1d + Wombat.Worker.Wallet.Blessing.Boost(BlessingTable.k_Visitors));
 
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다. 시작 장식은 PlazaDecorTable
         public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)

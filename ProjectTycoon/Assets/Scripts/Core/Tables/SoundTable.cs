@@ -37,9 +37,10 @@ namespace ZooTycoon.Core
         public const string k_Step = "step";
         // 설계 28: 거둘 때 덤이 나옴
         public const string k_Bonus = "bonus";
-        // 설계 29: 석상 굴리기 · 전설이 나옴
+        // 설계 30: 석상에 빌기(이름이 돌기 시작) · 축복이 멈춰 걸림 · 축복이 풀림
         public const string k_StatueRoll = "statue_roll";
-        public const string k_StatueLegend = "statue_legend";
+        public const string k_StatueBlessed = "statue_blessed";
+        public const string k_BlessingEnd = "blessing_end";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -72,7 +73,8 @@ namespace ZooTycoon.Core
             k_Step,
             k_Bonus,
             k_StatueRoll,
-            k_StatueLegend,
+            k_StatueBlessed,
+            k_BlessingEnd,
         };
 
         // Resources/ 기준, 확장자 없음

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using Newtonsoft.Json;
@@ -15,6 +16,8 @@ namespace ZooTycoon.Editor
         const string k_WorldShop = "Assets/Sprites/World/Shop/";
         // 설계 09 v0.4: 행동 아이콘(ActionTable icon 경로). UI와 같은 PPU, 9-slice 없음
         const string k_ActionDir = "Assets/Resources/Sprites/Actions";
+        // 설계 30: 석상 축복 아이콘(BlessingTable icon 경로). 행동 아이콘과 같게
+        const string k_BlessingDir = "Assets/Resources/Sprites/Blessings";
         const float k_UiPpu = 25f;
         const float k_WorldPpu = 40f;
 
@@ -36,7 +39,7 @@ namespace ZooTycoon.Editor
                 Import(k_Dir + pair.Key + ".png", pair.Value.border, pair.Value.ppu > 0f ? pair.Value.ppu : k_UiPpu);
             }
 
-            foreach (string path in Directory.GetFiles(k_ActionDir, "*.png"))
+            foreach (string path in Directory.GetFiles(k_ActionDir, "*.png").Concat(Directory.GetFiles(k_BlessingDir, "*.png")))
             {
                 Import(path.Replace(Path.DirectorySeparatorChar, '/'), null, k_UiPpu);
             }

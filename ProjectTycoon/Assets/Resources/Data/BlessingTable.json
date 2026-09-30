@@ -1,19 +1,18 @@
 {
-  "table": "StatueTable",
+  "table": "BlessingTable",
   "version": 1,
   "notes": [
-    "설계 29 웜뱃 석상 능력. id = 능력(코드가 거는 곳이 있다: StatueTable.k_*). name · format = StringTable 키(형식은 {0} 이름, {1} 값 숫자).",
-    "values = 등급 [보통, 드묾, 전설]의 값(비율, 0.1 = 10%). 굽기 · 계산 · 밭 자람은 속도 × (1 + 값), 빵 값은 값 × (1 + 값) 반올림, 손님은 오는 간격 ÷ (1 + 값), 걸음은 속도 × (1 + 값), 덤은 확률 + 값. 같은 능력 두 줄이면 더한다.",
-    "weight = 굴릴 때 그 능력이 뽑힐 비중. 등급 비중 · 굴리기 값은 PlazaConfigTable statue*. 값은 시작값.",
-    "version 1 (2026-09-30, 설계 29): 능력 일곱."
+    "설계 30 석상 축복. id = 효과(코드가 거는 곳이 있다: BlessingTable.k_*). name · format = StringTable 키(format은 {0} 퍼센트 숫자 = value × 100, {1} 배수 = 1 + value). icon = Resources/ 기준 경로.",
+    "걸린 동안 굽기 · 계산 · 밭 자람은 속도 × (1 + value), 빵 값은 값 × (1 + value) 반올림, 손님은 오는 간격 ÷ (1 + value), 덤은 확률 × (1 + value). 늘 하나만 걸린다(새로 빌면 앞 축복은 풀린다).",
+    "seconds = 걸려 있는 초, weight = 빌 때 뽑힐 비중. 다시 빌 때까지 쉬는 초는 PlazaConfigTable blessingCooldown. 값은 시작값.",
+    "version 1 (2026-09-30, 설계 30): 축복 여섯. 설계 29 StatueTable(능력치 돌리기)을 지우고 이 표로 바꿨다(사용자: 능력치 돌리기 삭제, 석상은 축복 뽑기). 걸음 효과는 뺐다."
   ],
   "rows": [
-    {"id": "bake", "name": "statue_bake", "format": "statue_format_percent", "values": [0.1, 0.2, 0.4], "weight": 1},
-    {"id": "checkout", "name": "statue_checkout", "format": "statue_format_percent", "values": [0.1, 0.2, 0.4], "weight": 1},
-    {"id": "price", "name": "statue_price", "format": "statue_format_percent", "values": [0.05, 0.1, 0.2], "weight": 1},
-    {"id": "visitors", "name": "statue_visitors", "format": "statue_format_percent", "values": [0.1, 0.2, 0.35], "weight": 1},
-    {"id": "walk", "name": "statue_walk", "format": "statue_format_percent", "values": [0.05, 0.1, 0.2], "weight": 1},
-    {"id": "grow", "name": "statue_grow", "format": "statue_format_percent", "values": [0.1, 0.2, 0.4], "weight": 1},
-    {"id": "bonus", "name": "statue_bonus", "format": "statue_format_point", "values": [0.05, 0.1, 0.2], "weight": 1}
+    {"id": "visitors", "name": "blessing_visitors", "format": "blessing_visitors_effect", "icon": "Sprites/Blessings/visitors", "value": 0.5, "seconds": 300, "weight": 1},
+    {"id": "price", "name": "blessing_price", "format": "blessing_price_effect", "icon": "Sprites/Blessings/price", "value": 0.5, "seconds": 300, "weight": 1},
+    {"id": "bake", "name": "blessing_bake", "format": "blessing_bake_effect", "icon": "Sprites/Blessings/bake", "value": 1, "seconds": 300, "weight": 1},
+    {"id": "checkout", "name": "blessing_checkout", "format": "blessing_checkout_effect", "icon": "Sprites/Blessings/checkout", "value": 1, "seconds": 300, "weight": 1},
+    {"id": "grow", "name": "blessing_grow", "format": "blessing_grow_effect", "icon": "Sprites/Blessings/grow", "value": 1, "seconds": 300, "weight": 1},
+    {"id": "bonus", "name": "blessing_bonus", "format": "blessing_bonus_effect", "icon": "Sprites/Blessings/bonus", "value": 1, "seconds": 300, "weight": 1}
   ]
 }

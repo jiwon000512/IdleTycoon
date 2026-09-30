@@ -54,7 +54,7 @@ namespace ZooTycoon.Data
             ValidateConfig(tables, errors);
             ValidateBakeryConfig(tables, errors);
             ValidatePlazaConfig(tables, errors);
-            ValidateStatues(tables, errors);
+            ValidateBlessings(tables, errors);
             ValidateFarmConfig(tables, errors);
 
             return errors;
@@ -641,46 +641,40 @@ namespace ZooTycoon.Data
             CheckRequired<PlazaConfigTable>(tables, new[] { PlazaConfigTable.k_Main }, errors);
         }
 
-        // 설계 29: 석상 능력(코드가 거는 일곱이 다 있고, 값은 등급 셋이 0보다 크고 올라가며, 비중 합 > 0) · 광장 석상 값(재료 · 비용 · 잠금 · 등급 비중) · 석상 사물은 바닥 사각형이 있다
-        private static void ValidateStatues(TableSet tables, List<string> errors)
+        // 설계 30: 석상 축복(코드가 거는 여섯이 다 있고, 문구 · 아이콘이 있고, 값 · 시간 > 0, 비중 합 > 0) · 광장 쉬는 시간 > 0 · 석상 사물은 바닥 사각형이 있다
+        private static void ValidateBlessings(TableSet tables, List<string> errors)
         {
             HashSet<string> strings = Ids<StringTable>(tables);
             double weights = 0d;
 
-            foreach (StatueTable ability in tables.GetAll<StatueTable>())
+            foreach (BlessingTable blessing in tables.GetAll<BlessingTable>())
             {
-                CheckId("StatueTable", ability.Id, errors);
-                weights += ability.Weight;
-                List<double> v = ability.Values;
+                CheckId("BlessingTable", blessing.Id, errors);
+                weights += blessing.Weight;
 
-                if (!strings.Contains(ability.Name ?? string.Empty) || !strings.Contains(ability.Format ?? string.Empty))
+                if (!strings.Contains(blessing.Name ?? string.Empty) || !strings.Contains(blessing.Format ?? string.Empty) || string.IsNullOrEmpty(blessing.Icon))
                 {
-                    errors.Add($"StatueTable '{ability.Id}': name · format이 StringTable에 없다.");
+                    errors.Add($"BlessingTable '{blessing.Id}': name · format이 StringTable에 없거나 icon이 비었다.");
                 }
 
-                if (v == null || v.Count != 3 || v[0] <= 0d || v[1] < v[0] || v[2] < v[1] || ability.Weight < 0d)
+                if (blessing.Value <= 0d || blessing.Seconds <= 0d || blessing.Weight < 0d)
                 {
-                    errors.Add($"StatueTable '{ability.Id}': values는 등급 셋이 0보다 크고 보통 ≤ 드묾 ≤ 전설, weight는 0 이상이어야 한다.");
+                    errors.Add($"BlessingTable '{blessing.Id}': value · seconds는 0보다 크고 weight는 0 이상이어야 한다.");
                 }
             }
 
             if (weights <= 0d)
             {
-                errors.Add("StatueTable: weight 합이 0보다 커야 한다.");
+                errors.Add("BlessingTable: weight 합이 0보다 커야 한다.");
             }
 
-            CheckRequired<StatueTable>(tables, StatueTable.Ids, errors);
-            HashSet<string> itemIds = Ids<ItemTable>(tables);
+            CheckRequired<BlessingTable>(tables, BlessingTable.Ids, errors);
 
             foreach (PlazaConfigTable plaza in tables.GetAll<PlazaConfigTable>())
             {
-                List<double> grades = plaza.StatueGradeWeights;
-
-                if (!itemIds.Contains(plaza.StatueItem ?? string.Empty) || plaza.StatueRollCost < 1 || plaza.StatueLockCost < 0
-                    || plaza.StatueMaxLocks < 0 || plaza.StatueMaxLocks >= Statue.k_Lines
-                    || grades == null || grades.Count != 3 || grades.Exists(g => g < 0d) || grades.Sum() <= 0d)
+                if (plaza.BlessingCooldown <= 0d)
                 {
-                    errors.Add($"PlazaConfigTable '{plaza.Id}': statueItem은 ItemTable에, statueRollCost는 1 이상, statueLockCost는 0 이상, statueMaxLocks는 0 ~ {Statue.k_Lines - 1}, statueGradeWeights는 0 이상 셋(합 > 0)이어야 한다.");
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': blessingCooldown은 0보다 커야 한다.");
                 }
             }
 

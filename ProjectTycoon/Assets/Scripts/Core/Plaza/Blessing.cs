@@ -1,139 +1,94 @@
+using System;
 using System.Collections.Generic;
 using GameKit.Events;
 using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    public enum StatueGrade
+    // 설계 30: 석상 축복(가게 전부에 걸리는 시간제 효과, 플레이어 상태라 ZooState가 든다). 무료로 빌면 축복 하나를 비중으로 뽑아 seconds 동안 건다.
+    // 늘 하나만 걸린다(새 축복이 덮는다). 빈 뒤 blessingCooldown초 동안은 못 빈다. 걸리거나 풀리거나 쉬는 시간이 끝나면 BlessingChanged
+    public sealed class Blessing
     {
-        Common,
-        Rare,
-        Legend,
-    }
-
-    // 설계 29: 석상 능력 한 줄. 빈 줄은 Ability가 null
-    public sealed class StatueLine
-    {
-        public StatueTable Ability { get; internal set; }
-        public StatueGrade Grade { get; internal set; }
-        public bool Locked { get; internal set; }
-        public bool IsEmpty => Ability == null;
-        public double Value => IsEmpty ? 0d : Ability.Values[(int)Grade];
-    }
-
-    // 설계 29: 웜뱃 석상의 능력 세 줄(광장 공용, 플레이어 상태라 ZooState가 든다). 반짝돌로 잠그지 않은 줄을 다시 굴린다.
-    // 굴리기 값 = rollCost + 잠근 줄마다 lockCost, 잠금은 maxLocks줄까지(빈 줄은 못 잠근다). 능력은 곧바로 가게 전부에 걸린다(Boost, 같은 능력은 더한다)
-    public sealed class Statue
-    {
-        public const int k_Lines = 3;
-
         private readonly EventBus m_bus;
         private readonly PlazaConfigTable m_config;
-        private readonly IReadOnlyList<StatueTable> m_abilities;
-        private readonly StatueLine[] m_lines = new StatueLine[k_Lines];
+        private readonly IReadOnlyList<BlessingTable> m_all;
 
-        public IReadOnlyList<StatueLine> Lines => m_lines;
-        // 바치는 재료(반짝돌)
-        public string Item => m_config.StatueItem;
-        public int RollCost => m_config.StatueRollCost + LockedCount * m_config.StatueLockCost;
+        // 걸린 축복(없으면 null) · 남은 초 · 다시 빌 때까지 남은 초
+        public BlessingTable Active { get; private set; }
+        public double Remaining { get; private set; }
+        public double Cooldown { get; private set; }
+        public bool CanPray => Cooldown <= 0d;
 
-        public int LockedCount
-        {
-            get
-            {
-                int count = 0;
-
-                foreach (StatueLine line in m_lines)
-                {
-                    count += line.Locked ? 1 : 0;
-                }
-
-                return count;
-            }
-        }
-
-        public Statue(TableSet tables, EventBus bus)
+        public Blessing(TableSet tables, EventBus bus)
         {
             m_bus = bus;
             m_config = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
-            m_abilities = tables.GetAll<StatueTable>();
-
-            for (int i = 0; i < k_Lines; i++)
-            {
-                m_lines[i] = new StatueLine();
-            }
+            m_all = tables.GetAll<BlessingTable>();
         }
 
-        public bool CanLock(int line)
+        // 쉬는 중이면 아무 일 없이 false
+        public bool TryPray(IRandom random)
         {
-            return !m_lines[line].IsEmpty && !m_lines[line].Locked && LockedCount < m_config.StatueMaxLocks;
-        }
-
-        // 잠금 켜고 끄기는 무료. 못 잠그는 줄이면 아무 일 없음
-        public void SetLocked(int line, bool locked)
-        {
-            if (m_lines[line].Locked == locked || (locked && !CanLock(line)))
-            {
-                return;
-            }
-
-            m_lines[line].Locked = locked;
-            m_bus.Publish(new Events.StatueChanged(this, false));
-        }
-
-        // 반짝돌을 치르고 잠그지 않은 줄마다 능력(비중) · 등급(gradeWeights)을 새로 뽑는다. 모자라면 아무 일 없이 false
-        public bool TryRoll(ZooState wallet, IRandom random)
-        {
-            if (!wallet.TrySpendItem(Item, RollCost))
+            if (!CanPray)
             {
                 return false;
             }
 
-            foreach (StatueLine line in m_lines)
-            {
-                if (line.Locked)
-                {
-                    continue;
-                }
-
-                line.Ability = m_abilities[Pick(random, m_abilities.Count, i => m_abilities[i].Weight)];
-                line.Grade = (StatueGrade)Pick(random, m_config.StatueGradeWeights.Count, i => m_config.StatueGradeWeights[i]);
-            }
-
-            m_bus.Publish(new Events.StatueChanged(this, true));
+            Active = m_all[Pick(random)];
+            Remaining = Active.Seconds;
+            Cooldown = m_config.BlessingCooldown;
+            m_bus.Publish(new Events.BlessingChanged(this, true));
             return true;
         }
 
-        // 그 능력이 걸린 줄 값의 합(없으면 0)
-        public double Boost(string abilityId)
+        public void Tick(double dt)
         {
-            double sum = 0d;
+            bool changed = false;
 
-            foreach (StatueLine line in m_lines)
+            if (Active != null)
             {
-                if (!line.IsEmpty && line.Ability.Id == abilityId)
+                Remaining -= dt;
+
+                if (Remaining <= 0d)
                 {
-                    sum += line.Value;
+                    Active = null;
+                    Remaining = 0d;
+                    changed = true;
                 }
             }
 
-            return sum;
+            if (Cooldown > 0d)
+            {
+                Cooldown = Math.Max(0d, Cooldown - dt);
+                changed |= Cooldown <= 0d;
+            }
+
+            if (changed)
+            {
+                m_bus.Publish(new Events.BlessingChanged(this, false));
+            }
         }
 
-        private static int Pick(IRandom random, int count, System.Func<int, double> weight)
+        // 걸린 축복이 그 효과면 값(없으면 0)
+        public double Boost(string effect)
+        {
+            return Active != null && Active.Id == effect ? Active.Value : 0d;
+        }
+
+        private int Pick(IRandom random)
         {
             double total = 0d;
 
-            for (int i = 0; i < count; i++)
+            foreach (BlessingTable blessing in m_all)
             {
-                total += weight(i);
+                total += blessing.Weight;
             }
 
             double roll = random.NextDouble() * total;
 
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < m_all.Count; i++)
             {
-                roll -= weight(i);
+                roll -= m_all[i].Weight;
 
                 if (roll < 0d)
                 {
@@ -141,7 +96,7 @@ namespace ZooTycoon.Core
                 }
             }
 
-            return count - 1;
+            return m_all.Count - 1;
         }
     }
 }

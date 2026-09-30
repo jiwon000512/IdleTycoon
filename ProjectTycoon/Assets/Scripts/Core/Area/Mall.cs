@@ -40,6 +40,8 @@ namespace ZooTycoon.Core
             {
                 area.Tick(dt);
             }
+
+            Wombat.Worker.Wallet.Blessing.Tick(dt);
         }
 
         private void Bus_Passed(Events.Passed e)

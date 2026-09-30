@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 30,
+  "version": 31,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -33,7 +33,8 @@
     "version 27 (2026-09-29, 설계 26 창고 화면): 상단 바 재료 알약을 걷어 topbar_item 삭제. 창고 inventory_title · inventory_count · inventory_source(획득처) · inventory_uses(사용처) · inventory_none · inventory_farm · inventory_seconds · inventory_yield · inventory_have 추가.",
     "version 28 (2026-09-30, 설계 27 칸 밭): 갈기 값 표식 tag_till, 농장 편집 모드 안내 edit_dig_hint 추가. 편집 모드 밭 카드가 없어져 kind_plot 삭제.",
     "version 29 (2026-09-30, 설계 28 똥 거름 · 덤): 창고 정보 창의 획득처 · 사용처 글(ItemTable source · use가 가리킨다) inventory_source_clean · inventory_use_plant · inventory_source_harvest · inventory_use_statue 추가.",
-    "version 30 (2026-09-30, 설계 29 웜뱃 석상): 석상 팝업 statue_*(제목 · 굴리기 · 잠금 · 빈 줄 · 등급 셋 · 보유 · 안내 · 모자람), 능력 이름 일곱 · 줄 형식 둘(StatueTable name · format이 가리킨다) 추가. inventory_use_statue 글에서 「(준비 중)」을 뺐다."
+    "version 30 (2026-09-30, 설계 29 웜뱃 석상): 석상 팝업 statue_*(제목 · 굴리기 · 잠금 · 빈 줄 · 등급 셋 · 보유 · 안내 · 모자람), 능력 이름 일곱 · 줄 형식 둘(StatueTable name · format이 가리킨다) 추가. inventory_use_statue 글에서 「(준비 중)」을 뺐다.",
+    "version 31 (2026-09-30, 설계 30 석상 축복): 능력치 돌리기 문구(굴리기 · 잠금 · 빈 줄 · 등급 · 보유 · 모자람 · 능력 일곱 · 줄 형식)와 inventory_use_statue를 지웠다. statue_hint를 새 글로, statue_pray · statue_again · statue_none, 축복 이름 여섯 blessing_* · 효과 형식 여섯 blessing_*_effect, inventory_use_relic(반짝돌 쓸 곳: 유물 수레, 준비 중) 추가."
   ],
   "rows": [
     {
@@ -465,88 +466,76 @@
       "ko": "밭을 거둘 때 가끔"
     },
     {
-      "id": "inventory_use_statue",
-      "ko": "광장 석상"
-    },
-    {
       "id": "statue_title",
       "ko": "웜뱃 석상"
     },
     {
-      "id": "statue_roll",
-      "ko": "굴리기"
-    },
-    {
-      "id": "statue_lock",
-      "ko": "잠금"
-    },
-    {
-      "id": "statue_locked",
-      "ko": "잠김"
-    },
-    {
-      "id": "statue_empty",
-      "ko": "빈 줄"
-    },
-    {
-      "id": "statue_grade_common",
-      "ko": "보통"
-    },
-    {
-      "id": "statue_grade_rare",
-      "ko": "드묾"
-    },
-    {
-      "id": "statue_grade_legend",
-      "ko": "전설"
-    },
-    {
-      "id": "statue_have",
-      "ko": "반짝돌 {0}개"
+      "id": "inventory_use_relic",
+      "ko": "광장 유물 수레(준비 중)"
     },
     {
       "id": "statue_hint",
-      "ko": "잠근 줄은 두고 나머지만 다시 굴린다"
+      "ko": "빌면 축복 하나가 몇 분 동안 가게 전부에 걸린다"
     },
     {
-      "id": "statue_short",
-      "ko": "반짝돌이 모자라다"
+      "id": "statue_pray",
+      "ko": "빌기"
     },
     {
-      "id": "statue_bake",
-      "ko": "굽기 속도"
+      "id": "statue_again",
+      "ko": "다시 빌기 {0}"
     },
     {
-      "id": "statue_checkout",
-      "ko": "계산 속도"
+      "id": "statue_none",
+      "ko": "걸린 축복이 없다"
     },
     {
-      "id": "statue_price",
-      "ko": "빵 값"
+      "id": "blessing_visitors",
+      "ko": "손님 축복"
     },
     {
-      "id": "statue_visitors",
-      "ko": "손님"
+      "id": "blessing_price",
+      "ko": "황금 축복"
     },
     {
-      "id": "statue_walk",
-      "ko": "웜뱃 걸음"
+      "id": "blessing_bake",
+      "ko": "화덕 축복"
     },
     {
-      "id": "statue_grow",
-      "ko": "밭 자람"
+      "id": "blessing_checkout",
+      "ko": "주판 축복"
     },
     {
-      "id": "statue_bonus",
-      "ko": "덤 확률"
+      "id": "blessing_grow",
+      "ko": "새싹 축복"
     },
     {
-      "id": "statue_format_percent",
-      "ko": "{0} +{1}%"
+      "id": "blessing_bonus",
+      "ko": "반짝 축복"
     },
     {
-      "id": "statue_format_point",
-      "ko": "{0} +{1}%p"
+      "id": "blessing_visitors_effect",
+      "ko": "손님 +{0}%"
+    },
+    {
+      "id": "blessing_price_effect",
+      "ko": "버는 코인 +{0}%"
+    },
+    {
+      "id": "blessing_bake_effect",
+      "ko": "굽기 ×{1}"
+    },
+    {
+      "id": "blessing_checkout_effect",
+      "ko": "계산 ×{1}"
+    },
+    {
+      "id": "blessing_grow_effect",
+      "ko": "자람 ×{1}"
+    },
+    {
+      "id": "blessing_bonus_effect",
+      "ko": "반짝돌 ×{1}"
     }
   ]
 }

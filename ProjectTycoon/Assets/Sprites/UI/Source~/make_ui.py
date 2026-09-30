@@ -40,6 +40,17 @@ def save(name, a, border=None):
     print(f'{name:24s} {a.shape[1]:3d} x {a.shape[0]:3d}  border={border}')
 
 
+# 꺼진 주 버튼: 시안의 꺼짐 그림은 오른쪽에 얼룩이 있어(진행상황 알려진 문제), 주 버튼 모양을 그대로 회색 셋으로 다시 칠한다(2026-09-30 설계 30)
+DISABLED = {(240, 160, 112): (154, 138, 124), (216, 120, 72): (142, 110, 92), (184, 94, 56): (122, 106, 96), (166, 75, 60): (122, 106, 96)}
+
+
+def disabled_from(primary):
+    out = primary.copy()
+    for src, dst in DISABLED.items():
+        hit = (primary[..., 0] == src[0]) & (primary[..., 1] == src[1]) & (primary[..., 2] == src[2]) & (primary[..., 3] > 0)
+        out[hit, :3] = dst
+    return out
+
 def components(a, min_cells=20):
     m = a[..., 3] > 0
     lab = np.full(m.shape, -1); out = []
@@ -69,8 +80,12 @@ def crop_rows(a, keep_top, keep_bottom, height):
 # ---------- 버튼 A: 주·보조 3상태, 닫기, (옛 상단 바 pill: 시안 C로 안 씀, 자리만 건너뜀), 태그 ----------
 btn = snap(load('buttons_a_px'))
 names = ['btn_primary', 'btn_primary_pressed', 'btn_primary_disabled', 'btn_secondary', 'btn_secondary_pressed', 'btn_secondary_disabled', 'btn_close', 'pill_topbar', 'tag_cost']
+parts = {}
 for (x0, y0, x1, y1), n in zip(components(btn), names):
     part = trim(btn[y0:y1, x0:x1])
+    parts[n] = part
+    if n == 'btn_primary_disabled':
+        part = disabled_from(parts['btn_primary'])
     if n.startswith('btn_') and n != 'btn_close':
         save(n, part, border=(5, 5, 5, 5))          # 좌·하·우·상 (Unity spriteBorder 순서 x=left y=bottom z=right w=top)
     elif n == 'btn_close':

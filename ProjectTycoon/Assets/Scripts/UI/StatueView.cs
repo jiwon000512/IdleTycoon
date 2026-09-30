@@ -10,32 +10,22 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 29 웜뱃 석상 팝업: 능력 세 줄(등급 알약 · 능력 글 · 잠금 버튼) + 안내 + 보유 반짝돌 · 굴리기(값). 광장 석상 앞 버튼으로 열린다.
-    // 굴리면 굴리는 줄이 능력 이름을 빠르게 넘기다 위부터 차례로 멈춘다(전설은 소리 + 한 번 부풂). 표시와 입력만, 규칙은 Core Statue · StatuePresenter
+    // 설계 30 석상 축복 팝업: 걸린 축복 카드(아이콘 · 이름 · 효과 · 남은 시간) + 안내 + 빌기 버튼(쉬는 시간이면 「다시 빌기 7:30」, 꺼짐). 광장 석상 앞 버튼으로 열린다.
+    // 빌면 카드가 축복 이름을 빠르게 넘기다 멈춘다(소리 + 한 번 부풂). 남은 시간 · 쉬는 시간은 Presenter가 준 읽기 함수로 매 프레임 그린다. 규칙은 Core Blessing · StatuePresenter
     public sealed class StatueView : UIView
     {
-        // 줄 하나. Grade가 null이면 빈 줄(알약 숨김)
-        public sealed class LineData
+        // 카드 하나. 걸린 축복이 없으면 null
+        public sealed class CardData
         {
-            public string Grade;
-            public StatueGrade GradeLevel;
-            public string Text;
-            public string LockLabel;
-            public bool Locked;
-            public bool CanToggle;
+            public string IconPath;
+            public string Name;
+            public string Effect;
+            public Func<double> Remaining;
         }
 
-        // 굴리는 줄이 도는 시간 · 줄마다 늦게 멈추는 간격 · 이름이 바뀌는 간격(초)
-        private const float k_SpinSeconds = 0.6f;
-        private const float k_StopGap = 0.15f;
-        private const float k_SpinStep = 0.06f;
-        // 등급 알약 색(보통 · 드묾 · 전설)과 그 위 글자색
-        private static readonly Color[] k_GradeColors = { new Color32(0x8A, 0x7B, 0x6E, 0xFF), new Color32(0x3F, 0x7F, 0xA6, 0xFF), new Color32(0xF2, 0xC1, 0x4E, 0xFF) };
-        private static readonly Color[] k_GradeText = { new Color32(0xFB, 0xF4, 0xE6, 0xFF), new Color32(0xFB, 0xF4, 0xE6, 0xFF), new Color32(0x2E, 0x23, 0x20, 0xFF) };
-        // 전설 줄은 줄 틀을 금빛으로 물들인다(UI에는 입자를 넣지 않으므로 금빛 틀 · 부풂 · 소리로 알린다)
-        private static readonly Color k_LegendRow = new Color32(0xFF, 0xE2, 0x96, 0xFF);
-        private static readonly Color k_LockOnText = new Color32(0xFB, 0xF4, 0xE6, 0xFF);
-        private static readonly Color k_LockOffText = new Color32(0x2E, 0x23, 0x20, 0xFF);
+        // 이름이 도는 시간(상단 바 축복 알약도 이만큼 늦게 보인다) · 이름이 바뀌는 간격(초)
+        public const float k_SpinSeconds = 0.9f;
+        private const float k_SpinStep = 0.07f;
 
         [SerializeField] private GameObject m_root;
         [SerializeField] private CanvasGroup m_rootGroup;
@@ -43,55 +33,48 @@ namespace ZooTycoon.UI
         [SerializeField] private Button m_dim;
         [SerializeField] private Button m_closeButton;
         [SerializeField] private TextMeshProUGUI m_title;
-        [Tooltip("줄 템플릿: Grade(pill + Label) · Text · Lock(버튼 + Label)")]
-        [SerializeField] private RectTransform m_lineTemplate;
+        [Tooltip("축복 카드: 아이콘 · 이름 · 효과 · 남은 시간")]
+        [SerializeField] private RectTransform m_card;
+        [SerializeField] private Image m_icon;
+        [SerializeField] private TextMeshProUGUI m_name;
+        [SerializeField] private TextMeshProUGUI m_effect;
+        [SerializeField] private TextMeshProUGUI m_time;
         [SerializeField] private TextMeshProUGUI m_hint;
-        [SerializeField] private TextMeshProUGUI m_have;
-        [SerializeField] private Button m_rollButton;
-        [SerializeField] private TextMeshProUGUI m_rollLabel;
-        [SerializeField] private TextMeshProUGUI m_rollCost;
-        [Tooltip("잠금 버튼: 켜짐(주 버튼) · 꺼짐(보조 버튼) 그림")]
-        [SerializeField] private Sprite m_lockOn;
-        [SerializeField] private Sprite m_lockOff;
+        [SerializeField] private Button m_prayButton;
+        [SerializeField] private TextMeshProUGUI m_prayLabel;
 
-        private readonly List<RectTransform> m_lines = new List<RectTransform>();
         private Vector2 m_panelRest;
         private Coroutine m_fx;
         private Coroutine m_spin;
+        private string m_prayText;
+        private Func<double, string> m_againText;
+        private CardData m_shown;
+        private Func<double> m_cooldown;
+        private bool m_canPray;
 
         public event Action CloseRequested;
-        public event Action<int> LockClicked;
-        public event Action RollClicked;
+        public event Action PrayClicked;
 
         public bool IsOpen => m_root.activeSelf;
-        // 줄이 도는 중(그동안 새 결과를 덮어 그리지 않는다)
+        // 이름이 도는 중(그동안 카드를 덮어 그리지 않는다)
         public bool Spinning => m_spin != null;
 
         private void Awake()
         {
             m_dim.onClick.AddListener(() => CloseRequested?.Invoke());
             m_closeButton.onClick.AddListener(() => CloseRequested?.Invoke());
-            m_rollButton.onClick.AddListener(() => RollClicked?.Invoke());
-            m_lineTemplate.gameObject.SetActive(false);
+            m_prayButton.onClick.AddListener(() => PrayClicked?.Invoke());
             m_panelRest = m_panel.anchoredPosition;
-
-            for (int i = 0; i < Statue.k_Lines; i++)
-            {
-                int index = i;
-                RectTransform line = Instantiate(m_lineTemplate, m_lineTemplate.parent);
-                line.gameObject.SetActive(true);
-                line.Find("Lock").GetComponent<Button>().onClick.AddListener(() => LockClicked?.Invoke(index));
-                m_lines.Add(line);
-            }
-
             m_root.SetActive(false);
         }
 
-        public void SetLabels(string title, string hint, string roll)
+        // again: 쉬는 시간 남은 초 → 버튼 글(「다시 빌기 7:30」)
+        public void SetLabels(string title, string hint, string pray, Func<double, string> again)
         {
             m_title.text = title;
             m_hint.text = hint;
-            m_rollLabel.text = roll;
+            m_prayText = pray;
+            m_againText = again;
         }
 
         public void Open()
@@ -118,101 +101,77 @@ namespace ZooTycoon.UI
             SoundManager.Instance.Play(SoundTable.k_UiClose);
         }
 
-        // 줄 · 보유 · 굴리기 값. canRoll이 아니면 버튼이 꺼진다(모자람)
-        public void Show(IReadOnlyList<LineData> lines, string have, string cost, bool canRoll)
-        {
-            for (int i = 0; i < m_lines.Count; i++)
-            {
-                SetLine(m_lines[i], lines[i]);
-            }
-
-            m_have.text = have;
-            m_rollCost.text = cost;
-            m_rollButton.interactable = canRoll && !Spinning;
-        }
-
-        // 굴렸다: rolled 줄은 names를 빠르게 넘기다 위부터 차례로 멈추며 lines 값이 된다. 멈출 때 전설이면 소리 + 부풂
-        public void PlayRoll(IReadOnlyList<LineData> lines, bool[] rolled, IReadOnlyList<string> names, string have, string cost, bool canRoll)
+        // 카드(null이면 none 글) · 쉬는 시간(남은 초를 읽는 함수) · 빌 수 있나
+        public void Show(CardData card, string none, Func<double> cooldown, bool canPray)
         {
             StopSpin();
-            m_have.text = have;
-            m_rollCost.text = cost;
-            SoundManager.Instance.Play(SoundTable.k_StatueRoll);
-            m_spin = StartCoroutine(Spin(lines, rolled, names, canRoll));
+            SetCard(card, none);
+            SetPray(cooldown, canPray);
         }
 
-        private IEnumerator Spin(IReadOnlyList<LineData> lines, bool[] rolled, IReadOnlyList<string> names, bool canRoll)
+        // 빌었다: 이름(names)을 빠르게 넘기다 card로 멈춘다
+        public void PlayPray(CardData card, IReadOnlyList<string> names, Func<double> cooldown)
         {
-            m_rollButton.interactable = false;
-            float elapsed = 0f;
-            bool[] stopped = new bool[m_lines.Count];
+            StopSpin();
+            SetPray(cooldown, false);
+            SoundManager.Instance.Play(SoundTable.k_StatueRoll);
+            m_spin = StartCoroutine(Spin(card, names));
+        }
 
-            for (int i = 0; i < m_lines.Count; i++)
+        private void Update()
+        {
+            if (!m_root.activeSelf)
             {
-                stopped[i] = !rolled[i];
-                SetLine(m_lines[i], lines[i], rolled[i]);
+                return;
             }
 
-            while (Array.IndexOf(stopped, false) >= 0)
+            if (m_shown != null && !Spinning)
             {
-                int shown = 0;
+                m_time.text = BigNumberFormatter.Clock(m_shown.Remaining());
+            }
 
-                for (int i = 0; i < m_lines.Count; i++)
-                {
-                    if (stopped[i])
-                    {
-                        continue;
-                    }
+            if (!m_canPray)
+            {
+                m_prayLabel.text = m_againText(m_cooldown());
+            }
+        }
 
-                    if (elapsed >= k_SpinSeconds + shown * k_StopGap)
-                    {
-                        stopped[i] = true;
-                        SetLine(m_lines[i], lines[i]);
-                        StartCoroutine(UiFx.Pulse(m_lines[i]));
+        private IEnumerator Spin(CardData card, IReadOnlyList<string> names)
+        {
+            m_icon.enabled = false;
+            m_effect.text = string.Empty;
+            m_time.text = string.Empty;
+            float elapsed = 0f;
 
-                        if (lines[i].GradeLevel == StatueGrade.Legend)
-                        {
-                            SoundManager.Instance.Play(SoundTable.k_StatueLegend);
-                        }
-                    }
-                    else
-                    {
-                        m_lines[i].Find("Text").GetComponent<TMP_Text>().text = names[UnityEngine.Random.Range(0, names.Count)];
-                    }
-
-                    shown++;
-                }
-
+            while (elapsed < k_SpinSeconds)
+            {
+                m_name.text = names[UnityEngine.Random.Range(0, names.Count)];
                 yield return new WaitForSeconds(k_SpinStep);
                 elapsed += k_SpinStep;
             }
 
             m_spin = null;
-            m_rollButton.interactable = canRoll;
+            SetCard(card, string.Empty);
+            StartCoroutine(UiFx.Pulse(m_card));
+            SoundManager.Instance.Play(SoundTable.k_StatueBlessed);
         }
 
-        // spinning: 도는 줄은 등급 알약을 숨기고 잠금 버튼을 끈다
-        private void SetLine(RectTransform line, LineData data, bool spinning = false)
+        private void SetCard(CardData card, string none)
         {
-            GameObject grade = line.Find("Grade").gameObject;
-            grade.SetActive(data.Grade != null && !spinning);
-            line.GetComponent<Image>().color = data.Grade != null && !spinning && data.GradeLevel == StatueGrade.Legend ? k_LegendRow : Color.white;
+            m_icon.enabled = card != null;
+            m_icon.sprite = card != null ? Resources.Load<Sprite>(card.IconPath) : null;
+            m_name.text = card != null ? card.Name : none;
+            m_effect.text = card != null ? card.Effect : string.Empty;
+            m_shown = card;
+            m_time.text = card != null ? BigNumberFormatter.Clock(card.Remaining()) : string.Empty;
+        }
 
-            if (data.Grade != null)
-            {
-                grade.GetComponent<Image>().color = k_GradeColors[(int)data.GradeLevel];
-                TMP_Text label = grade.GetComponentInChildren<TMP_Text>();
-                label.text = data.Grade;
-                label.color = k_GradeText[(int)data.GradeLevel];
-            }
-
-            line.Find("Text").GetComponent<TMP_Text>().text = data.Text;
-            Button lockButton = line.Find("Lock").GetComponent<Button>();
-            lockButton.interactable = data.CanToggle && !spinning;
-            lockButton.GetComponent<Image>().sprite = data.Locked ? m_lockOn : m_lockOff;
-            TMP_Text lockLabel = lockButton.GetComponentInChildren<TMP_Text>();
-            lockLabel.text = data.LockLabel;
-            lockLabel.color = data.Locked ? k_LockOnText : k_LockOffText;
+        private void SetPray(Func<double> cooldown, bool canPray)
+        {
+            m_cooldown = cooldown;
+            m_canPray = canPray;
+            m_prayButton.interactable = canPray;
+            m_prayLabel.text = canPray ? m_prayText : m_againText(cooldown());
         }
 
         private void StopSpin()

@@ -35,16 +35,16 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 29: 석상 줄이 바뀌었다. Rolled면 굴렸다(잠그지 않은 줄이 새로), 아니면 잠금만
-        public readonly struct StatueChanged
+        // 설계 30: 석상 축복이 바뀌었다. Prayed면 빌어서 새 축복이 걸렸다, 아니면 축복이 풀렸거나 쉬는 시간이 끝났다
+        public readonly struct BlessingChanged
         {
-            public readonly Statue Statue;
-            public readonly bool Rolled;
+            public readonly Blessing Blessing;
+            public readonly bool Prayed;
 
-            public StatueChanged(Statue statue, bool rolled)
+            public BlessingChanged(Blessing blessing, bool prayed)
             {
-                Statue = statue;
-                Rolled = rolled;
+                Blessing = blessing;
+                Prayed = prayed;
             }
         }
     }

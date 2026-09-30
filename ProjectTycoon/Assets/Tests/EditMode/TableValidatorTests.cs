@@ -11,7 +11,7 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 12)]
-        [TestCase("StringTable", 30)]
+        [TestCase("StringTable", 31)]
         [TestCase("ClerkTable", 1)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 2)]
@@ -20,16 +20,16 @@ namespace ZooTycoon.Tests
         [TestCase("ActionTable", 12)]
         [TestCase("InteractableTable", 12)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 10)]
+        [TestCase("SoundTable", 11)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 3)]
         [TestCase("BakeryConfigTable", 7)]
-        [TestCase("PlazaConfigTable", 2)]
+        [TestCase("PlazaConfigTable", 3)]
         [TestCase("PlazaDecorTable", 1)]
-        [TestCase("ItemTable", 3)]
+        [TestCase("ItemTable", 4)]
         [TestCase("CropTable", 3)]
         [TestCase("FarmConfigTable", 4)]
-        [TestCase("StatueTable", 1)]
+        [TestCase("BlessingTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -261,24 +261,21 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(freeTill), Is.Not.Empty);
         }
 
-        // 설계 29: 능력 값이 등급 순서가 아님, 코드가 거는 능력이 표에 없음, 잠금이 세 줄, 바치는 재료가 없음, 등급 비중이 둘
+        // 설계 30: 코드가 거는 축복이 표에 없음, 시간이 0, 효과 글이 없음, 쉬는 시간이 0
         [Test]
-        public void Validate_WhenStatueDataInvalid_ReportsError()
+        public void Validate_WhenBlessingDataInvalid_ReportsError()
         {
-            TableSet falling = TestTables.Load();
-            falling.Get<StatueTable>(StatueTable.k_Bake).Values[2] = 0.01d;
-            TableSet lockAll = TestTables.Load();
-            lockAll.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).StatueMaxLocks = Statue.k_Lines;
-            TableSet noItem = TestTables.Load();
-            noItem.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).StatueItem = "milk";
-            TableSet twoGrades = TestTables.Load();
-            twoGrades.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).StatueGradeWeights.RemoveAt(2);
+            TableSet noTime = TestTables.Load();
+            noTime.Get<BlessingTable>(BlessingTable.k_Bake).Seconds = 0d;
+            TableSet noText = TestTables.Load();
+            noText.Get<BlessingTable>(BlessingTable.k_Bake).Format = "no_such_key";
+            TableSet noRest = TestTables.Load();
+            noRest.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).BlessingCooldown = 0d;
 
-            Assert.That(TableValidator.Validate(falling), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(TestTables.LoadWithout("StatueTable", StatueTable.k_Grow)), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(lockAll), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(noItem), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(twoGrades), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(TestTables.LoadWithout("BlessingTable", BlessingTable.k_Grow)), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noTime), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noText), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noRest), Is.Not.Empty);
         }
 
         // 설계 11: 장식 그림 경로 없음, 광장에 없는 장식

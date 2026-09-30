@@ -7,8 +7,9 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 설계 29 검증: 반짝돌로 세 줄 굴리기 · 잠금(값이 오르고 두 줄까지) · 모자라면 그대로, 능력이 오븐 · 걸음 · 밭 · 덤 · 손님에 걸림, 광장 석상(분수 자리 · 편집에서 못 집음 · 버튼으로 팝업). 실제 JSON 값
-    public sealed class StatueTests
+    // 설계 30 검증: 무료로 빌면 축복 하나가 걸리고 쉬는 시간이 시작, 쉬는 중엔 못 빎, 시간이 다 되면 풀림, 늘 하나(새 축복이 덮음),
+    // 효과가 오븐 · 밭 · 덤 · 손님에 걸림, 광장 석상(분수 자리 · 편집에서 못 집음 · 버튼으로 팝업). 실제 JSON 값
+    public sealed class BlessingTests
     {
         private const double k_Dt = 0.02;
 
@@ -21,9 +22,9 @@ namespace ZooTycoon.Tests
         private FarmArea m_farm;
         private Mall m_mall;
 
-        private Statue Statue => m_state.Statue;
+        private Blessing Blessing => m_state.Blessing;
         private PlazaConfigTable Config => m_tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
-        private string Gem => Config.StatueItem;
+        private string Gem => m_tables.Get<FarmConfigTable>(FarmConfigTable.k_Main).BonusItem;
 
         [SetUp]
         public void Create()
@@ -32,7 +33,6 @@ namespace ZooTycoon.Tests
             m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).MaxCustomers = 0;
             m_bus = new EventBus();
             m_state = ZooState.CreateNew(m_tables, m_bus);
-            m_state.TrySpendItem(Gem, m_state.Count(Gem));
             m_wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, new SequenceRandom(new double[2000]), m_wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), m_wombat, m_bus);
@@ -48,147 +48,153 @@ namespace ZooTycoon.Tests
             }
         }
 
-        // 능력 표 순서의 index번째가 뽑히는 난수(비중이 같다) · 등급이 뽑히는 난수(비중 70 · 25 · 5)
-        private double AbilityRoll(string id)
+        // 표 순서에서 그 축복이 뽑히는 난수(비중 가운데)
+        private double Roll(string id)
         {
-            var abilities = m_tables.GetAll<StatueTable>();
-            double total = abilities.Sum(a => a.Weight);
-            double before = abilities.TakeWhile(a => a.Id != id).Sum(a => a.Weight);
-            return (before + m_tables.Get<StatueTable>(id).Weight * 0.5d) / total;
+            var all = m_tables.GetAll<BlessingTable>();
+            double total = all.Sum(b => b.Weight);
+            double before = all.TakeWhile(b => b.Id != id).Sum(b => b.Weight);
+            return (before + m_tables.Get<BlessingTable>(id).Weight * 0.5d) / total;
         }
 
-        private static double GradeRoll(StatueGrade grade)
+        private void Grant(string id)
         {
-            return grade == StatueGrade.Common ? 0.1d : grade == StatueGrade.Rare ? 0.8d : 0.99d;
+            Assert.That(Blessing.TryPray(new SequenceRandom(Roll(id))), Is.True);
         }
 
-        // 첫 줄에 그 능력 · 등급, 나머지 두 줄은 이 시험과 상관없는 능력(보통)
-        private void Grant(string id, StatueGrade grade, string filler)
+        private double Value(string id)
         {
-            m_state.AddItem(Gem, Statue.RollCost);
-            SequenceRandom random = new SequenceRandom(AbilityRoll(id), GradeRoll(grade), AbilityRoll(filler), 0.1d, AbilityRoll(filler), 0.1d);
-            Assert.That(Statue.TryRoll(m_state, random), Is.True);
-        }
-
-        private double Value(string id, StatueGrade grade)
-        {
-            return m_tables.Get<StatueTable>(id).Values[(int)grade];
+            return m_tables.Get<BlessingTable>(id).Value;
         }
 
         [Test]
-        public void Roll_FillsEveryLine_AndSpendsRollCost()
+        public void Pray_AppliesOneBlessing_AndStartsCooldown()
         {
-            m_state.AddItem(Gem, Config.StatueRollCost);
+            int prayed = 0;
+            m_bus.Subscribe<Events.BlessingChanged>(e => prayed += e.Prayed ? 1 : 0);
+            int gems = m_state.Count(Gem);
+
+            Grant(BlessingTable.k_Bake);
+
+            Assert.That(prayed, Is.EqualTo(1));
+            Assert.That(Blessing.Active.Id, Is.EqualTo(BlessingTable.k_Bake));
+            Assert.That(Blessing.Remaining, Is.EqualTo(m_tables.Get<BlessingTable>(BlessingTable.k_Bake).Seconds));
+            Assert.That(Blessing.Cooldown, Is.EqualTo(Config.BlessingCooldown));
+            Assert.That(Blessing.Boost(BlessingTable.k_Bake), Is.EqualTo(Value(BlessingTable.k_Bake)));
+            Assert.That(Blessing.Boost(BlessingTable.k_Grow), Is.EqualTo(0d));
+            Assert.That(m_state.Count(Gem), Is.EqualTo(gems));
+        }
+
+        [Test]
+        public void Pray_DuringCooldown_ChangesNothing()
+        {
+            Grant(BlessingTable.k_Bake);
+            Blessing.Tick(Config.BlessingCooldown - 1d);
+
+            Assert.That(Blessing.CanPray, Is.False);
+            Assert.That(Blessing.TryPray(new SequenceRandom(Roll(BlessingTable.k_Grow))), Is.False);
+            Assert.That(Blessing.Cooldown, Is.EqualTo(1d).Within(1e-9));
+        }
+
+        // 걸린 시간이 다 되면 풀리고, 쉬는 시간이 끝나면 다시 빌 수 있다(둘 다 BlessingChanged)
+        [Test]
+        public void Blessing_EndsAfterSeconds_ThenCooldownEnds()
+        {
             int changed = 0;
-            m_bus.Subscribe<Events.StatueChanged>(e => changed += e.Rolled ? 1 : 0);
-            SequenceRandom random = new SequenceRandom(AbilityRoll(StatueTable.k_Bake), 0.99d, AbilityRoll(StatueTable.k_Price), 0.8d, AbilityRoll(StatueTable.k_Bonus), 0.1d);
+            m_bus.Subscribe<Events.BlessingChanged>(e => changed += e.Prayed ? 0 : 1);
+            Grant(BlessingTable.k_Grow);
+            double seconds = m_tables.Get<BlessingTable>(BlessingTable.k_Grow).Seconds;
 
-            Assert.That(Statue.TryRoll(m_state, random), Is.True);
+            Blessing.Tick(seconds - 1d);
+            Assert.That(Blessing.Active, Is.Not.Null);
+            Blessing.Tick(1d);
 
-            Assert.That(m_state.Count(Gem), Is.EqualTo(0));
+            Assert.That(Blessing.Active, Is.Null);
+            Assert.That(Blessing.Boost(BlessingTable.k_Grow), Is.EqualTo(0d));
             Assert.That(changed, Is.EqualTo(1));
-            Assert.That(Statue.Lines.Select(l => l.Ability.Id), Is.EqualTo(new[] { StatueTable.k_Bake, StatueTable.k_Price, StatueTable.k_Bonus }));
-            Assert.That(Statue.Lines.Select(l => l.Grade), Is.EqualTo(new[] { StatueGrade.Legend, StatueGrade.Rare, StatueGrade.Common }));
-            Assert.That(Statue.Boost(StatueTable.k_Bake), Is.EqualTo(Value(StatueTable.k_Bake, StatueGrade.Legend)));
-            Assert.That(Statue.Boost(StatueTable.k_Walk), Is.EqualTo(0d));
+
+            Blessing.Tick(Config.BlessingCooldown - seconds);
+
+            Assert.That(Blessing.CanPray, Is.True);
+            Assert.That(changed, Is.EqualTo(2));
         }
 
-        // 빈 줄은 못 잠그고, 잠근 줄은 굴려도 그대로이며 값이 lockCost씩 오른다. 잠금은 maxLocks줄까지
+        // 늘 하나: 앞 축복이 남아 있어도 새로 빌면 덮는다
         [Test]
-        public void Lock_KeepsLine_RaisesCost_UpToMaxLocks()
+        public void NewPrayer_ReplacesBlessing()
         {
-            Assert.That(Statue.CanLock(0), Is.False);
-            Grant(StatueTable.k_Bake, StatueGrade.Legend, StatueTable.k_Grow);
+            m_tables.Get<BlessingTable>(BlessingTable.k_Bake).Seconds = Config.BlessingCooldown * 2d;
+            Grant(BlessingTable.k_Bake);
+            Blessing.Tick(Config.BlessingCooldown);
 
-            Statue.SetLocked(0, true);
-            Statue.SetLocked(1, true);
-            Statue.SetLocked(2, true);
+            Grant(BlessingTable.k_Price);
 
-            Assert.That(Statue.LockedCount, Is.EqualTo(Config.StatueMaxLocks));
-            Assert.That(Statue.Lines[2].Locked, Is.False);
-            Assert.That(Statue.RollCost, Is.EqualTo(Config.StatueRollCost + Config.StatueMaxLocks * Config.StatueLockCost));
-
-            Statue.SetLocked(1, false);
-            m_state.AddItem(Gem, Statue.RollCost);
-            Assert.That(Statue.TryRoll(m_state, new SequenceRandom(AbilityRoll(StatueTable.k_Walk), 0.1d, AbilityRoll(StatueTable.k_Walk), 0.1d)), Is.True);
-
-            Assert.That(Statue.Lines[0].Ability.Id, Is.EqualTo(StatueTable.k_Bake));
-            Assert.That(Statue.Lines[0].Grade, Is.EqualTo(StatueGrade.Legend));
-            Assert.That(Statue.Lines[1].Ability.Id, Is.EqualTo(StatueTable.k_Walk));
-            Assert.That(Statue.Lines[2].Ability.Id, Is.EqualTo(StatueTable.k_Walk));
-            Assert.That(m_state.Count(Gem), Is.EqualTo(0));
+            Assert.That(Blessing.Active.Id, Is.EqualTo(BlessingTable.k_Price));
+            Assert.That(Blessing.Boost(BlessingTable.k_Bake), Is.EqualTo(0d));
         }
 
+        // Mall이 매 프레임 축복 시간을 줄인다
         [Test]
-        public void Roll_WithTooFewGems_ChangesNothing()
+        public void MallTick_CountsBlessingDown()
         {
-            m_state.AddItem(Gem, Config.StatueRollCost - 1);
+            Grant(BlessingTable.k_Grow);
+            double start = Blessing.Remaining;
 
-            Assert.That(Statue.TryRoll(m_state, new SequenceRandom()), Is.False);
+            Run(1d);
 
-            Assert.That(m_state.Count(Gem), Is.EqualTo(Config.StatueRollCost - 1));
-            Assert.That(Statue.Lines.All(l => l.IsEmpty), Is.True);
+            Assert.That(start - Blessing.Remaining, Is.EqualTo(1d).Within(1e-6));
         }
 
-        // 굽기 전설이면 오븐이 (1 + 값)배로 굽는다
+        // 화덕 축복이면 오븐이 (1 + 값)배로 굽는다
         [Test]
-        public void BakeBoost_OvenBakesFaster()
+        public void BakeBlessing_OvenBakesFaster()
         {
-            Grant(StatueTable.k_Bake, StatueGrade.Legend, StatueTable.k_Grow);
+            Grant(BlessingTable.k_Bake);
             OvenInteractable oven = m_shop.Ovens[0];
             Assert.That(oven.TryStart(m_tables.GetAll<BreadTable>()[0]), Is.True);
             double start = oven.Remaining;
 
             Run(1d);
 
-            Assert.That(start - oven.Remaining, Is.EqualTo(1d + Value(StatueTable.k_Bake, StatueGrade.Legend)).Within(1e-6));
+            Assert.That(start - oven.Remaining, Is.EqualTo(1d + Value(BlessingTable.k_Bake)).Within(1e-6));
         }
 
         [Test]
-        public void WalkBoost_WombatWalksFaster()
+        public void GrowBlessing_FieldGrowsFaster()
         {
-            double speed = m_wombat.Speed;
-
-            Grant(StatueTable.k_Walk, StatueGrade.Rare, StatueTable.k_Grow);
-
-            Assert.That(m_wombat.Speed, Is.EqualTo(speed * (1d + Value(StatueTable.k_Walk, StatueGrade.Rare))).Within(1e-9));
-        }
-
-        [Test]
-        public void GrowBoost_FieldGrowsFaster()
-        {
-            Grant(StatueTable.k_Grow, StatueGrade.Legend, StatueTable.k_Walk);
+            Grant(BlessingTable.k_Grow);
             PlotInteractable plot = m_farm.Plots.First(p => p.IsTilled);
             plot.Plant(m_farm.Crop, false);
             double start = plot.Remaining;
 
             Run(1d);
 
-            Assert.That(start - plot.Remaining, Is.EqualTo(1d + Value(StatueTable.k_Grow, StatueGrade.Legend)).Within(1e-6));
+            Assert.That(start - plot.Remaining, Is.EqualTo(1d + Value(BlessingTable.k_Grow)).Within(1e-6));
         }
 
-        // 덤 전설이면 덤 확률에 값이 더해진다: 난수 0.3은 기본(0.2)으로는 안 나오지만 0.2 + 0.2 = 0.4면 나온다
+        // 반짝 축복이면 덤 확률이 × (1 + 값): 기본 확률보다 조금 큰 난수도 덤이 나온다
         [Test]
-        public void BonusBoost_AddsToBonusChance()
+        public void BonusBlessing_MultipliesBonusChance()
         {
-            Grant(StatueTable.k_Bonus, StatueGrade.Legend, StatueTable.k_Walk);
+            Grant(BlessingTable.k_Bonus);
             PlotInteractable plot = m_farm.Plots.First(p => p.IsTilled);
             plot.Plant(m_farm.Crop, false);
-            double roll = m_tables.Get<FarmConfigTable>(FarmConfigTable.k_Main).BonusChance + Value(StatueTable.k_Bonus, StatueGrade.Legend) * 0.5d;
+            double chance = m_tables.Get<FarmConfigTable>(FarmConfigTable.k_Main).BonusChance;
+            int gems = m_state.Count(Gem);
 
-            plot.Harvest(m_state, new SequenceRandom(roll));
+            plot.Harvest(m_state, new SequenceRandom(chance * (1d + Value(BlessingTable.k_Bonus) * 0.5d)));
 
-            Assert.That(m_state.Count(Gem), Is.EqualTo(1));
+            Assert.That(m_state.Count(Gem), Is.EqualTo(gems + 1));
         }
 
-        // 손님 전설이면 계단으로 오는 간격이 ÷ (1 + 값): 첫 손님 뒤 기본 간격이 되기 전에 둘째가 온다
+        // 손님 축복이면 계단으로 오는 간격이 ÷ (1 + 값): 첫 손님 뒤 기본 간격이 되기 전에 둘째가 온다
         [Test]
-        public void VisitorsBoost_CustomersArriveSooner()
+        public void VisitorsBlessing_CustomersArriveSooner()
         {
-            Grant(StatueTable.k_Visitors, StatueGrade.Legend, StatueTable.k_Walk);
+            Grant(BlessingTable.k_Visitors);
             int arrived = 0;
             m_bus.Subscribe<Events.PlazaVisitorArrived>(_ => arrived++);
-            double boosted = Config.ArrivalSeconds / (1d + Value(StatueTable.k_Visitors, StatueGrade.Legend));
+            double boosted = Config.ArrivalSeconds / (1d + Value(BlessingTable.k_Visitors));
 
             Run(k_Dt + (boosted + Config.ArrivalSeconds) * 0.5d);
 
@@ -213,6 +219,8 @@ namespace ZooTycoon.Tests
             Assert.That(m_plaza.TargetAction.Id, Is.EqualTo(ActionTable.k_Statue));
             Assert.That(m_plaza.TryInteract(), Is.True);
             Assert.That(opened, Is.EqualTo(1));
+            Assert.That(statue.TryPray(), Is.True);
+            Assert.That(Blessing.Active, Is.Not.Null);
         }
     }
 }

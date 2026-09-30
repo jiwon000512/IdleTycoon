@@ -271,6 +271,26 @@ namespace ZooTycoon.Tests
             Assert.That(shop.Visitors.Count, Is.EqualTo(0));
         }
 
+        // 설계 30: 황금 축복이 걸린 동안 빵 값 × (1 + 값) 반올림
+        [Test]
+        public void Customer_PaysMore_WithGoldBlessing()
+        {
+            BakeryArea shop = Create(c => m_arrivalSeconds = 1000d);
+            Stock(shop, "b01", 6);
+            var blessings = m_tables.GetAll<BlessingTable>();
+            BlessingTable gold = m_tables.Get<BlessingTable>(BlessingTable.k_Price);
+            double roll = (System.Linq.Enumerable.Sum(System.Linq.Enumerable.TakeWhile(blessings, b => b.Id != gold.Id), b => b.Weight) + gold.Weight * 0.5d)
+                / System.Linq.Enumerable.Sum(blessings, b => b.Weight);
+            Assert.That(m_state.Blessing.TryPray(new SequenceRandom(roll)), Is.True);
+            double coins = m_state.Coins;
+            bool paid = false;
+            m_bus.Subscribe<Events.BakeryVisitorPaid>(_ => paid = true);
+
+            RunUntil(shop, () => paid);
+
+            Assert.That(m_state.Coins, Is.EqualTo(coins + System.Math.Round(10d * (1d + gold.Value))));
+        }
+
         // 빵을 집은 뒤 줄 머리 자리까지 걸어가 선 다음에야 계산(1.5초)이 시작된다
         [Test]
         public void Checkout_StartsOnlyAfterHeadStandsAtHeadSlot()

@@ -1,15 +1,16 @@
 {
   "table": "ItemTable",
-  "version": 3,
+  "version": 4,
   "notes": [
     "설계 25 밀 농사: 재료. id는 CropTable item · BreadTable ingredients가 가리킨다. 창고(ZooState)가 id로 세고, 사고팔지 않는다(재화는 코인 하나).",
     "icon: Resources/ 기준 경로(확장자 없음). 상단 바 재료 알약 · 굽기 칩 레시피 · 거두기 팝업이 같은 그림을 쓴다. start: 새 게임 창고에 든 개수(시작값).",
     "version 2 (2026-09-29, 설계 26 창고 화면): desc = 창고에서 칸을 누르면 보이는 설명. 획득처 · 사용처는 CropTable · BreadTable에서 찾는다.",
-    "version 3 (2026-09-30, 설계 28 똥 거름 · 덤): manure(거름: 빵집 똥을 치우면 하나, 심을 때 자동으로 하나 쓴다) · gem(반짝돌: 거둘 때 가끔 나오는 덤, 쓸 곳은 설계 29 석상) 행. source · use = 작물 · 빵 표에서 찾을 수 없는 획득처 · 사용처 글(StringTable 키, 없으면 칸을 비운다)."
+    "version 3 (2026-09-30, 설계 28 똥 거름 · 덤): manure(거름: 빵집 똥을 치우면 하나, 심을 때 자동으로 하나 쓴다) · gem(반짝돌: 거둘 때 가끔 나오는 덤, 쓸 곳은 설계 29 석상) 행. source · use = 작물 · 빵 표에서 찾을 수 없는 획득처 · 사용처 글(StringTable 키, 없으면 칸을 비운다).",
+    "version 4 (2026-09-30, 설계 30): 석상이 축복(무료)으로 바뀌어 gem 쓸 곳은 광장 유물 수레(설계 31, 준비 중). use를 inventory_use_relic으로, desc도 고쳤다."
   ],
   "rows": [
     { "id": "wheat", "name": "밀", "desc": "밭에서 자라는 노란 곡식. 빵 반죽의 기본 재료다.", "icon": "Sprites/Items/wheat", "start": 10 },
     { "id": "manure", "name": "거름", "desc": "똥을 치워 만든 거름. 심을 때 밭에 섞으면 빨리 자라고 반짝돌이 더 잘 나온다.", "icon": "Sprites/Items/manure", "start": 0, "source": "inventory_source_clean", "use": "inventory_use_plant" },
-    { "id": "gem", "name": "반짝돌", "desc": "밭을 거두다 가끔 나오는 반짝이는 돌. 광장의 웜뱃 석상이 좋아한다.", "icon": "Sprites/Items/gem", "start": 0, "source": "inventory_source_harvest", "use": "inventory_use_statue" }
+    { "id": "gem", "name": "반짝돌", "desc": "밭을 거두다 가끔 나오는 반짝이는 돌. 모아 두면 광장 유물 수레에서 쓴다.", "icon": "Sprites/Items/gem", "start": 0, "source": "inventory_source_harvest", "use": "inventory_use_relic" }
   ]
 }

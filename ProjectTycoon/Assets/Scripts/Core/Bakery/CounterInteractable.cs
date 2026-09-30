@@ -97,7 +97,7 @@ namespace ZooTycoon.Core
                 m_remaining = Bakery.Config.CheckoutSeconds;
             }
 
-            m_remaining -= dt * UpgradeValue(UpgradeLevel) * (1d + Bakery.Wallet.Statue.Boost(StatueTable.k_Checkout));
+            m_remaining -= dt * UpgradeValue(UpgradeLevel) * (1d + Bakery.Wallet.Blessing.Boost(BlessingTable.k_Checkout));
 
             if (m_remaining <= 0d)
             {
@@ -113,7 +113,7 @@ namespace ZooTycoon.Core
             Served++;
             head.Pay();
             // 설계 29: 석상 빵 값 능력(반올림, 코인은 정수)
-            double price = Math.Round(head.Bread.Price * (1d + Bakery.Wallet.Statue.Boost(StatueTable.k_Price)));
+            double price = Math.Round(head.Bread.Price * (1d + Bakery.Wallet.Blessing.Boost(BlessingTable.k_Price)));
             m_till.AddCoins(price);
             Bakery.Bus.Publish(new Events.BakeryVisitorPaid(head, price));
             Repath();

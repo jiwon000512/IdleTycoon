@@ -7,12 +7,10 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 29 웜뱃 석상 팝업: 광장 석상 앞 버튼(StatueOpened)으로 열고, 줄 · 잠금 · 굴리기를 Core Statue에 잇는다.
-    // 줄 글 = StatueTable format(이름, 값 %). 굴리면 굴린 줄만 돌린다. 반짝돌이 바뀌면 보유 · 버튼을 다시 그린다. 편집 모드에서는 닫는다
+    // 설계 30 석상 축복 팝업: 광장 석상 앞 버튼(StatueOpened)으로 열고, 카드 · 빌기를 Core Blessing에 잇는다.
+    // 빌면 카드가 돌다 멈춘다. 축복이 풀리거나 쉬는 시간이 끝나면 다시 그린다. 편집 모드에서는 닫는다
     public sealed class StatuePresenter : IDisposable
     {
-        private static readonly string[] k_GradeKeys = { "statue_grade_common", "statue_grade_rare", "statue_grade_legend" };
-
         private readonly StatueView m_view;
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
@@ -20,7 +18,7 @@ namespace ZooTycoon.UI
         private readonly List<string> m_names = new List<string>();
         private StatueInteractable m_thing;
 
-        private Statue Statue => m_state.Statue;
+        private Blessing Blessing => m_state.Blessing;
 
         public StatuePresenter(StatueView view, ZooState state, EventBus bus, TableSet tables)
         {
@@ -28,28 +26,33 @@ namespace ZooTycoon.UI
             m_state = state;
             m_tables = tables;
             m_view.CloseRequested += View_CloseRequested;
-            m_view.LockClicked += View_LockClicked;
-            m_view.RollClicked += View_RollClicked;
-            m_view.SetLabels(tables.Text("statue_title"), tables.Text("statue_hint"), tables.Text("statue_roll"));
+            m_view.PrayClicked += View_PrayClicked;
+            m_view.SetLabels(tables.Text("statue_title"), tables.Text("statue_hint"), tables.Text("statue_pray"),
+                seconds => tables.Format("statue_again", BigNumberFormatter.Clock(seconds)));
 
-            foreach (StatueTable ability in tables.GetAll<StatueTable>())
+            foreach (BlessingTable blessing in tables.GetAll<BlessingTable>())
             {
-                m_names.Add(tables.Text(ability.Name));
+                m_names.Add(tables.Text(blessing.Name));
             }
 
             m_subscriptions = new[]
             {
                 bus.Subscribe<Events.StatueOpened>(Bus_StatueOpened),
-                bus.Subscribe<Events.StatueChanged>(Bus_StatueChanged),
-                bus.Subscribe<Events.ItemsChanged>(Bus_ItemsChanged),
+                bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged),
             };
+        }
+
+        // 효과 글: format의 {0} = 퍼센트 숫자, {1} = 배수(상단 바 축복 알약도 쓴다)
+        public static string EffectText(TableSet tables, BlessingTable blessing)
+        {
+            return tables.Format(blessing.Format, (blessing.Value * 100d).ToString("0.#", CultureInfo.InvariantCulture),
+                (1d + blessing.Value).ToString("0.#", CultureInfo.InvariantCulture));
         }
 
         public void Dispose()
         {
             m_view.CloseRequested -= View_CloseRequested;
-            m_view.LockClicked -= View_LockClicked;
-            m_view.RollClicked -= View_RollClicked;
+            m_view.PrayClicked -= View_PrayClicked;
 
             foreach (IDisposable subscription in m_subscriptions)
             {
@@ -65,35 +68,22 @@ namespace ZooTycoon.UI
             }
         }
 
-        private List<StatueView.LineData> Lines()
+        private StatueView.CardData Card()
         {
-            List<StatueView.LineData> lines = new List<StatueView.LineData>();
+            BlessingTable active = Blessing.Active;
 
-            for (int i = 0; i < Statue.Lines.Count; i++)
+            return active == null ? null : new StatueView.CardData
             {
-                StatueLine line = Statue.Lines[i];
-                lines.Add(new StatueView.LineData
-                {
-                    Grade = line.IsEmpty ? null : m_tables.Text(k_GradeKeys[(int)line.Grade]),
-                    GradeLevel = line.Grade,
-                    Text = line.IsEmpty
-                        ? m_tables.Text("statue_empty")
-                        : m_tables.Format(line.Ability.Format, m_tables.Text(line.Ability.Name), (line.Value * 100d).ToString("0.#", CultureInfo.InvariantCulture)),
-                    LockLabel = m_tables.Text(line.Locked ? "statue_locked" : "statue_lock"),
-                    Locked = line.Locked,
-                    CanToggle = line.Locked || Statue.CanLock(i),
-                });
-            }
-
-            return lines;
+                IconPath = active.Icon,
+                Name = m_tables.Text(active.Name),
+                Effect = EffectText(m_tables, active),
+                Remaining = () => Blessing.Remaining,
+            };
         }
-
-        private string Have => m_tables.Format("statue_have", m_state.Count(Statue.Item));
-        private bool CanRoll => m_state.Count(Statue.Item) >= Statue.RollCost;
 
         private void Refresh()
         {
-            m_view.Show(Lines(), Have, Statue.RollCost.ToString(CultureInfo.InvariantCulture), CanRoll);
+            m_view.Show(Card(), m_tables.Text("statue_none"), () => Blessing.Cooldown, Blessing.CanPray);
         }
 
         private void Bus_StatueOpened(Events.StatueOpened e)
@@ -103,33 +93,18 @@ namespace ZooTycoon.UI
             m_view.Open();
         }
 
-        private void Bus_StatueChanged(Events.StatueChanged e)
+        private void Bus_BlessingChanged(Events.BlessingChanged e)
         {
             if (!m_view.IsOpen)
             {
                 return;
             }
 
-            if (!e.Rolled)
+            if (e.Prayed)
             {
-                Refresh();
-                return;
+                m_view.PlayPray(Card(), m_names, () => Blessing.Cooldown);
             }
-
-            bool[] rolled = new bool[e.Statue.Lines.Count];
-
-            for (int i = 0; i < rolled.Length; i++)
-            {
-                rolled[i] = !e.Statue.Lines[i].Locked;
-            }
-
-            m_view.PlayRoll(Lines(), rolled, m_names, Have, Statue.RollCost.ToString(CultureInfo.InvariantCulture), CanRoll);
-        }
-
-        // 반짝돌이 바뀌었다(굴리기로 줄었거나 밭에서 늘었다). 도는 중에는 줄을 덮지 않는다
-        private void Bus_ItemsChanged(Events.ItemsChanged e)
-        {
-            if (e.Wallet == m_state && m_view.IsOpen && !m_view.Spinning)
+            else if (!m_view.Spinning)
             {
                 Refresh();
             }
@@ -140,14 +115,9 @@ namespace ZooTycoon.UI
             m_view.Close();
         }
 
-        private void View_LockClicked(int line)
+        private void View_PrayClicked()
         {
-            Statue.SetLocked(line, !Statue.Lines[line].Locked);
-        }
-
-        private void View_RollClicked()
-        {
-            m_thing?.TryRoll();
+            m_thing?.TryPray();
         }
     }
 }

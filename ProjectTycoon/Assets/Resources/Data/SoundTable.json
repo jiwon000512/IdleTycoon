@@ -1,6 +1,6 @@
 {
   "table": "SoundTable",
-  "version": 10,
+  "version": 11,
   "notes": [
     "설계 10·23: 효과음. id는 코드(SoundTable.k_*)와 같아야 하고, 어느 사건에 나는지는 코드(World WorldSound · UI View)가 정한다. 재생은 GameKit SoundManager(GameManager.Init이 이 표를 등록한다).",
     "clip: Resources/ 기준 경로(확장자 없음). Assets/Audio/Source~/make_sfx.py로 합성한 실제 소리(2026-09-24 사용자 선택). 바꿀 때는 같은 경로에 덮어쓴다.",
@@ -14,7 +14,8 @@
     "version 7 (2026-09-29, 설계 25 밀 농사): plant(밭에 심음) · harvest(거둠) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전).",
     "version 8 (2026-09-30, 사용자 요청): step(웜뱃 걸음, 걷기 프레임 1 · 5마다, WombatView) 추가. 같은 날부터 곳에 매인 소리(사물 · 파기 · 밭 · 똥 · 점원 수다)는 웜뱃이 있는 곳의 것만 난다(WorldSound).",
     "version 9 (2026-09-30, 설계 28 똥 거름 · 덤): bonus(거둘 때 덤이 나옴: 밝은 두 음) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전).",
-    "version 10 (2026-09-30, 설계 29 웜뱃 석상): statue_roll(굴리기, 줄이 돌기 시작) · statue_legend(전설이 나온 줄이 멈춤) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전)."
+    "version 10 (2026-09-30, 설계 29 웜뱃 석상): statue_roll(굴리기, 줄이 돌기 시작) · statue_legend(전설이 나온 줄이 멈춤) 추가. make_sfx.py 1차(에이전트 판단, 시안 비교 전).",
+    "version 11 (2026-09-30, 설계 30 석상 축복): statue_roll은 빌 때 이름이 돌기 시작, statue_legend를 statue_blessed(축복이 멈춰 걸림)로 바꿈, blessing_end(축복이 풀림) 추가. make_sfx.py 1차(에이전트 판단)."
   ],
   "rows": [
     { "id": "pay", "clip": "Audio/pay", "volume": 0.6, "minGap": 0.1, "comboSeconds": 2.5, "pitchStep": 0.05, "pitchMax": 1.3 },
@@ -45,6 +46,7 @@
     { "id": "step", "clip": "Audio/step", "volume": 0.16, "minGap": 0.12, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "bonus", "clip": "Audio/bonus", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "statue_roll", "clip": "Audio/statue_roll", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
-    { "id": "statue_legend", "clip": "Audio/statue_legend", "volume": 0.55, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
+    { "id": "statue_blessed", "clip": "Audio/statue_blessed", "volume": 0.55, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "blessing_end", "clip": "Audio/blessing_end", "volume": 0.4, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
   ]
 }

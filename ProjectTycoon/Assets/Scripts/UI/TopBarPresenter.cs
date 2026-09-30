@@ -13,6 +13,7 @@ namespace ZooTycoon.UI
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
         private readonly IDisposable m_coins;
+        private readonly IDisposable m_blessing;
 
         private double m_last;
         private double m_spent;
@@ -25,12 +26,29 @@ namespace ZooTycoon.UI
 
             m_last = state.Coins;
             m_coins = bus.Subscribe<Events.CoinsChanged>(Bus_CoinsChanged);
+            m_blessing = bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged);
             RefreshCoins();
         }
 
         public void Dispose()
         {
             m_coins.Dispose();
+            m_blessing.Dispose();
+        }
+
+        // 설계 30: 축복이 걸리면 알약, 풀리면 숨긴다(쉬는 시간이 끝난 알림은 알약과 상관없다)
+        private void Bus_BlessingChanged(Events.BlessingChanged e)
+        {
+            BlessingTable active = e.Blessing.Active;
+
+            if (active == null)
+            {
+                m_view.HideBlessing();
+            }
+            else if (e.Prayed)
+            {
+                m_view.ShowBlessing(active.Icon, StatuePresenter.EffectText(m_tables, active), () => e.Blessing.Remaining, StatueView.k_SpinSeconds);
+            }
         }
 
         private void Bus_CoinsChanged(Events.CoinsChanged e)

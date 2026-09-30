@@ -13,8 +13,8 @@ namespace ZooTycoon.Core
         private readonly Dictionary<string, int> m_items = new Dictionary<string, int>(StringComparer.Ordinal);
 
         public double Coins { get; private set; }
-        // 설계 29: 웜뱃 석상 능력 세 줄(가게 전부에 걸린다)
-        public Statue Statue { get; private set; }
+        // 설계 30: 석상 축복(가게 전부에 걸리는 시간제 효과)
+        public Blessing Blessing { get; private set; }
 
         private ZooState(double coins, EventBus bus)
         {
@@ -26,7 +26,7 @@ namespace ZooTycoon.Core
         public static ZooState CreateNew(TableSet tables, EventBus bus)
         {
             ZooState state = new ZooState(tables.Get<ConfigTable>(ConfigTable.k_StartCoins).Value, bus);
-            state.Statue = new Statue(tables, bus);
+            state.Blessing = new Blessing(tables, bus);
 
             foreach (ItemTable item in tables.GetAll<ItemTable>())
             {
