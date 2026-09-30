@@ -1,8 +1,8 @@
 # 설계 25 밀 농사: 밀 재료 아이콘(창고 칸 · 거두기 팝업 · 굽기 칩). 한 칸 2px · PPU 80, 피벗 가운데(BakeryBaker).
 # 밭 흙판과 밀 단계 그림은 2026-09-30부터 Codex 시안을 칸 단위로 줄인 make_farm_art.py가 만든다(옛 더미 밭·밀 그림은 지웠다).
 # 2026-09-30 사용자 「밭에 심긴 것과 같은 것으로」: 줄 그림에서는 포기들의 잎이 서로 닿아 한 포기를 못 오리므로, 밭 밀 줄(raw/wheat_a.png 익음 띠 + 게임 그림)을 참조로 주고
-#   Codex에 한 포기만 그리게 했다(raw/wheat_icon_a~c.png, 프롬프트 raw/prompt_wheat_icon.txt). 사용자 선택 A → make_pixel.py로 13칸 폭 격자 → 밭 밀(wheat_2_0) 팔레트 7색으로 맞춤 → 투명 여백 잘라 저장.
-#   창고 칸 등은 InventoryView가 상자에 드는 정수 배로 보인다(13×24칸이라 칸에서 2배 = 밭과 같은 결).
+#   Codex에 한 포기만 그리게 했다(raw/wheat_icon_a~c.png, 프롬프트 raw/prompt_wheat_icon.txt). 사용자 선택 A → make_pixel.py로 CELLS_W칸 폭 격자 → 밭 밀(wheat_2_0) 팔레트 7색으로 맞춤 → 투명 여백 잘라 저장.
+#   창고 칸 등은 InventoryView가 상자에 드는 정수 배로 보인다(10칸 폭(약 18칸 높이)이라 칸에서 3배, 2026-09-30 사용자 「10칸 폭으로」).
 # 출력: Resources/Sprites/Items/wheat.png. 실행: Windows Python(Pillow · numpy) make_farm.py
 import os
 import subprocess
@@ -15,7 +15,7 @@ RES = os.path.join(HERE, '..', '..', '..', '..', 'Resources', 'Sprites')
 MAKE_PIXEL = os.path.join(HERE, '..', '..', 'Source~', 'make_pixel.py')
 RAW = os.path.join(HERE, 'raw', 'wheat_icon_a.png')
 PX = 2
-CELLS_W = 13
+CELLS_W = 10
 
 
 def icon():
