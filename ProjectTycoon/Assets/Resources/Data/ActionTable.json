@@ -1,6 +1,6 @@
 {
   "table": "ActionTable",
-  "version": 10,
+  "version": 11,
   "notes": [
     "설계 09 v0.4 → 설계 13 v0.5: 웜뱃이 사물에서 하는 행동. 하는 일은 행동 클래스(ActionFactory 안 중첩 클래스, id로 만든다), 이 표는 어떻게 하는지(mode)와 버튼 아이콘. 어느 사물에서 되는지는 InteractableTable.json actions.",
     "mode: auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로 · manual = 상호작용 버튼(지금 할 수 있는 첫 manual 행동) · sheet = 시트의 한 줄(줄을 누르면 산다). take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
@@ -15,7 +15,8 @@
     "version 7 (2026-09-26, 설계 18 자유 배치): place_shelf·place_oven 삭제. 사물 설치는 행동이 아니라 편집 모드(WombatArea.Placement).",
     "version 8 (2026-09-26, 설계 22): wake(manual, 삽 옆 아이콘 Actions/wake 더미) — 딴짓 중인 점원(clerk 사물)을 깨운다: 딴짓을 끊고 자리로, 다음 딴짓 판정 1회 건너뜀, 대화 clerk_wake.",
     "version 9 (2026-09-29, 설계 24 웜뱃 똥): clean(manual, 아이콘 Actions/clean 더미) — 똥(poop 사물)이 대상이면 버튼으로 웜뱃 range 안 똥을 전부 치운다.",
-    "version 10 (2026-09-29, 설계 25 밀 농사): plant(manual, 아이콘 Actions/plant 더미) — 빈 밭(plot)에 농장 작물(CropTable 첫 행)을 심는다. harvest(auto) — 익은 밭 range 안에 들어오면 거둬 창고(ZooState)에 넣는다(들고 다니지 않는다)."
+    "version 10 (2026-09-29, 설계 25 밀 농사): plant(manual, 아이콘 Actions/plant 더미) — 빈 밭(plot)에 농장 작물(CropTable 첫 행)을 심는다. harvest(auto) — 익은 밭 range 안에 들어오면 거둬 창고(ZooState)에 넣는다(들고 다니지 않는다).",
+    "version 11 (2026-09-30, 설계 27 칸 밭): till(manual, 아이콘 Actions/till 더미) — 판 흙 칸(plot)에 서면 버튼으로 갈아 밭 칸으로(값 FarmConfigTable tillCost, 코인이 모자라면 아무 일 없음). plant는 밭 칸에서만, harvest는 밟으면(칸 안). dig는 빵집·농장 공용."
   ],
   "rows": [
     {
@@ -82,6 +83,11 @@
       "id": "plant",
       "mode": "manual",
       "icon": "Sprites/Actions/plant"
+    },
+    {
+      "id": "till",
+      "mode": "manual",
+      "icon": "Sprites/Actions/till"
     },
     {
       "id": "harvest",

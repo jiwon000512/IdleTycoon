@@ -19,7 +19,7 @@ namespace ZooTycoon.Core
         private readonly List<OvenInteractable> m_ovens = new List<OvenInteractable>();
         private readonly List<CounterInteractable> m_counters = new List<CounterInteractable>();
         private readonly List<IPlacedKind> m_shopKinds = new List<IPlacedKind>();
-        private readonly Dictionary<Cell, DigInteractable> m_digs = new Dictionary<Cell, DigInteractable>();
+        private readonly DigSet m_digs;
         private readonly PassageInteractable m_exit;
 
         public const string k_Id = "bakery";
@@ -76,9 +76,10 @@ namespace ZooTycoon.Core
             m_config = tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery);
             m_state = state;
             Random = random;
-            Grid = new BurrowGrid(m_config, bus);
+            Grid = new BurrowGrid(BurrowGrid.Columns(2, 4), m_config.DigBaseCost, m_config.DigCostGrowth, CellBounds.None, bus);
             bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new BakeryLayout(tables);
+            m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells, this);
             InitClerks();
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
 
@@ -167,18 +168,9 @@ namespace ZooTycoon.Core
             return best;
         }
 
-        // 편집 모드에서 누른 점의 팔 수 있는 흙 칸. 없으면 null
-        public DigInteractable DigAt(Vector2 p)
+        public override DigInteractable DigAt(Vector2 p)
         {
-            foreach (DigInteractable dig in m_digs.Values)
-            {
-                if (Layout.DistanceToCell(dig.Cell, p) == 0f)
-                {
-                    return dig;
-                }
-            }
-
-            return null;
+            return m_digs.At(p);
         }
 
         // 설계 17: 굽기 시트가 값을 치른 뒤 다음 빵을 연다(BreadTable 행 순서)
@@ -298,27 +290,10 @@ namespace ZooTycoon.Core
             // 대상은 다음 Tick에 고른다. 여기서 고르면 LayoutChanged보다 TargetChanged가 먼저 나가 화면에 없는 사물(새 오븐·진열대)을 가리킨다
         }
 
-        // 팔 수 있는 칸은 칸 기준으로 맞춘다(있던 칸은 같은 객체를 둬 대상이 흔들리지 않는다). 목록 순서는 딴짓 점원 → 똥 → 진열대 → 오븐 → 계산대 → 나가기 → 파기
+        // 목록 순서는 딴짓 점원 → 똥 → 진열대 → 오븐 → 계산대 → 나가기 → 파기(팔 수 있는 칸은 DigSet이 칸 기준으로 맞춘다)
         private void SyncThings()
         {
-            List<Cell> digCells = new List<Cell>(Grid.Frontier());
-
-            foreach (Cell cell in new List<Cell>(m_digs.Keys))
-            {
-                if (!digCells.Contains(cell))
-                {
-                    m_digs.Remove(cell);
-                }
-            }
-
-            foreach (Cell cell in digCells)
-            {
-                if (!m_digs.ContainsKey(cell))
-                {
-                    m_digs[cell] = new DigInteractable(Row(DigInteractable.k_Id), cell, this);
-                }
-            }
-
+            m_digs.Sync();
             Placed.Clear();
 
             // 설계 22: 딴짓 중인 점원이 먼저 — 자리에 선 점원은 그 사물과 거리가 같아 앞에 있어야 대상이 된다(같은 거리면 먼저 것)
@@ -332,11 +307,7 @@ namespace ZooTycoon.Core
             Placed.AddRange(m_ovens);
             Placed.AddRange(m_counters);
             Placed.Add(m_exit);
-
-            foreach (Cell cell in digCells)
-            {
-                Placed.Add(m_digs[cell]);
-            }
+            Placed.AddRange(m_digs.Things);
         }
 
         private void OnLayoutChanged()

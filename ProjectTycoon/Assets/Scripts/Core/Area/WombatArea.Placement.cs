@@ -118,6 +118,12 @@ namespace ZooTycoon.Core
             return found;
         }
 
+        // 설계 27: 편집에서 누른 점의 팔 수 있는 흙 칸. 없으면 null(파는 굴이 override)
+        public virtual DigInteractable DigAt(Vector2 p)
+        {
+            return null;
+        }
+
         public PlacementCheck CanPlace(string kindId, Vector2 at)
         {
             return Check(KindOf(kindId), at, null);

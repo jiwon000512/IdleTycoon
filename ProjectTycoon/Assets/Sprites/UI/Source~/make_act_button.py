@@ -92,6 +92,16 @@ def exit_():  # 나가기: 왼쪽 아치에서 나오는 화살표
     return outline(a)
 
 
+def till():  # 갈기(설계 27 더미): 괭이 — 나무 자루 + 오른쪽 위 강철 날
+    im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
+    d.line([(3, 15), (12, 6)], fill=WOOD + (255,), width=2)
+    d.line([(2, 16), (4, 14)], fill=WOOD_D + (255,), width=2)    # 손잡이 끝
+    d.polygon([(10, 3), (16, 3), (16, 6), (13, 6), (13, 10), (10, 10)], fill=STEEL + (255,))
+    d.polygon([(13, 6), (16, 6), (16, 7), (13, 10)], fill=STEEL_D + (255,))
+    return outline(np.asarray(im).copy())
+
+
 Image.fromarray(button()).save('../btn_act.png')
-for action_id, draw in [('open', open_), ('dig', dig), ('enter', enter), ('exit', exit_)]:
+# enter·exit는 2026-09-26 굴 이동 자동으로 아이콘이 없다(그리는 함수만 남김)
+for action_id, draw in [('open', open_), ('dig', dig), ('till', till)]:
     Image.fromarray(draw()).save(f'../../../Resources/Sprites/Actions/{action_id}.png')

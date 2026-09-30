@@ -38,18 +38,9 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_poopFrames;
         [SerializeField] private float m_poopFrameRate = 2f;
 
-        private const int k_DirtOrder = -1990;
+        // 설계 24 똥: 엉덩이 높이에서 떨어져 흙먼지(모든 그림 위), 치우면 납작해지며 흰 반짝. 파기 연출은 공용 DigView
         private static readonly Color k_Dirt = new Color(0.45f, 0.3f, 0.18f);
-        // 굴을 판 순간 새 칸에서 튀는 흙덩이(두 빛깔 × k_ClodCount개, 모든 그림 위)
-        private static readonly Color k_DirtDark = new Color32(52, 32, 32, 255);
-        private const int k_ClodCells = 12;
-        private const int k_ClodCount = 12;
-        private const float k_ClodSpread = 2.4f;
-        private const float k_ClodLift = 4f;
-        private const float k_ClodGravity = 12f;
-        private const float k_ClodSeconds = 0.6f;
         private const int k_ClodOrder = 1000;
-        // 설계 24 똥: 엉덩이 높이에서 떨어져 흙먼지, 치우면 납작해지며 흰 반짝
         private const float k_PoopDropHeight = 0.3f;
         private const float k_PoopDropSeconds = 0.12f;
         private const float k_PoopCleanSeconds = 0.15f;
@@ -61,7 +52,7 @@ namespace ZooTycoon.World
         private readonly Dictionary<ShelfInteractable, ShelfSignView> m_signs = new Dictionary<ShelfInteractable, ShelfSignView>();
         private readonly Dictionary<OvenInteractable, OvenView> m_ovens = new Dictionary<OvenInteractable, OvenView>();
         private readonly Dictionary<CounterInteractable, CounterView> m_counters = new Dictionary<CounterInteractable, CounterView>();
-        private readonly Dictionary<Cell, MarkerView> m_digTags = new Dictionary<Cell, MarkerView>();
+        private DigView m_dig;
         private CounterView m_wombatCounter;
         private BakeryArea m_shop;
         private FrameCache m_frames;
@@ -120,6 +111,7 @@ namespace ZooTycoon.World
             m_frames = frames;
             m_tables = tables;
             m_ghost = GhostView.Create(transform);
+            m_dig = new DigView(this, m_digTagPrefab, tables, shop.Grid, cell => (Vector3)CellCenter(cell), new Vector2(Layout.CellWidth, Layout.CellHeight), m_digSeconds);
             Repaint();
             Build();
             m_wombatCounter.Wombat.Bind(shop, this, frames);
@@ -151,7 +143,7 @@ namespace ZooTycoon.World
         public void SetEditing(bool editing)
         {
             m_editing = editing;
-            RefreshDigTags();
+            m_dig.Refresh(editing, m_shownTarget);
             RefreshOutlines();
 
             if (!editing)
@@ -256,7 +248,7 @@ namespace ZooTycoon.World
                     m_counters[counter].Bounce();
                     break;
                 case DigInteractable dig:
-                    m_digTags[dig.Cell].Bounce();
+                    m_dig.Bounce(dig.Cell);
                     break;
                 case PassageInteractable _:
                     StartCoroutine(Fx.Bounce(m_arch));
@@ -264,39 +256,6 @@ namespace ZooTycoon.World
                 case PoopInteractable poop when m_poops.ContainsKey(poop):
                     StartCoroutine(Fx.Bounce(m_poops[poop].transform));
                     break;
-            }
-        }
-
-        private void ShowDigTag(Cell cell)
-        {
-            if (!m_digTags.TryGetValue(cell, out MarkerView tag))
-            {
-                tag = Instantiate(m_digTagPrefab, transform);
-                tag.transform.position = CellCenter(cell);
-                m_digTags[cell] = tag;
-            }
-
-            tag.Show(m_tables.Format("tag_dig", Cost(m_shop.Grid.DigCost)));
-        }
-
-        // 편집 중이면 팔 수 있는 칸 전부, 아니면 대상인 칸만
-        private void RefreshDigTags()
-        {
-            foreach (MarkerView tag in m_digTags.Values)
-            {
-                tag.gameObject.SetActive(false);
-            }
-
-            if (m_editing)
-            {
-                foreach (Cell cell in m_shop.Grid.Frontier())
-                {
-                    ShowDigTag(cell);
-                }
-            }
-            else if (m_shownTarget is DigInteractable dig)
-            {
-                ShowDigTag(dig.Cell);
             }
         }
 
@@ -397,12 +356,12 @@ namespace ZooTycoon.World
             if (e.Area == m_shop)
             {
                 Build();
-                RefreshDigTags();
+                m_dig.Refresh(m_editing, m_shownTarget);
                 RefreshOutlines();
             }
         }
 
-        // 굴 파기 연출: 다시 그리고, 새 칸 자리에 흙빛 사각형을 얹어 밝아지게 한다
+        // 굴 파기 연출: 다시 그리고, 새 칸이 흙빛에서 밝아진다(DigView)
         private void Bus_Dug(Events.Dug e)
         {
             if (e.Grid != m_shop.Grid)
@@ -411,10 +370,7 @@ namespace ZooTycoon.World
             }
 
             Repaint();
-            StartCoroutine(DigRoutine(e.Cell));
-            Vector3 center = CellCenter(e.Cell);
-            StartCoroutine(Fx.Burst(transform, White, center, k_ClodCount, k_ClodSpread, k_ClodLift, k_ClodGravity, k_ClodSeconds, k_ClodCells, k_Dirt, k_ClodOrder));
-            StartCoroutine(Fx.Burst(transform, White, center, k_ClodCount, k_ClodSpread, k_ClodLift, k_ClodGravity, k_ClodSeconds, k_ClodCells, k_DirtDark, k_ClodOrder));
+            m_dig.Play(e.Cell);
             OnExpanded();
         }
 
@@ -427,7 +383,7 @@ namespace ZooTycoon.World
             }
 
             m_shownTarget = m_shop.Target;
-            RefreshDigTags();
+            m_dig.Refresh(m_editing, m_shownTarget);
 
             if (m_shownTarget != null)
             {
@@ -501,25 +457,6 @@ namespace ZooTycoon.World
             }
 
             Destroy(poop.gameObject);
-        }
-
-        private System.Collections.IEnumerator DigRoutine(Cell cell)
-        {
-            GameObject go = new GameObject("Dirt");
-            go.transform.SetParent(transform, false);
-            go.transform.position = CellCenter(cell);
-            go.transform.localScale = new Vector3(Layout.CellWidth, Layout.CellHeight, 1f);
-            SpriteRenderer r = go.AddComponent<SpriteRenderer>();
-            r.sprite = White;
-            r.sortingOrder = k_DirtOrder;
-
-            for (float t = 0f; t < m_digSeconds; t += Time.deltaTime)
-            {
-                r.color = new Color(k_Dirt.r, k_Dirt.g, k_Dirt.b, 1f - t / m_digSeconds);
-                yield return null;
-            }
-
-            Destroy(go);
         }
 
         private Sprite White
@@ -659,11 +596,6 @@ namespace ZooTycoon.World
             }
 
             view.ShowBaking((float)oven.Progress, oven.Ready);
-        }
-
-        private static string Cost(double cost)
-        {
-            return cost.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         // 빈 진열대(설계 17)는 null

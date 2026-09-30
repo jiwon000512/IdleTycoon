@@ -14,6 +14,8 @@ namespace ZooTycoon.Core
         public const float k_ShelfDrop = 0.65f;
         public const float k_OvenDrop = 0.85f;
         public const float k_CounterDrop = 1.55f;
+        // 시작 계산대 줄(굴 격자 설계 v0.5)
+        public const int k_CounterRow = 2;
 
         // 웜뱃 바닥 자리(손님이 계산대 뒤로 지나가지 않게): 계산대 윗변부터 뒤 자리 위 k_WombatBack까지, 좌우 half
         private const float k_WombatHalf = 0.4f;
@@ -29,16 +31,15 @@ namespace ZooTycoon.Core
         private const float k_HoleGap = 1f;
         private const float k_OverflowDistance = 2f;
 
-        private readonly double m_cellWidth;
-        private readonly double m_cellHeight;
-        private readonly double m_entranceHeight;
+        private readonly CellMetrics m_cells;
         private readonly Dictionary<CounterInteractable, List<Vector2>> m_queues = new Dictionary<CounterInteractable, List<Vector2>>();
         private readonly Dictionary<ShelfInteractable, List<Vector2>> m_shelfSpots = new Dictionary<ShelfInteractable, List<Vector2>>();
         private readonly List<Vector2> m_noSpots = new List<Vector2>();
 
-        // 굴 칸 크기(유닛)
-        public float CellWidth => (float)m_cellWidth;
-        public float CellHeight => (float)m_cellHeight;
+        // 굴 칸 크기(유닛)와 칸 ↔ 좌표(설계 27: 빵집·농장 공용 CellMetrics)
+        public CellMetrics Cells => m_cells;
+        public float CellWidth => m_cells.CellWidth;
+        public float CellHeight => m_cells.CellHeight;
         public BurrowShape.Result Shape { get; private set; }
         public BurrowNav Nav { get; private set; }
         // 설계 09: 웜뱃이 걷는 땅. 손님 땅과 같되 계산대 뒤 웜뱃 자리를 막지 않는다
@@ -50,24 +51,21 @@ namespace ZooTycoon.Core
         public Vector2 HoleInside => new Vector2(0f, -(BurrowShape.k_EntranceFloorTop - 1) / BurrowShape.k_PixelsPerUnit);
         public Vector2 HoleFloor => new Vector2(0f, -2.2f);
         // 시작 계산대 밑변(계산대 줄 윗변 가운데에서 아래로)
-        public Vector2 CounterBase => new Vector2(0f, -RowTop(BurrowGrid.k_CounterRow) - k_CounterDrop);
+        public Vector2 CounterBase => new Vector2(0f, -RowTop(k_CounterRow) - k_CounterDrop);
 
         public BakeryLayout(TableSet tables)
         {
-            m_cellWidth = tables.Get<ConfigTable>(ConfigTable.k_CellWidth).Value;
-            m_cellHeight = tables.Get<ConfigTable>(ConfigTable.k_CellHeight).Value;
-            m_entranceHeight = tables.Get<ConfigTable>(ConfigTable.k_EntranceHeight).Value;
+            m_cells = new CellMetrics(tables);
         }
 
         public float RowTop(int row)
         {
-            return row <= 0 ? 0f : (float)(m_entranceHeight + (row - 1) * m_cellHeight);
+            return m_cells.RowTop(row);
         }
 
         public Vector2 CellCenter(Cell cell)
         {
-            float height = (float)(cell.Row == 0 ? m_entranceHeight : m_cellHeight);
-            return new Vector2((float)((cell.Col + 0.5) * m_cellWidth), -(RowTop(cell.Row) + height * 0.5f));
+            return m_cells.CellCenter(cell);
         }
 
         // 시작 배치·테스트용 칸 자리
@@ -90,13 +88,7 @@ namespace ZooTycoon.Core
         // 칸 사각형까지의 거리(안이면 0). 파기 대상 고르기
         public float DistanceToCell(Cell cell, Vector2 p)
         {
-            float top = -RowTop(cell.Row);
-            float bottom = top - (float)(cell.Row == 0 ? m_entranceHeight : m_cellHeight);
-            float left = (float)(cell.Col * m_cellWidth);
-            float right = left + (float)m_cellWidth;
-            float dx = Math.Max(Math.Max(left - p.X, p.X - right), 0f);
-            float dy = Math.Max(Math.Max(bottom - p.Y, p.Y - top), 0f);
-            return (float)Math.Sqrt(dx * dx + dy * dy);
+            return m_cells.DistanceToCell(cell, p);
         }
 
         // 진열대의 서는 자리(표 순서: 오른쪽 옆 → 왼쪽 옆 → 앞 둘). 놓이지 않은(보관된) 진열대는 없음
@@ -139,8 +131,7 @@ namespace ZooTycoon.Core
         public void Rebuild(IReadOnlyCollection<Cell> cells, IReadOnlyList<ShelfInteractable> shelves, IReadOnlyList<OvenInteractable> ovens,
             IReadOnlyList<CounterInteractable> counters, int queueCapacity)
         {
-            int unit = (int)BurrowShape.k_PixelsPerUnit;
-            Shape = BurrowShape.Build(cells, (int)Math.Round(m_cellWidth * unit), (int)Math.Round(m_cellHeight * unit), (int)Math.Round(m_entranceHeight * unit));
+            Shape = m_cells.Build(cells);
 
             List<NavRect> blocked = new List<NavRect>();
 

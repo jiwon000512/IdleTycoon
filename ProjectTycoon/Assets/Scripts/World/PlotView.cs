@@ -2,13 +2,16 @@ using UnityEngine;
 
 namespace ZooTycoon.World
 {
-    // 설계 25: 밭 하나. 흙 틀 + 작물 그림(CropTable sprite_단계). 자라는 동안 오븐과 같은 타이머, 빈 밭은 오븐과 같은 오르내리는 화살표(웜뱃의 대상이면 끔)
+    // 설계 25 → 설계 27: 밭 칸 하나. 갈아 놓은 흙판(칸 크기, 흙 칸이면 숨김) + 작물 포기 여럿(CropTable sprite_단계, 저마다 발끝으로 깊이 정렬)
+    // + 오븐과 같은 타이머·다 익음 표시(작물 위)·빈 밭 화살표(칸 가운데, 웜뱃의 대상이면 끔)
     public sealed class PlotView : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer m_body;
-        [SerializeField] private SpriteRenderer m_crop;
+        [Tooltip("작물 포기(뒷줄부터)")]
+        [SerializeField] private SpriteRenderer[] m_crops;
         [SerializeField] private SpriteRenderer m_timer;
         [SerializeField] private Sprite[] m_timerFrames;
+        [SerializeField] private SpriteRenderer m_readyMark;
         [SerializeField] private SpriteRenderer m_emptyMark;
         [Tooltip("빈 밭 화살표: 오르내리는 높이(유닛, 2칸)와 한 번 바뀌는 간격(초)")]
         [SerializeField] private float m_markBob = 0.05f;
@@ -17,9 +20,6 @@ namespace ZooTycoon.World
         private float m_markY;
         private bool m_empty;
         private bool m_markHidden;
-
-        // 편집 모드 외곽선을 붙일 몸체
-        public SpriteRenderer Body => m_body;
 
         private void Awake()
         {
@@ -38,16 +38,27 @@ namespace ZooTycoon.World
         public void Bounce()
         {
             StartCoroutine(Fx.Bounce(m_body.transform));
-            StartCoroutine(Fx.Bounce(m_crop.transform));
+
+            foreach (SpriteRenderer crop in m_crops)
+            {
+                StartCoroutine(Fx.Bounce(crop.transform));
+            }
         }
 
-        // crop: 지금 단계 그림(빈 밭은 null). growing: 타이머를 보인다
-        public void Show(Sprite crop, bool growing)
+        // tilled: 밭 칸인가(흙 칸이면 흙판·작물·표식 전부 숨김). crop: 지금 단계 그림(빈 밭은 null). growing: 타이머, ripe: 다 익음 표시
+        public void Show(bool tilled, Sprite crop, bool growing, bool ripe)
         {
-            m_crop.sprite = crop;
-            m_crop.enabled = crop != null;
-            m_timer.enabled = growing;
-            m_empty = crop == null;
+            m_body.enabled = tilled;
+
+            foreach (SpriteRenderer renderer in m_crops)
+            {
+                renderer.sprite = crop;
+                renderer.enabled = tilled && crop != null;
+            }
+
+            m_timer.enabled = tilled && growing;
+            m_readyMark.enabled = tilled && ripe;
+            m_empty = tilled && crop == null;
             m_emptyMark.enabled = m_empty && !m_markHidden;
         }
 

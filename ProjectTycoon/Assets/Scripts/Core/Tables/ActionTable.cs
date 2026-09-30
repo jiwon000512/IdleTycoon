@@ -31,6 +31,8 @@ namespace ZooTycoon.Core
         // 설계 25: 빈 밭에 심기(버튼) · 익은 밭 거두기(auto)
         public const string k_Plant = "plant";
         public const string k_Harvest = "harvest";
+        // 설계 27: 판 흙 칸 갈기(버튼)
+        public const string k_Till = "till";
 
         public ActionMode Mode { get; set; }
         // 버튼 아이콘(Resources/ 기준, 확장자 없음). manual만, 나머지는 null

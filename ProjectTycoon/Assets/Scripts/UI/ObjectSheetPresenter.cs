@@ -8,7 +8,7 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 사물 터치 기획 → 설계 09 → 설계 13 v0.5: 상호작용 버튼으로 연 사물의 시트. 줄은 그 사물의 시트 행동(InteractableTable.actions 중 mode sheet)이 내놓고,
-    // 여기서는 행동 id별 서식으로 글자만 만든다(굽기 = 칩, 나머지 = 행). 제목·상태 줄만 사물 종류로 가른다. 줄을 누르면 곳에 TryChoose로 부탁한다.
+    // 여기서는 행동 id별 서식으로 글자만 만든다(굽기 = 칩, 나머지 = 행). 제목·상태 줄만 사물 종류로 가른다. 줄을 누르면 대상의 곳(m_target.Area)에 TryChoose로 부탁한다(설계 27: 굴 파기 시트는 농장에서도 열린다).
     // 열린 동안 사물(계산대 줄 포함)·업그레이드·배치·코인 이벤트로 갱신하고, 웜뱃의 대상이 바뀌면 닫는다
     public sealed class ObjectSheetPresenter : IDisposable
     {
@@ -74,9 +74,9 @@ namespace ZooTycoon.UI
             List<SheetRow> rows = new List<SheetRow>();
             SetHeader();
 
-            foreach (SheetAction action in m_shop.SheetActions(m_target))
+            foreach (SheetAction action in m_target.Area.SheetActions(m_target))
             {
-                foreach (SheetOption option in action.Options(m_shop.Wombat.Worker, m_target))
+                foreach (SheetOption option in action.Options(m_target.Area.Wombat.Worker, m_target))
                 {
                     if (action.Table.Id == ActionTable.k_Bake)
                     {
@@ -108,8 +108,8 @@ namespace ZooTycoon.UI
                 case CounterInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", ((CounterInteractable)m_target).Queue.Count));
                     break;
-                case DigInteractable _:
-                    m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", m_shop.Grid.Cells.Count));
+                case DigInteractable dig:
+                    m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", dig.Grid.Cells.Count));
                     break;
             }
         }
@@ -238,7 +238,7 @@ namespace ZooTycoon.UI
         {
             (string action, string option) = m_chips[index];
 
-            if (m_shop.TryChoose(action, m_target, option))
+            if (m_target.Area.TryChoose(action, m_target, option))
             {
                 m_view.Close();
             }
@@ -249,7 +249,7 @@ namespace ZooTycoon.UI
         {
             (string action, string option) = m_rows[index];
 
-            if (!m_shop.TryChoose(action, m_target, option))
+            if (!m_target.Area.TryChoose(action, m_target, option))
             {
                 return;
             }
@@ -267,9 +267,12 @@ namespace ZooTycoon.UI
             m_view.Close();
         }
 
+        // 열린 시트의 곳(설계 27: 굴 파기 시트는 농장에서도 열린다)
+        private WombatArea Area => m_target?.Area;
+
         private void Bus_ThingChanged(Events.ThingChanged e)
         {
-            if (e.Thing.Area == m_shop)
+            if (e.Thing.Area == Area)
             {
                 RefreshIfOpen();
             }
@@ -277,7 +280,7 @@ namespace ZooTycoon.UI
 
         private void Bus_Upgraded(Events.Upgraded e)
         {
-            if (e.Area == m_shop)
+            if (e.Area == Area)
             {
                 RefreshIfOpen();
             }
@@ -285,7 +288,7 @@ namespace ZooTycoon.UI
 
         private void Bus_LayoutChanged(Events.LayoutChanged e)
         {
-            if (e.Area == m_shop)
+            if (e.Area == Area)
             {
                 RefreshIfOpen();
             }
@@ -304,7 +307,7 @@ namespace ZooTycoon.UI
         // 걸어서 다른 사물로 가면(또는 배치가 바뀌어 대상이 사라지면) 닫는다
         private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            if (e.Area == m_shop && m_view.IsVisible && m_shop.Target != m_target)
+            if (e.Area == Area && m_view.IsVisible && Area.Target != m_target)
             {
                 m_view.Close();
             }

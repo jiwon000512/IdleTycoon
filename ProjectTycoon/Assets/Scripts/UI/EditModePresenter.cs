@@ -119,6 +119,8 @@ namespace ZooTycoon.UI
             }
 
             m_view.SetCards(m_cards);
+            // 설계 27: 놓을 것이 없는 곳(농장)에서는 보관 안내 대신 파기 안내
+            m_view.SetStoreHint(m_tables.Text(m_cards.Count == 0 ? "edit_dig_hint" : "edit_store_hint"));
         }
 
         private Vector2 ToArea(Vector2 world)
@@ -174,7 +176,7 @@ namespace ZooTycoon.UI
                 return;
             }
 
-            m_pressedDig = Area is BakeryArea bakery ? bakery.DigAt(at) : null;
+            m_pressedDig = Area.DigAt(at);
             m_panning = true;
             m_panFrom = world;
         }

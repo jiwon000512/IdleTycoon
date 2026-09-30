@@ -1,6 +1,5 @@
-# 설계 25 밀 농사 더미(시안 비교 전, 에이전트 판단): 앞쪽 위에서 내려다본 나무 틀 밭(윗면 흙 3두둑 · 앞면 판자) + 밀 3단계 + 밀 아이콘.
-# 한 칸 2px · PPU 80. 밭 64×24칸 = 바닥 사각형(halfWidth 0.8 · depth 0.6)과 같은 크기, 피벗 아래 가운데(BakeryBaker).
-# 밀 단계 그림은 밭과 같은 폭·같은 밑변(피벗 아래 가운데)이라 밭 위에 그대로 얹힌다. 두둑마다 한 줄씩 심는다.
+# 설계 25 밀 농사 → 설계 27 칸 밭 더미(시안 비교 전, 에이전트 판단): 갈아 놓은 흙판(칸 크기 135×96칸 = 3.375×2.4유닛, 바닥 재질이라 외곽선 없음) + 밀 3단계 + 밀 아이콘.
+# 한 칸 2px · PPU 80. 흙판은 피벗 아래 가운데(BakeryBaker)라 칸 밑변에 놓이고, 밀 포기 그림(64×40칸, 세 두둑)은 흙판 위 네 자리(BakeryBaker k_CropOffsets)에 얹힌다.
 # 출력: ../plot.png(Sprites/World/Farm) · Resources/Sprites/Farm/wheat_0~2.png · Resources/Sprites/Items/wheat.png
 # 실행: Windows Python(Pillow) make_farm.py
 import os
@@ -12,10 +11,7 @@ RES = os.path.join(HERE, '..', '..', '..', '..', 'Resources', 'Sprites')
 PX = 2
 
 OUT = (52, 32, 32, 255)        # 외곽선(art.md)
-WOOD = (176, 128, 84, 255)     # 틀 윗면
-WOOD_HI = (206, 164, 112, 255)  # 틀 하이라이트 한 획
-PLANK = (140, 98, 62, 255)     # 앞면 판자
-PLANK_SH = (112, 76, 48, 255)  # 판자 이음·오른쪽 그늘
+PLANK_SH = (112, 76, 48, 255)  # 아이콘 끈
 SOIL = (96, 64, 44, 255)       # 흙
 RIDGE = (120, 84, 58, 255)     # 두둑
 FURROW = (74, 48, 34, 255)     # 고랑
@@ -25,8 +21,10 @@ STALK = (196, 160, 84, 255)
 GOLD = (232, 196, 104, 255)
 GOLD_DK = (184, 140, 64, 255)
 
+# 흙판(칸 크기)
+PLOT_W, PLOT_H = 135, 96
+# 밀 포기 그림: 폭·밑변 기준 두둑 세 줄(그림 위에서 몇 칸째)
 W, H = 64, 24
-# 두둑 윗줄(밭 그림 위에서 몇 칸째). 심는 줄은 두둑 아랫줄
 RIDGES = [4, 8, 12]
 CROP_H = 40
 
@@ -45,32 +43,18 @@ def save(cells, w, h, path):
 
 
 def plot():
+    # 갈아 놓은 흙판: 칸 전체를 채우는 흙, 가로 두둑(2줄) + 고랑(1줄)이 15칸마다, 가장자리 한 칸은 고랑빛
     c = {}
-    for y in range(H):
-        for x in range(W):
-            edge = x in (0, W - 1) or y in (0, H - 1)
-            if edge:
-                # 둥근 네 귀퉁이
-                if (x in (0, W - 1)) and (y in (0, H - 1)):
-                    continue
-                c[(x, y)] = OUT
-            elif y >= 17:
-                # 앞면 판자(6줄), 16칸마다 이음, 오른쪽 끝 그늘
-                c[(x, y)] = PLANK_SH if (x % 16 == 0 or x >= W - 3) else PLANK
-            elif y == 16:
-                c[(x, y)] = OUT
-            elif x <= 2 or x >= W - 3 or y <= 2 or y >= 14:
-                # 틀 윗면 테(2칸) + 윗테 하이라이트 한 획
-                c[(x, y)] = WOOD_HI if (y == 1 and 3 <= x <= W - 12) else WOOD
-            else:
-                c[(x, y)] = SOIL
-    # 두둑(2줄)과 고랑(두둑 바로 아래 한 줄)
-    for r in RIDGES:
-        for x in range(4, W - 4):
+    for y in range(PLOT_H):
+        for x in range(PLOT_W):
+            edge = x in (0, PLOT_W - 1) or y in (0, PLOT_H - 1)
+            c[(x, y)] = FURROW if edge else SOIL
+    for r in range(6, PLOT_H - 6, 15):
+        for x in range(3, PLOT_W - 3):
             c[(x, r)] = RIDGE
             c[(x, r + 1)] = RIDGE
             c[(x, r + 2)] = FURROW
-    save(c, W, H, os.path.join(FARM, 'plot.png'))
+    save(c, PLOT_W, PLOT_H, os.path.join(FARM, 'plot.png'))
 
 
 def plant_columns():
@@ -116,7 +100,7 @@ def ripe(c, x, base):
 
 def crop(stage, name):
     c = {}
-    # 뒤 두둑부터 그려 앞 줄이 앞에 온다. 밑변은 밭 그림 밑변과 같다
+    # 뒤 두둑부터 그려 앞 줄이 앞에 온다. 밑변은 옛 밭 그림 밑변과 같다
     for r in RIDGES:
         base = CROP_H - H + r + 1
         for x in plant_columns():

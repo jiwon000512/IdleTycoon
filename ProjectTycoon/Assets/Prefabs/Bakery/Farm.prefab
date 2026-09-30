@@ -609,7 +609,8 @@ MonoBehaviour:
   m_wallFace: {fileID: 2800000, guid: f8b8f3fe1380e1a4f8215b817762678b, type: 3}
   m_arch: {fileID: 2315082637935100317}
   m_plotPrefab: {fileID: 8977439784559700589, guid: fb1b15eba6ad1284184203b37cb5fdcb, type: 3}
-  m_ghostPlot: {fileID: 21300000, guid: 14b6c43800a462541a581cd3861273a6, type: 3}
+  m_digTagPrefab: {fileID: 2695013931679785543, guid: 97aa13a92e14cdf42beedaa907855fa1, type: 3}
+  m_digSeconds: 0.6
   m_popupPrefab: {fileID: 7514188495375028674, guid: 7e45d723b8f7bf241a56d4293794eb7c, type: 3}
   m_wombat: {fileID: 927404608812704301}
 --- !u!1 &2492467503936702096

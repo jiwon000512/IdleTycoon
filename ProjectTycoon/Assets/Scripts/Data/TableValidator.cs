@@ -625,16 +625,15 @@ namespace ZooTycoon.Data
             CheckRequired<PlazaConfigTable>(tables, new[] { PlazaConfigTable.k_Main }, errors);
         }
 
-        // 설계 25: 방은 가로 1칸·세로 2칸(입구 줄 + 밭 줄) 이상, 시작 밭은 밭 최대 수 안
+        // 설계 27: 층은 시작 칸(가운데 두 열 × startRows줄, 입구 줄 포함)을 담아야 하고, 시작 밭은 시작 칸의 밭 줄 안, 값은 0보다 크고 증가율은 1 이상
         private static void ValidateFarmConfig(TableSet tables, List<string> errors)
         {
-            PriceInfo plot = System.Linq.Enumerable.FirstOrDefault(tables.GetAll<InteractableTable>(), row => row.Id == PlotInteractable.k_Id)?.Price;
-
             foreach (FarmConfigTable farm in tables.GetAll<FarmConfigTable>())
             {
-                if (farm.Cols < 1 || farm.Rows < 2 || farm.StartPlots < 0 || plot != null && farm.StartPlots > plot.Max)
+                if (farm.FloorCols < 2 || farm.StartRows < 2 || farm.StartRows > farm.FloorRows || farm.StartFields < 0 || farm.StartFields > 2 * (farm.StartRows - 1)
+                    || farm.DigBaseCost <= 0d || farm.DigCostGrowth < 1d || farm.TillCost <= 0d)
                 {
-                    errors.Add($"FarmConfigTable '{farm.Id}': cols는 1 이상, rows는 2 이상, startPlots는 0 ~ 밭 최대 수여야 한다.");
+                    errors.Add($"FarmConfigTable '{farm.Id}': floorCols는 2 이상, startRows는 2 ~ floorRows, startFields는 0 ~ 2 × (startRows − 1), digBaseCost·tillCost는 0보다 크고 digCostGrowth는 1 이상이어야 한다.");
                 }
             }
 

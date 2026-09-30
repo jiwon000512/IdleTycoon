@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace ZooTycoon.Core
@@ -190,39 +189,6 @@ namespace ZooTycoon.Core
             public override void Do(Worker worker, Interactable target)
             {
                 ((PoopInteractable)target).Bakery.CleanAround();
-            }
-        }
-
-        // 굴 격자 설계 v0.5: 그 칸 파기(시트 줄). 비용 = digBaseCost × digCostGrowth^(판 칸 수)
-        private sealed class Dig : SheetAction
-        {
-            public Dig(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is DigInteractable;
-            }
-
-            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
-            {
-                double cost = ((DigInteractable)target).Bakery.Grid.DigCost;
-                return new[] { new SheetOption(null, SheetOption.Afford(worker, cost), cost) };
-            }
-
-            public override bool TryChoose(Worker worker, Interactable target, string option)
-            {
-                DigInteractable dig = (DigInteractable)target;
-                BurrowGrid grid = dig.Bakery.Grid;
-
-                if (!grid.CanDig(dig.Cell) || !worker.Wallet.TrySpendCoins(grid.DigCost))
-                {
-                    return false;
-                }
-
-                grid.Dig(dig.Cell);
-                return true;
             }
         }
     }

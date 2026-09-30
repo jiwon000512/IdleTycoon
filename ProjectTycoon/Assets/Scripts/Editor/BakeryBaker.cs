@@ -24,8 +24,14 @@ namespace ZooTycoon.Editor
         const string k_FarmDir = "Assets/Sprites/World/Farm/";
         const string k_CropDir = "Assets/Resources/Sprites/Farm/";
         const string k_ItemDir = "Assets/Resources/Sprites/Items/";
-        // 밭 타이머·빈 밭 화살표 높이(밭 밑변에서, 다 자란 밀 위)
-        const float k_PlotMarkHeight = 0.95f;
+        // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 포기 네 자리(칸 밑변 기준, 뒷줄부터).
+        // 타이머·다 익음 표시는 작물 위(칸 윗변 바로 아래), 빈 밭 화살표는 칸 가운데(작물이 없을 때만 보인다).
+        // 표식은 캐릭터와 같은 층(0)에서 발끝 깊이로 정렬 — 웜뱃이 그 칸에 서면 웜뱃이 앞에 온다(QA 2026-09-30: 위 층이면 웜뱃 얼굴을 덮는다)
+        const int k_FieldOrder = -1997;
+        const int k_PlotMarkOrder = 0;
+        const float k_PlotMarkHeight = 2.3f;
+        const float k_PlotEmptyMarkHeight = 1.5f;
+        static readonly Vector3[] k_CropOffsets = { new Vector3(-0.85f, 1.2f, 0f), new Vector3(0.85f, 1.2f, 0f), new Vector3(-0.85f, 0.2f, 0f), new Vector3(0.85f, 0.2f, 0f) };
         // 설계 11 광장 빵집 문(원점 = 구멍 밑변 가운데, 유닛): 차양은 아치 윗부분을 덮고, 간판은 문 왼쪽 띠 가운데
         const float k_AwningHeight = 1.0f;
         const float k_SignOffsetX = 1.3f;
@@ -81,7 +87,7 @@ namespace ZooTycoon.Editor
             VisitorView customer = BakeCustomer();
             BakeShop(shelf, shelfSign, oven, counter, digTag, poop, customer);
             BakePlaza(customer);
-            BakeFarm(BakePlot());
+            BakeFarm(BakePlot(), digTag);
             AssetDatabase.SaveAssets();
             return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza·Plot·Farm";
         }
@@ -277,13 +283,13 @@ namespace ZooTycoon.Editor
             Set(view, "m_timer", timer);
             Set(view, "m_fire", fire);
             Set(view, "m_fireAnimator", fireAnimator);
-            SetSprites(view, "m_baseFire", Frames("oven_fire", "_0", "_1", "_2", "_3"));
-            SetSprites(view, "m_upgradedFire", Frames("oven_2_fire", "_0", "_1", "_2", "_3"));
+            SetArray(view, "m_baseFire", Frames("oven_fire", "_0", "_1", "_2", "_3"));
+            SetArray(view, "m_upgradedFire", Frames("oven_2_fire", "_0", "_1", "_2", "_3"));
             Set(view, "m_smoke", smoke);
             Set(view, "m_smokeAnimator", smokeAnimator);
-            SetSprites(view, "m_graySmoke", Frames("smoke_gray", SmokeSuffixes()));
-            SetSprites(view, "m_whiteSmoke", Frames("smoke_white", SmokeSuffixes()));
-            SetSprites(view, "m_timerFrames", timerFrames);
+            SetArray(view, "m_graySmoke", Frames("smoke_gray", SmokeSuffixes()));
+            SetArray(view, "m_whiteSmoke", Frames("smoke_white", SmokeSuffixes()));
+            SetArray(view, "m_timerFrames", timerFrames);
             Set(view, "m_readyText", ready);
             Set(view, "m_emptyMark", emptyMark);
             Set(view, "m_readyMark", readyMark);
@@ -315,7 +321,7 @@ namespace ZooTycoon.Editor
 
             SpriteRenderer timer = Renderer(body.transform, "Timer", timerFrames[0], new Vector3(-0.6f, 0.75f, 0f), 3);
             Set(counter, "m_timer", timer);
-            SetSprites(counter, "m_timerFrames", timerFrames);
+            SetArray(counter, "m_timerFrames", timerFrames);
             return Save(root, counter, "Counter");
         }
 
@@ -338,13 +344,13 @@ namespace ZooTycoon.Editor
             // 옆모습(손님 동선 설계 v0.2): 오른쪽 보는 그림, 왼쪽은 뒤집기
             foreach (string side in new[] { "front", "back", "side" })
             {
-                SetSprites(mover, "m_" + side + "Idle", Frames("wombat_" + side, IdleSuffixes));
-                SetSprites(mover, "m_" + side + "Walk", Frames("wombat_" + side, WalkSuffixes));
-                SetSprites(mover, "m_" + side + "Fidget", LoadFrames("wombat_" + side + "_fidget"));
+                SetArray(mover, "m_" + side + "Idle", Frames("wombat_" + side, IdleSuffixes));
+                SetArray(mover, "m_" + side + "Walk", Frames("wombat_" + side, WalkSuffixes));
+                SetArray(mover, "m_" + side + "Fidget", LoadFrames("wombat_" + side + "_fidget"));
             }
 
-            SetSprites(mover, "m_frontBlink", Frames("wombat_front", BlinkSuffixes));
-            SetSprites(mover, "m_sideBlink", Frames("wombat_side", BlinkSuffixes));
+            SetArray(mover, "m_frontBlink", Frames("wombat_front", BlinkSuffixes));
+            SetArray(mover, "m_sideBlink", Frames("wombat_side", BlinkSuffixes));
 
             // 설계 22: 머리 위 이모지 말풍선·글자 말풍선(웜뱃 키 1.1)
             BakeBubbles(wombat.transform, mover, k_WombatHeight);
@@ -452,7 +458,7 @@ namespace ZooTycoon.Editor
             sayText.fontSize = 2.5f;
             sayText.rectTransform.sizeDelta = new Vector2(3f, 0.4f);
             Set(view, "m_bubble", bubble);
-            SetSprites(view, "m_bubbleFrames", frames);
+            SetArray(view, "m_bubbleFrames", frames);
             Set(view, "m_say", say);
             Set(view, "m_sayTail", sayTail);
             Set(view, "m_sayText", sayText);
@@ -477,7 +483,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_counterPrefab", counter);
             Set(view, "m_digTagPrefab", digTag);
             Set(view, "m_poopPrefab", poop);
-            SetSprites(view, "m_poopFrames", Frames("poop", "_0", "_1"));
+            SetArray(view, "m_poopFrames", Frames("poop", "_0", "_1"));
             Set(view, "m_ghostShelf", Load("shelf"));
             Set(view, "m_ghostOven", Load("oven"));
             Set(view, "m_ghostCounter", Load("counter"));
@@ -534,13 +540,18 @@ namespace ZooTycoon.Editor
             return text;
         }
 
-        // 설계 25: 밭 하나. 흙 틀(몸체) + 작물(같은 밑변) + 오븐과 같은 타이머·빈 밭 화살표(밀 위)
+        // 설계 27: 밭 칸 하나. 갈아 놓은 흙판(칸 크기, 갈기 전엔 숨김) + 작물 포기 넷(SortingGroup 없이 저마다 발끝으로 깊이 정렬) + 오븐과 같은 타이머·빈 밭 화살표(칸 윗변)
         static PlotView BakePlot()
         {
             GameObject go = new GameObject("Plot");
-            go.AddComponent<SortingGroup>();
-            SpriteRenderer body = Renderer(go.transform, "Body", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "plot.png"), Vector3.zero, 0);
-            SpriteRenderer crop = Renderer(go.transform, "Crop", null, Vector3.zero, 1);
+            SpriteRenderer body = Renderer(go.transform, "Body", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "plot.png"), Vector3.zero, k_FieldOrder);
+            SpriteRenderer[] crops = new SpriteRenderer[k_CropOffsets.Length];
+
+            for (int i = 0; i < crops.Length; i++)
+            {
+                crops[i] = Renderer(go.transform, "Crop" + i, null, k_CropOffsets[i], 0);
+            }
+
             Sprite[] timerFrames = new Sprite[k_TimerFrames];
 
             for (int i = 0; i < k_TimerFrames; i++)
@@ -548,21 +559,24 @@ namespace ZooTycoon.Editor
                 timerFrames[i] = Load(TimerFrame(i));
             }
 
-            SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, k_PlotMarkHeight, 0f), 3);
+            SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
             timer.enabled = false;
-            SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, k_PlotMarkHeight, 0f), 3);
+            SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", Load("oven_ready_mark"), new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
+            readyMark.enabled = false;
+            SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, k_PlotEmptyMarkHeight, 0f), k_PlotMarkOrder);
 
             PlotView view = go.AddComponent<PlotView>();
             Set(view, "m_body", body);
-            Set(view, "m_crop", crop);
+            SetArray(view, "m_crops", crops);
             Set(view, "m_timer", timer);
-            SetSprites(view, "m_timerFrames", timerFrames);
+            SetArray(view, "m_timerFrames", timerFrames);
+            Set(view, "m_readyMark", readyMark);
             Set(view, "m_emptyMark", emptyMark);
             return Save(go, view, "Plot");
         }
 
-        // 설계 25: 농장 굴. 굴 그림·구멍 아치·밭 자리는 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다
-        static void BakeFarm(PlotView plot)
+        // 설계 25 → 27: 농장 굴. 굴 그림·구멍 아치·밭 칸은 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다. 파기 표식은 빵집과 같은 프리팹
+        static void BakeFarm(PlotView plot, MarkerView digTag)
         {
             GameObject root = new GameObject("Farm");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -578,7 +592,7 @@ namespace ZooTycoon.Editor
             SetBurrowTextures(view);
             Set(view, "m_arch", arch.transform);
             Set(view, "m_plotPrefab", plot);
-            Set(view, "m_ghostPlot", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "plot.png"));
+            Set(view, "m_digTagPrefab", digTag);
             Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             Set(view, "m_wombat", wombat);
             Save(root, view, "Farm");
@@ -709,15 +723,15 @@ namespace ZooTycoon.Editor
             return System.Array.ConvertAll(suffixes, suffix => Load(name + suffix));
         }
 
-        static void SetSprites(Object target, string field, Sprite[] sprites)
+        static void SetArray(Object target, string field, Object[] values)
         {
             SerializedObject so = new SerializedObject(target);
             SerializedProperty array = so.FindProperty(field);
-            array.arraySize = sprites.Length;
+            array.arraySize = values.Length;
 
-            for (int i = 0; i < sprites.Length; i++)
+            for (int i = 0; i < values.Length; i++)
             {
-                array.GetArrayElementAtIndex(i).objectReferenceValue = sprites[i];
+                array.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
             }
 
             so.ApplyModifiedPropertiesWithoutUndo();

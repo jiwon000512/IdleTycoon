@@ -93,6 +93,11 @@ namespace ZooTycoon.UI
             m_doneLabel.text = done;
         }
 
+        public void SetStoreHint(string storeHint)
+        {
+            m_storeHint.text = storeHint;
+        }
+
         public void SetCards(IReadOnlyList<CardData> cards)
         {
             while (m_cards.Count < cards.Count)
