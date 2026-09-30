@@ -262,6 +262,28 @@ namespace ZooTycoon.Tests
             Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_Plant));
         }
 
+        // QA A: 밭 위에 서도 곁에 흙 칸(파기)이 있으면 흙 칸이 대상(삽 버튼). 흙 칸에서 멀면 밭이 대상
+        [Test]
+        public void Target_OnField_YieldsToAdjacentSoil()
+        {
+            Create();
+            GoToFarm();
+            PlotInteractable plot = m_farm.Plots[0];
+            CellMetrics cells = m_farm.Layout.Cells;
+            Vector2 center = cells.CellCenter(plot.Cell);
+            Vector2 edge = new Vector2(center.X, center.Y - cells.CellHeight * 0.5f + 0.2f);
+
+            m_farm.Wombat.Mover.Place(edge);
+            Run(k_Dt);
+            Assert.That(m_farm.Target, Is.InstanceOf<DigInteractable>());
+            Assert.That(((DigInteractable)m_farm.Target).Cell, Is.EqualTo(plot.Cell.Offset(0, 1)));
+            Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_OpenDig));
+
+            m_farm.Wombat.Mover.Place(center);
+            Run(k_Dt);
+            Assert.That(m_farm.Target, Is.SameAs(plot));
+        }
+
         // 밭은 걷는 바닥: 구멍 아래에서 밭 칸 가운데까지 길이 있고, 조이스틱으로 밭을 가로질러 간다
         [Test]
         public void Fields_DoNotBlockWalking()

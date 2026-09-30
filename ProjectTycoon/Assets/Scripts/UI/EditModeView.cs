@@ -46,6 +46,9 @@ namespace ZooTycoon.UI
         private readonly Dictionary<string, Sprite> m_icons = new Dictionary<string, Sprite>();
         private Camera m_camera;
         private Vector2 m_panelRest;
+        // 패널 높이: 카드 줄이 있을 때(프리팹 값)와 없을 때(카드 줄 높이 + 아래 여백만큼 줄인 안내 한 줄, 설계 27 QA)
+        private float m_panelFull;
+        private float m_panelCompact;
         private Coroutine m_panelFx;
 
         public event Action EditClicked;
@@ -65,6 +68,8 @@ namespace ZooTycoon.UI
             m_dragArea.PointerUp += data => WorldPointerUp?.Invoke(World(data), OverPanel(data));
             m_cardTemplate.gameObject.SetActive(false);
             m_panelRest = m_panelRect.anchoredPosition;
+            m_panelFull = m_panelRect.sizeDelta.y;
+            m_panelCompact = m_panelFull - (m_cardsRoot.sizeDelta.y + m_cardsRoot.anchoredPosition.y);
             m_panel.SetActive(false);
             SetEditing(false);
         }
@@ -98,8 +103,13 @@ namespace ZooTycoon.UI
             m_storeHint.text = storeHint;
         }
 
+        // 놓을 것이 없는 곳(농장)은 카드 줄을 숨기고 패널을 안내 한 줄 높이로
         public void SetCards(IReadOnlyList<CardData> cards)
         {
+            bool any = cards.Count > 0;
+            m_cardsRoot.gameObject.SetActive(any);
+            m_panelRect.sizeDelta = new Vector2(m_panelRect.sizeDelta.x, any ? m_panelFull : m_panelCompact);
+
             while (m_cards.Count < cards.Count)
             {
                 EditCardView card = Instantiate(m_cardTemplate, m_cardsRoot);

@@ -32,6 +32,7 @@ namespace ZooTycoon.World
 
         private readonly Dictionary<WombatArea, IAreaView> m_views = new Dictionary<WombatArea, IAreaView>();
         private BakeryView m_shopView;
+        private FarmView m_farmView;
         private Mall m_mall;
         private IDisposable m_areaChanged;
         private IDisposable m_clerkHired;
@@ -51,11 +52,12 @@ namespace ZooTycoon.World
             PlazaView plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
             plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, plazaView, bus, tables, Frames);
             plazaView.Bind(mall.Plaza, bus, Frames, tables);
-            FarmView farmView = Instantiate(m_farmPrefab, k_FarmOrigin, Quaternion.identity, transform);
-            farmView.Bind(mall.Farm, bus, Frames, tables);
+            m_farmView = Instantiate(m_farmPrefab, k_FarmOrigin, Quaternion.identity, transform);
+            m_farmView.Bind(mall.Farm, bus, Frames, tables);
+            m_farmView.Expanded += FarmView_Expanded;
             m_views[mall.Bakery] = m_shopView;
             m_views[mall.Plaza] = plazaView;
-            m_views[mall.Farm] = farmView;
+            m_views[mall.Farm] = m_farmView;
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
             FollowWombat();
@@ -119,6 +121,11 @@ namespace ZooTycoon.World
                 m_shopView.Expanded -= BakeryView_Expanded;
             }
 
+            if (m_farmView != null)
+            {
+                m_farmView.Expanded -= FarmView_Expanded;
+            }
+
             m_areaChanged?.Dispose();
             m_clerkHired?.Dispose();
 
@@ -136,6 +143,14 @@ namespace ZooTycoon.World
             if (m_mall.Active == m_mall.Bakery)
             {
                 m_camera.SetBounds(m_shopView.Bounds);
+            }
+        }
+
+        private void FarmView_Expanded()
+        {
+            if (m_mall.Active == m_mall.Farm)
+            {
+                m_camera.SetBounds(m_farmView.Bounds);
             }
         }
 

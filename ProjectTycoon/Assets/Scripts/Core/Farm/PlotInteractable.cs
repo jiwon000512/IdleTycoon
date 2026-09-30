@@ -23,6 +23,8 @@ namespace ZooTycoon.Core
         public double Progress => IsEmpty ? 0d : 1d - Remaining / Crop.GrowSeconds;
         // 자라는 그림 번호: 자라는 동안 0 ~ stages − 2를 고르게, 익으면 마지막. 빈 밭은 −1
         public int Stage => IsEmpty ? -1 : IsRipe ? Crop.Stages - 1 : Math.Min(Crop.Stages - 2, (int)(Progress * (Crop.Stages - 1)));
+        // 밟고 서는 사물: 곁의 흙 칸(파기)·통로에 대상을 양보한다(QA A)
+        public override int TargetPriority => 1;
 
         public PlotInteractable(InteractableTable table, Cell cell, FarmArea farm, bool tilled) : base(table, farm)
         {

@@ -15,7 +15,7 @@ namespace ZooTycoon.World
         private const string k_PopupKey = "harvest_popup";
         // 거두기 팝업이 뜨는 높이(거둔 웜뱃 발끝에서 머리 위)
         private const float k_PopupHeight = 1.4f;
-        // 갈기 값 표식: 웜뱃이 그 칸에 서 있으므로 칸 윗변 바로 아래에, 모든 그림 위에
+        // 갈기 값 표식(흙 칸마다 늘 보인다 — QA B): 웜뱃이 그 칸에 서기도 하므로 칸 윗변 바로 아래에, 모든 그림 위에
         private const float k_TillTagDrop = 0.3f;
         private const int k_TillTagOrder = 1000;
 
@@ -37,26 +37,40 @@ namespace ZooTycoon.World
         [SerializeField] private WombatView m_wombat;
 
         private readonly Dictionary<PlotInteractable, PlotView> m_plots = new Dictionary<PlotInteractable, PlotView>();
+        private readonly Dictionary<PlotInteractable, MarkerView> m_tillTags = new Dictionary<PlotInteractable, MarkerView>();
         private FarmArea m_farm;
         private FrameCache m_frames;
         private TableSet m_tables;
         private DigView m_dig;
-        private MarkerView m_tillTag;
         private Interactable m_shownTarget;
         private bool m_editing;
         private IDisposable[] m_subscriptions;
 
+        // 굴을 팠다(카메라 경계가 넓어진다)
+        public event Action Expanded;
+
         public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombat.transform;
 
-        // 층 둘레 + 좌·우·아래 흙 한 칸. 위는 첫 줄 윗변
+        // 빵집과 같은 규칙(QA D): 판 칸의 경계 + 좌·우·아래로 한 칸(팔 수 있는 흙이 보이게). 위는 입구 윗변
         public Rect Bounds
         {
             get
             {
-                FarmLayout layout = m_farm.Layout;
-                Vector3 origin = transform.position;
-                return new Rect(origin.x - layout.Width * 0.5f - 1f, origin.y - layout.Height - 1f, layout.Width + 2f, layout.Height + 1f);
+                CellMetrics cells = m_farm.Layout.Cells;
+                int minCol = int.MaxValue, maxCol = int.MinValue, maxRow = 0;
+
+                foreach (Cell cell in m_farm.Grid.Cells)
+                {
+                    minCol = Mathf.Min(minCol, cell.Col);
+                    maxCol = Mathf.Max(maxCol, cell.Col);
+                    maxRow = Mathf.Max(maxRow, cell.Row);
+                }
+
+                float xMin = transform.position.x + (minCol - 1) * cells.CellWidth;
+                float xMax = transform.position.x + (maxCol + 2) * cells.CellWidth;
+                float yMin = transform.position.y - cells.RowTop(maxRow + 2);
+                return new Rect(xMin, yMin, xMax - xMin, transform.position.y - yMin);
             }
         }
 
@@ -179,6 +193,8 @@ namespace ZooTycoon.World
                 plot.Changed += Plot_Changed;
                 Refresh(plot);
             }
+
+            RefreshTillTags();
         }
 
         private void Refresh(PlotInteractable plot)
@@ -187,33 +203,44 @@ namespace ZooTycoon.World
             m_plots[plot].Show(plot.IsTilled, crop, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe);
         }
 
-        // 대상인 흙 칸 위에 「갈기 값」
-        private void RefreshTillTag()
+        // 흙 칸(갈기 전)마다 「갈기 값」 표식을 늘 보인다. 갈면 사라진다
+        private void RefreshTillTags()
         {
-            if (m_shownTarget is PlotInteractable plot && !plot.IsTilled)
-            {
-                if (m_tillTag == null)
-                {
-                    m_tillTag = Instantiate(m_digTagPrefab, transform);
+            CellMetrics cells = m_farm.Layout.Cells;
+            string text = m_tables.Format("tag_till", m_farm.Config.TillCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
 
-                    foreach (SpriteRenderer renderer in m_tillTag.GetComponentsInChildren<SpriteRenderer>(true))
+            foreach (PlotInteractable plot in m_farm.Plots)
+            {
+                m_tillTags.TryGetValue(plot, out MarkerView tag);
+
+                if (plot.IsTilled)
+                {
+                    if (tag != null)
+                    {
+                        tag.gameObject.SetActive(false);
+                    }
+
+                    continue;
+                }
+
+                if (tag == null)
+                {
+                    tag = Instantiate(m_digTagPrefab, transform);
+                    tag.transform.position = ToWorld(cells.CellCenter(plot.Cell) + new System.Numerics.Vector2(0f, cells.CellHeight * 0.5f - k_TillTagDrop));
+                    m_tillTags[plot] = tag;
+
+                    foreach (SpriteRenderer renderer in tag.GetComponentsInChildren<SpriteRenderer>(true))
                     {
                         renderer.sortingOrder = k_TillTagOrder;
                     }
 
-                    foreach (TMPro.TextMeshPro text in m_tillTag.GetComponentsInChildren<TMPro.TextMeshPro>(true))
+                    foreach (TMPro.TextMeshPro label in tag.GetComponentsInChildren<TMPro.TextMeshPro>(true))
                     {
-                        text.sortingOrder = k_TillTagOrder + 1;
+                        label.sortingOrder = k_TillTagOrder + 1;
                     }
                 }
 
-                CellMetrics cells = m_farm.Layout.Cells;
-                m_tillTag.transform.position = ToWorld(cells.CellCenter(plot.Cell) + new System.Numerics.Vector2(0f, cells.CellHeight * 0.5f - k_TillTagDrop));
-                m_tillTag.Show(m_tables.Format("tag_till", m_farm.Config.TillCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
-            }
-            else if (m_tillTag != null)
-            {
-                m_tillTag.gameObject.SetActive(false);
+                tag.Show(text);
             }
         }
 
@@ -248,6 +275,7 @@ namespace ZooTycoon.World
 
             Repaint();
             m_dig.Play(e.Cell);
+            Expanded?.Invoke();
         }
 
         // 갈았다: 흙덩이가 튀고(파기와 같은 연출) 밭이 튄다. 갈기 표식은 사라진다
@@ -265,39 +293,32 @@ namespace ZooTycoon.World
                 view.Bounce();
             }
 
-            RefreshTillTag();
+            RefreshTillTags();
         }
 
-        // 대상이 바뀌면 튀고, 버튼 행동만 바뀐 사건(익었다 등)에서는 표식만 맞춘다
+        // 대상이 바뀌면 튄다. 버튼 행동만 바뀐 사건(익었다 등)에서는 튀지 않는다
         private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            if (e.Area != m_farm)
+            if (e.Area != m_farm || m_farm.Target == m_shownTarget)
             {
                 return;
             }
 
-            Interactable target = m_farm.Target;
+            m_shownTarget = m_farm.Target;
+            m_dig.Refresh(m_editing, m_shownTarget);
 
-            if (target != m_shownTarget)
+            switch (m_shownTarget)
             {
-                m_shownTarget = target;
-                m_dig.Refresh(m_editing, target);
-
-                switch (target)
-                {
-                    case PlotInteractable plot when m_plots.ContainsKey(plot):
-                        m_plots[plot].Bounce();
-                        break;
-                    case DigInteractable dig:
-                        m_dig.Bounce(dig.Cell);
-                        break;
-                    case PassageInteractable _:
-                        StartCoroutine(Fx.Bounce(m_arch));
-                        break;
-                }
+                case PlotInteractable plot when m_plots.ContainsKey(plot):
+                    m_plots[plot].Bounce();
+                    break;
+                case DigInteractable dig:
+                    m_dig.Bounce(dig.Cell);
+                    break;
+                case PassageInteractable _:
+                    StartCoroutine(Fx.Bounce(m_arch));
+                    break;
             }
-
-            RefreshTillTag();
         }
 
         private void Bus_Harvested(Events.Harvested e)

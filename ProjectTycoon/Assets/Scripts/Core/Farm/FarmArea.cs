@@ -44,7 +44,7 @@ namespace ZooTycoon.Core
         public FarmArea(TableSet tables, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
         {
             m_config = tables.Get<FarmConfigTable>(FarmConfigTable.k_Main);
-            Layout = new FarmLayout(tables, m_config);
+            Layout = new FarmLayout(tables);
             Crop = tables.GetAll<CropTable>()[0];
             Grid = new BurrowGrid(BurrowGrid.Columns(k_StartCols, m_config.StartRows), m_config.DigBaseCost, m_config.DigCostGrowth,
                 new CellBounds(m_config.FloorCols, m_config.FloorRows), bus);

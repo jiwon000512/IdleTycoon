@@ -240,11 +240,12 @@ namespace ZooTycoon.Core
             }
         }
 
-        // range 안 사물을 모으고, 그 사물들의 auto 행동을 할 수 있으면 하고, 가장 가까운 것을 돌려준다
+        // range 안 사물을 모으고, 그 사물들의 auto 행동을 할 수 있으면 하고, 대상(TargetPriority가 작은 것 중 가장 가까운 것)을 돌려준다
         private Interactable GatherInRange()
         {
             Vector2 p = Wombat.Mover.Position;
             float best = float.MaxValue;
+            int bestPriority = int.MaxValue;
             Interactable found = null;
             m_inRange.Clear();
 
@@ -259,9 +260,10 @@ namespace ZooTycoon.Core
 
                 m_inRange.Add(thing);
 
-                if (distance < best)
+                if (thing.TargetPriority < bestPriority || thing.TargetPriority == bestPriority && distance < best)
                 {
                     best = distance;
+                    bestPriority = thing.TargetPriority;
                     found = thing;
                 }
             }

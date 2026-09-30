@@ -25,6 +25,9 @@ namespace ZooTycoon.Core
         // 기준점까지 거리. range 판정과 가장 가까운 대상 고르기에 쓴다
         public abstract float DistanceTo(Vector2 p);
 
+        // 설계 27 QA: 대상 고르기 순서(작을수록 먼저, 같으면 가까운 것). 밟고 서는 사물(밭)은 1이라 곁에 서는 사물(흙 칸·통로)에 양보한다
+        public virtual int TargetPriority => 0;
+
         // 시간이 흐르는 사물만(오븐 굽기·계산대 계산)
         public virtual void Tick(double dt)
         {
