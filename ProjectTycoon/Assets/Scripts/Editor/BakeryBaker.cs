@@ -32,6 +32,9 @@ namespace ZooTycoon.Editor
         const int k_PlotEmptyMarkOrder = 0;
         const float k_PlotMarkHeight = 2.55f;
         const float k_PlotEmptyMarkHeight = 1.5f;
+        // 농장 입구 고정 장식(2026-09-30 사용자: 왼쪽 씨앗 자루 · 허수아비, 오른쪽 모종 작업대 · 삽과 쇠스랑). 입구 아치 바닥 기준 가로 · 세로(유닛). 길은 막지 않는다
+        static readonly string[] k_FarmProps = { "farm_prop_sack", "farm_prop_scarecrow", "farm_prop_bench", "farm_prop_tools" };
+        static readonly Vector3[] k_FarmPropOffsets = { new Vector3(-2.66f, -0.12f, 0f), new Vector3(-1.45f, -0.12f, 0f), new Vector3(1.675f, -0.12f, 0f), new Vector3(2.89f, -0.12f, 0f) };
         static readonly Vector3[] k_CropOffsets = { new Vector3(0f, 1.65f, 0f), new Vector3(0f, 1.05f, 0f), new Vector3(0f, 0.45f, 0f) };
         // 설계 11 광장 빵집 문(원점 = 구멍 밑변 가운데, 유닛): 차양은 아치 윗부분을 덮고, 간판은 문 왼쪽 띠 가운데
         const float k_AwningHeight = 1.0f;
@@ -166,6 +169,11 @@ namespace ZooTycoon.Editor
             Import(k_FarmDir + "farm_ready_mark.png", center);
             Import(k_FarmDir + "farm_sparkle_0.png", center);
             Import(k_FarmDir + "farm_sparkle_1.png", center);
+
+            foreach (string prop in k_FarmProps)
+            {
+                Import(k_FarmDir + prop + ".png", bottom);
+            }
 
             foreach (string path in System.IO.Directory.GetFiles(k_CropDir, "*.png"))
             {
@@ -616,12 +624,20 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
+            GameObject props = Child(root.transform, "EntranceProps", Vector3.zero);
+
+            for (int i = 0; i < k_FarmProps.Length; i++)
+            {
+                SpriteRenderer prop = Renderer(props.transform, k_FarmProps[i], AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + k_FarmProps[i] + ".png"), k_FarmPropOffsets[i], 0);
+                prop.spriteSortPoint = SpriteSortPoint.Pivot;
+            }
             WombatView wombat = BakeWombat(root.transform, Vector3.zero);
 
             FarmView view = root.AddComponent<FarmView>();
             Set(view, "m_burrow", burrow);
             SetBurrowTextures(view);
             Set(view, "m_arch", arch.transform);
+            Set(view, "m_entranceProps", props.transform);
             Set(view, "m_plotPrefab", plot);
             Set(view, "m_digTagPrefab", digTag);
             Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));

@@ -45,6 +45,8 @@ namespace ZooTycoon.World
         [SerializeField] private Texture2D m_wallFace;
         [Tooltip("구멍 아치(나가기 대상이면 튄다)")]
         [SerializeField] private Transform m_arch;
+        [Tooltip("입구 양옆 고정 장식(씨앗 자루 · 허수아비 · 작업대 · 도구). 아치 자리를 따라간다")]
+        [SerializeField] private Transform m_entranceProps;
         [SerializeField] private PlotView m_plotPrefab;
         [Tooltip("파기·갈기 값 표식(빵집과 같은 프리팹)")]
         [SerializeField] private MarkerView m_digTagPrefab;
@@ -104,6 +106,7 @@ namespace ZooTycoon.World
             m_dig = new DigView(this, m_digTagPrefab, tables, farm.Grid, cell => ToWorld(cells.CellCenter(cell)), new Vector2(cells.CellWidth, cells.CellHeight), m_digSeconds);
             Repaint();
             m_arch.localPosition = new Vector3(farm.Layout.HoleFloor.X, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f);
+            m_entranceProps.localPosition = m_arch.localPosition;
             Build();
             m_wombat.Bind(farm, transform, frames);
 
