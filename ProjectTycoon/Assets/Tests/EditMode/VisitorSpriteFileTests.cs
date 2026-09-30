@@ -85,7 +85,7 @@ namespace ZooTycoon.Tests
             }
         }
 
-        // 설계 25 · 27: 재료 아이콘, 작물 단계 그림(sprite_단계_반쪽, 단계 0 ~ stages − 1 × 반쪽 0 · 1)
+        // 설계 25 · 27: 재료 아이콘, 작물 단계 그림(sprite_단계_반쪽, 단계 0 ~ stages − 1 × 반쪽 0 · 1). 무럭무럭(2026-09-30): 단계 1부터 흔들림 판 _l · _r
         [Test]
         public void Icon_OfEveryItem_AndStages_OfEveryCrop_ExistUnderResources()
         {
@@ -100,8 +100,11 @@ namespace ZooTycoon.Tests
                 {
                     for (int half = 0; half < 2; half++)
                     {
-                        string stage = crop.Sprite + "_" + i + "_" + half + ".png";
-                        Assert.That(File.Exists(Path.Combine(k_ResourcesPath, stage)), Is.True, $"CropTable '{crop.Id}': {stage} 파일이 없다.");
+                        foreach (string sway in i == 0 ? new[] { "" } : new[] { "", "_l", "_r" })
+                        {
+                            string stage = crop.Sprite + "_" + i + "_" + half + sway + ".png";
+                            Assert.That(File.Exists(Path.Combine(k_ResourcesPath, stage)), Is.True, $"CropTable '{crop.Id}': {stage} 파일이 없다.");
+                        }
                     }
                 }
             }

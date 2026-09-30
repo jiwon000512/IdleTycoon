@@ -1,13 +1,14 @@
 {
   "table": "CropTable",
-  "version": 2,
+  "version": 3,
   "notes": [
     "설계 25 밀 농사: 밭에 심는 작물. 심기는 첫 행을 심는다(작물이 늘면 시트로 고른다).",
     "item: 거두면 창고에 드는 재료(ItemTable id). growSeconds: 심고 익을 때까지(초). yield: 한 번 거두면 나오는 개수. 값은 시작값.",
     "sprite: 자라는 그림(Resources/ 기준, 확장자 없음) 뒤에 _단계_반쪽. 단계는 0 ~ stages − 1(자라는 동안 0 ~ stages − 2를 고르게 넘기고 익으면 마지막), 반쪽은 0 · 1(밭 칸의 줄마다 번갈아 얹는다). stages는 2 이상.",
-    "version 2 (2026-09-30, 설계 27 그림): 그림 이름이 _단계에서 _단계_반쪽으로. 한 줄 그림(120칸 폭)을 밭 칸의 줄 셋에 얹는다(Farm/Source~/make_farm_art.py)."
+    "version 2 (2026-09-30, 설계 27 그림): 그림 이름이 _단계에서 _단계_반쪽으로. 한 줄 그림(120칸 폭)을 밭 칸의 줄 셋에 얹는다(Farm/Source~/make_farm_art.py).",
+    "version 3 (2026-09-30, 무럭무럭 연출 C): 밀 단계 3 → 5(씨앗 둔덕 · 새싹 · 줄기 · 익어 가는 · 익음). 단계 1부터는 바람 흔들림 판 _단계_반쪽_l · _r(위 절반을 한 칸 기운 그림)도 둔다."
   ],
   "rows": [
-    { "id": "wheat", "item": "wheat", "growSeconds": 20, "yield": 3, "sprite": "Sprites/Farm/wheat", "stages": 3 }
+    { "id": "wheat", "item": "wheat", "growSeconds": 20, "yield": 3, "sprite": "Sprites/Farm/wheat", "stages": 5 }
   ]
 }

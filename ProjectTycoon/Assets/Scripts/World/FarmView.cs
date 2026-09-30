@@ -56,6 +56,8 @@ namespace ZooTycoon.World
 
         private readonly Dictionary<PlotInteractable, PlotView> m_plots = new Dictionary<PlotInteractable, PlotView>();
         private readonly Dictionary<PlotInteractable, MarkerView> m_tillTags = new Dictionary<PlotInteractable, MarkerView>();
+        // 밭마다 마지막으로 보인 단계(빈 밭 −1). 오르면 늘어남 연출
+        private readonly Dictionary<PlotInteractable, int> m_stages = new Dictionary<PlotInteractable, int>();
         private FarmArea m_farm;
         private FrameCache m_frames;
         private TableSet m_tables;
@@ -217,23 +219,30 @@ namespace ZooTycoon.World
             RefreshTillTags();
         }
 
-        // 작물 그림은 CropTable sprite + _단계_반쪽(0·1). 줄마다 반쪽을 번갈아 얹어 같은 그림이 반복되지 않는다
+        // 작물 그림은 CropTable sprite + _단계_반쪽(0·1). 줄마다 반쪽을 번갈아 얹어 같은 그림이 반복되지 않는다.
+        // 무럭무럭: 단계 1부터는 바람에 기운 두 장(_l · _r)도 준다. 단계가 오르면(심기 포함) 밭 뷰가 늘어나며 바꾼다
         private void Refresh(PlotInteractable plot)
         {
             PlotView view = m_plots[plot];
-            Sprite[] crops = null;
+            Sprite[][] crops = null;
+            int stage = plot.Stage;
 
             if (!plot.IsEmpty)
             {
-                crops = new Sprite[view.Rows];
+                crops = new Sprite[view.Rows][];
 
                 for (int i = 0; i < crops.Length; i++)
                 {
-                    crops[i] = m_frames.Get(plot.Crop.Sprite + "_" + plot.Stage + "_" + i % k_CropHalves)[0];
+                    string path = plot.Crop.Sprite + "_" + stage + "_" + i % k_CropHalves;
+                    crops[i] = stage == 0
+                        ? new[] { m_frames.Get(path)[0] }
+                        : new[] { m_frames.Get(path)[0], m_frames.Get(path + "_l")[0], m_frames.Get(path + "_r")[0] };
                 }
             }
 
-            view.Show(plot.IsTilled, crops, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe, plot.IsFertilized);
+            bool grew = m_stages.TryGetValue(plot, out int before) && stage > before;
+            m_stages[plot] = stage;
+            view.Show(plot.IsTilled, crops, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe, plot.IsFertilized, grew);
         }
 
         // 흙 칸(갈기 전)마다 「갈기 값」 표식을 늘 보인다. 갈면 사라진다
@@ -277,20 +286,15 @@ namespace ZooTycoon.World
             }
         }
 
-        // 심은 순간(작물이 생기고 아직 첫 단계)은 톡 튄다(거름을 섞었으면 거름 알갱이도). 자라는 단계 변화·거두기·갈기는 각자 연출
+        // 심기 · 자람 · 익음은 밭 뷰가 늘어나며 보인다(Refresh). 거름을 섞어 심은 순간은 거름 알갱이도 튄다. 거두기 · 갈기는 각자 연출
         private void Plot_Changed(Interactable thing)
         {
             PlotInteractable plot = (PlotInteractable)thing;
             Refresh(plot);
 
-            if (!plot.IsEmpty && plot.Stage == 0)
+            if (!plot.IsEmpty && plot.Stage == 0 && plot.IsFertilized)
             {
-                m_plots[plot].Bounce();
-
-                if (plot.IsFertilized)
-                {
-                    Burst(ToWorld(m_farm.Layout.Cells.CellCenter(plot.Cell)), k_Manure, k_ManureLight);
-                }
+                Burst(ToWorld(m_farm.Layout.Cells.CellCenter(plot.Cell)), k_Manure, k_ManureLight);
             }
         }
 
@@ -392,11 +396,11 @@ namespace ZooTycoon.World
         {
             CoinPopup popup = Instantiate(m_popupPrefab, at, Quaternion.identity, transform);
             popup.Show(m_tables.Format(k_PopupKey, count), m_frames.Get(m_tables.Get<ItemTable>(item).Icon)[0]);
+            return popup;
         }
 
         // 네모 알갱이 두 빛깔이 튄다(낟알 · 거름 · 반짝)
         private void Burst(Vector3 at, Color first, Color second)
-            return popup;
         {
             m_square = m_square != null ? m_square : Fx.NewSquare();
             StartCoroutine(Fx.Burst(transform, m_square, at, k_GrainCount, k_GrainSpread, k_GrainLift, k_GrainGravity, k_GrainSeconds, k_GrainCells, first, k_GrainOrder));

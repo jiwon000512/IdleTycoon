@@ -163,6 +163,8 @@ namespace ZooTycoon.Editor
             }
 
             Import(k_FarmDir + "farm_ready_mark.png", center);
+            Import(k_FarmDir + "farm_sparkle_0.png", center);
+            Import(k_FarmDir + "farm_sparkle_1.png", center);
 
             foreach (string path in System.IO.Directory.GetFiles(k_CropDir, "*.png"))
             {
@@ -576,6 +578,15 @@ namespace ZooTycoon.Editor
             SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "farm_ready_mark.png"), new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
             readyMark.enabled = false;
             SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, k_PlotEmptyMarkHeight, 0f), k_PlotEmptyMarkOrder);
+            // 무럭무럭: 익은 밭 이삭 위 반짝임 둘(번갈아 쓴다, 자리는 실행 중)
+            Sprite[] sparkleFrames = { AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "farm_sparkle_0.png"), AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "farm_sparkle_1.png") };
+            SpriteRenderer[] sparkles = new SpriteRenderer[2];
+
+            for (int i = 0; i < sparkles.Length; i++)
+            {
+                sparkles[i] = Renderer(go.transform, "Sparkle" + i, sparkleFrames[0], Vector3.zero, k_PlotMarkOrder);
+                sparkles[i].enabled = false;
+            }
 
             PlotView view = go.AddComponent<PlotView>();
             Set(view, "m_body", body);
@@ -585,6 +596,8 @@ namespace ZooTycoon.Editor
             SetArray(view, "m_timerFrames", timerFrames);
             Set(view, "m_readyMark", readyMark);
             Set(view, "m_emptyMark", emptyMark);
+            SetArray(view, "m_sparkles", sparkles);
+            SetArray(view, "m_sparkleFrames", sparkleFrames);
             return Save(go, view, "Plot");
         }
 

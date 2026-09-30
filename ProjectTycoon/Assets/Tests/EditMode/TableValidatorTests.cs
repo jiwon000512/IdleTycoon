@@ -27,7 +27,7 @@ namespace ZooTycoon.Tests
         [TestCase("PlazaConfigTable", 1)]
         [TestCase("PlazaDecorTable", 1)]
         [TestCase("ItemTable", 3)]
-        [TestCase("CropTable", 2)]
+        [TestCase("CropTable", 3)]
         [TestCase("FarmConfigTable", 4)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
