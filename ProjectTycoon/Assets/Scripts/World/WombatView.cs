@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using GameKit.Audio;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
@@ -89,6 +90,9 @@ namespace ZooTycoon.World
         private float m_fidgetIn;
         private Sprite m_square;
         private float m_dustTimer;
+        // 발소리(2026-09-30 사용자 요청): 걷기 프레임 가운데 몸이 내려앉는 칸(m_walkBob −1)에 한 번씩
+        private static readonly int[] k_StepFrames = { 1, 5 };
+        private int m_lastFrame = -1;
 
         // 굽기 때 켜진 채 저장된 말풍선·글 상자는 실행 시작에 끈다(Say·Bubble이 필요할 때만 켠다)
         private void Awake()
@@ -99,6 +103,9 @@ namespace ZooTycoon.World
         }
 
         // 설계 22: 대화 글자 말풍선
+        // 이 곳에 웜뱃이 있나(곳에 매인 소리는 이때만)
+        public bool Present => m_area != null && m_area.WombatPresent;
+
         public void Say(string text, float seconds)
         {
             if (m_saying != null)
@@ -238,6 +245,16 @@ namespace ZooTycoon.World
                 m_playing = frames;
                 m_animator.Play(frames, moving ? m_walkSeconds : m_idleSeconds);
             }
+
+            // 발소리는 이 곳에 웜뱃이 있을 때만 이 뷰가 도니 곳 밖에서는 나지 않는다
+            int frame = m_animator.Index;
+
+            if (moving && frame != m_lastFrame && System.Array.IndexOf(k_StepFrames, frame) >= 0)
+            {
+                SoundManager.Instance.Play(SoundTable.k_Step);
+            }
+
+            m_lastFrame = moving ? frame : -1;
 
             // 서 있을 때만 가끔 눈을 감는다(뒷모습은 눈이 없다)
             m_blinkIn -= Time.deltaTime;

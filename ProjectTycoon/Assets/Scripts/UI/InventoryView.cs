@@ -46,6 +46,7 @@ namespace ZooTycoon.UI
         private const float k_LineIconScale = 2f;
         private const float k_EmptyAlpha = 0.35f;
         private const float k_DimAlpha = 0.5f;
+        private const int k_UseRowsVisible = 3;
 
         [SerializeField] private Button m_openButton;
         [SerializeField] private GameObject m_root;
@@ -70,6 +71,9 @@ namespace ZooTycoon.UI
         [SerializeField] private RectTransform m_sourceTemplate;
         [SerializeField] private TextMeshProUGUI m_sourceNone;
         [SerializeField] private TextMeshProUGUI m_usesLabel;
+        [Tooltip("사용처는 세로 한 줄씩(그림 · 이름 · 개수 칸을 맞춘다). 보이는 창은 k_UseRowsVisible줄까지, 그 아래는 스크롤(2026-09-30 사용자)")]
+        [SerializeField] private ScrollRect m_usesScroll;
+        [SerializeField] private LayoutElement m_usesViewport;
         [SerializeField] private RectTransform m_useTemplate;
         [SerializeField] private TextMeshProUGUI m_usesNone;
 
@@ -216,6 +220,14 @@ namespace ZooTycoon.UI
                 use.Find("Name").GetComponent<TMP_Text>().text = uses[i].Name;
                 use.Find("Count").GetComponent<TMP_Text>().text = uses[i].Count;
             }
+
+            // 보이는 창 높이 = 줄 수(최대 k_UseRowsVisible) × 줄 높이 + 사이. 줄 높이 · 사이는 프리팹 값
+            int shown = Mathf.Clamp(uses.Count, 1, k_UseRowsVisible);
+            float row = m_useTemplate.GetComponent<LayoutElement>().preferredHeight;
+            float gap = m_useTemplate.parent.GetComponent<VerticalLayoutGroup>().spacing;
+            m_usesViewport.preferredHeight = shown * row + (shown - 1) * gap;
+            m_usesViewport.gameObject.SetActive(uses.Count > 0);
+            m_usesScroll.verticalNormalizedPosition = 1f;
 
             if (!m_info.activeSelf)
             {

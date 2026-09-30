@@ -18,12 +18,12 @@ namespace ZooTycoon.World
         public WombatView Wombat => m_wombat;
         public SpriteRenderer Body => m_body;
 
-        // 영수증이 한 칸 올라올 때마다 출력기 소리
+        // 영수증이 한 칸 올라올 때마다 출력기 소리(웜뱃이 빵집에 있을 때만)
         public void SetProgress(float progress, bool serving)
         {
             int frame = serving ? 1 + Mathf.RoundToInt(Mathf.Clamp01(progress) * (m_timerFrames.Length - 2)) : 0;
 
-            if (frame > m_frame)
+            if (frame > m_frame && m_wombat.Present)
             {
                 SoundManager.Instance.Play(SoundTable.k_Receipt);
             }

@@ -18,5 +18,7 @@ namespace ZooTycoon.Core
         public double DigBaseCost { get; set; }
         public double DigCostGrowth { get; set; }
         public double TillCost { get; set; }
+        // 밭 몸통 여백(유닛, 칸 둘레): 익은 밭은 발이 몸통 안에 들 때만 거둔다(여백은 걷는 길)
+        public double FieldInset { get; set; }
     }
 }

@@ -32,6 +32,8 @@ namespace ZooTycoon.UI
         }
 
         private const float k_ToastSeconds = 2.5f;
+        // 줄 목록은 이 수까지 보이고 그 아래는 스크롤, 패널 높이는 보이는 줄 수에 맞춘다(2026-09-30 사용자). 요약 줄(점원 수 · 월급 합)은 바닥에 고정
+        private const int k_VisibleRows = 3;
         // 협상 장면의 웜뱃·후보 그림: 스프라이트 1px = 캔버스 2px(둘 다 같은 배율, 시트 칸 여백 포함)
         private const float k_ScenePixel = 2f;
         // 협상 결과: 이긴 쪽이 두 번 폴짝(캔버스 px, 4의 배수로 움직인다) · 맞은 구간이 깜빡
@@ -122,6 +124,12 @@ namespace ZooTycoon.UI
         private Sprite m_paydayFillSprite;
         private Vector2 m_panelRest;
         private Vector2 m_askRest;
+        // 프리팹 값: 패널 높이(협상 상태) · 줄 창 위쪽 높이(제목 · 탭) · 줄 창 아래 높이(요약 줄 또는 바닥 버튼) · 줄 높이 · 줄 사이
+        private float m_panelFull;
+        private float m_chrome;
+        private float m_viewportBottom;
+        private float m_rowHeight;
+        private float m_rowGap;
         private bool m_open;
         private bool m_askOpen;
         private Coroutine m_rootFx;
@@ -156,6 +164,13 @@ namespace ZooTycoon.UI
             m_candidateRowTemplate.gameObject.SetActive(false);
             m_panelRest = m_panel.anchoredPosition;
             m_askRest = m_askBox.anchoredPosition;
+            RectTransform viewport = (RectTransform)m_rows.parent;
+            RectTransform body = (RectTransform)m_list.transform.parent;
+            m_panelFull = m_panel.sizeDelta.y;
+            m_viewportBottom = viewport.offsetMin.y;
+            m_chrome = -body.sizeDelta.y - viewport.offsetMax.y;
+            m_rowHeight = m_rowTemplate.GetComponent<LayoutElement>().preferredHeight;
+            m_rowGap = m_rows.GetComponent<VerticalLayoutGroup>().spacing;
             m_paydayFillImage = m_paydayFill.GetComponent<Image>();
             m_paydayFillSprite = m_paydayFillImage.sprite;
             m_root.SetActive(false);
@@ -280,7 +295,16 @@ namespace ZooTycoon.UI
                 views[i].Show(rows[i], Load(rows[i].IconPath));
             }
 
-            m_summaryRow.SetAsLastSibling();
+            SetListHeight(rows.Count);
+        }
+
+        // 줄 창은 k_VisibleRows줄까지 보이고 그 아래는 스크롤. 바닥(요약 줄 또는 후보 목록의 버튼)은 프리팹 높이 그대로
+        private void SetListHeight(int rows)
+        {
+            int shown = Mathf.Clamp(rows, 1, k_VisibleRows);
+            float list = shown * m_rowHeight + (shown - 1) * m_rowGap;
+            m_panel.sizeDelta = new Vector2(m_panel.sizeDelta.x, m_chrome + list + m_viewportBottom);
+            m_rows.anchoredPosition = Vector2.zero;
         }
 
         // 월급날 게이지. label이 null이면 숨긴다(점원이 없다 · 후보 목록). 모자라면(low) 채움이 빨강
@@ -328,6 +352,7 @@ namespace ZooTycoon.UI
             m_list.SetActive(false);
             HideAsk();
             m_nego.SetActive(true);
+            m_panel.sizeDelta = new Vector2(m_panel.sizeDelta.x, m_panelFull);
             m_negoHint.text = hint;
             m_nowLabel.text = now;
             m_negoCandidate.sprite = Load(candidatePath);

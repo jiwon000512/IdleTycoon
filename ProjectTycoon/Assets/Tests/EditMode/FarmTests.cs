@@ -214,6 +214,33 @@ namespace ZooTycoon.Tests
             Assert.That(m_mall.Wombat.Worker.Hands.Count, Is.EqualTo(0));
         }
 
+        // 2026-09-30 안 A: 익은 밭은 발이 밭 몸통(칸 둘레 여백 fieldInset 안쪽)에 들 때만 거둔다. 여백에 서면 대상이어도 그대로
+        [Test]
+        public void Harvest_NeedsFeetOnFieldBody()
+        {
+            Create();
+            GoToFarm();
+            PlotInteractable plot = m_farm.Plots[0];
+            CellMetrics cells = m_farm.Layout.Cells;
+            Vector2 center = cells.CellCenter(plot.Cell);
+            Vector2 margin = new Vector2(center.X, center.Y + cells.CellHeight * 0.5f - (float)Config.FieldInset * 0.5f);
+            int wheat = m_state.Count(k_Wheat);
+
+            m_farm.Wombat.Mover.Place(center);
+            Run(k_Dt);
+            Assert.That(m_farm.TryInteract(), Is.True);
+            m_farm.Wombat.Mover.Place(margin);
+            Run(plot.Crop.GrowSeconds + k_Dt);
+            Assert.That(plot.IsRipe, Is.True);
+            Assert.That(m_farm.Target, Is.SameAs(plot));
+            Assert.That(m_state.Count(k_Wheat), Is.EqualTo(wheat));
+
+            m_farm.Wombat.Mover.Place(center);
+            Run(k_Dt);
+            Assert.That(plot.IsEmpty, Is.True);
+            Assert.That(m_state.Count(k_Wheat), Is.EqualTo(wheat + plot.Farm.Crop.Yield));
+        }
+
         // 파기: 붙은 흙 칸의 시트 행동으로 코인을 치르면 굴이 넓어지고 그 칸에 흙 밭 사물이 생긴다(파기 대상에서는 빠진다).
         // 갈기: 흙 칸에 서면 버튼 = 갈기, 누르면 코인을 치르고 밭이 되어 버튼 = 심기. 코인이 모자라면 버튼이 없다
         [Test]

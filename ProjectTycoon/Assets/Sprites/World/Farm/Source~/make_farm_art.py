@@ -1,9 +1,15 @@
-# 설계 27 농장 그림(Codex 시안 → 칸 단위): 갈아 놓은 흙판 + 밀 3단계 × 두 줄.
-# 원본 시안은 raw/(soil_a~c: 흙판 135×96칸, wheat_a~c: 밀 시트 3단계 가로 줄). 2026-09-30 에이전트가 고름: 흙판 = soil_b(가는 고랑 여섯 줄), 밀 = wheat_a(둥근 잎 · 통통한 이삭).
-# 흙판: 시안이 이미 135×96 격자(soil_b는 8배)라 칸마다 최빈색 → 팔레트 7색 → 한 칸 2px(270×192, PPU 80, 피벗 아래 가운데). 바닥 재질이라 외곽선 없음.
-# 밀: 시트의 흰 줄 사이 띠 셋(위부터 새싹 · 줄기 · 익음)을 찾고, 띠의 원본 격자(FFT, 8px쯤)를 재서 한 띠를 반으로 나눠(120칸쯤) 두 줄 그림으로 만든다.
-#   밭 칸(135칸)에 줄 셋을 겹쳐 얹고(BakeryBaker k_CropOffsets), 줄마다 반쪽 0 · 1을 번갈아 써 같은 그림이 반복되지 않게 한다.
-# 출력: ../plot.png · Resources/Sprites/Farm/wheat_<단계>_<반쪽>.png. 실행: Windows Python(Pillow · numpy) make_farm_art.py
+# 설계 27 농장 그림(Codex 시안 → 칸 단위): 밭 칸 흙판 + 밀 3단계 × 두 줄 + 농사 타이머 · 다 익음 표시.
+# 원본 시안은 raw/(soil_a~c: 흙판 135×96칸, wheat_a~c: 밀 시트 3단계 가로 줄). 2026-09-30 에이전트가 고름: 흙판 = soil_b(가는 고랑), 밀 = wheat_a(둥근 잎 · 통통한 이삭).
+# 흙판(사용자 피드백 2026-09-30 「가장자리가 네모라 땅과 구분이 안 됨」 · 「싹 자리가 이상함」): 칸(135×96) 둘레 여백(INSET, FarmConfigTable fieldInset 0.25유닛 = 10칸)은 투명(굴 바닥이 보인다),
+#   그 안쪽에 테두리 2칸(외곽선 + 밝은 턱, 아래는 그늘)과 속 흙. 속 흙은 soil_b 팔레트로 직접 그린다: 바탕 + 잔돌 + 작물 줄 셋 자리에 고랑(어두운 띠 3칸 + 앞쪽 밝은 이랑 1칸).
+#   작물 줄 밑변(ROW_CELLS)은 BakeryBaker k_CropOffsets와 같은 값(칸 밑변에서 16 · 38 · 60칸 = 0.4 · 0.95 · 1.5유닛).
+# 밀: 시트의 흰 줄 사이 띠 셋(위부터 새싹 · 줄기 · 익음)을 찾고, 띠의 원본 격자(FFT, 8px쯤)를 재서 한 띠를 반으로 나눠(120칸) 두 줄 그림으로 만든 뒤
+#   밭 속(111칸)에 들어가게 잉크가 적은 끝을 잘라 WHEAT_MAX_W칸으로. 새싹 · 줄기 단계는 세계 팔레트 쪽으로 채도 · 밝기를 누른다(PRESS, 사용자 피드백 6-2).
+#   밭 칸에 줄 셋을 겹쳐 얹고(BakeryBaker k_CropOffsets), 줄마다 반쪽 0 · 1을 번갈아 써 같은 그림이 반복되지 않게 한다.
+# 표시: 오븐 타이머 원판(Shop/oven_timer_00, 20×20칸)을 바탕으로 초록 부채꼴 16장(farm_timer_00~15)과 밀 이삭을 얹은 다 익음 표시(farm_ready_mark). 작물 위에 뜨므로 그림은 모든 것 위(BakeryBaker k_PlotMarkOrder).
+# 출력: ../plot.png · ../farm_timer_XX.png · ../farm_ready_mark.png · Resources/Sprites/Farm/wheat_<단계>_<반쪽>.png. 실행: Windows Python(Pillow · numpy) make_farm_art.py
+import colorsys
+import math
 import os
 from collections import Counter
 import numpy as np
@@ -12,16 +18,49 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(HERE, 'raw')
 FARM = os.path.join(HERE, '..')
+SHOP = os.path.join(HERE, '..', '..', 'Shop')
 RES = os.path.join(HERE, '..', '..', '..', '..', 'Resources', 'Sprites', 'Farm')
 PX = 2
-SOIL_RAW, SOIL_CELLS = 'soil_b.png', (135, 96)
+CELL_W, CELL_H = 135, 96
+INSET = 10
+RIM = 2
+ROW_CELLS = (16, 38, 60)
 WHEAT_RAW = 'wheat_a.png'
-# 밀 한 줄(반쪽)의 폭(칸): 밭 칸 135칸 안에 여유 있게. 원본 격자(FFT)는 6.4px로 재지만 눈으로 잰 픽셀은 8px쯤이라 폭을 직접 준다
+# 밀 한 줄(반쪽)의 폭(칸): 원본 격자(FFT)는 6.4px로 재지만 눈으로 잰 픽셀은 8px쯤이라 폭을 직접 준다. 밭 속 111칸에 여유 있게 끝을 잘라 WHEAT_MAX_W칸
 WHEAT_CELLS_W = 120
+WHEAT_MAX_W = 104
+WHEAT_TRIM = 16
+# 단계마다 (채도 배율, 밝기 배율). 익음(2)은 그대로
+PRESS = {0: (0.72, 0.9), 1: (0.85, 0.95), 2: (1.0, 1.0)}
 # 팔레트: 이 비율보다 드문 색은 버리고, 이 거리 안은 한 색, 많아도 7색(art.md 5~7색)
 PALETTE_TH = 0.008
 PALETTE_GAP = 48
 PALETTE_MAX = 7
+
+# 흙판 색(soil_b를 칸 단위로 줄였을 때의 팔레트, 2026-09-30) + 외곽선(art.md)
+LINE = (52, 32, 32)
+SOIL = (96, 60, 36)
+SOIL_LIGHT = (144, 96, 60)
+SOIL_DARK = (72, 36, 24)
+SOIL_PALE = (192, 132, 96)
+
+# 표시 색: 초록은 밀 줄기 단계 팔레트, 이삭은 익음 단계 팔레트
+GREEN = (120, 132, 36)
+GREEN_LIGHT = (180, 192, 60)
+EAR = {'#': (60, 24, 24), 'g': (228, 168, 60), 'G': (204, 144, 48), 'h': (240, 216, 144), 's': (156, 96, 36)}
+EAR_ROWS = ['....#....',
+            '...#h#...',
+            '..#ghg#..',
+            '..#GgG#..',
+            '.#gGhGg#.',
+            '.#GgGgG#.',
+            '.#gGgGg#.',
+            '..#GgG#..',
+            '..#gsg#..',
+            '...#s#...',
+            '...#s#...',
+            '...#s#...',
+            '....#....']
 
 
 def save(rgba, path):
@@ -48,6 +87,18 @@ def quantize(small, mask):
     dist = ((small[:, :, None, :] - pal[None, None, :, :]) ** 2).sum(3)
     print('  palette', len(pal))
     return pal[dist.argmin(2)].astype(np.uint8)
+
+
+def press(rgb, mask, sat, val):
+    # 팔레트 색마다 채도 · 밝기를 누른다(어두운 외곽선은 그대로: 밝기 0.35 아래)
+    out = rgb.copy()
+    for c in np.unique(rgb[mask], axis=0):
+        h, s, v = colorsys.rgb_to_hsv(*(c / 255.0))
+        if v < 0.35:
+            continue
+        r, g, b = colorsys.hsv_to_rgb(h, s * sat, v * val)
+        out[(rgb == c).all(2)] = (int(round(r * 255)), int(round(g * 255)), int(round(b * 255)))
+    return out
 
 
 def cells_of(rgb, mask, cells_w, cells_h):
@@ -81,8 +132,56 @@ def grid_period(g):
     return float(np.median(res))
 
 
+def trim(out, max_w):
+    # 양끝에서 잉크(불투명 칸)가 가장 적은 곳을 잘라 max_w칸 안으로(포기 사이 빈 칸을 고른다)
+    ink = (out[..., 3] > 0).sum(0)
+    w = out.shape[1]
+    best = None
+    for left in range(0, WHEAT_TRIM + 1):
+        for right in range(0, WHEAT_TRIM + 1):
+            if w - left - right > max_w:
+                continue
+            cost = (ink[:left].sum() + ink[w - right:].sum(), abs(left - right), -(w - left - right))
+            if best is None or cost < best[0]:
+                best = (cost, left, right)
+    _, left, right = best
+    return out[:, left:w - right]
+
+
+def soil():
+    # 밭 칸 흙판: 둘레 여백은 투명, 테두리 2칸, 속은 바탕 + 잔돌 + 작물 줄 자리 고랑
+    out = np.zeros((CELL_H, CELL_W, 4), np.uint8)
+    x0, x1 = INSET, CELL_W - INSET
+    y0, y1 = INSET, CELL_H - INSET
+    rng = np.random.RandomState(27)
+    body = np.zeros((y1 - y0, x1 - x0, 3), np.uint8)
+    body[:] = SOIL
+    speck = rng.rand(*body.shape[:2])
+    body[speck < 0.05] = SOIL_LIGHT
+    body[(speck >= 0.05) & (speck < 0.06)] = SOIL_PALE
+    body[(speck >= 0.06) & (speck < 0.09)] = SOIL_DARK
+    for base in ROW_CELLS:
+        # 작물 밑변(칸 밑변에서 base칸 위 = 그림 줄 CELL_H−1−base)이 고랑의 뒷줄에 서게: 고랑은 그 줄부터 아래로 세 칸, 그 앞(아래) 이랑 한 칸
+        yb = CELL_H - 1 - base - y0
+        body[yb:yb + 3, :] = SOIL_DARK
+        body[yb:yb + 3, :][rng.rand(3, body.shape[1]) < 0.04] = SOIL
+        body[yb + 3, :] = SOIL_LIGHT
+    # 테두리: 바깥 외곽선, 안쪽 턱(위 · 좌 · 우 밝게, 아래 그늘)
+    body[0, :] = LINE
+    body[-1, :] = LINE
+    body[:, 0] = LINE
+    body[:, -1] = LINE
+    body[1, 1:-1] = SOIL_PALE
+    body[1:-1, 1] = SOIL_LIGHT
+    body[1:-1, -2] = SOIL_LIGHT
+    body[-2, 1:-1] = SOIL_DARK
+    out[y0:y1, x0:x1, :3] = body
+    out[y0:y1, x0:x1, 3] = 255
+    save(out, os.path.join(FARM, 'plot.png'))
+
+
 def white_bg(a):
-    # 네 변에서 이어진 흰색만 배경(안쪽 흰 하이라이트는 남긴다)
+    # 네 변에서 이어진 흰색만 배경(안쪽 밝은 선은 남긴다). 밀은 안 쓴다(흰 하이라이트가 없어 전부 배경)
     from collections import deque
     near = np.abs(a[..., :3].astype(int) - 255).sum(2) < 60
     h, w = near.shape
@@ -105,17 +204,6 @@ def white_bg(a):
                 bg[ny, nx] = True
                 q.append((ny, nx))
     return bg
-
-
-def soil():
-    a = np.asarray(Image.open(os.path.join(RAW, SOIL_RAW)).convert('RGB')).astype(int)
-    cw, ch = SOIL_CELLS
-    small, sa = cells_of(a, np.ones(a.shape[:2], bool), cw, ch)
-    rgb = quantize(small, sa)
-    out = np.zeros((ch, cw, 4), np.uint8)
-    out[..., :3] = rgb
-    out[..., 3] = 255
-    save(out, os.path.join(FARM, 'plot.png'))
 
 
 def wheat():
@@ -149,11 +237,11 @@ def wheat():
             period = (hx1 - hx0) / cells_w
             cells_h = max(1, int(round((y1 - y0) / period)))
             small, sa = cells_of(sub, mask, cells_w, cells_h)
-            rgb = quantize(small, sa)
+            rgb = press(quantize(small, sa), sa, *PRESS[stage])
             out = np.zeros((cells_h, cells_w, 4), np.uint8)
             out[..., :3] = rgb
             out[..., 3] = np.where(sa, 255, 0)
-            halves.append(out)
+            halves.append(trim(out, WHEAT_MAX_W))
         # 두 반쪽의 폭·높이를 맞춘다(가운데 정렬, 밑변 정렬)
         w = max(h.shape[1] for h in halves)
         h = max(h.shape[0] for h in halves)
@@ -165,6 +253,37 @@ def wheat():
             save(pad, os.path.join(RES, 'wheat_%d_%d.png' % (stage, half)))
 
 
+def marks():
+    # 오븐 타이머 빈 원판(20×20칸: 외곽선 · 테 · 살 · 가운데 점)에 초록 부채꼴을 12시부터 시계 방향으로 채운다. 테에 붙은 살 한 칸은 밝은 초록(오븐과 같은 결)
+    dial = np.asarray(Image.open(os.path.join(SHOP, 'oven_timer_00.png')).convert('RGBA'))[::2, ::2].copy()
+    h, w = dial.shape[:2]
+    rgb = dial[..., :3].astype(int)
+    face = (np.abs(rgb - (240, 228, 216)).sum(2) < 30) | (np.abs(rgb - (251, 244, 230)).sum(2) < 30)
+    ring = np.abs(rgb - (217, 200, 180)).sum(2) < 30
+    edge = np.zeros_like(face)
+    for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+        shifted = np.roll(np.roll(ring, dy, axis=0), dx, axis=1)
+        edge |= face & shifted
+    cy, cx = (h - 1) / 2, (w - 1) / 2
+    ys, xs = np.mgrid[0:h, 0:w]
+    angle = (np.degrees(np.arctan2(xs - cx, cy - ys)) + 360) % 360
+    frames = 16
+    for i in range(frames):
+        frame = dial.copy()
+        fill = face & (angle <= i / (frames - 1) * 360 + 1e-6) if i > 0 else np.zeros_like(face)
+        frame[fill & ~edge, :3] = GREEN
+        frame[fill & edge, :3] = GREEN_LIGHT
+        save(frame, os.path.join(FARM, 'farm_timer_%02d.png' % i))
+    ready = dial.copy()
+    x0, y0 = (w - len(EAR_ROWS[0])) // 2, (h - len(EAR_ROWS)) // 2
+    for y, row in enumerate(EAR_ROWS):
+        for x, ch in enumerate(row):
+            if ch in EAR:
+                ready[y0 + y, x0 + x] = EAR[ch] + (255,)
+    save(ready, os.path.join(FARM, 'farm_ready_mark.png'))
+
+
 if __name__ == '__main__':
     soil()
     wheat()
+    marks()

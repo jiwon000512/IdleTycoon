@@ -631,9 +631,9 @@ namespace ZooTycoon.Data
             foreach (FarmConfigTable farm in tables.GetAll<FarmConfigTable>())
             {
                 if (farm.FloorCols < 2 || farm.StartRows < 2 || farm.StartRows > farm.FloorRows || farm.StartFields < 0 || farm.StartFields > 2 * (farm.StartRows - 1)
-                    || farm.DigBaseCost <= 0d || farm.DigCostGrowth < 1d || farm.TillCost <= 0d)
+                    || farm.DigBaseCost <= 0d || farm.DigCostGrowth < 1d || farm.TillCost <= 0d || farm.FieldInset < 0d || farm.FieldInset >= 1d)
                 {
-                    errors.Add($"FarmConfigTable '{farm.Id}': floorCols는 2 이상, startRows는 2 ~ floorRows, startFields는 0 ~ 2 × (startRows − 1), digBaseCost·tillCost는 0보다 크고 digCostGrowth는 1 이상이어야 한다.");
+                    errors.Add($"FarmConfigTable '{farm.Id}': floorCols는 2 이상, startRows는 2 ~ floorRows, startFields는 0 ~ 2 × (startRows − 1), digBaseCost·tillCost는 0보다 크고 digCostGrowth는 1 이상, fieldInset는 0 이상 1 미만이어야 한다.");
                 }
             }
 

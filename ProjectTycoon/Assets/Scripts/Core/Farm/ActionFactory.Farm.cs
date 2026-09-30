@@ -55,7 +55,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 거두기(auto): 익은 밭 칸에 발이 들면 창고로
+        // 거두기(auto): 익은 밭 몸통에 웜뱃 발이 들면 창고로(칸 둘레 여백에서는 안 거둔다). 거두는 것은 웜뱃뿐이라 자리는 밭의 곳에서 읽는다
         private sealed class Harvest : InteractAction
         {
             public Harvest(ActionTable table) : base(table)
@@ -69,7 +69,7 @@ namespace ZooTycoon.Core
 
             public override bool CanDo(Worker worker, Interactable target)
             {
-                return target is PlotInteractable plot && plot.IsRipe;
+                return target is PlotInteractable plot && plot.IsRipe && plot.IsUnderfoot(plot.Farm.Wombat.Mover.Position);
             }
 
             public override void Do(Worker worker, Interactable target)

@@ -39,6 +39,12 @@ namespace ZooTycoon.Core
             return Farm.Layout.Cells.DistanceToCell(Cell, p);
         }
 
+        // 발이 밭 몸통(칸 둘레 여백 FarmConfigTable fieldInset 안쪽)에 있나. 거두기는 여기서만(여백은 걷는 길, 2026-09-30 안 A)
+        public bool IsUnderfoot(Vector2 p)
+        {
+            return Farm.Layout.Cells.CellRect(Cell).Contains(p, -(float)Farm.Config.FieldInset);
+        }
+
         // 갈기: 흙 칸이 밭 칸이 된다(값은 갈기 행동이 치른다)
         public void Till()
         {

@@ -20,6 +20,16 @@ namespace ZooTycoon.World
         // 갈기 값 표식(흙 칸마다 늘 보인다 — QA B): 웜뱃이 그 칸에 서기도 하므로 칸 윗변 바로 아래에, 모든 그림 위에
         private const float k_TillTagDrop = 0.3f;
         private const int k_TillTagOrder = 1000;
+        // 거두는 순간 밭 가운데에서 낟알이 금빛 두 톤으로 튄다(2026-09-30 안 A: 밟고 거두기가 보이게)
+        private static readonly Color k_Grain = new Color32(0xE4, 0xA8, 0x3C, 255);
+        private static readonly Color k_GrainLight = new Color32(0xF0, 0xD8, 0x90, 255);
+        private const int k_GrainCount = 8;
+        private const float k_GrainSpread = 1.6f;
+        private const float k_GrainLift = 3.2f;
+        private const float k_GrainGravity = 10f;
+        private const float k_GrainSeconds = 0.5f;
+        private const int k_GrainCells = 5;
+        private const int k_GrainOrder = 1000;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -47,6 +57,7 @@ namespace ZooTycoon.World
         private Interactable m_shownTarget;
         private bool m_editing;
         private IDisposable[] m_subscriptions;
+        private Sprite m_square;
 
         // 굴을 팠다(카메라 경계가 넓어진다)
         public event Action Expanded;
@@ -343,10 +354,14 @@ namespace ZooTycoon.World
                 return;
             }
 
-            // 거두는 것은 밟은 웜뱃이므로 팝업은 웜뱃 머리 위에서 떠오른다(그림이 아니라 sim 자리: 그림은 한 프레임 늦다)
+            // 거두는 것은 밟은 웜뱃이므로 팝업은 웜뱃 머리 위에서 떠오른다(그림이 아니라 sim 자리: 그림은 한 프레임 늦다). 밭에서는 낟알이 튄다
             CoinPopup popup = Instantiate(m_popupPrefab, ToWorld(m_farm.Wombat.Mover.Position) + Vector3.up * k_PopupHeight, Quaternion.identity, transform);
             popup.Show(m_tables.Format(k_PopupKey, e.Count), m_frames.Get(m_tables.Get<ItemTable>(e.Item).Icon)[0]);
             m_plots[e.Plot].Bounce();
+            m_square = m_square != null ? m_square : Fx.NewSquare();
+            Vector3 center = ToWorld(m_farm.Layout.Cells.CellCenter(e.Plot.Cell));
+            StartCoroutine(Fx.Burst(transform, m_square, center, k_GrainCount, k_GrainSpread, k_GrainLift, k_GrainGravity, k_GrainSeconds, k_GrainCells, k_Grain, k_GrainOrder));
+            StartCoroutine(Fx.Burst(transform, m_square, center, k_GrainCount, k_GrainSpread, k_GrainLift, k_GrainGravity, k_GrainSeconds, k_GrainCells, k_GrainLight, k_GrainOrder));
         }
     }
 }

@@ -24,14 +24,15 @@ namespace ZooTycoon.Editor
         const string k_FarmDir = "Assets/Sprites/World/Farm/";
         const string k_CropDir = "Assets/Resources/Sprites/Farm/";
         const string k_ItemDir = "Assets/Resources/Sprites/Items/";
-        // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 줄 셋(칸 밑변 기준, 뒷줄부터. 줄 그림은 120칸 폭 · 익으면 26칸 높이라 줄 사이 0.8이면 겹치지 않는다).
-        // 타이머·다 익음 표시는 작물 위(칸 윗변 바로 아래), 빈 밭 화살표는 칸 가운데(작물이 없을 때만 보인다).
-        // 표식은 캐릭터와 같은 층(0)에서 발끝 깊이로 정렬 — 웜뱃이 그 칸에 서면 웜뱃이 앞에 온다(QA 2026-09-30: 위 층이면 웜뱃 얼굴을 덮는다)
+        // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 줄 셋(칸 밑변 기준, 뒷줄부터. 줄 그림은 104칸 폭 · 익으면 26칸 높이. 밑변은 make_farm_art.py ROW_CELLS 16 · 38 · 60칸 = 흙판 고랑 자리).
+        // 농사 타이머 · 다 익음 표시(Farm/farm_timer_XX · farm_ready_mark)는 칸 윗변 위에 띄워 모든 그림 위에(2026-09-30 사용자: 작물에 가려지고 빵 모양이던 것),
+        // 빈 밭 화살표는 칸 가운데 · 캐릭터 층(작물이 없을 때만 보이니 웜뱃이 앞에 온다)
         const int k_FieldOrder = -1997;
-        const int k_PlotMarkOrder = 0;
-        const float k_PlotMarkHeight = 2.3f;
+        const int k_PlotMarkOrder = 1000;
+        const int k_PlotEmptyMarkOrder = 0;
+        const float k_PlotMarkHeight = 2.55f;
         const float k_PlotEmptyMarkHeight = 1.5f;
-        static readonly Vector3[] k_CropOffsets = { new Vector3(0f, 1.75f, 0f), new Vector3(0f, 0.95f, 0f), new Vector3(0f, 0.15f, 0f) };
+        static readonly Vector3[] k_CropOffsets = { new Vector3(0f, 1.5f, 0f), new Vector3(0f, 0.95f, 0f), new Vector3(0f, 0.4f, 0f) };
         // 설계 11 광장 빵집 문(원점 = 구멍 밑변 가운데, 유닛): 차양은 아치 윗부분을 덮고, 간판은 문 왼쪽 띠 가운데
         const float k_AwningHeight = 1.0f;
         const float k_SignOffsetX = 1.3f;
@@ -152,8 +153,15 @@ namespace ZooTycoon.Editor
                 Import(path.Replace('\\', '/'), bottom);
             }
 
-            // 설계 25: 밭·작물 단계는 아래 가운데(같은 밑변에 겹친다), 재료 아이콘은 가운데
+            // 설계 25: 밭·작물 단계는 아래 가운데(같은 밑변에 겹친다), 재료 아이콘은 가운데. 농사 타이머 · 다 익음 표시는 오븐 표시처럼 가운데
             Import(k_FarmDir + "plot.png", bottom);
+
+            for (int i = 0; i < k_TimerFrames; i++)
+            {
+                Import(k_FarmDir + FarmTimerFrame(i) + ".png", center);
+            }
+
+            Import(k_FarmDir + "farm_ready_mark.png", center);
 
             foreach (string path in System.IO.Directory.GetFiles(k_CropDir, "*.png"))
             {
@@ -540,7 +548,7 @@ namespace ZooTycoon.Editor
             return text;
         }
 
-        // 설계 27: 밭 칸 하나. 갈아 놓은 흙판(칸 크기, 갈기 전엔 숨김) + 작물 포기 넷(SortingGroup 없이 저마다 발끝으로 깊이 정렬) + 오븐과 같은 타이머·빈 밭 화살표(칸 윗변)
+        // 설계 27: 밭 칸 하나. 갈아 놓은 흙판(칸 안쪽 몸통 + 테두리, 갈기 전엔 숨김) + 작물 줄 셋(SortingGroup 없이 저마다 발끝으로 깊이 정렬) + 농사 타이머 · 다 익음 표시(칸 윗변 위) · 빈 밭 화살표(칸 가운데)
         static PlotView BakePlot()
         {
             GameObject go = new GameObject("Plot");
@@ -556,14 +564,14 @@ namespace ZooTycoon.Editor
 
             for (int i = 0; i < k_TimerFrames; i++)
             {
-                timerFrames[i] = Load(TimerFrame(i));
+                timerFrames[i] = AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + FarmTimerFrame(i) + ".png");
             }
 
             SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
             timer.enabled = false;
-            SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", Load("oven_ready_mark"), new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
+            SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "farm_ready_mark.png"), new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
             readyMark.enabled = false;
-            SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, k_PlotEmptyMarkHeight, 0f), k_PlotMarkOrder);
+            SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, k_PlotEmptyMarkHeight, 0f), k_PlotEmptyMarkOrder);
 
             PlotView view = go.AddComponent<PlotView>();
             Set(view, "m_body", body);
@@ -684,6 +692,11 @@ namespace ZooTycoon.Editor
         static string TimerFrame(int i)
         {
             return "oven_timer_" + i.ToString("00");
+        }
+
+        static string FarmTimerFrame(int i)
+        {
+            return "farm_timer_" + i.ToString("00");
         }
 
         // 연기 12프레임 이름 뒤붙이(_00~_11)

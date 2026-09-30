@@ -20,7 +20,7 @@ namespace ZooTycoon.Tests
         [TestCase("ActionTable", 11)]
         [TestCase("InteractableTable", 11)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 7)]
+        [TestCase("SoundTable", 8)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 3)]
         [TestCase("BakeryConfigTable", 6)]
@@ -28,7 +28,7 @@ namespace ZooTycoon.Tests
         [TestCase("PlazaDecorTable", 1)]
         [TestCase("ItemTable", 2)]
         [TestCase("CropTable", 2)]
-        [TestCase("FarmConfigTable", 2)]
+        [TestCase("FarmConfigTable", 3)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -233,7 +233,10 @@ namespace ZooTycoon.Tests
             farm.StartRows = farm.FloorRows + 1;
             TableSet freeTill = TestTables.Load();
             freeTill.Get<FarmConfigTable>(FarmConfigTable.k_Main).TillCost = 0d;
+            TableSet wideInset = TestTables.Load();
+            wideInset.Get<FarmConfigTable>(FarmConfigTable.k_Main).FieldInset = 1d;
 
+            Assert.That(TableValidator.Validate(wideInset), Is.Not.Empty);
             Assert.That(TableValidator.Validate(unknownItem), Is.Not.Empty);
             Assert.That(TableValidator.Validate(oneStage), Is.Not.Empty);
             Assert.That(TableValidator.Validate(TestTables.Load("CropTable", rows => rows.Clear())), Is.Not.Empty);
