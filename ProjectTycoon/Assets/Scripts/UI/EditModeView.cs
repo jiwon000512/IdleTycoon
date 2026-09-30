@@ -69,7 +69,8 @@ namespace ZooTycoon.UI
             m_cardTemplate.gameObject.SetActive(false);
             m_panelRest = m_panelRect.anchoredPosition;
             m_panelFull = m_panelRect.sizeDelta.y;
-            m_panelCompact = m_panelFull - (m_cardsRoot.sizeDelta.y + m_cardsRoot.anchoredPosition.y);
+            // 카드 줄만 뺀 높이(카드 아래 여백은 안내 줄 아래 여백으로 남는다)
+            m_panelCompact = m_panelFull - m_cardsRoot.sizeDelta.y;
             m_panel.SetActive(false);
             SetEditing(false);
         }

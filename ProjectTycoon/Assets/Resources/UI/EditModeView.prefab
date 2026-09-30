@@ -383,7 +383,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 24, y: -12}
+  m_AnchoredPosition: {x: 32, y: -40}
   m_SizeDelta: {x: 600, y: 56}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &8798332435980648775
@@ -791,8 +791,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
   m_Padding:
-    m_Left: 24
-    m_Right: 24
+    m_Left: 32
+    m_Right: 32
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 3
@@ -1118,7 +1118,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 384}
+  m_SizeDelta: {x: 0, y: 416}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &5020245306471088701
 CanvasRenderer:
@@ -1416,7 +1416,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -16, y: -12}
+  m_AnchoredPosition: {x: -24, y: -40}
   m_SizeDelta: {x: 176, y: 56}
   m_Pivot: {x: 1, y: 1}
 --- !u!222 &2062039140264160045
