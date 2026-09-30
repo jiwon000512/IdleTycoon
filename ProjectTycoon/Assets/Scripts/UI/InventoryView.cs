@@ -40,10 +40,12 @@ namespace ZooTycoon.UI
             public string Count;
         }
 
-        // 월드 그림(한 칸 2px)을 정수 배로(UI 규칙 8): 칸 아이콘은 한 칸 = 캔버스 10px(칸을 채우게, QA 2026-09-30), 정보 아이콘 8px, 줄 아이콘 4px
+        // 월드 그림(한 칸 2px)을 정수 배로(UI 규칙 8): 칸 아이콘은 한 칸 = 캔버스 10px(칸을 채우게, QA 2026-09-30), 정보 아이콘 8px, 줄 아이콘 4px.
+        // 그림이 커서 프리팹의 아이콘 상자를 넘치면 상자에 드는 정수 배로 줄인다(밀 아이콘은 밭의 포기 그대로 12×20칸, 2026-09-30)
         private const float k_SlotIconScale = 5f;
         private const float k_BigIconScale = 4f;
         private const float k_LineIconScale = 2f;
+        private const float k_IconBoxSlack = 0.1f;
         private const float k_EmptyAlpha = 0.35f;
         private const float k_DimAlpha = 0.5f;
         private const int k_UseRowsVisible = 3;
@@ -87,6 +89,11 @@ namespace ZooTycoon.UI
         private Vector2 m_infoRest;
         private Coroutine m_fx;
         private Coroutine m_infoFx;
+        // 프리팹의 아이콘 상자 한 변(칸 · 정보 · 획득처 줄 · 사용처 줄)
+        private float m_slotIconBox;
+        private float m_infoIconBox;
+        private float m_sourceIconBox;
+        private float m_useIconBox;
 
         public event Action OpenClicked;
         public event Action CloseRequested;
@@ -108,8 +115,17 @@ namespace ZooTycoon.UI
             m_useTemplate.gameObject.SetActive(false);
             m_panelRest = m_panel.anchoredPosition;
             m_infoRest = m_infoBox.anchoredPosition;
+            m_slotIconBox = Box(m_slotTemplate.transform);
+            m_infoIconBox = m_infoIcon.rectTransform.sizeDelta.y;
+            m_sourceIconBox = Box(m_sourceTemplate);
+            m_useIconBox = Box(m_useTemplate);
             m_info.SetActive(false);
             m_root.SetActive(false);
+        }
+
+        private static float Box(Transform template)
+        {
+            return ((RectTransform)template.Find("Icon")).sizeDelta.y;
         }
 
         public void SetButtonVisible(bool visible)
@@ -176,7 +192,7 @@ namespace ZooTycoon.UI
                 bool empty = data.IconPath == null;
                 slot.interactable = !empty;
                 slot.GetComponent<CanvasGroup>().alpha = empty ? k_EmptyAlpha : data.Dim ? k_DimAlpha : 1f;
-                SetIcon(slot.transform.Find("Icon").GetComponent<Image>(), data.IconPath, k_SlotIconScale);
+                SetIcon(slot.transform.Find("Icon").GetComponent<Image>(), data.IconPath, k_SlotIconScale, m_slotIconBox);
                 slot.transform.Find("CountBadge").gameObject.SetActive(!empty);
                 slot.transform.Find("CountBadge/Count").GetComponent<TMP_Text>().text = data.Count;
                 slot.transform.Find("Name").GetComponent<TMP_Text>().text = data.Name;
@@ -193,7 +209,7 @@ namespace ZooTycoon.UI
         // 정보 창 내용. 열려 있지 않으면 연다
         public void ShowInfo(string iconPath, string name, string count, string desc, IReadOnlyList<SourceData> sources, IReadOnlyList<UseData> uses)
         {
-            SetIcon(m_infoIcon, iconPath, k_BigIconScale);
+            SetIcon(m_infoIcon, iconPath, k_BigIconScale, m_infoIconBox);
             m_infoName.text = name;
             m_infoCount.text = count;
             m_infoDesc.text = desc;
@@ -206,7 +222,7 @@ namespace ZooTycoon.UI
                 Transform line = m_sources[i];
                 line.Find("Place").GetComponent<TMP_Text>().text = sources[i].Place;
                 line.Find("Seconds").GetComponent<TMP_Text>().text = sources[i].Seconds;
-                SetIcon(line.Find("Icon").GetComponent<Image>(), sources[i].IconPath, k_LineIconScale);
+                SetIcon(line.Find("Icon").GetComponent<Image>(), sources[i].IconPath, k_LineIconScale, m_sourceIconBox);
                 line.Find("Yield").GetComponent<TMP_Text>().text = sources[i].Yield;
             }
 
@@ -216,7 +232,7 @@ namespace ZooTycoon.UI
             for (int i = 0; i < uses.Count; i++)
             {
                 Transform use = m_uses[i];
-                SetIcon(use.Find("Icon").GetComponent<Image>(), uses[i].IconPath, k_LineIconScale);
+                SetIcon(use.Find("Icon").GetComponent<Image>(), uses[i].IconPath, k_LineIconScale, m_useIconBox);
                 use.Find("Name").GetComponent<TMP_Text>().text = uses[i].Name;
                 use.Find("Count").GetComponent<TMP_Text>().text = uses[i].Count;
             }
@@ -259,8 +275,9 @@ namespace ZooTycoon.UI
             }
         }
 
-        // 레이아웃이 크기를 정하므로 LayoutElement에도 준다
-        private void SetIcon(Image icon, string path, float scale)
+        // 레이아웃이 크기를 정하므로 LayoutElement에도 준다. 배율은 정수(픽셀), 높이가 상자를 넘치면 드는 만큼 줄이되 1배 아래로는 안 간다(폭은 줄 · 칸이 받아 준다).
+        // 한 자릿수 픽셀 넘침(케이크 96 > 92)은 봐준다: k_IconBoxSlack
+        private void SetIcon(Image icon, string path, float scale, float box)
         {
             Sprite sprite = path == null ? null : Load(path);
             icon.sprite = sprite;
@@ -271,7 +288,8 @@ namespace ZooTycoon.UI
                 return;
             }
 
-            Vector2 size = sprite.rect.size * scale;
+            float fit = Mathf.Max(1f, Mathf.Min(scale, Mathf.Floor(box / sprite.rect.height + k_IconBoxSlack)));
+            Vector2 size = sprite.rect.size * fit;
             icon.rectTransform.sizeDelta = size;
 
             if (icon.TryGetComponent(out LayoutElement layout))

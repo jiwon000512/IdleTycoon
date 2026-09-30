@@ -92,6 +92,42 @@ def exit_():  # 나가기: 왼쪽 아치에서 나오는 화살표
     return outline(a)
 
 
+# 2026-09-30 사용자 선택(시안 페이지): 심기 B 새싹 + 흙 봉우리, 깨우기 B 종, 치우기 A 빗자루. 옛 그림은 아이콘 자체에 둥근 테 · 세로 선이 있어 둥근 버튼 안에서 이상했다
+LEAF, LEAF_D = (0x78, 0x84, 0x24), (0x54, 0x60, 0x24)
+GOLD, GOLD_D, GOLD_L = (0xE8, 0xC4, 0x68), (0xB8, 0x8C, 0x40), (0xF4, 0xE0, 0xA0)
+BRUSH, BRUSH_D = (0xE2, 0xC8, 0x8C), (0xB8, 0x98, 0x5C)
+
+
+def plant():  # 심기: 새싹 + 흙 봉우리
+    im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
+    d.pieslice([2, 11, 15, 22], 180, 360, fill=WOOD_D + (255,))
+    d.rectangle([8, 7, 9, 13], fill=LEAF_D + (255,))
+    d.polygon([(8, 8), (3, 5), (3, 2), (7, 3)], fill=LEAF + (255,))
+    d.polygon([(9, 8), (14, 5), (14, 2), (10, 3)], fill=LEAF + (255,))
+    return outline(np.asarray(im).copy())
+
+
+def wake():  # 깨우기: 종
+    im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
+    d.pieslice([4, 3, 13, 12], 180, 360, fill=GOLD + (255,))
+    d.rectangle([4, 7, 13, 12], fill=GOLD + (255,))
+    d.rectangle([3, 12, 14, 13], fill=GOLD_D + (255,))
+    d.rectangle([8, 14, 9, 15], fill=GOLD_D + (255,))
+    d.rectangle([8, 1, 9, 2], fill=GOLD_D + (255,))
+    d.rectangle([5, 5, 6, 9], fill=GOLD_L + (255,))
+    return outline(np.asarray(im).copy())
+
+
+def clean():  # 치우기: 빗자루(삽과 같은 기울기)
+    im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
+    d.line([(9, 8), (15, 2)], fill=WOOD + (255,), width=2)
+    d.line([(14, 3), (16, 1)], fill=WOOD_D + (255,), width=2)
+    d.polygon([(2, 12), (7, 6), (11, 10), (9, 16), (3, 16)], fill=BRUSH + (255,))
+    d.polygon([(3, 16), (9, 16), (11, 10), (10, 12)], fill=BRUSH_D + (255,))
+    d.rectangle([7, 8, 8, 9], fill=WOOD_D + (255,))
+    return outline(np.asarray(im).copy())
+
+
 def till():  # 갈기(설계 27 더미): 괭이 — 나무 자루 + 오른쪽 위 강철 날
     im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
     d.line([(3, 15), (12, 6)], fill=WOOD + (255,), width=2)
@@ -103,5 +139,5 @@ def till():  # 갈기(설계 27 더미): 괭이 — 나무 자루 + 오른쪽 �
 
 Image.fromarray(button()).save('../btn_act.png')
 # enter·exit는 2026-09-26 굴 이동 자동으로 아이콘이 없다(그리는 함수만 남김)
-for action_id, draw in [('open', open_), ('dig', dig), ('till', till)]:
+for action_id, draw in [('open', open_), ('dig', dig), ('till', till), ('plant', plant), ('wake', wake), ('clean', clean)]:
     Image.fromarray(draw()).save(f'../../../Resources/Sprites/Actions/{action_id}.png')

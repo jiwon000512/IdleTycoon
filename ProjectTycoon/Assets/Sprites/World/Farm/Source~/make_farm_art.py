@@ -1,8 +1,8 @@
 # 설계 27 농장 그림(Codex 시안 → 칸 단위): 밭 칸 흙판 + 밀 3단계 × 두 줄 + 농사 타이머 · 다 익음 표시.
 # 원본 시안은 raw/(soil_a~c: 흙판 135×96칸, wheat_a~c: 밀 시트 3단계 가로 줄). 2026-09-30 에이전트가 고름: 흙판 = soil_b(가는 고랑), 밀 = wheat_a(둥근 잎 · 통통한 이삭).
-# 흙판(사용자 피드백 2026-09-30 「가장자리가 네모라 땅과 구분이 안 됨」 · 「싹 자리가 이상함」): 칸(135×96) 둘레 여백(INSET, FarmConfigTable fieldInset 0.25유닛 = 10칸)은 투명(굴 바닥이 보인다),
-#   그 안쪽에 테두리 2칸(외곽선 + 밝은 턱, 아래는 그늘)과 속 흙. 속 흙은 soil_b 팔레트로 직접 그린다: 바탕 + 잔돌 + 작물 줄 셋 자리에 고랑(어두운 띠 3칸 + 앞쪽 밝은 이랑 1칸).
-#   작물 줄 밑변(ROW_CELLS)은 BakeryBaker k_CropOffsets와 같은 값(칸 밑변에서 16 · 38 · 60칸 = 0.4 · 0.95 · 1.5유닛).
+# 흙판(사용자 피드백 2026-09-30 「가장자리가 네모라 땅과 구분이 안 됨」 · 「각 칸에 심겨야」, 시안 A 선택): 칸(135×96) 둘레 여백(INSET, FarmConfigTable fieldInset 0.25유닛 = 10칸)은 투명(굴 바닥이 보인다),
+#   그 안쪽에 테두리 2칸(외곽선 + 밝은 턱, 아래는 그늘)과 속 흙. 속 흙은 soil_b 팔레트로 직접 그린다: 바탕 + 잔돌, 같은 높이 이랑 셋(BEDS)을 가는 밝은 선 한 칸으로 나눈다.
+#   작물 줄 밑변(ROW_CELLS)은 이랑 아래에서 6칸 위 = BakeryBaker k_CropOffsets와 같은 값(칸 밑변에서 18 · 42 · 66칸 = 0.45 · 1.05 · 1.65유닛).
 # 밀: 시트의 흰 줄 사이 띠 셋(위부터 새싹 · 줄기 · 익음)을 찾고, 띠의 원본 격자(FFT, 8px쯤)를 재서 한 띠를 반으로 나눠(120칸) 두 줄 그림으로 만든 뒤
 #   밭 속(111칸)에 들어가게 잉크가 적은 끝을 잘라 WHEAT_MAX_W칸으로. 새싹 · 줄기 단계는 세계 팔레트 쪽으로 채도 · 밝기를 누른다(PRESS, 사용자 피드백 6-2).
 #   밭 칸에 줄 셋을 겹쳐 얹고(BakeryBaker k_CropOffsets), 줄마다 반쪽 0 · 1을 번갈아 써 같은 그림이 반복되지 않게 한다.
@@ -24,7 +24,8 @@ PX = 2
 CELL_W, CELL_H = 135, 96
 INSET = 10
 RIM = 2
-ROW_CELLS = (16, 38, 60)
+BEDS = 3
+ROW_CELLS = (18, 42, 66)
 WHEAT_RAW = 'wheat_a.png'
 # 밀 한 줄(반쪽)의 폭(칸): 원본 격자(FFT)는 6.4px로 재지만 눈으로 잰 픽셀은 8px쯤이라 폭을 직접 준다. 밭 속 111칸에 여유 있게 끝을 잘라 WHEAT_MAX_W칸
 WHEAT_CELLS_W = 120
@@ -149,7 +150,7 @@ def trim(out, max_w):
 
 
 def soil():
-    # 밭 칸 흙판: 둘레 여백은 투명, 테두리 2칸, 속은 바탕 + 잔돌 + 작물 줄 자리 고랑
+    # 밭 칸 흙판: 둘레 여백은 투명, 테두리 2칸, 속은 바탕 + 잔돌, 같은 높이 이랑 셋을 가는 밝은 선으로 나눈다
     out = np.zeros((CELL_H, CELL_W, 4), np.uint8)
     x0, x1 = INSET, CELL_W - INSET
     y0, y1 = INSET, CELL_H - INSET
@@ -160,12 +161,10 @@ def soil():
     body[speck < 0.05] = SOIL_LIGHT
     body[(speck >= 0.05) & (speck < 0.06)] = SOIL_PALE
     body[(speck >= 0.06) & (speck < 0.09)] = SOIL_DARK
-    for base in ROW_CELLS:
-        # 작물 밑변(칸 밑변에서 base칸 위 = 그림 줄 CELL_H−1−base)이 고랑의 뒷줄에 서게: 고랑은 그 줄부터 아래로 세 칸, 그 앞(아래) 이랑 한 칸
-        yb = CELL_H - 1 - base - y0
-        body[yb:yb + 3, :] = SOIL_DARK
-        body[yb:yb + 3, :][rng.rand(3, body.shape[1]) < 0.04] = SOIL
-        body[yb + 3, :] = SOIL_LIGHT
+    inner_bottom = body.shape[0] - 1 - RIM
+    bed = (body.shape[0] - 2 * RIM) // BEDS
+    for b in range(1, BEDS):
+        body[inner_bottom - bed * b, :] = SOIL_LIGHT
     # 테두리: 바깥 외곽선, 안쪽 턱(위 · 좌 · 우 밝게, 아래 그늘)
     body[0, :] = LINE
     body[-1, :] = LINE

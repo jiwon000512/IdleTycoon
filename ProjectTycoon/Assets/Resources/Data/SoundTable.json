@@ -40,6 +40,6 @@
     { "id": "clean", "clip": "Audio/clean", "volume": 0.5, "minGap": 0.15, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "plant", "clip": "Audio/plant", "volume": 0.5, "minGap": 0.15, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "harvest", "clip": "Audio/harvest", "volume": 0.55, "minGap": 0.1, "comboSeconds": 1.5, "pitchStep": 0.05, "pitchMax": 1.2 },
-    { "id": "step", "clip": "Audio/step", "volume": 0.2, "minGap": 0.12, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
+    { "id": "step", "clip": "Audio/step", "volume": 0.16, "minGap": 0.12, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
   ]
 }
