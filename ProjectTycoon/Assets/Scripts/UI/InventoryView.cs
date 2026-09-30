@@ -45,7 +45,7 @@ namespace ZooTycoon.UI
         private const float k_SlotIconScale = 5f;
         private const float k_BigIconScale = 4f;
         private const float k_LineIconScale = 2f;
-        private const float k_IconBoxSlack = 0.1f;
+        private const float k_IconBoxSlack = 0.25f;
         private const float k_EmptyAlpha = 0.35f;
         private const float k_DimAlpha = 0.5f;
         private const int k_UseRowsVisible = 3;
@@ -276,7 +276,7 @@ namespace ZooTycoon.UI
         }
 
         // 레이아웃이 크기를 정하므로 LayoutElement에도 준다. 배율은 정수(픽셀), 높이가 상자를 넘치면 드는 만큼 줄이되 1배 아래로는 안 간다(폭은 줄 · 칸이 받아 준다).
-        // 한 자릿수 픽셀 넘침(케이크 96 > 92)은 봐준다: k_IconBoxSlack
+        // 상자보다 조금(배율 1/4까지) 큰 정수 배는 봐준다(케이크 2배 104 > 줄 92): k_IconBoxSlack
         private void SetIcon(Image icon, string path, float scale, float box)
         {
             Sprite sprite = path == null ? null : Load(path);
