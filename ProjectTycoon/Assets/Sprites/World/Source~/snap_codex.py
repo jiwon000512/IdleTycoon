@@ -1,0 +1,129 @@
+# -*- coding: utf-8 -*-
+# Codex 시안 → 게임 칸 그림(원본 그대로, 2026-09-30 사용자 결정). 원본 그림의 픽셀 격자(주기 · 시작점)를 찾아 칸마다 가운데 색을 그대로 가져온다.
+# 칸 수를 짐작해 주지 않고, 드문 색을 버리지 않는다(한 칸짜리 눈 · 입 · 싹이 살아남는다). 손으로 다시 그리지 않는다.
+#   1. 격자: 외곽선 두께 = 한 칸이라 진한 구간 길이의 최빈값으로 대략의 칸 크기를 잡고(원본마다 10~20px로 다름), 그 ±15% 안에서
+#      칸 경계(밝기가 크게 바뀌는 곳)를 가장 잘 짚는 (주기, 시작점)을 찾는다. 넓은 범위를 그냥 찾으면 절반 · 두 배 주기에 속는다.
+#   2. 칸 색: 칸 가운데 50%의 중앙값.
+#   3. 흰 바탕: 가장자리에서 이어진 흰 칸 + 안쪽에 갇힌 순백 칸(구멍)은 투명, 투명과 맞닿은 흰빛 번짐 칸은 두 번 벗긴다.
+#   4. 색: 거리 24 안은 한 색. 그래도 --colors보다 많으면 Lab 거리(색상 차이 2배)로 가장 가까운 두 색을 합친다(art.md 한 물체 12색 안).
+#   5. 가장 어두운 색과 맨 바깥 칸은 외곽선 (52,32,32)(art.md).
+# 사용: snap_codex.py <원본.png> <출력.png> [--colors=12] [--px=2] [--cell=가로[,세로] 대략 칸 크기 px]   출력은 한 칸 = px 픽셀(월드 2px), 여백을 잘라 저장
+import sys
+import numpy as np
+from PIL import Image
+
+LINE = (52, 32, 32)
+
+
+def outline_cell(dark):
+    # 외곽선 두께 = 한 칸: 진한 칸이 이어지는 길이(3~60px)의 최빈값을 대략의 칸 크기로
+    runs = []
+    for row in dark[::3]:
+        x = 0
+        while x < len(row):
+            if row[x]:
+                start = x
+                while x < len(row) and row[x]:
+                    x += 1
+                if 3 <= x - start <= 60:
+                    runs.append(x - start)
+            x += 1
+    counts = np.bincount(runs)
+    # 이웃 길이까지 묶어서(13 · 14처럼 갈라지는 것) 가장 많은 곳
+    smooth = counts + np.concatenate([[0], counts[:-1]]) + np.concatenate([counts[1:], [0]])
+    return float(smooth.argmax())
+
+
+def grid(edges, around):
+    # 대략의 칸 크기 ±15% 안에서, 칸 경계(밝기가 크게 바뀌는 곳)를 가장 잘 짚는 (주기, 시작점)
+    top = (0.0, around, 0.0)
+    for period in np.arange(around * 0.85, around * 1.15, 0.02):
+        for phase in np.arange(0, period, 0.25):
+            idx = np.round(np.arange(phase, len(edges), period)).astype(int)
+            score = edges[idx[idx < len(edges)]].mean()
+            if score > top[0]:
+                top = (score, period, phase)
+    return top[1], top[2]
+
+
+def merge_colors(a, mask, limit):
+    while True:
+        cols, counts = np.unique(a[mask][:, :3], axis=0, return_counts=True)
+        if len(cols) <= limit:
+            return a
+        lab = np.asarray(Image.fromarray(cols.reshape(1, -1, 3).astype(np.uint8), 'RGB').convert('LAB')).reshape(-1, 3).astype(float)
+        lab[:, 1:] = (lab[:, 1:] - 128) * 2.0
+        d = ((lab[:, None, :] - lab[None, :, :]) ** 2).sum(2)
+        np.fill_diagonal(d, 1e18)
+        i, j = np.unravel_index(d.argmin(), d.shape)
+        src, dst = (i, j) if counts[i] < counts[j] else (j, i)
+        a[mask & (a[..., :3] == cols[src]).all(2), :3] = cols[dst]
+
+
+def snap(path, max_colors=12, cell=None, fixed=None):
+    a = np.asarray(Image.open(path).convert('RGB')).astype(float)
+    h, w = a.shape[:2]
+    g = a.mean(2)
+    dark = a.sum(2) < 250
+    # cell: 대략의 칸 크기를 직접 줄 때(외곽선이 얇게 그려져 최빈값이 틀린 원본, 또는 이미 고른 크기를 지킬 때)
+    cx, cy = (cell, cell) if isinstance(cell, (int, float)) else (cell or (None, None))
+    if fixed:
+        # 이미 고른 그림을 그대로 다시 만들 때: (가로 주기, 가로 시작, 세로 주기, 세로 시작)
+        px_, phx, py_, phy = fixed
+    else:
+        px_, phx = grid(np.abs(np.diff(g, axis=1)).sum(0), cx or outline_cell(dark))
+        py_, phy = grid(np.abs(np.diff(g, axis=0)).sum(1), cy or outline_cell(dark.T))
+    xs, ys = np.arange(phx + 1, w, px_), np.arange(phy + 1, h, py_)
+    cw, ch = len(xs) - 1, len(ys) - 1
+    cells = np.zeros((ch, cw, 3))
+    for j in range(ch):
+        for i in range(cw):
+            x0, x1, y0, y1 = xs[i], xs[i + 1], ys[j], ys[j + 1]
+            block = a[int(y0 + (y1 - y0) * 0.25):int(y1 - (y1 - y0) * 0.25) + 1, int(x0 + (x1 - x0) * 0.25):int(x1 - (x1 - x0) * 0.25) + 1]
+            cells[j, i] = np.median(block.reshape(-1, 3), 0)
+    ink = np.abs(cells - 255).sum(2) > 45
+    bg = np.zeros_like(ink)
+    stack = [(j, i) for j in range(ch) for i in (0, cw - 1) if not ink[j, i]] + [(j, i) for i in range(cw) for j in (0, ch - 1) if not ink[j, i]]
+    while stack:
+        j, i = stack.pop()
+        if bg[j, i]:
+            continue
+        bg[j, i] = True
+        for nj, ni in ((j - 1, i), (j + 1, i), (j, i - 1), (j, i + 1)):
+            if 0 <= nj < ch and 0 <= ni < cw and not ink[nj, ni] and not bg[nj, ni]:
+                stack.append((nj, ni))
+    mask = ~bg
+    # 안쪽에 갇힌 흰 바탕(손잡이 구멍 · 자루 사이 틈): 순백에 가까운 칸은 투명(시안의 하이라이트는 순백이 아니다)
+    mask &= ~(cells.min(2) > 240)
+    for _ in range(2):
+        pad = np.pad(mask, 1)
+        edge = ~(pad[:-2, 1:-1] & pad[2:, 1:-1] & pad[1:-1, :-2] & pad[1:-1, 2:])
+        mask &= ~((cells.min(2) > 200) & edge)
+    rgb = cells.round().astype(int)
+    palette = []
+    for c in rgb[mask]:
+        if not any(np.abs(p - c).sum() < 24 for p in palette):
+            palette.append(c)
+    palette = np.array(palette)
+    rgb = palette[((rgb[..., None, :] - palette[None, None]) ** 2).sum(-1).argmin(-1)]
+    out = np.zeros((ch, cw, 4), np.int64)
+    out[..., :3] = rgb
+    out[..., 3] = np.where(mask, 255, 0)
+    out = merge_colors(out, mask, max_colors)
+    cols = np.unique(out[mask][:, :3], axis=0)
+    out[mask & (out[..., :3] == cols[cols.sum(1).argmin()]).all(2), :3] = LINE
+    pad = np.pad(mask, 1)
+    border = mask & ~(pad[:-2, 1:-1] & pad[2:, 1:-1] & pad[1:-1, :-2] & pad[1:-1, 2:])
+    out[border, :3] = LINE
+    ys_, xs_ = np.nonzero(mask)
+    return out[ys_.min():ys_.max() + 1, xs_.min():xs_.max() + 1].astype(np.uint8), (px_, phx, py_, phy)
+
+
+if __name__ == '__main__':
+    args = [x for x in sys.argv[1:] if not x.startswith('--')]
+    opts = dict((x[2:].split('=') + ['1'])[:2] for x in sys.argv[1:] if x.startswith('--'))
+    cells, g = snap(args[0], int(opts.get('colors', 12)), tuple(float(v) for v in opts['cell'].split(',')) if 'cell' in opts else None)
+    px = int(opts.get('px', 2))
+    Image.fromarray(np.repeat(np.repeat(cells, px, 0), px, 1)).save(args[1])
+    n = len(np.unique(cells[cells[..., 3] > 0][:, :3], axis=0))
+    print('grid', round(g[0], 2), round(g[2], 2), 'cells', cells.shape[1], 'x', cells.shape[0], 'colors', n, '->', args[1])
