@@ -645,7 +645,7 @@ namespace ZooTycoon.Editor
             return shadow;
         }
 
-        // 비용 태그(UI 규칙 4장: 진갈색 바탕·크림 글자 9px, 월드 스프라이트 PPU 40 = 1px가 한 칸)
+        // 비용 태그(크림 알약 바탕·진갈색 글자 9px — UI 규칙 4장 패널·글자색, 월드 스프라이트 PPU 40 = 1px가 한 칸)
         static (SpriteRenderer, TextMeshPro) Tag(Transform parent, float y)
         {
             GameObject tag = Child(parent, "Tag", new Vector3(0f, y, 0f));
@@ -655,7 +655,7 @@ namespace ZooTycoon.Editor
             TextMeshPro text = WorldText(tag.transform, "Text", Vector3.zero, k_MarkerOrder + 4);
             text.rectTransform.sizeDelta = new Vector2(2.1f, 0.35f);
             text.fontSize = 2.75f;
-            text.color = new Color32(0xF4, 0xDF, 0xBF, 255);
+            text.color = new Color32(0x2E, 0x23, 0x20, 255);
             return (bg, text);
         }
 

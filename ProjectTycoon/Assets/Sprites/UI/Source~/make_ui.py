@@ -77,8 +77,8 @@ for (x0, y0, x1, y1), n in zip(components(btn), names):
         save(n, part)
     elif n == 'pill_topbar':
         continue                                    # 상단 HUD는 공용 알약 pill(make_pill.py)을 쓴다
-    else:
-        save(n, part, border=(6, 5, 6, 5))
+    elif n == 'tag_cost':
+        continue                                    # 값 표식은 크림 알약(make_tag_cost.py, 2026-09-30)
 
 # ---------- 아이콘 A ----------
 ic = snap(load('icons_a_px'))
