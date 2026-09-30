@@ -81,4 +81,5 @@ echo "<프롬프트> Save the image as x.png in the current working directory an
 - 시안마다 「틀만 확대」와 「게임에 끼운 캡처」를 같이 보여 준다. 지금 모습도 나란히.
 - 장단점은 사실로 적는다(새로 만들 조각 수, 규칙과 어긋나는 점).
 - 페이지 머리의 `<style>`이 닫혔는지 확인하고 올린다.
+- 픽셀 그림은 1배(한 칸 = 1px)로 올리고, 화면 픽셀 기준 정수 배로만 키운다(`img[data-unit]` + `devicePixelRatio`로 폭 계산, `image-rendering: pixelated`). `width: 100%`로 칸에 맞추면 어중간한 배율에 모니터 배율(125%·150%)이 겹쳐 픽셀이 깨진다(2026-09-30 사용자). UI 캡처는 `data-unit="4"`(1 UI px = 캡처 4px), 월드 캡처는 부드럽게 축소한다.
 - 적용이 끝나 다음 작업으로 넘어가면 페이지를 지운다.

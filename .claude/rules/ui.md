@@ -20,7 +20,7 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 7. **UI 프리팹이 원본이다.** 값은 프리팹을 직접 고친다(`PrefabUtility.LoadPrefabContents` → 값 → `SaveAsPrefabAsset`). 크기·위치는 프리팹에서 읽는다.
 8. **픽셀은 정수 배.** 스프라이트는 원본의 정수 배 크기로 놓는다(9-slice 가운데만 예외).
 9. **가로로 늘어나는 둥근 조각은 끝 비율을 지킨다.** 9-slice 경계는 좌우만(둥근 끝 전체), 높이는 원본 칸 수의 정수 배, `pixelsPerUnitMultiplier` = 4 / 배율.
-10. **폰트는 그대로.** 정자체를 굵히거나 그림자를 넣지 않는다(세 번 반려됨). 제목 14 · 굵은 11 · 보조 9.
+10. **글자는 두 벌.** 제목·이름·개수·이름표·값·버튼은 굵은 11(Galmuri11-Bold), 설명·안내 글만 보통 9(Galmuri9)(2026-09-30 사용자, 창고 시안 A). 정자체를 굵히거나 그림자를 넣지 않는다(세 번 반려됨). 새 UI 프리팹도 `FontAssetTests.UiPrefabs_UseOnlyTheTwoUiFonts`가 검사한다(굵은 11은 44, 보통 9는 36).
 
 ## 2. 공용 조각
 
@@ -73,6 +73,6 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 
 ## 5. 폰트와 모션
 
-- 갈무리 비트맵 폰트(`Assets/Fonts/Galmuri`): 제목 Galmuri14 · 본문 Galmuri11-Bold · 보조 Galmuri9 · 말풍선 Galmuri11. TMP 글자 크기는 UI px × 4.
+- 갈무리 비트맵 폰트(`Assets/Fonts/Galmuri`): 굵은 Galmuri11-Bold · 보통 Galmuri9 두 벌뿐이다(1장 10. 월드 글자 · 말풍선도 굵은 11, TMP 기본 글꼴도 굵은 11). TMP 글자 크기는 UI px × 4.
 - 폰트 에셋은 **정적 아틀라스**다. 문구에 새 글자가 생기면 `FontAssetTests`가 실패하고, 메뉴 `ZooTycoon/Bake/Fonts`로 다시 굽는다. 폰트 에셋은 `git checkout`으로 되돌리지 않는다.
 - 눌림은 공용 `PressScale`(0.95배, 가운데 기준). 시트 열기 0.15초, 닫기 0.10초. UI에 흔들림·입자·줌을 넣지 않는다.
