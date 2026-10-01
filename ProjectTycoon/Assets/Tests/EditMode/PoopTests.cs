@@ -8,7 +8,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 설계 24 웜뱃 똥: 걸은 거리로 싸기 · 손님은 둘레를 피해 가고 길이 없으면 포기 · 치우기 버튼. 시작 배치(계산대 좌우 통로 폭 1.8) 그대로
+    // 설계 24 웜뱃 똥(빵집, 설계 37부터 곳 공용 코드): 걸은 거리로 싸기 · 손님은 둘레를 피해 가고 길이 없으면 포기 · 치우기 버튼. 시작 배치(계산대 좌우 통로 폭 1.8) 그대로
     public sealed class PoopTests
     {
         private const double k_Dt = 0.02;
@@ -17,13 +17,24 @@ namespace ZooTycoon.Tests
 
         private TableSet m_tables;
         private EventBus m_bus;
-        private BakeryConfigTable m_config;
 
-        private BakeryArea Create(Action<BakeryConfigTable> tweak = null)
+        // 설계 37: 똥 숫자는 ConfigTable(웜뱃의 값), 치운 똥이 되는 재료는 농장 거름
+        private double Config(string id)
+        {
+            return m_tables.Get<ConfigTable>(id).Value;
+        }
+
+        private string Manure => m_tables.Get<FarmConfigTable>(FarmConfigTable.k_Main).ManureItem;
+
+        private static void Set(TableSet tables, string id, double value)
+        {
+            tables.Get<ConfigTable>(id).Value = value;
+        }
+
+        private BakeryArea Create(Action<TableSet> tweak = null)
         {
             m_tables = TestTables.Load();
-            m_config = m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery);
-            tweak?.Invoke(m_config);
+            tweak?.Invoke(m_tables);
             m_bus = new EventBus();
             ZooState state = ZooState.CreateNew(m_tables, m_bus);
             return new BakeryArea(state, m_tables, new SequenceRandom(new double[400]), new Wombat(m_tables, state), m_bus);
@@ -76,7 +87,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Walking_DropsPoopBehindTheWombatEveryPoopEvery()
         {
-            BakeryArea shop = Create(c => c.PoopEvery = 1d);
+            BakeryArea shop = Create(t => Set(t, ConfigTable.k_PoopEvery, 1d));
             shop.Wombat.SetInput(new Vector2(-1f, 0f));
             List<PoopInteractable> dropped = new List<PoopInteractable>();
             m_bus.Subscribe<Events.PoopDropped>(e => dropped.Add(e.Poop));
@@ -93,10 +104,10 @@ namespace ZooTycoon.Tests
         [Test]
         public void Walking_WithZeroChance_DropsNothing()
         {
-            BakeryArea shop = Create(c =>
+            BakeryArea shop = Create(t =>
             {
-                c.PoopEvery = 1d;
-                c.PoopChance = 0d;
+                Set(t, ConfigTable.k_PoopEvery, 1d);
+                Set(t, ConfigTable.k_PoopChance, 0d);
             });
             shop.Wombat.SetInput(new Vector2(-1f, 0f));
 
@@ -109,7 +120,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void TeleportOrBeingAway_DropsNothing()
         {
-            BakeryArea shop = Create(c => c.PoopEvery = 1d);
+            BakeryArea shop = Create(t => Set(t, ConfigTable.k_PoopEvery, 1d));
 
             for (int i = 0; i < 6; i++)
             {
@@ -130,14 +141,14 @@ namespace ZooTycoon.Tests
             BakeryArea shop = Create();
 
             Assert.That(shop.TryDropPoop(new Vector2(2f, -3f)), Is.True);
-            Assert.That(shop.TryDropPoop(new Vector2(2f + (float)m_config.PoopGap - 0.05f, -3f)), Is.False);
+            Assert.That(shop.TryDropPoop(new Vector2(2f + (float)Config(ConfigTable.k_PoopGap) - 0.05f, -3f)), Is.False);
 
-            for (int i = 1; i < m_config.PoopMax; i++)
+            for (int i = 1; i < (int)Config(ConfigTable.k_PoopMax); i++)
             {
                 Assert.That(shop.TryDropPoop(new Vector2(2f, -3f - i)), Is.True);
             }
 
-            Assert.That(shop.Poops.Count, Is.EqualTo(m_config.PoopMax));
+            Assert.That(shop.Poops.Count, Is.EqualTo((int)Config(ConfigTable.k_PoopMax)));
             Assert.That(shop.TryDropPoop(new Vector2(-2f, -3f)), Is.False);
         }
 
@@ -150,7 +161,7 @@ namespace ZooTycoon.Tests
             Vector2 to = new Vector2(2f, -3f);
             float straight = BurrowNav.Length(from, shop.Layout.Nav.FindPath(from, to));
             Vector2 poop = new Vector2(0f, -3f);
-            float radius = (float)m_config.PoopAvoidRadius;
+            float radius = (float)Config(ConfigTable.k_PoopAvoidRadius);
 
             shop.TryDropPoop(poop);
             List<Vector2> around = shop.Layout.Nav.FindPath(from, to);
@@ -197,7 +208,7 @@ namespace ZooTycoon.Tests
 
             Assert.That(visitor.Phase, Is.EqualTo(VisitorPhase.Queued));
             Assert.That(visitor.Disgusted, Is.False);
-            Assert.That(closest, Is.GreaterThanOrEqualTo((float)m_config.PoopAvoidRadius - 0.05f));
+            Assert.That(closest, Is.GreaterThanOrEqualTo((float)Config(ConfigTable.k_PoopAvoidRadius) - 0.05f));
             Assert.That(right, Is.GreaterThan(shop.Counter.Position.X + 1f));
         }
 
@@ -265,7 +276,7 @@ namespace ZooTycoon.Tests
 
             RunUntil(shop, () => visitor.HasSpot, 3d);
 
-            Assert.That(Vector2.Distance(visitor.Spot, first), Is.GreaterThanOrEqualTo((float)m_config.PoopAvoidRadius));
+            Assert.That(Vector2.Distance(visitor.Spot, first), Is.GreaterThanOrEqualTo((float)Config(ConfigTable.k_PoopAvoidRadius)));
         }
 
         // 똥이 대상이면 버튼은 치우기, 누르면 range 안 똥만 전부 치운다. 치운 만큼 거름이 창고로 간다(설계 28)
@@ -281,14 +292,14 @@ namespace ZooTycoon.Tests
             shop.TryDropPoop(wombat + new Vector2(-0.4f, 0f));
             shop.TryDropPoop(new Vector2(-2f, -7f));
             shop.Tick(k_Dt);
-            int manure = shop.Wallet.Count(m_config.PoopItem);
+            int manure = shop.Wallet.Count(Manure);
 
             Assert.That(shop.Target, Is.InstanceOf<PoopInteractable>());
             Assert.That(shop.TargetAction.Id, Is.EqualTo(ActionTable.k_Clean));
             Assert.That(shop.TryInteract(), Is.True);
             Assert.That(cleaned.Count, Is.EqualTo(2));
             Assert.That(shop.Poops.Count, Is.EqualTo(1));
-            Assert.That(shop.Wallet.Count(m_config.PoopItem), Is.EqualTo(manure + 2));
+            Assert.That(shop.Wallet.Count(Manure), Is.EqualTo(manure + 2));
             Assert.That(shop.Things, Has.No.Member(cleaned[0]));
         }
 
@@ -299,11 +310,11 @@ namespace ZooTycoon.Tests
             BakeryArea shop = Create();
             Assert.That(shop.TryFindSpot(ShelfInteractable.k_Id, new Vector2(1.7f, -3.6f), out Vector2 spot), Is.True);
             shop.TryDropPoop(spot + new Vector2(0f, 0.2f));
-            int manure = shop.Wallet.Count(m_config.PoopItem);
+            int manure = shop.Wallet.Count(Manure);
 
             Assert.That(shop.TryBuy(ShelfInteractable.k_Id, spot), Is.True);
             Assert.That(shop.Poops, Is.Empty);
-            Assert.That(shop.Wallet.Count(m_config.PoopItem), Is.EqualTo(manure));
+            Assert.That(shop.Wallet.Count(Manure), Is.EqualTo(manure));
         }
     }
 }

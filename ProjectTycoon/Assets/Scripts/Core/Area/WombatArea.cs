@@ -22,6 +22,8 @@ namespace ZooTycoon.Core
         private ActionTable m_lastAction;
 
         public TableSet Tables { get; }
+        // 곳의 난수(손님 · 똥 · 덤 등)
+        internal IRandom Random { get; }
         // 설계 16: 곳의 사건 버스. 사물·손님이 이걸로 사건을 낸다
         public EventBus Bus { get; }
         public Wombat Wombat { get; }
@@ -86,12 +88,14 @@ namespace ZooTycoon.Core
             return Entrance;
         }
 
-        protected WombatArea(TableSet tables, Wombat wombat, EventBus bus)
+        protected WombatArea(TableSet tables, IRandom random, Wombat wombat, EventBus bus)
         {
             Tables = tables;
+            Random = random;
             Wombat = wombat;
             Bus = bus;
             PlaceCell = (float)tables.Get<ConfigTable>(ConfigTable.k_PlaceCell).Value;
+            InitPoops(tables);
 
             foreach (ActionTable action in tables.GetAll<ActionTable>())
             {
@@ -99,10 +103,11 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 매 프레임. 순서: 웜뱃(걷기 → 대상·auto 행동) → 곳 고유(손님) → 사물(계산대 타이머·오븐)
+        // 매 프레임. 순서: 웜뱃(걷기 → 대상·auto 행동 → 똥) → 곳 고유(손님) → 사물(계산대 타이머·오븐)
         public void Tick(double dt)
         {
             TickWombat(dt);
+            TickPoops();
             TickArea(dt);
 
             foreach (Interactable thing in Placed)

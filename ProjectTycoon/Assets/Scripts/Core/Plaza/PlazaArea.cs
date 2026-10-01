@@ -35,7 +35,7 @@ namespace ZooTycoon.Core
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         public override string Id => k_Id;
 
-        protected override BurrowNav WombatNav => Layout.Nav;
+        protected override BurrowNav WombatNav => Layout.WombatNav;
         protected override Vector2 Entrance => Layout.DoorFloor;
 
         protected override IEnumerable<Vector2> Doors
@@ -71,7 +71,7 @@ namespace ZooTycoon.Core
         private double ArrivalSeconds => m_config.ArrivalSeconds / Wombat.Worker.Wallet.Scale(BlessingTable.k_Visitors);
 
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다. 시작 장식은 PlazaDecorTable
-        public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
+        public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, random, wombat, bus)
         {
             m_config = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
             m_random = random;
@@ -123,26 +123,23 @@ namespace ZooTycoon.Core
             return m_random.NextDouble() < m_config.EmoteChance;
         }
 
-        // 빈 들를 곳 하나를 잡는다(난수 자리부터 돌며). 다 찼으면 false
+        // 빈 들를 곳 하나를 잡는다(난수 자리부터 돌며). 설계 37: 똥 둘레 안 자리는 찬 자리. 다 찼으면 false
         internal bool TryTakeSpot(out int index)
         {
             int count = Layout.Spots.Count;
+            index = count == 0 ? -1 : RandomIndex(count);
 
-            if (count == 0 || m_takenSpots.Count >= count)
+            for (int tried = 0; tried < count; tried++, index = (index + 1) % count)
             {
-                index = -1;
-                return false;
+                if (!m_takenSpots.Contains(index) && !NearPoop(Layout.Spots[index].Position))
+                {
+                    m_takenSpots.Add(index);
+                    return true;
+                }
             }
 
-            index = RandomIndex(count);
-
-            while (m_takenSpots.Contains(index))
-            {
-                index = (index + 1) % count;
-            }
-
-            m_takenSpots.Add(index);
-            return true;
+            index = -1;
+            return false;
         }
 
         internal void ReleaseSpot(int index)
@@ -278,6 +275,8 @@ namespace ZooTycoon.Core
         protected override void OnPlacementChanged()
         {
             Layout.Rebuild(PlacedThings);
+            ClearBuriedPoops();
+            SyncPoops();
             m_takenSpots.Clear();
 
             foreach (PlazaVisitor visitor in m_visitors)
@@ -287,6 +286,24 @@ namespace ZooTycoon.Core
 
             Unstick();
             Bus.Publish(new Events.LayoutChanged(this));
+        }
+
+        // 설계 37: 똥은 사물 목록 앞에 들고 손님 땅에 둘레를 건다. 걷는 손님은 새 길을 찾고, 들를 곳에 닿을 수 없으면 건너뛴다
+        protected override void OnPoopsChanged()
+        {
+            SyncPoops();
+
+            foreach (PlazaVisitor visitor in m_visitors)
+            {
+                visitor.Repath();
+            }
+        }
+
+        private void SyncPoops()
+        {
+            Placed.RemoveAll(thing => thing is PoopInteractable);
+            Placed.InsertRange(0, Poops);
+            ApplyPoopObstacles(Layout.Nav);
         }
 
         private void TickArrival(double dt)

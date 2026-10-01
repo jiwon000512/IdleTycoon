@@ -16,7 +16,9 @@ namespace ZooTycoon.Core
         private readonly List<PlazaSpot> m_spots = new List<PlazaSpot>();
 
         public BurrowShape.Result Shape { get; }
+        // 손님 땅(설계 37: 똥 둘레가 걸린다)과 웜뱃 땅(둘레 없이 밟고 지나간다). 막힌 곳은 같다
         public BurrowNav Nav { get; private set; }
+        public BurrowNav WombatNav { get; private set; }
         public IReadOnlyList<PlazaSpot> Spots => m_spots;
         public Vector2 DoorInside { get; }
         public Vector2 DoorFloor { get; }
@@ -59,6 +61,7 @@ namespace ZooTycoon.Core
             }
 
             Nav = new BurrowNav(Shape, blocked);
+            WombatNav = new BurrowNav(Shape, blocked);
             m_spots.Clear();
 
             foreach (IPlaced placed in decor)

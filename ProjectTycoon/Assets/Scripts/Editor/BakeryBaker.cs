@@ -93,8 +93,8 @@ namespace ZooTycoon.Editor
             BakeCoinPopup();
             VisitorView customer = BakeCustomer();
             BakeShop(shelf, shelfSign, oven, counter, digTag, poop, customer);
-            BakePlaza(customer);
-            BakeFarm(BakePlot(), digTag);
+            BakePlaza(customer, poop);
+            BakeFarm(BakePlot(), digTag, poop);
             AssetDatabase.SaveAssets();
             return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza·Plot·Farm";
         }
@@ -536,7 +536,7 @@ namespace ZooTycoon.Editor
         }
 
         // 설계 11: 굴 밖 광장. 굴 그림·빵집 문·계단·장식 자리는 실행 중 PlazaView가 Core 배치(PlazaLayout)대로 놓는다
-        static void BakePlaza(VisitorView customer)
+        static void BakePlaza(VisitorView customer, SpriteAnimator poop)
         {
             GameObject root = new GameObject("Plaza");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -569,6 +569,10 @@ namespace ZooTycoon.Editor
             Set(view, "m_stairs", stairs.transform);
             Set(view, "m_wombat", wombat);
             Set(view, "m_statue", statue.transform);
+            Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
+            // 설계 37: 똥은 빵집과 같은 그림
+            Set(view, "m_poopPrefab", poop);
+            SetArray(view, "m_poopFrames", Frames("poop", "_0", "_1"));
             PlazaVisitorSpawner spawner = root.AddComponent<PlazaVisitorSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Plaza");
@@ -635,7 +639,7 @@ namespace ZooTycoon.Editor
         }
 
         // 설계 25 → 27: 농장 굴. 굴 그림·구멍 아치·밭 칸은 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다. 파기 표식은 빵집과 같은 프리팹
-        static void BakeFarm(PlotView plot, MarkerView digTag)
+        static void BakeFarm(PlotView plot, MarkerView digTag, SpriteAnimator poop)
         {
             GameObject root = new GameObject("Farm");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -661,6 +665,8 @@ namespace ZooTycoon.Editor
             Set(view, "m_plotPrefab", plot);
             Set(view, "m_digTagPrefab", digTag);
             Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
+            Set(view, "m_poopPrefab", poop);
+            SetArray(view, "m_poopFrames", Frames("poop", "_0", "_1"));
             Set(view, "m_wombat", wombat);
             Save(root, view, "Farm");
         }

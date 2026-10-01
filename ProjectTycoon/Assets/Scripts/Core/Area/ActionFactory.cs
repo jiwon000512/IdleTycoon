@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ZooTycoon.Core
 {
-    // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일 — 열기·통로·업그레이드·굴 파기, 빵집: ActionFactory.Bakery.cs, 농장: ActionFactory.Farm.cs, 광장: ActionFactory.Plaza.cs).
+    // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일 — 열기·통로·업그레이드·굴 파기·똥 치우기, 빵집: ActionFactory.Bakery.cs, 농장: ActionFactory.Farm.cs, 광장: ActionFactory.Plaza.cs).
     // 새 행동 = 그 sim 파일에 중첩 클래스 하나 + 여기 case 한 줄과 Ids 한 칸 + ActionTable 한 줄
     public static partial class ActionFactory
     {
@@ -141,6 +141,24 @@ namespace ZooTycoon.Core
 
                 dig.Grid.Dig(dig.Cell);
                 return true;
+            }
+        }
+
+        // 설계 24 → 37: 똥 치우기(버튼, 곳 공용). 웜뱃 range 안 똥을 전부 치운다
+        private sealed class Clean : InteractAction
+        {
+            public Clean(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is PoopInteractable;
+            }
+
+            public override void Do(Worker worker, Interactable target)
+            {
+                ((PoopInteractable)target).Area.CleanAround();
             }
         }
     }

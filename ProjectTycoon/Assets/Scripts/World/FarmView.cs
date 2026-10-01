@@ -54,6 +54,10 @@ namespace ZooTycoon.World
         [SerializeField] private float m_digSeconds = 0.6f;
         [Tooltip("거두기 팝업(코인 팝업 프리팹에 재료 아이콘을 얹는다)")]
         [SerializeField] private CoinPopup m_popupPrefab;
+        [Tooltip("설계 37: 웜뱃 똥 그림(빵집과 같은 프리팹 · 프레임)")]
+        [SerializeField] private SpriteAnimator m_poopPrefab;
+        [SerializeField] private Sprite[] m_poopFrames;
+        [SerializeField] private float m_poopFrameRate = 2f;
         [SerializeField] private WombatView m_wombat;
 
         private readonly Dictionary<PlotInteractable, PlotView> m_plots = new Dictionary<PlotInteractable, PlotView>();
@@ -64,6 +68,7 @@ namespace ZooTycoon.World
         private FrameCache m_frames;
         private TableSet m_tables;
         private DigView m_dig;
+        private PoopViews m_poopViews;
         private Interactable m_shownTarget;
         private bool m_editing;
         private IDisposable[] m_subscriptions;
@@ -104,6 +109,7 @@ namespace ZooTycoon.World
             m_tables = tables;
             CellMetrics cells = farm.Layout.Cells;
             m_dig = new DigView(this, m_digTagPrefab, tables, farm.Grid, cell => ToWorld(cells.CellCenter(cell)), new Vector2(cells.CellWidth, cells.CellHeight), m_digSeconds);
+            m_poopViews = new PoopViews(this, farm, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, ToWorld);
             Repaint();
             m_arch.localPosition = new Vector3(farm.Layout.HoleFloor.X, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f);
             m_entranceProps.localPosition = m_arch.localPosition;
@@ -180,6 +186,8 @@ namespace ZooTycoon.World
             {
                 subscription.Dispose();
             }
+
+            m_poopViews.Dispose();
         }
 
         private Vector3 ToWorld(System.Numerics.Vector2 p)
@@ -363,6 +371,9 @@ namespace ZooTycoon.World
                     break;
                 case PassageInteractable _:
                     StartCoroutine(Fx.Bounce(m_arch));
+                    break;
+                case PoopInteractable poop:
+                    m_poopViews.Bounce(poop);
                     break;
             }
         }

@@ -547,5 +547,70 @@ namespace ZooTycoon.Tests
             Assert.That(m_state.Count(k_Wheat), Is.EqualTo(1));
             Assert.That(changes, Is.EqualTo(1));
         }
+
+        // 설계 37: 농장에서도 걸으면 똥을 누고(웜뱃이 있는 곳에서만), 치우기 버튼으로 치우면 거름이 창고로 들고 사건 PoopsCleaned가 한 번(곳 · 거름 · 개수)
+        [Test]
+        public void Poop_DropsAndCleansInFarm()
+        {
+            Create(0.1);
+            GoToFarm();
+            Vector2 a = CenterOf(new Cell(-1, 1));
+            Vector2 b = CenterOf(new Cell(0, 1));
+            List<Events.PoopsCleaned> gained = new List<Events.PoopsCleaned>();
+            m_bus.Subscribe<Events.PoopsCleaned>(e => gained.Add(e));
+
+            for (int i = 0; i < 12 && m_farm.Poops.Count == 0; i++)
+            {
+                Steer(a, b);
+            }
+
+            Assert.That(m_farm.Poops.Count, Is.GreaterThan(0));
+            Assert.That(m_shop.Poops, Is.Empty);
+            Assert.That(m_plaza.Poops, Is.Empty);
+            PoopInteractable poop = m_farm.Poops[0];
+            Assert.That(m_farm.Things, Does.Contain(poop));
+
+            int manure = m_state.Count(Config.ManureItem);
+            m_farm.Wombat.Mover.Place(poop.Position);
+            Run(k_Dt);
+            Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_Clean));
+            int inRange = m_farm.Poops.Count(m_farm.IsInRange);
+            Assert.That(m_farm.TryInteract(), Is.True);
+            Assert.That(m_state.Count(Config.ManureItem), Is.EqualTo(manure + inRange));
+            Assert.That(gained.Single().Area, Is.SameAs(m_farm));
+            Assert.That(gained.Single().Item, Is.EqualTo(Config.ManureItem));
+            Assert.That(gained.Single().Count, Is.EqualTo(inRange));
+        }
+
+        // 설계 37: 광장 똥은 손님 땅에만 둘레를 건다(손님은 돌아가고 웜뱃은 밟고 지나간다)
+        [Test]
+        public void PlazaPoop_BlocksVisitorGroundOnly()
+        {
+            Create();
+            PlazaLayout layout = m_plaza.Layout;
+            Vector2 from = layout.DoorFloor + new Vector2(0f, -0.8f);
+            Vector2 to = from + new Vector2(0f, -2.4f);
+            Assert.That(layout.WombatNav.IsWalkable(to), Is.True);
+
+            Assert.That(m_plaza.TryDropPoop(from + new Vector2(0f, -1.2f)), Is.True);
+            Assert.That(m_plaza.Things, Does.Contain(m_plaza.Poops[0]));
+            float wombat = PathLength(from, layout.WombatNav.FindPath(from, to));
+            float visitor = PathLength(from, layout.Nav.FindPath(from, to));
+            Assert.That(wombat, Is.LessThan(2.7f));
+            Assert.That(visitor, Is.GreaterThan(wombat + 0.1f));
+        }
+
+        private static float PathLength(Vector2 from, List<Vector2> path)
+        {
+            float length = 0f;
+
+            foreach (Vector2 point in path)
+            {
+                length += Vector2.Distance(from, point);
+                from = point;
+            }
+
+            return length;
+        }
     }
 }

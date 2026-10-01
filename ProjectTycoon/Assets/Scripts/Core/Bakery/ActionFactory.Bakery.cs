@@ -173,23 +173,5 @@ namespace ZooTycoon.Core
                 clerk.Bakery.StartDialogue(DialogueTable.k_ClerkWake, clerk);
             }
         }
-
-        // 설계 24: 똥 치우기(버튼). 웜뱃 range 안 똥을 전부 치운다
-        private sealed class Clean : InteractAction
-        {
-            public Clean(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is PoopInteractable;
-            }
-
-            public override void Do(Worker worker, Interactable target)
-            {
-                ((PoopInteractable)target).Bakery.CleanAround();
-            }
-        }
     }
 }

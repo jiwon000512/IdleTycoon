@@ -41,26 +41,18 @@ namespace ZooTycoon.World
         [SerializeField] private float m_poopFrameRate = 2f;
 
         // 설계 24 똥: 엉덩이 높이에서 떨어져 흙먼지(모든 그림 위), 치우면 납작해지며 흰 반짝. 파기 연출은 공용 DigView
-        private static readonly Color k_Dirt = new Color(0.45f, 0.3f, 0.18f);
-        private const int k_ClodOrder = 1000;
-        private const float k_PoopDropHeight = 0.3f;
-        private const float k_PoopDropSeconds = 0.12f;
-        private const float k_PoopCleanSeconds = 0.15f;
-        private const int k_PoopBits = 6;
-        private const string k_CoinKey = "coin_popup";
-        private static readonly Color k_Sparkle = new Color32(255, 247, 222, 255);
 
         private readonly Dictionary<ShelfInteractable, ShelfView> m_shelves = new Dictionary<ShelfInteractable, ShelfView>();
-        private readonly Dictionary<PoopInteractable, SpriteAnimator> m_poops = new Dictionary<PoopInteractable, SpriteAnimator>();
         private readonly Dictionary<ShelfInteractable, ShelfSignView> m_signs = new Dictionary<ShelfInteractable, ShelfSignView>();
         private readonly Dictionary<OvenInteractable, OvenView> m_ovens = new Dictionary<OvenInteractable, OvenView>();
         private readonly Dictionary<CounterInteractable, CounterView> m_counters = new Dictionary<CounterInteractable, CounterView>();
         private DigView m_dig;
+        // 설계 37: 똥 그림(곳 공용 조각)
+        private PoopViews m_poopViews;
         private CounterView m_wombatCounter;
         private BakeryArea m_shop;
         private FrameCache m_frames;
         private TableSet m_tables;
-        private Sprite m_white;
         private GhostView m_ghost;
         private Interactable m_shownTarget;
         private bool m_built;
@@ -115,6 +107,7 @@ namespace ZooTycoon.World
             m_tables = tables;
             m_ghost = GhostView.Create(transform);
             m_dig = new DigView(this, m_digTagPrefab, tables, shop.Grid, cell => (Vector3)CellCenter(cell), new Vector2(Layout.CellWidth, Layout.CellHeight), m_digSeconds);
+            m_poopViews = new PoopViews(this, shop, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, ToWorld);
             Repaint();
             Build();
             m_wombatCounter.Wombat.Bind(shop, this, frames);
@@ -126,8 +119,6 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.Upgraded>(Bus_Upgraded),
                 bus.Subscribe<Events.Dug>(Bus_Dug),
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
-                bus.Subscribe<Events.PoopDropped>(Bus_PoopDropped),
-                bus.Subscribe<Events.PoopCleaned>(Bus_PoopCleaned),
             };
         }
 
@@ -256,8 +247,8 @@ namespace ZooTycoon.World
                 case PassageInteractable _:
                     StartCoroutine(Fx.Bounce(m_arch));
                     break;
-                case PoopInteractable poop when m_poops.ContainsKey(poop):
-                    StartCoroutine(Fx.Bounce(m_poops[poop].transform));
+                case PoopInteractable poop:
+                    m_poopViews.Bounce(poop);
                     break;
             }
         }
@@ -300,6 +291,8 @@ namespace ZooTycoon.World
                 {
                     subscription.Dispose();
                 }
+
+                m_poopViews.Dispose();
             }
         }
 
@@ -397,88 +390,6 @@ namespace ZooTycoon.World
         private void OnExpanded()
         {
             Expanded?.Invoke();
-        }
-
-        // 설계 24: 똥이 떨어졌다. 엉덩이 높이에서 톡 떨어져 흙먼지를 일으키고 한 번 튄다
-        private void Bus_PoopDropped(Events.PoopDropped e)
-        {
-            if (e.Poop.Bakery != m_shop)
-            {
-                return;
-            }
-
-            SpriteAnimator poop = Instantiate(m_poopPrefab, transform);
-            poop.Play(m_poopFrames, m_poopFrameRate);
-            m_poops[e.Poop] = poop;
-            StartCoroutine(DropRoutine(poop.transform, ToWorld(e.Poop.Position)));
-        }
-
-        // 치웠다(사물 밑에 깔렸어도): 납작해지며 사라지고 흰 반짝
-        private void Bus_PoopCleaned(Events.PoopCleaned e)
-        {
-            if (!m_poops.TryGetValue(e.Poop, out SpriteAnimator poop))
-            {
-                return;
-            }
-
-            m_poops.Remove(e.Poop);
-            StartCoroutine(Fx.Burst(transform, White, poop.transform.position + Vector3.up * 0.15f, k_PoopBits, 0.8f, 1.5f, 6f, 0.35f, 2, k_Sparkle, k_ClodOrder));
-            StartCoroutine(CleanRoutine(poop.transform));
-
-            if (e.Coins > 0d)
-            {
-                CoinPopup popup = Instantiate(m_popupPrefab, poop.transform.position + Vector3.up * 0.4f, Quaternion.identity, transform);
-                popup.Show(m_tables.Format(k_CoinKey, e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
-            }
-        }
-
-        private System.Collections.IEnumerator DropRoutine(Transform poop, Vector3 at)
-        {
-            for (float t = 0f; t < k_PoopDropSeconds; t += Time.deltaTime)
-            {
-                if (poop == null)
-                {
-                    yield break;
-                }
-
-                float k = t / k_PoopDropSeconds;
-                poop.position = at + Vector3.up * (k_PoopDropHeight * (1f - k * k));
-                yield return null;
-            }
-
-            if (poop == null)
-            {
-                yield break;
-            }
-
-            poop.position = at;
-            StartCoroutine(Fx.Burst(transform, White, at, k_PoopBits, 0.6f, 1.2f, 8f, 0.3f, 2, k_Dirt, k_ClodOrder));
-            yield return Fx.Bounce(poop);
-        }
-
-        private System.Collections.IEnumerator CleanRoutine(Transform poop)
-        {
-            for (float t = 0f; t < k_PoopCleanSeconds; t += Time.deltaTime)
-            {
-                float k = t / k_PoopCleanSeconds;
-                poop.localScale = new Vector3(1f + 0.3f * k, 1f - k, 1f);
-                yield return null;
-            }
-
-            Destroy(poop.gameObject);
-        }
-
-        private Sprite White
-        {
-            get
-            {
-                if (m_white == null)
-                {
-                    m_white = Fx.NewSquare();
-                }
-
-                return m_white;
-            }
         }
 
         // 굴 모양은 Core가 이미 계산해 둔 마스크(걷는 땅과 같은 것)를 칠한다

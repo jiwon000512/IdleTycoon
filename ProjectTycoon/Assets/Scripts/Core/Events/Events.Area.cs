@@ -112,5 +112,46 @@ namespace ZooTycoon.Core
                 Wallet = wallet;
             }
         }
+
+        // ---------- 설계 24 · 37 똥(곳 공용) ----------
+
+        // 웜뱃이 똥을 떨궜다(그림 · 흙먼지 · 소리)
+        public readonly struct PoopDropped
+        {
+            public readonly PoopInteractable Poop;
+
+            public PoopDropped(PoopInteractable poop)
+            {
+                Poop = poop;
+            }
+        }
+
+        // 똥이 치워졌다(치우기 버튼 · 사물 밑에 깔림). 그림을 지운다. Coins: 설계 31 거름 국자로 받은 코인(없으면 0)
+        public readonly struct PoopCleaned
+        {
+            public readonly PoopInteractable Poop;
+            public readonly double Coins;
+
+            public PoopCleaned(PoopInteractable poop, double coins)
+            {
+                Poop = poop;
+                Coins = coins;
+            }
+        }
+
+        // 설계 37: 치우기 버튼으로 똥 Count개를 치워 거름(Item)이 창고에 들었다(「+N」 팝업 · 창고 버튼). 곳마다 한 번
+        public readonly struct PoopsCleaned
+        {
+            public readonly WombatArea Area;
+            public readonly string Item;
+            public readonly int Count;
+
+            public PoopsCleaned(WombatArea area, string item, int count)
+            {
+                Area = area;
+                Item = item;
+                Count = count;
+            }
+        }
     }
 }

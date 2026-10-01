@@ -19,6 +19,12 @@ namespace ZooTycoon.Core
         public const string k_CarryCapacity = "carryCapacity";
         // 설계 18: 배치 격자 한 변(유닛). 사물 밑변 가운데를 여기에 맞춘다
         public const string k_PlaceCell = "placeCell";
+        // 설계 24 → 37: 웜뱃 똥(곳 공용). poopEvery 유닛 걸을 때마다 poopChance로 하나(곳마다 바닥에 poopMax까지, 다른 똥 poopGap 안이면 건너뜀). 손님은 둘레 poopAvoidRadius 안을 걷지 않는다
+        public const string k_PoopEvery = "poopEvery";
+        public const string k_PoopChance = "poopChance";
+        public const string k_PoopMax = "poopMax";
+        public const string k_PoopGap = "poopGap";
+        public const string k_PoopAvoidRadius = "poopAvoidRadius";
 
         public double Value { get; set; }
     }

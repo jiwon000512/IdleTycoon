@@ -24,8 +24,6 @@ namespace ZooTycoon.Core
         private readonly PassageInteractable m_exit;
 
         public FarmConfigTable Config => m_config;
-        // 덤 굴리기(설계 28)
-        internal IRandom Random { get; }
         public BurrowGrid Grid { get; }
         public FarmLayout Layout { get; }
         // 판 순서(시작 칸은 줄 → 열 순)
@@ -45,10 +43,9 @@ namespace ZooTycoon.Core
             get { yield break; }
         }
 
-        public FarmArea(TableSet tables, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
+        public FarmArea(TableSet tables, IRandom random, Wombat wombat, EventBus bus) : base(tables, random, wombat, bus)
         {
             m_config = tables.Get<FarmConfigTable>(FarmConfigTable.k_Main);
-            Random = random;
             Layout = new FarmLayout(tables);
             m_unlocked.Add(tables.GetAll<CropTable>()[0]);
             Grid = new BurrowGrid(BurrowGrid.Columns(k_StartCols, m_config.StartRows), m_config.DigBaseCost, m_config.DigCostGrowth,
@@ -124,16 +121,29 @@ namespace ZooTycoon.Core
             Bus.Publish(new Events.LayoutChanged(this));
         }
 
-        // 걷는 땅(판 칸 전부)과 사물 목록(밭 → 나가기 → 파기)을 다시 맞춘다
+        // 걷는 땅(판 칸 전부)과 사물 목록을 다시 맞춘다
         private void Rebuild()
         {
             Layout.Rebuild(Grid.Cells);
             m_digs.Sync();
+            SyncThings();
+            Unstick();
+        }
+
+        // 설계 37: 농장엔 손님이 없어 똥은 사물 목록에만 든다(밭 위에도 떨어진다)
+        protected override void OnPoopsChanged()
+        {
+            SyncThings();
+        }
+
+        // 사물 목록: 똥 → 밭 → 나가기 → 파기(밭은 곁의 사물에 대상을 양보한다)
+        private void SyncThings()
+        {
             Placed.Clear();
+            Placed.AddRange(Poops);
             Placed.AddRange(m_plots);
             Placed.Add(m_exit);
             Placed.AddRange(m_digs.Things);
-            Unstick();
         }
 
         private InteractableTable Row(string interactableId)

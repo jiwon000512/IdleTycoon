@@ -164,27 +164,28 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 다음 갈 곳: 들를 곳이 남았으면 빈 들를 곳, 아니면 빵집(자리가 있을 때) 또는 계단
+        // 다음 갈 곳: 들를 곳이 남았으면 빈 들를 곳, 아니면 빵집(자리가 있을 때) 또는 계단.
+        // 설계 37: 들를 곳은 똥 둘레를 피해 가고(닿을 수 없으면 건너뛴다), 문 · 계단 · 좌판은 둘레를 무시하고 지나간다(광장이 멈추지 않게)
         private void Next()
         {
             if (m_dismissed)
             {
                 m_heading = Goal.Stairs;
-                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.StairsFloor, Facing.Up);
+                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.StairsFloor, Facing.Up, true);
                 return;
             }
 
             if (m_stall.HasValue)
             {
                 m_heading = Goal.Stall;
-                Mover.WalkTo(Plaza.Layout.Nav, m_stall.Value, Facing.Down);
+                Mover.WalkTo(Plaza.Layout.Nav, m_stall.Value, Facing.Down, true);
                 return;
             }
 
             if (m_returnHome)
             {
                 m_heading = Goal.Door;
-                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.DoorFloor, Facing.Up);
+                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.DoorFloor, Facing.Up, true);
                 return;
             }
 
@@ -204,7 +205,7 @@ namespace ZooTycoon.Core
             if (m_wantsShop && Plaza.Bakery.CanAdmit)
             {
                 m_heading = Goal.Door;
-                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.DoorFloor, Facing.Up);
+                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.DoorFloor, Facing.Up, true);
                 return;
             }
 
@@ -217,7 +218,7 @@ namespace ZooTycoon.Core
 
             m_wantsShop = false;
             m_heading = Goal.Stairs;
-            Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.StairsFloor, Facing.Up);
+            Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.StairsFloor, Facing.Up, true);
         }
 
         private void Arrive()
@@ -267,10 +268,11 @@ namespace ZooTycoon.Core
 
             if (Moving && !Hopping)
             {
-                Mover.WalkTo(Plaza.Layout.Nav, Mover.Destination, Mover.ArriveFacing);
+                Mover.WalkTo(Plaza.Layout.Nav, Mover.Destination, Mover.ArriveFacing, true);
             }
         }
 
+        // 설계 37: 똥 둘레 때문에 닿을 수 없는 들를 곳은 🤢 하고 놓는다
         private bool TryVisitSpot()
         {
             if (!Plaza.TryTakeSpot(out int index))
@@ -278,11 +280,40 @@ namespace ZooTycoon.Core
                 return false;
             }
 
+            PlazaSpot spot = Plaza.Layout.Spots[index];
+
+            if (!Mover.WalkTo(Plaza.Layout.Nav, spot.Position, spot.Facing))
+            {
+                Plaza.ReleaseSpot(index);
+                Bubble.Show(BubbleTable.k_Yuck);
+                return false;
+            }
+
             m_spot = index;
             m_heading = Goal.Spot;
-            PlazaSpot spot = Plaza.Layout.Spots[index];
-            Mover.WalkTo(Plaza.Layout.Nav, spot.Position, spot.Facing);
             return true;
+        }
+
+        // 설계 37: 똥이 바뀌었다. 걷던 길을 새 둘레로 다시 찾고, 들를 곳에 닿을 수 없으면 🤢 하고 다음으로
+        internal void Repath()
+        {
+            if (!Moving || Hopping)
+            {
+                return;
+            }
+
+            if (m_heading != Goal.Spot)
+            {
+                Mover.WalkTo(Plaza.Layout.Nav, Mover.Destination, Mover.ArriveFacing, true);
+                return;
+            }
+
+            if (!Mover.WalkTo(Plaza.Layout.Nav, Mover.Destination, Mover.ArriveFacing))
+            {
+                ReleaseSpot();
+                Bubble.Show(BubbleTable.k_Yuck);
+                Next();
+            }
         }
 
         private void ReleaseSpot()

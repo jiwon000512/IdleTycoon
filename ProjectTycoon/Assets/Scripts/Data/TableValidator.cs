@@ -31,6 +31,7 @@ namespace ZooTycoon.Data
         {
             ConfigTable.k_StartCoins, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight, ConfigTable.k_EntranceHeight,
             ConfigTable.k_WalkSpeed, ConfigTable.k_WombatSpeed, ConfigTable.k_HopSeconds, ConfigTable.k_CarryCapacity, ConfigTable.k_PlaceCell,
+            ConfigTable.k_PoopEvery, ConfigTable.k_PoopChance, ConfigTable.k_PoopMax, ConfigTable.k_PoopGap, ConfigTable.k_PoopAvoidRadius,
         };
 
         public static IReadOnlyList<string> Validate(TableSet tables)
@@ -546,9 +547,15 @@ namespace ZooTycoon.Data
                     errors.Add($"ConfigTable '{row.Id}': value가 너무 작다(startCoins는 0 이상, 나머지는 0보다 커야 한다).");
                 }
 
-                if (row.Id == ConfigTable.k_CarryCapacity && row.Value != System.Math.Floor(row.Value))
+                if ((row.Id == ConfigTable.k_CarryCapacity || row.Id == ConfigTable.k_PoopMax) && row.Value != System.Math.Floor(row.Value))
                 {
-                    errors.Add($"ConfigTable '{row.Id}': carryCapacity는 정수여야 한다.");
+                    errors.Add($"ConfigTable '{row.Id}': carryCapacity · poopMax는 정수여야 한다.");
+                }
+
+                // 설계 24 · 37: 똥 확률은 1 이하
+                if (row.Id == ConfigTable.k_PoopChance && row.Value > 1d)
+                {
+                    errors.Add($"ConfigTable '{row.Id}': poopChance는 0~1이어야 한다.");
                 }
             }
 
@@ -600,18 +607,6 @@ namespace ZooTycoon.Data
                 if (bakery.DigBaseCost <= 0d || bakery.DigCostGrowth < 1d)
                 {
                     errors.Add($"BakeryConfigTable '{bakery.Id}': digBaseCost는 0보다, digCostGrowth는 1 이상이어야 한다.");
-                }
-
-                // 설계 24
-                if (bakery.PoopEvery <= 0d || bakery.PoopChance < 0d || bakery.PoopChance > 1d || bakery.PoopMax < 0 || bakery.PoopGap < 0d || bakery.PoopAvoidRadius < 0d)
-                {
-                    errors.Add($"BakeryConfigTable '{bakery.Id}': poopEvery는 0보다, poopChance는 0~1, poopMax·poopGap·poopAvoidRadius는 0 이상이어야 한다.");
-                }
-
-                // 설계 28
-                if (bakery.PoopItem == null || !Ids<ItemTable>(tables).Contains(bakery.PoopItem))
-                {
-                    errors.Add($"BakeryConfigTable '{bakery.Id}': poopItem '{bakery.PoopItem}'이 ItemTable에 없다.");
                 }
             }
 

@@ -128,6 +128,15 @@ namespace ZooTycoon.UI
             return ((RectTransform)template.Find("Icon")).sizeDelta.y;
         }
 
+        // 설계 37: 재료가 들어왔다(거름 등) — 창고 버튼이 한 번 톡
+        public void Bump()
+        {
+            if (m_openButton.gameObject.activeInHierarchy)
+            {
+                StartCoroutine(UiFx.Pulse((RectTransform)m_openButton.transform));
+            }
+        }
+
         public void SetButtonVisible(bool visible)
         {
             m_openButton.gameObject.SetActive(visible);

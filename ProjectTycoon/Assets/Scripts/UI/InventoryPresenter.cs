@@ -19,6 +19,7 @@ namespace ZooTycoon.UI
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
         private readonly IDisposable m_items;
+        private readonly IDisposable m_manure;
         // 정보 창에 보이는 재료. 없으면 null
         private ItemTable m_shown;
 
@@ -32,6 +33,8 @@ namespace ZooTycoon.UI
             m_view.SlotClicked += View_SlotClicked;
             m_view.InfoCloseRequested += View_InfoCloseRequested;
             m_items = bus.Subscribe<Events.ItemsChanged>(Bus_ItemsChanged);
+            // 설계 37: 똥을 치워 거름이 들면 창고 버튼이 톡
+            m_manure = bus.Subscribe<Events.PoopsCleaned>(_ => m_view.Bump());
             m_view.SetLabels(tables.Text("inventory_title"), tables.Text("inventory_source"), tables.Text("inventory_uses"), tables.Text("inventory_none"));
         }
 
@@ -42,6 +45,7 @@ namespace ZooTycoon.UI
             m_view.SlotClicked -= View_SlotClicked;
             m_view.InfoCloseRequested -= View_InfoCloseRequested;
             m_items.Dispose();
+            m_manure.Dispose();
         }
 
         // 편집 모드에서는 버튼을 숨긴다(점원 버튼과 같이)

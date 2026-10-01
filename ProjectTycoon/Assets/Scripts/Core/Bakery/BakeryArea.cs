@@ -8,7 +8,7 @@ namespace ZooTycoon.Core
 {
     // 설계 08 v0.5 → 설계 13 → 설계 18: 빵집. 사물(진열대·오븐·계산대·나가기·파기)을 조립하고 사물 사이(오븐 → 웜뱃 손 → 진열대 → 손님 → 계산대)를 잇는다.
     // 설계 18: 진열대·오븐·계산대는 자유 배치(밑변 가운데 좌표). 사고 옮기고 보관하는 규칙은 WombatArea.Placement. 굴 파기는 칸 그대로.
-    // 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs. 설계 24 웜뱃 똥은 BakeryArea.Poops.cs.
+    // 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs. 설계 24 · 37 웜뱃 똥은 곳 공용 WombatArea.Poops.cs(손님 땅 둘레만 여기).
     // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기로 광장에 간다(없는 동안 계산이 멈춘다)
     public sealed partial class BakeryArea : WombatArea
     {
@@ -38,7 +38,6 @@ namespace ZooTycoon.Core
         public override string Id => k_Id;
         // 설계 25: 오븐이 재료를 꺼내는 창고
         public ZooState Wallet => m_state;
-        internal IRandom Random { get; }
 
         protected override BurrowNav WombatNav => Layout.WombatNav;
         protected override Vector2 Entrance => Layout.HoleFloor;
@@ -71,11 +70,10 @@ namespace ZooTycoon.Core
         }
 
         // 첫 손님은 광장에서 온다. 웜뱃은 계산대 뒤에서 시작한다
-        public BakeryArea(ZooState state, TableSet tables, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
+        public BakeryArea(ZooState state, TableSet tables, IRandom random, Wombat wombat, EventBus bus) : base(tables, random, wombat, bus)
         {
             m_config = tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery);
             m_state = state;
-            Random = random;
             Grid = new BurrowGrid(BurrowGrid.Columns(2, 4), m_config.DigBaseCost, m_config.DigCostGrowth, CellBounds.None, bus);
             bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new BakeryLayout(tables);
@@ -183,7 +181,6 @@ namespace ZooTycoon.Core
         {
             TickVisitors(dt);
             TickClerks(dt);
-            TickPoops();
         }
 
         protected override bool IsStaffed(Interactable thing)
@@ -282,6 +279,7 @@ namespace ZooTycoon.Core
         {
             Layout.Rebuild(Grid.Cells, m_shelves, m_ovens, m_counters, m_config.MaxCustomers);
             ClearBuriedPoops();
+            ApplyPoopObstacles(Layout.Nav);
             SyncThings();
             RepathVisitors();
             RepathClerks();
@@ -302,12 +300,20 @@ namespace ZooTycoon.Core
                 Placed.Add(clerk);
             }
 
-            Placed.AddRange(m_poops);
+            Placed.AddRange(Poops);
             Placed.AddRange(m_shelves);
             Placed.AddRange(m_ovens);
             Placed.AddRange(m_counters);
             Placed.Add(m_exit);
             Placed.AddRange(m_digs.Things);
+        }
+
+        // 설계 24: 똥은 사물 목록에 들고, 손님 땅에 둘레를 걸며, 걷는 손님은 새 길을 찾는다(길이 없으면 포기)
+        protected override void OnPoopsChanged()
+        {
+            SyncThings();
+            ApplyPoopObstacles(Layout.Nav);
+            RepathVisitors();
         }
 
         private void OnLayoutChanged()

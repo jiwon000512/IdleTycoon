@@ -39,6 +39,8 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.DialogueLine>(e => PlayIn((e.SpeakerObject as Clerk)?.Bakery, SoundTable.k_Say)),
                 bus.Subscribe<Events.PoopDropped>(e => PlayIn(e.Poop.Area, SoundTable.k_Poop)),
                 bus.Subscribe<Events.PoopCleaned>(e => PlayIn(e.Poop.Area, SoundTable.k_Clean)),
+                // 설계 37: 거름이 창고로(거두기와 같은 소리)
+                bus.Subscribe<Events.PoopsCleaned>(e => PlayIn(e.Area, SoundTable.k_Harvest)),
                 bus.Subscribe<Events.Harvested>(e => PlayIn(e.Plot.Area, SoundTable.k_Harvest)),
                 bus.Subscribe<Events.BonusFound>(e => PlayIn(e.Plot.Area, SoundTable.k_Bonus)),
                 // 설계 27: 갈기는 파기 소리(더미)

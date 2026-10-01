@@ -47,7 +47,7 @@ namespace ZooTycoon.Game
             Add("배속", "배 (1 = 보통)", "4", s => { Time.timeScale = (float)Number(s); return "배속 ×" + s; });
             Add("행상 부르기", "값 없음 (없을 때 바로 계단으로 온다)", string.Empty, Summon);
             Add("곳 이동", BakeryArea.k_Id + " · " + PlazaArea.k_Id + " · " + FarmArea.k_Id, PlazaArea.k_Id, Move);
-            Add("똥 싸기", "개수 (빵집에서, 웜뱃 둘레)", "3", Poop);
+            Add("똥 싸기", "개수 (지금 있는 곳, 웜뱃 둘레)", "3", Poop);
             Select(0);
         }
 
@@ -127,11 +127,6 @@ namespace ZooTycoon.Game
 
         private string Poop(string s)
         {
-            if (Mall.Active != Mall.Bakery)
-            {
-                return "빵집에서만";
-            }
-
             int dropped = 0;
             int count = (int)Number(s);
             System.Numerics.Vector2 at = Mall.Wombat.Mover.Position;
@@ -140,7 +135,7 @@ namespace ZooTycoon.Game
             {
                 float angle = i * 2.4f;
                 float radius = 0.8f + 0.3f * i;
-                dropped += Mall.Bakery.TryDropPoop(at + new System.Numerics.Vector2(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius)) ? 1 : 0;
+                dropped += Mall.Active.TryDropPoop(at + new System.Numerics.Vector2(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius)) ? 1 : 0;
             }
 
             return "똥 " + dropped + "개";

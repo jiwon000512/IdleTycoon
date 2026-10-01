@@ -49,6 +49,12 @@ namespace ZooTycoon.World
         [SerializeField] private WombatView m_wombat;
         [Tooltip("설계 29: 웜뱃 석상(자리는 Core 석상 기준점)")]
         [SerializeField] private Transform m_statue;
+        [Tooltip("설계 37: 거름 국자 코인 · 거름 「+N」 팝업(빵집과 같은 프리팹)")]
+        [SerializeField] private CoinPopup m_popupPrefab;
+        [Tooltip("설계 37: 웜뱃 똥 그림(빵집과 같은 프리팹 · 프레임)")]
+        [SerializeField] private SpriteAnimator m_poopPrefab;
+        [SerializeField] private Sprite[] m_poopFrames;
+        [SerializeField] private float m_poopFrameRate = 2f;
 
         private readonly Dictionary<DecorationData, GameObject> m_decor = new Dictionary<DecorationData, GameObject>();
         private PlazaArea m_plaza;
@@ -57,6 +63,7 @@ namespace ZooTycoon.World
         private bool m_editing;
         private IPlaced m_held;
         private IDisposable[] m_subscriptions;
+        private PoopViews m_poopViews;
         private Sprite m_square;
         private float m_glow;
 
@@ -92,6 +99,7 @@ namespace ZooTycoon.World
             m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);
             m_statue.localPosition = new Vector3(plaza.Statue.Position.X, plaza.Statue.Position.Y, 0f);
+            m_poopViews = new PoopViews(this, plaza, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, p => transform.position + new Vector3(p.X, p.Y, 0f));
             Build();
 
             m_wombat.Bind(plaza, transform, frames);
@@ -164,6 +172,8 @@ namespace ZooTycoon.World
             {
                 subscription.Dispose();
             }
+
+            m_poopViews.Dispose();
         }
 
         // 장식을 Core 목록에 맞춘다: 없는 것은 만들고, 사라진 것은 지우고, 자리는 늘 다시 놓는다
@@ -233,6 +243,11 @@ namespace ZooTycoon.World
             if (e.Area == m_plaza && m_plaza.Target is StatueInteractable)
             {
                 StartCoroutine(Fx.Bounce(m_statue));
+            }
+
+            if (e.Area == m_plaza && m_plaza.Target is PoopInteractable poop)
+            {
+                m_poopViews.Bounce(poop);
             }
         }
 
