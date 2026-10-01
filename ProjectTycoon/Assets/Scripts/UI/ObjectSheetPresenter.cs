@@ -8,7 +8,7 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 사물 터치 기획 → 설계 09 → 설계 13 v0.5: 상호작용 버튼으로 연 사물의 시트. 줄은 그 사물의 시트 행동(InteractableTable.actions 중 mode sheet)이 내놓고,
-    // 여기서는 행동 id별 서식으로 글자만 만든다(굽기 = 칩, 나머지 = 행). 제목·상태 줄만 사물 종류로 가른다. 줄을 누르면 대상의 곳(m_target.Area)에 TryChoose로 부탁한다(설계 27: 굴 파기 시트는 농장에서도 열린다).
+    // 여기서는 행동 id별 서식으로 글자만 만든다(굽기 · 심기 = 칩, 나머지 = 행). 제목·상태 줄만 사물 종류로 가른다. 줄을 누르면 대상의 곳(m_target.Area)에 TryChoose로 부탁한다(설계 27: 굴 파기 시트는 농장에서도 열린다).
     // 열린 동안 사물(계산대 줄 포함)·업그레이드·배치·코인 이벤트로 갱신하고, 웜뱃의 대상이 바뀌면 닫는다
     public sealed class ObjectSheetPresenter : IDisposable
     {
@@ -78,9 +78,9 @@ namespace ZooTycoon.UI
             {
                 foreach (SheetOption option in action.Options(m_target.Area.Wombat.Worker, m_target))
                 {
-                    if (action.Table.Id == ActionTable.k_Bake)
+                    if (action.Table.Id == ActionTable.k_Bake || action.Table.Id == ActionTable.k_Plant)
                     {
-                        chips.Add(Chip(option));
+                        chips.Add(action.Table.Id == ActionTable.k_Bake ? Chip(option) : CropChip(option));
                         m_chips.Add((action.Table.Id, option.Option));
                     }
                     else
@@ -111,6 +111,10 @@ namespace ZooTycoon.UI
                 case DigInteractable dig:
                     m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", dig.Grid.Cells.Count));
                     break;
+                // 설계 35: 거름은 심을 때 하나씩 저절로 든다
+                case PlotInteractable plot:
+                    m_view.SetHeader(m_tables.Text("sheet_plot_title"), m_tables.Format("sheet_plot_status", m_shop.Wallet.Count(plot.Farm.Config.ManureItem)));
+                    break;
             }
         }
 
@@ -124,7 +128,7 @@ namespace ZooTycoon.UI
             return m_tables.Text("sheet_oven_empty");
         }
 
-        // 굽기 칩: 해금된 빵(빈 오븐이고 재료가 있을 때만 고를 수 있고, 재고가 없으면 강조) · 다음 빵 해금(값, 설계 17). 둘 다 레시피(설계 25)
+        // 굽기 칩: 해금된 빵(빈 오븐이고 재료가 있을 때만 고를 수 있고, 재고 배지 · 재고가 없으면 강조) · 다음 빵 해금(자물쇠 + 값, 설계 17). 둘 다 레시피(설계 25)
         private SheetChip Chip(SheetOption option)
         {
             BreadTable bread = m_tables.Get<BreadTable>(option.Option);
@@ -136,8 +140,8 @@ namespace ZooTycoon.UI
                 {
                     SpritePath = bread.Sprite,
                     Label = m_tables.Format("chip_bread", bread.Name),
-                    Sub = m_tables.Text("chip_unlock"),
-                    SubRight = BigNumberFormatter.Format(option.Cost),
+                    Cost = BigNumberFormatter.Format(option.Cost),
+                    CostPoor = option.State == SheetOptionState.Poor,
                     Enabled = enabled,
                     Ingredients = Recipe(bread),
                 };
@@ -149,11 +153,44 @@ namespace ZooTycoon.UI
             {
                 SpritePath = bread.Sprite,
                 Label = m_tables.Format("chip_bread", bread.Name),
-                Sub = m_tables.Format("chip_bread_stock", stock),
-                SubRight = m_tables.Format("chip_bread_seconds", bread.BakeSeconds),
+                Count = m_tables.Format("chip_count", stock),
+                CountEmpty = stock == 0,
+                Seconds = m_tables.Format("chip_seconds", bread.BakeSeconds),
                 Highlighted = enabled && stock == 0,
                 Enabled = enabled,
                 Ingredients = Recipe(bread),
+            };
+        }
+
+        // 설계 35 작물 칩: 연 작물(창고 개수 배지, 창고가 비면 강조) · 다음 작물 해금(자물쇠 + 값)
+        private SheetChip CropChip(SheetOption option)
+        {
+            CropTable crop = m_tables.Get<CropTable>(option.Option);
+            ItemTable item = m_tables.Get<ItemTable>(crop.Item);
+
+            if (crop == ((PlotInteractable)m_target).Farm.NextCrop)
+            {
+                return new SheetChip
+                {
+                    SpritePath = item.Icon,
+                    Label = item.Name,
+                    Cost = BigNumberFormatter.Format(option.Cost),
+                    CostPoor = option.State == SheetOptionState.Poor,
+                    Enabled = option.State == SheetOptionState.Enabled,
+                };
+            }
+
+            int stock = m_shop.Wallet.Count(crop.Item);
+
+            return new SheetChip
+            {
+                SpritePath = item.Icon,
+                Label = item.Name,
+                Count = m_tables.Format("chip_count", stock),
+                CountEmpty = stock == 0,
+                Seconds = m_tables.Format("chip_seconds", crop.GrowSeconds),
+                Highlighted = stock == 0,
+                Enabled = option.State == SheetOptionState.Enabled,
             };
         }
 

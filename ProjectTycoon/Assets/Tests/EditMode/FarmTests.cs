@@ -181,14 +181,14 @@ namespace ZooTycoon.Tests
             Assert.That(m_plaza.Wombat.Mover.Position, Is.EqualTo(plaza.FarmDoorFloor));
         }
 
-        // 밭 칸에 서면 버튼 = 심기. 자라는 동안은 밭에 서 있어도 거두지 않고, 익은 밭 칸에 발이 들면 저절로 거둬 창고로(들고 다니지 않는다). 옆 칸에서는 거두지 않는다
+        // 밭 칸에 서면 버튼 = 심기(밭 시트 → 밀 칩). 자라는 동안은 밭에 서 있어도 거두지 않고, 익은 밭 칸에 발이 들면 저절로 거둬 창고로(들고 다니지 않는다). 옆 칸에서는 거두지 않는다
         [Test]
         public void Plant_GrowsThenHarvestsWhenSteppingOnField()
         {
             Create();
             GoToFarm();
             PlotInteractable plot = m_farm.Plots[0];
-            CropTable crop = m_farm.Crop;
+            CropTable crop = m_farm.UnlockedCrops[0];
             Vector2 inside = CenterOf(plot.Cell);
             Vector2 beside = CenterOf(plot.Cell.Offset(1, 0));
             int wheat = m_state.Count(k_Wheat);
@@ -198,8 +198,7 @@ namespace ZooTycoon.Tests
             m_farm.Wombat.Mover.Place(inside);
             Run(k_Dt);
             Assert.That(m_farm.Target, Is.SameAs(plot));
-            Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_Plant));
-            Assert.That(m_farm.TryInteract(), Is.True);
+            Sow();
             Assert.That(plot.Crop, Is.SameAs(crop));
             Assert.That(plot.Stage, Is.EqualTo(0));
 
@@ -222,6 +221,51 @@ namespace ZooTycoon.Tests
             Assert.That(m_mall.Wombat.Worker.Hands.Count, Is.EqualTo(0));
         }
 
+        // 설계 35: 밭 시트는 연 작물 칩(처음엔 밀) + 다음 작물 해금 칩(값 unlockCost). 코인이 모자라면 해금 칩이 Poor이고 골라도 아무것도 바뀌지 않는다.
+        // 사면 열리고 그 밭에 바로 심으며, 거두면 그 작물의 재료가 창고로. 심은 밭에는 더 심지 못한다
+        [Test]
+        public void PlantSheet_UnlocksNextCrop_AndPlantsItRightAway()
+        {
+            Create();
+            GoToFarm();
+            PlotInteractable plot = m_farm.Plots[0];
+            CropTable wheat = m_farm.UnlockedCrops[0];
+            CropTable next = m_farm.NextCrop;
+            SheetAction plant = m_farm.SheetActions(plot).Single();
+            List<Events.Harvested> harvested = new List<Events.Harvested>();
+            m_bus.Subscribe<Events.Harvested>(e => harvested.Add(e));
+            m_farm.Wombat.Mover.Place(CenterOf(plot.Cell));
+            Run(k_Dt);
+            m_state.AddCoins(next.UnlockCost);
+            Assert.That(m_state.TrySpendCoins(m_state.Coins - next.UnlockCost + 1d), Is.True);
+
+            IReadOnlyList<SheetOption> options = plant.Options(m_farm.Wombat.Worker, plot);
+            Assert.That(options.Select(o => o.Option), Is.EqualTo(new[] { wheat.Id, next.Id }));
+            Assert.That(options[0].State, Is.EqualTo(SheetOptionState.Enabled));
+            Assert.That(options[1].State, Is.EqualTo(SheetOptionState.Poor));
+            Assert.That(options[1].Cost, Is.EqualTo(next.UnlockCost));
+            Assert.That(m_farm.TryChoose(ActionTable.k_Plant, plot, next.Id), Is.False);
+            Assert.That(m_farm.UnlockedCrops.Count, Is.EqualTo(1));
+            Assert.That(plot.IsEmpty, Is.True);
+
+            m_state.AddCoins(1d);
+            Assert.That(m_farm.TryChoose(ActionTable.k_Plant, plot, next.Id), Is.True);
+            Assert.That(m_state.Coins, Is.EqualTo(0d));
+            Assert.That(m_farm.UnlockedCrops, Is.EqualTo(new[] { wheat, next }));
+            Assert.That(m_farm.NextCrop, Is.Null);
+            Assert.That(plot.Crop, Is.SameAs(next));
+            Assert.That(m_farm.TryChoose(ActionTable.k_Plant, plot, wheat.Id), Is.False);
+            Assert.That(plant.Options(m_farm.Wombat.Worker, plot).Select(o => o.Option), Is.EqualTo(new[] { wheat.Id, next.Id }));
+
+            int before = m_state.Count(next.Item);
+            m_farm.Wombat.Mover.Place(MarginOf(plot.Cell));
+            Run(next.GrowSeconds + k_Dt);
+            m_farm.Wombat.Mover.Place(CenterOf(plot.Cell));
+            Run(k_Dt);
+            Assert.That(m_state.Count(next.Item), Is.EqualTo(before + next.Yield));
+            Assert.That(harvested.Single().Crop, Is.SameAs(next));
+        }
+
         // 2026-09-30 안 A: 익은 밭은 발이 밭 몸통(칸 둘레 여백 fieldInset 안쪽)에 들 때만 거둔다. 여백에 서면 대상이어도 그대로
         [Test]
         public void Harvest_NeedsFeetOnFieldBody()
@@ -236,7 +280,7 @@ namespace ZooTycoon.Tests
 
             m_farm.Wombat.Mover.Place(center);
             Run(k_Dt);
-            Assert.That(m_farm.TryInteract(), Is.True);
+            Sow();
             m_farm.Wombat.Mover.Place(margin);
             Run(plot.Crop.GrowSeconds + k_Dt);
             Assert.That(plot.IsRipe, Is.True);
@@ -246,7 +290,15 @@ namespace ZooTycoon.Tests
             m_farm.Wombat.Mover.Place(center);
             Run(k_Dt);
             Assert.That(plot.IsEmpty, Is.True);
-            Assert.That(m_state.Count(k_Wheat), Is.EqualTo(wheat + plot.Farm.Crop.Yield));
+            Assert.That(m_state.Count(k_Wheat), Is.EqualTo(wheat + plot.Farm.UnlockedCrops[0].Yield));
+        }
+
+        // 설계 35: 빈 밭의 버튼은 밭 시트를 열고(TryInteract false), 시트의 작물 칩이 웜뱃이 선 밭에 심는다
+        private void Sow(string crop = k_Wheat)
+        {
+            Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_OpenPlant));
+            Assert.That(m_farm.TryInteract(), Is.False);
+            Assert.That(m_farm.TryChoose(ActionTable.k_Plant, m_farm.Target, crop), Is.True);
         }
 
         // 칸 윗변 여백(칸 안 · 밭 몸통 밖): 기다리는 동안 거두지 않는 자리
@@ -265,18 +317,18 @@ namespace ZooTycoon.Tests
             GoToFarm();
             PlotInteractable fertilized = m_farm.Plots[0];
             PlotInteractable plain = m_farm.Plots[1];
-            CropTable crop = m_farm.Crop;
+            CropTable crop = m_farm.UnlockedCrops[0];
             m_state.AddItem(Config.ManureItem, 1);
 
             m_farm.Wombat.Mover.Place(CenterOf(fertilized.Cell));
             Run(k_Dt);
-            Assert.That(m_farm.TryInteract(), Is.True);
+            Sow();
             Assert.That(fertilized.IsFertilized, Is.True);
             Assert.That(m_state.Count(Config.ManureItem), Is.EqualTo(0));
 
             m_farm.Wombat.Mover.Place(CenterOf(plain.Cell));
             Run(k_Dt);
-            Assert.That(m_farm.TryInteract(), Is.True);
+            Sow();
             Assert.That(plain.IsFertilized, Is.False);
 
             m_farm.Wombat.Mover.Place(MarginOf(plain.Cell));
@@ -315,9 +367,9 @@ namespace ZooTycoon.Tests
         {
             m_farm.Wombat.Mover.Place(CenterOf(plot.Cell));
             Run(k_Dt);
-            Assert.That(m_farm.TryInteract(), Is.True);
+            Sow();
             m_farm.Wombat.Mover.Place(MarginOf(plot.Cell));
-            Run(m_farm.Crop.GrowSeconds + k_Dt);
+            Run(plot.Crop.GrowSeconds + k_Dt);
             Assert.That(plot.IsRipe, Is.True);
             m_farm.Wombat.Mover.Place(CenterOf(plot.Cell));
             Run(k_Dt);
@@ -369,7 +421,7 @@ namespace ZooTycoon.Tests
             Assert.That(tilled.Count, Is.EqualTo(1));
 
             Run(k_Dt);
-            Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_Plant));
+            Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_OpenPlant));
         }
 
         // QA A: 밭 위에 서도 곁에 흙 칸(파기)이 있으면 흙 칸이 대상(삽 버튼). 흙 칸에서 멀면 밭이 대상

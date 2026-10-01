@@ -229,7 +229,7 @@ namespace ZooTycoon.World
         }
 
         // 작물 그림은 CropTable sprite + _단계_반쪽(0·1). 줄마다 반쪽을 번갈아 얹어 같은 그림이 반복되지 않는다.
-        // 무럭무럭: 단계 1부터는 바람에 기운 두 장(_l · _r)도 준다. 단계가 오르면(심기 포함) 밭 뷰가 늘어나며 바꾼다
+        // 무럭무럭: 단계 1부터는 바람에 기운 두 장(_l · _r)도 준다. 단계가 오르면(심기 포함) 밭 뷰가 늘어나며 바꾼다. 다 익음 표시는 작물마다(CropTable readyMark)
         private void Refresh(PlotInteractable plot)
         {
             PlotView view = m_plots[plot];
@@ -251,7 +251,8 @@ namespace ZooTycoon.World
 
             bool grew = m_stages.TryGetValue(plot, out int before) && stage > before;
             m_stages[plot] = stage;
-            view.Show(plot.IsTilled, crops, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe, plot.IsFertilized, grew);
+            Sprite readyMark = plot.IsEmpty ? null : m_frames.Get(plot.Crop.ReadyMark)[0];
+            view.Show(plot.IsTilled, crops, readyMark, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe, plot.IsFertilized, grew);
         }
 
         // 흙 칸(갈기 전)마다 「갈기 값」 표식을 늘 보인다. 갈면 사라진다
@@ -382,13 +383,13 @@ namespace ZooTycoon.World
             // 설계 31: 물뿌리개 · 덤 작물이 나오면 이삭 바구니
             m_relicProps.Pop(BlessingTable.k_Grow);
 
-            if (e.Count > m_farm.Crop.Yield)
+            if (e.Count > e.Crop.Yield)
             {
                 m_relicProps.Pop(RelicTable.k_Basket);
             }
 
             // 거두는 것은 밟은 웜뱃이므로 팝업은 웜뱃 머리 위에서 떠오른다(그림이 아니라 sim 자리: 그림은 한 프레임 늦다). 밭에서는 낟알이 튄다
-            Popup(ToWorld(m_farm.Wombat.Mover.Position) + Vector3.up * k_PopupHeight, e.Item, e.Count);
+            Popup(ToWorld(m_farm.Wombat.Mover.Position) + Vector3.up * k_PopupHeight, e.Crop.Item, e.Count);
             m_plots[e.Plot].Bounce();
             Burst(ToWorld(m_farm.Layout.Cells.CellCenter(e.Plot.Cell)), k_Grain, k_GrainLight);
         }

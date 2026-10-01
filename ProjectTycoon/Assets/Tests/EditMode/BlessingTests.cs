@@ -164,7 +164,7 @@ namespace ZooTycoon.Tests
         {
             Grant(BlessingTable.k_Grow);
             PlotInteractable plot = m_farm.Plots.First(p => p.IsTilled);
-            plot.Plant(m_farm.Crop, false);
+            plot.Plant(m_farm.UnlockedCrops[0], false);
             double start = plot.Remaining;
 
             Run(1d);
@@ -178,7 +178,7 @@ namespace ZooTycoon.Tests
         {
             Grant(BlessingTable.k_Bonus);
             PlotInteractable plot = m_farm.Plots.First(p => p.IsTilled);
-            plot.Plant(m_farm.Crop, false);
+            plot.Plant(m_farm.UnlockedCrops[0], false);
             double chance = m_tables.Get<FarmConfigTable>(FarmConfigTable.k_Main).BonusChance;
             int gems = m_state.Count(Gem);
 

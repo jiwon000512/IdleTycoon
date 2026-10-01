@@ -14,17 +14,17 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 익은 밭을 거뒀다: 창고에 재료 count개(팝업 · 소리)
+        // 익은 밭을 거뒀다: 창고에 그 작물의 재료 count개(팝업 · 소리). 설계 35: 작물이 여럿이라 거둔 작물을 싣는다(덤 작물 판정은 그 작물의 yield와 비교)
         public readonly struct Harvested
         {
             public readonly PlotInteractable Plot;
-            public readonly string Item;
+            public readonly CropTable Crop;
             public readonly int Count;
 
-            public Harvested(PlotInteractable plot, string item, int count)
+            public Harvested(PlotInteractable plot, CropTable crop, int count)
             {
                 Plot = plot;
-                Item = item;
+                Crop = crop;
                 Count = count;
             }
         }

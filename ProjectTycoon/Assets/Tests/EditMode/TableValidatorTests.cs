@@ -11,14 +11,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 13)]
-        [TestCase("StringTable", 34)]
+        [TestCase("StringTable", 35)]
         [TestCase("ClerkTable", 1)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 2)]
         [TestCase("DialogueTable", 4)]
-        [TestCase("BreadTable", 3)]
-        [TestCase("ActionTable", 14)]
-        [TestCase("InteractableTable", 14)]
+        [TestCase("BreadTable", 4)]
+        [TestCase("ActionTable", 15)]
+        [TestCase("InteractableTable", 15)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 11)]
         [TestCase("BgmTable", 1)]
@@ -26,8 +26,8 @@ namespace ZooTycoon.Tests
         [TestCase("BakeryConfigTable", 7)]
         [TestCase("PlazaConfigTable", 6)]
         [TestCase("PlazaDecorTable", 1)]
-        [TestCase("ItemTable", 4)]
-        [TestCase("CropTable", 3)]
+        [TestCase("ItemTable", 5)]
+        [TestCase("CropTable", 4)]
         [TestCase("FarmConfigTable", 4)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 1)]
@@ -230,6 +230,11 @@ namespace ZooTycoon.Tests
             unknownItem.GetAll<BreadTable>()[0].Ingredients[0].Item = "milk";
             TableSet oneStage = TestTables.Load();
             oneStage.GetAll<CropTable>()[0].Stages = 1;
+            // 설계 35: 해금 값이 음수, 다 익음 표시 없음
+            TableSet negativeUnlock = TestTables.Load();
+            negativeUnlock.GetAll<CropTable>()[1].UnlockCost = -1d;
+            TableSet noReadyMark = TestTables.Load();
+            noReadyMark.GetAll<CropTable>()[0].ReadyMark = null;
             TableSet tallStart = TestTables.Load();
             FarmConfigTable farm = tallStart.Get<FarmConfigTable>(FarmConfigTable.k_Main);
             farm.StartRows = farm.FloorRows + 1;
@@ -257,6 +262,8 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(wideInset), Is.Not.Empty);
             Assert.That(TableValidator.Validate(unknownItem), Is.Not.Empty);
             Assert.That(TableValidator.Validate(oneStage), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(negativeUnlock), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noReadyMark), Is.Not.Empty);
             Assert.That(TableValidator.Validate(TestTables.Load("CropTable", rows => rows.Clear())), Is.Not.Empty);
             Assert.That(TableValidator.Validate(tallStart), Is.Not.Empty);
             Assert.That(TableValidator.Validate(freeTill), Is.Not.Empty);

@@ -81,7 +81,7 @@ namespace ZooTycoon.Core
             IsFertilized = false;
             wallet.AddItem(crop.Item, count);
             OnChanged();
-            Area.Bus.Publish(new Events.Harvested(this, crop.Item, count));
+            Area.Bus.Publish(new Events.Harvested(this, crop, count));
 
             if (bonus)
             {

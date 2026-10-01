@@ -19,6 +19,7 @@ namespace ZooTycoon.Core
 
         private readonly FarmConfigTable m_config;
         private readonly List<PlotInteractable> m_plots = new List<PlotInteractable>();
+        private readonly List<CropTable> m_unlocked = new List<CropTable>();
         private readonly DigSet m_digs;
         private readonly PassageInteractable m_exit;
 
@@ -29,8 +30,9 @@ namespace ZooTycoon.Core
         public FarmLayout Layout { get; }
         // 판 순서(시작 칸은 줄 → 열 순)
         public IReadOnlyList<PlotInteractable> Plots => m_plots;
-        // 심기가 심는 작물(CropTable 첫 행. 작물이 늘면 시트로 고른다)
-        public CropTable Crop { get; }
+        // 설계 35: 밭 시트에 칩이 뜨는 작물(CropTable 행 순서, 시작은 첫 행)과 다음 해금 작물(다 열었으면 null)
+        public IReadOnlyList<CropTable> UnlockedCrops => m_unlocked;
+        public CropTable NextCrop => m_unlocked.Count < Tables.GetAll<CropTable>().Count ? Tables.GetAll<CropTable>()[m_unlocked.Count] : null;
         public override IReadOnlyList<IPlacedKind> ShopKinds => s_noKinds;
         public override string Id => k_Id;
 
@@ -48,7 +50,7 @@ namespace ZooTycoon.Core
             m_config = tables.Get<FarmConfigTable>(FarmConfigTable.k_Main);
             Random = random;
             Layout = new FarmLayout(tables);
-            Crop = tables.GetAll<CropTable>()[0];
+            m_unlocked.Add(tables.GetAll<CropTable>()[0]);
             Grid = new BurrowGrid(BurrowGrid.Columns(k_StartCols, m_config.StartRows), m_config.DigBaseCost, m_config.DigCostGrowth,
                 new CellBounds(m_config.FloorCols, m_config.FloorRows), bus);
             m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells, this);
@@ -67,6 +69,12 @@ namespace ZooTycoon.Core
         public override DigInteractable DigAt(Vector2 p)
         {
             return m_digs.At(p);
+        }
+
+        // 설계 35: 밭 시트가 값을 치른 뒤 다음 작물을 연다(CropTable 행 순서)
+        internal void UnlockCrop(CropTable crop)
+        {
+            m_unlocked.Add(crop);
         }
 
         internal override bool IsPassage(Vector2 p)

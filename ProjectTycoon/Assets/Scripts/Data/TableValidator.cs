@@ -26,7 +26,7 @@ namespace ZooTycoon.Data
             BubbleTable.k_Yuck,
         };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
-        private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig };
+        private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_OpenPlant };
         private static readonly string[] k_ConfigIds =
         {
             ConfigTable.k_StartCoins, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight, ConfigTable.k_EntranceHeight,
@@ -310,7 +310,7 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 설계 25: 작물은 하나 이상(심기는 첫 행), 거두는 재료가 ItemTable에 있고, 자라는 그림은 2단계 이상
+        // 설계 25: 작물은 하나 이상(첫 행은 처음부터 열림), 거두는 재료가 ItemTable에 있고, 자라는 그림은 2단계 이상. 설계 35: 해금 값은 0 이상
         private static void ValidateCrops(TableSet tables, List<string> errors)
         {
             HashSet<string> itemIds = Ids<ItemTable>(tables);
@@ -329,9 +329,9 @@ namespace ZooTycoon.Data
                     errors.Add($"CropTable '{crop.Id}': 재료 '{crop.Item}'이 ItemTable에 없다.");
                 }
 
-                if (crop.GrowSeconds <= 0d || crop.Yield < 1 || string.IsNullOrEmpty(crop.Sprite) || crop.Stages < 2)
+                if (crop.GrowSeconds <= 0d || crop.Yield < 1 || string.IsNullOrEmpty(crop.Sprite) || crop.Stages < 2 || crop.UnlockCost < 0d || string.IsNullOrEmpty(crop.ReadyMark))
                 {
-                    errors.Add($"CropTable '{crop.Id}': growSeconds는 0보다, yield는 1 이상, sprite가 있고 stages는 2 이상이어야 한다.");
+                    errors.Add($"CropTable '{crop.Id}': growSeconds는 0보다, yield는 1 이상, sprite · readyMark가 있고 stages는 2 이상, unlockCost는 0 이상이어야 한다.");
                 }
             }
         }

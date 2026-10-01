@@ -25,7 +25,7 @@ namespace ZooTycoon.Editor
         const string k_CropDir = "Assets/Resources/Sprites/Farm/";
         const string k_ItemDir = "Assets/Resources/Sprites/Items/";
         // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 줄 셋(칸 밑변 기준, 뒷줄부터. 줄 그림은 104칸 폭 · 익으면 26칸 높이. 밑변은 make_farm_art.py ROW_CELLS 18 · 42 · 66칸 = 이랑 셋의 아래에서 6칸).
-        // 농사 타이머 · 다 익음 표시(Farm/farm_timer_XX · farm_ready_mark)는 칸 윗변 위에 띄워 모든 그림 위에(2026-09-30 사용자: 작물에 가려지고 빵 모양이던 것),
+        // 농사 타이머 · 다 익음 표시(Farm/farm_timer_XX · Resources/Sprites/Farm/Ready/<작물>, 작물마다는 실행 중 FarmView가 바꾼다)는 칸 윗변 위에 띄워 모든 그림 위에(2026-09-30 사용자: 작물에 가려지고 빵 모양이던 것),
         // 빈 밭 화살표는 칸 가운데 · 캐릭터 층(작물이 없을 때만 보이니 웜뱃이 앞에 온다)
         const int k_FieldOrder = -1997;
         const int k_PlotMarkOrder = 1000;
@@ -166,7 +166,11 @@ namespace ZooTycoon.Editor
                 Import(k_FarmDir + FarmTimerFrame(i) + ".png", center);
             }
 
-            Import(k_FarmDir + "farm_ready_mark.png", center);
+            // 다 익음 표시는 작물마다(CropTable readyMark), 가운데 피벗이라 작물 단계 그림(발끝 피벗)과 폴더를 나눈다
+            foreach (string path in System.IO.Directory.GetFiles(k_CropDir + "Ready/", "*.png"))
+            {
+                Import(path.Replace('\\', '/'), center);
+            }
             Import(k_FarmDir + "farm_sparkle_0.png", center);
             Import(k_FarmDir + "farm_sparkle_1.png", center);
 
@@ -589,7 +593,7 @@ namespace ZooTycoon.Editor
 
             SpriteRenderer timer = Renderer(go.transform, "Timer", timerFrames[0], new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
             timer.enabled = false;
-            SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "farm_ready_mark.png"), new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
+            SpriteRenderer readyMark = Renderer(go.transform, "ReadyMark", AssetDatabase.LoadAssetAtPath<Sprite>(k_CropDir + "Ready/wheat.png"), new Vector3(0f, k_PlotMarkHeight, 0f), k_PlotMarkOrder);
             readyMark.enabled = false;
             SpriteRenderer emptyMark = Renderer(go.transform, "EmptyMark", Load("oven_empty_mark"), new Vector3(0f, k_PlotEmptyMarkHeight, 0f), k_PlotEmptyMarkOrder);
             // 무럭무럭: 익은 밭 이삭 위 반짝임 둘(번갈아 쓴다, 자리는 실행 중)

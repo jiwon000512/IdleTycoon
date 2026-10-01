@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 34,
+  "version": 35,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -37,7 +37,8 @@
     "version 31 (2026-09-30, 설계 30 석상 축복): 능력치 돌리기 문구(굴리기 · 잠금 · 빈 줄 · 등급 · 보유 · 모자람 · 능력 일곱 · 줄 형식)와 inventory_use_statue를 지웠다. statue_hint를 새 글로, statue_pray · statue_again · statue_none, 축복 이름 여섯 blessing_* · 효과 형식 여섯 blessing_*_effect, inventory_use_relic(반짝돌 쓸 곳: 유물 수레, 준비 중) 추가.",
     "version 32 (2026-10-01, 설계 31 유물 수레): 유물 팝업 relic_*(제목 · 끼운 유물 · 모은 유물 · 빈 칸 · 뽑기 · 고르기 · 새 유물 · 별 오름 · 끼우기 · 빼기 · 가득 · 모자람 · 다 모음), 유물 이름 아홉 · 효과 형식 아홉(RelicTable name · format이 가리킨다), 주판 두 배 계산 팝업 coin_popup_double, 떠돌이 행상 merchant_pill · merchant_next 추가. inventory_use_relic에서 「(준비 중)」을 뺐다.",
     "version 33 (2026-10-01, 설계 32 행상 다듬기): 좌판 팝업 relic_cart_title · relic_cart_lead · relic_have · relic_again · relic_view · 고른 결과 relic_got_*(새 유물 · 별 오름 · 빈 칸에 끼움 · 끼운 유물 · 칸 가득) 추가. relic_title을 유물 화면 제목 「유물」로, relic_hint를 유물 화면 안내로, merchant_next를 상단 알약 이름 「다음 행상」(시간은 알약의 시간 칸)으로 바꿨다.",
-    "version 34 (2026-10-01, 설계 34 행상과 대화): 행상 인사 say_merchant_hello_1~3(DialogueTable merchant_hello) 추가. 행상이 없을 때 상단 알약은 회색 얼굴 + 시간만이라(사용자 B) merchant_next를 지웠다."
+    "version 34 (2026-10-01, 설계 34 행상과 대화): 행상 인사 say_merchant_hello_1~3(DialogueTable merchant_hello) 추가. 행상이 없을 때 상단 알약은 회색 얼굴 + 시간만이라(사용자 B) merchant_next를 지웠다.",
+    "version 35 (2026-10-01, 설계 35 작물 · 밭 시트): 밭 시트 제목 sheet_plot_title · 상태 sheet_plot_status(거름 개수), 칩 시안 A 「배지 + 시계 줄」(아트방, 사용자 선택): 아래 줄 글자를 개수 배지 · 시계 · 자물쇠로 바꿔 chip_bread_stock(×{0}) → chip_count({0}), chip_bread_seconds → chip_seconds, chip_unlock 삭제."
   ],
   "rows": [
     {
@@ -89,16 +90,12 @@
       "ko": "{0}"
     },
     {
-      "id": "chip_bread_stock",
-      "ko": "×{0}"
+      "id": "chip_count",
+      "ko": "{0}"
     },
     {
-      "id": "chip_bread_seconds",
+      "id": "chip_seconds",
       "ko": "{0}초"
-    },
-    {
-      "id": "chip_unlock",
-      "ko": "해금"
     },
     {
       "id": "row_upgrade",
@@ -123,6 +120,14 @@
     {
       "id": "row_dig_effect",
       "ko": "굴이 넓어진다"
+    },
+    {
+      "id": "sheet_plot_title",
+      "ko": "밭"
+    },
+    {
+      "id": "sheet_plot_status",
+      "ko": "거름 {0}개"
     },
     {
       "id": "tag_dig",

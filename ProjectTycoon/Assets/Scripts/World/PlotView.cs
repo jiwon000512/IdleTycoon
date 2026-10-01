@@ -102,10 +102,15 @@ namespace ZooTycoon.World
             }
         }
 
-        // tilled: 밭 칸인가(흙 칸이면 흙판·작물·표식 전부 숨김). crops: 줄마다 지금 단계 그림 {기본, 왼쪽, 오른쪽} 또는 {기본}(빈 밭은 null).
+        // tilled: 밭 칸인가(흙 칸이면 흙판·작물·표식 전부 숨김). crops: 줄마다 지금 단계 그림 {기본, 왼쪽, 오른쪽} 또는 {기본}(빈 밭은 null). readyMark: 그 작물의 다 익음 표시(빈 밭은 null).
         // growing: 게이지, ripe: 다 익음 표시, fertilized: 거름 알갱이. grew: 방금 단계가 올랐다(뒷줄부터 늘어나며 새 그림으로)
-        public void Show(bool tilled, Sprite[][] crops, bool growing, bool ripe, bool fertilized, bool grew)
+        public void Show(bool tilled, Sprite[][] crops, Sprite readyMark, bool growing, bool ripe, bool fertilized, bool grew)
         {
+            if (readyMark != null)
+            {
+                m_readyMark.sprite = readyMark;
+            }
+
             m_body.enabled = tilled;
             m_manure.enabled = tilled && fertilized;
             m_rows = tilled ? crops : null;

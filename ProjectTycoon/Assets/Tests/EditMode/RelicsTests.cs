@@ -220,23 +220,23 @@ namespace ZooTycoon.Tests
         public void Basket_HarvestSometimesGivesOneMore()
         {
             PlotInteractable plot = m_farm.Plots.First(p => p.IsTilled);
-            string wheat = m_farm.Crop.Item;
-            plot.Plant(m_farm.Crop, false);
+            string wheat = m_farm.UnlockedCrops[0].Item;
+            plot.Plant(m_farm.UnlockedCrops[0], false);
             int before = m_state.Count(wheat);
             plot.Harvest(m_state, new SequenceRandom(0.99d));
-            Assert.That(m_state.Count(wheat), Is.EqualTo(before + m_farm.Crop.Yield));
+            Assert.That(m_state.Count(wheat), Is.EqualTo(before + m_farm.UnlockedCrops[0].Yield));
 
             Grant(m_state, "basket");
             double chance = Relic("basket").Values[0];
-            plot.Plant(m_farm.Crop, false);
+            plot.Plant(m_farm.UnlockedCrops[0], false);
             before = m_state.Count(wheat);
             plot.Harvest(m_state, new SequenceRandom(0.99d, chance * 0.5d));
-            Assert.That(m_state.Count(wheat), Is.EqualTo(before + m_farm.Crop.Yield + 1));
+            Assert.That(m_state.Count(wheat), Is.EqualTo(before + m_farm.UnlockedCrops[0].Yield + 1));
 
-            plot.Plant(m_farm.Crop, false);
+            plot.Plant(m_farm.UnlockedCrops[0], false);
             before = m_state.Count(wheat);
             plot.Harvest(m_state, new SequenceRandom(0.99d, (chance + 1d) * 0.5d));
-            Assert.That(m_state.Count(wheat), Is.EqualTo(before + m_farm.Crop.Yield));
+            Assert.That(m_state.Count(wheat), Is.EqualTo(before + m_farm.UnlockedCrops[0].Yield));
         }
 
         // 풍경: 손님 간격이 ÷ (1 + 값)

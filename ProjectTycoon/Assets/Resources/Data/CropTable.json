@@ -1,14 +1,16 @@
 {
   "table": "CropTable",
-  "version": 3,
+  "version": 4,
   "notes": [
-    "설계 25 밀 농사: 밭에 심는 작물. 심기는 첫 행을 심는다(작물이 늘면 시트로 고른다).",
+    "설계 25 밀 농사: 밭에 심는 작물. 행 순서 = 해금 순서(첫 행은 처음부터 열려 있어 unlockCost를 쓰지 않는다).",
     "item: 거두면 창고에 드는 재료(ItemTable id). growSeconds: 심고 익을 때까지(초). yield: 한 번 거두면 나오는 개수. 값은 시작값.",
     "sprite: 자라는 그림(Resources/ 기준, 확장자 없음) 뒤에 _단계_반쪽. 단계는 0 ~ stages − 1(자라는 동안 0 ~ stages − 2를 고르게 넘기고 익으면 마지막), 반쪽은 0 · 1(밭 칸의 줄마다 번갈아 얹는다). stages는 2 이상.",
     "version 2 (2026-09-30, 설계 27 그림): 그림 이름이 _단계에서 _단계_반쪽으로. 한 줄 그림(120칸 폭)을 밭 칸의 줄 셋에 얹는다(Farm/Source~/make_farm_art.py).",
-    "version 3 (2026-09-30, 무럭무럭 연출 C): 밀 단계 3 → 5(씨앗 둔덕 · 새싹 · 줄기 · 익어 가는 · 익음). 단계 1부터는 바람 흔들림 판 _단계_반쪽_l · _r(위 절반을 한 칸 기운 그림)도 둔다."
+    "version 3 (2026-09-30, 무럭무럭 연출 C): 밀 단계 3 → 5(씨앗 둔덕 · 새싹 · 줄기 · 익어 가는 · 익음). 단계 1부터는 바람 흔들림 판 _단계_반쪽_l · _r(위 절반을 한 칸 기운 그림)도 둔다.",
+    "version 4 (2026-10-01, 설계 35 작물 · 밭 시트): unlockCost = 밭 시트의 다음 작물 해금 칩 값(코인). 딸기 행(케이크 레시피, 그림은 아트방 시안 A 「잎 덤불 → 꽃 · 풋딸기 → 빨간 딸기」). readyMark = 익은 밭 위 다 익음 표시(금빛 원판, Resources/ 기준, 가운데 피벗이라 Sprites/Farm/Ready/에 둔다, 작물마다 다르다 — 2026-10-01 사용자). 딸기 원판은 아트방 시안 전까지 밀 원판을 가리킨다."
   ],
   "rows": [
-    { "id": "wheat", "item": "wheat", "growSeconds": 20, "yield": 3, "sprite": "Sprites/Farm/wheat", "stages": 5 }
+    { "id": "wheat", "item": "wheat", "growSeconds": 20, "yield": 3, "sprite": "Sprites/Farm/wheat", "stages": 5, "unlockCost": 0, "readyMark": "Sprites/Farm/Ready/wheat" },
+    { "id": "strawberry", "item": "strawberry", "growSeconds": 60, "yield": 2, "sprite": "Sprites/Farm/strawberry", "stages": 5, "unlockCost": 1000, "readyMark": "Sprites/Farm/Ready/wheat" }
   ]
 }

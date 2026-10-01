@@ -12,7 +12,7 @@ namespace ZooTycoon.Core
         {
             ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter, ActionTable.k_Upgrade,
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
-            ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
+            ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_OpenPlant, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
             ActionTable.k_Talk,
         };
 
@@ -32,6 +32,7 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Dig: return new Dig(table);
                 case ActionTable.k_Wake: return new Wake(table);
                 case ActionTable.k_Clean: return new Clean(table);
+                case ActionTable.k_OpenPlant: return new OpenPlant(table);
                 case ActionTable.k_Plant: return new Plant(table);
                 case ActionTable.k_Harvest: return new Harvest(table);
                 case ActionTable.k_Till: return new Till(table);
@@ -41,7 +42,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 시트 열기(open 돋보기 · open_dig 삽). 아무 사물이나 받고, TryInteract가 false를 돌려 화면이 시트를 연다
+        // 시트 열기(open 돋보기 · open_dig 삽). 아무 사물이나 받고, TryInteract가 false를 돌려 화면이 시트를 연다. 밭 시트는 OpenPlant(ActionFactory.Farm.cs)
         private sealed class Open : InteractAction
         {
             public Open(ActionTable table) : base(table)

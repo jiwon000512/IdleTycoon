@@ -28,7 +28,8 @@ namespace ZooTycoon.Core
         public const string k_Wake = "wake";
         // 설계 24: 똥 치우기
         public const string k_Clean = "clean";
-        // 설계 25: 빈 밭에 심기(버튼) · 익은 밭 거두기(auto)
+        // 설계 25 → 설계 35: 빈 밭의 버튼이 밭 시트를 열고(open_plant), 시트의 작물 칩이 심는다(plant) · 익은 밭 거두기(auto)
+        public const string k_OpenPlant = "open_plant";
         public const string k_Plant = "plant";
         public const string k_Harvest = "harvest";
         // 설계 27: 판 흙 칸 갈기(버튼)
