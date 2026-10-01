@@ -46,7 +46,9 @@ def grid(edges, around, span=0.15):
     return top[1], top[2]
 
 
-def merge_colors(a, mask, limit):
+def merge_colors(a, mask, limit, mean=False):
+    # mean: 합쳤을 때 늘어나는 오차(거리 × 두 색 칸 수의 조화 평균, Ward)가 가장 작은 짝을 가중 평균한 색으로 합친다.
+    #   기본(가장 가까운 짝, 적은 색을 많은 색으로)은 나무결처럼 톤이 여럿인 넓은 면에서 되풀이될수록 한쪽으로 쏠리고, 색이 많은 그림(수레)에서 벨벳 같은 면이 사라진다
     while True:
         cols, counts = np.unique(a[mask][:, :3], axis=0, return_counts=True)
         if len(cols) <= limit:
@@ -54,13 +56,22 @@ def merge_colors(a, mask, limit):
         lab = np.asarray(Image.fromarray(cols.reshape(1, -1, 3).astype(np.uint8), 'RGB').convert('LAB')).reshape(-1, 3).astype(float)
         lab[:, 1:] = (lab[:, 1:] - 128) * 2.0
         d = ((lab[:, None, :] - lab[None, :, :]) ** 2).sum(2)
+        if mean:
+            d = d * (counts[:, None] * counts[None, :]) / (counts[:, None] + counts[None, :])
         np.fill_diagonal(d, 1e18)
         i, j = np.unravel_index(d.argmin(), d.shape)
+        if mean:
+            c = np.round((cols[i] * counts[i] + cols[j] * counts[j]) / (counts[i] + counts[j]))
+            for k in (i, j):
+                a[mask & (a[..., :3] == cols[k]).all(2), :3] = c
+            continue
         src, dst = (i, j) if counts[i] < counts[j] else (j, i)
         a[mask & (a[..., :3] == cols[src]).all(2), :3] = cols[dst]
 
 
-def snap(path, max_colors=12, cell=None, fixed=None, square=False):
+def snap(path, max_colors=12, cell=None, fixed=None, square=False, min_hole=1, mean_merge=False):
+    # min_hole: 안쪽에 갇힌 순백 덩이가 이 칸 수 이상이면 구멍(투명). 흰 하이라이트 한 획이 있는 그림(수레 덮개 등)은 크게 준다
+    #   (하이라이트가 뚫리면 옆의 밝은 천까지 번짐으로 벗겨져 흰 얼룩이 된다). mean_merge: merge_colors의 mean
     # square: 원본 픽셀이 정사각형인 그림(한 장에 큰 물체 하나). 세로 주기를 가로 주기 ±2% 안에서만 찾아, 가로 · 세로가 따로 잡혀 찌그러지는 것을 막는다
     a = np.asarray(Image.open(path).convert('RGB')).astype(float)
     h, w = a.shape[:2]
@@ -100,7 +111,23 @@ def snap(path, max_colors=12, cell=None, fixed=None, square=False):
                 stack.append((nj, ni))
     mask = ~bg
     # 안쪽에 갇힌 흰 바탕(손잡이 구멍 · 자루 사이 틈): 순백에 가까운 칸은 투명(시안의 하이라이트는 순백이 아니다)
-    mask &= ~(cells.min(2) > 240)
+    white = mask & (cells.min(2) > 240)
+    seen = np.zeros_like(white)
+    for j0, i0 in zip(*np.nonzero(white)):
+        if seen[j0, i0]:
+            continue
+        blob, stack = [], [(j0, i0)]
+        seen[j0, i0] = True
+        while stack:
+            j, i = stack.pop()
+            blob.append((j, i))
+            for nj, ni in ((j - 1, i), (j + 1, i), (j, i - 1), (j, i + 1)):
+                if 0 <= nj < ch and 0 <= ni < cw and white[nj, ni] and not seen[nj, ni]:
+                    seen[nj, ni] = True
+                    stack.append((nj, ni))
+        if len(blob) >= min_hole:
+            for j, i in blob:
+                mask[j, i] = False
     for _ in range(2):
         pad = np.pad(mask, 1)
         edge = ~(pad[:-2, 1:-1] & pad[2:, 1:-1] & pad[1:-1, :-2] & pad[1:-1, 2:])
@@ -115,7 +142,7 @@ def snap(path, max_colors=12, cell=None, fixed=None, square=False):
     out = np.zeros((ch, cw, 4), np.int64)
     out[..., :3] = rgb
     out[..., 3] = np.where(mask, 255, 0)
-    out = merge_colors(out, mask, max_colors)
+    out = merge_colors(out, mask, max_colors, mean_merge)
     cols = np.unique(out[mask][:, :3], axis=0)
     out[mask & (out[..., :3] == cols[cols.sum(1).argmin()]).all(2), :3] = LINE
     pad = np.pad(mask, 1)

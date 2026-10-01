@@ -8,7 +8,7 @@
 #   밭 칸에 줄 셋을 겹쳐 얹고(BakeryBaker k_CropOffsets), 줄마다 반쪽 0 · 1을 번갈아 써 같은 그림이 반복되지 않게 한다.
 # 표시: 진행 게이지 「새싹 원판」 20×20칸 16장(farm_timer_00~15, 테두리가 초록으로 돌고 가운데 새싹이 자람)과 금빛 테두리 · 이삭의 다 익음 표시(farm_ready_mark). 작물 위에 뜨므로 그림은 모든 것 위(BakeryBaker k_PlotMarkOrder).
 #   2026-09-30 「무럭무럭」: 띠 셋에서 5단계(씨앗 둔덕 · 새싹 · 줄기 · 익어 가는 · 익음)를 만들고, 단계 · 반쪽마다 위 절반을 한 칸 기운 흔들림 판(_l · _r).
-# 출력: ../plot.png · ../farm_timer_XX.png · ../farm_ready_mark.png · ../farm_sparkle_0~1.png · Resources/Sprites/Farm/wheat_<단계>_<반쪽>[_l|_r].png. 실행: Windows Python(Pillow · numpy) make_farm_art.py
+# 출력: ../plot.png · ../plot_manure.png(거름 넣은 밭 겹 그림) · ../farm_timer_XX.png · ../farm_ready_mark.png · ../farm_sparkle_0~1.png · Resources/Sprites/Farm/wheat_<단계>_<반쪽>[_l|_r].png. 실행: Windows Python(Pillow · numpy) make_farm_art.py
 import colorsys
 import math
 import os
@@ -44,12 +44,12 @@ SOIL = (96, 60, 36)
 SOIL_LIGHT = (144, 96, 60)
 SOIL_DARK = (72, 36, 24)
 SOIL_PALE = (192, 132, 96)
-MANURE = (48, 28, 24)
 # 씨앗 둔덕의 싹 · 익어 가는 이삭에 섞는 초록(밀 줄기 단계 팔레트 쪽)과 섞는 비율
 SEED_GREEN = (144, 156, 96)
 TURN_GREEN = (150, 162, 92)
 TURN_MIX = 0.5
-MANURE_LIGHT = (104, 72, 44)
+# 거름 넣은 밭(설계 28, 2026-10-01 사용자 선택 A 「거름 섞은 흙」): 흙판 색 → 거름 아이콘 쪽 짙고 덜 붉은 색
+MANURE_SOIL = {SOIL: (68, 46, 36), SOIL_LIGHT: (113, 78, 53), SOIL_DARK: (48, 30, 26), SOIL_PALE: (150, 112, 80)}
 
 # 표시 색: 초록은 밀 줄기 단계 팔레트, 이삭은 익음 단계 팔레트
 GREEN = (120, 132, 36)
@@ -194,6 +194,7 @@ def soil():
     out[y0:y1, x0:x1, :3] = body
     out[y0:y1, x0:x1, 3] = 255
     save(out, os.path.join(FARM, 'plot.png'))
+    return out
 
 
 def white_bg(a):
@@ -378,27 +379,26 @@ def marks():
         save(spark, os.path.join(FARM, 'farm_sparkle_%d.png' % i))
 
 
-def manure():
-    # 설계 28 거름 준 밭의 알갱이(더미, 시안 전): 흙판 속에 짙은 거름 덩이를 흩뿌린 겹 그림(흙판과 같은 크기 · 같은 밑변). 이랑 선과 테두리는 비운다
-    out = np.zeros((CELL_H, CELL_W, 4), np.uint8)
-    rng = np.random.RandomState(28)
-    top, bottom = INSET + RIM + 1, CELL_H - INSET - RIM - 2
-    left, right = INSET + RIM + 1, CELL_W - INSET - RIM - 3
-    bed = (CELL_H - 2 * (INSET + RIM)) // BEDS
-    lines = [CELL_H - INSET - RIM - 1 - bed * b for b in range(1, BEDS)]
-    # 멀리서도 거름 밭이 보이게 덩이는 3×2칸, 촘촘히(처음 2×2 · 70개는 캡처에서 안 보였다)
-    for _ in range(150):
-        y, x = rng.randint(top, bottom), rng.randint(left, right - 1)
-        if any(abs(y - line) <= 1 or abs(y + 1 - line) <= 1 for line in lines):
+def manure(plot):
+    # 거름 넣은 밭의 겹 그림(흙판과 같은 크기 · 같은 밑변): 이랑 속 흙을 흙판 무늬 그대로 거름색으로(MANURE_SOIL). 이랑 선과 테두리는 비운다
+    #   2026-10-01 시안 셋(A 거름 섞은 흙 · B 네모 거름 알갱이 · C 이랑 앞 거름 띠)에서 A. 밀이 다 자라도 포기 사이 흙빛으로 보인다
+    out = np.zeros_like(plot)
+    top, bottom = INSET + RIM, CELL_H - INSET - RIM - 1
+    left, right = INSET + RIM, CELL_W - INSET - RIM - 1
+    inner_bottom = CELL_H - 2 * INSET - 1 - RIM
+    bed = (CELL_H - 2 * INSET - 2 * RIM) // BEDS
+    lines = {INSET + inner_bottom - bed * b for b in range(1, BEDS)}
+    for y in range(top, bottom + 1):
+        if y in lines:
             continue
-        out[y, x:x + 3] = MANURE + (255,)
-        out[y + 1, x:x + 3] = MANURE + (255,)
-        out[y, x + 1] = MANURE_LIGHT + (255,)
+        for x in range(left, right + 1):
+            c = MANURE_SOIL.get(tuple(int(v) for v in plot[y, x, :3]))
+            if c:
+                out[y, x] = c + (255,)
     save(out, os.path.join(FARM, 'plot_manure.png'))
 
 
 if __name__ == '__main__':
-    soil()
-    manure()
+    manure(soil())
     wheat()
     marks()

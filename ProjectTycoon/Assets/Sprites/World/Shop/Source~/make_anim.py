@@ -25,9 +25,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SHOP = os.path.join(HERE, '..')
 SHEETS = os.path.join(HERE, '..', '..', '..', '..', 'Resources', 'Sprites', 'Visitors')
 CELL = 52   # 시트 칸 폭(칸) = 104px
+# 꼬리가 옆으로 나와 104px에 안 드는 종만 넓게(VisitorSheetImporter도 같은 폴더를 같은 폭으로 자른다). 너구리 앞모습은 발 가운데 피벗으로 54칸 + 꼬리 살랑 1칸
+CELLS = {'Tanuki': 56}
 IDLE_DUR = [500, 160, 520, 160]
 WALK_DUR = [80, 65, 65, 65, 80, 65, 65, 65]
-FOLDERS = {'rabbit': 'Rabbit', 'penguin': 'Penguin', 'fox': 'Fox', 'hedgehog': 'Hedgehog'}
+FOLDERS = {'rabbit': 'Rabbit', 'penguin': 'Penguin', 'fox': 'Fox', 'hedgehog': 'Hedgehog', 'tanuki': 'Tanuki'}
 # 점원 회색 웜뱃(2026-09-26 gray_d): 빵집 웜뱃 털 5색 → 남부 털코웜뱃 회갈색. 외곽선·눈·코·귀 안은 그대로
 GRAY = ('WombatGray', {
     (192, 168, 144): (178, 170, 156),   # 밝은 털(앞·옆)
@@ -139,6 +141,12 @@ FIDGETS = {
         'back': wag('tail', n=3) + [(dict(ear=(-1, 0)), 2), REST, (dict(ear=(0, -1)), 2), REST],
         'side': wag('tail') + look_up(),
     },
+    # 설계 31 유물 행상: 꼬리 살랑 + 오른 앞발 흔들기(손님에게 손짓) · 뒤는 귀 쫑긋 + 발 구르기
+    'tanuki': {
+        'front': wag('tail', right=1, left=1, n=1) + flick({'paw_r': 1}, 3) + look_around(),   # 112px 칸이라 36프레임까지
+        'back': flick({'ear_l': -1, 'ear_r': 1}) + tap(0) + tap(1),
+        'side': wag('tail', right=1, left=1) + look_up(),
+    },
     'hedgehog': {
         'front': shake() + look_around(),
         'back': shake() + tap(0) + tap(1),
@@ -191,22 +199,22 @@ def recolor(a, table):
     return b
 
 
-def sheet(frames, path):
-    """칸 폭 104px 가로 1행. 위 빈 줄은 잘라 시트 높이 = 가장 높은 프레임. 가로는 캔버스 가운데가 칸 가운데(BakeryBaker.CellBottom과 같은 규칙)"""
+def sheet(frames, path, cell=CELL):
+    """칸 폭 cell칸(기본 104px) 가로 1행. 위 빈 줄은 잘라 시트 높이 = 가장 높은 프레임. 가로는 캔버스 가운데가 칸 가운데(BakeryBaker.CellBottom과 같은 규칙)"""
     top = min(np.nonzero(opaque(f).any(1))[0].min() for f in frames)
     frames = [f[top:] for f in frames]
     w = frames[0].shape[1]
-    if w > CELL:
-        cut = (w - CELL + 1) // 2
-        assert not any(opaque(f)[:, :cut].any() or opaque(f)[:, w - cut:].any() for f in frames), f'{path}: 칸 폭 104px를 넘는다'
+    if w > cell:
+        cut = (w - cell + 1) // 2
+        assert not any(opaque(f)[:, :cut].any() or opaque(f)[:, w - cut:].any() for f in frames), f'{path}: 칸 폭 {cell * 2}px를 넘는다'
         frames = [f[:, cut:w - cut] for f in frames]
         w = frames[0].shape[1]
     h = max(f.shape[0] for f in frames)
-    assert CELL * len(frames) * 2 <= SHEET_MAX, f'{path}: 시트 폭 {CELL * len(frames) * 2}px > {SHEET_MAX}px(Unity가 줄여 칸이 잘린다)'
-    out = np.zeros((h, CELL * len(frames), 4), np.uint8)
-    x0 = CELL // 2 - w // 2
+    assert cell * len(frames) * 2 <= SHEET_MAX, f'{path}: 시트 폭 {cell * len(frames) * 2}px > {SHEET_MAX}px(Unity가 줄여 칸이 잘린다)'
+    out = np.zeros((h, cell * len(frames), 4), np.uint8)
+    x0 = cell // 2 - w // 2
     for i, f in enumerate(frames):
-        out[h - f.shape[0]:, i * CELL + x0:i * CELL + x0 + w] = f
+        out[h - f.shape[0]:, i * cell + x0:i * cell + x0 + w] = f
     save(out, path)
 
 
@@ -214,13 +222,14 @@ def sheets(folder, views):
     """views: 방향 → (숨쉬기, 걷기, 깜빡임, 딴짓)"""
     d = os.path.join(SHEETS, folder)
     os.makedirs(d, exist_ok=True)
+    cell = CELLS.get(folder, CELL)
     for view, tag in (('front', ''), ('back', 'Back'), ('side', 'Side')):
         idle, walk, blink, fidget = views[view]
-        sheet(idle, os.path.join(d, f'{folder}_{tag}Idle.png'))
-        sheet(walk, os.path.join(d, f'{folder}_{tag}Move.png'))
-        sheet(fidget, os.path.join(d, f'{folder}_{tag}Fidget.png'))
+        sheet(idle, os.path.join(d, f'{folder}_{tag}Idle.png'), cell)
+        sheet(walk, os.path.join(d, f'{folder}_{tag}Move.png'), cell)
+        sheet(fidget, os.path.join(d, f'{folder}_{tag}Fidget.png'), cell)
         if blink:
-            sheet(blink, os.path.join(d, f'{folder}_{tag}Blink.png'))
+            sheet(blink, os.path.join(d, f'{folder}_{tag}Blink.png'), cell)
 
 
 def main():
@@ -250,6 +259,10 @@ def main():
     for animal, views in VISITORS.items():
         frames = {v: animate(os.path.join(HERE, f'{animal}_{v}.png'), spec, v, animal, issues) for v, spec in views.items()}
         sheets(FOLDERS[animal], frames)
+        # 정지 그림(VisitorTable sprite)은 없는 종만 앞모습 숨쉬기 첫 프레임으로(옛 종의 그림은 그대로)
+        still = os.path.join(SHEETS, FOLDERS[animal], FOLDERS[animal] + '.png')
+        if not os.path.exists(still):
+            sheet([frames['front'][0][0]], still, CELLS.get(FOLDERS[animal], CELL))
         made[animal] = frames
     print('checks:', issues or 'ok')
     if len(sys.argv) > 1:

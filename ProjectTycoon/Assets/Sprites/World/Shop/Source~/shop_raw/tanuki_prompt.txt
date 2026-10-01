@@ -1,0 +1,48 @@
+# 행상 동물 종 시안(2026-10-01, 참조 -i: 기존 동물 다섯 줄 세운 그림). A 오소리 · B 너구리 · C 두더지 → 사용자 선택 B
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference file).
+Image 1 shows the existing characters of this cozy pixel-art idle game (a wombat, a rabbit, a penguin, a fox, a hedgehog), all drawn with the same camera, style and size. Draw ONE NEW character in exactly the same style, camera and size: a traveling MERCHANT who visits the wombat's underground plaza with a cart of old relics. Do not copy any of the species in image 1.
+
+POSE: standing still, upright on its two hind legs, facing the viewer (front view), both tiny front paws held together in front of the chest, exactly like the characters in image 1.
+
+CAMERA (most important): the same camera as image 1: looking DOWN at the character from about 30 degrees above, not at eye level. The big round head and the small body are merged into ONE chubby round bean with no neck, about as wide as it is tall (not counting ears); the face sits low in the blob; only the tiny paws, a round belly and tiny feet peek out at the bottom. Never four-legged.
+
+SIZE: about the same size as the fox in image 1: about 40 big pixels tall and about 40 big pixels wide.
+
+STYLE: chunky pixel art game sprite in exactly the same style as image 1: large blocky square pixels on a roughly 40x40 pixel grid, no anti-aliasing, no blur; a dark brown outline (#342020) one big pixel wide around the whole silhouette; soft low-saturation pastel palette, 6 to 9 flat colors, no gradients, no dithering; one flat darker shade on the lower belly and the far side; one small white highlight on the top of the head; plain solid white background, exactly one character, centered, no ground, no ground shadow, no text, no border, no watermark.
+
+CHARACTER:
+[a] a chubby round BADGER: soft grey fur, a white face with two dark grey stripes running from the nose over the eyes up to the ears, small round dark ears with white rims, black dot eyes, a small dark nose, pink cheeks, dark grey paws and feet. Merchant touch: a small teal neckerchief knotted at the neck, and a thin leather strap across the chest to a little coin pouch at the hip.
+[b] a chubby round RACCOON DOG (tanuki): warm grey-brown fur, a dark brown eye mask around both eyes, a cream muzzle and cream belly, a small black nose, pink cheeks, small round ears with dark tips, dark brown paws and feet, a short fluffy striped tail peeking out at one side. Merchant touch: a small mustard-yellow neckerchief knotted at the neck, and a thin leather strap across the chest to a little coin pouch at the hip.
+[c] a chubby round MOLE: soft dark slate-grey velvet fur, a lighter grey belly, a pink pointed nose tip, tiny black dot eyes, pink cheeks, no visible ears, big pink spade-like front paws held in front of the chest, small pink feet. Merchant touch: a small brick-red neckerchief knotted at the neck, and a pair of round brass goggles pushed up on the top of the head.
+
+# 너구리 턴어라운드(참조 -i: tanuki_ref_fox_turnaround.png 여우 완성 시트 한 칸 9px, merchant_species_b.png). 같은 프롬프트 3번 → tanuki_sheet_raw_a~c. 사용자 선택 B
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference files).
+Image 1 is a finished character turnaround sheet from this cozy pixel-art game: a fox seen from the FRONT (left), the RIGHT SIDE (middle) and the BACK (right), drawn with the same camera, at the same scale, standing on the same baseline, on a wide white sheet.
+Image 2 is a NEW character of the same game, a tanuki (raccoon dog) traveling merchant, front view only, but drawn much bigger than the game needs.
+
+Draw a new turnaround sheet in exactly the layout, pixel size and scale of image 1: the TANUKI from image 2 seen from the FRONT (left), the RIGHT SIDE (middle) and the BACK (right), on the same baseline as the fox.
+
+SIZE (most important): the tanuki must be the same size as the fox in image 1, made of the same big square pixels: its round body is as tall and as wide as the fox's body (not counting the fox's big tail). Do not make it bigger than the fox.
+
+CHARACTER (keep the design of image 2 exactly): a chubby round tanuki with warm grey-brown fur, a dark brown eye mask around both eyes, a cream muzzle and cream belly, a small black nose, pink cheeks, small round ears with dark tips and pink insides, dark brown paws and feet, a mustard-yellow neckerchief knotted at the neck, a thin leather strap across the chest to a little brown coin pouch at the hip, and a SHORT fluffy tail with dark brown stripes that sticks out only a little.
+FRONT: like image 2: facing the viewer, both tiny front paws held together in front of the chest, the coin pouch at its hip, the short striped tail just peeking out at one side.
+RIGHT SIDE: strict profile facing RIGHT: the short cream muzzle at the right edge with a tiny black nose, one black dot eye inside the dark mask, a pink cheek, both round ears on top (the far ear peeking out just behind the near ear), the tiny near front paw held up against the chest, the neckerchief knot and the coin pouch visible, the short striped tail curling up behind its back on the left, the dark feet at the bottom pointing right.
+BACK: no face, the back of the head and body in grey-brown fur, both round ears, the neckerchief knot tied at the back of the neck, the strap crossing the back, the short striped tail at the bottom middle.
+
+CAMERA: the SAME camera as image 1 for all three views: looking DOWN from about 30 degrees above, not at eye level. The big round head and the small body are merged into ONE chubby round bean with no neck; the face sits low in the blob; the eye in the side view is at the same height as the eyes in the front view. Upright on two hind legs, never four-legged.
+
+STYLE: chunky pixel art game sprite exactly like image 1: large blocky square pixels, no anti-aliasing, no blur; a dark brown outline (#342020) one big pixel wide around each silhouette; soft low-saturation pastel palette, flat colors, no gradients, no dithering; one flat darker shade on the lower belly and far limbs; one small white highlight on the top of the head; plain solid white background, exactly three tanuki views and nothing else, no ground, no ground shadow, no text, no border.
+
+# 옆모습 다시(사용자 「옆모습 좀 더 통통하게」, 참조 -i: tanuki_side_sheet_in_b.png 앞 | 빈칸 | 뒤 한 칸 10px, 여우 시트) → tanuki_side_raw_b.png 가운데
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference files).
+Image 1 is a character turnaround sheet of this chunky pixel-art tanuki merchant: its FRONT view on the left and its BACK view on the right, drawn with the same camera, at the same scale, on the same baseline. The middle slot is empty.
+Image 2 is a finished turnaround sheet of a DIFFERENT character (a fox) in the same game: front, right side, back. Use image 2 only to see how the side view keeps the same camera, size and pixel size as the front and back. Do not copy the fox.
+Redraw image 1 as a wide landscape image with its front and back views unchanged (same pixels, same place), and fill the empty middle slot with the RIGHT SIDE view of the same tanuki, at the same scale and on the same baseline.
+
+THE SIDE VIEW MUST BE CHUBBY (most important): a fat round bean seen from the side. Its body is as wide from belly to back as the front view's body is wide from left to right, with a round belly bulging forward and a round back. It is NOT a slim upright figure. Same total height as the front view.
+
+CHARACTER in the side view: strict profile facing RIGHT: a short cream muzzle at the right edge with a tiny black nose, one black dot eye inside the dark brown eye mask, a pink cheek, both round ears on top (the far ear peeking out just behind the near ear), the tiny near front paw held up against the cream chest, the mustard-yellow neckerchief with its knot, the thin leather strap and the little brown coin pouch at the hip, the dark feet at the bottom pointing right. The short striped tail hugs the round back on the left and sticks out only a little (about 4 big pixels).
+
+CAMERA: the SAME camera as the front and back views: looking DOWN from about 30 degrees above, not at eye level. The head and body are ONE chubby blob with no neck; the eye is at the same height as the eyes of the front view. Upright on two hind legs, never four-legged. Only the direction changes, as if the tanuki turned on a turntable.
+
+STYLE: exactly the same as image 1: the same big square pixels, no anti-aliasing, no blur; the same dark brown outline one big pixel wide; the same flat colors as image 1, no gradients, no dithering; plain solid white background, no ground, no ground shadow, no text, no border.

@@ -1,31 +1,17 @@
-# 설계 24 웜뱃 똥 더미: 앞쪽 위에서 내려다본 네모 똥 한 덩이(윗면 3줄 · 앞면 4줄, 10×9칸) + 위로 오르는 냄새 김 2프레임.
-# 한 칸 2px · PPU 80, 피벗 아래 가운데(BakeryBaker). 출력 ../poop_0.png · ../poop_1.png(김만 다르다). 실제 그림은 시안 셋에서 고른다.
-# 실행: Windows Python(Pillow) make_poop.py
+# 설계 24 웜뱃 똥: 앞쪽 위에서 내려다본 네모 똥 한 덩이 + 위로 오르는 냄새 김 2프레임. 한 칸 2px · PPU 80, 피벗 아래 가운데(BakeryBaker).
+# 2026-10-01 사용자 선택 A(한 덩이): Codex 시안 shop_raw/poop_a~c.png(프롬프트 shop_raw/poop_prompt.txt, 거름 아이콘과 같은 결)을
+#   원본 격자 그대로 옮긴다(World/Source~/snap_codex.py, 정사각형 격자). 15×14칸. 김은 칸 무늬로 그려 물체 위 가운데에 얹는다.
+# 출력 ../poop_0.png · ../poop_1.png(김만 다르다). 실행: Windows Python(Pillow · numpy) make_poop.py
 import os
+import sys
+import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..')
+RAW = os.path.join(HERE, 'shop_raw', 'poop_a.png')
 PX = 2
-PAL = {
-    'o': (52, 32, 32, 255),     # 외곽선(art.md)
-    'h': (178, 142, 104, 255),  # 윗면 하이라이트 한 획
-    't': (140, 104, 74, 255),   # 윗면
-    'f': (108, 76, 52, 255),    # 앞면
-    's': (88, 60, 42, 255),     # 앞면 오른쪽 그늘
-    'g': (150, 164, 112, 255),  # 냄새 김
-}
-CUBE = [
-    "..oooooooo..",
-    ".ohhtttttto.",
-    ".ohttttttto.",
-    ".otttttttto.",
-    ".offffffsso.",
-    ".offffffsso.",
-    ".offffffsso.",
-    ".offffffsso.",
-    "..oooooooo..",
-]
+STINK_COLOR = (150, 164, 112)
 STINK = [
     [
         "...g....g...",
@@ -42,22 +28,27 @@ STINK = [
         "............",
     ],
 ]
+sys.path.insert(0, os.path.join(HERE, '..', '..', 'Source~'))
+import snap_codex  # noqa: E402
 
 
-def draw(rows):
-    im = Image.new('RGBA', (len(rows[0]) * PX, len(rows) * PX), (0, 0, 0, 0))
-    px = im.load()
-    for y, line in enumerate(rows):
-        for x, ch in enumerate(line):
-            if ch in PAL:
-                for dy in range(PX):
-                    for dx in range(PX):
-                        px[x * PX + dx, y * PX + dy] = PAL[ch]
-    return im
+def with_stink(cells, stink):
+    sh, sw = len(stink), len(stink[0])
+    h, w = cells.shape[:2]
+    width = max(w, sw)
+    out = np.zeros((sh + h, width, 4), np.uint8)
+    out[sh:, (width - w) // 2:(width - w) // 2 + w] = cells
+    left = (width - sw) // 2
+    for y, row in enumerate(stink):
+        for x, ch in enumerate(row):
+            if ch == 'g':
+                out[y, left + x] = STINK_COLOR + (255,)
+    return out
 
 
 if __name__ == '__main__':
+    cells, _ = snap_codex.snap(RAW, 12, square=True)
     for i, stink in enumerate(STINK):
-        im = draw(stink + CUBE)
-        im.save(os.path.join(OUT, 'poop_%d.png' % i))
-        print('poop_%d' % i, im.size)
+        a = with_stink(cells, stink)
+        Image.fromarray(np.repeat(np.repeat(a, PX, 0), PX, 1)).save(os.path.join(OUT, 'poop_%d.png' % i))
+        print('poop_%d' % i, 'cells', a.shape[1], 'x', a.shape[0])

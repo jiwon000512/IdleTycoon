@@ -1,0 +1,16 @@
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference files).
+Pixel-art WOMBAT DROPPING for a cozy underground burrow bakery idle game (wombats really poop small SQUARE cubes). It lies on the bakery floor; customers walk around it, and the player sweeps it up and it becomes compost. It must read as poop at a glance (NOT a wooden box, crate, brownie, chocolate or bread) while staying cute, never gross.
+On a strict pixel grid: every art pixel is a crisp square, about 16 screen pixels per art pixel.
+Reference image 1 is the CURRENT placeholder dropping drawn on that same grid (one art pixel = 16 screen pixels, the cube is 10 art pixels wide). It reads too much like a wooden box; make the new one read as poop.
+Reference image 2 is the COMPOST item icon (three square compost cubes with a sprout) that the dropping turns into: match its cube shape, dark earthy browns and crumbly texture, but WITHOUT the sprout.
+Style: dark brown 1-pixel outline (#342020) all around, flat colours (5 to 7), soft desaturated earthy palette, one darker tone on the shadow side, one small light highlight stroke on the top-left of each top face, no anti-aliasing, no gradients, no dithering.
+View: orthographic three-quarter top-down, parallel projection, the top face visible as a flat band, vertical edges stay vertical, never seen from below.
+Pure white background and nothing else: no floor, no cast shadow, no stink lines, no flies, no text, no border.
+
+poop_a: The object: ONE single square cube dropping, about 11 art pixels wide and 11 art pixels tall, slightly soft rounded corners, a few darker crumbly specks on the front face.
+poop_b: The object: a small pile of THREE little square cube droppings, two on the floor side by side and one resting on top between them, the whole pile 17 art pixels wide and 15 art pixels tall.
+poop_c: The object: TWO little square cube droppings in a short row, the right one slightly in front of the left one and overlapping it a little, the pair 18 art pixels wide and 11 art pixels tall.
+
+참조 -i: 지금 더미 똥(poop_0 네모만, 한 칸 16px + 옅은 격자) · 거름 아이콘 원본(Farm/Source~/raw/manure_icon_c.png). 끝에 "Save the image as <이름>.png in the current working directory and reply with only the path." Codex CLI, model_reasoning_effort=low.
+b · c는 크게 그려 세 번 뽑았다(작게 시켜도 픽셀만 잘게 해서 24~29칸). 남긴 것: b 2회차(26×22칸), c 3회차(24×17칸).
+2026-10-01 사용자 선택: A(한 덩이, 15×14칸).
