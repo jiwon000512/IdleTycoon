@@ -704,9 +704,9 @@ namespace ZooTycoon.Data
                     errors.Add($"RelicTable '{relic.Id}': name · format이 StringTable에 없거나 icon이 비었다.");
                 }
 
-                if (!RelicTable.Effects.Contains(relic.Effect) || !RelicTable.Anchors.Contains(relic.Anchor) || relic.Weight < 0d)
+                if (!RelicTable.Effects.Contains(relic.Effect) || relic.Weight < 0d)
                 {
-                    errors.Add($"RelicTable '{relic.Id}': effect · anchor가 코드에 없거나(RelicTable.Effects · Anchors) weight가 0보다 작다.");
+                    errors.Add($"RelicTable '{relic.Id}': effect가 코드에 없거나(RelicTable.Effects) weight가 0보다 작다.");
                 }
 
                 bool shrinks = relic.Effect == RelicTable.k_Abacus || relic.Effect == RelicTable.k_Clock;

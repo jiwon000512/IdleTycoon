@@ -59,8 +59,6 @@ namespace ZooTycoon.World
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
         private float m_glow;
-        // 설계 31: 계단에 걸리는 유물(풍경)
-        private RelicProps m_relicProps;
 
         public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombat.transform;
@@ -94,10 +92,6 @@ namespace ZooTycoon.World
             m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);
             m_statue.localPosition = new Vector3(plaza.Statue.Position.X, plaza.Statue.Position.Y, 0f);
-            m_relicProps = new RelicProps(this, plaza.Wombat.Worker.Wallet.Relics,
-                anchor => anchor == RelicTable.k_AnchorPlazaStairs ? new[] { layout.StairsFloor } : new System.Numerics.Vector2[0],
-                p => transform.position + new Vector3(p.X, p.Y, 0f));
-            m_relicProps.Rebuild();
             Build();
 
             m_wombat.Bind(plaza, transform, frames);
@@ -106,8 +100,6 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged),
-                bus.Subscribe<Events.RelicsChanged>(Bus_RelicsChanged),
-                bus.Subscribe<Events.PlazaVisitorArrived>(_ => m_relicProps.Pop(BlessingTable.k_Visitors)),
             };
         }
 
@@ -287,12 +279,6 @@ namespace ZooTycoon.World
             }
 
             Sparkle(m_statue);
-        }
-
-        // 설계 31: 칸이 바뀌면 계단의 유물을 다시 건다
-        private void Bus_RelicsChanged(Events.RelicsChanged e)
-        {
-            m_relicProps.Rebuild();
         }
 
         private void Sparkle(Transform thing)

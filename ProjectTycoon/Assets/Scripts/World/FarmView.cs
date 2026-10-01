@@ -64,8 +64,6 @@ namespace ZooTycoon.World
         private FrameCache m_frames;
         private TableSet m_tables;
         private DigView m_dig;
-        // 설계 31: 농장 문에 걸리는 유물(물뿌리개 · 이삭 바구니)
-        private RelicProps m_relicProps;
         private Interactable m_shownTarget;
         private bool m_editing;
         private IDisposable[] m_subscriptions;
@@ -106,9 +104,6 @@ namespace ZooTycoon.World
             m_tables = tables;
             CellMetrics cells = farm.Layout.Cells;
             m_dig = new DigView(this, m_digTagPrefab, tables, farm.Grid, cell => ToWorld(cells.CellCenter(cell)), new Vector2(cells.CellWidth, cells.CellHeight), m_digSeconds);
-            m_relicProps = new RelicProps(this, farm.Wombat.Worker.Wallet.Relics,
-                anchor => anchor == RelicTable.k_AnchorFarmDoor ? new[] { farm.Layout.HoleFloor } : new System.Numerics.Vector2[0], ToWorld);
-            m_relicProps.Rebuild();
             Repaint();
             m_arch.localPosition = new Vector3(farm.Layout.HoleFloor.X, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f);
             m_entranceProps.localPosition = m_arch.localPosition;
@@ -123,7 +118,6 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.Tilled>(Bus_Tilled),
                 bus.Subscribe<Events.Harvested>(Bus_Harvested),
                 bus.Subscribe<Events.BonusFound>(Bus_BonusFound),
-                bus.Subscribe<Events.RelicsChanged>(_ => m_relicProps.Rebuild()),
             };
         }
 
@@ -378,14 +372,6 @@ namespace ZooTycoon.World
             if (e.Plot.Farm != m_farm)
             {
                 return;
-            }
-
-            // 설계 31: 물뿌리개 · 덤 작물이 나오면 이삭 바구니
-            m_relicProps.Pop(BlessingTable.k_Grow);
-
-            if (e.Count > e.Crop.Yield)
-            {
-                m_relicProps.Pop(RelicTable.k_Basket);
             }
 
             // 거두는 것은 밟은 웜뱃이므로 팝업은 웜뱃 머리 위에서 떠오른다(그림이 아니라 sim 자리: 그림은 한 프레임 늦다). 밭에서는 낟알이 튄다

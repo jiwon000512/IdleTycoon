@@ -20,15 +20,6 @@ namespace ZooTycoon.Core
             k_Abacus, k_Scoop, k_Basket, k_Clock,
         };
 
-        // 끼운 유물이 가게에 걸리는 자리(World가 곳마다 기준점을 안다): 오븐마다 · 계산대마다 · 빵집 구멍 · 광장 계단 · 농장 문
-        public const string k_AnchorOven = "oven";
-        public const string k_AnchorCounter = "counter";
-        public const string k_AnchorBakeryHole = "bakery_hole";
-        public const string k_AnchorPlazaStairs = "plaza_stairs";
-        public const string k_AnchorFarmDoor = "farm_door";
-
-        public static readonly string[] Anchors = { k_AnchorOven, k_AnchorCounter, k_AnchorBakeryHole, k_AnchorPlazaStairs, k_AnchorFarmDoor };
-
         // 이름 · 효과 글 형식(StringTable 키. 형식은 {0} 퍼센트 숫자(값 × 100), {1} 값 그대로)
         public string Name { get; set; }
         public string Format { get; set; }
@@ -36,9 +27,5 @@ namespace ZooTycoon.Core
         public string Effect { get; set; }
         public double[] Values { get; set; }
         public double Weight { get; set; }
-        // 걸리는 자리와 그 기준점에서 어긋남(유닛, y 위)
-        public string Anchor { get; set; }
-        public double Dx { get; set; }
-        public double Dy { get; set; }
     }
 }

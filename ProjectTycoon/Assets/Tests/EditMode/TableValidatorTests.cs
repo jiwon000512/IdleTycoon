@@ -30,7 +30,7 @@ namespace ZooTycoon.Tests
         [TestCase("CropTable", 4)]
         [TestCase("FarmConfigTable", 4)]
         [TestCase("BlessingTable", 1)]
-        [TestCase("RelicTable", 1)]
+        [TestCase("RelicTable", 2)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -286,7 +286,7 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(noRest), Is.Not.Empty);
         }
 
-        // 설계 31: 코드에 없는 효과 · 걸 자리, 별마다 세지지 않는 값, 없는 뽑기 재료, 칸 0, 행상이 간격보다 오래 머묾 · 손님 외형 · 좌판 뒤 자리 없음
+        // 설계 31: 코드에 없는 효과, 별마다 세지지 않는 값, 없는 뽑기 재료, 칸 0, 행상이 간격보다 오래 머묾 · 손님 외형 · 좌판 뒤 자리 없음
         [Test]
         public void Validate_WhenRelicDataInvalid_ReportsError()
         {
@@ -300,8 +300,6 @@ namespace ZooTycoon.Tests
             noItem.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).RelicItem = "no_such_item";
             TableSet noSlots = TestTables.Load();
             noSlots.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).RelicSlots = 0;
-            TableSet noAnchor = TestTables.Load();
-            noAnchor.Get<RelicTable>("bellows").Anchor = "roof";
             TableSet longStay = TestTables.Load();
             longStay.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).MerchantStay = 900d;
             TableSet customerMerchant = TestTables.Load();
@@ -313,7 +311,6 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(clockUp), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noItem), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noSlots), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(noAnchor), Is.Not.Empty);
             Assert.That(TableValidator.Validate(longStay), Is.Not.Empty);
             Assert.That(TableValidator.Validate(customerMerchant), Is.Not.Empty);
         }
