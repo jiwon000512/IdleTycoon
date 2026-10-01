@@ -35,6 +35,9 @@ namespace ZooTycoon.Editor
         // 농장 입구 고정 장식(2026-09-30 사용자: 왼쪽 씨앗 자루 · 허수아비, 오른쪽 모종 작업대 · 삽과 쇠스랑). 입구 아치 바닥 기준 가로 · 세로(유닛). 길은 막지 않는다
         static readonly string[] k_FarmProps = { "farm_prop_sack", "farm_prop_scarecrow", "farm_prop_bench", "farm_prop_tools" };
         static readonly Vector3[] k_FarmPropOffsets = { new Vector3(-2.675f, -0.12f, 0f), new Vector3(-1.45f, -0.12f, 0f), new Vector3(1.55f, -0.12f, 0f), new Vector3(2.6125f, -0.12f, 0f) };
+        // 빵집 입구 고정 장식(2026-10-01 사용자, 아트방 시안): 왼쪽 밀 통 · 웜뱃 제빵사, 오른쪽 칠판 · 빵 식힘대. 뜻은 농장 소품과 같다(아치 바닥 기준, 길은 막지 않는다)
+        static readonly string[] k_BakeryProps = { "bakery_prop_wheat_barrel", "bakery_prop_baker", "bakery_prop_chalkboard", "bakery_prop_bread_rack" };
+        static readonly Vector3[] k_BakeryPropOffsets = { new Vector3(-2.65f, -0.12f, 0f), new Vector3(-1.475f, -0.12f, 0f), new Vector3(1.2125f, -0.12f, 0f), new Vector3(2.4125f, -0.12f, 0f) };
         static readonly Vector3[] k_CropOffsets = { new Vector3(0f, 1.65f, 0f), new Vector3(0f, 1.05f, 0f), new Vector3(0f, 0.45f, 0f) };
         // 설계 11 광장 빵집 문(원점 = 구멍 밑변 가운데, 유닛): 차양은 아치 윗부분을 덮고, 간판은 문 왼쪽 띠 가운데
         const float k_AwningHeight = 1.0f;
@@ -177,6 +180,11 @@ namespace ZooTycoon.Editor
             foreach (string prop in k_FarmProps)
             {
                 Import(k_FarmDir + prop + ".png", bottom);
+            }
+
+            foreach (string prop in k_BakeryProps)
+            {
+                Import(k_SpriteDir + prop + ".png", bottom);
             }
 
             foreach (string path in System.IO.Directory.GetFiles(k_CropDir, "*.png"))
@@ -499,6 +507,13 @@ namespace ZooTycoon.Editor
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             // 아치 그림 53칸 높이가 입구 줄(80칸) 밑변에 닿게: 윗변 = 27칸 = 0.675유닛 아래
             SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f), k_ArchOrder);
+            GameObject props = Child(root.transform, "EntranceProps", arch.transform.localPosition);
+
+            for (int i = 0; i < k_BakeryProps.Length; i++)
+            {
+                SpriteRenderer prop = Renderer(props.transform, k_BakeryProps[i], Load(k_BakeryProps[i]), k_BakeryPropOffsets[i], 0);
+                prop.spriteSortPoint = SpriteSortPoint.Pivot;
+            }
 
             BakeryView view = root.AddComponent<BakeryView>();
             Set(view, "m_shelfPrefab", shelf);
