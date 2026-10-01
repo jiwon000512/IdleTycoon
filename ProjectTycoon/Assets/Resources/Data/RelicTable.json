@@ -13,7 +13,7 @@
     {"id": "bellows", "name": "relic_bellows", "format": "relic_bellows_effect", "icon": "Sprites/Items/gem", "effect": "bake", "values": [0.2, 0.4, 0.6], "anchor": "oven", "dx": -0.75, "dy": 0.15, "weight": 1},
     {"id": "bell", "name": "relic_bell", "format": "relic_bell_effect", "icon": "Sprites/Items/gem", "effect": "checkout", "values": [0.2, 0.4, 0.6], "anchor": "counter", "dx": -0.2, "dy": 0.75, "weight": 1},
     {"id": "watering_can", "name": "relic_watering_can", "format": "relic_watering_can_effect", "icon": "Sprites/Items/gem", "effect": "grow", "values": [0.2, 0.4, 0.6], "anchor": "farm_door", "dx": 1.3, "dy": 0.1, "weight": 1},
-    {"id": "chime", "name": "relic_chime", "format": "relic_chime_effect", "icon": "Sprites/Items/gem", "effect": "visitors", "values": [0.1, 0.2, 0.3], "anchor": "plaza_stairs", "dx": 1.4, "dy": 0.4, "weight": 1},
+    {"id": "chime", "name": "relic_chime", "format": "relic_chime_effect", "icon": "Sprites/Items/gem", "effect": "visitors", "values": [0.1, 0.2, 0.3], "anchor": "plaza_stairs", "dx": 0.28, "dy": 1.5, "weight": 1},
     {"id": "lucky_coin", "name": "relic_lucky_coin", "format": "relic_lucky_coin_effect", "icon": "Sprites/Items/gem", "effect": "price", "values": [0.05, 0.1, 0.15], "anchor": "counter", "dx": 0.6, "dy": 0.75, "weight": 1},
     {"id": "abacus", "name": "relic_abacus", "format": "relic_abacus_effect", "icon": "Sprites/Items/gem", "effect": "abacus", "values": [5, 4, 3], "anchor": "counter", "dx": 0.3, "dy": 0.75, "weight": 1},
     {"id": "scoop", "name": "relic_scoop", "format": "relic_scoop_effect", "icon": "Sprites/Items/gem", "effect": "scoop", "values": [20, 40, 80], "anchor": "bakery_hole", "dx": -1.2, "dy": 0.15, "weight": 1},

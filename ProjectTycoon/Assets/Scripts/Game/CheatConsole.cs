@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Game
 {
     // 에디터 전용 치트 도구(빌드에 들어가지 않는다): ` 로 열고 닫는다. 치트를 고르고(누르기 · ↑↓) 값이 있으면 넣고 Enter.
-    // 화면 밖 개발 도구라 문구는 StringTable이 아니라 여기 둔다
+    // 화면 밖 개발 도구라 문구는 StringTable이 아니라 여기 둔다. 열린 동안은 Input System 키보드를 꺼 글을 칠 때 웜뱃이 걷지 않는다(IMGUI 글 칸은 따로 받는다)
     public sealed class CheatConsole : MonoBehaviour
     {
         private const string k_InputName = "cheat_input";
@@ -155,6 +156,7 @@ namespace ZooTycoon.Game
                 {
                     m_open = !m_open;
                     m_focus = m_open;
+                    SetKeyboard(!m_open);
                 }
 
                 e.Use();
@@ -215,6 +217,29 @@ namespace ZooTycoon.Game
             {
                 GUI.FocusControl(k_InputName);
                 m_focus = false;
+            }
+        }
+
+        // 플레이를 끝낼 때 열려 있었어도 키보드를 되살린다(장치 상태는 플레이를 넘어 남는다)
+        private void OnDestroy()
+        {
+            SetKeyboard(true);
+        }
+
+        private static void SetKeyboard(bool enabled)
+        {
+            if (Keyboard.current == null || Keyboard.current.enabled == enabled)
+            {
+                return;
+            }
+
+            if (enabled)
+            {
+                InputSystem.EnableDevice(Keyboard.current);
+            }
+            else
+            {
+                InputSystem.DisableDevice(Keyboard.current);
             }
         }
 
