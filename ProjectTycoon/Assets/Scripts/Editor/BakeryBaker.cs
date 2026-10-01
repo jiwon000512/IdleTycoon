@@ -151,10 +151,6 @@ namespace ZooTycoon.Editor
             Import(k_PlazaDir + "sign.png", center);
             Import(k_PlazaDir + "stairs.png", bottom);
             Import(k_PlazaDir + "statue.png", bottom);
-            Import(k_PlazaDir + "relic_cart_open.png", bottom);
-            Import(k_PlazaDir + "relic_cart_folded_side.png", bottom);
-            // 접힘 끝면은 손잡이가 바퀴 바닥보다 2칸 아래까지 그려져 피벗(바퀴 바닥 가운데)이 그림 바닥에서 4px 위
-            Import(k_PlazaDir + "relic_cart_folded_end.png", new Vector2(0.5f, 4f / 134f));
 
             foreach (string path in System.IO.Directory.GetFiles(k_DecorDir, "*.png"))
             {
@@ -543,10 +539,6 @@ namespace ZooTycoon.Editor
             // 설계 29: 웜뱃 석상(분수 자리, 발끝으로 깊이 정렬). 크기는 그림 칸 수로(2026-09-30 처음의 1.5배, 스케일 1)
             SpriteRenderer statue = Renderer(root.transform, "Statue", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "statue.png"), Vector3.zero, 0);
             statue.spriteSortPoint = SpriteSortPoint.Pivot;
-            // 설계 31 · 32: 유물 수레(접힘 옆 · 접힘 끝면 = 천 덮개 A · 펼침 = 유리 진열장 수레 C, 피벗 = 바퀴 바닥 가운데)
-            Sprite cartOpen = AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "relic_cart_open.png");
-            SpriteRenderer relicCart = Renderer(root.transform, "RelicCart", cartOpen, Vector3.zero, 0);
-            relicCart.spriteSortPoint = SpriteSortPoint.Pivot;
 
             PlazaView view = root.AddComponent<PlazaView>();
             Set(view, "m_burrow", burrow);
@@ -558,10 +550,6 @@ namespace ZooTycoon.Editor
             Set(view, "m_stairs", stairs.transform);
             Set(view, "m_wombat", wombat);
             Set(view, "m_statue", statue.transform);
-            Set(view, "m_relicCart", relicCart);
-            Set(view, "m_cartFoldedSide", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "relic_cart_folded_side.png"));
-            Set(view, "m_cartFoldedEnd", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "relic_cart_folded_end.png"));
-            Set(view, "m_cartOpen", cartOpen);
             PlazaVisitorSpawner spawner = root.AddComponent<PlazaVisitorSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Plaza");

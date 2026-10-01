@@ -27,6 +27,8 @@ namespace ZooTycoon.Core
     public sealed class DialogueTable : Table<string>
     {
         public const string k_ClerkWake = "clerk_wake";
+        // 설계 34: 행상에게 말을 걸면 첫 줄 중 하나
+        public const string k_MerchantHello = "merchant_hello";
 
         public double LineSeconds { get; set; }
         public List<DialogueLineData> Lines { get; set; }

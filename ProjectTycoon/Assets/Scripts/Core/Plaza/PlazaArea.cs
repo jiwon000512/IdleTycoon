@@ -47,10 +47,12 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 행상 자리도 웜뱃이 곁에 서 있다고 영영 기다리지 않는다(설계 34)
         internal override bool IsPassage(Vector2 p)
         {
             return Vector2.DistanceSquared(p, Layout.DoorFloor) < 1e-4f || Vector2.DistanceSquared(p, Layout.StairsFloor) < 1e-4f
-                || Vector2.DistanceSquared(p, Layout.FarmDoorFloor) < 1e-4f;
+                || Vector2.DistanceSquared(p, Layout.FarmDoorFloor) < 1e-4f
+                || Vector2.DistanceSquared(p, new Vector2((float)m_config.MerchantX, (float)m_config.MerchantY)) < 1e-4f;
         }
 
         // 설계 25: 농장에서 오면 농장 문 앞에 선다
@@ -59,14 +61,12 @@ namespace ZooTycoon.Core
             return from is FarmArea ? Layout.FarmDoorFloor : Layout.DoorFloor;
         }
         protected override BurrowShape.Result Shape => Layout.Shape;
-        // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt).
-        // 설계 32: 겹침 판정에는 늘 수레가 있어(좌판 자리에 장식을 못 놓는다) 길 · 들를 곳(Obstacles)에는 행상이 수레를 세운 동안만
-        protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue).Append(RelicCart);
-        private IEnumerable<IPlaced> Obstacles => Merchant.CartParked ? PlacedThings : m_decor.Cast<IPlaced>().Append(Statue);
+        // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt)
+        protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue);
         public StatueInteractable Statue { get; }
-        // 설계 31: 유물 수레(행상의 좌판 자리, 세운 동안 길을 막고 손님이 들른다. 버튼은 행상이 좌판을 연 동안만) · 떠돌이 행상
-        public RelicCartInteractable RelicCart { get; }
+        // 설계 31 · 34: 떠돌이 행상(일정 · 걷는 그림)과 그 행상에게 말 거는 사물
         public RelicMerchant Merchant { get; }
+        public MerchantInteractable MerchantThing { get; }
         // 손님이 계단으로 오는 간격(손님 축복 · 풍경이면 짧아진다)
         private double ArrivalSeconds => m_config.ArrivalSeconds / Wombat.Worker.Wallet.Scale(BlessingTable.k_Visitors);
 
@@ -82,9 +82,8 @@ namespace ZooTycoon.Core
             Statue = new StatueInteractable(tables.Get<InteractableTable>(StatueInteractable.k_Id), this, new Vector2((float)m_config.StatueX, (float)m_config.StatueY), random);
             Placed.Add(Statue);
             Merchant = new RelicMerchant(this, tables);
-            RelicCart = new RelicCartInteractable(tables.Get<InteractableTable>(RelicCartInteractable.k_Id), this,
-                new Vector2((float)m_config.RelicCartX, (float)m_config.RelicCartY), random, Merchant);
-            Placed.Add(RelicCart);
+            MerchantThing = new MerchantInteractable(tables.Get<InteractableTable>(MerchantInteractable.k_Id), this, random, Merchant);
+            Placed.Add(MerchantThing);
             m_arrivalElapsed = m_config.ArrivalSeconds;
             m_questionRange = (float)tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
@@ -110,7 +109,7 @@ namespace ZooTycoon.Core
                 m_decor.Add(new DecorationData(tables.Get<DecorationTable>(placed.Decoration), new Vector2((float)placed.X, (float)placed.Y)));
             }
 
-            Layout.Rebuild(Obstacles);
+            Layout.Rebuild(PlacedThings);
         }
 
         // 들를 곳에서 머무는 초 · ♥를 띄울지
@@ -160,14 +159,11 @@ namespace ZooTycoon.Core
             Merchant.Tick(dt);
         }
 
-        // 설계 31 · 33: 행상이 계단에서 톡 나와 수레를 끌고 수레 기준점 줄의 왼쪽(entry, worker 자리 x)에서 오른쪽 손잡이 자리(handle, 맞은편)까지 걸으면
-        // 뒤따르는 수레가 좌판 자리에 멈춘다. 그 뒤 좌판 자리(worker)에 서고, 떠날 때는 손잡이 자리에서 수레를 잡아 왼쪽으로 밀어낸다
+        // 설계 31 · 34: 행상이 계단에서 톡 나와 좌판 자리(merchantX · Y)로 걷는다
         internal PlazaVisitor SpawnMerchant(VisitorTable look)
         {
-            Vector2 stall = Placement.SpotOf(RelicCart, SpotRole.Worker);
-            Vector2 entry = new Vector2(stall.X, RelicCart.Position.Y);
-            Vector2 handle = new Vector2(2f * RelicCart.Position.X - stall.X, RelicCart.Position.Y);
-            PlazaVisitor merchant = new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, 0, false, null, stall, handle, entry);
+            Vector2 stall = new Vector2((float)m_config.MerchantX, (float)m_config.MerchantY);
+            PlazaVisitor merchant = new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, 0, false, null, stall);
             Spawn(merchant);
             return merchant;
         }
@@ -281,7 +277,7 @@ namespace ZooTycoon.Core
         // 들를 곳 번호가 바뀌므로 손님은 들르던 곳을 놓고 다음으로, 걷던 손님은 새 땅에서 길을 다시 찾는다. 새 사물이 웜뱃 발밑이면 비켜 선다
         protected override void OnPlacementChanged()
         {
-            Layout.Rebuild(Obstacles);
+            Layout.Rebuild(PlacedThings);
             m_takenSpots.Clear();
 
             foreach (PlazaVisitor visitor in m_visitors)
@@ -291,12 +287,6 @@ namespace ZooTycoon.Core
 
             Unstick();
             Bus.Publish(new Events.LayoutChanged(this));
-        }
-
-        // 설계 32: 행상이 수레를 세웠다 · 걷었다
-        internal void CartMoved()
-        {
-            OnPlacementChanged();
         }
 
         private void TickArrival(double dt)

@@ -30,9 +30,6 @@ namespace ZooTycoon.Core
         public Facing ArriveFacing { get; private set; }
         public bool Moving => m_next < m_points.Count;
         public Vector2 Destination => Moving ? m_points[m_points.Count - 1] : Position;
-        // 남은 꺾임점 수와 i번째(다음 점부터)
-        public int RemainingCount => m_points.Count - m_next;
-        public Vector2 Remaining(int i) => m_points[m_next + i];
 
         public Mover(Vector2 position, Facing facing)
         {
@@ -86,20 +83,6 @@ namespace ZooTycoon.Core
                 Position += (target - Position) * (left / gap);
                 left = 0f;
             }
-        }
-
-        // 설계 33: 점들을 차례로 거쳐 마지막 점으로(점 사이 길을 이어 한 길로 — 밀고 가는 수레가 길 끝까지 미리 본다. 못 찾은 구간은 곧장)
-        public void WalkThrough(BurrowNav nav, Facing arrive, params Vector2[] points)
-        {
-            WalkTo(nav, points[0], arrive);
-
-            for (int i = 1; i < points.Length; i++)
-            {
-                List<Vector2> leg = nav.FindPath(points[i - 1], points[i]);
-                m_points.AddRange(leg.Count > 0 ? leg : new List<Vector2> { points[i] });
-            }
-
-            TurnToNext();
         }
 
         // 걷는 중이면 지금 선분을 마저 걷고 그 끝점에서 새 길을 찾는다. 닿을 수 없으면 곧장(ponytail: 막힌 배치에서만 생김).

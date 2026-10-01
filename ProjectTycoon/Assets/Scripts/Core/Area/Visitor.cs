@@ -130,12 +130,15 @@ namespace ZooTycoon.Core
                 return false;
             }
 
-            if (Vector2.Distance(Mover.Destination, Area.Wombat.Mover.Position) < k_YieldRadius && !Area.IsPassage(Mover.Destination))
+            // 갈 곳이 웜뱃 둘레 안이면 돌아가도 소용없다: 통로면 기다렸다 지나가고, 아니면 웜뱃이 비킬 때까지 선다
+            bool cornered = Vector2.Distance(Mover.Destination, Area.Wombat.Mover.Position) < k_YieldRadius;
+
+            if (cornered && !Area.IsPassage(Mover.Destination))
             {
                 return true;
             }
 
-            if (m_detourWait <= 0d)
+            if (!cornered && m_detourWait <= 0d)
             {
                 m_detourWait = k_DetourGap;
 

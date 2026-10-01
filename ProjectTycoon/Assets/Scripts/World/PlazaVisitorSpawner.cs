@@ -31,7 +31,17 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.PlazaVisitorArrived>(Bus_VisitorArrived),
                 bus.Subscribe<Events.PlazaVisitorLeft>(Bus_VisitorLeft),
                 bus.Subscribe<Events.DialogueLine>(Bus_DialogueLine),
+                bus.Subscribe<Events.MerchantTalked>(Bus_MerchantTalked),
             };
+        }
+
+        // 설계 34: 말을 건 행상이 인사 한 줄
+        private void Bus_MerchantTalked(Events.MerchantTalked e)
+        {
+            if (m_units.TryGetValue(e.Thing.Merchant.Figure, out VisitorView unit))
+            {
+                unit.Say(m_tables.Text(e.TextId), (float)e.Seconds);
+            }
         }
 
         private void Bus_DialogueLine(Events.DialogueLine e)

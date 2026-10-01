@@ -77,7 +77,8 @@ namespace ZooTycoon.UI
             m_viewLabel.text = view;
         }
 
-        public void Open()
+        // delay: 행상이 인사를 말하는 동안 기다렸다 뜬다(설계 34)
+        public void Open(float delay)
         {
             if (m_root.activeSelf)
             {
@@ -85,7 +86,7 @@ namespace ZooTycoon.UI
             }
 
             m_root.SetActive(true);
-            Run(ref m_fx, UiFx.Appear(m_rootGroup, m_panel, m_panelRest, 0f));
+            Run(ref m_fx, UiFx.Appear(m_rootGroup, m_panel, m_panelRest, delay));
             SoundManager.Instance.Play(SoundTable.k_UiOpen);
         }
 

@@ -1,6 +1,6 @@
 {
   "table": "ActionTable",
-  "version": 13,
+  "version": 14,
   "notes": [
     "설계 09 v0.4 → 설계 13 v0.5: 웜뱃이 사물에서 하는 행동. 하는 일은 행동 클래스(ActionFactory 안 중첩 클래스, id로 만든다), 이 표는 어떻게 하는지(mode)와 버튼 아이콘. 어느 사물에서 되는지는 InteractableTable.json actions.",
     "mode: auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로 · manual = 상호작용 버튼(지금 할 수 있는 첫 manual 행동) · sheet = 시트의 한 줄(줄을 누르면 산다). take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
@@ -18,7 +18,8 @@
     "version 10 (2026-09-29, 설계 25 밀 농사): plant(manual, 아이콘 Actions/plant 더미) — 빈 밭(plot)에 농장 작물(CropTable 첫 행)을 심는다. harvest(auto) — 익은 밭 range 안에 들어오면 거둬 창고(ZooState)에 넣는다(들고 다니지 않는다).",
     "version 11 (2026-09-30, 설계 27 칸 밭): till(manual, 아이콘 Actions/till 더미) — 판 흙 칸(plot)에 서면 버튼으로 갈아 밭 칸으로(값 FarmConfigTable tillCost, 코인이 모자라면 아무 일 없음). plant는 밭 칸에서만, harvest는 밟으면(칸 안). dig는 빵집·농장 공용.",
     "version 12 (2026-09-30, 설계 29 웜뱃 석상): statue(manual, 아이콘 Actions/statue 더미) — 광장 석상 앞에서 버튼으로 석상 팝업(세 줄 · 잠금 · 굴리기)을 연다.",
-    "version 13 (2026-10-01, 설계 31 유물 수레): relic(manual) — 광장 유물 수레 앞에서 버튼으로 유물 팝업을 연다. 아이콘은 아트방 시안 전까지 반짝돌 그림을 임시로 가리킨다."
+    "version 13 (2026-10-01, 설계 31 유물 수레): relic(manual) — 광장 유물 수레 앞에서 버튼으로 유물 팝업을 연다. 아이콘은 아트방 시안 전까지 반짝돌 그림을 임시로 가리킨다.",
+    "version 14 (2026-10-01, 설계 34 행상과 대화): relic → talk(manual, 아이콘 Actions/talk 말풍선) — 광장 행상(merchant)에게 말을 걸면 인사 뒤 뽑기 팝업."
   ],
   "rows": [
     {
@@ -102,9 +103,9 @@
       "icon": "Sprites/Actions/statue"
     },
     {
-      "id": "relic",
+      "id": "talk",
       "mode": "manual",
-      "icon": "Sprites/Items/gem"
+      "icon": "Sprites/Actions/talk"
     }
   ]
 }

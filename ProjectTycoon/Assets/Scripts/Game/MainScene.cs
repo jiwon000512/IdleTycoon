@@ -29,13 +29,14 @@ namespace ZooTycoon.Game
             UIManager ui = UIManager.Instance;
             TopBarView topBarView = ui.Open<TopBarView>();
             m_hudView = ui.Open<ControlHudView>();
+            // 유물 버튼은 메뉴 버튼 줄이라 팝업들보다 아래에 깐다
+            RelicView relicsView = ui.Open<RelicView>();
             ObjectSheetView sheetView = ui.Open<ObjectSheetView>();
             EditModeView editView = ui.Open<EditModeView>();
             ClerkPopupView clerkView = ui.Open<ClerkPopupView>();
             InventoryView inventoryView = ui.Open<InventoryView>();
             StatueView statueView = ui.Open<StatueView>();
             RelicCartView relicView = ui.Open<RelicCartView>();
-            RelicView relicsView = ui.Open<RelicView>();
             WorldManager world = WorldManager.Instance;
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables, game.Mall.Plaza.Merchant);

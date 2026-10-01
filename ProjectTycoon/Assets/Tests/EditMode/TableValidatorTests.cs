@@ -11,20 +11,20 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 13)]
-        [TestCase("StringTable", 33)]
+        [TestCase("StringTable", 34)]
         [TestCase("ClerkTable", 1)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 2)]
-        [TestCase("DialogueTable", 3)]
+        [TestCase("DialogueTable", 4)]
         [TestCase("BreadTable", 3)]
-        [TestCase("ActionTable", 13)]
-        [TestCase("InteractableTable", 13)]
+        [TestCase("ActionTable", 14)]
+        [TestCase("InteractableTable", 14)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 11)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 3)]
         [TestCase("BakeryConfigTable", 7)]
-        [TestCase("PlazaConfigTable", 5)]
+        [TestCase("PlazaConfigTable", 6)]
         [TestCase("PlazaDecorTable", 1)]
         [TestCase("ItemTable", 4)]
         [TestCase("CropTable", 3)]
@@ -299,10 +299,6 @@ namespace ZooTycoon.Tests
             longStay.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).MerchantStay = 900d;
             TableSet customerMerchant = TestTables.Load();
             customerMerchant.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).MerchantLook = "v01";
-            TableSet noSetup = TestTables.Load();
-            noSetup.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).MerchantSetupSeconds = 0d;
-            TableSet noStand = TestTables.Load();
-            noStand.Get<InteractableTable>(RelicCartInteractable.k_Id).Spots.RemoveAll(spot => spot.Role == SpotRole.Worker);
 
             Assert.That(TableValidator.Validate(TestTables.Load()), Is.Empty);
             Assert.That(TableValidator.Validate(noEffect), Is.Not.Empty);
@@ -313,8 +309,6 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(noAnchor), Is.Not.Empty);
             Assert.That(TableValidator.Validate(longStay), Is.Not.Empty);
             Assert.That(TableValidator.Validate(customerMerchant), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(noStand), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(noSetup), Is.Not.Empty);
         }
 
         // 설계 11: 장식 그림 경로 없음, 광장에 없는 장식

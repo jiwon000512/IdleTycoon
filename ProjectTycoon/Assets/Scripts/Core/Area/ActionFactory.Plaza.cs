@@ -21,26 +21,26 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 31 유물 수레 앞 버튼: 행상이 좌판을 연 동안 유물 팝업을 연다
-        private sealed class OpenRelicCart : InteractAction
+        // 설계 31 · 34 행상에게 말 걸기: 행상이 좌판 자리에 선 동안 인사를 듣고 뽑기 팝업
+        private sealed class TalkToMerchant : InteractAction
         {
-            public OpenRelicCart(ActionTable table) : base(table)
+            public TalkToMerchant(ActionTable table) : base(table)
             {
             }
 
             public override bool Accepts(Interactable target)
             {
-                return target is RelicCartInteractable;
+                return target is MerchantInteractable;
             }
 
             public override bool CanDo(Worker worker, Interactable target)
             {
-                return target is RelicCartInteractable cart && cart.IsOpen;
+                return target is MerchantInteractable merchant && merchant.IsOpen;
             }
 
             public override void Do(Worker worker, Interactable target)
             {
-                ((RelicCartInteractable)target).Open();
+                ((MerchantInteractable)target).Talk();
             }
         }
     }

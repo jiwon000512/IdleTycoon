@@ -35,14 +35,18 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 31: 유물 수레 앞 버튼을 눌렀다(팝업)
-        public readonly struct RelicCartOpened
+        // 설계 34: 행상에게 말을 걸었다(행상이 TextId를 Seconds 동안 말하고 뽑기 팝업)
+        public readonly struct MerchantTalked
         {
-            public readonly RelicCartInteractable Thing;
+            public readonly MerchantInteractable Thing;
+            public readonly string TextId;
+            public readonly double Seconds;
 
-            public RelicCartOpened(RelicCartInteractable thing)
+            public MerchantTalked(MerchantInteractable thing, string textId, double seconds)
             {
                 Thing = thing;
+                TextId = textId;
+                Seconds = seconds;
             }
         }
 

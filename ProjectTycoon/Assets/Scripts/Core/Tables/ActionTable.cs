@@ -35,8 +35,8 @@ namespace ZooTycoon.Core
         public const string k_Till = "till";
         // 설계 29: 광장 석상 팝업 열기(버튼)
         public const string k_Statue = "statue";
-        // 설계 31: 광장 유물 수레 팝업 열기(버튼)
-        public const string k_Relic = "relic";
+        // 설계 34: 광장 행상에게 말 걸기(버튼, 인사 뒤 뽑기 팝업)
+        public const string k_Talk = "talk";
 
         public ActionMode Mode { get; set; }
         // 버튼 아이콘(Resources/ 기준, 확장자 없음). manual만, 나머지는 null

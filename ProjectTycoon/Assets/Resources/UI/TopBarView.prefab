@@ -162,7 +162,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6902e5dc8adad244c867675ae395bd54, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2b57a5cd561a36545a71f11b0a77936d, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -796,6 +796,7 @@ MonoBehaviour:
   m_blessingText: {fileID: 5972059239422843783}
   m_blessingTime: {fileID: 8170158462987551832}
   m_merchant: {fileID: 6062880211200262602}
+  m_merchantIcon: {fileID: 2986325473904809714}
   m_merchantText: {fileID: 2728192894920047205}
   m_merchantTime: {fileID: 5708947561147477862}
 --- !u!1 &7987130483569834067

@@ -7,16 +7,19 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 31 · 32 좌판 팝업: 광장 수레 앞 버튼(RelicCartOpened)으로 열고, 뽑기 · 후보 · 고른 결과를 Core Relics에 잇는다.
-    // 뽑은 후보는 고를 때까지 남는다(다시 열어도 후보). 「유물 보기」는 유물 화면(openRelics)을 연다. 행상이 좌판을 접으면 · 편집 모드에서는 닫는다
+    // 설계 31 · 32 · 34 좌판 팝업: 광장 행상에게 말을 걸면(MerchantTalked) 인사가 반쯤 지난 뒤 열고, 뽑기 · 후보 · 고른 결과를 Core Relics에 잇는다.
+    // 뽑은 후보는 고를 때까지 남는다(다시 열어도 후보). 「유물 보기」는 유물 화면(openRelics)을 연다. 행상이 떠나면 · 편집 모드에서는 닫는다
     public sealed class RelicCartPresenter : IDisposable
     {
+        // 인사 말풍선이 떠 있는 시간 중 이만큼 지나 팝업이 뜬다
+        private const float k_TalkShare = 0.5f;
+
         private readonly RelicCartView m_view;
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
         private readonly Action m_openRelics;
         private readonly IDisposable[] m_subscriptions;
-        private RelicCartInteractable m_thing;
+        private MerchantInteractable m_thing;
         private int m_chosen;
 
         private Relics Relics => m_state.Relics;
@@ -35,7 +38,7 @@ namespace ZooTycoon.UI
             m_view.SetLabels(tables.Text("relic_cart_title"), tables.Text("relic_draw"), tables.Text("relic_again"), tables.Text("relic_view"));
             m_subscriptions = new[]
             {
-                bus.Subscribe<Events.RelicCartOpened>(Bus_RelicCartOpened),
+                bus.Subscribe<Events.MerchantTalked>(Bus_MerchantTalked),
                 bus.Subscribe<Events.RelicsChanged>(Bus_RelicsChanged),
                 bus.Subscribe<Events.MerchantChanged>(Bus_MerchantChanged),
             };
@@ -104,7 +107,7 @@ namespace ZooTycoon.UI
             return offers;
         }
 
-        private void Bus_RelicCartOpened(Events.RelicCartOpened e)
+        private void Bus_MerchantTalked(Events.MerchantTalked e)
         {
             m_thing = e.Thing;
 
@@ -117,7 +120,7 @@ namespace ZooTycoon.UI
                 ShowReady();
             }
 
-            m_view.Open();
+            m_view.Open((float)e.Seconds * k_TalkShare);
         }
 
         // 고른 결과: 위 글 = 새 유물 / 별 오름, 아래 글 = 칸에 끼움 / 이미 끼운 유물 / 칸이 가득

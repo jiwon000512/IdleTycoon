@@ -17,7 +17,7 @@ namespace ZooTycoon.Data
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
-            PlotInteractable.k_Id, StatueInteractable.k_Id, RelicCartInteractable.k_Id,
+            PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -241,7 +241,7 @@ namespace ZooTycoon.Data
                 }
             }
 
-            CheckRequired<DialogueTable>(tables, new[] { DialogueTable.k_ClerkWake }, errors);
+            CheckRequired<DialogueTable>(tables, new[] { DialogueTable.k_ClerkWake, DialogueTable.k_MerchantHello }, errors);
         }
 
         // 설계 08 v0.5
@@ -735,17 +735,10 @@ namespace ZooTycoon.Data
                 // 떠돌이 행상: 머무는 동안 다음 방문이 오지 않게, 외형은 역할 merchant 행
                 VisitorTable look = tables.GetAll<VisitorTable>().FirstOrDefault(v => v.Id == plaza.MerchantLook);
 
-                if (plaza.MerchantFirst < 0d || plaza.MerchantStay <= 0d || plaza.MerchantSetupSeconds <= 0d || plaza.MerchantEvery <= plaza.MerchantStay || look == null || look.Role != VisitorRole.Merchant)
+                if (plaza.MerchantFirst < 0d || plaza.MerchantStay <= 0d || plaza.MerchantEvery <= plaza.MerchantStay || look == null || look.Role != VisitorRole.Merchant)
                 {
-                    errors.Add($"PlazaConfigTable '{plaza.Id}': merchantFirst ≥ 0, 0 < merchantStay < merchantEvery, merchantSetupSeconds > 0, merchantLook은 VisitorTable의 merchant 행이어야 한다.");
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': merchantFirst ≥ 0, 0 < merchantStay < merchantEvery, merchantLook은 VisitorTable의 merchant 행이어야 한다.");
                 }
-            }
-
-            InteractableTable cart = tables.GetAll<InteractableTable>().FirstOrDefault(t => t.Id == RelicCartInteractable.k_Id);
-
-            if (cart != null && (cart.HalfWidth <= 0d || cart.Depth <= 0d || cart.Spots == null || !cart.Spots.Any(s => s.Role == SpotRole.Worker)))
-            {
-                errors.Add("InteractableTable 'relic_cart': 길을 막는 halfWidth · depth가 0보다 크고, 행상이 서는 worker 자리가 있어야 한다.");
             }
         }
 

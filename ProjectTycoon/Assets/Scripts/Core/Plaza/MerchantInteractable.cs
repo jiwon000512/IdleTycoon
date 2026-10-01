@@ -1,43 +1,41 @@
-using System;
 using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 31: 광장의 유물 수레(떠돌이 행상의 좌판 자리, 석상처럼 고정). 길을 막는 바닥 사각형과 손님이 들르는 자리가 있고, 값이 없는 종류라 편집 모드에서 집지 않는다.
-    // 행동 relic은 행상이 좌판을 연 동안만 팝업을 열고(RelicCartOpened), 뽑기는 광장 난수로 지갑의 유물(Relics)에서 후보를 뽑는다.
-    // 설계 32: 행상이 수레를 세운 동안만 그 자리에 있다(그 밖에는 웜뱃이 닿지 않는다)
-    public sealed class RelicCartInteractable : Interactable, IPlaced
+    // 설계 31 · 34: 광장 떠돌이 행상(너구리)에게 말 걸기. 행상이 좌판 자리에 서 있는 동안만 웜뱃이 닿고(거리 = 행상까지),
+    // 행동 relic이면 행상이 웜뱃을 보고 인사 한 줄(DialogueTable merchant_hello)을 말한 뒤 뽑기 팝업이 뜬다(MerchantTalked).
+    // 뽑기는 광장 난수로 지갑의 유물(Relics)에서 후보를 뽑는다. 수레는 없다(2026-10-01 사용자)
+    public sealed class MerchantInteractable : Interactable
     {
-        public const string k_Id = "relic_cart";
+        public const string k_Id = "merchant";
 
         private readonly IRandom m_random;
+        private readonly DialogueTable m_hello;
 
-        public Vector2 Position { get; }
-        public IPlacedKind Kind => Table;
         public Relics Relics => Area.Wombat.Worker.Wallet.Relics;
         public RelicMerchant Merchant { get; }
         public bool IsOpen => Merchant.IsOpen;
 
-        public RelicCartInteractable(InteractableTable table, PlazaArea plaza, Vector2 position, IRandom random, RelicMerchant merchant) : base(table, plaza)
+        public MerchantInteractable(InteractableTable table, PlazaArea plaza, IRandom random, RelicMerchant merchant) : base(table, plaza)
         {
-            Position = position;
             m_random = random;
             Merchant = merchant;
+            m_hello = plaza.Tables.Get<DialogueTable>(DialogueTable.k_MerchantHello);
         }
 
         public override float DistanceTo(Vector2 p)
         {
-            return Merchant.CartParked ? Vector2.Distance(p, Position) : float.MaxValue;
+            return IsOpen ? Vector2.Distance(p, Merchant.Figure.Position) : float.MaxValue;
         }
 
-        public void MoveTo(Vector2 position)
+        // 행상이 웜뱃 쪽을 보고 인사 한 줄을 고른다
+        public void Talk()
         {
-            throw new InvalidOperationException("유물 수레는 옮기지 않는다.");
-        }
-
-        public void Open()
-        {
-            Area.Bus.Publish(new Events.RelicCartOpened(this));
+            PlazaVisitor figure = Merchant.Figure;
+            figure.Face(Area.Wombat.Mover.Position);
+            DialogueLineData line = m_hello.Lines[0];
+            string text = line.Texts[(int)(m_random.NextDouble() * line.Texts.Count) % line.Texts.Count];
+            Area.Bus.Publish(new Events.MerchantTalked(this, text, m_hello.LineSeconds));
         }
 
         public bool TryDraw()

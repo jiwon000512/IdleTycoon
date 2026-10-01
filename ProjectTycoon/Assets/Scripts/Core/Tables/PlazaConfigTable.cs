@@ -25,9 +25,7 @@ namespace ZooTycoon.Core
         public double StatueX { get; set; }
         public double StatueY { get; set; }
         public double BlessingCooldown { get; set; }
-        // 설계 31: 유물 수레 자리(밑변 가운데) · 뽑을 때 내는 재료와 개수 · 칸 수
-        public double RelicCartX { get; set; }
-        public double RelicCartY { get; set; }
+        // 설계 31: 뽑을 때 내는 재료와 개수 · 칸 수
         public string RelicItem { get; set; }
         public int RelicCost { get; set; }
         public int RelicSlots { get; set; }
@@ -36,7 +34,8 @@ namespace ZooTycoon.Core
         public double MerchantEvery { get; set; }
         public double MerchantStay { get; set; }
         public string MerchantLook { get; set; }
-        // 설계 32: 좌판 자리에 세운 수레를 펼치는 초 · 접는 초
-        public double MerchantSetupSeconds { get; set; }
+        // 설계 34: 행상이 서는 좌판 자리(발 위치, 수레 없이 행상만)
+        public double MerchantX { get; set; }
+        public double MerchantY { get; set; }
     }
 }
