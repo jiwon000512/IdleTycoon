@@ -2,8 +2,10 @@
 # 상호작용 버튼 + 행동 아이콘 실제 아트(시안 B 흙 테 + 크림 판, 2026-09-23 사용자 선택). AI 없이 칸 단위로 그린다.
 # 1 px = 1 UI px(PPU 25). 버튼 44: 조이스틱 받침과 같은 흙 테 + 크림 판. 아이콘 18: 버튼 행동(ActionTable.json manual)만 — 열기·파기·들어가기·나가기(꺼내기는 2026-09-23 auto로 바뀌어 아이콘 삭제).
 # 비활성은 코드 틴트(버튼 × 0.65, 아이콘 40%)라 따로 그리지 않는다. 칠한 뒤 바깥 1칸 진갈색 외곽선.
-# 사용: make_act_button.py (이 폴더에서) → ../btn_act.png, Resources/Sprites/Actions/<id>.png → 메뉴 ZooTycoon/Bake/Import UI Sprites → Bake/UI
+# 2026-10-01 사용자: 상호작용 버튼 btn_act는 B 「돌 테」, 오른쪽 메뉴 버튼 · 팝업은 새 조각 btn_menu C 「볼록 단추」(옛 흙 테 + 크림 판은 버림).
+# 사용: make_act_button.py (이 폴더에서) → ../btn_act.png · ../btn_menu.png, Resources/Sprites/Actions/<id>.png → 메뉴 ZooTycoon/Bake/Import UI Sprites → Bake/UI
 import os
+import random
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -31,12 +33,48 @@ def outline(a):
     return a
 
 
+Y, X = np.mgrid[0:44, 0:44] - 21.5
+STONE = [(88, 80, 78), (122, 114, 108), (156, 148, 138), (190, 182, 170), (222, 216, 204)]   # 석상 · 축복 메달과 같은 돌색
+CARAMEL, CARAMEL_D, CARAMEL_DD, CARAMEL_L = (0xD8, 0x96, 0x60), (0xB0, 0x70, 0x44), (0x84, 0x50, 0x34), (0xF0, 0xBC, 0x84)
+
+
+def face(a, r, dx=0, dy=0):
+    # 크림 판: 아래 · 오른쪽 그늘 한 톤, 위 · 왼쪽 안쪽 밝은 초승달
+    paint(a, disc(44, r, dx, dy), LIGHT)
+    paint(a, disc(44, r, dx, dy) & ~disc(44, r, dx - 1, dy - 1), TAN)
+    paint(a, disc(44, r, dx, dy) & ~disc(44, r, dx + 1.2, dy + 1.2) & (X - dx + Y - dy < -r * 0.6), CREAM)
+
+
 def button():
+    # 상호작용 버튼(2026-10-01 사용자 B 「돌 테」): 석상 돌색 테 + 점무늬 + 크림 판
     a = np.zeros((44, 44, 4), np.uint8)
-    paint(a, disc(44, 20.5), RIM)
-    paint(a, disc(44, 20.5) & ~disc(44, 20.5, 1, 1), RIM_L)    # 위·왼쪽 밝은 테
-    paint(a, disc(44, 14.5), LIGHT)
-    paint(a, disc(44, 14.5) & ~disc(44, 14.5, -1, -1), TAN)    # 판 아래·오른쪽 그늘
+    paint(a, disc(44, 20.5), STONE[2])
+    paint(a, disc(44, 20.5) & ~disc(44, 20.5, 1, 1), STONE[3])
+    paint(a, disc(44, 20.5) & ~disc(44, 20.5, 1.6, 1.6) & (X + Y < -20), STONE[4])
+    paint(a, disc(44, 20.5) & ~disc(44, 20.5, -1, -1), STONE[1])
+    paint(a, disc(44, 16.5) & ~disc(44, 15.5), STONE[1])
+    rnd = random.Random(7)
+    band = np.argwhere(disc(44, 20) & ~disc(44, 17))
+    for _ in range(30):
+        j, i = band[rnd.randrange(len(band))]
+        a[j, i, :3] = STONE[1]
+    face(a, 15)
+    return outline(a)
+
+
+def menu_button():
+    # 메뉴 버튼(오른쪽 버튼 줄 · 팝업, 2026-10-01 사용자 C 「볼록 단추」): 캐러멜 테가 아래로 두께를 보인다.
+    #   두께 때문에 원을 아래로 내렸던 시안은 맨 아랫줄에 외곽선 자리가 없어(사용자 「아랫쪽 검은 선」) 전체를 1칸 올렸다
+    a = np.zeros((44, 44, 4), np.uint8)
+    paint(a, disc(44, 20.5, 0, 0.5), CARAMEL_DD)
+    paint(a, disc(44, 19.5, 0, -1.5), CARAMEL)
+    paint(a, disc(44, 19.5, 0, -1.5) & ~disc(44, 19.5, 1, -0.5), CARAMEL_L)
+    paint(a, disc(44, 19.5, 0, -1.5) & ~disc(44, 19.5, -1, -2.5), CARAMEL_D)
+    paint(a, disc(44, 15.5, 0, -1.5) & ~disc(44, 14.5, 0, -1.5), CARAMEL_D)
+    b = np.zeros_like(a)
+    face(b, 14.2, 0, -1.5)
+    m = b[..., 3] > 0
+    a[m] = b[m]
     return outline(a)
 
 
@@ -138,6 +176,7 @@ def till():  # 갈기(설계 27 더미): 괭이 — 나무 자루 + 오른쪽 �
 
 
 Image.fromarray(button()).save('../btn_act.png')
+Image.fromarray(menu_button()).save('../btn_menu.png')
 # enter·exit는 2026-09-26 굴 이동 자동으로 아이콘이 없다(그리는 함수만 남김)
 for action_id, draw in [('open', open_), ('dig', dig), ('till', till), ('plant', plant), ('wake', wake), ('clean', clean)]:
     Image.fromarray(draw()).save(f'../../../Resources/Sprites/Actions/{action_id}.png')

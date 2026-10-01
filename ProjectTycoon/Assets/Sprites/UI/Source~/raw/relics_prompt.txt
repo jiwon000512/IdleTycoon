@@ -1,0 +1,19 @@
+# 설계 31 유물 아이콘 아홉(2026-10-01). 참조 -i: relics_ref_grid.png(3×3, 칸 24×24 한 칸 16px) · relics_ref_blessings16.png(축복 메달) · World/Plaza/Source~/raw/relic_cart_c.png(좌판)
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference files).
+A 3 x 3 sheet of NINE pixel-art RELIC ICONS for a cozy underground burrow idle game. A tanuki merchant sells these old curios; each relic is shown as an icon in menus AND placed as a tiny object in the world (next to an oven, on a shop counter, hanging at a doorway), so each object must be readable at a glance at a very small size.
+Image 1 is the 3 x 3 layout grid: nine squares, each square is exactly 24 x 24 art pixels (one light grey grid square = one art pixel = 16 screen pixels). Paint one relic inside each square, in this order, left to right, top to bottom:
+1 a leather BELLOWS (two wooden boards, folded leather, a brass nozzle), 2 a copper hand BELL with a wooden handle, 3 a tin WATERING CAN with a long spout,
+4 a WIND CHIME (a small roof cap with hanging metal tubes and a paper strip), 5 a LUCKY COIN (a big gold coin with a square hole in the middle, a red string), 6 an OLD ABACUS (wooden frame, rows of beads),
+7 a COMPOST SCOOP (a small wooden-handled scoop with dark compost in it), 8 a woven GRAIN BASKET full of golden wheat ears, 9 a round brass ALARM CLOCK with two bells on top.
+Image 2 shows the existing icons of the same game (stone medals) drawn on the same grid: match their pixel size, outline and soft palette. Image 3 is the merchant's cart: the relics behind its glass (bell, clock, coin, chime) show the wanted look of these old objects.
+Each relic fills most of its 24 x 24 square with a 1 art pixel margin, drawn with big square art pixels exactly as large as the grid squares (no finer detail), front three-quarter top-down view, a dark brown outline (#342020) one art pixel wide, soft warm muted colors, 4 to 8 colors per icon, one small white highlight, no anti-aliasing, no gradients, no dithering. Pure white background; do NOT draw the grid lines or the square borders; no text, no numbers, no letters.
+ICON STYLE:
+[a] Just the object itself on the white background, nothing behind it.
+[b] Each object sits on a round grey STONE MEDAL exactly like the medals in image 2 (same stone rim, same dotted texture), the object drawn in the medal's middle, slightly overlapping the rim.
+[c] Just the object itself, with a thin warm GOLD glow outline one art pixel wide just outside the dark outline, so it reads as a precious relic.
+처음 a · c(relics_first_a/c.png)는 Codex가 픽셀을 잘게 그려 36~50칸이라 버렸다. b(메달, 25칸)를 바탕으로 편집:
+    echo "Remove ONLY the grey stone medals behind the objects (fill those areas with pure white), and keep every object EXACTLY the same: same position, same size, same big square pixels, same colors and the same dark outline. Where the object overlapped the medal, keep the object's own outline. Do not redraw, rescale or move anything. Pure white background, no text."
+    echo "Save the image as relics_a.png in the current working directory and reply with only the path." ) | codex exec --skip-git-repo-check -s workspace-write -c model_reasoning_effort=low -i relics_b.png - > log2_a.txt 2>&1 &
+    echo "Save the image as relics_c.png in the current working directory and reply with only the path." ) | codex exec --skip-git-repo-check -s workspace-write -c model_reasoning_effort=low -i relics_b.png - > log2_c.txt 2>&1 &
+  wait
+2026-10-01 사용자 선택: C(금빛 테두리) = relics_c_gold.png

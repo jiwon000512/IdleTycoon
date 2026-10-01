@@ -318,5 +318,15 @@
   "w": 18,
   "h": 18,
   "border": null
+ },
+ "icon_relic": {
+  "w": 18,
+  "h": 18,
+  "border": null
+ },
+ "btn_menu": {
+  "w": 44,
+  "h": 44,
+  "border": null
  }
 }

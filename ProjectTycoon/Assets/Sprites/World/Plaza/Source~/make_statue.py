@@ -1,4 +1,6 @@
 # 설계 29 웜뱃 석상 → ../statue.png(아래 가운데 피벗, PPU 80, 스케일 1). 석상 버튼 아이콘(18×18)도 같이 → Resources/Sprites/Actions/statue.png.
+# 2026-10-01 사용자 「석상 크기 좀 줄여줘, 처음 크기에서 1.25배」: 같은 디자인을 작은 칸으로 다시 그리게 했다(raw/statue125_*, 프롬프트 raw/statue125_prompt.txt).
+#   74칸 블록아웃을 줘도 Codex 픽셀 크기가 달라 63 · 75 · 82칸이 나왔고, 사용자가 63칸 A(처음의 약 1.05배)를 골랐다. 아래 옛 기록은 1.5배(87칸) 때 것.
 # 석상(2026-09-30 사용자: 처음 크기의 1.5배 · 받침 봉헌 제단 원본): 1.5배를 스케일로 키우면 한 칸이 3px라 art.md(크기는 칸 수로)와 어긋나서,
 #   Codex에 1.5배 칸 수(폭 약 87칸, 웜뱃 약 63칸)로 석상 전체를 다시 그리게 했다. 참조: 옛 석상(60칸)을 한 칸 16px로 키운 raw/statue15_ref16.png(웜뱃 결),
 #   처음 받침 시안 raw/statue_pedestal_first_b.png(봉헌 제단 디자인). 프롬프트 raw/statue15_prompt.ps1. 세 장(raw/statue15_a~c.png) 가운데
@@ -16,12 +18,11 @@ LINE = (52, 32, 32)
 STONE = [(88, 80, 78), (122, 114, 108), (156, 148, 138), (190, 182, 170), (222, 216, 204)]
 sys.path.insert(0, os.path.join(HERE, '..', '..', 'Source~'))
 import snap_codex  # noqa: E402
-STATUE_RAW = os.path.join(HERE, 'raw', 'statue15_a.png')
-TARGET_W = 87             # 옛 석상 58칸 × 1.5
+STATUE_RAW = os.path.join(HERE, 'raw', 'statue125_a.png')
 
-raw = np.asarray(Image.open(STATUE_RAW).convert('RGB')).astype(int)
-ys, xs = np.nonzero(np.abs(raw - 255).sum(2) > 60)
-cells, _ = snap_codex.snap(STATUE_RAW, 12, cell=(xs.max() - xs.min() + 1) / TARGET_W, square=True)
+# 사용자가 고른 그림(63×65칸)을 만든 격자를 그대로 적어 둔다(가로 주기 · 시작, 세로 주기 · 시작). 자동은 시작점이 1/4px 달라 칸이 한 줄씩 밀린다. 하이라이트는 구멍으로 뚫지 않게
+GRID = (17.867, 16.0, 17.60966, 1.0)
+cells, _ = snap_codex.snap(STATUE_RAW, 12, fixed=GRID, min_hole=40)
 img = Image.fromarray(np.repeat(np.repeat(cells, 2, 0), 2, 1), 'RGBA')
 img.save(os.path.join(HERE, '..', 'statue.png'))
 print('statue', img.size, 'cells', cells.shape[1], 'x', cells.shape[0])
