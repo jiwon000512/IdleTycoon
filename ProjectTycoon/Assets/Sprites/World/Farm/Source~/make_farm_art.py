@@ -8,13 +8,21 @@
 #   밭 칸에 줄 셋을 겹쳐 얹고(BakeryBaker k_CropOffsets), 줄마다 반쪽 0 · 1을 번갈아 써 같은 그림이 반복되지 않게 한다.
 # 표시: 진행 게이지 「새싹 원판」 20×20칸 16장(farm_timer_00~15, 테두리가 초록으로 돌고 가운데 새싹이 자람)과 금빛 테두리 · 이삭의 다 익음 표시(farm_ready_mark). 작물 위에 뜨므로 그림은 모든 것 위(BakeryBaker k_PlotMarkOrder).
 #   2026-09-30 「무럭무럭」: 띠 셋에서 5단계(씨앗 둔덕 · 새싹 · 줄기 · 익어 가는 · 익음)를 만들고, 단계 · 반쪽마다 위 절반을 한 칸 기운 흔들림 판(_l · _r).
-# 출력: ../plot.png · ../plot_manure.png(거름 넣은 밭 겹 그림) · ../farm_timer_XX.png · ../farm_ready_mark.png · ../farm_sparkle_0~1.png · Resources/Sprites/Farm/wheat_<단계>_<반쪽>[_l|_r].png. 실행: Windows Python(Pillow · numpy) make_farm_art.py
+# 딸기(설계 35, 2026-10-01 사용자 선택 A): raw/strawberry_crop_a~c(새싹 · 줄기 · 꽃과 풋열매 · 익음 4띠, 프롬프트 raw/prompt_strawberry_crop.txt).
+#   밀과 달리 원본 격자 그대로(World/Source~/snap_codex.py, 띠마다). 원본 픽셀이 잘아(한 칸 5.6px) 띠가 330칸 넘게 나오므로 포기 사이 빈 열에서 STRAW_MAX_W칸 안으로 창 둘(반쪽 0 · 1)을 자른다.
+#   5단계 = 씨앗 둔덕(새싹 밑동 자리) · 띠 0 · 1 · 2 · 3. 꽃잎 흰색은 남긴다(바깥 배경만 지움). 흔들림 판은 밀과 같다.
+# 출력: ../plot.png · ../plot_manure.png(거름 넣은 밭 겹 그림) · ../farm_timer_XX.png · Resources/Sprites/Farm/Ready/wheat.png(다 익음 원판, 작물마다 CropTable readyMark) · ../farm_sparkle_0~1.png · Resources/Sprites/Farm/wheat_<단계>_<반쪽>[_l|_r].png · strawberry_<단계>_<반쪽>[_l|_r].png. 실행: Windows Python(Pillow · numpy) make_farm_art.py
 import colorsys
 import math
 import os
+import sys
+import tempfile
 from collections import Counter
 import numpy as np
 from PIL import Image
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'Source~'))
+import snap_codex  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(HERE, 'raw')
@@ -31,6 +39,10 @@ WHEAT_RAW = 'wheat_a.png'
 WHEAT_CELLS_W = 120
 WHEAT_MAX_W = 104
 WHEAT_TRIM = 16
+STRAW_RAW = 'strawberry_crop_a.png'
+STRAW_MAX_W = 104
+# 꽃잎 · 하이라이트 흰 덩어리(원본 px)는 이보다 작아 남고, 바깥 배경만 지운다
+STRAW_MIN_HOLE = 1000
 # 단계마다 (채도 배율, 밝기 배율). 익음(2)은 그대로
 PRESS = {0: (0.72, 0.9), 1: (0.85, 0.95), 2: (1.0, 1.0)}
 # 팔레트: 이 비율보다 드문 색은 버리고, 이 거리 안은 한 색, 많아도 7색(art.md 5~7색)
@@ -279,6 +291,59 @@ def wheat():
             save(tilt(cells, 1), os.path.join(RES, 'wheat_%d_%d_r.png' % (stage, half)))
 
 
+def strawberry():
+    img = np.asarray(Image.open(os.path.join(RAW, STRAW_RAW)).convert('RGBA'))
+    ink = np.abs(img[..., :3].astype(int) - 255).sum(2) >= 60
+    rows = ink.any(1)
+    bands, start = [], None
+    for y, on in enumerate(rows):
+        if on and start is None:
+            start = y
+        if not on and start is not None:
+            if y - start > 20:
+                bands.append((start, y))
+            start = None
+    if start is not None:
+        bands.append((start, len(rows)))
+    assert len(bands) == 4, bands
+    raw = []
+    for y0, y1 in bands:
+        xs = np.nonzero(ink[y0:y1].any(0))[0]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, 'band.png')
+            Image.fromarray(img[max(0, y0 - 12):y1 + 12, xs.min() - 12:xs.max() + 13]).save(path)
+            cells, _ = snap_codex.snap(path, 12, min_hole=STRAW_MIN_HOLE)
+        halves = straw_windows(cells)
+        h = max(x.shape[0] for x in halves)
+        w = max(x.shape[1] for x in halves)
+        raw.append([np.pad(x, ((h - x.shape[0], 0), ((w - x.shape[1]) // 2, w - x.shape[1] - (w - x.shape[1]) // 2), (0, 0))) for x in halves])
+        print('strawberry band', len(raw) - 1, 'cells', cells.shape[1], 'x', cells.shape[0], '->', w, 'x', h)
+    for half in range(2):
+        sprout = raw[0][half]
+        # 씨앗 둔덕: 새싹 밑 세 줄에 잉크가 있는 열 묶음마다(seed_stage는 맨 아랫줄만 본다)
+        foot = np.zeros((1, sprout.shape[1], 4), np.uint8)
+        foot[0, (sprout[-3:, :, 3] > 0).any(0), 3] = 255
+        stages = [seed_stage(foot), raw[0][half], raw[1][half], raw[2][half], raw[3][half]]
+        for stage, cells in enumerate(stages):
+            save(cells, os.path.join(RES, 'strawberry_%d_%d.png' % (stage, half)))
+            save(tilt(cells, -1), os.path.join(RES, 'strawberry_%d_%d_l.png' % (stage, half)))
+            save(tilt(cells, 1), os.path.join(RES, 'strawberry_%d_%d_r.png' % (stage, half)))
+
+
+def straw_windows(cells):
+    # 포기 사이 빈 열(잉크가 가장 적은 10%)에서 시작해 STRAW_MAX_W칸 안의 가장 먼 빈 열에서 끝나는 창. 앞 절반 · 뒤 절반에서 하나씩
+    ink = (cells[..., 3] > 0).sum(0)
+    n = len(ink)
+    gap = [x for x in range(n) if ink[x] <= np.sort(ink)[n // 10]]
+    out = []
+    for lo, hi in ((0, n // 2 - STRAW_MAX_W // 2), (n // 2 - STRAW_MAX_W // 4, n - 1)):
+        best = max((max(e for e in gap if s < e <= s + STRAW_MAX_W) - s, s) for s in gap
+                   if lo <= s <= hi and any(s < e <= s + STRAW_MAX_W for e in gap))
+        width, s = best
+        out.append(cells[:, s + 1:s + width])
+    return out
+
+
 def seed_stage(sprout):
     # 새싹 그림의 맨 아랫줄 줄기 자리마다 흙 둔덕(7칸) + 초록 싹 두 칸. 높이 6칸, 폭은 새싹과 같다
     w = sprout.shape[1]
@@ -368,7 +433,7 @@ def marks():
         save(frame, os.path.join(FARM, 'farm_timer_%02d.png' % i))
     ready = dial(360, EAR['G'], EAR['g'])
     stamp(ready, EAR_ROWS, EAR)
-    save(ready, os.path.join(FARM, 'farm_ready_mark.png'))
+    save(ready, os.path.join(RES, 'Ready', 'wheat.png'))
     # 2026-09-30 「무럭무럭」: 다 익은 이삭 위에 가끔 뜨는 반짝임 두 장(큰 +, 작은 +). 가운데 피벗
     for i, rows in enumerate(SPARKLE_ROWS):
         spark = np.zeros((len(rows), len(rows[0]), 4), np.uint8)
@@ -401,4 +466,5 @@ def manure(plot):
 if __name__ == '__main__':
     manure(soil())
     wheat()
+    strawberry()
     marks()
