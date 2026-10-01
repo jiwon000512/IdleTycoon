@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using GameKit.Events;
 using GameKit.Tables;
@@ -7,35 +6,39 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 31 · 32 · 34 좌판 팝업: 광장 행상에게 말을 걸면(MerchantTalked) 인사가 반쯤 지난 뒤 열고, 뽑기 · 후보 · 고른 결과를 Core Relics에 잇는다.
-    // 뽑은 후보는 고를 때까지 남는다(다시 열어도 후보). 「유물 보기」는 유물 화면(openRelics)을 연다. 행상이 떠나면 · 편집 모드에서는 닫는다
+    // 설계 31 · 32 · 34 → 설계 36 반짝돌 뽑기: 광장 행상에게 말을 걸면(MerchantTalked) 인사가 반쯤 지난 뒤 뽑기 메인을 열고, 뽑으면(RelicsChanged Drawn)
+    // 결과 팝업이 메인 위에 뜬다. 결과의 「한 번 더」는 그 자리에서 다시 뽑고, 「확인」은 결과만 닫고, 「유물 보기」는 둘 다 닫고 유물 화면(openRelics)을 연다.
+    // 행상이 떠나면 · 편집 모드에서는 둘 다 닫는다
     public sealed class RelicCartPresenter : IDisposable
     {
         // 인사 말풍선이 떠 있는 시간 중 이만큼 지나 팝업이 뜬다
         private const float k_TalkShare = 0.5f;
 
         private readonly RelicCartView m_view;
+        private readonly RelicDrawResultView m_result;
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
         private readonly Action m_openRelics;
         private readonly IDisposable[] m_subscriptions;
         private MerchantInteractable m_thing;
-        private int m_chosen;
 
         private Relics Relics => m_state.Relics;
         private bool CanDraw => m_state.Count(Relics.Item) >= Relics.Cost && !Relics.Complete;
 
-        public RelicCartPresenter(RelicCartView view, ZooState state, EventBus bus, TableSet tables, Action openRelics)
+        public RelicCartPresenter(RelicCartView view, RelicDrawResultView result, ZooState state, EventBus bus, TableSet tables, Action openRelics)
         {
             m_view = view;
+            m_result = result;
             m_state = state;
             m_tables = tables;
             m_openRelics = openRelics;
             m_view.CloseRequested += View_CloseRequested;
             m_view.DrawClicked += View_DrawClicked;
-            m_view.ViewClicked += View_ViewClicked;
-            m_view.OfferClicked += View_OfferClicked;
-            m_view.SetLabels(tables.Text("relic_cart_title"), tables.Text("relic_draw"), tables.Text("relic_again"), tables.Text("relic_view"));
+            m_result.CloseRequested += Result_CloseRequested;
+            m_result.AgainClicked += View_DrawClicked;
+            m_result.ViewClicked += Result_ViewClicked;
+            m_view.SetLabels(tables.Text("relic_cart_title"), tables.Text("relic_draw"));
+            m_result.SetLabels(tables.Text("relic_view"), tables.Text("relic_again"), tables.Text("relic_ok"));
             m_subscriptions = new[]
             {
                 bus.Subscribe<Events.MerchantTalked>(Bus_MerchantTalked),
@@ -55,8 +58,9 @@ namespace ZooTycoon.UI
         {
             m_view.CloseRequested -= View_CloseRequested;
             m_view.DrawClicked -= View_DrawClicked;
-            m_view.ViewClicked -= View_ViewClicked;
-            m_view.OfferClicked -= View_OfferClicked;
+            m_result.CloseRequested -= Result_CloseRequested;
+            m_result.AgainClicked -= View_DrawClicked;
+            m_result.ViewClicked -= Result_ViewClicked;
 
             foreach (IDisposable subscription in m_subscriptions)
             {
@@ -68,7 +72,7 @@ namespace ZooTycoon.UI
         {
             if (editing)
             {
-                m_view.Close();
+                CloseBoth();
             }
         }
 
@@ -81,77 +85,51 @@ namespace ZooTycoon.UI
             m_view.ShowReady(m_tables.Format("relic_cart_lead", Relics.Cost), hint, Relics.Cost, CanDraw);
         }
 
-        private void ShowOffer(bool animate)
+        private void CloseBoth()
         {
-            m_view.ShowOffer(Offers(), m_tables.Text("relic_pick"), m_tables.Text("relic_pick_hint"), animate);
-        }
-
-        // 후보 카드: 고른 뒤의 별과 효과, 새 유물이면 「새 유물」, 아니면 「★n로」
-        private List<RelicCard.Data> Offers()
-        {
-            List<RelicCard.Data> offers = new List<RelicCard.Data>();
-
-            foreach (RelicTable relic in Relics.Offer)
-            {
-                int stars = Relics.Stars(relic) + 1;
-                offers.Add(new RelicCard.Data
-                {
-                    IconPath = relic.Icon,
-                    Name = m_tables.Text(relic.Name),
-                    Effect = EffectText(m_tables, relic, stars),
-                    Stars = stars,
-                    Badge = stars == 1 ? m_tables.Text("relic_new") : m_tables.Format("relic_star_up", stars),
-                });
-            }
-
-            return offers;
+            m_result.Close();
+            m_view.Close();
         }
 
         private void Bus_MerchantTalked(Events.MerchantTalked e)
         {
             m_thing = e.Thing;
-
-            if (Relics.HasOffer)
-            {
-                ShowOffer(false);
-            }
-            else
-            {
-                ShowReady();
-            }
-
+            ShowReady();
             m_view.Open((float)e.Seconds * k_TalkShare);
         }
 
-        // 고른 결과: 위 글 = 새 유물 / 별 오름, 아래 글 = 칸에 끼움 / 이미 끼운 유물 / 칸이 가득
+        // 뽑은 유물의 앞면: 이름표 = 새 유물 / ★n로, 아래 글 = 칸에 끼움 / 이미 끼운 유물 / 칸이 가득. 메인의 반짝돌 글도 다시 쓴다
         private void Bus_RelicsChanged(Events.RelicsChanged e)
         {
-            if (!m_view.IsOpen)
+            if (e.Change != RelicChange.Drawn || !m_view.IsOpen)
             {
                 return;
             }
 
-            if (e.Change == RelicChange.Drawn)
+            RelicTable relic = e.Relic;
+            int stars = Relics.Stars(relic);
+            RelicCard.Data face = new RelicCard.Data
             {
-                ShowOffer(true);
-            }
-            else if (e.Change == RelicChange.Chosen)
-            {
-                int stars = Relics.Stars(e.Relic);
-                string label = stars == 1 ? m_tables.Text("relic_got_new") : m_tables.Format("relic_got_star", stars);
-                string hint = !Relics.IsEquipped(e.Relic) ? m_tables.Text("relic_got_full")
-                    : stars == 1 ? m_tables.Text("relic_got_slot")
-                    : m_tables.Text("relic_got_equipped");
-                m_view.ShowChosen(m_chosen, stars, label, hint, Relics.Cost, CanDraw);
-            }
+                IconPath = relic.Icon,
+                Name = m_tables.Text(relic.Name),
+                Effect = EffectText(m_tables, relic, stars),
+                Stars = stars,
+                Selected = true,
+                Badge = stars == 1 ? m_tables.Text("relic_new") : m_tables.Format("relic_star_up", stars),
+            };
+            string hint = !Relics.IsEquipped(relic) ? m_tables.Text("relic_got_full")
+                : stars == 1 ? m_tables.Text("relic_got_slot")
+                : m_tables.Text("relic_got_equipped");
+            ShowReady();
+            m_result.Show(face, stars, hint, Relics.Cost, CanDraw);
         }
 
-        // 행상이 좌판을 접으면 팝업도 닫는다(뽑은 후보는 다음 방문까지 남는다)
+        // 행상이 떠나면 둘 다 닫는다
         private void Bus_MerchantChanged(Events.MerchantChanged e)
         {
             if (!e.Merchant.IsOpen)
             {
-                m_view.Close();
+                CloseBoth();
             }
         }
 
@@ -165,16 +143,15 @@ namespace ZooTycoon.UI
             m_thing?.TryDraw();
         }
 
-        private void View_ViewClicked()
+        private void Result_CloseRequested()
         {
-            m_view.Close();
-            m_openRelics();
+            m_result.Close();
         }
 
-        private void View_OfferClicked(int index)
+        private void Result_ViewClicked()
         {
-            m_chosen = index;
-            Relics.Choose(index);
+            CloseBoth();
+            m_openRelics();
         }
     }
 }

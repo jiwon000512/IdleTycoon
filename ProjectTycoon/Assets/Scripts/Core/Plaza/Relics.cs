@@ -5,29 +5,23 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 31: 유물(플레이어 상태라 ZooState가 든다). 광장 유물 수레에서 반짝돌(relicItem)을 relicCost개 내고 뽑으면 후보(별이 다 오르지 않은 유물, 비중)가
-    // 서로 다르게 셋까지 뜨고, 하나를 고를 때까지 남는다. 새 유물은 ★1, 가진 유물은 별 +1. 칸(relicSlots)에 끼운 유물만 효과가 난다(빈 칸이면 고를 때 저절로 끼운다)
+    // 설계 31 → 설계 36: 유물(플레이어 상태라 ZooState가 든다). 광장 행상에게 반짝돌(relicItem)을 relicCost개 내고 뽑으면 별이 다 오르지 않은 유물 중
+    // 하나가 비중으로 바로 들어온다(새 유물은 ★1, 가진 유물은 별 +1). 칸(relicSlots)에 끼운 유물만 효과가 난다(빈 칸이면 뽑을 때 저절로 끼운다)
     public sealed class Relics
     {
-        public const int k_Choices = 3;
-
         private readonly ZooState m_wallet;
         private readonly EventBus m_bus;
         private readonly PlazaConfigTable m_config;
         private readonly Dictionary<string, int> m_stars = new Dictionary<string, int>(StringComparer.Ordinal);
-        private readonly List<RelicTable> m_offer = new List<RelicTable>();
         private readonly RelicTable[] m_slots;
         // 낡은 주판: 끼운 동안 센 계산 수
         private int m_sales;
 
         public IReadOnlyList<RelicTable> All { get; }
-        // 뽑고 아직 고르지 않은 후보(없으면 빈 목록)
-        public IReadOnlyList<RelicTable> Offer => m_offer;
         // 칸(빈 칸은 null)
         public IReadOnlyList<RelicTable> Slots => m_slots;
         public string Item => m_config.RelicItem;
         public int Cost => m_config.RelicCost;
-        public bool HasOffer => m_offer.Count > 0;
         // 모든 유물의 별이 다 올랐다(더 뽑을 것이 없다)
         public bool Complete => Candidates().Count == 0;
 
@@ -51,32 +45,17 @@ namespace ZooTycoon.Core
             return Array.IndexOf(m_slots, relic) >= 0;
         }
 
-        // 후보가 남아 있거나, 더 뽑을 것이 없거나, 반짝돌이 모자라면 아무 일 없이 false
+        // 뽑은 유물 하나: 별 +1, 칸에 없고 빈 칸이 있으면 끼운다. 더 뽑을 것이 없거나 반짝돌이 모자라면 아무 일 없이 false
         public bool TryDraw(IRandom random)
         {
             List<RelicTable> pool = Candidates();
 
-            if (HasOffer || pool.Count == 0 || !m_wallet.TrySpendItem(Item, Cost))
+            if (pool.Count == 0 || !m_wallet.TrySpendItem(Item, Cost))
             {
                 return false;
             }
 
-            while (m_offer.Count < k_Choices && pool.Count > 0)
-            {
-                int index = Pick(pool, random);
-                m_offer.Add(pool[index]);
-                pool.RemoveAt(index);
-            }
-
-            Publish(RelicChange.Drawn, null);
-            return true;
-        }
-
-        // 후보 하나를 고른다: 별 +1, 칸에 없고 빈 칸이 있으면 끼운다
-        public void Choose(int index)
-        {
-            RelicTable relic = m_offer[index];
-            m_offer.Clear();
+            RelicTable relic = pool[Pick(pool, random)];
             m_stars[relic.Id] = Stars(relic) + 1;
             int free = Array.IndexOf(m_slots, null);
 
@@ -85,7 +64,8 @@ namespace ZooTycoon.Core
                 m_slots[free] = relic;
             }
 
-            Publish(RelicChange.Chosen, relic);
+            Publish(RelicChange.Drawn, relic);
+            return true;
         }
 
         // 가진 유물을 빈 칸에. 없는 유물 · 이미 끼운 유물 · 빈 칸이 없으면 false
@@ -202,11 +182,10 @@ namespace ZooTycoon.Core
         }
     }
 
-    // 뽑음(후보가 떴다) · 고름(Relic을 골랐다) · 끼움/뺌
+    // 뽑음(Relic이 들어왔다) · 끼움/뺌
     public enum RelicChange
     {
         Drawn,
-        Chosen,
         Equipped,
     }
 }

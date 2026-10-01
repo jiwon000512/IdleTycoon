@@ -49,15 +49,15 @@ namespace ZooTycoon.Tests
             m_mall = new Mall(m_shop, m_plaza, m_farm, m_bus);
         }
 
-        // 그 유물을 첫 후보로 뽑아 고른다(비중이 모두 같다고 보고 후보 순서의 가운데 난수)
+        // 그 유물을 뽑는다(비중이 모두 같다고 보고 후보 순서의 가운데 난수)
         internal static void Grant(ZooState state, string id)
         {
             Relics relics = state.Relics;
             List<RelicTable> pool = relics.All.Where(r => relics.Stars(r) < r.Values.Length).ToList();
-            double roll = (pool.FindIndex(r => r.Id == id) + 0.5d) / pool.Count;
-            Assert.That(relics.TryDraw(new SequenceRandom(roll, 0.5d, 0.5d)), Is.True);
-            Assert.That(relics.Offer[0].Id, Is.EqualTo(id));
-            relics.Choose(0);
+            RelicTable relic = pool.Single(r => r.Id == id);
+            int stars = relics.Stars(relic);
+            Assert.That(relics.TryDraw(new SequenceRandom((pool.IndexOf(relic) + 0.5d) / pool.Count)), Is.True);
+            Assert.That(relics.Stars(relic), Is.EqualTo(stars + 1));
         }
 
         private RelicTable Relic(string id)
@@ -65,46 +65,44 @@ namespace ZooTycoon.Tests
             return m_tables.Get<RelicTable>(id);
         }
 
+        // 설계 36: 반짝돌을 내면 유물 하나가 바로 들어온다(★1 · 빈 칸에 끼움), 사건은 그 유물을 싣는다
         [Test]
-        public void Draw_SpendsGems_AndOffersThreeDifferent()
+        public void Draw_SpendsGems_AndGivesOneRelic()
         {
             int gems = Gems;
-            int drawn = 0;
-            m_bus.Subscribe<Events.RelicsChanged>(e => drawn += e.Change == RelicChange.Drawn ? 1 : 0);
+            List<Events.RelicsChanged> drawn = new List<Events.RelicsChanged>();
+            m_bus.Subscribe<Events.RelicsChanged>(e => drawn.Add(e));
 
-            Assert.That(Relics.TryDraw(new SequenceRandom(0.1d, 0.1d, 0.1d)), Is.True);
+            Assert.That(Relics.TryDraw(new SequenceRandom(0.1d)), Is.True);
 
             Assert.That(Gems, Is.EqualTo(gems - Config.RelicCost));
-            Assert.That(Relics.Offer.Count, Is.EqualTo(Relics.k_Choices));
-            Assert.That(Relics.Offer.Distinct().Count(), Is.EqualTo(Relics.k_Choices));
-            Assert.That(drawn, Is.EqualTo(1));
+            Assert.That(Relics.All.Count(r => Relics.Stars(r) > 0), Is.EqualTo(1));
+            Assert.That(drawn.Single().Change, Is.EqualTo(RelicChange.Drawn));
+            RelicTable relic = drawn.Single().Relic;
+            Assert.That(Relics.Stars(relic), Is.EqualTo(1));
+            Assert.That(Relics.Slots[0], Is.EqualTo(relic));
         }
 
         [Test]
-        public void Draw_FailsWithoutGems_OrWhileOfferIsOpen()
+        public void Draw_FailsWithoutGems()
         {
-            Assert.That(Relics.TryDraw(new SequenceRandom(0.1d, 0.1d, 0.1d)), Is.True);
+            m_state.TrySpendItem(Relics.Item, Gems - (Config.RelicCost - 1));
             int gems = Gems;
 
-            Assert.That(Relics.TryDraw(new SequenceRandom(0.1d, 0.1d, 0.1d)), Is.False);
+            Assert.That(Relics.TryDraw(new SequenceRandom(0.1d)), Is.False);
             Assert.That(Gems, Is.EqualTo(gems));
-
-            Relics.Choose(0);
-            m_state.TrySpendItem(Relics.Item, Gems - (Config.RelicCost - 1));
-            Assert.That(Relics.TryDraw(new SequenceRandom(0.1d, 0.1d, 0.1d)), Is.False);
-            Assert.That(Relics.HasOffer, Is.False);
+            Assert.That(Relics.All.All(r => Relics.Stars(r) == 0), Is.True);
         }
 
-        // 새 유물은 ★1로 빈 칸에 들고, 또 고르면 ★2(칸은 그대로 하나)
+        // 새 유물은 ★1로 빈 칸에 들고, 또 뽑히면 ★2(칸은 그대로 하나)
         [Test]
-        public void Choose_GivesStar_AndEquipsIntoFreeSlot_ThenRaisesStar()
+        public void Draw_GivesStar_AndEquipsIntoFreeSlot_ThenRaisesStar()
         {
             RelicTable bellows = Relic("bellows");
 
             Grant(m_state, "bellows");
             Assert.That(Relics.Stars(bellows), Is.EqualTo(1));
             Assert.That(Relics.Slots[0], Is.EqualTo(bellows));
-            Assert.That(Relics.HasOffer, Is.False);
 
             Grant(m_state, "bellows");
             Assert.That(Relics.Stars(bellows), Is.EqualTo(2));
@@ -112,9 +110,9 @@ namespace ZooTycoon.Tests
             Assert.That(Relics.Value(BlessingTable.k_Bake), Is.EqualTo(bellows.Values[1]));
         }
 
-        // ★3이 된 유물은 후보에 안 뜨고, 남은 후보가 둘이면 둘만, 다 모으면 뽑기가 없다
+        // ★3이 된 유물은 뽑히지 않고(남은 둘 중에서만), 다 모으면 뽑기가 없다
         [Test]
-        public void MaxedRelics_LeaveTheOffer_UntilComplete()
+        public void MaxedRelics_AreNotDrawn_UntilComplete()
         {
             foreach (RelicTable relic in Relics.All.Skip(2))
             {
@@ -124,9 +122,8 @@ namespace ZooTycoon.Tests
                 }
             }
 
-            Assert.That(Relics.TryDraw(new SequenceRandom(0.1d, 0.1d)), Is.True);
-            Assert.That(Relics.Offer, Is.EquivalentTo(Relics.All.Take(2)));
-            Relics.Choose(0);
+            Assert.That(Relics.TryDraw(new SequenceRandom(0.99d)), Is.True);
+            Assert.That(Relics.All.Take(2).Sum(r => Relics.Stars(r)), Is.EqualTo(1));
 
             foreach (RelicTable relic in Relics.All.Take(2))
             {
@@ -322,7 +319,7 @@ namespace ZooTycoon.Tests
             Assert.That(phases, Is.EqualTo(new[] { MerchantPhase.Coming, MerchantPhase.Open, MerchantPhase.Leaving, MerchantPhase.Away }));
             Assert.That(m_plaza.Visitors, Is.Empty);
             Assert.That(m_plaza.TargetAction, Is.Null);
-            Assert.That(Relics.HasOffer, Is.True);
+            Assert.That(Relics.All.Sum(r => Relics.Stars(r)), Is.EqualTo(1));
             Assert.That(m_plaza.Merchant.UntilNext, Is.GreaterThan(0d).And.LessThan(60d));
 
             Assert.That(RunUntil(() => m_plaza.Merchant.Phase == MerchantPhase.Coming, 60d), Is.True);

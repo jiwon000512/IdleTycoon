@@ -37,6 +37,8 @@ namespace ZooTycoon.Game
             InventoryView inventoryView = ui.Open<InventoryView>();
             StatueView statueView = ui.Open<StatueView>();
             RelicCartView relicView = ui.Open<RelicCartView>();
+            // 뽑기 결과는 뽑기 메인 위에 뜬다(설계 36)
+            RelicDrawResultView relicResultView = ui.Open<RelicDrawResultView>();
             WorldManager world = WorldManager.Instance;
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables, game.Mall.Plaza.Merchant);
@@ -47,7 +49,7 @@ namespace ZooTycoon.Game
             m_inventoryPresenter = new InventoryPresenter(inventoryView, game.State, game.Bus, game.Tables);
             m_statuePresenter = new StatuePresenter(statueView, game.State, game.Bus, game.Tables);
             m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
-            m_relicPresenter = new RelicCartPresenter(relicView, game.State, game.Bus, game.Tables, m_relicsPresenter.Open);
+            m_relicPresenter = new RelicCartPresenter(relicView, relicResultView, game.State, game.Bus, game.Tables, m_relicsPresenter.Open);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.EditingChanged += Edit_EditingChanged;
