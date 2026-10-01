@@ -31,7 +31,8 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 | 닫기 | `btn_close` | 76×76 |
 | 주 버튼 | `btn_primary` (+ `_pressed`, `_disabled`) | Button 상태 스프라이트 세 장을 같이 쓴다 |
 | 보조 버튼 | `btn_secondary` (+ `_pressed`, `_disabled`) | |
-| 행동 버튼(원형) | `btn_act` | |
+| 상호작용 버튼(원형) | `btn_act` | 돌 테(석상 돌색). `make_act_button.py` |
+| 메뉴 버튼(원형) | `btn_menu` | 오른쪽 버튼 줄 · 팝업. 캐러멜 볼록 단추(아래 두께). 132px(3배) · 아이콘 54px · 간격 20px(실제 폰 약 9mm, 2026-10-01 사용자). `make_act_button.py` |
 | 팝업 틀 | `panel` | 9-slice 8칸. `make_panel.py` |
 | 카드·줄 | `row` | |
 | 칩·탭·카드 | `chip` · `chip_selected` | 9-slice 6칸. `make_chip.py` |
