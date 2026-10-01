@@ -10,7 +10,8 @@ namespace ZooTycoon.UI
 {
     // 연출 1차: 상단 바는 코인만. 값이 바뀌면 0.25초 동안 숫자가 오른다(첫 표시는 즉시)
     // 숫자는 공용 코인 캡슐(Prefabs/UI/CoinPill) 안의 금색 글자.
-    // 설계 30: 석상 축복이 걸린 동안 코인 아래 축복 알약(아이콘 · 효과 · 남은 시간, 마지막 10초는 깜빡임). 그동안 쓴 코인 표시는 그 아래로 내려간다
+    // 설계 30: 석상 축복이 걸린 동안 코인 아래 축복 알약(아이콘 · 효과 · 남은 시간, 마지막 10초는 깜빡임). 그동안 쓴 코인 표시는 그 아래로 내려간다.
+    // 설계 31: 떠돌이 행상이 좌판을 연 동안 「행상 2:59」 알약. 알약은 코인 아래로 위에서부터 쌓인다(축복 → 행상)
     public sealed class TopBarView : UIView
     {
         private const float k_CountSeconds = 0.25f;
@@ -29,6 +30,10 @@ namespace ZooTycoon.UI
         [SerializeField] private Image m_blessingIcon;
         [SerializeField] private TMP_Text m_blessingText;
         [SerializeField] private TMP_Text m_blessingTime;
+        [Tooltip("설계 31 행상 알약(축복 알약 아래)")]
+        [SerializeField] private CanvasGroup m_merchant;
+        [SerializeField] private TMP_Text m_merchantText;
+        [SerializeField] private TMP_Text m_merchantTime;
 
         private Func<double, string> m_format;
         private double m_from;
@@ -40,6 +45,8 @@ namespace ZooTycoon.UI
         private Vector2 m_spentRest;
         private Func<double> m_blessingLeft;
         private float m_blessingDelay;
+        private Func<double> m_merchantLeft;
+        private float m_pillTop;
 
         public bool SpentVisible => m_spentLeft > 0f;
 
@@ -47,7 +54,9 @@ namespace ZooTycoon.UI
         {
             m_spent.gameObject.SetActive(false);
             m_blessing.gameObject.SetActive(false);
+            m_merchant.gameObject.SetActive(false);
             m_spentRest = ((RectTransform)m_spent.transform).anchoredPosition;
+            m_pillTop = ((RectTransform)m_blessing.transform).anchoredPosition.y;
         }
 
         // delay: 석상 팝업에서 이름이 도는 동안은 결과를 미리 보이지 않는다
@@ -76,8 +85,25 @@ namespace ZooTycoon.UI
             }
 
             m_blessing.gameObject.SetActive(false);
-            PlaceSpent();
+            Stack();
             SoundManager.Instance.Play(SoundTable.k_BlessingEnd);
+        }
+
+        // 설계 31: 행상이 좌판을 열었다 · 걷었다. remaining: 좌판이 닫힐 때까지 남은 초
+        public void ShowMerchant(string text, Func<double> remaining)
+        {
+            m_merchantText.text = text;
+            m_merchantLeft = remaining;
+            m_merchantTime.text = BigNumberFormatter.Clock(remaining());
+            m_merchant.alpha = 1f;
+            m_merchant.gameObject.SetActive(true);
+            Stack();
+        }
+
+        public void HideMerchant()
+        {
+            m_merchant.gameObject.SetActive(false);
+            Stack();
         }
 
         private void Reveal()
@@ -85,14 +111,27 @@ namespace ZooTycoon.UI
             m_blessingTime.text = BigNumberFormatter.Clock(m_blessingLeft());
             m_blessing.alpha = 1f;
             m_blessing.gameObject.SetActive(true);
-            PlaceSpent();
+            Stack();
         }
 
-        private void PlaceSpent()
+        // 켜진 알약을 위에서부터 붙여 놓고, 쓴 코인 표시는 맨 아래 알약 밑으로
+        private void Stack()
         {
-            RectTransform blessing = (RectTransform)m_blessing.transform;
-            float drop = m_blessing.gameObject.activeSelf ? blessing.sizeDelta.y + m_spentRest.y - blessing.anchoredPosition.y : 0f;
-            ((RectTransform)m_spent.transform).anchoredPosition = m_spentRest - new Vector2(0f, Mathf.Max(0f, drop));
+            float y = m_pillTop;
+
+            foreach (CanvasGroup pill in new[] { m_blessing, m_merchant })
+            {
+                if (!pill.gameObject.activeSelf)
+                {
+                    continue;
+                }
+
+                RectTransform rect = (RectTransform)pill.transform;
+                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
+                y -= rect.sizeDelta.y;
+            }
+
+            ((RectTransform)m_spent.transform).anchoredPosition = new Vector2(m_spentRest.x, Mathf.Min(m_spentRest.y, y));
         }
 
         public void ShowSpent(string text)
@@ -129,6 +168,11 @@ namespace ZooTycoon.UI
                 double left = m_blessingLeft();
                 m_blessingTime.text = BigNumberFormatter.Clock(left);
                 m_blessing.alpha = left > k_BlinkSeconds ? 1f : Mathf.Lerp(k_BlinkMin, 1f, Mathf.PingPong(Time.time * k_BlinkSpeed, 1f));
+            }
+
+            if (m_merchant.gameObject.activeSelf)
+            {
+                m_merchantTime.text = BigNumberFormatter.Clock(m_merchantLeft());
             }
 
             if (m_spentLeft > 0f)

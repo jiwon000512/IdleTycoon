@@ -65,6 +65,12 @@ namespace ZooTycoon.Core
             {
                 foreach (SpotOffset spot in placed.Kind.Spots)
                 {
+                    // 설계 31: 행상이 서는 자리(worker)는 손님이 들르지 않는다
+                    if (spot.Role != SpotRole.Customer)
+                    {
+                        continue;
+                    }
+
                     Vector2 p = Nav.Snap(Placement.SpotAt(placed.Position, spot));
 
                     if (Nav.IsWalkable(p))

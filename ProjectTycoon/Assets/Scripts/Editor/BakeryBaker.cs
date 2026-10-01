@@ -503,6 +503,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_counterPrefab", counter);
             Set(view, "m_digTagPrefab", digTag);
             Set(view, "m_poopPrefab", poop);
+            Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             SetArray(view, "m_poopFrames", Frames("poop", "_0", "_1"));
             Set(view, "m_ghostShelf", Load("shelf"));
             Set(view, "m_ghostOven", Load("oven"));
@@ -538,6 +539,14 @@ namespace ZooTycoon.Editor
             // 설계 29: 웜뱃 석상(분수 자리, 발끝으로 깊이 정렬). 크기는 그림 칸 수로(2026-09-30 처음의 1.5배, 스케일 1)
             SpriteRenderer statue = Renderer(root.transform, "Statue", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "statue.png"), Vector3.zero, 0);
             statue.spriteSortPoint = SpriteSortPoint.Pivot;
+            // 설계 31: 유물 수레(석상 오른쪽). 그림은 아트방 시안 전까지 농장 모종 작업대를 임시로
+            SpriteRenderer relicCart = Renderer(root.transform, "RelicCart", AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/World/Farm/farm_prop_bench.png"), Vector3.zero, 0);
+            relicCart.spriteSortPoint = SpriteSortPoint.Pivot;
+            // 설계 31: 행상이 없을 때 좌판 자리에 「다음 행상 12:30」(월드 값 표식 공용 조각 tag_cost, 글 길이만큼 넓힘)
+            GameObject merchantSign = Child(root.transform, "MerchantSign", Vector3.zero);
+            (SpriteRenderer merchantBg, TextMeshPro merchantText) = Tag(merchantSign.transform, k_SignHeight);
+            merchantBg.size = new Vector2(2.6f, merchantBg.size.y);
+            merchantText.rectTransform.sizeDelta = new Vector2(2.6f, merchantBg.size.y);
 
             PlazaView view = root.AddComponent<PlazaView>();
             Set(view, "m_burrow", burrow);
@@ -549,6 +558,9 @@ namespace ZooTycoon.Editor
             Set(view, "m_stairs", stairs.transform);
             Set(view, "m_wombat", wombat);
             Set(view, "m_statue", statue.transform);
+            Set(view, "m_relicCart", relicCart.transform);
+            Set(view, "m_merchantSign", merchantSign.transform);
+            Set(view, "m_merchantSignText", merchantText);
             PlazaVisitorSpawner spawner = root.AddComponent<PlazaVisitorSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Plaza");

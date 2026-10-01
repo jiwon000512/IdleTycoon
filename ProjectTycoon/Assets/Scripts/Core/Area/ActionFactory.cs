@@ -13,6 +13,7 @@ namespace ZooTycoon.Core
             ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter, ActionTable.k_Upgrade,
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
             ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
+            ActionTable.k_Relic,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -35,6 +36,7 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Harvest: return new Harvest(table);
                 case ActionTable.k_Till: return new Till(table);
                 case ActionTable.k_Statue: return new OpenStatue(table);
+                case ActionTable.k_Relic: return new OpenRelicCart(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");
             }
         }

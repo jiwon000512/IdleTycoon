@@ -1,6 +1,6 @@
 {
   "table": "VisitorTable",
-  "version": 12,
+  "version": 13,
   "notes": [
     "기획서 4장 관광객(v0.14). v1.14부터 빵집 손님 외형 전용: 손님이 들어올 때마다 한 행을 고른다.",
     "sprite·idleSheet·moveSheet·backIdleSheet·backMoveSheet는 Resources/ 기준 경로(확장자 없음). idle·move 시트가 null이면 sprite 1장, back 시트가 null이면 앞모습 시트를 쓴다.",
@@ -14,7 +14,8 @@
     "version 9 (2026-09-26, 설계 21 점원): role 추가 — customer(광장 도착 손님 외형, 균등 난수) · clerk(점원 외형, 후보마다 clerk 행 중 균등 난수). v05 회색 웜뱃(남부 털코웜뱃 회갈색 gray_d): 빵집 웜뱃 24장의 털 5색만 바꾼 시트(Shop/Source~/make_wombat_palette.py, 칸 폭 104px). 새 점원 외형 = 시트 한 벌 + clerk 행 하나.",
     "version 10 (2026-09-27, 버그: 점원이 빵을 손보다 높이 듦): handRatio 추가 — 앞발 높이 / 키(든 빵 가운데 = 키 × handRatio + 빵 반쯤). 손님 공통 프리팹 값 0.33을 행으로 옮겼다. 콩 모양 웜뱃(v05)은 0.17(키 1.025 → 빵 0.35, 빵집 웜뱃 m_handHeight와 같음).",
     "version 11 (2026-09-29, 캐릭터 애니메이션 B3): idleFrameRate·moveFrameRate 삭제 — 프레임마다 다른 시간(숨쉬기 4 · 걷기 8)을 손님 프리팹(VisitorView m_idleSeconds · m_walkSeconds)이 갖는다. blinkSheet·sideBlinkSheet 추가(눈 감은 숨쉬기, 눈이 없으면 null). 시트는 Shop/Source~/make_anim.py(부위 조립)가 만든다.",
-    "version 12 (2026-09-29, 딴짓): fidgetSheet·backFidgetSheet·sideFidgetSheet 추가 — 서 있을 때 가끔 숨쉬기 사이에 한 번 끼워 넣는 동작(두리번 · 귀 쫑긋 · 꼬리 살랑 등, 종 · 방향마다 한 벌, 없으면 null). 한 칸 시간 · 간격은 손님 프리팹(VisitorView m_fidgetFrameSeconds · m_fidgetEvery). 시트는 Shop/Source~/make_anim.py."
+    "version 12 (2026-09-29, 딴짓): fidgetSheet·backFidgetSheet·sideFidgetSheet 추가 — 서 있을 때 가끔 숨쉬기 사이에 한 번 끼워 넣는 동작(두리번 · 귀 쫑긋 · 꼬리 살랑 등, 종 · 방향마다 한 벌, 없으면 null). 한 칸 시간 · 간격은 손님 프리팹(VisitorView m_fidgetFrameSeconds · m_fidgetEvery). 시트는 Shop/Source~/make_anim.py.",
+    "version 13 (2026-10-01, 설계 31 떠돌이 행상): role merchant 행 v06(PlazaConfigTable.merchantLook). 광장 손님 · 점원 외형으로는 뽑히지 않는다. 그림은 아트방 시안 전까지 고슴도치 시트를 임시로 가리킨다."
   ],
   "rows": [
     {
@@ -116,6 +117,26 @@
       "scale": 1,
       "carryAt": "hand",
       "handRatio": 0.17
+    },
+    {
+      "id": "v06",
+      "name": "행상",
+      "role": "merchant",
+      "sprite": "Sprites/Visitors/Hedgehog/Hedgehog",
+      "idleSheet": "Sprites/Visitors/Hedgehog/Hedgehog_Idle",
+      "moveSheet": "Sprites/Visitors/Hedgehog/Hedgehog_Move",
+      "backIdleSheet": "Sprites/Visitors/Hedgehog/Hedgehog_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/Hedgehog/Hedgehog_BackMove",
+      "sideIdleSheet": "Sprites/Visitors/Hedgehog/Hedgehog_SideIdle",
+      "sideMoveSheet": "Sprites/Visitors/Hedgehog/Hedgehog_SideMove",
+      "blinkSheet": "Sprites/Visitors/Hedgehog/Hedgehog_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/Hedgehog/Hedgehog_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/Hedgehog/Hedgehog_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/Hedgehog/Hedgehog_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/Hedgehog/Hedgehog_SideFidget",
+      "scale": 1,
+      "carryAt": "hand",
+      "handRatio": 0.33
     }
   ]
 }

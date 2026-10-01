@@ -15,6 +15,8 @@ namespace ZooTycoon.Core
         public double Coins { get; private set; }
         // 설계 30: 석상 축복(가게 전부에 걸리는 시간제 효과)
         public Blessing Blessing { get; private set; }
+        // 설계 31: 유물(칸에 끼운 것만 효과)
+        public Relics Relics { get; private set; }
 
         private ZooState(double coins, EventBus bus)
         {
@@ -27,6 +29,7 @@ namespace ZooTycoon.Core
         {
             ZooState state = new ZooState(tables.Get<ConfigTable>(ConfigTable.k_StartCoins).Value, bus);
             state.Blessing = new Blessing(tables, bus);
+            state.Relics = new Relics(tables, state, bus);
 
             foreach (ItemTable item in tables.GetAll<ItemTable>())
             {
@@ -34,6 +37,12 @@ namespace ZooTycoon.Core
             }
 
             return state;
+        }
+
+        // 설계 31: 효과 배수. 축복과 유물이 같은 효과면 곱한다(굽기 · 계산 속도 · 빵 값 · 손님 · 자람, 효과 키는 BlessingTable.k_*)
+        public double Scale(string effect)
+        {
+            return (1d + Blessing.Boost(effect)) * (1d + Relics.Value(effect));
         }
 
         public void AddCoins(double amount)

@@ -14,6 +14,8 @@ namespace ZooTycoon.World
         private const float k_HelloSeconds = 1.2f;
 
         private const string k_CoinKey = "coin_popup";
+        // 설계 31: 낡은 주판으로 두 배가 된 계산
+        private const string k_DoubleKey = "coin_popup_double";
 
         [SerializeField] private VisitorView m_prefab;
 
@@ -171,7 +173,7 @@ namespace ZooTycoon.World
         {
             if (Mine(e.Visitor))
             {
-                string amount = m_tables.Format(k_CoinKey, e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
+                string amount = m_tables.Format(e.Doubled ? k_DoubleKey : k_CoinKey, e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
                 m_units[e.Visitor].Pay(amount);
             }
         }

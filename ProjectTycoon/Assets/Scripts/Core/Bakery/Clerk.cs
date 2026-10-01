@@ -368,6 +368,9 @@ namespace ZooTycoon.Core
             m_idling = true;
             double bySkill = m_config.IdleSecondsMin + (m_config.IdleSecondsMax - m_config.IdleSecondsMin) * (100 - Skill) / 100d;
             m_idleLeft = bySkill * (1d - k_IdleJitter * 0.5 + k_IdleJitter * Bakery.Random.NextDouble());
+            // 설계 31 알람 시계: 딴짓이 그 초를 넘지 않는다
+            double alarm = Bakery.Wallet.Relics.Value(RelicTable.k_Clock);
+            m_idleLeft = alarm > 0d ? Math.Min(m_idleLeft, alarm) : m_idleLeft;
             BurrowNav nav = Bakery.Layout.WombatNav;
             double roll = Bakery.Random.NextDouble();
             Clerk other = roll < m_config.ChatChance ? Bakery.ChatPartnerFor(this) : null;

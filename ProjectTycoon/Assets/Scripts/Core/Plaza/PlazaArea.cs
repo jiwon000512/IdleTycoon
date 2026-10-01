@@ -60,10 +60,13 @@ namespace ZooTycoon.Core
         }
         protected override BurrowShape.Result Shape => Layout.Shape;
         // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt)
-        protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue);
+        protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue).Append(RelicCart);
         public StatueInteractable Statue { get; }
-        // 손님이 계단으로 오는 간격(석상 손님 능력이면 짧아진다)
-        private double ArrivalSeconds => m_config.ArrivalSeconds / (1d + Wombat.Worker.Wallet.Blessing.Boost(BlessingTable.k_Visitors));
+        // 설계 31: 유물 수레(행상의 좌판 자리, 늘 길을 막고 손님이 들른다. 버튼은 행상이 좌판을 연 동안만) · 떠돌이 행상
+        public RelicCartInteractable RelicCart { get; }
+        public RelicMerchant Merchant { get; }
+        // 손님이 계단으로 오는 간격(손님 축복 · 풍경이면 짧아진다)
+        private double ArrivalSeconds => m_config.ArrivalSeconds / Wombat.Worker.Wallet.Scale(BlessingTable.k_Visitors);
 
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다. 시작 장식은 PlazaDecorTable
         public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, wombat, bus)
@@ -76,6 +79,10 @@ namespace ZooTycoon.Core
             Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.FarmDoorFloor, FarmArea.k_Id));
             Statue = new StatueInteractable(tables.Get<InteractableTable>(StatueInteractable.k_Id), this, new Vector2((float)m_config.StatueX, (float)m_config.StatueY), random);
             Placed.Add(Statue);
+            Merchant = new RelicMerchant(this, tables);
+            RelicCart = new RelicCartInteractable(tables.Get<InteractableTable>(RelicCartInteractable.k_Id), this,
+                new Vector2((float)m_config.RelicCartX, (float)m_config.RelicCartY), random, Merchant);
+            Placed.Add(RelicCart);
             m_arrivalElapsed = m_config.ArrivalSeconds;
             m_questionRange = (float)tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
@@ -142,12 +149,22 @@ namespace ZooTycoon.Core
             m_takenSpots.Remove(index);
         }
 
-        // 매 프레임(웜뱃 다음). 순서: 도착 → 손님 → 외출 점원 말풍선
+        // 매 프레임(웜뱃 다음). 순서: 도착 → 손님 → 외출 점원 말풍선 → 행상
         protected override void TickArea(double dt)
         {
             TickArrival(dt);
             TickVisitors(dt);
             TickClerkFigures();
+            Merchant.Tick(dt);
+        }
+
+        // 설계 31: 행상이 계단에서 톡 나와 좌판 뒤 자리(수레의 worker 자리)로 걷는다
+        internal PlazaVisitor SpawnMerchant(VisitorTable look)
+        {
+            Vector2 stall = Placement.SpotOf(RelicCart, SpotRole.Worker);
+            PlazaVisitor merchant = new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, 0, false, null, stall);
+            Spawn(merchant);
+            return merchant;
         }
 
         // 외출한 점원의 광장 그림: 웜뱃이 가까우면 「?」와 웜뱃 쪽 보기, 아니면 딴짓 말풍선(점원의 말풍선 상태를 같이 쓴다)

@@ -62,7 +62,7 @@ namespace ZooTycoon.Core
             }
 
             double before = Math.Ceiling(Remaining);
-            double speed = UpgradeValue(UpgradeLevel) * (1d + Bakery.Wallet.Blessing.Boost(BlessingTable.k_Bake));
+            double speed = UpgradeValue(UpgradeLevel) * Bakery.Wallet.Scale(BlessingTable.k_Bake);
             Remaining = Math.Max(0d, Remaining - dt * speed);
 
             if (Remaining == 0d)

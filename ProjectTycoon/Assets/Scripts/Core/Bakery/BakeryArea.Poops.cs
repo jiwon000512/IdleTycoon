@@ -39,18 +39,25 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 치우기 버튼: 웜뱃 range 안 똥 전부. 치운 만큼 거름(poopItem)이 창고로 간다(설계 28. 사물 밑에 깔려 사라진 똥은 주지 않는다)
+        // 치우기 버튼: 웜뱃 range 안 똥 전부. 치운 만큼 거름(poopItem)이 창고로 간다(설계 28. 사물 밑에 깔려 사라진 똥은 주지 않는다).
+        // 설계 31 거름 국자를 끼웠으면 똥 하나마다 코인
         internal void CleanAround()
         {
             int cleaned = 0;
+            double coins = m_state.Relics.Value(RelicTable.k_Scoop);
 
             for (int i = m_poops.Count - 1; i >= 0; i--)
             {
                 if (IsInRange(m_poops[i]))
                 {
-                    RemovePoop(i);
+                    RemovePoop(i, coins);
                     cleaned++;
                 }
+            }
+
+            if (coins > 0d && cleaned > 0)
+            {
+                m_state.AddCoins(coins * cleaned);
             }
 
             if (cleaned > 0)
@@ -108,7 +115,7 @@ namespace ZooTycoon.Core
                 {
                     if (Placement.Rect(thing).Contains(m_poops[i].Position, 0f))
                     {
-                        RemovePoop(i);
+                        RemovePoop(i, 0d);
                         break;
                     }
                 }
@@ -137,11 +144,11 @@ namespace ZooTycoon.Core
             Layout.Nav.SetObstacles(m_poopPoints, (float)m_config.PoopAvoidRadius);
         }
 
-        private void RemovePoop(int index)
+        private void RemovePoop(int index, double coins)
         {
             PoopInteractable poop = m_poops[index];
             m_poops.RemoveAt(index);
-            Bus.Publish(new Events.PoopCleaned(poop));
+            Bus.Publish(new Events.PoopCleaned(poop, coins));
         }
     }
 }

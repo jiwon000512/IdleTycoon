@@ -58,15 +58,18 @@ namespace ZooTycoon.Core
             }
         }
 
+        // Doubled: 설계 31 낡은 주판으로 값이 두 배가 된 계산
         public readonly struct BakeryVisitorPaid
         {
             public readonly BakeryVisitor Visitor;
             public readonly double Coins;
+            public readonly bool Doubled;
 
-            public BakeryVisitorPaid(BakeryVisitor visitor, double coins)
+            public BakeryVisitorPaid(BakeryVisitor visitor, double coins, bool doubled)
             {
                 Visitor = visitor;
                 Coins = coins;
+                Doubled = doubled;
             }
         }
 
@@ -94,14 +97,16 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 똥이 치워졌다(치우기 버튼 · 사물 밑에 깔림). 그림을 지운다
+        // 똥이 치워졌다(치우기 버튼 · 사물 밑에 깔림). 그림을 지운다. Coins: 설계 31 거름 국자로 받은 코인(없으면 0)
         public readonly struct PoopCleaned
         {
             public readonly PoopInteractable Poop;
+            public readonly double Coins;
 
-            public PoopCleaned(PoopInteractable poop)
+            public PoopCleaned(PoopInteractable poop, double coins)
             {
                 Poop = poop;
+                Coins = coins;
             }
         }
 

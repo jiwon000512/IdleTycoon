@@ -97,7 +97,7 @@ namespace ZooTycoon.Core
                 m_remaining = Bakery.Config.CheckoutSeconds;
             }
 
-            m_remaining -= dt * UpgradeValue(UpgradeLevel) * (1d + Bakery.Wallet.Blessing.Boost(BlessingTable.k_Checkout));
+            m_remaining -= dt * UpgradeValue(UpgradeLevel) * Bakery.Wallet.Scale(BlessingTable.k_Checkout);
 
             if (m_remaining <= 0d)
             {
@@ -112,10 +112,12 @@ namespace ZooTycoon.Core
             m_queue.RemoveAt(0);
             Served++;
             head.Pay();
-            // 설계 29: 석상 빵 값 능력(반올림, 코인은 정수)
-            double price = Math.Round(head.Bread.Price * (1d + Bakery.Wallet.Blessing.Boost(BlessingTable.k_Price)));
+            // 황금 축복 · 행운 동전(반올림, 코인은 정수), 설계 31 낡은 주판이면 N번째 계산마다 ×2
+            double price = Math.Round(head.Bread.Price * Bakery.Wallet.Scale(BlessingTable.k_Price));
+            bool doubled = Bakery.Wallet.Relics.CountSale();
+            price *= doubled ? 2d : 1d;
             m_till.AddCoins(price);
-            Bakery.Bus.Publish(new Events.BakeryVisitorPaid(head, price));
+            Bakery.Bus.Publish(new Events.BakeryVisitorPaid(head, price, doubled));
             Repath();
             OnChanged();
         }

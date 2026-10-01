@@ -275,6 +275,24 @@ namespace ZooTycoon.Tests
             Assert.That(clerk.Working, Is.False);
         }
 
+        // 설계 31 알람 시계: 딴짓이 길어도(100초) 시계 값(초)을 넘기면 저절로 끝난다
+        [Test]
+        public void AlarmClock_CapsIdleSeconds()
+        {
+            BakeryArea shop = Create(new ConstantRandom(0d));
+            ClerkConfigTable config = m_tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
+            config.IdleSecondsMin = 100d;
+            config.IdleSecondsMax = 100d;
+            RelicsTests.Grant(m_state, RelicTable.k_Clock);
+            double alarm = m_tables.Get<RelicTable>(RelicTable.k_Clock).Values[0];
+            shop.Shelves[0].Put(Bread("b01"), 4);
+            Clerk clerk = Hire(shop, shop.Counter);
+            shop.Admit(m_customer);
+
+            Assert.That(RunUntil(shop, () => clerk.Idling), Is.True);
+            Assert.That(RunUntil(shop, () => !clerk.Idling, alarm + 1d), Is.True);
+        }
+
         // 검증 3: 주기마다 월급을 빼고, 모자라면 그 점원만 해고된다
         [Test]
         public void Payroll_FiresOnlyTheClerkItCannotPay()

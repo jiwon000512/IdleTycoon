@@ -5,7 +5,8 @@ namespace ZooTycoon.Core
 {
     // 설계 11 · 리뷰 R2: 광장 손님 한 명. 지상 계단(또는 빵집 문)에서 톡 나와 들를 곳 몇 곳을 들르고 빵집 문(자리가 있을 때) 또는 계단으로 간다.
     // 빵집이 꽉 찼으면 한 곳 더 들르고, 그때도 꽉 찼거나 들를 곳이 없으면 떠난다.
-    // 설계 22 외출: 점원의 광장 그림(Clerk != null)은 들를 곳을 계속 돌다(없으면 그 자리에서 기다림) ReturnToDoor로 문에 들어가 ClerkCameBack, 해고되면 Dismiss로 계단으로
+    // 설계 22 외출: 점원의 광장 그림(Clerk != null)은 들를 곳을 계속 돌다(없으면 그 자리에서 기다림) ReturnToDoor로 문에 들어가 ClerkCameBack, 해고되면 Dismiss로 계단으로.
+    // 설계 31 행상(stall이 있으면): 좌판 뒤 자리까지 걸어가 서 있다가(AtStall) Dismiss로 계단으로
     public sealed class PlazaVisitor : Visitor
     {
         private enum Goal
@@ -13,6 +14,7 @@ namespace ZooTycoon.Core
             Spot,
             Door,
             Stairs,
+            Stall,
         }
 
         private int m_visitsLeft;
@@ -30,12 +32,17 @@ namespace ZooTycoon.Core
         protected override WombatArea Area => Plaza;
         // 외출한 점원의 광장 그림이면 그 점원(말풍선을 같이 쓴다)
         public Clerk Clerk { get; }
+        // 설계 31: 행상이 좌판 뒤 자리에 섰다
+        public bool AtStall { get; private set; }
+        public bool IsMerchant => m_stall != null;
+        private readonly Vector2? m_stall;
 
         // inside에서 floor로 톡 나온다(계단·빵집 문)
-        internal PlazaVisitor(int id, VisitorTable look, PlazaArea plaza, Vector2 inside, Vector2 floor, int visits, bool wantsShop, Clerk clerk = null) : base(id, look, inside, plaza.Tables)
+        internal PlazaVisitor(int id, VisitorTable look, PlazaArea plaza, Vector2 inside, Vector2 floor, int visits, bool wantsShop, Clerk clerk = null, Vector2? stall = null) : base(id, look, inside, plaza.Tables)
         {
             Plaza = plaza;
             Clerk = clerk;
+            m_stall = stall;
             m_visitsLeft = visits;
             m_wantsShop = wantsShop;
 
@@ -60,10 +67,11 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 점원 그림: 해고됐다. 계단으로 나간다
+        // 점원 그림: 해고됐다 · 행상: 좌판을 걷었다. 계단으로 나간다
         internal void Dismiss()
         {
             m_dismissed = true;
+            AtStall = false;
             ReleaseSpot();
             Timer = 0d;
 
@@ -107,7 +115,7 @@ namespace ZooTycoon.Core
                 return true;
             }
 
-            if (Moving)
+            if (Moving || AtStall)
             {
                 return true;
             }
@@ -143,6 +151,13 @@ namespace ZooTycoon.Core
             {
                 m_heading = Goal.Stairs;
                 Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.StairsFloor, Facing.Up);
+                return;
+            }
+
+            if (m_stall.HasValue)
+            {
+                m_heading = Goal.Stall;
+                Mover.WalkTo(Plaza.Layout.Nav, m_stall.Value, Facing.Down);
                 return;
             }
 
@@ -197,6 +212,9 @@ namespace ZooTycoon.Core
                         Bubble.Show(BubbleTable.k_Heart);
                     }
 
+                    break;
+                case Goal.Stall:
+                    AtStall = true;
                     break;
                 case Goal.Door:
                     if (Clerk != null || Plaza.Bakery.CanAdmit)

@@ -67,18 +67,21 @@ namespace ZooTycoon.Core
             OnChanged();
         }
 
-        // 익은 작물을 거둬 창고에 넣는다(빈 밭이 된다). 덤은 bonusChance(× 석상 반짝 축복, 거름 준 밭은 × manureBonusScale)로 하나
+        // 익은 작물을 거둬 창고에 넣는다(빈 밭이 된다). 덤은 bonusChance(× 석상 반짝 축복, 거름 준 밭은 × manureBonusScale)로 하나.
+        // 설계 31 이삭 바구니를 끼웠으면 그 확률로 작물 +1
         public void Harvest(ZooState wallet, IRandom random)
         {
             CropTable crop = Crop;
             FarmConfigTable config = Farm.Config;
             double chance = config.BonusChance * (1d + wallet.Blessing.Boost(BlessingTable.k_Bonus));
             bool bonus = random.NextDouble() < chance * (IsFertilized ? config.ManureBonusScale : 1d);
+            double basket = wallet.Relics.Value(RelicTable.k_Basket);
+            int count = crop.Yield + (basket > 0d && random.NextDouble() < basket ? 1 : 0);
             Crop = null;
             IsFertilized = false;
-            wallet.AddItem(crop.Item, crop.Yield);
+            wallet.AddItem(crop.Item, count);
             OnChanged();
-            Area.Bus.Publish(new Events.Harvested(this, crop.Item, crop.Yield));
+            Area.Bus.Publish(new Events.Harvested(this, crop.Item, count));
 
             if (bonus)
             {
@@ -96,8 +99,8 @@ namespace ZooTycoon.Core
             }
 
             int before = Stage;
-            // 설계 30: 석상 새싹 축복
-            Remaining = Math.Max(0d, Remaining - dt * (1d + Farm.Wombat.Worker.Wallet.Blessing.Boost(BlessingTable.k_Grow)));
+            // 설계 30 · 31: 새싹 축복 · 물뿌리개
+            Remaining = Math.Max(0d, Remaining - dt * Farm.Wombat.Worker.Wallet.Scale(BlessingTable.k_Grow));
 
             if (Stage != before)
             {

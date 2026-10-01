@@ -336,6 +336,7 @@ MonoBehaviour:
   m_ghostOven: {fileID: 21300000, guid: 43047affed36862478ec26e8982b63db, type: 3}
   m_ghostCounter: {fileID: 21300000, guid: 7ca5ce5a7d8f6344eb407c4c20c9d5f4, type: 3}
   m_poopPrefab: {fileID: 5787336689831435316, guid: aa21d4fe4a5c3f147a656e3c91cd68e8, type: 3}
+  m_popupPrefab: {fileID: 7514188495375028674, guid: 7e45d723b8f7bf241a56d4293794eb7c, type: 3}
   m_poopFrames:
   - {fileID: 21300000, guid: de26a2c80044e4a42a564055e623475d, type: 3}
   - {fileID: 21300000, guid: 9e712ef3e59c6e64398a5126c4b0fd07, type: 3}

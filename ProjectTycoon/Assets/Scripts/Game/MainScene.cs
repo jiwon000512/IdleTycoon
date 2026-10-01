@@ -17,6 +17,7 @@ namespace ZooTycoon.Game
         private ClerkPresenter m_clerkPresenter;
         private InventoryPresenter m_inventoryPresenter;
         private StatuePresenter m_statuePresenter;
+        private RelicCartPresenter m_relicPresenter;
         private ControlHudView m_hudView;
 
         private void Awake()
@@ -32,6 +33,7 @@ namespace ZooTycoon.Game
             ClerkPopupView clerkView = ui.Open<ClerkPopupView>();
             InventoryView inventoryView = ui.Open<InventoryView>();
             StatueView statueView = ui.Open<StatueView>();
+            RelicCartView relicView = ui.Open<RelicCartView>();
             WorldManager world = WorldManager.Instance;
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables);
@@ -41,6 +43,7 @@ namespace ZooTycoon.Game
             m_clerkPresenter = new ClerkPresenter(clerkView, game.Mall, game.Bus, game.Tables);
             m_inventoryPresenter = new InventoryPresenter(inventoryView, game.State, game.Bus, game.Tables);
             m_statuePresenter = new StatuePresenter(statueView, game.State, game.Bus, game.Tables);
+            m_relicPresenter = new RelicCartPresenter(relicView, game.State, game.Bus, game.Tables);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.EditingChanged += Edit_EditingChanged;
@@ -72,6 +75,7 @@ namespace ZooTycoon.Game
             m_clerkPresenter?.Dispose();
             m_inventoryPresenter?.Dispose();
             m_statuePresenter?.Dispose();
+            m_relicPresenter?.Dispose();
         }
 
         private void Hud_SheetRequested(Interactable target)
@@ -85,6 +89,7 @@ namespace ZooTycoon.Game
             m_clerkPresenter.SetEditing(editing);
             m_inventoryPresenter.SetEditing(editing);
             m_statuePresenter.SetEditing(editing);
+            m_relicPresenter.SetEditing(editing);
             WorldManager.Instance.SetEditing(editing);
         }
     }

@@ -17,7 +17,7 @@ namespace ZooTycoon.Data
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
-            PlotInteractable.k_Id, StatueInteractable.k_Id,
+            PlotInteractable.k_Id, StatueInteractable.k_Id, RelicCartInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -55,6 +55,7 @@ namespace ZooTycoon.Data
             ValidateBakeryConfig(tables, errors);
             ValidatePlazaConfig(tables, errors);
             ValidateBlessings(tables, errors);
+            ValidateRelics(tables, errors);
             ValidateFarmConfig(tables, errors);
 
             return errors;
@@ -683,6 +684,68 @@ namespace ZooTycoon.Data
             if (statue != null && (statue.HalfWidth <= 0d || statue.Depth <= 0d))
             {
                 errors.Add("InteractableTable 'statue': 길을 막는 halfWidth · depth가 0보다 커야 한다.");
+            }
+        }
+
+        // 설계 31: 유물(효과 키가 코드에 있고, 문구 · 아이콘이 있고, 별 값 셋이 0보다 크며 별마다 세지고(주판 · 시계는 작아지고), 비중 합 > 0) ·
+        // 광장 뽑기 재료는 ItemTable에, 값 · 칸 ≥ 1 · 수레 사물은 바닥 사각형이 있다
+        private static void ValidateRelics(TableSet tables, List<string> errors)
+        {
+            HashSet<string> strings = Ids<StringTable>(tables);
+            double weights = 0d;
+
+            foreach (RelicTable relic in tables.GetAll<RelicTable>())
+            {
+                CheckId("RelicTable", relic.Id, errors);
+                weights += relic.Weight;
+
+                if (!strings.Contains(relic.Name ?? string.Empty) || !strings.Contains(relic.Format ?? string.Empty) || string.IsNullOrEmpty(relic.Icon))
+                {
+                    errors.Add($"RelicTable '{relic.Id}': name · format이 StringTable에 없거나 icon이 비었다.");
+                }
+
+                if (!RelicTable.Effects.Contains(relic.Effect) || !RelicTable.Anchors.Contains(relic.Anchor) || relic.Weight < 0d)
+                {
+                    errors.Add($"RelicTable '{relic.Id}': effect · anchor가 코드에 없거나(RelicTable.Effects · Anchors) weight가 0보다 작다.");
+                }
+
+                bool shrinks = relic.Effect == RelicTable.k_Abacus || relic.Effect == RelicTable.k_Clock;
+
+                if (relic.Values == null || relic.Values.Length != 3 || relic.Values.Any(v => v <= 0d)
+                    || !relic.Values.Zip(relic.Values.Skip(1), (a, b) => shrinks ? b < a : b > a).All(ok => ok))
+                {
+                    errors.Add($"RelicTable '{relic.Id}': values는 0보다 큰 셋이고 별마다 커져야 한다(abacus · clock은 작아진다).");
+                }
+            }
+
+            if (weights <= 0d)
+            {
+                errors.Add("RelicTable: weight 합이 0보다 커야 한다.");
+            }
+
+            HashSet<string> itemIds = Ids<ItemTable>(tables);
+
+            foreach (PlazaConfigTable plaza in tables.GetAll<PlazaConfigTable>())
+            {
+                if (plaza.RelicItem == null || !itemIds.Contains(plaza.RelicItem) || plaza.RelicCost < 1 || plaza.RelicSlots < 1)
+                {
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': relicItem은 ItemTable에 있고, relicCost · relicSlots는 1 이상이어야 한다.");
+                }
+
+                // 떠돌이 행상: 머무는 동안 다음 방문이 오지 않게, 외형은 역할 merchant 행
+                VisitorTable look = tables.GetAll<VisitorTable>().FirstOrDefault(v => v.Id == plaza.MerchantLook);
+
+                if (plaza.MerchantFirst < 0d || plaza.MerchantStay <= 0d || plaza.MerchantEvery <= plaza.MerchantStay || look == null || look.Role != VisitorRole.Merchant)
+                {
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': merchantFirst ≥ 0, 0 < merchantStay < merchantEvery, merchantLook은 VisitorTable의 merchant 행이어야 한다.");
+                }
+            }
+
+            InteractableTable cart = tables.GetAll<InteractableTable>().FirstOrDefault(t => t.Id == RelicCartInteractable.k_Id);
+
+            if (cart != null && (cart.HalfWidth <= 0d || cart.Depth <= 0d || cart.Spots == null || !cart.Spots.Any(s => s.Role == SpotRole.Worker)))
+            {
+                errors.Add("InteractableTable 'relic_cart': 길을 막는 halfWidth · depth가 0보다 크고, 행상이 서는 worker 자리가 있어야 한다.");
             }
         }
 

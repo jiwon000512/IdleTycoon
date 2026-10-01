@@ -35,6 +35,8 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite m_ghostCounter;
         [Tooltip("설계 24: 웜뱃 똥(발끝 피벗)과 냄새 김 프레임")]
         [SerializeField] private SpriteAnimator m_poopPrefab;
+        [Tooltip("설계 31: 거름 국자 코인 팝업")]
+        [SerializeField] private CoinPopup m_popupPrefab;
         [SerializeField] private Sprite[] m_poopFrames;
         [SerializeField] private float m_poopFrameRate = 2f;
 
@@ -45,6 +47,7 @@ namespace ZooTycoon.World
         private const float k_PoopDropSeconds = 0.12f;
         private const float k_PoopCleanSeconds = 0.15f;
         private const int k_PoopBits = 6;
+        private const string k_CoinKey = "coin_popup";
         private static readonly Color k_Sparkle = new Color32(255, 247, 222, 255);
 
         private readonly Dictionary<ShelfInteractable, ShelfView> m_shelves = new Dictionary<ShelfInteractable, ShelfView>();
@@ -69,6 +72,8 @@ namespace ZooTycoon.World
         public event Action Expanded;
 
         private BakeryLayout Layout => m_shop.Layout;
+        // 설계 31: 가게에 걸리는 유물(오븐 · 계산대 · 구멍)
+        private RelicProps m_relicProps;
 
         // 파낸 칸의 경계 + 좌·우·아래로 한 칸(팔 수 있는 흙이 보이게). 위는 입구 윗변
         public Rect Bounds
@@ -112,6 +117,7 @@ namespace ZooTycoon.World
             m_tables = tables;
             m_ghost = GhostView.Create(transform);
             m_dig = new DigView(this, m_digTagPrefab, tables, shop.Grid, cell => (Vector3)CellCenter(cell), new Vector2(Layout.CellWidth, Layout.CellHeight), m_digSeconds);
+            m_relicProps = new RelicProps(this, shop.Wallet.Relics, RelicAnchors, ToWorld);
             Repaint();
             Build();
             m_wombatCounter.Wombat.Bind(shop, this, frames);
@@ -125,7 +131,60 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.PoopDropped>(Bus_PoopDropped),
                 bus.Subscribe<Events.PoopCleaned>(Bus_PoopCleaned),
+                bus.Subscribe<Events.RelicsChanged>(_ => m_relicProps.Rebuild()),
+                bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
+                bus.Subscribe<Events.ClerkWoke>(e => PopIfMine(e.Clerk.Bakery, RelicTable.k_Clock)),
             };
+        }
+
+        // 설계 31: 유물을 걸 자리의 기준점(가게 좌표)
+        private IEnumerable<System.Numerics.Vector2> RelicAnchors(string anchor)
+        {
+            switch (anchor)
+            {
+                case RelicTable.k_AnchorOven:
+                    foreach (OvenInteractable oven in m_shop.Ovens)
+                    {
+                        yield return oven.Position;
+                    }
+
+                    break;
+                case RelicTable.k_AnchorCounter:
+                    foreach (CounterInteractable counter in m_shop.Counters)
+                    {
+                        yield return counter.Position;
+                    }
+
+                    break;
+                case RelicTable.k_AnchorBakeryHole:
+                    yield return Layout.HoleFloor;
+                    break;
+            }
+        }
+
+        // 계산: 구리 종 · 행운 동전, 두 배 계산이면 주판
+        private void Bus_VisitorPaid(Events.BakeryVisitorPaid e)
+        {
+            if (e.Visitor.Bakery != m_shop)
+            {
+                return;
+            }
+
+            m_relicProps.Pop(BlessingTable.k_Checkout);
+            m_relicProps.Pop(BlessingTable.k_Price);
+
+            if (e.Doubled)
+            {
+                m_relicProps.Pop(RelicTable.k_Abacus);
+            }
+        }
+
+        private void PopIfMine(BakeryArea shop, string effect)
+        {
+            if (shop == m_shop)
+            {
+                m_relicProps.Pop(effect);
+            }
         }
 
         // 가게 좌표(유닛) → 월드
@@ -305,9 +364,11 @@ namespace ZooTycoon.World
             RefreshShelf((ShelfInteractable)shelf);
         }
 
+        // 굽는 동안 1초마다(남은 초가 바뀔 때) 풀무가 바람을 넣는다
         private void Oven_Changed(Interactable oven)
         {
             RefreshOven((OvenInteractable)oven);
+            m_relicProps.Pop(BlessingTable.k_Bake);
         }
 
         // 업그레이드를 산 사물 종류(진열대 전부·오븐 전부·계산대 전부)가 한 번 튀고, 값(오븐 외형·진열대)을 다시 그린다
@@ -421,6 +482,13 @@ namespace ZooTycoon.World
             m_poops.Remove(e.Poop);
             StartCoroutine(Fx.Burst(transform, White, poop.transform.position + Vector3.up * 0.15f, k_PoopBits, 0.8f, 1.5f, 6f, 0.35f, 2, k_Sparkle, k_ClodOrder));
             StartCoroutine(CleanRoutine(poop.transform));
+
+            if (e.Coins > 0d)
+            {
+                m_relicProps.Pop(RelicTable.k_Scoop);
+                CoinPopup popup = Instantiate(m_popupPrefab, poop.transform.position + Vector3.up * 0.4f, Quaternion.identity, transform);
+                popup.Show(m_tables.Format(k_CoinKey, e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
+            }
         }
 
         private System.Collections.IEnumerator DropRoutine(Transform poop, Vector3 at)
@@ -528,6 +596,8 @@ namespace ZooTycoon.World
             {
                 RefreshOven(oven);
             }
+
+            m_relicProps.Rebuild();
         }
 
         private void Sync<TThing, TView>(Dictionary<TThing, TView> views, IReadOnlyList<TThing> things, TView prefab,

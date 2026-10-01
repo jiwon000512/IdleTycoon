@@ -25,5 +25,16 @@ namespace ZooTycoon.Core
         public double StatueX { get; set; }
         public double StatueY { get; set; }
         public double BlessingCooldown { get; set; }
+        // 설계 31: 유물 수레 자리(밑변 가운데) · 뽑을 때 내는 재료와 개수 · 칸 수
+        public double RelicCartX { get; set; }
+        public double RelicCartY { get; set; }
+        public string RelicItem { get; set; }
+        public int RelicCost { get; set; }
+        public int RelicSlots { get; set; }
+        // 설계 31 떠돌이 행상: 처음 오기까지 · 오는 간격(오는 때부터 다음 오는 때까지) · 머무는 초 · 외형(VisitorTable 역할 merchant)
+        public double MerchantFirst { get; set; }
+        public double MerchantEvery { get; set; }
+        public double MerchantStay { get; set; }
+        public string MerchantLook { get; set; }
     }
 }

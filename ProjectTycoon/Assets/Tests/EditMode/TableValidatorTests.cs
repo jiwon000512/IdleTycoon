@@ -10,26 +10,27 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("VisitorTable", 12)]
-        [TestCase("StringTable", 31)]
+        [TestCase("VisitorTable", 13)]
+        [TestCase("StringTable", 32)]
         [TestCase("ClerkTable", 1)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 2)]
         [TestCase("DialogueTable", 3)]
         [TestCase("BreadTable", 3)]
-        [TestCase("ActionTable", 12)]
-        [TestCase("InteractableTable", 12)]
+        [TestCase("ActionTable", 13)]
+        [TestCase("InteractableTable", 13)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 11)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 3)]
         [TestCase("BakeryConfigTable", 7)]
-        [TestCase("PlazaConfigTable", 3)]
+        [TestCase("PlazaConfigTable", 4)]
         [TestCase("PlazaDecorTable", 1)]
         [TestCase("ItemTable", 4)]
         [TestCase("CropTable", 3)]
         [TestCase("FarmConfigTable", 4)]
         [TestCase("BlessingTable", 1)]
+        [TestCase("RelicTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -276,6 +277,41 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(noTime), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noText), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noRest), Is.Not.Empty);
+        }
+
+        // 설계 31: 코드에 없는 효과 · 걸 자리, 별마다 세지지 않는 값, 없는 뽑기 재료, 칸 0, 행상이 간격보다 오래 머묾 · 손님 외형 · 좌판 뒤 자리 없음
+        [Test]
+        public void Validate_WhenRelicDataInvalid_ReportsError()
+        {
+            TableSet noEffect = TestTables.Load();
+            noEffect.Get<RelicTable>("bellows").Effect = "fly";
+            TableSet flat = TestTables.Load();
+            flat.Get<RelicTable>("bellows").Values = new[] { 0.2d, 0.2d, 0.6d };
+            TableSet clockUp = TestTables.Load();
+            clockUp.Get<RelicTable>("clock").Values = new[] { 10d, 20d, 30d };
+            TableSet noItem = TestTables.Load();
+            noItem.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).RelicItem = "no_such_item";
+            TableSet noSlots = TestTables.Load();
+            noSlots.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).RelicSlots = 0;
+            TableSet noAnchor = TestTables.Load();
+            noAnchor.Get<RelicTable>("bellows").Anchor = "roof";
+            TableSet longStay = TestTables.Load();
+            longStay.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).MerchantStay = 900d;
+            TableSet customerMerchant = TestTables.Load();
+            customerMerchant.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).MerchantLook = "v01";
+            TableSet noStand = TestTables.Load();
+            noStand.Get<InteractableTable>(RelicCartInteractable.k_Id).Spots.RemoveAll(spot => spot.Role == SpotRole.Worker);
+
+            Assert.That(TableValidator.Validate(TestTables.Load()), Is.Empty);
+            Assert.That(TableValidator.Validate(noEffect), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(flat), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(clockUp), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noItem), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noSlots), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noAnchor), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(longStay), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(customerMerchant), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noStand), Is.Not.Empty);
         }
 
         // 설계 11: 장식 그림 경로 없음, 광장에 없는 장식

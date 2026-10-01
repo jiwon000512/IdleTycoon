@@ -31,6 +31,8 @@ namespace ZooTycoon.World
         private const int k_GlowCount = 3;
         private const float k_GlowSpread = 1.0f;
         private const float k_GlowLift = 1.8f;
+        // 설계 31: 좌판을 걷을 때 수레가 작아지는 초
+        private const float k_FoldSeconds = 0.25f;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -49,6 +51,11 @@ namespace ZooTycoon.World
         [SerializeField] private WombatView m_wombat;
         [Tooltip("설계 29: 웜뱃 석상(자리는 Core 석상 기준점)")]
         [SerializeField] private Transform m_statue;
+        [Tooltip("설계 31: 유물 수레 = 행상의 좌판(자리는 Core 수레 기준점). 행상이 좌판을 연 동안만 보인다")]
+        [SerializeField] private Transform m_relicCart;
+        [Tooltip("설계 31: 행상이 없을 때 좌판 자리의 표지판(다음 행상까지 남은 시간)")]
+        [SerializeField] private Transform m_merchantSign;
+        [SerializeField] private TextMeshPro m_merchantSignText;
 
         private readonly Dictionary<DecorationData, GameObject> m_decor = new Dictionary<DecorationData, GameObject>();
         private PlazaArea m_plaza;
@@ -59,6 +66,9 @@ namespace ZooTycoon.World
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
         private float m_glow;
+        private TableSet m_tables;
+        // 설계 31: 계단에 걸리는 유물(풍경)
+        private RelicProps m_relicProps;
 
         public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombat.transform;
@@ -92,6 +102,14 @@ namespace ZooTycoon.World
             m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);
             m_statue.localPosition = new Vector3(plaza.Statue.Position.X, plaza.Statue.Position.Y, 0f);
+            m_relicCart.localPosition = new Vector3(plaza.RelicCart.Position.X, plaza.RelicCart.Position.Y, 0f);
+            m_merchantSign.localPosition = m_relicCart.localPosition;
+            m_tables = tables;
+            ShowStall(plaza.Merchant.IsOpen);
+            m_relicProps = new RelicProps(this, plaza.Wombat.Worker.Wallet.Relics,
+                anchor => anchor == RelicTable.k_AnchorPlazaStairs ? new[] { layout.StairsFloor } : new System.Numerics.Vector2[0],
+                p => transform.position + new Vector3(p.X, p.Y, 0f));
+            m_relicProps.Rebuild();
             Build();
 
             m_wombat.Bind(plaza, transform, frames);
@@ -100,6 +118,9 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged),
+                bus.Subscribe<Events.RelicsChanged>(Bus_RelicsChanged),
+                bus.Subscribe<Events.MerchantChanged>(Bus_MerchantChanged),
+                bus.Subscribe<Events.PlazaVisitorArrived>(_ => m_relicProps.Pop(BlessingTable.k_Visitors)),
             };
         }
 
@@ -234,20 +255,37 @@ namespace ZooTycoon.World
             {
                 StartCoroutine(Fx.Bounce(m_statue));
             }
+
+            if (e.Area == m_plaza && m_plaza.Target is RelicCartInteractable cart && cart.IsOpen)
+            {
+                StartCoroutine(Fx.Bounce(m_relicCart));
+            }
         }
 
-        private Vector3 StatueSparkPoint
+        private Vector3 StatueSparkPoint => SparkPoint(m_statue);
+
+        // 그림 높이의 k_StatueSparkHeight 비율 자리(머리 위쪽)
+        private static Vector3 SparkPoint(Transform thing)
         {
-            get
-            {
-                Bounds body = m_statue.GetComponentInChildren<SpriteRenderer>().bounds;
-                return new Vector3(m_statue.position.x, body.min.y + body.size.y * k_StatueSparkHeight, m_statue.position.z);
-            }
+            Bounds body = thing.GetComponentInChildren<SpriteRenderer>().bounds;
+            return new Vector3(thing.position.x, body.min.y + body.size.y * k_StatueSparkHeight, thing.position.z);
         }
 
         private void Update()
         {
-            if (m_plaza == null || m_plaza.Statue.Blessing.Active == null)
+            if (m_plaza == null)
+            {
+                return;
+            }
+
+            if (m_merchantSign.gameObject.activeSelf)
+            {
+                // 남은 초 → 「12:30」(분:초, 초는 올림)
+                int left = (int)Math.Ceiling(Math.Max(0d, m_plaza.Merchant.UntilNext));
+                m_merchantSignText.text = m_tables.Format("merchant_next", (left / 60) + ":" + (left % 60).ToString("00"));
+            }
+
+            if (m_plaza.Statue.Blessing.Active == null)
             {
                 return;
             }
@@ -273,9 +311,66 @@ namespace ZooTycoon.World
                 return;
             }
 
-            StartCoroutine(Fx.Bounce(m_statue));
+            Sparkle(m_statue);
+        }
+
+        // 설계 31: 유물을 뽑으면 수레가 톡 튀고 반짝 알갱이가 튄다. 칸이 바뀌면 계단의 유물을 다시 건다
+        private void Bus_RelicsChanged(Events.RelicsChanged e)
+        {
+            m_relicProps.Rebuild();
+
+            if (e.Change == RelicChange.Drawn && isActiveAndEnabled)
+            {
+                Sparkle(m_relicCart);
+            }
+        }
+
+        // 설계 31: 행상이 좌판을 펴면 수레가 나타나 튀며 반짝, 걷으면 작아지며 사라지고 빈 자리 표지판
+        private void Bus_MerchantChanged(Events.MerchantChanged e)
+        {
+            if (e.Merchant.Phase == MerchantPhase.Open)
+            {
+                ShowStall(true);
+
+                if (isActiveAndEnabled)
+                {
+                    Sparkle(m_relicCart);
+                }
+            }
+            else if (e.Merchant.Phase == MerchantPhase.Leaving && isActiveAndEnabled && m_relicCart.gameObject.activeSelf)
+            {
+                StartCoroutine(Fold());
+            }
+            else if (e.Merchant.Phase == MerchantPhase.Away)
+            {
+                ShowStall(false);
+            }
+        }
+
+        private void ShowStall(bool open)
+        {
+            m_relicCart.localScale = Vector3.one;
+            m_relicCart.gameObject.SetActive(open);
+            m_merchantSign.gameObject.SetActive(!open && m_plaza.Merchant.Phase == MerchantPhase.Away);
+        }
+
+        private System.Collections.IEnumerator Fold()
+        {
+            for (float t = 0f; t < k_FoldSeconds; t += Time.deltaTime)
+            {
+                m_relicCart.localScale = Vector3.one * (1f - t / k_FoldSeconds);
+                yield return null;
+            }
+
+            m_relicCart.localScale = Vector3.one;
+            m_relicCart.gameObject.SetActive(false);
+        }
+
+        private void Sparkle(Transform thing)
+        {
+            StartCoroutine(Fx.Bounce(thing));
             m_square = m_square != null ? m_square : Fx.NewSquare();
-            Vector3 at = StatueSparkPoint;
+            Vector3 at = SparkPoint(thing);
             StartCoroutine(Fx.Burst(transform, m_square, at, k_SparkCount, k_SparkSpread, k_SparkLift, k_SparkGravity, k_SparkSeconds, k_SparkCells, k_SparkLight, k_SparkOrder));
             StartCoroutine(Fx.Burst(transform, m_square, at, k_SparkCount, k_SparkSpread, k_SparkLift, k_SparkGravity, k_SparkSeconds, k_SparkCells, k_SparkGold, k_SparkOrder));
         }
