@@ -151,6 +151,10 @@ namespace ZooTycoon.Editor
             Import(k_PlazaDir + "sign.png", center);
             Import(k_PlazaDir + "stairs.png", bottom);
             Import(k_PlazaDir + "statue.png", bottom);
+            Import(k_PlazaDir + "relic_cart_open.png", bottom);
+            Import(k_PlazaDir + "relic_cart_folded_side.png", bottom);
+            // 접힘 끝면은 손잡이가 바퀴 바닥보다 2칸 아래까지 그려져 피벗(바퀴 바닥 가운데)이 그림 바닥에서 4px 위
+            Import(k_PlazaDir + "relic_cart_folded_end.png", new Vector2(0.5f, 4f / 134f));
 
             foreach (string path in System.IO.Directory.GetFiles(k_DecorDir, "*.png"))
             {
@@ -539,14 +543,10 @@ namespace ZooTycoon.Editor
             // 설계 29: 웜뱃 석상(분수 자리, 발끝으로 깊이 정렬). 크기는 그림 칸 수로(2026-09-30 처음의 1.5배, 스케일 1)
             SpriteRenderer statue = Renderer(root.transform, "Statue", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "statue.png"), Vector3.zero, 0);
             statue.spriteSortPoint = SpriteSortPoint.Pivot;
-            // 설계 31: 유물 수레(석상 오른쪽). 그림은 아트방 시안 전까지 농장 모종 작업대를 임시로
-            SpriteRenderer relicCart = Renderer(root.transform, "RelicCart", AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/World/Farm/farm_prop_bench.png"), Vector3.zero, 0);
+            // 설계 31 · 32: 유물 수레(접힘 옆 · 접힘 끝면 = 천 덮개 A · 펼침 = 유리 진열장 수레 C, 피벗 = 바퀴 바닥 가운데)
+            Sprite cartOpen = AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "relic_cart_open.png");
+            SpriteRenderer relicCart = Renderer(root.transform, "RelicCart", cartOpen, Vector3.zero, 0);
             relicCart.spriteSortPoint = SpriteSortPoint.Pivot;
-            // 설계 31: 행상이 없을 때 좌판 자리에 「다음 행상 12:30」(월드 값 표식 공용 조각 tag_cost, 글 길이만큼 넓힘)
-            GameObject merchantSign = Child(root.transform, "MerchantSign", Vector3.zero);
-            (SpriteRenderer merchantBg, TextMeshPro merchantText) = Tag(merchantSign.transform, k_SignHeight);
-            merchantBg.size = new Vector2(2.6f, merchantBg.size.y);
-            merchantText.rectTransform.sizeDelta = new Vector2(2.6f, merchantBg.size.y);
 
             PlazaView view = root.AddComponent<PlazaView>();
             Set(view, "m_burrow", burrow);
@@ -558,9 +558,10 @@ namespace ZooTycoon.Editor
             Set(view, "m_stairs", stairs.transform);
             Set(view, "m_wombat", wombat);
             Set(view, "m_statue", statue.transform);
-            Set(view, "m_relicCart", relicCart.transform);
-            Set(view, "m_merchantSign", merchantSign.transform);
-            Set(view, "m_merchantSignText", merchantText);
+            Set(view, "m_relicCart", relicCart);
+            Set(view, "m_cartFoldedSide", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "relic_cart_folded_side.png"));
+            Set(view, "m_cartFoldedEnd", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "relic_cart_folded_end.png"));
+            Set(view, "m_cartOpen", cartOpen);
             PlazaVisitorSpawner spawner = root.AddComponent<PlazaVisitorSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Plaza");

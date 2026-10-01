@@ -19,7 +19,7 @@ namespace ZooTycoon.UI
         private double m_last;
         private double m_spent;
 
-        public TopBarPresenter(TopBarView view, ZooState state, EventBus bus, TableSet tables)
+        public TopBarPresenter(TopBarView view, ZooState state, EventBus bus, TableSet tables, RelicMerchant merchant)
         {
             m_view = view;
             m_state = state;
@@ -30,6 +30,7 @@ namespace ZooTycoon.UI
             m_blessing = bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged);
             m_merchant = bus.Subscribe<Events.MerchantChanged>(Bus_MerchantChanged);
             RefreshCoins();
+            ShowMerchant(merchant, false);
         }
 
         public void Dispose()
@@ -39,18 +40,24 @@ namespace ZooTycoon.UI
             m_merchant.Dispose();
         }
 
-        // 설계 31: 행상이 좌판을 연 동안 알약(남은 시간)
+        // 설계 31 · 32: 행상 알약은 늘 보인다. 오는 중 · 펼침 · 엶은 「행상」 + 좌판이 닫힐 때까지(펴기 전에는 머무는 초 그대로),
+        // 그 밖(접음 · 가는 중 · 없음)은 흐린 「다음 행상」 + 다음에 올 때까지. 계단에서 나오는 순간 톡 튀며 소리
         private void Bus_MerchantChanged(Events.MerchantChanged e)
         {
-            RelicMerchant merchant = e.Merchant;
+            ShowMerchant(e.Merchant, e.Merchant.Phase == MerchantPhase.Coming);
+        }
 
-            if (merchant.IsOpen)
+        private void ShowMerchant(RelicMerchant merchant, bool arrived)
+        {
+            bool here = merchant.Phase == MerchantPhase.Coming || merchant.Phase == MerchantPhase.Unpacking || merchant.IsOpen;
+
+            if (here)
             {
-                m_view.ShowMerchant(m_tables.Text("merchant_pill"), () => merchant.OpenLeft);
+                m_view.ShowMerchant(m_tables.Text("merchant_pill"), () => merchant.OpenLeft, false, arrived);
             }
             else
             {
-                m_view.HideMerchant();
+                m_view.ShowMerchant(m_tables.Text("merchant_next"), () => merchant.UntilNext, true, false);
             }
         }
 

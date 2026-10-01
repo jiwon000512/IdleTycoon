@@ -59,10 +59,12 @@ namespace ZooTycoon.Core
             return from is FarmArea ? Layout.FarmDoorFloor : Layout.DoorFloor;
         }
         protected override BurrowShape.Result Shape => Layout.Shape;
-        // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt)
+        // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt).
+        // 설계 32: 겹침 판정에는 늘 수레가 있어(좌판 자리에 장식을 못 놓는다) 길 · 들를 곳(Obstacles)에는 행상이 수레를 세운 동안만
         protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue).Append(RelicCart);
+        private IEnumerable<IPlaced> Obstacles => Merchant.CartParked ? PlacedThings : m_decor.Cast<IPlaced>().Append(Statue);
         public StatueInteractable Statue { get; }
-        // 설계 31: 유물 수레(행상의 좌판 자리, 늘 길을 막고 손님이 들른다. 버튼은 행상이 좌판을 연 동안만) · 떠돌이 행상
+        // 설계 31: 유물 수레(행상의 좌판 자리, 세운 동안 길을 막고 손님이 들른다. 버튼은 행상이 좌판을 연 동안만) · 떠돌이 행상
         public RelicCartInteractable RelicCart { get; }
         public RelicMerchant Merchant { get; }
         // 손님이 계단으로 오는 간격(손님 축복 · 풍경이면 짧아진다)
@@ -108,7 +110,7 @@ namespace ZooTycoon.Core
                 m_decor.Add(new DecorationData(tables.Get<DecorationTable>(placed.Decoration), new Vector2((float)placed.X, (float)placed.Y)));
             }
 
-            Layout.Rebuild(PlacedThings);
+            Layout.Rebuild(Obstacles);
         }
 
         // 들를 곳에서 머무는 초 · ♥를 띄울지
@@ -273,10 +275,10 @@ namespace ZooTycoon.Core
             m_decor.Remove((DecorationData)thing);
         }
 
-        // 들를 곳 번호가 바뀌므로 손님은 들르던 곳을 놓고 다음으로, 걷던 손님은 새 땅에서 길을 다시 찾는다
+        // 들를 곳 번호가 바뀌므로 손님은 들르던 곳을 놓고 다음으로, 걷던 손님은 새 땅에서 길을 다시 찾는다. 새 사물이 웜뱃 발밑이면 비켜 선다
         protected override void OnPlacementChanged()
         {
-            Layout.Rebuild(PlacedThings);
+            Layout.Rebuild(Obstacles);
             m_takenSpots.Clear();
 
             foreach (PlazaVisitor visitor in m_visitors)
@@ -284,7 +286,14 @@ namespace ZooTycoon.Core
                 visitor.Relayout();
             }
 
+            Unstick();
             Bus.Publish(new Events.LayoutChanged(this));
+        }
+
+        // 설계 32: 행상이 수레를 세웠다 · 걷었다
+        internal void CartMoved()
+        {
+            OnPlacementChanged();
         }
 
         private void TickArrival(double dt)

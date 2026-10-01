@@ -6,7 +6,7 @@ namespace ZooTycoon.Core
     // 설계 11 · 리뷰 R2: 광장 손님 한 명. 지상 계단(또는 빵집 문)에서 톡 나와 들를 곳 몇 곳을 들르고 빵집 문(자리가 있을 때) 또는 계단으로 간다.
     // 빵집이 꽉 찼으면 한 곳 더 들르고, 그때도 꽉 찼거나 들를 곳이 없으면 떠난다.
     // 설계 22 외출: 점원의 광장 그림(Clerk != null)은 들를 곳을 계속 돌다(없으면 그 자리에서 기다림) ReturnToDoor로 문에 들어가 ClerkCameBack, 해고되면 Dismiss로 계단으로.
-    // 설계 31 행상(stall이 있으면): 좌판 뒤 자리까지 걸어가 서 있다가(AtStall) Dismiss로 계단으로
+    // 설계 31 행상(stall이 있으면): 좌판 뒤 자리까지 걸어가 서 있다가(AtStall) Dismiss로 계단으로. 설계 32: 걷는 동안 ♪ 말풍선
     public sealed class PlazaVisitor : Visitor
     {
         private enum Goal
@@ -51,6 +51,11 @@ namespace ZooTycoon.Core
                 ShareBubble(clerk.Bubble);
             }
 
+            if (stall.HasValue)
+            {
+                Bubble.Show(BubbleTable.k_Note);
+            }
+
             StartHop(VisitorPhase.Entering, inside, floor);
         }
 
@@ -71,6 +76,12 @@ namespace ZooTycoon.Core
         internal void Dismiss()
         {
             m_dismissed = true;
+
+            if (AtStall)
+            {
+                Bubble.Show(BubbleTable.k_Note);
+            }
+
             AtStall = false;
             ReleaseSpot();
             Timer = 0d;
@@ -215,6 +226,7 @@ namespace ZooTycoon.Core
                     break;
                 case Goal.Stall:
                     AtStall = true;
+                    Bubble.Clear();
                     break;
                 case Goal.Door:
                     if (Clerk != null || Plaza.Bakery.CanAdmit)

@@ -36,5 +36,7 @@ namespace ZooTycoon.Core
         public double MerchantEvery { get; set; }
         public double MerchantStay { get; set; }
         public string MerchantLook { get; set; }
+        // 설계 32: 좌판 자리에 세운 수레를 펼치는 초 · 접는 초
+        public double MerchantSetupSeconds { get; set; }
     }
 }

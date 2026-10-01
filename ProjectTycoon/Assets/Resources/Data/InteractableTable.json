@@ -17,7 +17,7 @@
     "version 10 (2026-09-29, 설계 25 밀 농사): plot — 농장 밭(기준점 = 밑변 가운데, 거리는 밭 바닥 사각형까지). actions: plant(빈 밭이면 버튼으로 심기) · harvest(익으면 range 안에서 저절로 거둬 창고로). 편집 모드 농장 상점에서 산다(price, 시작 2칸은 FarmConfigTable startPlots). worker 자리(앞 0.4)는 밭이 입구에서 닿는지 보는 데만 쓴다. 빵집·농장은 파는 종류를 코드(Create와 같은 셋)로 고른다.",
     "version 11 (2026-09-30, 설계 27 칸 밭): plot — 판 칸(입구 줄 제외)마다 하나인 밭 칸(기준점 = 칸 밑변 가운데, 거리는 칸 사각형까지라 칸에 서면 대상, range 0.3). actions: till(흙 칸이면 버튼으로 갈기, 값 FarmConfigTable tillCost) · plant(밭이고 비었으면 버튼으로 심기) · harvest(익으면 밟으면 거둬 창고로). 놓는 사물이 아니라 halfWidth·depth·spots·price 삭제(편집 모드 밭 카드 없음, 시작 밭은 FarmConfigTable startFields). dig는 빵집·농장 공용(DigSet).",
     "version 12 (2026-09-30, 설계 29 웜뱃 석상): statue — 광장 분수 자리에 고정된 석상(기준점 밑변 가운데, range 1.2, 행동 statue = 팝업). 값(price)이 없어 편집 모드에서 집지 않고, 바닥 사각형은 길을 막으며 spots는 광장 손님이 들르는 자리.",
-    "version 13 (2026-10-01, 설계 31 유물 수레): relic_cart — 광장 석상 오른쪽의 떠돌이 행상 좌판 자리(기준점 밑변 가운데, 행동 relic = 유물 팝업, 행상이 좌판을 연 동안만 버튼). 석상처럼 값이 없어 편집 모드에서 집지 않고, 바닥은 늘 길을 막으며 customer spots는 손님이 들르는 자리, worker spot은 행상이 서는 좌판 뒤. 크기는 아트방 그림이 오면 맞춘다."
+    "version 13 (2026-10-01, 설계 31 유물 수레): relic_cart — 광장 석상 오른쪽의 떠돌이 행상 좌판 자리(기준점 밑변 가운데, 행동 relic = 유물 팝업, 행상이 좌판을 연 동안만 버튼). 석상처럼 값이 없어 편집 모드에서 집지 않고, 바닥은 늘 길을 막으며 customer spots는 손님이 들르는 자리, worker spot은 행상이 서는 자리(설계 32부터 좌판 왼쪽 앞, 유리 진열장 수레 그림에 맞춤)."
   ],
   "rows": [
     {
@@ -226,7 +226,7 @@
       "spots": [
         { "dx": 0, "dy": -0.4, "face": "up" },
         { "dx": 1.4, "dy": 0.25, "face": "left" },
-        { "dx": 0, "dy": 0.75, "face": "down", "role": "worker" }
+        { "dx": -1.4, "dy": -0.2, "face": "down", "role": "worker" }
       ]
     }
   ]

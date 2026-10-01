@@ -9,7 +9,8 @@ using ZooTycoon.Core;
 namespace ZooTycoon.Tests
 {
     // 설계 31 검증: 반짝돌로 뽑으면 서로 다른 후보 셋, 모자라거나 후보가 남았으면 못 뽑음, ★3은 후보에서 빠짐, 고르면 별 · 빈 칸에 끼움,
-    // 칸이 차면 모음에만, 끼운 것만 값, 축복과 곱, 규칙 넷(주판 · 국자 · 바구니 · 시계는 ClerkTests), 광장 수레(표 검사는 TableValidatorTests). 실제 JSON 값
+    // 칸이 차면 모음에만, 끼운 것만 값, 축복과 곱, 규칙 넷(주판 · 국자 · 바구니 · 시계는 ClerkTests), 광장 수레(표 검사는 TableValidatorTests). 실제 JSON 값.
+    // 설계 32: 행상 단계(펼침 · 접음), 수레는 세운 동안만 길을 막고 그 자리에 선 웜뱃은 비켜 선다
     public sealed class RelicsTests
     {
         private const double k_Dt = 0.02;
@@ -270,9 +271,9 @@ namespace ZooTycoon.Tests
             return done();
         }
 
-        // 좌판 자리는 석상 오른쪽에 늘 서서 길을 막고 편집에서 집히지 않는다. 행상이 오기 전에는 버튼이 없다
+        // 좌판 자리는 석상 오른쪽, 편집에서 집히지 않고 장식도 못 놓는다. 행상이 없으면 빈 바닥이라 지나갈 수 있고 웜뱃이 닿지 않는다
         [Test]
-        public void RelicCart_StandsFixed_ButtonOnlyWhileMerchantIsOpen()
+        public void RelicCart_WhileAway_IsOpenFloorButStaysReserved()
         {
             RelicCartInteractable cart = m_plaza.RelicCart;
             Assert.That(cart.Position, Is.EqualTo(new Vector2((float)Config.RelicCartX, (float)Config.RelicCartY)));
@@ -284,12 +285,34 @@ namespace ZooTycoon.Tests
             m_mall.Tick(k_Dt);
 
             Assert.That(m_plaza.Merchant.Phase, Is.EqualTo(MerchantPhase.Away));
-            Assert.That(m_plaza.Target, Is.EqualTo(cart));
-            Assert.That(m_plaza.TargetAction, Is.Null);
+            Assert.That(m_plaza.Layout.Nav.IsWalkable(CartFloor), Is.True);
+            Assert.That(m_plaza.Target, Is.Not.EqualTo(cart));
         }
 
-        // 행상: 처음 시간이 되면 계단에서 내려와 좌판 뒤에 서고, 머무는 동안 버튼으로 팝업, 시간이 다 되면 계단으로 나간다.
-        // 뽑은 후보는 떠나도 남고, 다음은 오는 때부터 merchantEvery 뒤에 온다
+        // 수레 바닥 사각형 안의 한 점(기준점 바로 위)
+        private Vector2 CartFloor => m_plaza.RelicCart.Position + new Vector2(0f, 0.1f);
+
+        // 설계 32: 수레를 세울 때 그 자리에 선 웜뱃은 가까운 바닥으로 비켜 선다. 웜뱃은 수레 끝쪽(좌판 뒤 자리에서 손님 비켜 가기 둘레 밖)에 둔다
+        [Test]
+        public void Merchant_ParkingCart_MovesWombatOff()
+        {
+            Build(c =>
+            {
+                c.MaxVisitors = 0;
+                c.MerchantFirst = 1d;
+            });
+            Vector2 cartEnd = m_plaza.RelicCart.Position + new Vector2(0.8f, 0.1f);
+            m_bus.Publish(new Events.Passed(m_shop, PlazaArea.k_Id));
+            m_wombat.Mover.Place(cartEnd);
+
+            Assert.That(RunUntil(() => m_plaza.Merchant.Phase == MerchantPhase.Unpacking, 40d), Is.True);
+            Assert.That(m_plaza.Layout.Nav.IsWalkable(cartEnd), Is.False);
+            Assert.That(m_wombat.Mover.Position, Is.Not.EqualTo(cartEnd));
+            Assert.That(m_plaza.Layout.Nav.IsWalkable(m_wombat.Mover.Position), Is.True);
+        }
+
+        // 행상: 처음 시간이 되면 계단에서 내려와 좌판 뒤에 서고, 수레를 세워 펼친 뒤 머무는 동안 버튼으로 팝업, 시간이 다 되면 접고 계단으로 나간다.
+        // 수레는 펼침 · 엶 · 접음 동안만 길을 막는다. 뽑은 후보는 떠나도 남고, 다음은 오는 때부터 merchantEvery 뒤에 온다
         [Test]
         public void Merchant_ComesOpensAndLeaves_OnSchedule()
         {
@@ -308,16 +331,27 @@ namespace ZooTycoon.Tests
             m_bus.Publish(new Events.Passed(m_shop, PlazaArea.k_Id));
             m_wombat.Mover.Place(cart.Position + new Vector2(0f, -0.7f));
 
-            Assert.That(RunUntil(() => m_plaza.Merchant.IsOpen, 40d), Is.True);
-            Assert.That(phases, Is.EqualTo(new[] { MerchantPhase.Coming, MerchantPhase.Open }));
+            Assert.That(RunUntil(() => m_plaza.Merchant.Phase == MerchantPhase.Unpacking, 40d), Is.True);
+            Assert.That(m_plaza.Merchant.OpenLeft, Is.EqualTo(Config.MerchantStay));
+            Assert.That(m_plaza.Layout.Nav.IsWalkable(CartFloor), Is.False);
+            Assert.That(m_plaza.TargetAction, Is.Null);
+
+            Assert.That(RunUntil(() => m_plaza.Merchant.IsOpen, Config.MerchantSetupSeconds + k_Dt * 2d), Is.True);
+            Assert.That(phases, Is.EqualTo(new[] { MerchantPhase.Coming, MerchantPhase.Unpacking, MerchantPhase.Open }));
             Assert.That(Vector2.Distance(m_plaza.Merchant.Figure.Position, Placement.SpotOf(cart, SpotRole.Worker)), Is.LessThan(0.3f));
             Assert.That(m_plaza.TargetAction.Id, Is.EqualTo(ActionTable.k_Relic));
             Assert.That(m_plaza.TryInteract(), Is.True);
             Assert.That(opened, Is.EqualTo(1));
             Assert.That(cart.TryDraw(), Is.True);
 
+            Assert.That(RunUntil(() => m_plaza.Merchant.Phase == MerchantPhase.Leaving, 40d), Is.True);
+            Assert.That(m_plaza.Layout.Nav.IsWalkable(CartFloor), Is.True);
+
             Assert.That(RunUntil(() => m_plaza.Merchant.Phase == MerchantPhase.Away, 40d), Is.True);
-            Assert.That(phases, Is.EqualTo(new[] { MerchantPhase.Coming, MerchantPhase.Open, MerchantPhase.Leaving, MerchantPhase.Away }));
+            Assert.That(phases, Is.EqualTo(new[]
+            {
+                MerchantPhase.Coming, MerchantPhase.Unpacking, MerchantPhase.Open, MerchantPhase.Packing, MerchantPhase.Leaving, MerchantPhase.Away,
+            }));
             Assert.That(m_plaza.Visitors, Is.Empty);
             Assert.That(m_plaza.TargetAction, Is.Null);
             Assert.That(Relics.HasOffer, Is.True);

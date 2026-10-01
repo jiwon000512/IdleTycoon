@@ -10,41 +10,15 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 31 유물 수레 팝업. 첫 화면: 끼운 유물 칸 셋(아이콘 · 별 · 효과) + 모은 유물 격자(못 모은 칸은 그림자) + 고른 유물 정보 줄(끼우기/빼기) + 안내 + 뽑기 버튼(반짝돌 값).
-    // 뽑으면 후보 화면: 카드 셋(새 유물 / ★n로 · 아이콘 · 이름 · 고른 뒤 별 · 효과)이 차례로 뜨고, 고르면 부풀고 첫 화면으로. 규칙은 Core Relics · RelicCartPresenter
+    // 설계 31 · 32 좌판 팝업(뽑기만). 한 쪽에 위 글 · 카드 셋 · 아래 글 · 발치 버튼.
+    // 뽑기 전: 카드 뒷면 셋 · 뽑기(반짝돌 값). 뽑으면 카드가 왼쪽부터 차례로 뒤집혀 후보(새 유물 / ★n로 · 아이콘 · 이름 · 고른 뒤 별 · 효과).
+    // 고르면 나머지가 흐려지고 고른 카드의 새 별이 차오른 뒤 결과 글 · 「유물 보기」 · 「한 번 더」. 규칙은 Core Relics · RelicCartPresenter
     public sealed class RelicCartView : UIView
     {
-        // 카드 하나(칸 · 격자 · 후보가 같은 모양, 없는 글은 비워 둔다)
-        [Serializable]
-        public sealed class Card
-        {
-            public RectTransform Root;
-            public Button Button;
-            public Image Frame;
-            public Image Icon;
-            public Image[] Stars;
-            public TextMeshProUGUI Name;
-            public TextMeshProUGUI Effect;
-            public GameObject Badge;
-            public TextMeshProUGUI BadgeText;
-        }
-
-        public sealed class CardData
-        {
-            public string IconPath;
-            public string Name;
-            public string Effect;
-            public int Stars;
-            public bool Owned = true;
-            public bool Selected;
-            public string Badge;
-        }
-
-        // 후보 카드가 하나씩 뜨는 간격 · 고른 카드가 부푼 뒤 첫 화면으로 돌아가기까지(초)
+        // 카드가 하나씩 뒤집히는 간격 · 한 장이 뒤집히는 초 · 새 별이 차오르기 전 쉼(초)
         private const float k_OfferStep = 0.12f;
-        private const float k_ChosenSeconds = 0.45f;
-        // 못 모은 유물 · 빈 별은 외곽선 색 그림자
-        private static readonly Color k_Shadow = new Color32(0x34, 0x20, 0x20, 90);
+        private const float k_FlipSeconds = 0.2f;
+        private const float k_StarDelay = 0.25f;
 
         [SerializeField] private GameObject m_root;
         [SerializeField] private CanvasGroup m_rootGroup;
@@ -54,66 +28,53 @@ namespace ZooTycoon.UI
         [SerializeField] private TextMeshProUGUI m_title;
         [SerializeField] private Sprite m_chip;
         [SerializeField] private Sprite m_chipSelected;
-        [Header("첫 화면")]
-        [SerializeField] private GameObject m_mainPage;
-        [SerializeField] private TextMeshProUGUI m_slotsLabel;
-        [SerializeField] private Card[] m_slots;
-        [SerializeField] private TextMeshProUGUI m_collectionLabel;
-        [SerializeField] private Card[] m_cells;
-        [SerializeField] private GameObject m_info;
-        [SerializeField] private Card m_infoCard;
-        [SerializeField] private Button m_infoButton;
-        [SerializeField] private TextMeshProUGUI m_infoButtonLabel;
-        [SerializeField] private TextMeshProUGUI m_hint;
-        [SerializeField] private GameObject m_foot;
+        [SerializeField] private TextMeshProUGUI m_offerLabel;
+        [SerializeField] private RelicCard[] m_offers;
+        [SerializeField] private TextMeshProUGUI m_offerHint;
+        [SerializeField] private Button m_viewButton;
+        [SerializeField] private TextMeshProUGUI m_viewLabel;
         [SerializeField] private Button m_drawButton;
         [SerializeField] private TextMeshProUGUI m_drawLabel;
         [SerializeField] private TextMeshProUGUI m_drawCost;
-        [Header("후보 화면")]
-        [SerializeField] private GameObject m_offerPage;
-        [SerializeField] private TextMeshProUGUI m_offerLabel;
-        [SerializeField] private Card[] m_offers;
-        [SerializeField] private TextMeshProUGUI m_offerHint;
 
         private Vector2 m_panelRest;
         private Coroutine m_fx;
         private Coroutine m_offerFx;
-        private string m_emptySlot;
-        private Color m_effectColor;
+        // 뒤집는 중인 앞면(연출이 끊기면 바로 앞면으로)
+        private IReadOnlyList<RelicCard.Data> m_faces;
+        private string m_draw;
+        private string m_again;
 
         public event Action CloseRequested;
         public event Action DrawClicked;
-        public event Action InfoClicked;
-        public event Action<int> SlotClicked;
-        public event Action<int> CellClicked;
+        public event Action ViewClicked;
         public event Action<int> OfferClicked;
 
         public bool IsOpen => m_root.activeSelf;
-        public int SlotCount => m_slots.Length;
-        public int CellCount => m_cells.Length;
 
         private void Awake()
         {
             m_dim.onClick.AddListener(() => CloseRequested?.Invoke());
             m_closeButton.onClick.AddListener(() => CloseRequested?.Invoke());
             m_drawButton.onClick.AddListener(() => DrawClicked?.Invoke());
-            m_infoButton.onClick.AddListener(() => InfoClicked?.Invoke());
-            Listen(m_slots, i => SlotClicked?.Invoke(i));
-            Listen(m_cells, i => CellClicked?.Invoke(i));
-            Listen(m_offers, i => OfferClicked?.Invoke(i));
+            m_viewButton.onClick.AddListener(() => ViewClicked?.Invoke());
+
+            for (int i = 0; i < m_offers.Length; i++)
+            {
+                int index = i;
+                m_offers[i].Button.onClick.AddListener(() => OfferClicked?.Invoke(index));
+            }
+
             m_panelRest = m_panel.anchoredPosition;
-            m_effectColor = m_slots[0].Effect.color;
             m_root.SetActive(false);
         }
 
-        public void SetLabels(string title, string slots, string emptySlot, string draw, string pick, string pickHint)
+        public void SetLabels(string title, string draw, string again, string view)
         {
             m_title.text = title;
-            m_slotsLabel.text = slots;
-            m_emptySlot = emptySlot;
-            m_drawLabel.text = draw;
-            m_offerLabel.text = pick;
-            m_offerHint.text = pickHint;
+            m_draw = draw;
+            m_again = again;
+            m_viewLabel.text = view;
         }
 
         public void Open()
@@ -140,51 +101,32 @@ namespace ZooTycoon.UI
             SoundManager.Instance.Play(SoundTable.k_UiClose);
         }
 
-        // 첫 화면: 칸(null이면 빈 칸) · 격자 · 「모은 유물 n/m」 · 고른 유물(null이면 정보 줄을 숨김)과 버튼 글 · 안내 · 뽑기
-        public void ShowMain(IReadOnlyList<CardData> slots, IReadOnlyList<CardData> cells, string collection,
-            CardData info, string infoButton, bool infoButtonOn, string hint, int cost, bool canDraw)
+        // 뽑기 전: 카드 뒷면 셋, 뽑기 버튼만
+        public void ShowReady(string label, string hint, int cost, bool canDraw)
         {
             StopOffer();
-            m_mainPage.SetActive(true);
-            m_offerPage.SetActive(false);
-            m_foot.SetActive(true);
 
-            for (int i = 0; i < m_slots.Length; i++)
+            foreach (RelicCard card in m_offers)
             {
-                SetCard(m_slots[i], slots[i]);
-                // 빈 칸은 안내 글 색으로 「빈 칸」
-                m_slots[i].Effect.text = slots[i] != null ? slots[i].Effect : m_emptySlot;
-                m_slots[i].Effect.color = slots[i] != null ? m_effectColor : m_hint.color;
+                card.Root.gameObject.SetActive(true);
+                card.SetBack(m_chip);
+                card.Button.interactable = false;
             }
 
-            for (int i = 0; i < m_cells.Length; i++)
-            {
-                SetCard(m_cells[i], cells[i]);
-            }
-
-            m_collectionLabel.text = collection;
-            m_info.SetActive(info != null);
-
-            if (info != null)
-            {
-                SetCard(m_infoCard, info);
-                m_infoButtonLabel.text = infoButton;
-                m_infoButton.interactable = infoButtonOn;
-            }
-
-            m_hint.text = hint;
-            m_drawCost.text = cost.ToString();
-            m_drawButton.interactable = canDraw;
+            m_offerLabel.text = label;
+            m_offerHint.text = hint;
+            ShowFoot(false, m_draw, cost, canDraw);
         }
 
-        // 후보 화면. animate면 카드가 왼쪽부터 하나씩 톡 뜬다
-        public void ShowOffer(IReadOnlyList<CardData> offers, bool animate)
+        // 후보. animate면 뒷면에서 왼쪽부터 하나씩 뒤집힌다(그동안 누를 수 없다)
+        public void ShowOffer(IReadOnlyList<RelicCard.Data> offers, string label, string hint, bool animate)
         {
             StopOffer();
-            m_mainPage.SetActive(false);
-            m_foot.SetActive(false);
-            m_offerPage.SetActive(true);
-            m_hint.text = string.Empty;
+            m_offerLabel.text = label;
+            m_offerHint.text = hint;
+            // 발치는 자리만 남겨 팝업 높이가 뽑기 전 · 결과와 같다
+            m_viewButton.gameObject.SetActive(false);
+            m_drawButton.gameObject.SetActive(false);
 
             for (int i = 0; i < m_offers.Length; i++)
             {
@@ -193,122 +135,104 @@ namespace ZooTycoon.UI
 
                 if (shown)
                 {
-                    SetCard(m_offers[i], offers[i]);
-                    m_offers[i].Button.interactable = true;
+                    m_offers[i].Set(offers[i], m_chip, m_chipSelected);
+                    m_offers[i].Button.interactable = !animate;
                 }
             }
 
             if (animate)
             {
                 SoundManager.Instance.Play(SoundTable.k_StatueRoll);
-                m_offerFx = StartCoroutine(RevealOffers(offers.Count));
+                m_faces = offers;
+                m_offerFx = StartCoroutine(Flip());
             }
         }
 
-        // 고른 카드가 부풀고 다른 카드는 흐려진 뒤 done(첫 화면으로)
-        public void PlayChosen(int index, Action done)
+        // 고른 카드만 남기고 흐리게, 새 별(stars번째)이 차오른 뒤 결과 글과 「유물 보기」 · 「한 번 더」
+        public void ShowChosen(int index, int stars, string label, string hint, int cost, bool canDraw)
         {
             StopOffer();
-            m_offerFx = StartCoroutine(Chosen(index, done));
+            m_offerFx = StartCoroutine(Chosen(index, stars, label, hint, cost, canDraw));
         }
 
-        // 첫 화면의 칸 · 격자 하나가 한 번 부푼다(고른 유물이 들어간 자리)
-        public void PulseSlot(int index)
+        // 카드마다 k_OfferStep씩 늦게, 가로로 접혔다(뒷면) 앞면으로 펴진다
+        private IEnumerator Flip()
         {
-            StartCoroutine(UiFx.Pulse(m_slots[index].Root));
-        }
+            float half = k_FlipSeconds * 0.5f;
+            float total = (m_faces.Count - 1) * k_OfferStep + k_FlipSeconds;
+            bool[] flipped = new bool[m_faces.Count];
 
-        public void PulseCell(int index)
-        {
-            StartCoroutine(UiFx.Pulse(m_cells[index].Root));
-        }
-
-        private IEnumerator RevealOffers(int count)
-        {
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < m_faces.Count; i++)
             {
-                m_offers[i].Root.localScale = Vector3.zero;
+                m_offers[i].SetBack(m_chip);
             }
 
-            for (int i = 0; i < count; i++)
+            for (float t = 0f; t < total; t += Time.unscaledDeltaTime)
             {
-                m_offers[i].Root.localScale = Vector3.one;
-                StartCoroutine(UiFx.Pulse(m_offers[i].Root));
-                yield return new WaitForSeconds(k_OfferStep);
+                for (int i = 0; i < m_faces.Count; i++)
+                {
+                    float local = t - i * k_OfferStep;
+
+                    if (local >= half && !flipped[i])
+                    {
+                        flipped[i] = true;
+                        m_offers[i].Set(m_faces[i], m_chip, m_chipSelected);
+                    }
+
+                    m_offers[i].Root.localScale = new Vector3(Mathf.Clamp01(Mathf.Abs(local - half) / half), 1f, 1f);
+                }
+
+                yield return null;
             }
 
             m_offerFx = null;
+            ShowFaces();
         }
 
-        private IEnumerator Chosen(int index, Action done)
+        private void ShowFaces()
         {
+            for (int i = 0; i < m_faces.Count; i++)
+            {
+                m_offers[i].Set(m_faces[i], m_chip, m_chipSelected);
+                m_offers[i].Button.interactable = true;
+            }
+
+            m_faces = null;
+        }
+
+        private IEnumerator Chosen(int index, int stars, string label, string hint, int cost, bool canDraw)
+        {
+            RelicCard chosen = m_offers[index];
+            chosen.Frame.sprite = m_chipSelected;
+
             for (int i = 0; i < m_offers.Length; i++)
             {
                 m_offers[i].Button.interactable = false;
-                m_offers[i].Root.localScale = Vector3.one;
-                SetAlpha(m_offers[i], i == index ? 1f : 0.35f);
+                m_offers[i].SetAlpha(i == index ? 1f : 0.35f);
             }
 
+            Image star = chosen.Stars[Mathf.Clamp(stars, 1, chosen.Stars.Length) - 1];
+            star.color = RelicCard.k_Shadow;
+            m_offerLabel.text = string.Empty;
+            m_offerHint.text = string.Empty;
+            yield return new WaitForSecondsRealtime(k_StarDelay);
+            star.color = Color.white;
             SoundManager.Instance.Play(SoundTable.k_StatueBlessed);
-            yield return UiFx.Pulse(m_offers[index].Root);
-            yield return new WaitForSeconds(k_ChosenSeconds);
+            yield return UiFx.Pulse(star.rectTransform);
+            yield return UiFx.Pulse(chosen.Root);
+            m_offerLabel.text = label;
+            m_offerHint.text = hint;
+            ShowFoot(true, m_again, cost, canDraw);
             m_offerFx = null;
-            StopOffer();
-            done();
         }
 
-        private void SetCard(Card card, CardData data)
+        private void ShowFoot(bool view, string draw, int cost, bool canDraw)
         {
-            bool has = data != null;
-            card.Icon.enabled = has;
-            card.Icon.sprite = has ? Resources.Load<Sprite>(data.IconPath) : null;
-            card.Icon.color = has && data.Owned ? Color.white : k_Shadow;
-
-            if (card.Frame != null)
-            {
-                card.Frame.sprite = has && data.Selected ? m_chipSelected : m_chip;
-            }
-
-            for (int i = 0; i < card.Stars.Length; i++)
-            {
-                card.Stars[i].enabled = has;
-                card.Stars[i].color = has && i < data.Stars ? Color.white : k_Shadow;
-            }
-
-            if (card.Name != null)
-            {
-                card.Name.text = has ? data.Name : string.Empty;
-            }
-
-            if (card.Effect != null)
-            {
-                card.Effect.text = has ? data.Effect : string.Empty;
-            }
-
-            if (card.Badge != null)
-            {
-                card.Badge.SetActive(has && !string.IsNullOrEmpty(data.Badge));
-                card.BadgeText.text = has ? data.Badge : string.Empty;
-            }
-        }
-
-        private static void SetAlpha(Card card, float alpha)
-        {
-            foreach (Graphic graphic in card.Root.GetComponentsInChildren<Graphic>())
-            {
-                Color color = graphic.color;
-                color.a = graphic == card.Icon || Array.IndexOf(card.Stars, graphic) >= 0 ? Mathf.Min(color.a, alpha) : alpha;
-                graphic.color = color;
-            }
-        }
-
-        private static void Listen(Card[] cards, Action<int> clicked)
-        {
-            for (int i = 0; i < cards.Length; i++)
-            {
-                int index = i;
-                cards[i].Button.onClick.AddListener(() => clicked(index));
-            }
+            m_viewButton.gameObject.SetActive(view);
+            m_drawButton.gameObject.SetActive(true);
+            m_drawLabel.text = draw;
+            m_drawCost.text = cost.ToString();
+            m_drawButton.interactable = canDraw;
         }
 
         private void StopOffer()
@@ -319,11 +243,16 @@ namespace ZooTycoon.UI
                 m_offerFx = null;
             }
 
-            // 연출이 도중에 끊겨도 카드는 제 크기 · 제 빛깔로
-            foreach (Card card in m_offers)
+            if (m_faces != null)
+            {
+                ShowFaces();
+            }
+
+            // 연출이 도중에 끊겨도 카드는 앞면 · 제 크기 · 제 빛깔로
+            foreach (RelicCard card in m_offers)
             {
                 card.Root.localScale = Vector3.one;
-                SetAlpha(card, 1f);
+                card.SetAlpha(1f);
             }
         }
 

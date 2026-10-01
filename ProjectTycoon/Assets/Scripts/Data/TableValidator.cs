@@ -735,9 +735,9 @@ namespace ZooTycoon.Data
                 // 떠돌이 행상: 머무는 동안 다음 방문이 오지 않게, 외형은 역할 merchant 행
                 VisitorTable look = tables.GetAll<VisitorTable>().FirstOrDefault(v => v.Id == plaza.MerchantLook);
 
-                if (plaza.MerchantFirst < 0d || plaza.MerchantStay <= 0d || plaza.MerchantEvery <= plaza.MerchantStay || look == null || look.Role != VisitorRole.Merchant)
+                if (plaza.MerchantFirst < 0d || plaza.MerchantStay <= 0d || plaza.MerchantSetupSeconds <= 0d || plaza.MerchantEvery <= plaza.MerchantStay || look == null || look.Role != VisitorRole.Merchant)
                 {
-                    errors.Add($"PlazaConfigTable '{plaza.Id}': merchantFirst ≥ 0, 0 < merchantStay < merchantEvery, merchantLook은 VisitorTable의 merchant 행이어야 한다.");
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': merchantFirst ≥ 0, 0 < merchantStay < merchantEvery, merchantSetupSeconds > 0, merchantLook은 VisitorTable의 merchant 행이어야 한다.");
                 }
             }
 

@@ -18,6 +18,7 @@ namespace ZooTycoon.Game
         private InventoryPresenter m_inventoryPresenter;
         private StatuePresenter m_statuePresenter;
         private RelicCartPresenter m_relicPresenter;
+        private RelicPresenter m_relicsPresenter;
         private ControlHudView m_hudView;
 
         private void Awake()
@@ -34,16 +35,18 @@ namespace ZooTycoon.Game
             InventoryView inventoryView = ui.Open<InventoryView>();
             StatueView statueView = ui.Open<StatueView>();
             RelicCartView relicView = ui.Open<RelicCartView>();
+            RelicView relicsView = ui.Open<RelicView>();
             WorldManager world = WorldManager.Instance;
 
-            m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables);
+            m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables, game.Mall.Plaza.Merchant);
             m_hudPresenter = new ControlHudPresenter(m_hudView, game.Mall, game.Bus);
             m_sheetPresenter = new ObjectSheetPresenter(sheetView, game.Mall.Bakery, game.Bus, game.Tables);
             m_editPresenter = new EditModePresenter(editView, game.Mall, game.Bus, game.Tables, world.OriginOf);
             m_clerkPresenter = new ClerkPresenter(clerkView, game.Mall, game.Bus, game.Tables);
             m_inventoryPresenter = new InventoryPresenter(inventoryView, game.State, game.Bus, game.Tables);
             m_statuePresenter = new StatuePresenter(statueView, game.State, game.Bus, game.Tables);
-            m_relicPresenter = new RelicCartPresenter(relicView, game.State, game.Bus, game.Tables);
+            m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
+            m_relicPresenter = new RelicCartPresenter(relicView, game.State, game.Bus, game.Tables, m_relicsPresenter.Open);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.EditingChanged += Edit_EditingChanged;
@@ -76,6 +79,7 @@ namespace ZooTycoon.Game
             m_inventoryPresenter?.Dispose();
             m_statuePresenter?.Dispose();
             m_relicPresenter?.Dispose();
+            m_relicsPresenter?.Dispose();
         }
 
         private void Hud_SheetRequested(Interactable target)
@@ -90,6 +94,7 @@ namespace ZooTycoon.Game
             m_inventoryPresenter.SetEditing(editing);
             m_statuePresenter.SetEditing(editing);
             m_relicPresenter.SetEditing(editing);
+            m_relicsPresenter.SetEditing(editing);
             WorldManager.Instance.SetEditing(editing);
         }
     }

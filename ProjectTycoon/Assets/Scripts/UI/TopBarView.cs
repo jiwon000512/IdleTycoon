@@ -11,7 +11,7 @@ namespace ZooTycoon.UI
     // 연출 1차: 상단 바는 코인만. 값이 바뀌면 0.25초 동안 숫자가 오른다(첫 표시는 즉시)
     // 숫자는 공용 코인 캡슐(Prefabs/UI/CoinPill) 안의 금색 글자.
     // 설계 30: 석상 축복이 걸린 동안 코인 아래 축복 알약(아이콘 · 효과 · 남은 시간, 마지막 10초는 깜빡임). 그동안 쓴 코인 표시는 그 아래로 내려간다.
-    // 설계 31: 떠돌이 행상이 좌판을 연 동안 「행상 2:59」 알약. 알약은 코인 아래로 위에서부터 쌓인다(축복 → 행상)
+    // 설계 31 · 32: 떠돌이 행상 알약은 늘 보인다(행상이 있으면 「행상 2:59」, 없으면 흐린 「다음 행상 13:57」). 알약은 코인 아래로 위에서부터 쌓인다(축복 → 행상)
     public sealed class TopBarView : UIView
     {
         private const float k_CountSeconds = 0.25f;
@@ -20,6 +20,8 @@ namespace ZooTycoon.UI
         private const double k_BlinkSeconds = 10d;
         private const float k_BlinkSpeed = 4f;
         private const float k_BlinkMin = 0.45f;
+        // 설계 32: 행상이 없을 때 「다음 행상」 알약의 불투명도
+        private const float k_MerchantDim = 0.6f;
 
         [SerializeField] private TMP_Text m_coinsText;
         [Tooltip("코인을 쓴 순간 캡슐 아래에 잠깐 뜨는 「-24」(작은 코인 캡슐)")]
@@ -30,7 +32,7 @@ namespace ZooTycoon.UI
         [SerializeField] private Image m_blessingIcon;
         [SerializeField] private TMP_Text m_blessingText;
         [SerializeField] private TMP_Text m_blessingTime;
-        [Tooltip("설계 31 행상 알약(축복 알약 아래)")]
+        [Tooltip("설계 31 · 32 행상 알약(축복 알약 아래)")]
         [SerializeField] private CanvasGroup m_merchant;
         [SerializeField] private TMP_Text m_merchantText;
         [SerializeField] private TMP_Text m_merchantTime;
@@ -89,21 +91,21 @@ namespace ZooTycoon.UI
             SoundManager.Instance.Play(SoundTable.k_BlessingEnd);
         }
 
-        // 설계 31: 행상이 좌판을 열었다 · 걷었다. remaining: 좌판이 닫힐 때까지 남은 초
-        public void ShowMerchant(string text, Func<double> remaining)
+        // 설계 31 · 32: remaining = 알약 시간(좌판이 닫힐 때까지 · 다음에 올 때까지). dim이면 흐리게, arrived면 톡 튀며 소리
+        public void ShowMerchant(string text, Func<double> remaining, bool dim, bool arrived)
         {
             m_merchantText.text = text;
             m_merchantLeft = remaining;
             m_merchantTime.text = BigNumberFormatter.Clock(remaining());
-            m_merchant.alpha = 1f;
+            m_merchant.alpha = dim ? k_MerchantDim : 1f;
             m_merchant.gameObject.SetActive(true);
             Stack();
-        }
 
-        public void HideMerchant()
-        {
-            m_merchant.gameObject.SetActive(false);
-            Stack();
+            if (arrived)
+            {
+                StartCoroutine(UiFx.Pulse((RectTransform)m_merchant.transform));
+                SoundManager.Instance.Play(SoundTable.k_Bonus);
+            }
         }
 
         private void Reveal()

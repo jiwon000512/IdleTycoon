@@ -31,8 +31,13 @@ namespace ZooTycoon.World
         private const int k_GlowCount = 3;
         private const float k_GlowSpread = 1.0f;
         private const float k_GlowLift = 1.8f;
-        // 설계 31: 좌판을 걷을 때 수레가 작아지는 초
-        private const float k_FoldSeconds = 0.25f;
+        // 설계 32: 행상 발 → 접힌 수레 피벗(옆으로 걸으면 앞, 위아래로 걸으면 늘 뒤 = 위쪽). 옆은 손잡이 혹(피벗에서 1.4유닛)이 앞발에 닿게,
+        // 위아래는 끝면 손잡이(피벗 바로 아래)가 앞발 높이(발에서 약 15칸)에 오게. 그 사이로 꺾일 때는 이 타원 둘레를 이 빠르기(도/초)로 돈다
+        private const float k_CartLeadSide = 1.7f;
+        private const float k_CartLeadEnd = 0.42f;
+        private const float k_CartTurn = 540f;
+        // 펼칠 때 세로로 늘었다 돌아오는 정도
+        private const float k_CartStretch = 0.15f;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -51,11 +56,12 @@ namespace ZooTycoon.World
         [SerializeField] private WombatView m_wombat;
         [Tooltip("설계 29: 웜뱃 석상(자리는 Core 석상 기준점)")]
         [SerializeField] private Transform m_statue;
-        [Tooltip("설계 31: 유물 수레 = 행상의 좌판(자리는 Core 수레 기준점). 행상이 좌판을 연 동안만 보인다")]
-        [SerializeField] private Transform m_relicCart;
-        [Tooltip("설계 31: 행상이 없을 때 좌판 자리의 표지판(다음 행상까지 남은 시간)")]
-        [SerializeField] private Transform m_merchantSign;
-        [SerializeField] private TextMeshPro m_merchantSignText;
+        [Tooltip("설계 31 · 32: 유물 수레 = 행상의 좌판. 행상이 밀고 다니다 Core 수레 기준점에 세우고 펼친다. 행상이 없으면 숨긴다")]
+        [SerializeField] private SpriteRenderer m_relicCart;
+        [Tooltip("접힘 옆(손잡이 오른쪽, 수레가 행상 오른쪽이면 뒤집는다) · 접힘 끝면(손잡이 아래 = 행상 쪽) · 펼침(좌판)")]
+        [SerializeField] private Sprite m_cartFoldedSide;
+        [SerializeField] private Sprite m_cartFoldedEnd;
+        [SerializeField] private Sprite m_cartOpen;
 
         private readonly Dictionary<DecorationData, GameObject> m_decor = new Dictionary<DecorationData, GameObject>();
         private PlazaArea m_plaza;
@@ -66,7 +72,8 @@ namespace ZooTycoon.World
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
         private float m_glow;
-        private TableSet m_tables;
+        // 설계 32: 행상 발 → 접힌 수레의 각도(도, 바라보는 쪽으로 둘레를 돈다). NaN = 아직 놓지 않음
+        private float m_cartAngle = float.NaN;
         // 설계 31: 계단에 걸리는 유물(풍경)
         private RelicProps m_relicProps;
 
@@ -102,10 +109,7 @@ namespace ZooTycoon.World
             m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);
             m_statue.localPosition = new Vector3(plaza.Statue.Position.X, plaza.Statue.Position.Y, 0f);
-            m_relicCart.localPosition = new Vector3(plaza.RelicCart.Position.X, plaza.RelicCart.Position.Y, 0f);
-            m_merchantSign.localPosition = m_relicCart.localPosition;
-            m_tables = tables;
-            ShowStall(plaza.Merchant.IsOpen);
+            DrawCart();
             m_relicProps = new RelicProps(this, plaza.Wombat.Worker.Wallet.Relics,
                 anchor => anchor == RelicTable.k_AnchorPlazaStairs ? new[] { layout.StairsFloor } : new System.Numerics.Vector2[0],
                 p => transform.position + new Vector3(p.X, p.Y, 0f));
@@ -258,7 +262,7 @@ namespace ZooTycoon.World
 
             if (e.Area == m_plaza && m_plaza.Target is RelicCartInteractable cart && cart.IsOpen)
             {
-                StartCoroutine(Fx.Bounce(m_relicCart));
+                StartCoroutine(Fx.Bounce(m_relicCart.transform));
             }
         }
 
@@ -278,12 +282,7 @@ namespace ZooTycoon.World
                 return;
             }
 
-            if (m_merchantSign.gameObject.activeSelf)
-            {
-                // 남은 초 → 「12:30」(분:초, 초는 올림)
-                int left = (int)Math.Ceiling(Math.Max(0d, m_plaza.Merchant.UntilNext));
-                m_merchantSignText.text = m_tables.Format("merchant_next", (left / 60) + ":" + (left % 60).ToString("00"));
-            }
+            DrawCart();
 
             if (m_plaza.Statue.Blessing.Active == null)
             {
@@ -321,49 +320,71 @@ namespace ZooTycoon.World
 
             if (e.Change == RelicChange.Drawn && isActiveAndEnabled)
             {
-                Sparkle(m_relicCart);
+                Sparkle(m_relicCart.transform);
             }
         }
 
-        // 설계 31: 행상이 좌판을 펴면 수레가 나타나 튀며 반짝, 걷으면 작아지며 사라지고 빈 자리 표지판
+        // 설계 31: 행상이 좌판을 다 펴면 수레가 튀며 반짝
         private void Bus_MerchantChanged(Events.MerchantChanged e)
         {
-            if (e.Merchant.Phase == MerchantPhase.Open)
+            if (e.Merchant.IsOpen && isActiveAndEnabled)
             {
-                ShowStall(true);
-
-                if (isActiveAndEnabled)
-                {
-                    Sparkle(m_relicCart);
-                }
-            }
-            else if (e.Merchant.Phase == MerchantPhase.Leaving && isActiveAndEnabled && m_relicCart.gameObject.activeSelf)
-            {
-                StartCoroutine(Fold());
-            }
-            else if (e.Merchant.Phase == MerchantPhase.Away)
-            {
-                ShowStall(false);
+                Sparkle(m_relicCart.transform);
             }
         }
 
-        private void ShowStall(bool open)
+        // 설계 32: 수레는 행상 단계를 매 프레임 그대로 그린다. 오는 중 · 가는 중은 접혀 따라가고(옆으로는 앞에서 밀고, 위아래로는 늘 행상 뒤 —
+        // 내려올 때 끌고 올라갈 때 민다. 너구리가 수레에 가리지 않게, 2026-10-01 사용자), 계단에서 톡 뛰는 동안은 행상과 같이 나타나고 사라진다.
+        // 펼침 앞 반은 좌판 자리로 미끄러지고 뒤 반은 펼친 그림으로 바꿔 세로로 늘었다 돌아온다. 접음은 그 반대. 엶 동안은 크기를 건드리지 않는다(튀기 연출)
+        private void DrawCart()
         {
-            m_relicCart.localScale = Vector3.one;
-            m_relicCart.gameObject.SetActive(open);
-            m_merchantSign.gameObject.SetActive(!open && m_plaza.Merchant.Phase == MerchantPhase.Away);
-        }
+            RelicMerchant merchant = m_plaza.Merchant;
+            bool shown = merchant.Phase != MerchantPhase.Away;
 
-        private System.Collections.IEnumerator Fold()
-        {
-            for (float t = 0f; t < k_FoldSeconds; t += Time.deltaTime)
+            if (m_relicCart.gameObject.activeSelf != shown)
             {
-                m_relicCart.localScale = Vector3.one * (1f - t / k_FoldSeconds);
-                yield return null;
+                m_relicCart.gameObject.SetActive(shown);
             }
 
-            m_relicCart.localScale = Vector3.one;
-            m_relicCart.gameObject.SetActive(false);
+            if (!shown)
+            {
+                m_cartAngle = float.NaN;
+                return;
+            }
+
+            PlazaVisitor figure = merchant.Figure;
+            float ahead = Angle(figure.Facing);
+            m_cartAngle = float.IsNaN(m_cartAngle) ? ahead : Mathf.MoveTowardsAngle(m_cartAngle, ahead, k_CartTurn * Time.deltaTime);
+            bool side = Mathf.Abs(Mathf.DeltaAngle(m_cartAngle, 90f)) > 45f;
+            float radians = m_cartAngle * Mathf.Deg2Rad;
+            Vector2 lead = new Vector2(figure.Position.X, figure.Position.Y) + new Vector2(Mathf.Cos(radians) * k_CartLeadSide, Mathf.Sin(radians) * k_CartLeadEnd);
+            Vector2 stall = new Vector2(m_plaza.RelicCart.Position.X, m_plaza.RelicCart.Position.Y);
+            float t = merchant.Phase == MerchantPhase.Unpacking ? 1f - (float)(merchant.SetupLeft / merchant.SetupSeconds)
+                : merchant.Phase == MerchantPhase.Packing ? (float)(merchant.SetupLeft / merchant.SetupSeconds)
+                : merchant.IsOpen ? 1f : 0f;
+            float unfold = Mathf.Clamp01(t * 2f - 1f);
+            Vector2 at = Vector2.Lerp(lead, stall, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t * 2f)));
+            m_relicCart.transform.localPosition = new Vector3(at.x, at.y, 0f);
+            m_relicCart.sprite = unfold > 0f ? m_cartOpen : side ? m_cartFoldedSide : m_cartFoldedEnd;
+            m_relicCart.flipX = unfold <= 0f && side && Mathf.Cos(radians) > 0f;
+            float hop = figure.Phase == VisitorPhase.Entering ? (float)figure.HopProgress : figure.Phase == VisitorPhase.Exiting ? 1f - (float)figure.HopProgress : 1f;
+            m_relicCart.color = new Color(1f, 1f, 1f, hop);
+
+            if (!merchant.IsOpen)
+            {
+                float stretch = Mathf.Sin(unfold * Mathf.PI) * k_CartStretch;
+                m_relicCart.transform.localScale = new Vector3(1f - stretch * 0.5f, 1f + stretch, 1f);
+            }
+        }
+
+        private static float Angle(Facing facing)
+        {
+            switch (facing)
+            {
+                case Facing.Left: return 180f;
+                case Facing.Right: return 0f;
+                default: return 90f;
+            }
         }
 
         private void Sparkle(Transform thing)

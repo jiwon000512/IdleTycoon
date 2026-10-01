@@ -23,7 +23,8 @@ namespace ZooTycoon.Editor
             {
                 string assetPath = path.Replace('\\', '/');
                 bool sheet = Path.GetFileNameWithoutExtension(assetPath).Contains("_");
-                Import(assetPath, sheet);
+                // 너구리만 꼬리가 옆으로 나와 칸 폭 112px(make_anim.py CELLS)
+                Import(assetPath, sheet, assetPath.Contains("/Tanuki/") ? 112 : k_FrameWidth);
             }
         }
 
