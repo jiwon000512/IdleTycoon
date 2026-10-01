@@ -9,7 +9,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 31 · 32 → 설계 36 뽑기 메인: 위 글 · 카드 뒷면 한 장 · 아래 글(가진 반짝돌 · 모자람 · 다 모음) · 뽑기 버튼.
+    // 설계 31 · 32 → 설계 36 뽑기 메인: 위 글 · 반짝돌 원석(아트방, 프리팹 그림) · 아래 글(가진 반짝돌 · 모자람 · 다 모음) · 뽑기 버튼.
     // 뽑은 결과는 이 팝업 위에 따로 뜨는 RelicDrawResultView. 규칙은 Core Relics · RelicCartPresenter
     public sealed class RelicCartView : UIView
     {
@@ -19,9 +19,7 @@ namespace ZooTycoon.UI
         [SerializeField] private Button m_dim;
         [SerializeField] private Button m_closeButton;
         [SerializeField] private TextMeshProUGUI m_title;
-        [SerializeField] private Sprite m_cardBack;
         [SerializeField] private TextMeshProUGUI m_label;
-        [SerializeField] private RelicCard m_card;
         [SerializeField] private TextMeshProUGUI m_hint;
         [SerializeField] private Button m_drawButton;
         [SerializeField] private TextMeshProUGUI m_drawLabel;
@@ -40,7 +38,6 @@ namespace ZooTycoon.UI
             m_dim.onClick.AddListener(() => CloseRequested?.Invoke());
             m_closeButton.onClick.AddListener(() => CloseRequested?.Invoke());
             m_drawButton.onClick.AddListener(() => DrawClicked?.Invoke());
-            m_card.Button.interactable = false;
             m_panelRest = m_panel.anchoredPosition;
             m_root.SetActive(false);
         }
@@ -77,7 +74,6 @@ namespace ZooTycoon.UI
 
         public void ShowReady(string label, string hint, int cost, bool canDraw)
         {
-            m_card.SetBack(m_cardBack);
             m_label.text = label;
             m_hint.text = hint;
             m_drawCost.text = cost.ToString();

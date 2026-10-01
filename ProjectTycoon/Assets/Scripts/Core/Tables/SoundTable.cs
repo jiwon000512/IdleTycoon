@@ -41,6 +41,12 @@ namespace ZooTycoon.Core
         public const string k_StatueRoll = "statue_roll";
         public const string k_StatueBlessed = "statue_blessed";
         public const string k_BlessingEnd = "blessing_end";
+        // 반짝돌 뽑기 돌 깨기: 금 0 · 1(톡) · 금 2(쩍) · 산산조각 · 유물 솟기
+        public const string k_DrawTap0 = "draw_tap_0";
+        public const string k_DrawTap1 = "draw_tap_1";
+        public const string k_DrawCrack = "draw_crack";
+        public const string k_DrawBreak = "draw_break";
+        public const string k_DrawReveal = "draw_reveal";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -75,6 +81,11 @@ namespace ZooTycoon.Core
             k_StatueRoll,
             k_StatueBlessed,
             k_BlessingEnd,
+            k_DrawTap0,
+            k_DrawTap1,
+            k_DrawCrack,
+            k_DrawBreak,
+            k_DrawReveal,
         };
 
         // Resources/ 기준, 확장자 없음
