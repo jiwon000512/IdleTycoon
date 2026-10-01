@@ -175,8 +175,22 @@ def till():  # 갈기(설계 27 더미): 괭이 — 나무 자루 + 오른쪽 �
     return outline(np.asarray(im).copy())
 
 
+ORANGE, ORANGE_D, ORANGE_L = (0xD8, 0x78, 0x48), (0xB0, 0x58, 0x34), (0xF0, 0xA0, 0x70)   # 주 버튼 주황(크림 판 위에서 또렷하게)
+
+
+def talk():  # 대화(너구리에게 말 걸어 뽑기, 2026-10-01 사용자 A): 주황 말풍선 + 크림 점 셋
+    im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
+    d.rounded_rectangle([1, 2, 16, 12], radius=3, fill=ORANGE + (255,))
+    d.polygon([(4, 12), (8, 12), (3, 16)], fill=ORANGE + (255,))
+    d.line([(3, 3), (13, 3)], fill=ORANGE_L + (255,))
+    d.line([(2, 12), (15, 12)], fill=ORANGE_D + (255,))
+    for x in (5, 8, 11):
+        d.rectangle([x, 6, x + 1, 7], fill=CREAM + (255,))
+    return outline(np.asarray(im).copy())
+
+
 Image.fromarray(button()).save('../btn_act.png')
 Image.fromarray(menu_button()).save('../btn_menu.png')
 # enter·exit는 2026-09-26 굴 이동 자동으로 아이콘이 없다(그리는 함수만 남김)
-for action_id, draw in [('open', open_), ('dig', dig), ('till', till), ('plant', plant), ('wake', wake), ('clean', clean)]:
+for action_id, draw in [('open', open_), ('dig', dig), ('till', till), ('plant', plant), ('wake', wake), ('clean', clean), ('talk', talk)]:
     Image.fromarray(draw()).save(f'../../../Resources/Sprites/Actions/{action_id}.png')

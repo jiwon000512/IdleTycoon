@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 67937540df826ac4c949ceea06c53d3e
+guid: 2b57a5cd561a36545a71f11b0a77936d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5590737798780322607
-    second: relic_cart_folded_side_0
+      213: 3534414814025447961
+    second: icon_merchant_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -49,9 +49,9 @@ TextureImporter:
   spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 0
-  alignment: 9
-  spritePivot: {x: 0.5, y: 0}
-  spritePixelsToUnits: 80
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 25
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: relic_cart_folded_side_0
+      name: icon_merchant_0
       rect:
         serializedVersion: 2
-        x: 33
+        x: 0
         y: 0
-        width: 203
-        height: 134
+        width: 24
+        height: 23
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1dc795fc795b962b0800000000000000
-      internalID: -5590737798780322607
+      spriteID: 91a7dd61c83cc0130800000000000000
+      internalID: 3534414814025447961
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      relic_cart_folded_side_0: -5590737798780322607
+      icon_merchant_0: 3534414814025447961
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

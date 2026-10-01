@@ -328,5 +328,10 @@
   "w": 44,
   "h": 44,
   "border": null
+ },
+ "icon_merchant": {
+  "w": 24,
+  "h": 24,
+  "border": null
  }
 }
