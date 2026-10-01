@@ -20,10 +20,10 @@ PLAZA = 'Sprites/World/Plaza/'
 SHEETS = {
     'a': {'tl': (DECOR + 'fountain_stone', 76, 8), 'tr': (DECOR + 'bench_log', 64, 8), 'bl': (DECOR + 'plant_pot', 30, 8), 'br': (DECOR + 'lamp_lantern', 26, 8)},
     'b': {'tl': (DECOR + 'fountain_tile', 76, 8), 'tr': (DECOR + 'bench_iron', 64, 8), 'bl': (DECOR + 'plant_box', 40, 10), 'br': (DECOR + 'lamp_globe', 16, 8)},
-    'f': {'top': (PLAZA + 'awning', 68, 8), 'bl': (PLAZA + 'sign', 40, 8), 'br': (PLAZA + 'stairs', 48, 8)},
+    'f': {'top': (PLAZA + 'awning', 68, 8), 'bl': (PLAZA + 'sign', 40, 8)},   # 시트의 계단(br)은 2026-10-01 make_stairs.py로 바꿔 건너뛴다
 }
 # 원본 격자 그대로 옮기는 것(World/Source~/snap_codex.py, 2026-09-30 규칙). 크기는 원본 칸 수 그대로(분수 · 벤치 · 화분은 옛 크기보다 20~25% 작고,
-# DecorationTable halfWidth · depth · spots를 그림에 맞춘다). 등 둘은 원본이 웜뱃보다 낮아(가로등으로 안 읽힘) 옛 방식(칸 수 고정)으로 둔다. 차양 · 계단도 옛 방식
+# DecorationTable halfWidth · depth · spots를 그림에 맞춘다). 등 둘은 원본이 웜뱃보다 낮아(가로등으로 안 읽힘) 옛 방식(칸 수 고정)으로 둔다. 차양도 옛 방식
 FAITHFUL = {'plant_box', 'sign', 'fountain_stone', 'fountain_tile', 'bench_log', 'bench_iron', 'plant_pot'}
 sys.path.insert(0, os.path.join(HERE, '..', '..', 'Source~'))
 import snap_codex  # noqa: E402
@@ -143,6 +143,8 @@ for key, items in SHEETS.items():
     im = Image.open(os.path.join(HERE, 'raw', 'plaza_sheet_%s.png' % key)).convert('RGB')
     for box in blobs(im):
         q = quadrant(box, im.size, key == 'f')
+        if q not in items:
+            continue
         rel, width, colors = items[q]
         if os.path.basename(rel) in FAITHFUL:
             pad = (max(box[0] - 6, 0), max(box[1] - 6, 0), box[2] + 6, box[3] + 6)
