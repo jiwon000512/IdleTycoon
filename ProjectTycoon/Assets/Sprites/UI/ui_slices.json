@@ -333,5 +333,10 @@
   "w": 24,
   "h": 24,
   "border": null
+ },
+ "card_back": {
+  "w": 69,
+  "h": 95,
+  "border": null
  }
 }
