@@ -37,6 +37,7 @@ description: 이 프로젝트(ProjectTycoon)의 Unity 에디터를 CLI로 다룰
 
 - 게임 뷰는 가로 1280×720이라 `--source screen` 캡처는 가로로 나오고 멈춘 프레임을 줄 때가 있다. **세로 UI 캡처는 캔버스를 카메라로 돌린 뒤 `--source camera`**로 찍는다(`play.sh`가 `UiCamera.cs`로 해 준다. 팝업을 새로 연 뒤 캔버스가 바뀌면 `UiCamera.Run`을 다시).
 - 버튼은 `onClick.Invoke()`, 눌림은 `ExecuteEvents.Execute(..., pointerDownHandler)`로 흉내 낸다. private 필드는 리플렉션으로.
+- 사용자가 직접 확인할 때는 에디터 전용 치트 창을 알려 준다(플레이 중 `, `Game/CheatConsole`, 치트 추가는 `Add` 한 줄).
 - 1초짜리 연출·소리는 캡처 대신 상태 값을 읽는다(`GameManager.Instance`, `SoundManager`의 AudioSource).
 - 시간을 멈춰 찍으려면 `Time.timeScale = 0`(끝나고 1로).
 - 프리팹을 고친 뒤에는 플레이를 새로 시작한다.
