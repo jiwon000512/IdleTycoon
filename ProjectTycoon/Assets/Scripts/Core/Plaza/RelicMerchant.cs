@@ -1,3 +1,4 @@
+using System;
 using GameKit.Tables;
 
 namespace ZooTycoon.Core
@@ -6,21 +7,23 @@ namespace ZooTycoon.Core
     {
         // 다음에 올 때까지 세는 중(좌판 자리는 빈 바닥)
         Away,
-        // 접힌 수레를 밀고 계단에서 좌판 자리까지 걷는 중
+        // 접힌 수레를 끌고 계단에서 손잡이 자리까지 걷는 중(설계 33: 수레가 좌판 자리에 멈춘다)
         Coming,
-        // 수레를 좌판 자리에 세우고 펼치는 중
+        // 수레를 좌판 자리에 세우고 펼치는 중(행상은 앞을 돌아 좌판 자리로, 다 펴고 행상이 서면 엶)
         Unpacking,
         // 좌판을 펼쳤다(수레 버튼 → 좌판 팝업)
         Open,
         // 좌판을 접는 중
         Packing,
+        // 접은 수레의 손잡이 쪽으로 걸어가는 중(수레는 아직 좌판 자리)
+        Hitching,
         // 접힌 수레를 밀고 계단으로 돌아가는 중
         Leaving,
     }
 
-    // 설계 31 · 32: 광장 떠돌이 행상. 처음에는 merchantFirst초, 그 뒤로는 올 때마다 merchantEvery초 뒤에 접힌 수레를 밀고 계단으로 내려와
-    // 좌판 자리 뒤에 서면 수레를 세워 merchantSetupSeconds초 동안 펼치고, merchantStay초 동안 좌판을 연다. 시간이 다 되면 접고 계단으로 돌아간다.
-    // 수레는 세운 동안(펼침 · 엶 · 접음)만 길을 막는다. 단계가 바뀔 때마다 MerchantChanged
+    // 설계 31 · 32 · 33: 광장 떠돌이 행상. 처음에는 merchantFirst초, 그 뒤로는 올 때마다 merchantEvery초 뒤에 접힌 수레를 끌고 계단으로 내려와
+    // 손잡이 자리에 서면 수레를 세워 merchantSetupSeconds초 동안 펼치고(그사이 행상은 좌판 자리로), merchantStay초 동안 좌판을 연다. 시간이 다 되면 접고,
+    // 손잡이 쪽으로 가 수레를 잡은 뒤(설계 33) 밀고 계단으로 돌아간다. 수레는 세운 동안(펼침 · 엶 · 접음 · 잡으러 감)만 길을 막는다. 단계가 바뀔 때마다 MerchantChanged
     public sealed class RelicMerchant
     {
         private readonly PlazaArea m_plaza;
@@ -38,7 +41,7 @@ namespace ZooTycoon.Core
         public double SetupSeconds => m_config.MerchantSetupSeconds;
         public double UntilNext => m_untilNext;
         public bool IsOpen => Phase == MerchantPhase.Open;
-        public bool CartParked => Phase == MerchantPhase.Unpacking || Phase == MerchantPhase.Open || Phase == MerchantPhase.Packing;
+        public bool CartParked => Phase == MerchantPhase.Unpacking || Phase == MerchantPhase.Open || Phase == MerchantPhase.Packing || Phase == MerchantPhase.Hitching;
         public PlazaVisitor Figure => m_figure;
 
         internal RelicMerchant(PlazaArea plaza, TableSet tables)
@@ -75,19 +78,19 @@ namespace ZooTycoon.Core
 
                     break;
                 case MerchantPhase.Coming:
-                    if (m_figure.AtStall)
+                    if (m_figure.AtHandle)
                     {
                         SetupLeft = SetupSeconds;
                         Set(MerchantPhase.Unpacking);
+                        m_figure.GoToStall();
                     }
 
                     break;
                 case MerchantPhase.Unpacking:
-                    SetupLeft -= dt;
+                    SetupLeft = Math.Max(0d, SetupLeft - dt);
 
-                    if (SetupLeft <= 0d)
+                    if (SetupLeft <= 0d && m_figure.AtStall)
                     {
-                        SetupLeft = 0d;
                         Set(MerchantPhase.Open);
                     }
 
@@ -109,6 +112,14 @@ namespace ZooTycoon.Core
                     if (SetupLeft <= 0d)
                     {
                         SetupLeft = 0d;
+                        Set(MerchantPhase.Hitching);
+                        m_figure.GoToHandle();
+                    }
+
+                    break;
+                case MerchantPhase.Hitching:
+                    if (m_figure.AtHandle)
+                    {
                         Set(MerchantPhase.Leaving);
                         m_figure.Dismiss();
                     }

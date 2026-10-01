@@ -292,7 +292,7 @@ namespace ZooTycoon.Tests
         // 수레 바닥 사각형 안의 한 점(기준점 바로 위)
         private Vector2 CartFloor => m_plaza.RelicCart.Position + new Vector2(0f, 0.1f);
 
-        // 설계 32: 수레를 세울 때 그 자리에 선 웜뱃은 가까운 바닥으로 비켜 선다. 웜뱃은 수레 끝쪽(좌판 뒤 자리에서 손님 비켜 가기 둘레 밖)에 둔다
+        // 설계 32: 수레를 세울 때 그 자리에 선 웜뱃은 가까운 바닥으로 비켜 선다. 웜뱃은 수레 바닥 가운데 안쪽(행상이 서는 손잡이 · 좌판 자리에서 손님 비켜 가기 둘레 밖)에 둔다
         [Test]
         public void Merchant_ParkingCart_MovesWombatOff()
         {
@@ -301,7 +301,7 @@ namespace ZooTycoon.Tests
                 c.MaxVisitors = 0;
                 c.MerchantFirst = 1d;
             });
-            Vector2 cartEnd = m_plaza.RelicCart.Position + new Vector2(0.8f, 0.1f);
+            Vector2 cartEnd = m_plaza.RelicCart.Position + new Vector2(0f, 0.3f);
             m_bus.Publish(new Events.Passed(m_shop, PlazaArea.k_Id));
             m_wombat.Mover.Place(cartEnd);
 
@@ -311,8 +311,8 @@ namespace ZooTycoon.Tests
             Assert.That(m_plaza.Layout.Nav.IsWalkable(m_wombat.Mover.Position), Is.True);
         }
 
-        // 행상: 처음 시간이 되면 계단에서 내려와 좌판 뒤에 서고, 수레를 세워 펼친 뒤 머무는 동안 버튼으로 팝업, 시간이 다 되면 접고 계단으로 나간다.
-        // 수레는 펼침 · 엶 · 접음 동안만 길을 막는다. 뽑은 후보는 떠나도 남고, 다음은 오는 때부터 merchantEvery 뒤에 온다
+        // 행상: 처음 시간이 되면 계단에서 내려와 좌판 자리에 서고, 수레를 세워 펼친 뒤 머무는 동안 버튼으로 팝업, 시간이 다 되면 접고
+        // 손잡이 자리(수레 오른쪽)로 가 잡은 뒤 계단으로 나간다(설계 33). 수레는 세운 동안만 길을 막는다. 뽑은 후보는 떠나도 남고, 다음은 오는 때부터 merchantEvery 뒤에 온다
         [Test]
         public void Merchant_ComesOpensAndLeaves_OnSchedule()
         {
@@ -336,7 +336,7 @@ namespace ZooTycoon.Tests
             Assert.That(m_plaza.Layout.Nav.IsWalkable(CartFloor), Is.False);
             Assert.That(m_plaza.TargetAction, Is.Null);
 
-            Assert.That(RunUntil(() => m_plaza.Merchant.IsOpen, Config.MerchantSetupSeconds + k_Dt * 2d), Is.True);
+            Assert.That(RunUntil(() => m_plaza.Merchant.IsOpen, 40d), Is.True);
             Assert.That(phases, Is.EqualTo(new[] { MerchantPhase.Coming, MerchantPhase.Unpacking, MerchantPhase.Open }));
             Assert.That(Vector2.Distance(m_plaza.Merchant.Figure.Position, Placement.SpotOf(cart, SpotRole.Worker)), Is.LessThan(0.3f));
             Assert.That(m_plaza.TargetAction.Id, Is.EqualTo(ActionTable.k_Relic));
@@ -344,13 +344,18 @@ namespace ZooTycoon.Tests
             Assert.That(opened, Is.EqualTo(1));
             Assert.That(cart.TryDraw(), Is.True);
 
+            Assert.That(RunUntil(() => m_plaza.Merchant.Phase == MerchantPhase.Hitching, 40d), Is.True);
+            Assert.That(m_plaza.Layout.Nav.IsWalkable(CartFloor), Is.False);
             Assert.That(RunUntil(() => m_plaza.Merchant.Phase == MerchantPhase.Leaving, 40d), Is.True);
+            Vector2 stand = Placement.SpotOf(cart, SpotRole.Worker);
+            Vector2 handle = new Vector2(2f * cart.Position.X - stand.X, cart.Position.Y);
+            Assert.That(Vector2.Distance(m_plaza.Merchant.Figure.Position, handle), Is.LessThan(0.3f));
             Assert.That(m_plaza.Layout.Nav.IsWalkable(CartFloor), Is.True);
 
             Assert.That(RunUntil(() => m_plaza.Merchant.Phase == MerchantPhase.Away, 40d), Is.True);
             Assert.That(phases, Is.EqualTo(new[]
             {
-                MerchantPhase.Coming, MerchantPhase.Unpacking, MerchantPhase.Open, MerchantPhase.Packing, MerchantPhase.Leaving, MerchantPhase.Away,
+                MerchantPhase.Coming, MerchantPhase.Unpacking, MerchantPhase.Open, MerchantPhase.Packing, MerchantPhase.Hitching, MerchantPhase.Leaving, MerchantPhase.Away,
             }));
             Assert.That(m_plaza.Visitors, Is.Empty);
             Assert.That(m_plaza.TargetAction, Is.Null);

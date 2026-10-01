@@ -18,6 +18,8 @@ namespace ZooTycoon.Editor
         const string k_ActionDir = "Assets/Resources/Sprites/Actions";
         // 설계 30: 석상 축복 아이콘(BlessingTable icon 경로). 행동 아이콘과 같게
         const string k_BlessingDir = "Assets/Resources/Sprites/Blessings";
+        // 설계 31 · 33: 유물 아이콘(RelicTable icon 경로). 가게에도 걸리므로 월드 한 칸 크기(PPU 40, 한 칸 1px), 피벗 아래 가운데. UI는 비율 유지라 상관없다
+        const string k_RelicDir = "Assets/Resources/Sprites/Relics";
         const float k_UiPpu = 25f;
         const float k_WorldPpu = 40f;
 
@@ -42,6 +44,11 @@ namespace ZooTycoon.Editor
             foreach (string path in Directory.GetFiles(k_ActionDir, "*.png").Concat(Directory.GetFiles(k_BlessingDir, "*.png")))
             {
                 Import(path.Replace(Path.DirectorySeparatorChar, '/'), null, k_UiPpu);
+            }
+
+            foreach (string path in Directory.GetFiles(k_RelicDir, "*.png"))
+            {
+                Import(path.Replace(Path.DirectorySeparatorChar, '/'), null, k_WorldPpu, SpriteAlignment.BottomCenter);
             }
 
             foreach ((string name, SpriteAlignment pivot) in new[] { ("tag_cost", SpriteAlignment.Center), ("bubble", SpriteAlignment.BottomCenter), ("bubble_tail", SpriteAlignment.TopCenter) })

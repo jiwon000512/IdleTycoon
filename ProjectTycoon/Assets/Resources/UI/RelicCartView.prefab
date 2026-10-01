@@ -1080,8 +1080,8 @@ MonoBehaviour:
   m_IgnoreLayout: 0
   m_MinWidth: -1
   m_MinHeight: -1
-  m_PreferredWidth: 96
-  m_PreferredHeight: 96
+  m_PreferredWidth: 104
+  m_PreferredHeight: 104
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -1176,8 +1176,8 @@ MonoBehaviour:
   m_IgnoreLayout: 0
   m_MinWidth: -1
   m_MinHeight: -1
-  m_PreferredWidth: 96
-  m_PreferredHeight: 96
+  m_PreferredWidth: 104
+  m_PreferredHeight: 104
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -2927,7 +2927,6 @@ MonoBehaviour:
     Badge: {fileID: 2052260697735405947}
     BadgeText: {fileID: 6789463953751677546}
   m_offerHint: {fileID: 5510147716899195407}
-  m_foot: {fileID: 6182576900903166162}
   m_viewButton: {fileID: 8744456314246761709}
   m_viewLabel: {fileID: 4869116030644217806}
   m_drawButton: {fileID: 7853395408865708396}
@@ -5868,8 +5867,8 @@ MonoBehaviour:
   m_IgnoreLayout: 0
   m_MinWidth: -1
   m_MinHeight: -1
-  m_PreferredWidth: 96
-  m_PreferredHeight: 96
+  m_PreferredWidth: 104
+  m_PreferredHeight: 104
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1

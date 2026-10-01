@@ -6,7 +6,10 @@ namespace ZooTycoon.Core
     // 설계 11 · 리뷰 R2: 광장 손님 한 명. 지상 계단(또는 빵집 문)에서 톡 나와 들를 곳 몇 곳을 들르고 빵집 문(자리가 있을 때) 또는 계단으로 간다.
     // 빵집이 꽉 찼으면 한 곳 더 들르고, 그때도 꽉 찼거나 들를 곳이 없으면 떠난다.
     // 설계 22 외출: 점원의 광장 그림(Clerk != null)은 들를 곳을 계속 돌다(없으면 그 자리에서 기다림) ReturnToDoor로 문에 들어가 ClerkCameBack, 해고되면 Dismiss로 계단으로.
-    // 설계 31 행상(stall이 있으면): 좌판 뒤 자리까지 걸어가 서 있다가(AtStall) Dismiss로 계단으로. 설계 32: 걷는 동안 ♪ 말풍선
+    // 설계 31 행상(stall이 있으면): 좌판 자리까지 걸어가 서 있다가(AtStall) Dismiss로 계단으로. 설계 32: 걷는 동안 ♪ 말풍선.
+    // 설계 33: 수레 손잡이는 늘 오른쪽(펼친 좌판 그림). 올 때는 좌판 왼쪽(entry) 위에서 내려와 오른쪽으로 끌고 들어가 손잡이 자리(handle)에 서면(AtHandle)
+    // 수레가 좌판 자리에 멈춘다. GoToStall로 앞을 돌아 좌판 자리(왼쪽 앞)에 서고(AtStall), 접은 뒤 GoToHandle로 손잡이 자리에 가 서서
+    // Dismiss로 수레 자리를 거쳐(수레를 왼쪽으로 밀어내며) 계단으로
     public sealed class PlazaVisitor : Visitor
     {
         private enum Goal
@@ -15,7 +18,13 @@ namespace ZooTycoon.Core
             Door,
             Stairs,
             Stall,
+            Handle,
+            // 경유점에 닿으면 다음 경유점으로(마지막은 m_routeGoal)
+            Route,
         }
+
+        // 행상이 좌판 왼쪽(entry)으로 곧게 내려오기 시작하는 높이(유닛)
+        private const float k_EntryApproach = 1f;
 
         private int m_visitsLeft;
         private bool m_wantsShop;
@@ -32,17 +41,32 @@ namespace ZooTycoon.Core
         protected override WombatArea Area => Plaza;
         // 외출한 점원의 광장 그림이면 그 점원(말풍선을 같이 쓴다)
         public Clerk Clerk { get; }
-        // 설계 31: 행상이 좌판 뒤 자리에 섰다
+        // 설계 31: 행상이 좌판 자리에 섰다 · 설계 33: 손잡이 자리에 섰다
         public bool AtStall { get; private set; }
+        public bool AtHandle { get; private set; }
         public bool IsMerchant => m_stall != null;
+        // 남은 길(밀고 가는 수레가 미리 따라간다)
+        public int PathLeft => Mover.RemainingCount;
+        public Vector2 PathPoint(int i) => Mover.Remaining(i);
         private readonly Vector2? m_stall;
+        private readonly Vector2 m_handle;
+        private readonly Vector2 m_entry;
+        // 수레를 끌고 손잡이 자리까지 왔다 · 좌판 자리로 간다
+        private bool m_arrived;
+        private bool m_toStall;
+        // 남은 경유점(한 구간씩 걸어, 웜뱃을 비켜 길을 다시 찾아도 그 구간만 바뀐다)
+        private readonly System.Collections.Generic.List<Vector2> m_route = new System.Collections.Generic.List<Vector2>();
+        private Goal m_routeGoal;
+        private Facing m_routeFacing;
 
         // inside에서 floor로 톡 나온다(계단·빵집 문)
-        internal PlazaVisitor(int id, VisitorTable look, PlazaArea plaza, Vector2 inside, Vector2 floor, int visits, bool wantsShop, Clerk clerk = null, Vector2? stall = null) : base(id, look, inside, plaza.Tables)
+        internal PlazaVisitor(int id, VisitorTable look, PlazaArea plaza, Vector2 inside, Vector2 floor, int visits, bool wantsShop, Clerk clerk = null, Vector2? stall = null, Vector2 handle = default, Vector2 entry = default) : base(id, look, inside, plaza.Tables)
         {
             Plaza = plaza;
             Clerk = clerk;
             m_stall = stall;
+            m_handle = handle;
+            m_entry = entry;
             m_visitsLeft = visits;
             m_wantsShop = wantsShop;
 
@@ -72,17 +96,34 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 점원 그림: 해고됐다 · 행상: 좌판을 걷었다. 계단으로 나간다
+        // 행상: 수레를 세웠다. 앞을 돌아 좌판 자리에 선다(AtStall)
+        internal void GoToStall()
+        {
+            AtHandle = false;
+            m_toStall = true;
+            Next();
+        }
+
+        // 행상: 좌판을 접었다. 손잡이 자리로 돌아가 선다(AtHandle)
+        internal void GoToHandle()
+        {
+            AtStall = false;
+            m_toStall = false;
+            Next();
+        }
+
+        // 점원 그림: 해고됐다 · 행상: 수레를 잡았다. 계단으로 나간다
         internal void Dismiss()
         {
             m_dismissed = true;
 
-            if (AtStall)
+            if (IsMerchant)
             {
                 Bubble.Show(BubbleTable.k_Note);
             }
 
             AtStall = false;
+            AtHandle = false;
             ReleaseSpot();
             Timer = 0d;
 
@@ -126,7 +167,7 @@ namespace ZooTycoon.Core
                 return true;
             }
 
-            if (Moving || AtStall)
+            if (Moving || AtStall || AtHandle)
             {
                 return true;
             }
@@ -161,14 +202,29 @@ namespace ZooTycoon.Core
             if (m_dismissed)
             {
                 m_heading = Goal.Stairs;
-                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.StairsFloor, Facing.Up);
+
+                if (IsMerchant)
+                {
+                    Mover.WalkThrough(Plaza.Layout.Nav, Facing.Up, Plaza.RelicCart.Position, Plaza.Layout.StairsFloor);
+                }
+                else
+                {
+                    Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.StairsFloor, Facing.Up);
+                }
+
+                return;
+            }
+
+            if (m_stall.HasValue && !m_arrived)
+            {
+                WalkRoute(Goal.Handle, Facing.Left, m_entry + new Vector2(0f, k_EntryApproach), m_entry, m_handle);
                 return;
             }
 
             if (m_stall.HasValue)
             {
-                m_heading = Goal.Stall;
-                Mover.WalkTo(Plaza.Layout.Nav, m_stall.Value, Facing.Down);
+                m_heading = m_toStall ? Goal.Stall : Goal.Handle;
+                Mover.WalkTo(Plaza.Layout.Nav, m_toStall ? m_stall.Value : m_handle, m_toStall ? Facing.Down : Facing.Left);
                 return;
             }
 
@@ -228,6 +284,13 @@ namespace ZooTycoon.Core
                     AtStall = true;
                     Bubble.Clear();
                     break;
+                case Goal.Handle:
+                    AtHandle = true;
+                    m_arrived = true;
+                    break;
+                case Goal.Route:
+                    WalkLeg();
+                    break;
                 case Goal.Door:
                     if (Clerk != null || Plaza.Bakery.CanAdmit)
                     {
@@ -243,6 +306,24 @@ namespace ZooTycoon.Core
                     StartHop(VisitorPhase.Exiting, Plaza.Layout.StairsFloor, Plaza.Layout.StairsInside);
                     break;
             }
+        }
+
+        private void WalkRoute(Goal goal, Facing arrive, params Vector2[] points)
+        {
+            m_route.Clear();
+            m_route.AddRange(points);
+            m_routeGoal = goal;
+            m_routeFacing = arrive;
+            WalkLeg();
+        }
+
+        // 다음 경유점으로. 사이 점에서는 그다음 점 쪽을 보며 닿는다(한 프레임 서도 돌아보지 않게)
+        private void WalkLeg()
+        {
+            Vector2 next = m_route[0];
+            m_route.RemoveAt(0);
+            m_heading = m_route.Count > 0 ? Goal.Route : m_routeGoal;
+            Mover.WalkTo(Plaza.Layout.Nav, next, m_route.Count > 0 ? Mover.FacingOf(m_route[0] - next) : m_routeFacing);
         }
 
         // 설계 18: 장식이 바뀌어 들를 곳 번호가 다시 매겨졌다. 들르던 곳은 놓고 다음으로, 걷던 길은 새 땅에서 다시

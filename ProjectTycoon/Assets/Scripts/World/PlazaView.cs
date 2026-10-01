@@ -31,11 +31,17 @@ namespace ZooTycoon.World
         private const int k_GlowCount = 3;
         private const float k_GlowSpread = 1.0f;
         private const float k_GlowLift = 1.8f;
-        // 설계 32: 행상 발 → 접힌 수레 피벗(옆으로 걸으면 앞, 위아래로 걸으면 늘 뒤 = 위쪽). 옆은 손잡이 혹(피벗에서 1.4유닛)이 앞발에 닿게,
-        // 위아래는 끝면 손잡이(피벗 바로 아래)가 앞발 높이(발에서 약 15칸)에 오게. 그 사이로 꺾일 때는 이 타원 둘레를 이 빠르기(도/초)로 돈다
-        private const float k_CartLeadSide = 1.7f;
-        private const float k_CartLeadEnd = 0.42f;
-        private const float k_CartTurn = 540f;
+        // 설계 33: 행상 발 ↔ 접힌 수레 피벗 거리는 방향에 따라 이 타원 위. 옆은 손잡이 혹(피벗에서 1.4유닛)이 앞발에 닿게(좌판 worker 자리 dx와 같아
+        // 오른쪽으로 끌고 들어와 손잡이 자리에 서면 수레가 좌판 자리에 멈춘다), 위아래는 끝면 손잡이가 앞발 높이에 오게
+        private const float k_CartReachSide = 1.4f;
+        private const float k_CartReachEnd = 0.5f;
+        // 발자취를 남기는 최소 걸음 · 길을 훑는 걸음(유닛)
+        private const float k_TrailStep = 0.02f;
+        private const float k_LineStep = 0.05f;
+        // 옆 ↔ 끝면 그림은 한쪽 성분이 다른 쪽의 이 배를 넘을 때만 바꾼다(모퉁이에서 떨리지 않게)
+        private const float k_CartTurnRatio = 1.3f;
+        // 그림 방향은 수레가 실제로 굴러간 방향 — 이만큼(유닛) 움직일 때마다 새로 잰다(짧은 꺾임에 흔들리지 않게)
+        private const float k_CartHeadingStep = 0.12f;
         // 펼칠 때 세로로 늘었다 돌아오는 정도
         private const float k_CartStretch = 0.15f;
 
@@ -72,8 +78,18 @@ namespace ZooTycoon.World
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
         private float m_glow;
-        // 설계 32: 행상 발 → 접힌 수레의 각도(도, 바라보는 쪽으로 둘레를 돈다). NaN = 아직 놓지 않음
-        private float m_cartAngle = float.NaN;
+        // 설계 33: 행상이 지나온 길(올 때 끌려오는 수레가 따라간다) · 지금 길 위 거리 · 마지막으로 길 위에 둔 자리(펼칠 때 여기서 좌판 자리로)
+        // 행상이 지나온 길(올 때) · 수레가 훑는 길(행상 발에서 멀어지는 쪽으로)
+        private readonly List<Vector2> m_trail = new List<Vector2>();
+        private readonly List<Vector2> m_line = new List<Vector2>();
+        private Vector2 m_cartPos;
+        // 행상 → 수레 방향 · 지금 옆 그림인가
+        private Vector2 m_cartDir = Vector2.up;
+        private bool m_cartSide;
+        // 수레가 굴러가는 방향 · 그 방향을 잰 마지막 자리
+        private Vector2 m_cartHeading = Vector2.down;
+        private Vector2 m_cartTrack;
+        private bool m_cartTracking;
         // 설계 31: 계단에 걸리는 유물(풍경)
         private RelicProps m_relicProps;
 
@@ -333,9 +349,11 @@ namespace ZooTycoon.World
             }
         }
 
-        // 설계 32: 수레는 행상 단계를 매 프레임 그대로 그린다. 오는 중 · 가는 중은 접혀 따라가고(옆으로는 앞에서 밀고, 위아래로는 늘 행상 뒤 —
-        // 내려올 때 끌고 올라갈 때 민다. 너구리가 수레에 가리지 않게, 2026-10-01 사용자), 계단에서 톡 뛰는 동안은 행상과 같이 나타나고 사라진다.
-        // 펼침 앞 반은 좌판 자리로 미끄러지고 뒤 반은 펼친 그림으로 바꿔 세로로 늘었다 돌아온다. 접음은 그 반대. 엶 동안은 크기를 건드리지 않는다(튀기 연출)
+        // 설계 32 · 33: 수레는 행상 단계를 매 프레임 그대로 그리고, 움직일 땐 늘 행상이 걷는 길 위에 있다 — 행상 발에서 그 방향의 타원 거리만큼
+        // 떨어진 길 위 첫 점(올 때는 지나온 길, 갈 때는 남은 길). 거리가 방향에 따라 이어서 바뀌어 모퉁이에서도 떨지 않고, 곧은 길에서는 정확히 그 거리.
+        // 처음엔 계단 안쪽 길을 이어 붙여 계단에서 굴러 나오고, 갈 때는 길 끝 너머 계단 안으로 들어간다. 세운 동안은 좌판 자리.
+        // 그림은 방향에 따라 옆(손잡이를 행상 쪽으로 뒤집기) · 끝면(경계에서 떨지 않게 넘어설 때만 바꿈), 계단 바닥선 위(계단 안)에서는 흐려진다.
+        // 펼침 앞 반은 마지막 자리에서 좌판 자리로 마저 가고 뒤 반은 펼친 그림으로 바꿔 세로로 늘었다 돌아온다. 접음은 그 반대. 엶 동안은 크기를 건드리지 않는다(튀기 연출)
         private void DrawCart()
         {
             RelicMerchant merchant = m_plaza.Merchant;
@@ -348,27 +366,93 @@ namespace ZooTycoon.World
 
             if (!shown)
             {
-                m_cartAngle = float.NaN;
+                m_trail.Clear();
+                m_cartDir = Vector2.up;
+                m_cartSide = false;
+                m_cartHeading = Vector2.down;
+                m_cartTracking = false;
                 return;
             }
 
             PlazaVisitor figure = merchant.Figure;
-            float ahead = Angle(figure.Facing);
-            m_cartAngle = float.IsNaN(m_cartAngle) ? ahead : Mathf.MoveTowardsAngle(m_cartAngle, ahead, k_CartTurn * Time.deltaTime);
-            bool side = Mathf.Abs(Mathf.DeltaAngle(m_cartAngle, 90f)) > 45f;
-            float radians = m_cartAngle * Mathf.Deg2Rad;
-            Vector2 lead = new Vector2(figure.Position.X, figure.Position.Y) + new Vector2(Mathf.Cos(radians) * k_CartLeadSide, Mathf.Sin(radians) * k_CartLeadEnd);
-            Vector2 stall = new Vector2(m_plaza.RelicCart.Position.X, m_plaza.RelicCart.Position.Y);
+            Vector2 feet = V(figure.Position);
+            Vector2 stall = V(m_plaza.RelicCart.Position);
+            bool moving = merchant.Phase == MerchantPhase.Coming || merchant.Phase == MerchantPhase.Leaving;
+
+            if (moving)
+            {
+                m_line.Clear();
+                m_line.Add(feet);
+
+                if (merchant.Phase == MerchantPhase.Coming)
+                {
+                    Remember(feet);
+
+                    for (int i = m_trail.Count - 1; i >= 0; i--)
+                    {
+                        m_line.Add(m_trail[i]);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < figure.PathLeft; i++)
+                    {
+                        m_line.Add(V(figure.PathPoint(i)));
+                    }
+
+                    m_line.Add(m_line[m_line.Count - 1] + Vector2.up * (k_CartReachSide + k_CartReachEnd));
+                }
+
+                m_cartPos = Tether(feet);
+                Vector2 away = m_cartPos - feet;
+
+                if (away.sqrMagnitude > 1e-6f)
+                {
+                    m_cartDir = away.normalized;
+                }
+
+                if (!m_cartTracking)
+                {
+                    m_cartTrack = m_cartPos;
+                    m_cartTracking = true;
+                }
+
+                Vector2 rolled = m_cartPos - m_cartTrack;
+
+                if (rolled.magnitude >= k_CartHeadingStep)
+                {
+                    m_cartHeading = rolled.normalized;
+                    m_cartTrack = m_cartPos;
+                }
+            }
+            else
+            {
+                // 세워 둔 동안은 옆으로 놓여 있고, 밀고 나갈 때는 이 자리에서 다시 잰다
+                m_cartHeading = Vector2.left;
+                m_cartTracking = false;
+            }
+
+            Vector2 look = moving ? m_cartHeading : Vector2.left;
+
+            if (m_cartSide ? Mathf.Abs(look.y) > Mathf.Abs(look.x) * k_CartTurnRatio : Mathf.Abs(look.x) > Mathf.Abs(look.y) * k_CartTurnRatio)
+            {
+                m_cartSide = !m_cartSide;
+            }
+
             float t = merchant.Phase == MerchantPhase.Unpacking ? 1f - (float)(merchant.SetupLeft / merchant.SetupSeconds)
                 : merchant.Phase == MerchantPhase.Packing ? (float)(merchant.SetupLeft / merchant.SetupSeconds)
                 : merchant.IsOpen ? 1f : 0f;
             float unfold = Mathf.Clamp01(t * 2f - 1f);
-            Vector2 at = Vector2.Lerp(lead, stall, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t * 2f)));
+            Vector2 at = moving ? m_cartPos
+                : merchant.Phase == MerchantPhase.Unpacking ? Vector2.Lerp(m_cartPos, stall, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t * 2f)))
+                : stall;
             m_relicCart.transform.localPosition = new Vector3(at.x, at.y, 0f);
-            m_relicCart.sprite = unfold > 0f ? m_cartOpen : side ? m_cartFoldedSide : m_cartFoldedEnd;
-            m_relicCart.flipX = unfold <= 0f && side && Mathf.Cos(radians) > 0f;
-            float hop = figure.Phase == VisitorPhase.Entering ? (float)figure.HopProgress : figure.Phase == VisitorPhase.Exiting ? 1f - (float)figure.HopProgress : 1f;
-            m_relicCart.color = new Color(1f, 1f, 1f, hop);
+            m_relicCart.sprite = unfold > 0f ? m_cartOpen : m_cartSide ? m_cartFoldedSide : m_cartFoldedEnd;
+            // 옆 그림은 손잡이가 오른쪽(펼친 좌판과 같다) → 끌거나 밀 때 수레가 행상 오른쪽에 있으면 뒤집는다. 세워 둔 동안은 그대로
+            m_relicCart.flipX = moving && m_cartSide && m_cartDir.x > 0f;
+            Vector2 floor = V(m_plaza.Layout.StairsFloor);
+            Vector2 inside = V(m_plaza.Layout.StairsInside);
+            m_relicCart.color = new Color(1f, 1f, 1f, 1f - Mathf.Clamp01((at.y - floor.y) / (inside.y - floor.y)));
 
             if (!merchant.IsOpen)
             {
@@ -377,14 +461,64 @@ namespace ZooTycoon.World
             }
         }
 
-        private static float Angle(Facing facing)
+        // 그 방향의 행상 발 ↔ 수레 거리(타원)
+        private static float Reach(Vector2 direction)
         {
-            switch (facing)
+            float x = direction.x / k_CartReachSide;
+            float y = direction.y / k_CartReachEnd;
+            return 1f / Mathf.Sqrt(x * x + y * y);
+        }
+
+        // 발자취: 처음에는 계단 안쪽에서 바닥으로 내려오는 길을 깔아 수레가 계단 속에서 굴러 나오게
+        private void Remember(Vector2 feet)
+        {
+            if (m_trail.Count == 0)
             {
-                case Facing.Left: return 180f;
-                case Facing.Right: return 0f;
-                default: return 90f;
+                Vector2 inside = V(m_plaza.Layout.StairsInside);
+                m_trail.Add(inside + Vector2.up * (k_CartReachSide + k_CartReachEnd));
+                m_trail.Add(inside);
             }
+
+            if (Vector2.Distance(m_trail[m_trail.Count - 1], feet) >= k_TrailStep)
+            {
+                m_trail.Add(feet);
+            }
+        }
+
+        // m_line(행상 발에서 멀어지는 길)을 훑어 발과의 거리가 그 방향의 타원 거리에 처음 닿는 점. 길이 모자라면 끝점
+        private Vector2 Tether(Vector2 feet)
+        {
+            Vector2 last = feet;
+            float lastGap = -Reach(m_cartDir);
+
+            for (int i = 1; i < m_line.Count; i++)
+            {
+                Vector2 from = m_line[i - 1];
+                Vector2 to = m_line[i];
+                int steps = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(from, to) / k_LineStep));
+
+                for (int k = 1; k <= steps; k++)
+                {
+                    Vector2 p = Vector2.Lerp(from, to, (float)k / steps);
+                    Vector2 away = p - feet;
+                    float gap = away.magnitude - (away.sqrMagnitude > 1e-6f ? Reach(away.normalized) : Reach(m_cartDir));
+
+                    if (gap >= 0f)
+                    {
+                        return Vector2.Lerp(last, p, lastGap / (lastGap - gap));
+                    }
+
+                    last = p;
+                    lastGap = gap;
+                }
+            }
+
+            return last;
+        }
+
+        private static Vector2 V(System.Numerics.Vector2 p)
+        {
+            return new Vector2(p.X, p.Y);
         }
 
         private void Sparkle(Transform thing)

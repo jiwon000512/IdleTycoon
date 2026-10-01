@@ -160,11 +160,14 @@ namespace ZooTycoon.Core
             Merchant.Tick(dt);
         }
 
-        // 설계 31: 행상이 계단에서 톡 나와 좌판 뒤 자리(수레의 worker 자리)로 걷는다
+        // 설계 31 · 33: 행상이 계단에서 톡 나와 수레를 끌고 수레 기준점 줄의 왼쪽(entry, worker 자리 x)에서 오른쪽 손잡이 자리(handle, 맞은편)까지 걸으면
+        // 뒤따르는 수레가 좌판 자리에 멈춘다. 그 뒤 좌판 자리(worker)에 서고, 떠날 때는 손잡이 자리에서 수레를 잡아 왼쪽으로 밀어낸다
         internal PlazaVisitor SpawnMerchant(VisitorTable look)
         {
             Vector2 stall = Placement.SpotOf(RelicCart, SpotRole.Worker);
-            PlazaVisitor merchant = new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, 0, false, null, stall);
+            Vector2 entry = new Vector2(stall.X, RelicCart.Position.Y);
+            Vector2 handle = new Vector2(2f * RelicCart.Position.X - stall.X, RelicCart.Position.Y);
+            PlazaVisitor merchant = new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, 0, false, null, stall, handle, entry);
             Spawn(merchant);
             return merchant;
         }
