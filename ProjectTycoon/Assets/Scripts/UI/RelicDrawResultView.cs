@@ -22,6 +22,7 @@ namespace ZooTycoon.UI
         [SerializeField] private Button m_dim;
         [SerializeField] private Sprite m_chip;
         [SerializeField] private Sprite m_chipSelected;
+        [SerializeField] private Sprite m_cardBack;
         [SerializeField] private RelicCard m_card;
         [SerializeField] private TextMeshProUGUI m_hint;
         [SerializeField] private Button m_viewButton;
@@ -95,7 +96,7 @@ namespace ZooTycoon.UI
         {
             SetFoot(false, cost, canDraw);
             m_hint.text = string.Empty;
-            m_card.SetBack(m_chip);
+            m_card.SetBack(m_cardBack);
             SoundManager.Instance.Play(SoundTable.k_StatueRoll);
             float half = k_FlipSeconds * 0.5f;
             bool flipped = false;

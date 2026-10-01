@@ -1331,6 +1331,7 @@ MonoBehaviour:
   m_dim: {fileID: 7815954692175585743}
   m_chip: {fileID: 21300000, guid: d2a36e560a7c98949adfc497ad875dcd, type: 3}
   m_chipSelected: {fileID: 21300000, guid: d2c4e44a69629064a8afae5d794f2611, type: 3}
+  m_cardBack: {fileID: 21300000, guid: 4e73477690472e44db714683004167ec, type: 3}
   m_card:
     Root: {fileID: 1923968893733638007}
     Button: {fileID: 6962922076279022096}

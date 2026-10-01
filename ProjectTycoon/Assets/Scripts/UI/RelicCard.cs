@@ -44,6 +44,7 @@ namespace ZooTycoon.UI
             if (Frame != null)
             {
                 Frame.sprite = has && data.Selected ? chipSelected : chip;
+                Frame.type = Image.Type.Sliced;
             }
 
             for (int i = 0; i < Stars.Length; i++)
@@ -69,13 +70,13 @@ namespace ZooTycoon.UI
             }
         }
 
-        // 뒷면: 지금 아이콘을 그림자로, 이름 자리에 「?」, 별 · 효과 · 이름표는 숨긴다(아트방 카드 뒷면 그림이 오기 전 임시)
-        public void SetBack(Sprite chip)
+        // 뒷면: 카드 뒷면 그림 한 장(틀까지 그려져 있어 9-slice 없이, 아트방 「반짝돌 무늬」). 아이콘 · 이름 · 별 · 효과 · 이름표는 숨긴다
+        public void SetBack(Sprite back)
         {
-            Icon.enabled = true;
-            Icon.color = k_Shadow;
-            Frame.sprite = chip;
-            Name.text = "?";
+            Icon.enabled = false;
+            Frame.sprite = back;
+            Frame.type = Image.Type.Simple;
+            Name.text = string.Empty;
             Effect.text = string.Empty;
             Badge.SetActive(false);
 

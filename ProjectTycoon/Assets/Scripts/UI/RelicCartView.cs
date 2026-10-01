@@ -19,7 +19,7 @@ namespace ZooTycoon.UI
         [SerializeField] private Button m_dim;
         [SerializeField] private Button m_closeButton;
         [SerializeField] private TextMeshProUGUI m_title;
-        [SerializeField] private Sprite m_chip;
+        [SerializeField] private Sprite m_cardBack;
         [SerializeField] private TextMeshProUGUI m_label;
         [SerializeField] private RelicCard m_card;
         [SerializeField] private TextMeshProUGUI m_hint;
@@ -77,7 +77,7 @@ namespace ZooTycoon.UI
 
         public void ShowReady(string label, string hint, int cost, bool canDraw)
         {
-            m_card.SetBack(m_chip);
+            m_card.SetBack(m_cardBack);
             m_label.text = label;
             m_hint.text = hint;
             m_drawCost.text = cost.ToString();
