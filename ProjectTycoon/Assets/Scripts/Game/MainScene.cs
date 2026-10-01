@@ -56,6 +56,9 @@ namespace ZooTycoon.Game
             m_editPresenter.HeldChanged += world.SetHeld;
 
             world.Initialize(game.Tables, game.Mall, game.Bus);
+#if UNITY_EDITOR
+            gameObject.AddComponent<CheatConsole>().Bind(game);
+#endif
         }
 
         private void OnDestroy()

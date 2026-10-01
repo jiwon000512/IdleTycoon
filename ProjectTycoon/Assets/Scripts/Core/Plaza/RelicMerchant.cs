@@ -49,6 +49,15 @@ namespace ZooTycoon.Core
             m_untilNext = m_config.MerchantFirst;
         }
 
+        // 다음 틱에 오게 한다(없을 때만, 에디터 치트)
+        public void Summon()
+        {
+            if (Phase == MerchantPhase.Away)
+            {
+                m_untilNext = 0d;
+            }
+        }
+
         internal void Tick(double dt)
         {
             m_untilNext -= dt;
