@@ -334,9 +334,124 @@
   "h": 24,
   "border": null
  },
- "card_back": {
-  "w": 69,
-  "h": 95,
+ "draw_stone": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_crack_0": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_crack_1": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_crack_2": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_crack_glow_gold": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_crack_glow_mint": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_piece_0": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_piece_1": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_piece_2": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_piece_3": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_piece_4": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_piece_5": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_piece_6": {
+  "w": 68,
+  "h": 66,
+  "border": null
+ },
+ "draw_rays_gold_0": {
+  "w": 120,
+  "h": 120,
+  "border": null
+ },
+ "draw_rays_gold_1": {
+  "w": 120,
+  "h": 120,
+  "border": null
+ },
+ "draw_rays_mint_0": {
+  "w": 120,
+  "h": 120,
+  "border": null
+ },
+ "draw_rays_mint_1": {
+  "w": 120,
+  "h": 120,
+  "border": null
+ },
+ "draw_spark_gold_0": {
+  "w": 3,
+  "h": 3,
+  "border": null
+ },
+ "draw_spark_gold_1": {
+  "w": 5,
+  "h": 5,
+  "border": null
+ },
+ "draw_spark_gold_2": {
+  "w": 7,
+  "h": 7,
+  "border": null
+ },
+ "draw_spark_mint_0": {
+  "w": 3,
+  "h": 3,
+  "border": null
+ },
+ "draw_spark_mint_1": {
+  "w": 5,
+  "h": 5,
+  "border": null
+ },
+ "draw_spark_mint_2": {
+  "w": 7,
+  "h": 7,
+  "border": null
+ },
+ "draw_flash": {
+  "w": 61,
+  "h": 61,
   "border": null
  }
 }
