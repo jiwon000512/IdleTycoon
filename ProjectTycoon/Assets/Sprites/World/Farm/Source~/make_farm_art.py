@@ -11,7 +11,7 @@
 # 딸기(설계 35, 2026-10-01 사용자 선택 A): raw/strawberry_crop_a~c(새싹 · 줄기 · 꽃과 풋열매 · 익음 4띠, 프롬프트 raw/prompt_strawberry_crop.txt).
 #   밀과 달리 원본 격자 그대로(World/Source~/snap_codex.py, 띠마다). 원본 픽셀이 잘아(한 칸 5.6px) 띠가 330칸 넘게 나오므로 포기 사이 빈 열에서 STRAW_MAX_W칸 안으로 창 둘(반쪽 0 · 1)을 자른다.
 #   5단계 = 씨앗 둔덕(새싹 밑동 자리) · 띠 0 · 1 · 2 · 3. 꽃잎 흰색은 남긴다(바깥 배경만 지움). 흔들림 판은 밀과 같다.
-# 출력: ../plot.png · ../plot_manure.png(거름 넣은 밭 겹 그림) · ../farm_timer_XX.png · Resources/Sprites/Farm/Ready/wheat.png(다 익음 원판, 작물마다 CropTable readyMark) · ../farm_sparkle_0~1.png · Resources/Sprites/Farm/wheat_<단계>_<반쪽>[_l|_r].png · strawberry_<단계>_<반쪽>[_l|_r].png. 실행: Windows Python(Pillow · numpy) make_farm_art.py
+# 출력: ../plot.png · ../plot_manure.png(거름 넣은 밭 겹 그림) · ../farm_timer_XX.png · Resources/Sprites/Farm/Ready/wheat.png · strawberry.png(다 익음 원판, 작물마다 CropTable readyMark) · ../farm_sparkle_0~1.png · Resources/Sprites/Farm/wheat_<단계>_<반쪽>[_l|_r].png · strawberry_<단계>_<반쪽>[_l|_r].png. 실행: Windows Python(Pillow · numpy) make_farm_art.py
 import colorsys
 import math
 import os
@@ -76,6 +76,21 @@ EAR_ROWS = ['...h...',
             '..sss..',
             '...s...',
             '.oOOOo.']
+# 딸기 다 익음 원판(2026-10-01 사용자 선택 A 「한 알」, 작물마다 다른 원판): 밀과 같은 금빛 테두리 + 가운데 딸기 9×11칸(딸기 아이콘 색).
+#   밀 이삭보다 조금 커서 (BERRY_X, BERRY_Y)에서 시작한다
+BERRY = {'#': (52, 32, 32), 'r': (228, 95, 95), 'd': (176, 54, 61), 'h': (250, 250, 245), 's': (249, 201, 113), 'g': (166, 181, 119), 'G': (106, 125, 75)}
+BERRY_ROWS = ['....G....',
+              '..gGGGg..',
+              '.#gGgGg#.',
+              '#rrgrgrd#',
+              '#hrrrsrd#',
+              '#rsrrrrd#',
+              '.#rrsrd#.',
+              '.#srrdd#.',
+              '..#rrd#..',
+              '...#d#...',
+              '....#....']
+BERRY_X, BERRY_Y = 5, 4
 # 진행 게이지 원판(칸): 크기 · 가운데 그림 자리 · 색(원판은 오븐 타이머와 같은 크림)
 DIAL = 20
 DIAL_SPROUT_X, DIAL_SPROUT_Y = 6, 5
@@ -419,11 +434,11 @@ def marks():
         a[face & (ys < c - 3) & (xs < c)] = DIAL_HI + (255,)
         return a
 
-    def stamp(a, rows, pal):
+    def stamp(a, rows, pal, ox=DIAL_SPROUT_X, oy=DIAL_SPROUT_Y):
         for y, row in enumerate(rows):
             for x, ch in enumerate(row):
                 if ch in pal:
-                    a[DIAL_SPROUT_Y + y, DIAL_SPROUT_X + x] = pal[ch] + (255,)
+                    a[oy + y, ox + x] = pal[ch] + (255,)
 
     frames = 16
     for i in range(frames):
@@ -434,6 +449,9 @@ def marks():
     ready = dial(360, EAR['G'], EAR['g'])
     stamp(ready, EAR_ROWS, EAR)
     save(ready, os.path.join(RES, 'Ready', 'wheat.png'))
+    berry = dial(360, EAR['G'], EAR['g'])
+    stamp(berry, BERRY_ROWS, BERRY, BERRY_X, BERRY_Y)
+    save(berry, os.path.join(RES, 'Ready', 'strawberry.png'))
     # 2026-09-30 「무럭무럭」: 다 익은 이삭 위에 가끔 뜨는 반짝임 두 장(큰 +, 작은 +). 가운데 피벗
     for i, rows in enumerate(SPARKLE_ROWS):
         spark = np.zeros((len(rows), len(rows[0]), 4), np.uint8)
