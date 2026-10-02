@@ -145,6 +145,37 @@ def glass(f, seconds, decay):
 # 설계 28 덤(반짝돌)이 나옴(2026-10-02 사용자 선택 A 「유리 티링」, 시안 B 돌 톡 + 반짝 · C 칩튠 획득은 버림): 유리알 종 둘(라 → 미)
 save('bonus', seq([glass(1760, 0.3, 0.09), glass(2637, 0.5, 0.14)], 0.07), 0.42)
 
+# 설계 40 별 평가(2026-10-02 사용자 선택 A 「칩튠 팡파르」, 시안 B 종 · C 마림바는 버림): 사각파 · 삼각파
+#   시작 = 「따-다-단!」(솔 · 솔 · 도 + 한 옥타브 아래 삼각파), 통과 = 솔 · 도 · 미 · 솔 뒤 도 · 미 · 솔 화음 + 반짝,
+#   실패 = 솔 · 미 · 도가 살짝 처지며 내려감, 팁 = 「띠링」(레 · 라) + 작은 반짝, 별 색 오름 = 두 옥타브를 빠르게 올라감 + 반짝
+def mix(*parts):
+    n = max(len(p) for p in parts)
+    return sum(np.pad(p, (0, n - len(p))) for p in parts)
+
+
+def at(x, sec):
+    return np.pad(x, (int(R * sec), 0))
+
+
+def shimmer(sec, seed, amp=0.2):
+    return soft(noise(sec, 5000, 9000, seed) * np.exp(-t_of(sec) / (sec / 3)), 0.002) * amp
+
+
+def sq(f, s):
+    return note(f, s, s * 0.6, 'square')
+
+
+def tri(f, s):
+    return note(f, s, s * 0.6, 'tri')
+
+
+save('eval_start', mix(seq([sq(784, 0.09), sq(784, 0.09), sq(1047, 0.42)], 0.13), seq([tri(524, 0.09), tri(524, 0.09), tri(524, 0.42)], 0.13) * 0.5), 0.45)
+save('eval_pass', mix(seq([sq(784, 0.1), sq(1047, 0.1), sq(1319, 0.1), sq(1568, 0.16)], 0.1),
+                      at(mix(sq(1047, 0.7), sq(1319, 0.7) * 0.8, sq(1568, 0.7) * 0.6), 0.48), at(shimmer(0.3, 7), 0.5)), 0.5)
+save('eval_fail', seq([sq(784, 0.2), sq(659, 0.2), sweep(523, 523 * 0.94, 0.5, 0.3, 'square')], 0.2), 0.4)
+save('tip', seq([sq(1175, 0.06), sq(1760, 0.16)], 0.05) + np.pad(shimmer(0.08, 3, 0.15), (0, int(R * 0.21) - int(R * 0.08))), 0.4)
+save('star_tier', mix(seq([tri(f, 0.12) for f in (523, 659, 784, 1047, 1319, 1568, 2093)], 0.045), at(shimmer(0.5, 11, 0.3), 0.3)), 0.45)
+
 # 설계 32 행상 도착(2026-10-02 사용자 선택 B 「행상 가락」, 시안 A 손 종 · C 풍경은 버림): 「왔어요~」 네 음(도 · 솔 · 라 · 솔),
 # 부드러운 사각파 + 한 옥타브 아래 삼각파. 너구리가 계단에서 나와 상단 행상 알약이 튈 때(TopBarView)
 call = [(1047, 0.12), (1568, 0.12), (1760, 0.14), (1568, 0.42)]

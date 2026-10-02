@@ -192,8 +192,23 @@ def talk():  # 대화(너구리에게 말 걸어 뽑기, 2026-10-01 사용자 A)
     return outline(np.asarray(im).copy())
 
 
+CHECK = (0x3E, 0x7A, 0x4C)   # UI 「가능」 초록
+
+
+def evaluate():  # 평가(설계 40 평가판, 2026-10-02 사용자 선택 A 평가표 클립보드, 시안 B 금별 · C 나팔은 버림): 나무 판 + 쇠 집게 + 종이 · 체크 셋
+    im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
+    d.rectangle([3, 2, 14, 16], fill=WOOD + (255,))
+    d.rectangle([14, 3, 14, 16], fill=WOOD_D + (255,)); d.rectangle([3, 16, 14, 16], fill=WOOD_D + (255,))
+    d.rectangle([5, 4, 12, 14], fill=CREAM + (255,))
+    d.rectangle([6, 1, 11, 3], fill=STEEL + (255,)); d.rectangle([6, 3, 11, 3], fill=STEEL_D + (255,))
+    for y in (6, 9, 12):
+        d.point((6, y), fill=CHECK + (255,)); d.point((7, y + 1), fill=CHECK + (255,)); d.point((8, y), fill=CHECK + (255,))
+        d.line([(9, y + 1), (11, y + 1)], fill=TAN + (255,))
+    return outline(np.asarray(im).copy())
+
+
 Image.fromarray(button()).save('../btn_act.png')
 Image.fromarray(menu_button()).save('../btn_menu.png')
 # enter·exit는 2026-09-26 굴 이동 자동으로 아이콘이 없다(그리는 함수만 남김)
-for action_id, draw in [('open', open_), ('dig', dig), ('till', till), ('plant', plant), ('wake', wake), ('clean', clean), ('talk', talk)]:
+for action_id, draw in [('open', open_), ('dig', dig), ('till', till), ('plant', plant), ('wake', wake), ('clean', clean), ('talk', talk), ('evaluate', evaluate)]:
     Image.fromarray(draw()).save(f'../../../Resources/Sprites/Actions/{action_id}.png')

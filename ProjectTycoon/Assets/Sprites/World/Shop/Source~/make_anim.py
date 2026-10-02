@@ -29,7 +29,7 @@ CELL = 52   # 시트 칸 폭(칸) = 104px
 CELLS = {'Tanuki': 56}
 IDLE_DUR = [500, 160, 520, 160]
 WALK_DUR = [80, 65, 65, 65, 80, 65, 65, 65]
-FOLDERS = {'rabbit': 'Rabbit', 'penguin': 'Penguin', 'fox': 'Fox', 'hedgehog': 'Hedgehog', 'tanuki': 'Tanuki'}
+FOLDERS = {'rabbit': 'Rabbit', 'penguin': 'Penguin', 'fox': 'Fox', 'hedgehog': 'Hedgehog', 'tanuki': 'Tanuki', 'owl': 'Owl'}
 # 점원 회색 웜뱃(2026-09-26 gray_d): 빵집 웜뱃 털 5색 → 남부 털코웜뱃 회갈색. 외곽선·눈·코·귀 안은 그대로
 GRAY = ('WombatGray', {
     (192, 168, 144): (178, 170, 156),   # 밝은 털(앞·옆)
@@ -146,6 +146,13 @@ FIDGETS = {
         'front': wag('tail', right=1, left=1, n=1) + flick({'paw_r': 1}, 3) + look_around(),   # 112px 칸이라 36프레임까지
         'back': flick({'ear_l': -1, 'ear_r': 1}) + tap(0) + tap(1),
         'side': wag('tail', right=1, left=1) + look_up(),
+    },
+    # 설계 40 평가단장 부엉이: 날개 · 귀깃을 떼지 않아 몸 동작만. 앞 두리번(부엉이 고개) + 뒤뚱, 뒤 뒤뚱 + 발 구르기,
+    #   옆은 고개 까딱 + 발 구르기(올려다보기는 눈 바로 위를 안경다리가 지나가 눈을 옮기면 안경알이 깨진다)
+    'owl': {
+        'front': look_around() + waddle(1),
+        'back': waddle() + tap(0),
+        'side': sniff(2) + tap(0),
     },
     'hedgehog': {
         'front': shake() + look_around(),

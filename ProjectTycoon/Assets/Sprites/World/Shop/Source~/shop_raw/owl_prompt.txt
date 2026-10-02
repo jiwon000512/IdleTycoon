@@ -1,0 +1,50 @@
+# 설계 40 별 평가 평가단장 부엉이(2026-10-02 아트방). Codex CLI, model_reasoning_effort=low
+# 1) 디자인 시안(참조 -i: owl_ref_lineup.png 지금 동물 여섯을 한 칸 8px로 줄 세움) → owl_species_a~c.png. 사용자 선택 A 「안경 평론가」
+# 2) 턴어라운드(참조 -i: tanuki_ref_fox_turnaround.png 여우 완성 시트, owl_species_a.png) 같은 지시 세 번 → 사용자 「다시 뽑기」 → 「2에서 옆모습 좀 더 통통」, 2번 = owl_sheet_raw_2.png
+# 3) 옆모습 다시(참조 -i: owl_side_sheet_in.png 2번의 앞 | 빈칸 | 뒤 한 칸 10px, 여우 시트) 세 번 → 사용자 선택 옆 1 = owl_side_raw_1.png
+
+## 1) 디자인
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference file).
+Image 1 shows the existing characters of this cozy pixel-art idle game (a wombat, a rabbit, a penguin, a fox, a hedgehog, a tanuki), all drawn with the same camera, style and size. Draw ONE NEW character in exactly the same style, camera and size: the HEAD JUDGE of a food-tasting panel who visits the wombat's bakery to give it stars. It is an OWL. Do not copy any of the species in image 1.
+
+POSE: standing still, upright on its two feet, facing the viewer (front view), both small wings folded together in front of the chest like the penguin's flippers and the other characters' front paws in image 1.
+
+CAMERA (most important): the same camera as image 1: looking DOWN at the character from about 30 degrees above, not at eye level. The big round head and the small body are merged into ONE chubby round bean with no neck, about as wide as it is tall (not counting ear tufts); the face sits low in the blob; only the folded wings, a round belly and tiny feet peek out at the bottom. Keep the eyes cute and small-pupiled like the other characters, not huge staring owl eyes.
+
+SIZE: about the same size as the fox in image 1: about 40 big pixels tall and about 40 big pixels wide.
+
+STYLE: chunky pixel art game sprite in exactly the same style as image 1: large blocky square pixels on a roughly 40x40 pixel grid, no anti-aliasing, no blur; a dark brown outline (#342020) one big pixel wide around the whole silhouette; soft low-saturation pastel palette, 6 to 9 flat colors, no gradients, no dithering; one flat darker shade on the lower belly and the far side; one small white highlight on the top of the head; plain solid white background, exactly one character, centered, no ground, no ground shadow, no text, no border, no watermark.
+
+CHARACTER:
+[a] a chubby round warm-brown OWL with a cream heart-shaped face disc, small round dark eyes behind a pair of thin round glasses, a small orange beak, a speckled cream belly, small rounded ear tufts, and a tiny red bow tie at the neck. A smart, kind critic.
+[b] a chubby round soft blue-grey OWL with a pale face disc, small dark eyes, a small yellow beak, a navy blue beret tilted on its head and a white napkin tucked at the neck like a gourmet about to taste food, a cream belly with a few grey bars.
+[c] a chubby round tawny horned OWL with tall pointed ear tufts, a cream face disc, small amber-ringed dark eyes with a little brass monocle on one eye, a small dark beak, and a dark green waistcoat with two tiny gold buttons over its cream belly. A dignified head judge.
+
+## 2) 턴어라운드
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference files).
+Image 1 is a finished character turnaround sheet from this cozy pixel-art game: a fox seen from the FRONT (left), the RIGHT SIDE (middle) and the BACK (right), drawn with the same camera, at the same scale, standing on the same baseline, on a wide white sheet.
+Image 2 is a NEW character of the same game, an owl head judge of a food-tasting panel, front view only, but drawn much bigger than the game needs.
+
+Draw a new turnaround sheet in exactly the layout, pixel size and scale of image 1: the OWL from image 2 seen from the FRONT (left), the RIGHT SIDE (middle) and the BACK (right), on the same baseline as the fox.
+
+SIZE (most important): the owl must be about the same size as the fox in image 1, made of the same big square pixels: its round body is as tall and as wide as the fox's body (not counting the fox's big tail); the small ear tufts may stick up a little more. Do not make it bigger than that.
+
+CHARACTER (keep the design of image 2 exactly): a chubby round warm-brown owl with a cream heart-shaped face disc, small round dark eyes behind thin round glasses, a small orange beak, pink cheeks, small rounded ear tufts with lighter insides, a tiny red bow tie at the neck, a speckled cream belly, brown wings folded in front, small orange feet.
+FRONT: like image 2: facing the viewer, both wings folded together in front of the chest, the bow tie at the neck, the speckled belly, the small orange feet.
+RIGHT SIDE: strict profile facing RIGHT: the cream face disc edge and the small orange beak at the right edge, one dark eye behind one round glass lens with the glasses arm going back to the head, a pink cheek, the ear tufts on top, the near wing folded against the side of the body, the bow tie tip visible at the front of the neck, a short tail-feather tip at the back on the left, the small orange feet at the bottom pointing right.
+BACK: no face, the back of the head and body in warm-brown feathers with a few lighter feather marks, both ear tufts, the glasses arms not visible, the wings folded at the sides, a short fan of tail feathers at the bottom middle, the small orange feet.
+
+CAMERA: the SAME camera as image 1 for all three views: looking DOWN from about 30 degrees above, not at eye level. The big round head and the small body are merged into ONE chubby round bean with no neck; the face sits low in the blob; the eye in the side view is at the same height as the eyes in the front view. Upright on two feet, never four-legged.
+
+STYLE: chunky pixel art game sprite exactly like image 1: large blocky square pixels, no anti-aliasing, no blur; a dark brown outline (#342020) one big pixel wide around each silhouette; soft low-saturation pastel palette, flat colors, no gradients, no dithering; one flat darker shade on the lower belly and far wing; one small white highlight on the top of the head; plain solid white background, exactly three owl views and nothing else, no ground, no ground shadow, no text, no border.
+
+## 3) 옆모습 다시
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference files).
+Image 1 is a character turnaround sheet of this chunky pixel-art owl head judge: its FRONT view on the left and its BACK view on the right, drawn with the same camera, at the same scale, on the same baseline. The middle slot is empty.
+Image 2 is a finished turnaround sheet of a DIFFERENT character (a fox) in the same game: front, right side, back. Use image 2 only to see how the side view keeps the same camera, size and pixel size as the front and back. Do not copy the fox.
+Redraw image 1 as a wide landscape image with its front and back views unchanged (same pixels, same place), and fill the empty middle slot with the RIGHT SIDE view of the same owl, at the same scale and on the same baseline.
+
+SIDE VIEW (most important): the owl is a chubby round bean, so its side view must be just as CHUBBY and ROUND as its front view: almost as wide as the front view (only a little narrower), exactly as tall as the front view, the same round outline, the belly bulging forward on the right. Do not make it slim or tall.
+DETAILS: strict profile facing RIGHT: the cream face disc edge and the small orange beak at the right edge, one small dark eye behind one round glass lens with the thin glasses arm going back toward the ear, a pink cheek, the rounded ear tufts on top (the far tuft peeking out just behind the near tuft), the near brown wing folded against the side of the body, the red bow tie tip at the front of the neck, the speckled cream belly at the front, a short tuft of tail feathers at the back on the left, the small orange feet at the bottom pointing right. The eye is at the same height as the eyes in the front view.
+CAMERA: looking DOWN from about 30 degrees above, the same camera as the front and back views. Upright on two feet.
+STYLE: exactly the same chunky pixel art as image 1: same big square pixel size, no anti-aliasing, no blur, the dark brown outline (#342020) one big pixel wide, the same flat palette, no gradients, no dithering; plain solid white background, exactly three owl views and nothing else, no ground, no shadow, no text, no border.
