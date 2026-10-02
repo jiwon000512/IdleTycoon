@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 36,
+  "version": 37,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -39,7 +39,8 @@
     "version 33 (2026-10-01, 설계 32 행상 다듬기): 좌판 팝업 relic_cart_title · relic_cart_lead · relic_have · relic_again · relic_view · 고른 결과 relic_got_*(새 유물 · 별 오름 · 빈 칸에 끼움 · 끼운 유물 · 칸 가득) 추가. relic_title을 유물 화면 제목 「유물」로, relic_hint를 유물 화면 안내로, merchant_next를 상단 알약 이름 「다음 행상」(시간은 알약의 시간 칸)으로 바꿨다.",
     "version 34 (2026-10-01, 설계 34 행상과 대화): 행상 인사 say_merchant_hello_1~3(DialogueTable merchant_hello) 추가. 행상이 없을 때 상단 알약은 회색 얼굴 + 시간만이라(사용자 B) merchant_next를 지웠다.",
     "version 35 (2026-10-01, 설계 35 작물 · 밭 시트): 밭 시트 제목 sheet_plot_title · 상태 sheet_plot_status(거름 개수), 칩 시안 A 「배지 + 시계 줄」(아트방, 사용자 선택): 아래 줄 글자를 개수 배지 · 시계 · 자물쇠로 바꿔 chip_bread_stock(×{0}) → chip_count({0}), chip_bread_seconds → chip_seconds, chip_unlock 삭제.",
-    "version 36 (2026-10-01, 설계 36 반짝돌 뽑기): 뽑기는 유물 하나 · 메인과 결과 팝업을 나눠 relic_cart_lead 문구 변경, 고르기 문구 relic_pick · relic_pick_hint와 결과 윗줄 relic_got_new · relic_got_star 삭제(이름표 relic_new · relic_star_up이 맡는다), 결과 닫기 relic_ok 추가."
+    "version 36 (2026-10-01, 설계 36 반짝돌 뽑기): 뽑기는 유물 하나 · 메인과 결과 팝업을 나눠 relic_cart_lead 문구 변경, 고르기 문구 relic_pick · relic_pick_hint와 결과 윗줄 relic_got_new · relic_got_star 삭제(이름표 relic_new · relic_star_up이 맡는다), 결과 닫기 relic_ok 추가.",
+    "version 37 (2026-10-01, 설계 38 농장 점원): 점원 팝업 가게 탭 clerk_tab_farm(탭 이름 = clerk_tab_<곳 id>), 농장 점원 자리 이름 kind_barn(자리 알약 「밭일 1」)."
   ],
   "rows": [
     {
@@ -209,6 +210,14 @@
     {
       "id": "clerk_tab_bakery",
       "ko": "빵집"
+    },
+    {
+      "id": "clerk_tab_farm",
+      "ko": "농장"
+    },
+    {
+      "id": "kind_barn",
+      "ko": "밭일"
     },
     {
       "id": "clerk_slot",

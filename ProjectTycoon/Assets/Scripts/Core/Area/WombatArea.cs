@@ -58,11 +58,6 @@ namespace ZooTycoon.Core
         }
 
         protected List<Interactable> Placed { get; } = new List<Interactable>();
-        // 설계 21: 점원이 붙은 사물(웜뱃의 auto 행동은 건너뛴다. 시트 열기·대상은 그대로)
-        protected virtual bool IsStaffed(Interactable thing)
-        {
-            return false;
-        }
 
         // 설계 25: 곳 id(통로가 가는 곳 · BgmTable 행). 곳 클래스의 k_Id
         public abstract string Id { get; }
@@ -96,6 +91,7 @@ namespace ZooTycoon.Core
             Bus = bus;
             PlaceCell = (float)tables.Get<ConfigTable>(ConfigTable.k_PlaceCell).Value;
             InitPoops(tables);
+            InitClerks();
 
             foreach (ActionTable action in tables.GetAll<ActionTable>())
             {
@@ -103,12 +99,13 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 매 프레임. 순서: 웜뱃(걷기 → 대상·auto 행동 → 똥) → 곳 고유(손님) → 사물(계산대 타이머·오븐)
+        // 매 프레임. 순서: 웜뱃(걷기 → 대상·auto 행동 → 똥) → 곳 고유(손님) → 점원 → 사물(계산대 타이머·오븐 · 밭)
         public void Tick(double dt)
         {
             TickWombat(dt);
             TickPoops();
             TickArea(dt);
+            TickClerks(dt);
 
             foreach (Interactable thing in Placed)
             {
@@ -165,7 +162,13 @@ namespace ZooTycoon.Core
         // 시트 줄 누르기
         public bool TryChoose(string actionId, Interactable target, string option)
         {
-            return ((SheetAction)m_actions[actionId]).TryChoose(Wombat.Worker, target, option);
+            return TryChoose(actionId, Wombat.Worker, target, option);
+        }
+
+        // 설계 38: 점원이 시트 줄을 자기 손으로 고른다(농장 점원의 심기)
+        internal bool TryChoose(string actionId, Worker worker, Interactable target, string option)
+        {
+            return ((SheetAction)m_actions[actionId]).TryChoose(worker, target, option);
         }
 
         // v0.6: 업그레이드 단계는 사물 종류 공통이라 곳이 센다
@@ -275,7 +278,8 @@ namespace ZooTycoon.Core
 
             foreach (Interactable thing in m_inRange)
             {
-                if (IsStaffed(thing))
+                // 설계 21: 점원이 붙은 사물은 웜뱃의 auto 행동을 건너뛴다(시트 열기·대상은 그대로)
+                if (ClerkOf(thing) != null)
                 {
                     continue;
                 }

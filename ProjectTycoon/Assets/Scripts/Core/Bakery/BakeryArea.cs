@@ -78,7 +78,6 @@ namespace ZooTycoon.Core
             bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new BakeryLayout(tables);
             m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells, this);
-            InitClerks();
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
 
             // 설계 25: 밭도 price가 있어 빵집이 파는 종류를 적는다(Create와 같은 셋)
@@ -180,12 +179,28 @@ namespace ZooTycoon.Core
         protected override void TickArea(double dt)
         {
             TickVisitors(dt);
-            TickClerks(dt);
         }
 
-        protected override bool IsStaffed(Interactable thing)
+        // 설계 21: 점원 자리는 오븐 → 계산대
+        public override IEnumerable<Interactable> ClerkSlots
         {
-            return ClerkOf(thing) != null;
+            get
+            {
+                foreach (OvenInteractable oven in m_ovens)
+                {
+                    yield return oven;
+                }
+
+                foreach (CounterInteractable counter in m_counters)
+                {
+                    yield return counter;
+                }
+            }
+        }
+
+        protected override void OnClerkThingsChanged()
+        {
+            SyncThings();
         }
 
         protected override IPlacedKind KindOf(string kindId)
@@ -295,10 +310,7 @@ namespace ZooTycoon.Core
             Placed.Clear();
 
             // 설계 22: 딴짓 중인 점원이 먼저 — 자리에 선 점원은 그 사물과 거리가 같아 앞에 있어야 대상이 된다(같은 거리면 먼저 것)
-            foreach (ClerkInteractable clerk in m_clerkThings.Values)
-            {
-                Placed.Add(clerk);
-            }
+            Placed.AddRange(ClerkThings);
 
             Placed.AddRange(Poops);
             Placed.AddRange(m_shelves);

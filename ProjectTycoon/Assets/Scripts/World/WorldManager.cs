@@ -159,16 +159,17 @@ namespace ZooTycoon.World
             FollowWombat();
         }
 
-        // 웜뱃이 그 가게에 있을 때만. 조이스틱을 움직이면 바로 웜뱃에게 돌아온다(조작을 빼앗지 않는다)
+        // 웜뱃이 그 점원의 곳(빵집 · 농장)에 있을 때만. 조이스틱을 움직이면 바로 웜뱃에게 돌아온다(조작을 빼앗지 않는다)
         private void Bus_ClerkHired(Events.ClerkHired e)
         {
-            if (m_mall.Active != m_mall.Bakery || e.Clerk.Bakery != m_mall.Bakery)
+            if (m_mall.Active != e.Clerk.Home)
             {
                 return;
             }
 
             Clerk clerk = e.Clerk;
-            m_camera.Spot(() => (Vector2)m_shopView.ToWorld(clerk.Position) + Vector2.up * k_BodyCenter, k_HireSpotSeconds,
+            Vector3 origin = m_views[clerk.Home].Origin;
+            m_camera.Spot(() => (Vector2)origin + new Vector2(clerk.Position.X, clerk.Position.Y) + Vector2.up * k_BodyCenter, k_HireSpotSeconds,
                 () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
         }
     }

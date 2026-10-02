@@ -182,7 +182,7 @@ namespace ZooTycoon.Core
                 {
                     if (clerk.Bubble.Id != BubbleTable.k_Question)
                     {
-                        figure.Hold(clerk.Bakery.ClerkConfig.QuestionHoldSeconds);
+                        figure.Hold(clerk.Home.ClerkConfig.QuestionHoldSeconds);
                     }
 
                     clerk.Bubble.Show(BubbleTable.k_Question);
@@ -199,15 +199,22 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 설계 38: 점원이 사는 곳의 광장 문(빵집 문 · 농장 문). 손님은 빵집 문
+        internal Vector2 DoorFloorOf(WombatArea home)
+        {
+            return home is FarmArea ? Layout.FarmDoorFloor : Layout.DoorFloor;
+        }
+
+        internal Vector2 DoorInsideOf(WombatArea home)
+        {
+            return home is FarmArea ? Layout.FarmDoorInside : Layout.DoorInside;
+        }
+
+        // 외출한 점원(빵집 · 농장)이 그 곳의 문에서 나온다
         private void Bus_ClerkWentOut(Events.ClerkWentOut e)
         {
-            if (e.Clerk.Bakery != Bakery)
-            {
-                return;
-            }
-
             Clerk clerk = e.Clerk;
-            PlazaVisitor figure = new PlazaVisitor(++m_nextVisitorId, clerk.Look, this, Layout.DoorInside, Layout.DoorFloor, int.MaxValue, false, clerk);
+            PlazaVisitor figure = new PlazaVisitor(++m_nextVisitorId, clerk.Look, this, DoorInsideOf(clerk.Home), DoorFloorOf(clerk.Home), int.MaxValue, false, clerk);
             m_clerkFigures[clerk] = figure;
             ClerkInteractable thing = new ClerkInteractable(Tables.Get<InteractableTable>(ClerkInteractable.k_Id), clerk, this, () => figure.Position);
             m_clerkThings[clerk] = thing;

@@ -4,7 +4,8 @@ using GameKit.Events;
 namespace ZooTycoon.Core
 {
     // 설계 11 3장 · 설계 13 · 설계 16: 곳들(빵집 · 광장 · 농장)을 함께 돌리고, 웜뱃 하나를 곳 사이로 옮긴다.
-    // 통로 사물이 낸 Passed를 받아 지금 곳이면 가는 곳(To)으로: 들어가는 곳은 온 곳을 알아 그 문 앞에 세운다(설계 25)
+    // 통로 사물이 낸 Passed를 받아 지금 곳이면 가는 곳(To)으로: 들어가는 곳은 온 곳을 알아 그 문 앞에 세운다(설계 25).
+    // 설계 38: 점원 월급날은 모든 곳 공통(Payroll)이라 여기서 곳보다 먼저 돌린다
     public sealed class Mall
     {
         private readonly EventBus m_bus;
@@ -15,6 +16,7 @@ namespace ZooTycoon.Core
         public PlazaArea Plaza { get; }
         public FarmArea Farm { get; }
         public IReadOnlyList<WombatArea> Areas => m_areas;
+        public Payroll Payroll { get; }
         // 웜뱃이 있는 곳
         public WombatArea Active { get; private set; }
 
@@ -30,12 +32,15 @@ namespace ZooTycoon.Core
             m_bus = bus;
             Wombat = bakery.Wombat;
             Active = bakery;
+            Payroll = new Payroll(m_areas, bakery.ClerkConfig, Wombat.Worker.Wallet, bus);
             bus.Subscribe<Events.Passed>(Bus_Passed);
         }
 
         // 웜뱃이 어디 있든 곳은 다 돈다
         public void Tick(double dt)
         {
+            Payroll.Tick(dt);
+
             foreach (WombatArea area in m_areas)
             {
                 area.Tick(dt);

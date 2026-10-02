@@ -17,7 +17,7 @@ namespace ZooTycoon.Data
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
-            PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id,
+            PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -100,10 +100,10 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 설계 21: 점원 역할은 worker 자리가 있는 사물(오븐·계산대)마다 하나, baseWage > 0
+        // 설계 21 · 38: 점원 역할은 worker 자리가 있는 사물(오븐·계산대·농장 작업대)마다 하나, baseWage > 0
         private static void ValidateClerks(TableSet tables, List<string> errors)
         {
-            HashSet<string> interactableIds = Ids<InteractableTable>(tables);
+            Dictionary<string, InteractableTable> things = tables.GetAll<InteractableTable>().ToDictionary(t => t.Id);
 
             foreach (ClerkTable role in tables.GetAll<ClerkTable>())
             {
@@ -114,13 +114,18 @@ namespace ZooTycoon.Data
                     errors.Add($"ClerkTable '{role.Id}': name이 있고 baseWage는 0보다 커야 한다.");
                 }
 
-                if (!interactableIds.Contains(role.Id))
+                if (!things.TryGetValue(role.Id, out InteractableTable thing) || !HasWorkerSpot(thing))
                 {
-                    errors.Add($"ClerkTable '{role.Id}': InteractableTable에 같은 id의 사물이 없다.");
+                    errors.Add($"ClerkTable '{role.Id}': InteractableTable에 같은 id의 사물이 없거나 그 사물에 worker 자리가 없다.");
                 }
             }
 
-            CheckRequired<ClerkTable>(tables, new[] { OvenInteractable.k_Id, CounterInteractable.k_Id }, errors);
+            CheckRequired<ClerkTable>(tables, new[] { OvenInteractable.k_Id, CounterInteractable.k_Id, BarnInteractable.k_Id }, errors);
+        }
+
+        private static bool HasWorkerSpot(InteractableTable thing)
+        {
+            return thing.Spots != null && thing.Spots.Any(spot => spot.Role == SpotRole.Worker);
         }
 
         private static void ValidateClerkConfig(TableSet tables, List<string> errors)
@@ -420,7 +425,8 @@ namespace ZooTycoon.Data
             CheckRequired<BgmTable>(tables, new[] { BgmTable.k_Bakery }, errors);
         }
 
-        // 설계 09 v0.4: 코드의 사물 종류(k_InteractableIds)가 모두 있고, range > 0, actions가 1개 이상이며 모두 ActionTable에 있다
+        // 설계 09 v0.4: 코드의 사물 종류(k_InteractableIds)가 모두 있고, range > 0, actions가 1개 이상이며 모두 ActionTable에 있다.
+        // 설계 38: 점원 자리 전용 사물(농장 작업대)은 웜뱃이 다루지 않아 actions가 비고 worker 자리만 있다
         private static void ValidateInteractables(TableSet tables, List<string> errors)
         {
             HashSet<string> actionIds = Ids<ActionTable>(tables);
@@ -436,7 +442,11 @@ namespace ZooTycoon.Data
 
                 if (element.Actions == null || element.Actions.Count == 0)
                 {
-                    errors.Add($"InteractableTable '{element.Id}': actions가 비어 있다.");
+                    if (!HasWorkerSpot(element))
+                    {
+                        errors.Add($"InteractableTable '{element.Id}': actions가 비어 있다(점원 자리 전용이면 worker 자리가 있어야 한다).");
+                    }
+
                     continue;
                 }
 

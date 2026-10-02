@@ -27,5 +27,8 @@ namespace ZooTycoon.Core
         public string BonusItem { get; set; }
         public double BonusChance { get; set; }
         public double ManureBonusScale { get; set; }
+        // 설계 38: 농장 점원 자리(작업대 앞 바닥, 농장 원점 기준 유닛). 그림은 입구 장식 모종 작업대
+        public double BarnX { get; set; }
+        public double BarnY { get; set; }
     }
 }

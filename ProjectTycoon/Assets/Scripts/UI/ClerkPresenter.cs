@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -7,7 +8,9 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 설계 21: 점원 팝업. 자리 목록(오븐·계산대마다 줄: 고용/해고) → 후보 5명 목록(선택) → 고용할까 창(그냥 고용/협상하기/취소) → 협상(탭 한 번) → 고용.
-    // 규칙(후보·월급·협상 결과·해고)은 전부 BakeryArea.Clerks·Negotiation이 정하고 여기는 글자와 흐름만. 지금 가게 탭은 빵집 하나
+    // 규칙(후보·월급·협상 결과·해고)은 전부 WombatArea.Clerks·Payroll·Negotiation이 정하고 여기는 글자와 흐름만.
+    // 설계 38: 가게 탭(점원 자리가 있는 곳: 빵집 · 농장, 탭마다 그 곳의 자리 · 후보). 월급날 게이지 · 월급 합 · 버튼 배지는 모든 곳 합계.
+    // 오븐 · 농장 점원 줄의 만들 것 칩(구울 빵 · 심을 작물)을 누르면 해금된 것 중 다음 것으로 바뀐다(고르는 곳은 사용자 고민 중, 2026-10-01)
     public sealed class ClerkPresenter : IDisposable
     {
         private enum Mode
@@ -22,13 +25,18 @@ namespace ZooTycoon.UI
         private const double k_CountSeconds = 0.4;
 
         private readonly ClerkPopupView m_view;
-        private readonly BakeryArea m_bakery;
+        private readonly Mall m_mall;
+        // 탭 순서 = 곳 순서(점원 자리가 있는 곳만)
+        private readonly List<WombatArea> m_shops;
+        private readonly List<string> m_tabs = new List<string>();
         private readonly TableSet m_tables;
         private readonly IDisposable[] m_subscriptions;
         private readonly List<Interactable> m_slots = new List<Interactable>();
         private readonly List<ClerkPopupView.RowData> m_rows = new List<ClerkPopupView.RowData>();
 
         private Mode m_mode;
+        // 지금 탭의 곳
+        private WombatArea m_area;
         private Interactable m_slot;
         private Candidate m_candidate;
         private bool m_asking;
@@ -42,11 +50,21 @@ namespace ZooTycoon.UI
         public ClerkPresenter(ClerkPopupView view, Mall mall, EventBus bus, TableSet tables)
         {
             m_view = view;
-            m_bakery = mall.Bakery;
+            m_mall = mall;
             m_tables = tables;
+            m_shops = mall.Areas.Where(area => area.ClerkSlots.Any()).ToList();
+            m_area = m_shops[0];
+
+            foreach (WombatArea shop in m_shops)
+            {
+                m_tabs.Add(tables.Text("clerk_tab_" + shop.Id));
+            }
+
             m_view.OpenClicked += View_OpenClicked;
             m_view.CloseClicked += View_CloseClicked;
             m_view.RowButtonClicked += View_RowButtonClicked;
+            m_view.TabClicked += View_TabClicked;
+            m_view.ProductClicked += View_ProductClicked;
             m_view.FootClicked += View_FootClicked;
             m_view.AskPlainClicked += View_AskPlainClicked;
             m_view.AskNegotiateClicked += View_AskNegotiateClicked;
@@ -74,6 +92,8 @@ namespace ZooTycoon.UI
             m_view.OpenClicked -= View_OpenClicked;
             m_view.CloseClicked -= View_CloseClicked;
             m_view.RowButtonClicked -= View_RowButtonClicked;
+            m_view.TabClicked -= View_TabClicked;
+            m_view.ProductClicked -= View_ProductClicked;
             m_view.FootClicked -= View_FootClicked;
             m_view.AskPlainClicked -= View_AskPlainClicked;
             m_view.AskNegotiateClicked -= View_AskNegotiateClicked;
@@ -100,7 +120,7 @@ namespace ZooTycoon.UI
 
         private NegotiationZone ZoneOf(ZoneColor color)
         {
-            foreach (NegotiationZone zone in m_bakery.ClerkConfig.Zones)
+            foreach (NegotiationZone zone in m_area.ClerkConfig.Zones)
             {
                 if (zone.Color == color)
                 {
@@ -123,12 +143,11 @@ namespace ZooTycoon.UI
             m_negotiation = null;
             m_asking = false;
             m_slots.Clear();
-            m_slots.AddRange(m_bakery.Ovens);
-            m_slots.AddRange(m_bakery.Counters);
+            m_slots.AddRange(m_area.ClerkSlots);
             m_rows.Clear();
             int wageSum = 0;
 
-            foreach (Clerk clerk in m_bakery.Clerks)
+            foreach (Clerk clerk in m_mall.Payroll.Clerks)
             {
                 wageSum += clerk.Wage;
             }
@@ -136,7 +155,7 @@ namespace ZooTycoon.UI
             for (int i = 0; i < m_slots.Count; i++)
             {
                 Interactable slot = m_slots[i];
-                Clerk clerk = m_bakery.ClerkOf(slot);
+                Clerk clerk = m_area.ClerkOf(slot);
                 string slotName = m_tables.Format("clerk_slot", m_tables.Text("kind_" + slot.Table.Id), IndexAmongKind(slot));
 
                 if (clerk == null)
@@ -168,14 +187,15 @@ namespace ZooTycoon.UI
                     Wage = Wage(clerk.Wage),
                     Button = m_tables.Text("clerk_fire"),
                     Enabled = true,
+                    ProductIcon = clerk.Product != null ? ProductIcon(clerk, clerk.Product) : null,
                 });
             }
 
-            m_view.ShowList(m_tables.Text("clerk_title"), m_tables.Text("clerk_tab_bakery"),
-                m_tables.Format("clerk_summary_count", m_bakery.Clerks.Count, m_slots.Count), m_tables.Text("clerk_summary_wage"), Wage(wageSum),
+            m_view.ShowList(m_tables.Text("clerk_title"), m_tabs, m_shops.IndexOf(m_area),
+                m_tables.Format("clerk_summary_count", m_area.Clerks.Count, m_slots.Count), m_tables.Text("clerk_summary_wage"), Wage(wageSum),
                 m_rows, null, null, null, false);
 
-            if (m_firing != null && m_bakery.ClerkOf(m_firing.Thing) == m_firing)
+            if (m_firing != null && m_firing.Home == m_area && m_area.ClerkOf(m_firing.Thing) == m_firing)
             {
                 ShowFireAsk();
             }
@@ -185,7 +205,20 @@ namespace ZooTycoon.UI
                 m_view.HideAsk();
             }
 
-            m_view.SetPayday(m_bakery.Clerks.Count > 0 ? m_tables.Text("clerk_payday") : null, (float)m_bakery.PaydayProgress, m_bakery.PaydayShort);
+            SetPayday();
+        }
+
+        // 월급날은 모든 곳 공통: 어느 곳에든 점원이 있으면 게이지
+        private void SetPayday()
+        {
+            Payroll payroll = m_mall.Payroll;
+            m_view.SetPayday(payroll.Clerks.Any() ? m_tables.Text("clerk_payday") : null, (float)payroll.Progress, payroll.Short);
+        }
+
+        // 만들 것 그림: 빵은 빵 그림, 작물은 그 작물 재료의 아이콘
+        private string ProductIcon(Clerk clerk, string id)
+        {
+            return clerk.Thing is OvenInteractable ? m_tables.Get<BreadTable>(id).Sprite : m_tables.Get<ItemTable>(m_tables.Get<CropTable>(id).Item).Icon;
         }
 
         // 같은 종류 안의 번호(오븐 1·오븐 2)
@@ -214,7 +247,7 @@ namespace ZooTycoon.UI
             m_mode = Mode.Candidates;
             m_rows.Clear();
 
-            foreach (Candidate candidate in m_bakery.Candidates)
+            foreach (Candidate candidate in m_area.Candidates)
             {
                 m_rows.Add(new ClerkPopupView.RowData
                 {
@@ -225,15 +258,15 @@ namespace ZooTycoon.UI
                     SkillHeader = m_tables.Text("clerk_col_skill"),
                     WageHeader = m_tables.Text("clerk_col_base_wage"),
                     Skill = candidate.Skill,
-                    Wage = Wage(m_bakery.WageFor(candidate, m_slot)),
+                    Wage = Wage(m_area.WageFor(candidate, m_slot)),
                     Button = m_tables.Text("clerk_select"),
                     Enabled = true,
                 });
             }
 
-            double refresh = m_bakery.ClerkConfig.RefreshCost;
-            m_view.ShowList(m_tables.Format("clerk_candidates_title", m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_slot.Table.Id), IndexAmongKind(m_slot))), null, null, null, null,
-                m_rows, null, m_tables.Text("clerk_refresh"), BigNumberFormatter.Format(refresh), m_bakery.Wombat.Worker.Wallet.Coins >= refresh);
+            double refresh = m_area.ClerkConfig.RefreshCost;
+            m_view.ShowList(m_tables.Format("clerk_candidates_title", m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_slot.Table.Id), IndexAmongKind(m_slot))), null, -1, null, null, null,
+                m_rows, null, m_tables.Text("clerk_refresh"), BigNumberFormatter.Format(refresh), m_area.Wombat.Worker.Wallet.Coins >= refresh);
 
             if (m_asking)
             {
@@ -246,7 +279,7 @@ namespace ZooTycoon.UI
             m_asking = true;
             m_view.ShowAsk(m_candidate.Look.Sprite, m_tables.Text("clerk_ask"), m_candidate.Name,
                 m_tables.Format("clerk_slot", m_tables.Text("kind_" + m_slot.Table.Id), IndexAmongKind(m_slot)),
-                m_tables.Text("clerk_col_skill"), m_tables.Text("clerk_col_base_wage"), m_candidate.Skill, Wage(m_bakery.WageFor(m_candidate, m_slot)),
+                m_tables.Text("clerk_col_skill"), m_tables.Text("clerk_col_base_wage"), m_candidate.Skill, Wage(m_area.WageFor(m_candidate, m_slot)),
                 m_tables.Text("clerk_hire_plain"), m_tables.Text("clerk_negotiate"), m_tables.Text("clerk_nego_risk"));
         }
 
@@ -261,7 +294,7 @@ namespace ZooTycoon.UI
 
         private void Hire(int wage)
         {
-            m_bakery.TryHire(m_candidate, m_slot, wage);
+            m_area.TryHire(m_candidate, m_slot, wage);
             Close();
         }
 
@@ -300,19 +333,17 @@ namespace ZooTycoon.UI
 
         private bool IsPlaced(Interactable slot)
         {
-            foreach (Interactable thing in m_bakery.Things)
-            {
-                if (thing == slot)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return m_area.ClerkSlots.Contains(slot);
         }
 
+        // 웜뱃이 있는 곳이 가게면 그 탭으로 연다(아니면 지난 탭)
         private void View_OpenClicked()
         {
+            if (m_shops.Contains(m_mall.Active))
+            {
+                m_area = m_mall.Active;
+            }
+
             m_view.Open();
             ShowSlots();
             m_view.PlayRows();
@@ -340,7 +371,7 @@ namespace ZooTycoon.UI
             if (m_mode == Mode.Slots)
             {
                 Interactable slot = m_slots[index];
-                Clerk clerk = m_bakery.ClerkOf(slot);
+                Clerk clerk = m_area.ClerkOf(slot);
 
                 if (clerk != null)
                 {
@@ -355,13 +386,51 @@ namespace ZooTycoon.UI
                 return;
             }
 
-            m_candidate = m_bakery.Candidates[index];
+            m_candidate = m_area.Candidates[index];
             ShowAsk();
+        }
+
+        private void View_TabClicked(int index)
+        {
+            if (m_mode != Mode.Slots || m_negotiation != null || m_shops[index] == m_area)
+            {
+                return;
+            }
+
+            m_area = m_shops[index];
+            m_firing = null;
+            ShowSlots();
+            m_view.PlayRows();
+        }
+
+        // 해금된 것 중 다음 것으로(끝이면 처음으로)
+        private void View_ProductClicked(int index)
+        {
+            Clerk clerk = m_mode == Mode.Slots ? m_area.ClerkOf(m_slots[index]) : null;
+
+            if (clerk == null || clerk.Product == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<string> products = clerk.Products;
+            int at = 0;
+
+            for (int i = 0; i < products.Count; i++)
+            {
+                if (products[i] == clerk.Product)
+                {
+                    at = i;
+                }
+            }
+
+            clerk.TrySetProduct(products[(at + 1) % products.Count]);
+            ShowSlots();
         }
 
         private void View_FootClicked()
         {
-            if (m_mode == Mode.Candidates && m_bakery.TryRefreshCandidates())
+            if (m_mode == Mode.Candidates && m_area.TryRefreshCandidates())
             {
                 m_view.PlayRows();
             }
@@ -375,7 +444,7 @@ namespace ZooTycoon.UI
                 return;
             }
 
-            Hire(m_bakery.WageFor(m_candidate, m_slot));
+            Hire(m_area.WageFor(m_candidate, m_slot));
         }
 
         private void View_AskNegotiateClicked()
@@ -385,12 +454,12 @@ namespace ZooTycoon.UI
                 Clerk clerk = m_firing;
                 m_firing = null;
                 m_view.HideAsk();
-                m_bakery.Fire(clerk, FireReason.Fired);
+                clerk.Home.Fire(clerk, FireReason.Fired);
                 return;
             }
 
             m_asking = false;
-            m_negotiation = m_bakery.Negotiate(m_candidate, m_slot);
+            m_negotiation = m_area.Negotiate(m_candidate, m_slot);
             m_resultTimer = k_ResultSeconds;
             m_view.ShowNegotiation(m_tables.Text("clerk_nego_title"), m_tables.Text("clerk_nego_hint"), m_tables.Text("clerk_nego_now"),
                 m_candidate.Look.SideIdleSheet ?? m_candidate.Look.Sprite,
@@ -427,9 +496,9 @@ namespace ZooTycoon.UI
 
             if (m_negotiation == null)
             {
-                if (m_mode == Mode.Slots && m_bakery.Clerks.Count > 0)
+                if (m_mode == Mode.Slots)
                 {
-                    m_view.SetPayday(m_tables.Text("clerk_payday"), (float)m_bakery.PaydayProgress, m_bakery.PaydayShort);
+                    SetPayday();
                 }
 
                 return;
@@ -464,13 +533,13 @@ namespace ZooTycoon.UI
         {
             int badge = 0;
 
-            if (m_bakery.PaydayShort)
+            if (m_mall.Payroll.Short)
             {
                 badge = -1;
             }
             else
             {
-                foreach (Clerk clerk in m_bakery.Clerks)
+                foreach (Clerk clerk in m_mall.Payroll.Clerks)
                 {
                     if (clerk.Idling || clerk.Away)
                     {
@@ -507,17 +576,12 @@ namespace ZooTycoon.UI
 
         private void Bus_ClerkFired(Events.ClerkFired e)
         {
-            if (e.Clerk.Bakery != m_bakery)
-            {
-                return;
-            }
-
             if (e.Reason == FireReason.Unpaid)
             {
                 m_view.ShowToast(m_tables.Format("clerk_fired_toast", e.Clerk.Name), m_tables.Text("clerk_fired_reason"));
             }
 
-            if (m_view.IsVisible && m_mode == Mode.Slots && m_negotiation == null && m_slots.Contains(e.Clerk.Thing))
+            if (m_view.IsVisible && m_mode == Mode.Slots && m_negotiation == null && e.Clerk.Home == m_area && m_slots.Contains(e.Clerk.Thing))
             {
                 m_view.PlayRowOut(m_slots.IndexOf(e.Clerk.Thing));
             }

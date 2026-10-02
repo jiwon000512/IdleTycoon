@@ -33,10 +33,10 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.Upgraded>(e => PlayIn(e.Area, SoundTable.k_Upgrade)),
                 bus.Subscribe<Events.ClerkHired>(_ => Play(SoundTable.k_ClerkHired)),
                 bus.Subscribe<Events.ClerkFired>(_ => Play(SoundTable.k_ClerkFired)),
-                bus.Subscribe<Events.ClerkWoke>(e => PlayIn(e.Clerk.Bakery, SoundTable.k_Wake)),
+                bus.Subscribe<Events.ClerkWoke>(e => PlayIn(e.Clerk.Home, SoundTable.k_Wake)),
                 bus.Subscribe<Events.Payday>(_ => Play(SoundTable.k_Payday)),
                 bus.Subscribe<Events.AreaChanged>(_ => Play(SoundTable.k_Passage)),
-                bus.Subscribe<Events.DialogueLine>(e => PlayIn((e.SpeakerObject as Clerk)?.Bakery, SoundTable.k_Say)),
+                bus.Subscribe<Events.DialogueLine>(e => PlayIn((e.SpeakerObject as Clerk)?.Home, SoundTable.k_Say)),
                 bus.Subscribe<Events.PoopDropped>(e => PlayIn(e.Poop.Area, SoundTable.k_Poop)),
                 bus.Subscribe<Events.PoopCleaned>(e => PlayIn(e.Poop.Area, SoundTable.k_Clean)),
                 // 설계 37: 거름이 창고로(거두기와 같은 소리)

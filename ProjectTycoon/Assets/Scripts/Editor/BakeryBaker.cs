@@ -94,7 +94,7 @@ namespace ZooTycoon.Editor
             VisitorView customer = BakeCustomer();
             BakeShop(shelf, shelfSign, oven, counter, digTag, poop, customer);
             BakePlaza(customer, poop);
-            BakeFarm(BakePlot(), digTag, poop);
+            BakeFarm(BakePlot(), digTag, poop, customer);
             AssetDatabase.SaveAssets();
             return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza·Plot·Farm";
         }
@@ -639,7 +639,7 @@ namespace ZooTycoon.Editor
         }
 
         // 설계 25 → 27: 농장 굴. 굴 그림·구멍 아치·밭 칸은 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다. 파기 표식은 빵집과 같은 프리팹
-        static void BakeFarm(PlotView plot, MarkerView digTag, SpriteAnimator poop)
+        static void BakeFarm(PlotView plot, MarkerView digTag, SpriteAnimator poop, VisitorView customer)
         {
             GameObject root = new GameObject("Farm");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -667,6 +667,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             Set(view, "m_poopPrefab", poop);
             SetArray(view, "m_poopFrames", Frames("poop", "_0", "_1"));
+            Set(view, "m_clerkPrefab", customer);
             Set(view, "m_wombat", wombat);
             Save(root, view, "Farm");
         }

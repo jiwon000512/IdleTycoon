@@ -40,17 +40,27 @@ namespace ZooTycoon.UI
         [SerializeField] private ClerkStatView m_stat;
         [SerializeField] private Button m_button;
         [SerializeField] private TextMeshProUGUI m_buttonLabel;
+        [Tooltip("설계 38: 만들 것 칩(구울 빵 · 심을 작물). 후보 줄 템플릿에는 없다")]
+        [SerializeField] private Button m_product;
+        [SerializeField] private Image m_productIcon;
 
         private bool m_leaving;
         private ClerkPopupView.RowData m_nextData;
         private Sprite m_nextIcon;
+        private Sprite m_nextProduct;
 
         public event Action<ClerkRowView> ButtonClicked;
+        public event Action<ClerkRowView> ProductClicked;
 
         private void Awake()
         {
             m_button.onClick.AddListener(() => ButtonClicked?.Invoke(this));
             m_emptyFrame.onClick.AddListener(() => ButtonClicked?.Invoke(this));
+
+            if (m_product != null)
+            {
+                m_product.onClick.AddListener(() => ProductClicked?.Invoke(this));
+            }
         }
 
         private void OnDisable()
@@ -59,13 +69,26 @@ namespace ZooTycoon.UI
         }
 
         // 옅어지는 동안 온 내용은 다 옅어진 뒤에 그린다
-        public void Show(ClerkPopupView.RowData data, Sprite icon)
+        public void Show(ClerkPopupView.RowData data, Sprite icon, Sprite product)
         {
             if (m_leaving)
             {
                 m_nextData = data;
                 m_nextIcon = icon;
+                m_nextProduct = product;
                 return;
+            }
+
+            // 만들 것 칩: 이름 줄에 들어가게 그림 1배(재료 창의 작은 상자와 같다)
+            if (m_product != null)
+            {
+                m_product.gameObject.SetActive(product != null);
+                m_productIcon.sprite = product;
+
+                if (product != null)
+                {
+                    m_productIcon.rectTransform.sizeDelta = product.rect.size;
+                }
             }
 
             m_portrait.sprite = icon;
@@ -107,7 +130,7 @@ namespace ZooTycoon.UI
 
                 if (m_nextData != null)
                 {
-                    Show(m_nextData, m_nextIcon);
+                    Show(m_nextData, m_nextIcon, m_nextProduct);
                 }
             }
 
@@ -141,7 +164,7 @@ namespace ZooTycoon.UI
 
             if (m_nextData != null)
             {
-                Show(m_nextData, m_nextIcon);
+                Show(m_nextData, m_nextIcon, m_nextProduct);
             }
 
             yield return UiFx.Appear(m_group, null, default, 0f);

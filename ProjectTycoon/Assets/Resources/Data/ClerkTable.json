@@ -1,9 +1,10 @@
 {
   "table": "ClerkTable",
-  "version": 1,
+  "version": 2,
   "notes": [
     "설계 21 점원(2026-09-26): 점원 역할 = 붙는 사물 하나(id = InteractableTable id). 오븐 점원은 그 오븐의 마지막 빵을 굽고 꺼내 진열대에 채우고, 계산 점원은 계산대 뒤 자리에 서서 계산한다.",
-    "baseWage: 일머리 0일 때 월급(코인/주기). 기본 월급 = baseWage × (1 + 일머리/100 × ClerkConfigTable wagePerSkill), 정수. 숫자는 시작값(식빵 오븐 하나 분당 약 40~50코인 기준)."
+    "baseWage: 일머리 0일 때 월급(코인/주기). 기본 월급 = baseWage × (1 + 일머리/100 × ClerkConfigTable wagePerSkill), 정수. 숫자는 시작값(식빵 오븐 하나 분당 약 40~50코인 기준).",
+    "version 2 (2026-10-01, 설계 38 농장 점원): barn(농장 작업대 앞) 추가. 농장 점원은 익은 밭을 거두고 빈 밭에 고른 작물을 심는다. 오븐 점원도 구울 빵을 고른다(처음은 그 오븐의 마지막 빵)."
   ],
   "rows": [
     {
@@ -15,6 +16,11 @@
       "id": "counter",
       "name": "계산 점원",
       "baseWage": 9
+    },
+    {
+      "id": "barn",
+      "name": "농장 점원",
+      "baseWage": 10
     }
   ]
 }

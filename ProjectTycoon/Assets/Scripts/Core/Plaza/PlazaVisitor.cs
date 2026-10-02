@@ -36,6 +36,9 @@ namespace ZooTycoon.Core
         public bool AtStall { get; private set; }
         public bool IsMerchant => m_stall != null;
         private readonly Vector2? m_stall;
+        // 들어가는 문(손님은 빵집 문, 점원 그림은 그 점원이 사는 곳의 문)
+        private readonly Vector2 m_doorFloor;
+        private readonly Vector2 m_doorInside;
 
         // inside에서 floor로 톡 나온다(계단·빵집 문)
         internal PlazaVisitor(int id, VisitorTable look, PlazaArea plaza, Vector2 inside, Vector2 floor, int visits, bool wantsShop, Clerk clerk = null, Vector2? stall = null) : base(id, look, inside, plaza.Tables)
@@ -43,6 +46,9 @@ namespace ZooTycoon.Core
             Plaza = plaza;
             Clerk = clerk;
             m_stall = stall;
+            WombatArea home = clerk != null ? clerk.Home : (WombatArea)plaza.Bakery;
+            m_doorFloor = plaza.DoorFloorOf(home);
+            m_doorInside = plaza.DoorInsideOf(home);
             m_visitsLeft = visits;
             m_wantsShop = wantsShop;
 
@@ -185,7 +191,7 @@ namespace ZooTycoon.Core
             if (m_returnHome)
             {
                 m_heading = Goal.Door;
-                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.DoorFloor, Facing.Up, true);
+                Mover.WalkTo(Plaza.Layout.Nav, m_doorFloor, Facing.Up, true);
                 return;
             }
 
@@ -205,7 +211,7 @@ namespace ZooTycoon.Core
             if (m_wantsShop && Plaza.Bakery.CanAdmit)
             {
                 m_heading = Goal.Door;
-                Mover.WalkTo(Plaza.Layout.Nav, Plaza.Layout.DoorFloor, Facing.Up, true);
+                Mover.WalkTo(Plaza.Layout.Nav, m_doorFloor, Facing.Up, true);
                 return;
             }
 
@@ -241,7 +247,7 @@ namespace ZooTycoon.Core
                 case Goal.Door:
                     if (Clerk != null || Plaza.Bakery.CanAdmit)
                     {
-                        StartHop(VisitorPhase.Exiting, Plaza.Layout.DoorFloor, Plaza.Layout.DoorInside);
+                        StartHop(VisitorPhase.Exiting, m_doorFloor, m_doorInside);
                     }
                     else
                     {

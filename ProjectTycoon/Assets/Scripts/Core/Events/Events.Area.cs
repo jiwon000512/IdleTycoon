@@ -153,5 +153,113 @@ namespace ZooTycoon.Core
                 Count = count;
             }
         }
+
+        // ---------- 설계 21 · 38 점원(빵집 · 농장 공용) ----------
+
+        // 점원을 고용했다(구멍에서 톡 나와 자리로 간다)
+        public readonly struct ClerkHired
+        {
+            public readonly Clerk Clerk;
+
+            public ClerkHired(Clerk clerk)
+            {
+                Clerk = clerk;
+            }
+        }
+
+        // 점원이 그만둔다(말풍선 → 구멍으로 걸어 나간다). 자리는 바로 빈다
+        public readonly struct ClerkFired
+        {
+            public readonly Clerk Clerk;
+            public readonly FireReason Reason;
+
+            public ClerkFired(Clerk clerk, FireReason reason)
+            {
+                Clerk = clerk;
+                Reason = reason;
+            }
+        }
+
+        // 그만둔 점원이 구멍으로 사라졌다(그림 삭제)
+        public readonly struct ClerkLeft
+        {
+            public readonly Clerk Clerk;
+
+            public ClerkLeft(Clerk clerk)
+            {
+                Clerk = clerk;
+            }
+        }
+
+        // 설계 22: 웜뱃이 딴짓하던 점원을 깨웠다(톡 튀기·효과음 자리)
+        public readonly struct ClerkWoke
+        {
+            public readonly Clerk Clerk;
+
+            public ClerkWoke(Clerk clerk)
+            {
+                Clerk = clerk;
+            }
+        }
+
+        // 설계 22 외출: 점원이 구멍으로 나갔다(광장이 그림을 세운다) · 돌아오라고 했다(광장 그림이 문으로) · 광장 그림이 문으로 들어왔다(구멍에서 나온다)
+        public readonly struct ClerkWentOut
+        {
+            public readonly Clerk Clerk;
+
+            public ClerkWentOut(Clerk clerk)
+            {
+                Clerk = clerk;
+            }
+        }
+
+        public readonly struct ClerkReturning
+        {
+            public readonly Clerk Clerk;
+
+            public ClerkReturning(Clerk clerk)
+            {
+                Clerk = clerk;
+            }
+        }
+
+        public readonly struct ClerkCameBack
+        {
+            public readonly Clerk Clerk;
+
+            public ClerkCameBack(Clerk clerk)
+            {
+                Clerk = clerk;
+            }
+        }
+
+        // 월급날에 이 점원이 월급을 받았다(머리 위 코인)
+        public readonly struct ClerkPaid
+        {
+            public readonly Clerk Clerk;
+            public readonly int Wage;
+
+            public ClerkPaid(Clerk clerk, int wage)
+            {
+                Clerk = clerk;
+                Wage = wage;
+            }
+        }
+
+        // 월급날이 지나갔다(모든 곳 공통, 한 명 이상 받았다). 소리는 점원 수와 무관하게 한 번
+        public readonly struct Payday
+        {
+        }
+
+        // 대기 후보가 바뀌었다(고용·새 후보 보기)
+        public readonly struct CandidatesChanged
+        {
+            public readonly WombatArea Area;
+
+            public CandidatesChanged(WombatArea area)
+            {
+                Area = area;
+            }
+        }
     }
 }

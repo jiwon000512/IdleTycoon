@@ -1,6 +1,6 @@
 {
   "table": "InteractableTable",
-  "version": 15,
+  "version": 16,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
     "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상. 통로(exit·door)는 바닥선에서 0.25 이상 올라간 띠(코드 PassageInteractable.k_Enter) 안에서 가로 거리만 잰다 — 거리만으로 넘어간다(2026-09-26).",
@@ -19,7 +19,8 @@
     "version 12 (2026-09-30, 설계 29 웜뱃 석상): statue — 광장 분수 자리에 고정된 석상(기준점 밑변 가운데, range 1.2, 행동 statue = 팝업). 값(price)이 없어 편집 모드에서 집지 않고, 바닥 사각형은 길을 막으며 spots는 광장 손님이 들르는 자리.",
     "version 13 (2026-10-01, 설계 31 유물 수레): relic_cart — 광장 석상 오른쪽의 떠돌이 행상 좌판 자리(기준점 밑변 가운데, 행동 relic = 유물 팝업, 행상이 좌판을 연 동안만 버튼). 석상처럼 값이 없어 편집 모드에서 집지 않고, 바닥은 늘 길을 막으며 customer spots는 손님이 들르는 자리, worker spot은 행상이 서는 자리(설계 32부터 좌판 왼쪽 앞, 유리 진열장 수레 그림에 맞춤).",
     "version 14 (2026-10-01, 설계 34 수레 없이 행상과 대화): relic_cart 행을 지우고 merchant 행 — 광장 떠돌이 행상(너구리)에게 말 걸기. 기준점 = 행상 발(서 있는 동안만 닿음), 바닥 · 들르는 자리 없음, 행동 talk(ActionTable v14) = 인사를 듣고 뽑기 팝업.",
-    "version 15 (2026-10-01, 설계 35 작물 · 밭 시트): plot 행동 till · plant · harvest → till · open_plant · plant · harvest(빈 밭의 버튼이 밭 시트를 열고, plant는 시트의 작물 칩)."
+    "version 15 (2026-10-01, 설계 35 작물 · 밭 시트): plot 행동 till · plant · harvest → till · open_plant · plant · harvest(빈 밭의 버튼이 밭 시트를 열고, plant는 시트의 작물 칩).",
+    "version 16 (2026-10-01, 설계 38 농장 점원): barn = 농장 점원 자리(입구 모종 작업대 앞, 기준점은 FarmConfigTable barnX · barnY). 웜뱃이 다루지 않아 actions가 비고 worker 자리만 있다(놓는 사물이 아니라 price · halfWidth 없음)."
   ],
   "rows": [
     {
@@ -224,6 +225,15 @@
         "talk"
       ],
       "upgrade": null
+    },
+    {
+      "id": "barn",
+      "range": 1.0,
+      "actions": [],
+      "upgrade": null,
+      "spots": [
+        { "dx": 0, "dy": 0, "face": "up", "role": "worker" }
+      ]
     }
   ]
 }

@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 21: 빵집 점원 명부. 자리(오븐·계산대)마다 점원 하나, 가게마다 대기 후보 N명, 월급은 가게 공통 월급날마다 지갑에서(모자라면 그 점원만 해고).
-    // 후보는 처음 볼 때 채운다(생성자에서 난수를 쓰지 않는다). 점원 한 명의 할 일은 Clerk
-    public sealed partial class BakeryArea
+    // 설계 21 → 설계 38: 곳의 점원 명부(빵집 · 농장 공용, 똥과 같은 방식). 자리(ClerkSlots: 오븐 · 계산대 · 농장 작업대)마다 점원 하나, 곳마다 대기 후보 N명.
+    // 후보는 처음 볼 때 채운다(생성자에서 난수를 쓰지 않는다). 월급날은 모든 곳 공통이라 Payroll(Mall)이, 점원 한 명의 할 일은 Clerk
+    public abstract partial class WombatArea
     {
         private readonly List<Clerk> m_clerks = new List<Clerk>();
         // 그만두고 구멍으로 가는 중(자리는 이미 비었다)
@@ -14,32 +15,37 @@ namespace ZooTycoon.Core
         private readonly List<VisitorTable> m_clerkLooks = new List<VisitorTable>();
         // 설계 22: 딴짓 중인 점원을 감싼 사물(웜뱃이 깨운다). 딴짓 시작·끝에 사물 목록을 다시 맞춘다
         private readonly Dictionary<Clerk, ClerkInteractable> m_clerkThings = new Dictionary<Clerk, ClerkInteractable>();
+        // 설계 22: 지금 도는 대화들(깨우기 · 수다가 동시에 돈다). 새 대화는 같은 점원이 낀 앞 대화를 대신한다
+        private readonly List<Dialogue> m_dialogues = new List<Dialogue>();
         private ClerkConfigTable m_clerkConfig;
         private int m_nextClerkId;
-        private double m_untilPayday;
 
         public ClerkConfigTable ClerkConfig => m_clerkConfig;
         public IReadOnlyList<Clerk> Clerks => m_clerks;
-        // 다음 월급날까지 찬 정도(0~1)
-        public double PaydayProgress => 1d - m_untilPayday / m_clerkConfig.WagePeriodSeconds;
-        // 지금 코인으로는 다음 월급날에 모두의 월급을 낼 수 없다(누군가 해고된다)
-        public bool PaydayShort
+
+        // 점원을 둘 수 있는 사물(점원 팝업의 자리 줄 순서). 점원이 없는 곳은 비었다
+        public virtual IEnumerable<Interactable> ClerkSlots
+        {
+            get { yield break; }
+        }
+
+        // 점원이 드나드는 굴 구멍: 바닥은 입구, 안은 구멍 그림 속(빵집 · 농장 구멍은 같은 자리)
+        internal Vector2 HoleFloor => Entrance;
+        internal Vector2 HoleInside => new Vector2(Entrance.X, -(BurrowShape.k_EntranceFloorTop - 1) / BurrowShape.k_PixelsPerUnit);
+        // 점원이 걷는 땅(웜뱃과 같다)
+        internal BurrowNav ClerkNav => WombatNav;
+
+        // 딴짓 중인 점원을 감싼 사물(곳의 사물 목록 맨 앞에 넣는다)
+        protected IEnumerable<ClerkInteractable> ClerkThings => m_clerkThings.Values;
+
+        public IReadOnlyList<Candidate> Candidates
         {
             get
             {
-                double wages = 0d;
-
-                foreach (Clerk clerk in m_clerks)
-                {
-                    wages += clerk.Wage;
-                }
-
-                return m_state.Coins < wages;
+                FillCandidates();
+                return m_candidates;
             }
         }
-
-        // 설계 22: 지금 도는 대화들(깨우기 · 수다가 동시에 돈다). 새 대화는 같은 점원이 낀 앞 대화를 대신한다
-        private readonly List<Dialogue> m_dialogues = new List<Dialogue>();
 
         // 이 점원이 낀 대화. 없으면 null
         public Dialogue DialogueOf(Clerk clerk)
@@ -47,14 +53,14 @@ namespace ZooTycoon.Core
             return m_dialogues.Find(d => d.Involves(clerk));
         }
 
-        // 수다 상대: 나 말고 가게 안에 서 있는 가장 가까운 점원(일하는 중이어도 된다. 외출·퇴장·들어오는 중·이미 수다 중은 뺀다). 없으면 null
+        // 수다 상대: 나 말고 곳 안에 서 있는 가장 가까운 점원(일하는 중이어도 된다. 외출·퇴장·들어오는 중·이미 수다 중은 뺀다). 없으면 null
         internal Clerk ChatPartnerFor(Clerk me)
         {
             Clerk best = null;
 
             foreach (Clerk clerk in m_clerks)
             {
-                if (clerk != me && clerk.CanChat && (best == null || System.Numerics.Vector2.Distance(clerk.Position, me.Position) < System.Numerics.Vector2.Distance(best.Position, me.Position)))
+                if (clerk != me && clerk.CanChat && (best == null || Vector2.Distance(clerk.Position, me.Position) < Vector2.Distance(best.Position, me.Position)))
                 {
                     best = clerk;
                 }
@@ -80,15 +86,6 @@ namespace ZooTycoon.Core
         internal void StopDialogue(Clerk clerk)
         {
             m_dialogues.RemoveAll(d => d.Involves(clerk));
-        }
-
-        public IReadOnlyList<Candidate> Candidates
-        {
-            get
-            {
-                FillCandidates();
-                return m_candidates;
-            }
         }
 
         // 이 사물에 붙은 점원. 없으면 null
@@ -131,17 +128,12 @@ namespace ZooTycoon.Core
             return new Negotiation(m_clerkConfig, Random, candidate.Skill, WageFor(candidate, thing));
         }
 
-        // 고용: 첫 월급을 내고 구멍에서 나온다. 다음부터는 공통 월급날(첫 점원이면 그때부터 센다). 자리가 찼거나 코인이 모자라면 실패
+        // 고용: 첫 월급을 내고 구멍에서 나온다. 다음부터는 공통 월급날(Payroll). 자리가 찼거나 코인이 모자라면 실패
         public bool TryHire(Candidate candidate, Interactable thing, int wage)
         {
-            if (!CanStaff(thing) || ClerkOf(thing) != null || !m_state.TrySpendCoins(wage))
+            if (!CanStaff(thing) || ClerkOf(thing) != null || !Wombat.Worker.Wallet.TrySpendCoins(wage))
             {
                 return false;
-            }
-
-            if (m_clerks.Count == 0)
-            {
-                m_untilPayday = m_clerkConfig.WagePeriodSeconds;
             }
 
             Clerk clerk = new Clerk(++m_nextClerkId, candidate, thing, wage, this);
@@ -168,7 +160,7 @@ namespace ZooTycoon.Core
 
         public bool TryRefreshCandidates()
         {
-            if (!m_state.TrySpendCoins(m_clerkConfig.RefreshCost))
+            if (!Wombat.Worker.Wallet.TrySpendCoins(m_clerkConfig.RefreshCost))
             {
                 return false;
             }
@@ -179,13 +171,17 @@ namespace ZooTycoon.Core
             return true;
         }
 
+        // 딴짓 점원 사물이 바뀌었다: 곳이 사물 목록을 다시 맞춘다
+        protected virtual void OnClerkThingsChanged()
+        {
+        }
+
         private void InitClerks()
         {
             m_clerkConfig = Tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
-            m_untilPayday = m_clerkConfig.WagePeriodSeconds;
             Bus.Subscribe<Events.ClerkCameBack>(e =>
             {
-                if (e.Clerk.Bakery == this)
+                if (e.Clerk.Home == this)
                 {
                     e.Clerk.ArriveBack();
                 }
@@ -200,43 +196,16 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 월급날(모두 같은 날) → 점원 틱 → 나간 점원 정리
+        // 점원 틱 → 딴짓 사물 → 대화 → 나간 점원 정리
         private void TickClerks(double dt)
         {
-            m_untilPayday -= dt;
-
-            if (m_untilPayday <= 0d)
-            {
-                m_untilPayday += m_clerkConfig.WagePeriodSeconds;
-                bool paid = false;
-
-                for (int i = m_clerks.Count - 1; i >= 0; i--)
-                {
-                    Clerk clerk = m_clerks[i];
-
-                    if (m_state.TrySpendCoins(clerk.Wage))
-                    {
-                        paid = true;
-                        Bus.Publish(new Events.ClerkPaid(clerk, clerk.Wage));
-                    }
-                    else
-                    {
-                        Fire(clerk, FireReason.Unpaid);
-                    }
-                }
-
-                if (paid)
-                {
-                    Bus.Publish(new Events.Payday(this));
-                }
-            }
-
             foreach (Clerk clerk in m_clerks)
             {
                 clerk.Tick(dt);
             }
 
             SyncClerkThings();
+
             foreach (Dialogue dialogue in m_dialogues.ToArray())
             {
                 dialogue.Tick(dt);
@@ -281,11 +250,11 @@ namespace ZooTycoon.Core
 
             if (changed)
             {
-                SyncThings();
+                OnClerkThingsChanged();
             }
         }
 
-        private void RepathClerks()
+        protected void RepathClerks()
         {
             foreach (Clerk clerk in m_clerks)
             {

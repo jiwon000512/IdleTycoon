@@ -58,6 +58,8 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteAnimator m_poopPrefab;
         [SerializeField] private Sprite[] m_poopFrames;
         [SerializeField] private float m_poopFrameRate = 2f;
+        [Tooltip("설계 38: 농장 점원 그림(손님 · 빵집 점원과 같은 프리팹)")]
+        [SerializeField] private VisitorView m_clerkPrefab;
         [SerializeField] private WombatView m_wombat;
 
         private readonly Dictionary<PlotInteractable, PlotView> m_plots = new Dictionary<PlotInteractable, PlotView>();
@@ -69,6 +71,7 @@ namespace ZooTycoon.World
         private TableSet m_tables;
         private DigView m_dig;
         private PoopViews m_poopViews;
+        private ClerkViews m_clerkViews;
         private Interactable m_shownTarget;
         private bool m_editing;
         private IDisposable[] m_subscriptions;
@@ -110,6 +113,7 @@ namespace ZooTycoon.World
             CellMetrics cells = farm.Layout.Cells;
             m_dig = new DigView(this, m_digTagPrefab, tables, farm.Grid, cell => ToWorld(cells.CellCenter(cell)), new Vector2(cells.CellWidth, cells.CellHeight), m_digSeconds);
             m_poopViews = new PoopViews(this, farm, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, ToWorld);
+            m_clerkViews = new ClerkViews(this, farm, bus, m_clerkPrefab, tables, frames, transform, null);
             Repaint();
             m_arch.localPosition = new Vector3(farm.Layout.HoleFloor.X, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f);
             m_entranceProps.localPosition = m_arch.localPosition;
@@ -188,6 +192,7 @@ namespace ZooTycoon.World
             }
 
             m_poopViews.Dispose();
+            m_clerkViews.Dispose();
         }
 
         private Vector3 ToWorld(System.Numerics.Vector2 p)

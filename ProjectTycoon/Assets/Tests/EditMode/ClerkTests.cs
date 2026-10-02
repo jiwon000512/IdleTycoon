@@ -33,6 +33,8 @@ namespace ZooTycoon.Tests
         private ZooState m_state;
         private TableSet m_tables;
         private VisitorTable m_customer;
+        // 설계 38: 월급날은 Mall의 Payroll이 돌린다(시험은 빵집 하나로)
+        private Payroll m_payroll;
         private readonly List<Events.ClerkFired> m_fired = new List<Events.ClerkFired>();
 
         private BakeryArea Create(IRandom random = null)
@@ -58,20 +60,21 @@ namespace ZooTycoon.Tests
             config.OutingChance = 0d;
             config.ChatChance = 0d;
             BakeryArea shop = new BakeryArea(m_state, m_tables, random ?? new ConstantRandom(1d), new Wombat(m_tables, m_state), m_bus);
+            m_payroll = new Payroll(new WombatArea[] { shop }, config, m_state, m_bus);
             // 웜뱃은 계산대 자리에서 시작한다: 점원만 일하게 구멍 아래로 비킨다
             shop.Wombat.Mover.Place(shop.Layout.HoleFloor);
             return shop;
         }
 
-        private static void Run(BakeryArea shop, double seconds)
+        private void Run(BakeryArea shop, double seconds)
         {
             for (double t = 0d; t < seconds - 1e-9; t += k_Dt)
             {
-                shop.Tick(k_Dt);
+                Tick(shop);
             }
         }
 
-        private static bool RunUntil(BakeryArea shop, Func<bool> done, double maxSeconds = 60d)
+        private bool RunUntil(BakeryArea shop, Func<bool> done, double maxSeconds = 60d)
         {
             for (double t = 0d; t < maxSeconds; t += k_Dt)
             {
@@ -80,10 +83,17 @@ namespace ZooTycoon.Tests
                     return true;
                 }
 
-                shop.Tick(k_Dt);
+                Tick(shop);
             }
 
             return done();
+        }
+
+        // Mall처럼 월급날 → 곳
+        private void Tick(BakeryArea shop)
+        {
+            m_payroll.Tick(k_Dt);
+            shop.Tick(k_Dt);
         }
 
         private static Clerk Hire(BakeryArea shop, Interactable thing)
@@ -237,9 +247,10 @@ namespace ZooTycoon.Tests
             Assert.That(RunUntil(shop, () => shelf.Stock == shelf.Capacity, 20d), Is.True);
         }
 
-        // 2026-09-26 사용자: 아직 구운 적 없는 오븐의 점원은 해금된 첫 빵을 굽는다. 웜뱃이 다른 빵을 고르면 그 빵으로
+        // 2026-09-26 사용자: 아직 구운 적 없는 오븐의 점원은 해금된 첫 빵을 굽는다.
+        // 설계 38: 그 뒤로는 고른 빵(Product)만 굽는다. 웜뱃이 그 오븐에 다른 빵을 구워도 다음 바퀴는 고른 빵, 고르면 그 빵으로
         [Test]
-        public void OvenClerk_WithoutLastBread_BakesFirstBread_ThenFollowsWombatChoice()
+        public void OvenClerk_BakesFirstBread_ThenOnlyTheChosenBread()
         {
             BakeryArea shop = Create();
             OvenInteractable oven = shop.Ovens[0];
@@ -249,15 +260,37 @@ namespace ZooTycoon.Tests
             Assert.That(oven.Bread, Is.EqualTo(Bread("b01")));
             Assert.That(RunUntil(shop, () => shop.StockOf(Bread("b01")) > 0), Is.True);
 
-            // 웜뱃이 다음 빵을 열어 굽게 하면 그 뒤 바퀴는 그 빵
+            Assert.That(clerk.Product, Is.EqualTo("b01"));
+            Assert.That(clerk.Products, Is.EqualTo(new[] { "b01" }));
+
+            // 웜뱃이 다음 빵을 열어 그 오븐에 구워도 점원은 다음 바퀴에 고른 빵(식빵)
             Assert.That(RunUntil(shop, () => oven.IsEmpty), Is.True);
             m_state.AddCoins(shop.NextBread.UnlockCost);
             Assert.That(shop.TryChoose(ActionTable.k_Bake, oven, shop.NextBread.Id), Is.True);
             BreadTable second = oven.Bread;
             Assert.That(second, Is.Not.EqualTo(Bread("b01")));
-            // 점원이 꺼내면(진열대에 식빵이 있어 든 채 기다린다) 그 자리에서 같은 빵을 다시 굽는다
+            Assert.That(clerk.Products, Is.EqualTo(new[] { "b01", second.Id }), "해금하면 고를 수 있다");
             Assert.That(RunUntil(shop, () => clerk.Worker.Hands.Bread == second, 30d), Is.True);
-            Assert.That(RunUntil(shop, () => !oven.IsEmpty && oven.Bread == second, 20d), Is.True, "다음 바퀴도 그 빵");
+            Assert.That(RunUntil(shop, () => !oven.IsEmpty, 20d), Is.True);
+            Assert.That(oven.Bread, Is.EqualTo(Bread("b01")), "웜뱃의 빵을 따라가지 않는다");
+        }
+
+        // 설계 38: 처음 고른 빵은 그 오븐의 마지막 빵. 고르면 다음 바퀴부터 그 빵, 해금 안 된 빵은 못 고른다
+        [Test]
+        public void OvenClerk_StartsWithLastBread_AndBakesWhatIsChosen()
+        {
+            BakeryArea shop = Create();
+            OvenInteractable oven = shop.Ovens[0];
+            BreadTable second = shop.NextBread;
+            m_state.AddCoins(second.UnlockCost);
+            Assert.That(shop.TryChoose(ActionTable.k_Bake, oven, second.Id), Is.True);
+            Clerk clerk = Hire(shop, oven);
+
+            Assert.That(clerk.Product, Is.EqualTo(second.Id));
+            Assert.That(clerk.TrySetProduct("nope"), Is.False);
+            Assert.That(clerk.TrySetProduct("b01"), Is.True);
+            Assert.That(RunUntil(shop, () => shop.StockOf(second) > 0), Is.True, "굽던 빵은 그대로 꺼내 채운다");
+            Assert.That(RunUntil(shop, () => !oven.IsEmpty && oven.Bread == Bread("b01"), 30d), Is.True, "다음 바퀴는 고른 빵");
         }
 
         // 검증 2: 일머리 1이면 한 바퀴 뒤 딴짓(Looking), 일머리 100이면 없음
@@ -333,13 +366,13 @@ namespace ZooTycoon.Tests
         public void PaydayShort_WhenCoinsBelowWageSum()
         {
             BakeryArea shop = Create();
-            Assert.That(shop.PaydayShort, Is.False);
+            Assert.That(m_payroll.Short, Is.False);
             Clerk clerk = Hire(shop, shop.Counter);
-            Assert.That(shop.PaydayShort, Is.False);
+            Assert.That(m_payroll.Short, Is.False);
 
             m_state.TrySpendCoins(m_state.Coins - clerk.Wage + 1d);
 
-            Assert.That(shop.PaydayShort, Is.True);
+            Assert.That(m_payroll.Short, Is.True);
         }
 
         // 월급날은 가게 공통: 주기 중간에 들어온 점원도 같은 날 받는다
@@ -357,7 +390,7 @@ namespace ZooTycoon.Tests
             m_bus.Subscribe<Events.ClerkPaid>(_ => paid++);
             m_bus.Subscribe<Events.Payday>(_ => paydays++);
 
-            Assert.That(shop.PaydayProgress, Is.EqualTo(0.5).Within(0.01));
+            Assert.That(m_payroll.Progress, Is.EqualTo(0.5).Within(0.01));
             Run(shop, period / 2d + 1d);
 
             Assert.That(m_state.Coins, Is.EqualTo(coins - first.Wage - late.Wage));

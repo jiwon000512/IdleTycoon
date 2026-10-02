@@ -29,6 +29,8 @@ namespace ZooTycoon.UI
             public string Wage;
             public string Button;
             public bool Enabled;
+            // 설계 38: 만들 것 칩(구울 빵 · 심을 작물 그림). null이면 칩이 없다(계산대 · 빈 자리 · 후보)
+            public string ProductIcon;
         }
 
         private const float k_ToastSeconds = 2.5f;
@@ -61,7 +63,11 @@ namespace ZooTycoon.UI
         [Tooltip("목록 상태: 가게 탭 줄 · 요약 · 줄 목록 · 바닥(글 또는 버튼)")]
         [SerializeField] private GameObject m_list;
         [SerializeField] private GameObject m_tabRow;
-        [SerializeField] private TextMeshProUGUI m_tabLabel;
+        [Tooltip("설계 38 가게 탭(빵집 · 농장). 고른 탭은 chip_selected")]
+        [SerializeField] private Button[] m_tabs;
+        [SerializeField] private TextMeshProUGUI[] m_tabLabels;
+        [SerializeField] private Sprite m_tabSprite;
+        [SerializeField] private Sprite m_tabSelectedSprite;
         [SerializeField] private TextMeshProUGUI m_summaryLeft;
         [SerializeField] private TextMeshProUGUI m_summaryRight;
         [Tooltip("요약 오른쪽: 글(m_summaryRight) + 코인 + 값을 담은 묶음과 그 값")]
@@ -139,6 +145,9 @@ namespace ZooTycoon.UI
         public event Action OpenClicked;
         public event Action CloseClicked;
         public event Action<int> RowButtonClicked;
+        public event Action<int> TabClicked;
+        // 설계 38: 줄의 만들 것 칩을 눌렀다(줄 번호)
+        public event Action<int> ProductClicked;
         public event Action FootClicked;
         public event Action AskPlainClicked;
         public event Action AskNegotiateClicked;
@@ -154,6 +163,13 @@ namespace ZooTycoon.UI
             m_openButton.onClick.AddListener(() => OpenClicked?.Invoke());
             m_dim.onClick.AddListener(() => CloseClicked?.Invoke());
             m_closeButton.onClick.AddListener(() => CloseClicked?.Invoke());
+
+            for (int i = 0; i < m_tabs.Length; i++)
+            {
+                int tab = i;
+                m_tabs[i].onClick.AddListener(() => TabClicked?.Invoke(tab));
+            }
+
             m_footButton.onClick.AddListener(() => FootClicked?.Invoke());
             m_askPlain.onClick.AddListener(() => AskPlainClicked?.Invoke());
             m_askNegotiate.onClick.AddListener(() => AskNegotiateClicked?.Invoke());
@@ -249,14 +265,21 @@ namespace ZooTycoon.UI
             }
         }
 
-        // 목록 상태(고용할까 창은 건드리지 않는다). tab이 null이면 후보 목록: 탭 줄을 숨기고 후보 줄 템플릿을 쓴다. 요약은 왼쪽 글 · 오른쪽 글 + 코인 값. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
-        public void ShowList(string title, string tab, string summaryLeft, string summaryRight, string summaryValue, IReadOnlyList<RowData> rows, string foot, string footButton, string footCost, bool footEnabled)
+        // 목록 상태(고용할까 창은 건드리지 않는다). tabs가 null이면 후보 목록: 탭 줄을 숨기고 후보 줄 템플릿을 쓴다. 요약은 왼쪽 글 · 오른쪽 글 + 코인 값. footButton이 null이면 바닥은 글, 아니면 버튼(값 칸 포함)
+        public void ShowList(string title, IReadOnlyList<string> tabs, int tab, string summaryLeft, string summaryRight, string summaryValue, IReadOnlyList<RowData> rows, string foot, string footButton, string footCost, bool footEnabled)
         {
             m_title.text = title;
             m_list.SetActive(true);
             m_nego.SetActive(false);
-            m_tabRow.SetActive(tab != null);
-            m_tabLabel.text = tab ?? string.Empty;
+            m_tabRow.SetActive(tabs != null);
+
+            for (int i = 0; i < m_tabs.Length; i++)
+            {
+                bool shown = tabs != null && i < tabs.Count;
+                m_tabs[i].gameObject.SetActive(shown);
+                m_tabs[i].image.sprite = i == tab ? m_tabSelectedSprite : m_tabSprite;
+                m_tabLabels[i].text = shown ? tabs[i] : string.Empty;
+            }
             m_summaryLeft.gameObject.SetActive(summaryLeft != null);
             m_summaryLeft.text = summaryLeft ?? string.Empty;
             m_summaryValueGroup.SetActive(summaryRight != null);
@@ -270,7 +293,7 @@ namespace ZooTycoon.UI
             m_footButtonCost.text = footCost ?? string.Empty;
             m_footButton.interactable = footEnabled;
 
-            bool candidates = tab == null;
+            bool candidates = tabs == null;
             List<ClerkRowView> views = candidates ? m_candidateViews : m_rowViews;
             foreach (ClerkRowView other in candidates ? m_rowViews : m_candidateViews)
             {
@@ -281,6 +304,7 @@ namespace ZooTycoon.UI
             {
                 ClerkRowView row = Instantiate(candidates ? m_candidateRowTemplate : m_rowTemplate, m_rows);
                 row.ButtonClicked += Row_ButtonClicked;
+                row.ProductClicked += Row_ProductClicked;
                 views.Add(row);
             }
 
@@ -292,7 +316,7 @@ namespace ZooTycoon.UI
                     continue;
                 }
 
-                views[i].Show(rows[i], Load(rows[i].IconPath));
+                views[i].Show(rows[i], Load(rows[i].IconPath), Load(rows[i].ProductIcon));
             }
 
             SetListHeight(rows.Count);
@@ -476,6 +500,11 @@ namespace ZooTycoon.UI
         {
             int index = m_rowViews.IndexOf(row);
             RowButtonClicked?.Invoke(index >= 0 ? index : m_candidateViews.IndexOf(row));
+        }
+
+        private void Row_ProductClicked(ClerkRowView row)
+        {
+            ProductClicked?.Invoke(m_rowViews.IndexOf(row));
         }
     }
 }

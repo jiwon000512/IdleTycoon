@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace ZooTycoon.Core
@@ -23,9 +24,11 @@ namespace ZooTycoon.Core
         Outing,
     }
 
-    // 설계 21: 점원 한 명 = 사물 하나(오븐·계산대)에 붙은 일꾼. 외형·걷기·톡 뛰기는 손님과 같은 뼈대(Visitor), 할 일은 자기 행동 트리.
-    // 오븐 점원: 자리로 → 마지막 빵(없으면 첫 빵) 굽기 → 다 구울 때까지 → 꺼내기 → 진열대로 → 채우기 → 딴짓 판정 → (반복).
+    // 설계 21: 점원 한 명 = 사물 하나(오븐·계산대·농장 작업대)에 붙은 일꾼. 외형·걷기·톡 뛰기는 손님과 같은 뼈대(Visitor), 할 일은 자기 행동 트리.
+    // 설계 38: 일하는 곳(Home)은 빵집 · 농장 어디든, 만들 것(Product: 구울 빵 · 심을 작물)은 플레이어가 고른다.
+    // 오븐 점원: 자리로 → 고른 빵 굽기 → 다 구울 때까지 → 꺼내기 → 진열대로 → 채우기 → 딴짓 판정 → (반복).
     // 계산 점원: 자리로 → 한 명 계산될 때까지 서 있기(계산은 계산대가 돌린다) → 딴짓 판정 → (반복).
+    // 농장 점원: 작업대 앞으로 → 익은 밭 · 빈 밭이 생길 때까지 → 가까운 밭부터 돌며 거두고 고른 작물을 심기(웜뱃과 같은 메서드) → 작업대 앞에서 딴짓 판정 → (반복).
     // 딴짓 확률은 (100 − 일머리)/100, 시간은 일머리가 낮을수록 길다(2026-09-26 사용자: 1분도 넘을 수 있다).
     // 설계 22: 딴짓 중엔 곳이 ClerkInteractable로 감싸 웜뱃이 깨울 수 있다(WakeUp: 딴짓을 끊고 다음 판정 wakeSkips회 건너뜀). 외출(Away) 중엔 광장이 같은 점원을 손님 그림으로 대신 세우고 거기서 깨운다.
     // 해고되면 구멍으로 걸어가 톡 사라진다(외출 중이면 그 자리에서 사라지고 광장 그림이 계단으로 간다)
@@ -42,6 +45,7 @@ namespace ZooTycoon.Core
         {
             Spot,
             Shelf,
+            Plot,
             Hole,
         }
 
@@ -56,6 +60,7 @@ namespace ZooTycoon.Core
         private bool m_entered;
         private Goal m_goal;
         private ShelfInteractable m_shelf;
+        private PlotInteractable m_plot;
         private int m_servedAtStart;
         private bool m_idling;
         private double m_idleLeft;
@@ -68,14 +73,17 @@ namespace ZooTycoon.Core
         private bool m_resumeWalk;
         private Dialogue m_chat;
 
-        public BakeryArea Bakery { get; }
-        protected override WombatArea Area => Bakery;
+        // 일하는 곳(빵집 · 농장)
+        public WombatArea Home { get; }
+        protected override WombatArea Area => Home;
         public Interactable Thing { get; }
         public ClerkTable Role { get; }
         public string Name { get; }
         public int Skill { get; }
         public int Wage { get; }
         public Worker Worker { get; }
+        // 설계 38: 만들 것 id(오븐 점원은 구울 빵, 농장 점원은 심을 작물). 계산 점원은 null
+        public string Product { get; private set; }
         public bool Leaving { get; private set; }
         // 딴짓 중이고 아직 돌아오는 길이 아니다(2026-09-26 버그: 광장에서 깨운 점원이 돌아가는 동안 「?」·「♪」와 깨우기 버튼이 다시 떴다)
         public bool Idling => m_idling && !m_returning;
@@ -91,19 +99,35 @@ namespace ZooTycoon.Core
 
         public Vector2 WorkerSpot => Placement.SpotOf((IPlaced)Thing, SpotRole.Worker);
 
-        internal Clerk(int id, Candidate candidate, Interactable thing, int wage, BakeryArea bakery) : base(id, candidate.Look, bakery.Layout.HoleInside, bakery.Tables)
+        internal Clerk(int id, Candidate candidate, Interactable thing, int wage, WombatArea home) : base(id, candidate.Look, home.HoleInside, home.Tables)
         {
-            Bakery = bakery;
+            Home = home;
             Thing = thing;
-            Role = bakery.Tables.Get<ClerkTable>(thing.Table.Id);
+            Role = home.Tables.Get<ClerkTable>(thing.Table.Id);
             Name = candidate.Name;
             Skill = candidate.Skill;
             Wage = wage;
-            Worker = new Worker(new Hands((int)bakery.Tables.Get<ConfigTable>(ConfigTable.k_CarryCapacity).Value), bakery.Wombat.Worker.Wallet);
-            m_config = bakery.Tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
-            m_questionRange = (float)bakery.Tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
+            Worker = new Worker(new Hands((int)home.Tables.Get<ConfigTable>(ConfigTable.k_CarryCapacity).Value), home.Wombat.Worker.Wallet);
+            m_config = home.Tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
+            m_questionRange = (float)home.Tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             m_enter = new BtAction<Clerk>(c => c.StartEnter(), (c, dt) => c.TickHopStatus(dt));
-            m_cycle = thing is CounterInteractable ? BuildCounterCycle() : BuildOvenCycle();
+
+            // 처음 만들 것: 오븐은 그 오븐의 마지막 빵(없으면 첫 빵), 농장은 첫 작물
+            switch (thing)
+            {
+                case OvenInteractable oven:
+                    Product = (oven.LastBread ?? oven.Bakery.UnlockedBreads[0]).Id;
+                    m_cycle = BuildOvenCycle();
+                    break;
+                case BarnInteractable barn:
+                    Product = barn.Farm.UnlockedCrops[0].Id;
+                    m_cycle = BuildFarmCycle();
+                    break;
+                default:
+                    m_cycle = BuildCounterCycle();
+                    break;
+            }
+
             m_leave = new BtSequence<Clerk>(
                 new BtAction<Clerk>(c => c.StartLeave(), (c, dt) => c.TickWalk()),
                 new BtAction<Clerk>(c => c.StartExit(), (c, dt) => c.TickHopStatus(dt)));
@@ -119,6 +143,50 @@ namespace ZooTycoon.Core
             Bubble.Show(BubbleTable.k_Angry);
         }
 
+        // 설계 38: 고를 수 있는 만들 것(해금된 빵 · 작물 id, 표 순서). 계산 점원은 없다
+        public IReadOnlyList<string> Products
+        {
+            get
+            {
+                List<string> ids = new List<string>();
+
+                switch (Thing)
+                {
+                    case OvenInteractable oven:
+                        foreach (BreadTable bread in oven.Bakery.UnlockedBreads)
+                        {
+                            ids.Add(bread.Id);
+                        }
+
+                        break;
+                    case BarnInteractable barn:
+                        foreach (CropTable crop in barn.Farm.UnlockedCrops)
+                        {
+                            ids.Add(crop.Id);
+                        }
+
+                        break;
+                }
+
+                return ids;
+            }
+        }
+
+        // 다음 바퀴부터 고른 것을 만든다(굽는 중인 빵 · 자라는 작물은 그대로)
+        public bool TrySetProduct(string id)
+        {
+            foreach (string product in Products)
+            {
+                if (product == id)
+                {
+                    Product = id;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // 설계 22: 웜뱃이 깨웠다. 딴짓을 끊고(바퀴가 자리로 보낸다) 다음 딴짓 판정을 건너뛴다.
         // 외출 중이면 돌아오라고 하고, 구멍으로 뛰어드는 중이면 광장에 가지 않고 바로 다시 나온다. 돌아오는 동안은 딴짓으로 치지 않는다
         public void WakeUp()
@@ -129,7 +197,7 @@ namespace ZooTycoon.Core
             }
 
             m_skipIdle = m_config.WakeSkips;
-            Bakery.Bus.Publish(new Events.ClerkWoke(this));
+            Home.Bus.Publish(new Events.ClerkWoke(this));
 
             if (m_partner != null)
             {
@@ -157,7 +225,7 @@ namespace ZooTycoon.Core
 
             Away = false;
             m_hopping = true;
-            StartHop(VisitorPhase.Entering, Bakery.Layout.HoleInside, Bakery.Layout.HoleFloor);
+            StartHop(VisitorPhase.Entering, Home.HoleInside, Home.HoleFloor);
         }
 
         // 배치가 바뀌었다: 걷는 중이면 같은 목표로 새 길, 자리에 서 있었으면 옮겨진 자리로(하던 기다림은 걸으면서 이어진다)
@@ -211,6 +279,16 @@ namespace ZooTycoon.Core
                 new BtAction<Clerk>(c => c.StartIdle(), (c, dt) => c.TickIdle(dt)));
         }
 
+        private static BtNode<Clerk> BuildFarmCycle()
+        {
+            return new BtSequence<Clerk>(
+                new BtAction<Clerk>(c => c.StartWalkToSpot(), (c, dt) => c.TickWalk()),
+                new BtAction<Clerk>(null, (c, dt) => c.NextPlot() != null ? BtStatus.Success : BtStatus.Running),
+                new BtAction<Clerk>(c => c.StartTend(), (c, dt) => c.TickTend()),
+                new BtAction<Clerk>(c => c.StartWalkToSpot(), (c, dt) => c.TickWalk()),
+                new BtAction<Clerk>(c => c.StartIdle(), (c, dt) => c.TickIdle(dt)));
+        }
+
         private static BtNode<Clerk> BuildCounterCycle()
         {
             return new BtSequence<Clerk>(
@@ -223,13 +301,13 @@ namespace ZooTycoon.Core
 
         private bool StartEnter()
         {
-            StartHop(VisitorPhase.Entering, Bakery.Layout.HoleInside, Bakery.Layout.HoleFloor);
+            StartHop(VisitorPhase.Entering, Home.HoleInside, Home.HoleFloor);
             return true;
         }
 
         private bool StartExit()
         {
-            StartHop(VisitorPhase.Exiting, Bakery.Layout.HoleFloor, Bakery.Layout.HoleInside);
+            StartHop(VisitorPhase.Exiting, Home.HoleFloor, Home.HoleInside);
             return true;
         }
 
@@ -255,7 +333,7 @@ namespace ZooTycoon.Core
             return BtStatus.Success;
         }
 
-        // 빈 오븐이면 마지막 빵을 굽는다. 아직 이 오븐에서 구운 적이 없으면 해금된 첫 빵(2026-09-26 사용자: 기다리지 말고 일해야 한다).
+        // 빈 오븐이면 고른 빵을 굽는다(2026-09-26 사용자: 기다리지 말고 일해야 한다).
         // 설계 25: 재료가 모자라 못 구우면 「…」를 띄우고, 구우면 지운다
         private BtStatus Bake()
         {
@@ -266,7 +344,7 @@ namespace ZooTycoon.Core
                 return BtStatus.Success;
             }
 
-            if (!oven.TryStart(oven.LastBread ?? Bakery.UnlockedBreads[0]))
+            if (!oven.TryStart(Home.Tables.Get<BreadTable>(Product)))
             {
                 Bubble.Show(BubbleTable.k_Wait);
             }
@@ -293,7 +371,7 @@ namespace ZooTycoon.Core
 
         private BtStatus TakeOut()
         {
-            Bakery.TryDo(ActionTable.k_TakeOut, Worker, Thing);
+            Home.TryDo(ActionTable.k_TakeOut, Worker, Thing);
             return BtStatus.Success;
         }
 
@@ -333,10 +411,72 @@ namespace ZooTycoon.Core
         {
             if (m_shelf != null)
             {
-                Bakery.TryDo(ActionTable.k_Fill, Worker, m_shelf);
+                Home.TryDo(ActionTable.k_Fill, Worker, m_shelf);
             }
 
             return BtStatus.Success;
+        }
+
+        // 할 일이 있는 가장 가까운 밭(익었거나 갈아 둔 빈 밭). 없으면 null
+        private PlotInteractable NextPlot()
+        {
+            PlotInteractable best = null;
+
+            foreach (PlotInteractable plot in ((BarnInteractable)Thing).Farm.Plots)
+            {
+                if ((plot.IsRipe || plot.IsTilled && plot.IsEmpty) && (best == null || plot.DistanceTo(Position) < best.DistanceTo(Position)))
+                {
+                    best = plot;
+                }
+            }
+
+            return best;
+        }
+
+        private bool StartTend()
+        {
+            WalkToPlot(NextPlot());
+            return true;
+        }
+
+        // 밭에 닿으면 다시 보고(웜뱃이 먼저 거뒀을 수 있다) 익었으면 거두고 비었으면 고른 작물을 심는다. 다음 밭이 없으면 끝
+        private BtStatus TickTend()
+        {
+            if (Moving)
+            {
+                return BtStatus.Running;
+            }
+
+            if (m_plot != null)
+            {
+                Tend(m_plot);
+            }
+
+            WalkToPlot(NextPlot());
+            return m_plot != null ? BtStatus.Running : BtStatus.Success;
+        }
+
+        private void Tend(PlotInteractable plot)
+        {
+            if (plot.IsRipe)
+            {
+                plot.Harvest(Home.Wombat.Worker.Wallet, Home.Random);
+            }
+
+            if (plot.IsTilled && plot.IsEmpty)
+            {
+                Home.TryChoose(ActionTable.k_Plant, Worker, plot, Product);
+            }
+        }
+
+        private void WalkToPlot(PlotInteractable plot)
+        {
+            m_plot = plot;
+
+            if (plot != null)
+            {
+                WalkToGoal(Goal.Plot);
+            }
         }
 
         private bool StartServe()
@@ -360,20 +500,20 @@ namespace ZooTycoon.Core
                 return true;
             }
 
-            if (Bakery.Random.NextDouble() >= (100 - Skill) / 100d)
+            if (Home.Random.NextDouble() >= (100 - Skill) / 100d)
             {
                 return true;
             }
 
             m_idling = true;
             double bySkill = m_config.IdleSecondsMin + (m_config.IdleSecondsMax - m_config.IdleSecondsMin) * (100 - Skill) / 100d;
-            m_idleLeft = bySkill * (1d - k_IdleJitter * 0.5 + k_IdleJitter * Bakery.Random.NextDouble());
+            m_idleLeft = bySkill * (1d - k_IdleJitter * 0.5 + k_IdleJitter * Home.Random.NextDouble());
             // 설계 31 알람 시계: 딴짓이 그 초를 넘지 않는다
-            double alarm = Bakery.Wallet.Relics.Value(RelicTable.k_Clock);
+            double alarm = Home.Wombat.Worker.Wallet.Relics.Value(RelicTable.k_Clock);
             m_idleLeft = alarm > 0d ? Math.Min(m_idleLeft, alarm) : m_idleLeft;
-            BurrowNav nav = Bakery.Layout.WombatNav;
-            double roll = Bakery.Random.NextDouble();
-            Clerk other = roll < m_config.ChatChance ? Bakery.ChatPartnerFor(this) : null;
+            BurrowNav nav = Home.ClerkNav;
+            double roll = Home.Random.NextDouble();
+            Clerk other = roll < m_config.ChatChance ? Home.ChatPartnerFor(this) : null;
 
             if (other != null)
             {
@@ -396,7 +536,7 @@ namespace ZooTycoon.Core
             {
                 Idle = IdleKind.Stroll;
                 float radius = (float)m_config.StrollRadius;
-                Vector2 around = WorkerSpot + new Vector2((float)(Bakery.Random.NextDouble() * 2d - 1d) * radius, (float)(Bakery.Random.NextDouble() * 2d - 1d) * radius);
+                Vector2 around = WorkerSpot + new Vector2((float)(Home.Random.NextDouble() * 2d - 1d) * radius, (float)(Home.Random.NextDouble() * 2d - 1d) * radius);
                 Vector2 to = nav.Snap(around);
 
                 if (nav.IsWalkable(to) || nav.TryNearestFree(to, _ => false, radius, out to))
@@ -447,7 +587,7 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            Bakery.StopDialogue(this);
+            Home.StopDialogue(this);
             LeaveChat();
             partner.LeaveChat();
         }
@@ -489,10 +629,10 @@ namespace ZooTycoon.Core
             if (m_chat == null)
             {
                 System.Collections.Generic.List<string> ids = m_config.ChatDialogues;
-                string id = ids[Math.Min(ids.Count - 1, (int)(Bakery.Random.NextDouble() * ids.Count))];
+                string id = ids[Math.Min(ids.Count - 1, (int)(Home.Random.NextDouble() * ids.Count))];
                 Mover.Facing = Mover.FacingOf(m_partner.Position - Position);
                 m_partner.Mover.Facing = Mover.FacingOf(Position - m_partner.Position);
-                m_chat = Bakery.StartDialogue(id, this, m_partner);
+                m_chat = Home.StartDialogue(id, this, m_partner);
                 return BtStatus.Running;
             }
 
@@ -552,14 +692,14 @@ namespace ZooTycoon.Core
                 {
                     // 뛰어드는 중에 깨웠다: 광장에 가지 않고 바로 다시 나온다
                     m_hopping = true;
-                    StartHop(VisitorPhase.Entering, Bakery.Layout.HoleInside, Bakery.Layout.HoleFloor);
+                    StartHop(VisitorPhase.Entering, Home.HoleInside, Home.HoleFloor);
                     return BtStatus.Running;
                 }
 
                 if (Phase == VisitorPhase.Exiting)
                 {
                     Away = true;
-                    Bakery.Bus.Publish(new Events.ClerkWentOut(this));
+                    Home.Bus.Publish(new Events.ClerkWentOut(this));
 
                     if (m_idleLeft <= 0d)
                     {
@@ -590,7 +730,7 @@ namespace ZooTycoon.Core
             }
 
             m_hopping = true;
-            StartHop(VisitorPhase.Exiting, Bakery.Layout.HoleFloor, Bakery.Layout.HoleInside);
+            StartHop(VisitorPhase.Exiting, Home.HoleFloor, Home.HoleInside);
             return BtStatus.Running;
         }
 
@@ -602,15 +742,15 @@ namespace ZooTycoon.Core
 
             if (Away)
             {
-                Bakery.Bus.Publish(new Events.ClerkReturning(this));
+                Home.Bus.Publish(new Events.ClerkReturning(this));
             }
         }
 
         private void ShowIdleBubble()
         {
-            Vector2 wombat = Bakery.Wombat.Mover.Position;
+            Vector2 wombat = Home.Wombat.Mover.Position;
 
-            if (Bakery.WombatPresent && Vector2.Distance(wombat, Position) <= m_questionRange)
+            if (Home.WombatPresent && Vector2.Distance(wombat, Position) <= m_questionRange)
             {
                 // 「?」가 뜬 순간 잠깐 멈춰 웜뱃을 본다(깨우기 쉽게)
                 if (Bubble.Id != BubbleTable.k_Question)
@@ -669,7 +809,7 @@ namespace ZooTycoon.Core
         {
             m_goal = goal;
             Phase = VisitorPhase.Walking;
-            BurrowNav nav = Bakery.Layout.WombatNav;
+            BurrowNav nav = Home.ClerkNav;
 
             switch (goal)
             {
@@ -679,8 +819,11 @@ namespace ZooTycoon.Core
                 case Goal.Shelf:
                     Mover.WalkTo(nav, ShelfStand(nav, m_shelf), Facing.Up);
                     break;
+                case Goal.Plot:
+                    Mover.WalkTo(nav, nav.Snap(((BarnInteractable)Thing).Farm.Layout.Cells.CellCenter(m_plot.Cell)), Facing.Down);
+                    break;
                 default:
-                    Mover.WalkTo(nav, Bakery.Layout.HoleFloor, Facing.Up);
+                    Mover.WalkTo(nav, Home.HoleFloor, Facing.Up);
                     break;
             }
         }
@@ -713,7 +856,7 @@ namespace ZooTycoon.Core
 
             ShelfInteractable empty = null;
 
-            foreach (ShelfInteractable shelf in Bakery.Shelves)
+            foreach (ShelfInteractable shelf in ((OvenInteractable)Thing).Bakery.Shelves)
             {
                 if (shelf.HasRoomFor(bread))
                 {

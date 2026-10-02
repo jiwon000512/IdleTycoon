@@ -8,7 +8,8 @@ namespace ZooTycoon.Core
 {
     // 설계 25 → 설계 27: 농장 굴. 광장 계단 오른쪽 문과 이 굴 구멍이 이어진다. 빵집처럼 판다(BurrowGrid, 층 범위·비용은 FarmConfigTable).
     // 판 칸(입구 줄 제외)마다 밭 사물(PlotInteractable) 하나: 흙 → 갈기 → 밭 → 심기 → 자람 → 밟고 거두기. 밭은 걷는 바닥이라 길을 막지 않는다.
-    // 놓는 사물은 없다(편집 모드 카드 없음, 편집은 파기 표식 보기). 손님·점원은 없고, 거둔 재료는 들고 다니지 않고 바로 창고(ZooState)로
+    // 놓는 사물은 없다(편집 모드 카드 없음, 편집은 파기 표식 보기). 손님은 없고, 거둔 재료는 들고 다니지 않고 바로 창고(ZooState)로.
+    // 설계 38: 점원 하나가 입구 작업대(Barn) 자리에서 밭을 돈다(명부는 곳 공용 WombatArea.Clerks)
     public sealed class FarmArea : WombatArea
     {
         public const string k_Id = "farm";
@@ -24,6 +25,8 @@ namespace ZooTycoon.Core
         private readonly PassageInteractable m_exit;
 
         public FarmConfigTable Config => m_config;
+        // 설계 38: 농장 점원 자리
+        public BarnInteractable Barn { get; }
         public BurrowGrid Grid { get; }
         public FarmLayout Layout { get; }
         // 판 순서(시작 칸은 줄 → 열 순)
@@ -52,6 +55,7 @@ namespace ZooTycoon.Core
                 new CellBounds(m_config.FloorCols, m_config.FloorRows), bus);
             m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells, this);
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
+            Barn = new BarnInteractable(Row(BarnInteractable.k_Id), this, new Vector2((float)m_config.BarnX, (float)m_config.BarnY));
 
             // 시작 밭은 앞에서부터 갈아 둔다(사건 없이)
             foreach (Cell cell in BurrowGrid.Columns(k_StartCols, m_config.StartRows))
@@ -66,6 +70,11 @@ namespace ZooTycoon.Core
         public override DigInteractable DigAt(Vector2 p)
         {
             return m_digs.At(p);
+        }
+
+        public override IEnumerable<Interactable> ClerkSlots
+        {
+            get { yield return Barn; }
         }
 
         // 설계 35: 밭 시트가 값을 치른 뒤 다음 작물을 연다(CropTable 행 순서)
@@ -121,12 +130,13 @@ namespace ZooTycoon.Core
             Bus.Publish(new Events.LayoutChanged(this));
         }
 
-        // 걷는 땅(판 칸 전부)과 사물 목록을 다시 맞춘다
+        // 걷는 땅(판 칸 전부)과 사물 목록을 다시 맞추고, 걷는 점원은 새 땅에서 길을 다시 찾는다
         private void Rebuild()
         {
             Layout.Rebuild(Grid.Cells);
             m_digs.Sync();
             SyncThings();
+            RepathClerks();
             Unstick();
         }
 
@@ -136,10 +146,16 @@ namespace ZooTycoon.Core
             SyncThings();
         }
 
-        // 사물 목록: 똥 → 밭 → 나가기 → 파기(밭은 곁의 사물에 대상을 양보한다)
+        protected override void OnClerkThingsChanged()
+        {
+            SyncThings();
+        }
+
+        // 사물 목록: 딴짓 점원 → 똥 → 밭 → 나가기 → 파기(밭은 곁의 사물에 대상을 양보한다). 작업대는 대상이 아니다
         private void SyncThings()
         {
             Placed.Clear();
+            Placed.AddRange(ClerkThings);
             Placed.AddRange(Poops);
             Placed.AddRange(m_plots);
             Placed.Add(m_exit);

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ZooTycoon.Core
 {
-    // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일 — 열기·통로·업그레이드·굴 파기·똥 치우기, 빵집: ActionFactory.Bakery.cs, 농장: ActionFactory.Farm.cs, 광장: ActionFactory.Plaza.cs).
+    // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일 — 열기·통로·업그레이드·굴 파기·똥 치우기·점원 깨우기, 빵집: ActionFactory.Bakery.cs, 농장: ActionFactory.Farm.cs, 광장: ActionFactory.Plaza.cs).
     // 새 행동 = 그 sim 파일에 중첩 클래스 하나 + 여기 case 한 줄과 Ids 한 칸 + ActionTable 한 줄
     public static partial class ActionFactory
     {
@@ -159,6 +159,31 @@ namespace ZooTycoon.Core
             public override void Do(Worker worker, Interactable target)
             {
                 ((PoopInteractable)target).Area.CleanAround();
+            }
+        }
+
+        // 설계 22: 딴짓 중인 점원 깨우기(버튼, 빵집 · 농장 · 광장 외출 그림 어디서나). 딴짓을 끊고 자리로 보내고 대화 clerk_wake를 건다
+        private sealed class Wake : InteractAction
+        {
+            public Wake(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is ClerkInteractable;
+            }
+
+            public override bool CanDo(Worker worker, Interactable target)
+            {
+                return target is ClerkInteractable clerk && clerk.Clerk.Idling;
+            }
+
+            public override void Do(Worker worker, Interactable target)
+            {
+                Clerk clerk = ((ClerkInteractable)target).Clerk;
+                clerk.WakeUp();
+                clerk.Home.StartDialogue(DialogueTable.k_ClerkWake, clerk);
             }
         }
     }

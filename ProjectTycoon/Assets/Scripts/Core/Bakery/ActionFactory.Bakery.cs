@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace ZooTycoon.Core
 {
-    // 설계 13 v0.6 → 설계 17·18: 빵집 행동(꺼내기·채우기·계산·굽기(해금 포함)·깨우기·치우기·파기). 진열대·오븐·계산대 설치는 편집 모드(WombatArea.Placement)
+    // 설계 13 v0.6 → 설계 17·18: 빵집 행동(꺼내기·채우기·계산·굽기(해금 포함)). 진열대·오븐·계산대 설치는 편집 모드(WombatArea.Placement)
     public static partial class ActionFactory
     {
         // 설계 09 v0.4: 꺼내기(auto). 오븐의 다 구운 빵을 들 수 있는 만큼 손에
@@ -146,31 +146,6 @@ namespace ZooTycoon.Core
                 }
 
                 return false;
-            }
-        }
-
-        // 설계 22: 딴짓 중인 점원 깨우기(버튼). 딴짓을 끊고 자리로 보내고 대화 clerk_wake를 건다
-        private sealed class Wake : InteractAction
-        {
-            public Wake(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is ClerkInteractable;
-            }
-
-            public override bool CanDo(Worker worker, Interactable target)
-            {
-                return target is ClerkInteractable clerk && clerk.Clerk.Idling;
-            }
-
-            public override void Do(Worker worker, Interactable target)
-            {
-                Clerk clerk = ((ClerkInteractable)target).Clerk;
-                clerk.WakeUp();
-                clerk.Bakery.StartDialogue(DialogueTable.k_ClerkWake, clerk);
             }
         }
     }

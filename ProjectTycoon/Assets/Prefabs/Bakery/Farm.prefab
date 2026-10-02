@@ -619,6 +619,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: de26a2c80044e4a42a564055e623475d, type: 3}
   - {fileID: 21300000, guid: 9e712ef3e59c6e64398a5126c4b0fd07, type: 3}
   m_poopFrameRate: 2
+  m_clerkPrefab: {fileID: 5516403084649859135, guid: 9e9d24c611c17be408369858cf2152c6, type: 3}
   m_wombat: {fileID: 927404608812704301}
 --- !u!1 &1999150333016241534
 GameObject:

@@ -22,7 +22,8 @@ namespace ZooTycoon.Core
         public IReadOnlyList<PlazaSpot> Spots => m_spots;
         public Vector2 DoorInside { get; }
         public Vector2 DoorFloor { get; }
-        // 설계 25: 농장 문(계단 오른쪽 칸 가운데, 빵집 문과 마주 본다)
+        // 설계 25: 농장 문(계단 오른쪽 칸 가운데, 빵집 문과 마주 본다). 설계 38: 농장 점원이 외출할 때 여기로 드나든다
+        public Vector2 FarmDoorInside { get; }
         public Vector2 FarmDoorFloor { get; }
         public Vector2 StairsInside { get; }
         public Vector2 StairsFloor { get; }
@@ -44,6 +45,7 @@ namespace ZooTycoon.Core
             float doorX = (float)(-0.5 * cellWidth);
             DoorInside = new Vector2(doorX, inside);
             DoorFloor = new Vector2(doorX, k_HoleFloorY);
+            FarmDoorInside = new Vector2(-doorX, inside);
             FarmDoorFloor = new Vector2(-doorX, k_HoleFloorY);
             StairsInside = new Vector2(0f, inside);
             StairsFloor = new Vector2(0f, k_HoleFloorY);
