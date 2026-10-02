@@ -35,7 +35,7 @@ namespace ZooTycoon.World
         private static readonly Color k_Manure = new Color32(0x4A, 0x30, 0x22, 255);
         private static readonly Color k_ManureLight = new Color32(0x6E, 0x4C, 0x30, 255);
         private static readonly Color k_Spark = new Color32(0xFB, 0xF4, 0xE6, 255);
-        private const float k_BonusDelay = 0.25f;
+        internal const float k_BonusDelay = 0.25f;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;

@@ -106,7 +106,7 @@ namespace ZooTycoon.UI
             if (arrived)
             {
                 StartCoroutine(UiFx.Pulse((RectTransform)m_merchant.transform));
-                SoundManager.Instance.Play(SoundTable.k_Bonus);
+                SoundManager.Instance.Play(SoundTable.k_MerchantArrive);
             }
         }
 

@@ -47,6 +47,8 @@ namespace ZooTycoon.Core
         public const string k_DrawCrack = "draw_crack";
         public const string k_DrawBreak = "draw_break";
         public const string k_DrawReveal = "draw_reveal";
+        // 유물 행상이 좌판 자리에 섬(아트방 도착 B)
+        public const string k_MerchantArrive = "merchant_arrive";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -86,6 +88,7 @@ namespace ZooTycoon.Core
             k_DrawCrack,
             k_DrawBreak,
             k_DrawReveal,
+            k_MerchantArrive,
         };
 
         // Resources/ 기준, 확장자 없음

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using GameKit.Audio;
@@ -42,7 +43,7 @@ namespace ZooTycoon.World
                 // 설계 37: 거름이 창고로(거두기와 같은 소리)
                 bus.Subscribe<Events.PoopsCleaned>(e => PlayIn(e.Area, SoundTable.k_Harvest)),
                 bus.Subscribe<Events.Harvested>(e => PlayIn(e.Plot.Area, SoundTable.k_Harvest)),
-                bus.Subscribe<Events.BonusFound>(e => PlayIn(e.Plot.Area, SoundTable.k_Bonus)),
+                bus.Subscribe<Events.BonusFound>(e => StartCoroutine(PlayLater(FarmView.k_BonusDelay, e.Plot.Area, SoundTable.k_Bonus))),
                 // 설계 27: 갈기는 파기 소리(더미)
                 bus.Subscribe<Events.Tilled>(e => PlayIn(e.Plot.Area, SoundTable.k_Dig)),
             };
@@ -71,6 +72,13 @@ namespace ZooTycoon.World
             {
                 Play(id);
             }
+        }
+
+        // 덤 소리는 덤 팝업이 뜨는 때에(FarmView)
+        private IEnumerator PlayLater(float seconds, WombatArea area, string id)
+        {
+            yield return new WaitForSeconds(seconds);
+            PlayIn(area, id);
         }
 
         // 오븐: 굽기 시작 · 다 구운 빵이 없다가 생김 · 꺼냄. 진열대: 빵이 늘어남. 상태는 곳 밖에서도 따라간다(돌아왔을 때 헛소리가 안 나게)
