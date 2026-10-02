@@ -10,7 +10,9 @@ namespace ZooTycoon.World
 {
     // 설계 25 → 설계 27: 농장 굴 화면. 굴 그림은 빵집·광장과 같은 BurrowPainter(판 칸이 늘면 다시 칠한다), 구멍 아치(광장으로)는 첫 줄 가운데, 파기 표식·연출은 공용 DigView.
     // 밭은 Core FarmArea.Plots(판 칸마다 하나, 사라지지 않는다)를 객체 키로 맞추고, 대상인 흙 칸 위에 갈기 값 표식, 거두면 밭 위로 재료 아이콘과 「+3」이 떠오른다.
-    // 놓는 사물이 없어 편집 그림자·외곽선은 없다(편집 모드 = 파기 표식 전부)
+    // 놓는 사물이 없어 편집 그림자·외곽선은 없다(편집 모드 = 파기 표식 전부).
+    // 설계 39: 층마다 화면 하나. 굴 그림 · 둘레 흙에 층 색조(FarmFloorTable tint)를 곱하고, 2층부터 위 구멍은 올라가는 계단. 다 판 층은 맨 아래 가운데에
+    // 계단 값 표식, 아래층이 열리면 그 자리에 계단 굴이 파이고(흙덩이) 내려가는 계단이 선다(층별 그림은 아트방 · 지금은 광장 계단을 빌려 씀)
     public sealed class FarmView : MonoBehaviour, IAreaView
     {
         private const string k_PopupKey = "harvest_popup";
@@ -36,6 +38,8 @@ namespace ZooTycoon.World
         private static readonly Color k_ManureLight = new Color32(0x6E, 0x4C, 0x30, 255);
         private static readonly Color k_Spark = new Color32(0xFB, 0xF4, 0xE6, 255);
         internal const float k_BonusDelay = 0.25f;
+        // 설계 39: 계단 값 표식은 계단 자리(가운데 통로 끝)에서 이만큼 위
+        private const float k_StairTagRise = 0.35f;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -45,6 +49,12 @@ namespace ZooTycoon.World
         [SerializeField] private Texture2D m_wallFace;
         [Tooltip("구멍 아치(나가기 대상이면 튄다)")]
         [SerializeField] private Transform m_arch;
+        [Tooltip("설계 39: 둘레 흙(층 색조를 곱한다)")]
+        [SerializeField] private SpriteRenderer m_backdrop;
+        [Tooltip("설계 39: 2층부터 위 구멍 그림(올라가는 계단)")]
+        [SerializeField] private Sprite m_stairsUp;
+        [Tooltip("설계 39: 아래층으로 내려가는 계단(계단 굴에 선다, 아래층이 열린 층만)")]
+        [SerializeField] private SpriteRenderer m_stairsDown;
         [Tooltip("입구 양옆 고정 장식(씨앗 자루 · 허수아비 · 작업대 · 도구). 아치 자리를 따라간다")]
         [SerializeField] private Transform m_entranceProps;
         [SerializeField] private PlotView m_plotPrefab;
@@ -73,6 +83,7 @@ namespace ZooTycoon.World
         private PoopViews m_poopViews;
         private ClerkViews m_clerkViews;
         private Interactable m_shownTarget;
+        private MarkerView m_stairTag;
         private bool m_editing;
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
@@ -117,6 +128,16 @@ namespace ZooTycoon.World
             Repaint();
             m_arch.localPosition = new Vector3(farm.Layout.HoleFloor.X, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f);
             m_entranceProps.localPosition = m_arch.localPosition;
+            ColorUtility.TryParseHtmlString(farm.Floor.Tint, out Color tint);
+            m_burrow.color = tint;
+            m_backdrop.color = tint;
+
+            if (farm.Upper != null)
+            {
+                m_arch.GetComponent<SpriteRenderer>().sprite = m_stairsUp;
+            }
+
+            m_stairsDown.transform.localPosition = new Vector3(farm.Layout.StairSpot.X, farm.Layout.StairSpot.Y, 0f);
             Build();
             m_wombat.Bind(farm, transform, frames);
 
@@ -128,6 +149,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.Tilled>(Bus_Tilled),
                 bus.Subscribe<Events.Harvested>(Bus_Harvested),
                 bus.Subscribe<Events.BonusFound>(Bus_BonusFound),
+                bus.Subscribe<Events.FloorOpened>(Bus_FloorOpened),
             };
         }
 
@@ -233,6 +255,50 @@ namespace ZooTycoon.World
             }
 
             RefreshTillTags();
+            RefreshStair();
+        }
+
+        // 값 표식(파기 표식 프리팹)은 모든 그림 위에
+        private MarkerView NewTag(Vector3 at)
+        {
+            MarkerView tag = Instantiate(m_digTagPrefab, at, Quaternion.identity, transform);
+
+            foreach (SpriteRenderer renderer in tag.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                renderer.sortingOrder = k_TillTagOrder;
+            }
+
+            foreach (TMPro.TextMeshPro label in tag.GetComponentsInChildren<TMPro.TextMeshPro>(true))
+            {
+                label.sortingOrder = k_TillTagOrder + 1;
+            }
+
+            return tag;
+        }
+
+        // 설계 39: 다 판 층(아래층이 닫힘)은 계단 자리에 값 표식을 늘 보인다. 아래층이 열렸으면 내려가는 계단
+        private void RefreshStair()
+        {
+            FarmArea lower = m_farm.Lower;
+            m_stairsDown.gameObject.SetActive(lower != null && lower.IsOpen);
+
+            if (lower == null || lower.IsOpen || !m_farm.IsFull)
+            {
+                if (m_stairTag != null)
+                {
+                    m_stairTag.gameObject.SetActive(false);
+                }
+
+                return;
+            }
+
+            if (m_stairTag == null)
+            {
+                m_stairTag = NewTag(ToWorld(m_farm.Layout.StairSpot + new System.Numerics.Vector2(0f, k_StairTagRise)));
+            }
+
+            m_stairTag.gameObject.SetActive(true);
+            m_stairTag.Show(m_tables.Format("tag_stair", lower.Floor.OpenCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
         }
 
         // 작물 그림은 CropTable sprite + _단계_반쪽(0·1). 줄마다 반쪽을 번갈아 얹어 같은 그림이 반복되지 않는다.
@@ -266,7 +332,7 @@ namespace ZooTycoon.World
         private void RefreshTillTags()
         {
             CellMetrics cells = m_farm.Layout.Cells;
-            string text = m_tables.Format("tag_till", m_farm.Config.TillCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
+            string text = m_tables.Format("tag_till", m_farm.Floor.TillCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
 
             foreach (PlotInteractable plot in m_farm.Plots)
             {
@@ -284,19 +350,8 @@ namespace ZooTycoon.World
 
                 if (tag == null)
                 {
-                    tag = Instantiate(m_digTagPrefab, transform);
-                    tag.transform.position = ToWorld(cells.CellCenter(plot.Cell) + new System.Numerics.Vector2(0f, cells.CellHeight * 0.5f - k_TillTagDrop));
+                    tag = NewTag(ToWorld(cells.CellCenter(plot.Cell) + new System.Numerics.Vector2(0f, cells.CellHeight * 0.5f - k_TillTagDrop)));
                     m_tillTags[plot] = tag;
-
-                    foreach (SpriteRenderer renderer in tag.GetComponentsInChildren<SpriteRenderer>(true))
-                    {
-                        renderer.sortingOrder = k_TillTagOrder;
-                    }
-
-                    foreach (TMPro.TextMeshPro label in tag.GetComponentsInChildren<TMPro.TextMeshPro>(true))
-                    {
-                        label.sortingOrder = k_TillTagOrder + 1;
-                    }
                 }
 
                 tag.Show(text);
@@ -355,6 +410,21 @@ namespace ZooTycoon.World
             RefreshTillTags();
         }
 
+        // 설계 39: 이 층의 계단으로 아래층이 열렸다. 계단 굴을 칠하고 흙덩이가 튄 뒤 내려가는 계단이 톡
+        private void Bus_FloorOpened(Events.FloorOpened e)
+        {
+            if (e.Floor.Upper != m_farm)
+            {
+                return;
+            }
+
+            Repaint();
+            RefreshStair();
+            NavRect stair = m_farm.Layout.StairRect;
+            m_dig.Clods(ToWorld(new System.Numerics.Vector2((stair.XMin + stair.XMax) * 0.5f, (stair.YMin + stair.YMax) * 0.5f)));
+            StartCoroutine(Fx.Bounce(m_stairsDown.transform));
+        }
+
         // 대상이 바뀌면 튄다. 버튼 행동만 바뀐 사건(익었다 등)에서는 튀지 않는다
         private void Bus_TargetChanged(Events.TargetChanged e)
         {
@@ -374,8 +444,11 @@ namespace ZooTycoon.World
                 case DigInteractable dig:
                     m_dig.Bounce(dig.Cell);
                     break;
-                case PassageInteractable _:
-                    StartCoroutine(Fx.Bounce(m_arch));
+                case PassageInteractable passage:
+                    StartCoroutine(Fx.Bounce(m_farm.Lower != null && passage.To == m_farm.Lower.Id ? m_stairsDown.transform : m_arch));
+                    break;
+                case StairInteractable _ when m_stairTag != null:
+                    m_stairTag.Bounce();
                     break;
                 case PoopInteractable poop:
                     m_poopViews.Bounce(poop);

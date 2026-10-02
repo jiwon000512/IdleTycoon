@@ -1,0 +1,15 @@
+{
+  "table": "FarmFloorTable",
+  "version": 1,
+  "notes": [
+    "설계 39 농장 아래층: 행 = 층(행 순서가 위 → 아래). id는 그 층의 곳 id(첫 행은 farm = 1층, 광장 농장 문과 이어진다). 1층이 아래층을 차례로 만들어 잇고, 층 수 = 행 수.",
+    "floorCols·floorRows: 한 층의 칸 범위(빵집·광장과 같은 칸, 가로 가운데 정렬, 첫 줄은 입구 줄). startRows·startFields: 처음 판 줄 수(입구 줄부터, 가운데 두 열)와 앞에서부터 갈아 둔 밭 수.",
+    "digBaseCost·digCostGrowth: 파기 값 = digBaseCost × digCostGrowth^(그 층에서 판 칸 − 시작 칸), 층마다 처음부터. tillCost: 흙 칸을 밭으로 가는 값(고정). 2026-10-02 FarmConfigTable에서 옮김.",
+    "openCost: 이 층을 여는 계단 값. 위층을 다 파면 맨 아래 가운데 계단 자리에서 치른다. 첫 층은 0(처음부터 열림). tint: 굴 그림(바닥 · 벽 · 둘레 흙)에 곱하는 색 #RRGGBB, 층별 그림이 오기 전 임시. 값은 모두 시작값."
+  ],
+  "rows": [
+    { "id": "farm", "floorCols": 4, "floorRows": 4, "startRows": 2, "startFields": 2, "digBaseCost": 100, "digCostGrowth": 1.3, "tillCost": 50, "openCost": 0, "tint": "#FFFFFF" },
+    { "id": "farm2", "floorCols": 4, "floorRows": 4, "startRows": 2, "startFields": 2, "digBaseCost": 300, "digCostGrowth": 1.3, "tillCost": 150, "openCost": 3000, "tint": "#E6CFC4" },
+    { "id": "farm3", "floorCols": 4, "floorRows": 4, "startRows": 2, "startFields": 2, "digBaseCost": 900, "digCostGrowth": 1.3, "tillCost": 450, "openCost": 15000, "tint": "#C9C4CC" }
+  ]
+}

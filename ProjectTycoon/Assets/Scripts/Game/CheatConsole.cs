@@ -46,8 +46,9 @@ namespace ZooTycoon.Game
             Add("시간 건너뛰기", "초 (가게 · 밭 · 행상 · 축복 · 월급이 모두 흐른다)", "60", Skip);
             Add("배속", "배 (1 = 보통)", "4", s => { Time.timeScale = (float)Number(s); return "배속 ×" + s; });
             Add("행상 부르기", "값 없음 (없을 때 바로 계단으로 온다)", string.Empty, Summon);
-            Add("곳 이동", BakeryArea.k_Id + " · " + PlazaArea.k_Id + " · " + FarmArea.k_Id, PlazaArea.k_Id, Move);
+            Add("곳 이동", string.Join(" · ", game.Mall.Areas.Select(area => area.Id)), PlazaArea.k_Id, Move);
             Add("똥 싸기", "개수 (지금 있는 곳, 웜뱃 둘레)", "3", Poop);
+            Add("층 다 파기", "값 없음 (지금 있는 농장 층, 무료)", string.Empty, DigFloor);
             Select(0);
         }
 
@@ -123,6 +124,25 @@ namespace ZooTycoon.Game
 
             m_game.Bus.Publish(new Events.Passed(Mall.Active, to));
             return to + "(으)로";
+        }
+
+        // 설계 39: 지금 층의 남은 칸을 모두 판다(계단 표식까지 바로 보려고)
+        private string DigFloor(string s)
+        {
+            if (!(Mall.Active is FarmArea farm))
+            {
+                return "농장 층에서만";
+            }
+
+            int dug = 0;
+
+            while (!farm.IsFull)
+            {
+                farm.Grid.Dig(farm.Grid.Frontier().First());
+                dug++;
+            }
+
+            return farm.Id + " " + dug + "칸 팠다";
         }
 
         private string Poop(string s)

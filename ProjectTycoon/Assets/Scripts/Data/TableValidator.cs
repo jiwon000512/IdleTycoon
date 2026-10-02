@@ -10,6 +10,7 @@ namespace ZooTycoon.Data
     public static class TableValidator
     {
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
+        private static readonly Regex k_HexColor = new Regex("^#[0-9A-Fa-f]{6}$");
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
         private static readonly Regex k_BreadIdPattern = new Regex("^b[0-9]{2}$");
         // 코드에 클래스가 있는 사물(행동은 ActionFactory.Ids)
@@ -17,7 +18,7 @@ namespace ZooTycoon.Data
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
-            PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id,
+            PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id, StairInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -747,28 +748,61 @@ namespace ZooTycoon.Data
             }
         }
 
-        // 설계 27: 층은 시작 칸(가운데 두 열 × startRows줄, 입구 줄 포함)을 담아야 하고, 시작 밭은 시작 칸의 밭 줄 안, 값은 0보다 크고 증가율은 1 이상
+        // 설계 28: 거름 · 덤 재료는 ItemTable에, 배율 · 확률 범위. 설계 27: 밭 여백
         private static void ValidateFarmConfig(TableSet tables, List<string> errors)
         {
             HashSet<string> itemIds = Ids<ItemTable>(tables);
 
             foreach (FarmConfigTable farm in tables.GetAll<FarmConfigTable>())
             {
-                // 설계 28
                 if (farm.ManureItem == null || !itemIds.Contains(farm.ManureItem) || farm.BonusItem == null || !itemIds.Contains(farm.BonusItem)
                     || farm.ManureGrowScale <= 0d || farm.ManureGrowScale > 1d || farm.BonusChance < 0d || farm.BonusChance > 1d || farm.ManureBonusScale < 1d)
                 {
                     errors.Add($"FarmConfigTable '{farm.Id}': manureItem·bonusItem은 ItemTable에 있고, manureGrowScale은 0 초과 1 이하, bonusChance는 0~1, manureBonusScale은 1 이상이어야 한다.");
                 }
 
-                if (farm.FloorCols < 2 || farm.StartRows < 2 || farm.StartRows > farm.FloorRows || farm.StartFields < 0 || farm.StartFields > 2 * (farm.StartRows - 1)
-                    || farm.DigBaseCost <= 0d || farm.DigCostGrowth < 1d || farm.TillCost <= 0d || farm.FieldInset < 0d || farm.FieldInset >= 1d)
+                if (farm.FieldInset < 0d || farm.FieldInset >= 1d)
                 {
-                    errors.Add($"FarmConfigTable '{farm.Id}': floorCols는 2 이상, startRows는 2 ~ floorRows, startFields는 0 ~ 2 × (startRows − 1), digBaseCost·tillCost는 0보다 크고 digCostGrowth는 1 이상, fieldInset는 0 이상 1 미만이어야 한다.");
+                    errors.Add($"FarmConfigTable '{farm.Id}': fieldInset는 0 이상 1 미만이어야 한다.");
                 }
             }
 
             CheckRequired<FarmConfigTable>(tables, new[] { FarmConfigTable.k_Main }, errors);
+            ValidateFarmFloors(tables, errors);
+        }
+
+        // 설계 27 · 39: 층은 시작 칸(가운데 두 열 × startRows줄, 입구 줄 포함)을 담고, 시작 밭은 시작 칸의 밭 줄 안, 값은 0보다 크고 증가율은 1 이상.
+        // 첫 층은 농장(FarmArea.k_Id)이고 처음부터 열려 openCost 0, 아래층은 openCost > 0. 색조는 #RRGGBB, 층마다 점원 팝업 탭 글(clerk_tab_<id>)
+        private static void ValidateFarmFloors(TableSet tables, List<string> errors)
+        {
+            IReadOnlyList<FarmFloorTable> floors = tables.GetAll<FarmFloorTable>();
+            HashSet<string> strings = Ids<StringTable>(tables);
+
+            if (floors.Count == 0 || floors[0].Id != FarmArea.k_Id)
+            {
+                errors.Add($"FarmFloorTable: 첫 행은 '{FarmArea.k_Id}'(1층)여야 한다.");
+            }
+
+            for (int i = 0; i < floors.Count; i++)
+            {
+                FarmFloorTable floor = floors[i];
+
+                if (floor.FloorCols < 2 || floor.StartRows < 2 || floor.StartRows > floor.FloorRows || floor.StartFields < 0 || floor.StartFields > 2 * (floor.StartRows - 1)
+                    || floor.DigBaseCost <= 0d || floor.DigCostGrowth < 1d || floor.TillCost <= 0d)
+                {
+                    errors.Add($"FarmFloorTable '{floor.Id}': floorCols는 2 이상, startRows는 2 ~ floorRows, startFields는 0 ~ 2 × (startRows − 1), digBaseCost·tillCost는 0보다 크고 digCostGrowth는 1 이상이어야 한다.");
+                }
+
+                if (i == 0 ? floor.OpenCost != 0d : floor.OpenCost <= 0d)
+                {
+                    errors.Add($"FarmFloorTable '{floor.Id}': openCost는 첫 층 0, 아래층은 0보다 커야 한다.");
+                }
+
+                if (floor.Tint == null || !k_HexColor.IsMatch(floor.Tint) || !strings.Contains("clerk_tab_" + floor.Id))
+                {
+                    errors.Add($"FarmFloorTable '{floor.Id}': tint는 #RRGGBB이고 StringTable에 clerk_tab_{floor.Id}가 있어야 한다.");
+                }
+            }
         }
 
         private static void CheckId(string table, string id, List<string> errors)

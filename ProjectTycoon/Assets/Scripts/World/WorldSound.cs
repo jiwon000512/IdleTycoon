@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using GameKit.Audio;
 using GameKit.Events;
@@ -46,6 +47,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BonusFound>(e => StartCoroutine(PlayLater(FarmView.k_BonusDelay, e.Plot.Area, SoundTable.k_Bonus))),
                 // 설계 27: 갈기는 파기 소리(더미)
                 bus.Subscribe<Events.Tilled>(e => PlayIn(e.Plot.Area, SoundTable.k_Dig)),
+                bus.Subscribe<Events.FloorOpened>(Bus_FloorOpened),
             };
         }
 
@@ -132,7 +134,14 @@ namespace ZooTycoon.World
         private void Bus_Dug(Events.Dug e)
         {
             m_dugFrame = Time.frameCount;
-            PlayIn(e.Grid == m_mall.Farm.Grid ? m_mall.Farm : m_mall.Bakery, SoundTable.k_Dig);
+            PlayIn((WombatArea)m_mall.Farms.FirstOrDefault(farm => farm.Grid == e.Grid) ?? m_mall.Bakery, SoundTable.k_Dig);
+        }
+
+        // 설계 39: 계단 파기도 파기 소리(배치가 바뀐 소리는 빼고)
+        private void Bus_FloorOpened(Events.FloorOpened e)
+        {
+            m_dugFrame = Time.frameCount;
+            PlayIn(e.Floor.Upper, SoundTable.k_Dig);
         }
 
         // 놓기·옮기기·치우기. 파기도 배치를 바꾸므로 같은 프레임의 파기는 뺀다

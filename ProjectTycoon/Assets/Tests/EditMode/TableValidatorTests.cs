@@ -11,14 +11,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 13)]
-        [TestCase("StringTable", 37)]
+        [TestCase("StringTable", 38)]
         [TestCase("ClerkTable", 2)]
         [TestCase("ClerkConfigTable", 6)]
-        [TestCase("BubbleTable", 2)]
+        [TestCase("BubbleTable", 3)]
         [TestCase("DialogueTable", 4)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 15)]
-        [TestCase("InteractableTable", 16)]
+        [TestCase("ActionTable", 16)]
+        [TestCase("InteractableTable", 17)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 13)]
         [TestCase("BgmTable", 1)]
@@ -28,7 +28,8 @@ namespace ZooTycoon.Tests
         [TestCase("PlazaDecorTable", 1)]
         [TestCase("ItemTable", 5)]
         [TestCase("CropTable", 4)]
-        [TestCase("FarmConfigTable", 5)]
+        [TestCase("FarmConfigTable", 6)]
+        [TestCase("FarmFloorTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -236,10 +237,10 @@ namespace ZooTycoon.Tests
             TableSet noReadyMark = TestTables.Load();
             noReadyMark.GetAll<CropTable>()[0].ReadyMark = null;
             TableSet tallStart = TestTables.Load();
-            FarmConfigTable farm = tallStart.Get<FarmConfigTable>(FarmConfigTable.k_Main);
+            FarmFloorTable farm = tallStart.Get<FarmFloorTable>(FarmArea.k_Id);
             farm.StartRows = farm.FloorRows + 1;
             TableSet freeTill = TestTables.Load();
-            freeTill.Get<FarmConfigTable>(FarmConfigTable.k_Main).TillCost = 0d;
+            freeTill.Get<FarmFloorTable>(FarmArea.k_Id).TillCost = 0d;
             TableSet wideInset = TestTables.Load();
             wideInset.Get<FarmConfigTable>(FarmConfigTable.k_Main).FieldInset = 1d;
             // 설계 28: 거름 재료가 표에 없음, 덤 확률 1 초과, 거름 배율 0, 획득처 글 없음
@@ -264,6 +265,26 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(TestTables.Load("CropTable", rows => rows.Clear())), Is.Not.Empty);
             Assert.That(TableValidator.Validate(tallStart), Is.Not.Empty);
             Assert.That(TableValidator.Validate(freeTill), Is.Not.Empty);
+        }
+
+        // 설계 39: 첫 층이 농장이 아님 · 첫 층에 여는 값 · 아래층이 공짜 · 색조가 #RRGGBB가 아님 · 점원 탭 글 없음
+        [Test]
+        public void Validate_WhenFarmFloorDataInvalid_ReportsError()
+        {
+            TableSet paidFirst = TestTables.Load();
+            paidFirst.Get<FarmFloorTable>(FarmArea.k_Id).OpenCost = 10d;
+            TableSet freeLower = TestTables.Load();
+            freeLower.GetAll<FarmFloorTable>()[1].OpenCost = 0d;
+            TableSet badTint = TestTables.Load();
+            badTint.GetAll<FarmFloorTable>()[1].Tint = "red";
+            TableSet noTab = TestTables.Load();
+            noTab.GetAll<FarmFloorTable>()[1].Id = "farm9";
+
+            Assert.That(TableValidator.Validate(TestTables.LoadWithout("FarmFloorTable", FarmArea.k_Id)), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(paidFirst), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(freeLower), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(badTint), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noTab), Is.Not.Empty);
         }
 
         // 설계 30: 코드가 거는 축복이 표에 없음, 시간이 0, 효과 글이 없음, 쉬는 시간이 0

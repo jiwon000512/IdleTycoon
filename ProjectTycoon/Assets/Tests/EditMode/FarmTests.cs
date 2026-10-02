@@ -24,6 +24,7 @@ namespace ZooTycoon.Tests
         private Mall m_mall;
 
         private FarmConfigTable Config => m_tables.Get<FarmConfigTable>(FarmConfigTable.k_Main);
+        private FarmFloorTable Floor => m_tables.Get<FarmFloorTable>(FarmArea.k_Id);
 
         // roll: 거둘 때마다 굴리는 덤 난수(기본은 안 나오는 값)
         private void Create(double roll = 0.99)
@@ -145,7 +146,7 @@ namespace ZooTycoon.Tests
         public void Farm_StartsWithDugColumnsAndTilledFields()
         {
             Create();
-            FarmConfigTable config = Config;
+            FarmFloorTable config = Floor;
 
             Assert.That(m_farm.Grid.Cells.Count, Is.EqualTo(2 * config.StartRows));
             Assert.That(m_farm.Plots.Count, Is.EqualTo(2 * (config.StartRows - 1)));
@@ -383,7 +384,7 @@ namespace ZooTycoon.Tests
         {
             Create();
             GoToFarm();
-            FarmConfigTable config = Config;
+            FarmFloorTable config = Floor;
             Cell cell = new Cell(-1, config.StartRows);
             double coins = m_state.Coins;
             DigInteractable dig = DigAt(cell);
@@ -468,7 +469,7 @@ namespace ZooTycoon.Tests
         public void EditMode_HasNoCardsAndFindsSoilByPoint()
         {
             Create();
-            Cell cell = new Cell(-1, Config.StartRows);
+            Cell cell = new Cell(-1, Floor.StartRows);
 
             Assert.That(m_farm.ShopKinds, Is.Empty);
             Assert.That(m_farm.DigAt(CenterOf(cell))?.Cell, Is.EqualTo(cell));
@@ -480,7 +481,7 @@ namespace ZooTycoon.Tests
         public void Floor_StopsDiggingWhenFull()
         {
             Create();
-            FarmConfigTable config = Config;
+            FarmFloorTable config = Floor;
 
             while (m_farm.Grid.Frontier().Any())
             {

@@ -1,8 +1,19 @@
 namespace ZooTycoon.Core
 {
-    // 설계 25 · 27: 농장 사건
+    // 설계 25 · 27 · 39: 농장 사건
     public static partial class Events
     {
+        // 설계 39: 아래층이 열렸다(위층 계단 굴 · 점원 팝업 탭 · 소리). Floor = 열린 층, 계단은 Floor.Upper에
+        public readonly struct FloorOpened
+        {
+            public readonly FarmArea Floor;
+
+            public FloorOpened(FarmArea floor)
+            {
+                Floor = floor;
+            }
+        }
+
         // 흙 칸을 갈아 밭 칸이 됐다(그림 · 소리)
         public readonly struct Tilled
         {

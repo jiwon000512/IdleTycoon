@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 37,
+  "version": 38,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -40,7 +40,8 @@
     "version 34 (2026-10-01, 설계 34 행상과 대화): 행상 인사 say_merchant_hello_1~3(DialogueTable merchant_hello) 추가. 행상이 없을 때 상단 알약은 회색 얼굴 + 시간만이라(사용자 B) merchant_next를 지웠다.",
     "version 35 (2026-10-01, 설계 35 작물 · 밭 시트): 밭 시트 제목 sheet_plot_title · 상태 sheet_plot_status(거름 개수), 칩 시안 A 「배지 + 시계 줄」(아트방, 사용자 선택): 아래 줄 글자를 개수 배지 · 시계 · 자물쇠로 바꿔 chip_bread_stock(×{0}) → chip_count({0}), chip_bread_seconds → chip_seconds, chip_unlock 삭제.",
     "version 36 (2026-10-01, 설계 36 반짝돌 뽑기): 뽑기는 유물 하나 · 메인과 결과 팝업을 나눠 relic_cart_lead 문구 변경, 고르기 문구 relic_pick · relic_pick_hint와 결과 윗줄 relic_got_new · relic_got_star 삭제(이름표 relic_new · relic_star_up이 맡는다), 결과 닫기 relic_ok 추가.",
-    "version 37 (2026-10-01, 설계 38 농장 점원): 점원 팝업 가게 탭 clerk_tab_farm(탭 이름 = clerk_tab_<곳 id>), 농장 점원 자리 이름 kind_barn(자리 알약 「밭일 1」)."
+    "version 37 (2026-10-01, 설계 38 농장 점원): 점원 팝업 가게 탭 clerk_tab_farm(탭 이름 = clerk_tab_<곳 id>), 농장 점원 자리 이름 kind_barn(자리 알약 「밭일 1」).",
+    "version 38 (2026-10-02, 설계 39 농장 아래층): 점원 탭 clerk_tab_farm 「농장」 → 「농장 1층」, clerk_tab_farm2 · farm3, 계단 자리 시트(sheet_stair_title · sheet_stair_status · row_dig_floor · row_dig_floor_effect)와 표식 tag_stair."
   ],
   "rows": [
     {
@@ -213,7 +214,35 @@
     },
     {
       "id": "clerk_tab_farm",
-      "ko": "농장"
+      "ko": "농장 1층"
+    },
+    {
+      "id": "clerk_tab_farm2",
+      "ko": "농장 2층"
+    },
+    {
+      "id": "clerk_tab_farm3",
+      "ko": "농장 3층"
+    },
+    {
+      "id": "sheet_stair_title",
+      "ko": "아래층 파기"
+    },
+    {
+      "id": "sheet_stair_status",
+      "ko": "농장 {0}층"
+    },
+    {
+      "id": "row_dig_floor",
+      "ko": "계단 파기"
+    },
+    {
+      "id": "row_dig_floor_effect",
+      "ko": "농장 {0}층이 열린다"
+    },
+    {
+      "id": "tag_stair",
+      "ko": "계단 {0}"
     },
     {
       "id": "kind_barn",

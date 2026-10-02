@@ -132,7 +132,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void FarmClerk_RechecksPlotTheWombatHarvestedFirst()
         {
-            Create(1d, tables => tables.Get<FarmConfigTable>(FarmConfigTable.k_Main).StartFields = 1);
+            Create(1d, tables => tables.Get<FarmFloorTable>(FarmArea.k_Id).StartFields = 1);
             PlotInteractable plot = Tilled.Single();
             Clerk clerk = Hire(m_farm, m_farm.Barn);
             Assert.That(RunUntil(() => !plot.IsEmpty && clerk.Working), Is.True);

@@ -27,7 +27,7 @@ namespace ZooTycoon.UI
         private readonly ClerkPopupView m_view;
         private readonly Mall m_mall;
         // 탭 순서 = 곳 순서(점원 자리가 있는 곳만)
-        private readonly List<WombatArea> m_shops;
+        private readonly List<WombatArea> m_shops = new List<WombatArea>();
         private readonly List<string> m_tabs = new List<string>();
         private readonly TableSet m_tables;
         private readonly IDisposable[] m_subscriptions;
@@ -52,13 +52,8 @@ namespace ZooTycoon.UI
             m_view = view;
             m_mall = mall;
             m_tables = tables;
-            m_shops = mall.Areas.Where(area => area.ClerkSlots.Any()).ToList();
+            RefreshShops();
             m_area = m_shops[0];
-
-            foreach (WombatArea shop in m_shops)
-            {
-                m_tabs.Add(tables.Text("clerk_tab_" + shop.Id));
-            }
 
             m_view.OpenClicked += View_OpenClicked;
             m_view.CloseClicked += View_CloseClicked;
@@ -84,6 +79,7 @@ namespace ZooTycoon.UI
                 bus.Subscribe<Events.CoinsChanged>(_ => RefreshIfOpen()),
                 bus.Subscribe<Events.LayoutChanged>(_ => RefreshIfOpen()),
                 bus.Subscribe<Events.ThingChanged>(_ => RefreshIfOpen()),
+                bus.Subscribe<Events.FloorOpened>(Bus_FloorOpened),
             };
         }
 
@@ -572,6 +568,25 @@ namespace ZooTycoon.UI
         private void ShowResultBubble(int wage)
         {
             m_view.SetBubble(m_tables.Format("clerk_nego_" + OutcomeKey(), Wage(wage)));
+        }
+
+        // 탭 = 점원 자리가 있는 곳(설계 39: 닫힌 농장 층은 자리가 없어 탭도 없다)
+        private void RefreshShops()
+        {
+            m_shops.Clear();
+            m_shops.AddRange(m_mall.Areas.Where(area => area.ClerkSlots.Any()));
+            m_tabs.Clear();
+
+            foreach (WombatArea shop in m_shops)
+            {
+                m_tabs.Add(m_tables.Text("clerk_tab_" + shop.Id));
+            }
+        }
+
+        private void Bus_FloorOpened(Events.FloorOpened e)
+        {
+            RefreshShops();
+            RefreshIfOpen();
         }
 
         private void Bus_ClerkFired(Events.ClerkFired e)

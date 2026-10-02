@@ -111,6 +111,10 @@ namespace ZooTycoon.UI
                 case DigInteractable dig:
                     m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", dig.Grid.Cells.Count));
                     break;
+                // 설계 39: 계단 자리 = 아래층 파기
+                case StairInteractable stair:
+                    m_view.SetHeader(m_tables.Text("sheet_stair_title"), m_tables.Format("sheet_stair_status", stair.Farm.Lower.Number));
+                    break;
                 // 설계 35: 거름은 심을 때 하나씩 저절로 든다
                 case PlotInteractable plot:
                     m_view.SetHeader(m_tables.Text("sheet_plot_title"), m_tables.Format("sheet_plot_status", m_shop.Wallet.Count(plot.Farm.Config.ManureItem)));
@@ -236,6 +240,14 @@ namespace ZooTycoon.UI
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
+                case ActionTable.k_DigFloor:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Text("row_dig_floor"),
+                        Effect = m_tables.Format("row_dig_floor_effect", ((StairInteractable)m_target).Farm.Lower.Number),
+                        Cost = BigNumberFormatter.Format(option.Cost),
+                        State = RowState(option.State),
+                    };
                 default:
                     throw new InvalidOperationException($"행동 '{actionId}'의 시트 서식이 없다.");
             }
@@ -281,7 +293,7 @@ namespace ZooTycoon.UI
             }
         }
 
-        // 빈 자리·파기 자리는 사면 사물이 바뀌어 시트를 닫는다
+        // 빈 자리·파기 자리·계단 자리는 사면 사물이 바뀌어 시트를 닫는다
         private void View_RowClicked(int index)
         {
             (string action, string option) = m_rows[index];
@@ -293,7 +305,7 @@ namespace ZooTycoon.UI
 
             m_view.FlashRow(index);
 
-            if (m_target is DigInteractable)
+            if (m_target is DigInteractable || m_target is StairInteractable)
             {
                 m_view.Close();
             }

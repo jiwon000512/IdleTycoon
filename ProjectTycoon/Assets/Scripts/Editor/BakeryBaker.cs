@@ -638,7 +638,8 @@ namespace ZooTycoon.Editor
             return Save(go, view, "Plot");
         }
 
-        // 설계 25 → 27: 농장 굴. 굴 그림·구멍 아치·밭 칸은 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다. 파기 표식은 빵집과 같은 프리팹
+        // 설계 25 → 27: 농장 굴. 굴 그림·구멍 아치·밭 칸은 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다. 파기 표식은 빵집과 같은 프리팹.
+        // 설계 39: 층 계단은 광장 계단 그림을 빌린다(2층부터 위 구멍 · 위아래로 뒤집어 내려가는 계단, 아트방 그림이 오면 바꾼다)
         static void BakeFarm(PlotView plot, MarkerView digTag, SpriteAnimator poop, VisitorView customer)
         {
             GameObject root = new GameObject("Farm");
@@ -648,6 +649,10 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
+            Sprite stairs = AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png");
+            SpriteRenderer stairsDown = Renderer(root.transform, "StairsDown", stairs, Vector3.zero, k_ArchOrder);
+            stairsDown.flipY = true;
+            stairsDown.gameObject.SetActive(false);
             GameObject props = Child(root.transform, "EntranceProps", Vector3.zero);
 
             for (int i = 0; i < k_FarmProps.Length; i++)
@@ -661,6 +666,9 @@ namespace ZooTycoon.Editor
             Set(view, "m_burrow", burrow);
             SetBurrowTextures(view);
             Set(view, "m_arch", arch.transform);
+            Set(view, "m_backdrop", backdrop);
+            Set(view, "m_stairsUp", stairs);
+            Set(view, "m_stairsDown", stairsDown);
             Set(view, "m_entranceProps", props.transform);
             Set(view, "m_plotPrefab", plot);
             Set(view, "m_digTagPrefab", digTag);

@@ -5,16 +5,20 @@ namespace ZooTycoon.Core
 {
     // 설계 11 3장 · 설계 13 · 설계 16: 곳들(빵집 · 광장 · 농장)을 함께 돌리고, 웜뱃 하나를 곳 사이로 옮긴다.
     // 통로 사물이 낸 Passed를 받아 지금 곳이면 가는 곳(To)으로: 들어가는 곳은 온 곳을 알아 그 문 앞에 세운다(설계 25).
-    // 설계 38: 점원 월급날은 모든 곳 공통(Payroll)이라 여기서 곳보다 먼저 돌린다
+    // 설계 38: 점원 월급날은 모든 곳 공통(Payroll)이라 여기서 곳보다 먼저 돌린다.
+    // 설계 39: 농장은 층마다 곳 하나(1층이 아래층을 잇는다). 닫힌 층도 처음부터 곳 목록에 든다
     public sealed class Mall
     {
         private readonly EventBus m_bus;
         private readonly List<WombatArea> m_areas = new List<WombatArea>();
+        private readonly List<FarmArea> m_farms = new List<FarmArea>();
 
         public Wombat Wombat { get; }
         public BakeryArea Bakery { get; }
         public PlazaArea Plaza { get; }
+        // 농장 1층. 층 전부는 Farms(위 → 아래)
         public FarmArea Farm { get; }
+        public IReadOnlyList<FarmArea> Farms => m_farms;
         public IReadOnlyList<WombatArea> Areas => m_areas;
         public Payroll Payroll { get; }
         // 웜뱃이 있는 곳
@@ -28,7 +32,13 @@ namespace ZooTycoon.Core
             Farm = farm;
             m_areas.Add(bakery);
             m_areas.Add(plaza);
-            m_areas.Add(farm);
+
+            for (FarmArea floor = farm; floor != null; floor = floor.Lower)
+            {
+                m_farms.Add(floor);
+                m_areas.Add(floor);
+            }
+
             m_bus = bus;
             Wombat = bakery.Wombat;
             Active = bakery;

@@ -12,12 +12,14 @@ namespace ZooTycoon.World
     // 설계 11: 굴 밖 광장도 실행 중 생성(빵집 위쪽 멀리)하고, 웜뱃이 옮겨 가면 카메라 대상·경계를 그곳으로 바꾼다.
     // 설계 18: 편집 모드(카메라 멈춤·팬, 놓을 자리 그림자, 파기 태그 상시)를 곳 화면에 넘긴다. 곳 좌표 ↔ 월드 좌표는 곳 원점 차이뿐.
     // 설계 25: 농장도 실행 중 생성(광장 위쪽 멀리). 곳마다 화면 하나(IAreaView)를 두고 웜뱃이 있는 곳의 화면을 쓴다.
+    // 설계 39: 농장은 층마다 화면 하나(1층 위로 k_FloorGap씩)
     // 씬의 World 오브젝트에 붙어 있고 MainScene.Awake가 GameManager.Init 뒤에 Initialize로 서비스를 넘긴다
     public sealed class WorldManager : MonoSingleton<WorldManager>
     {
         // 광장 원점(빵집 원점에서 떨어진 곳. 두 곳이 한 화면에 같이 보이지 않게)
         private static readonly Vector3 k_PlazaOrigin = new Vector3(0f, 60f, 0f);
         private static readonly Vector3 k_FarmOrigin = new Vector3(0f, 120f, 0f);
+        private static readonly Vector3 k_FloorGap = new Vector3(0f, 60f, 0f);
         // 고용한 점원이 굴에서 나오는 모습을 당겨서 보여 주는 시간(초)과 발끝에서 몸 가운데까지(유닛)
         private const float k_HireSpotSeconds = 1.8f;
         private const float k_BodyCenter = 0.5f;
@@ -32,7 +34,7 @@ namespace ZooTycoon.World
 
         private readonly Dictionary<WombatArea, IAreaView> m_views = new Dictionary<WombatArea, IAreaView>();
         private BakeryView m_shopView;
-        private FarmView m_farmView;
+        private readonly List<FarmView> m_farmViews = new List<FarmView>();
         private Mall m_mall;
         private IDisposable m_areaChanged;
         private IDisposable m_clerkHired;
@@ -47,17 +49,23 @@ namespace ZooTycoon.World
             m_shopView.GetComponent<BakeryVisitorSpawner>().Initialize(mall.Bakery, m_shopView, bus, tables, Frames);
             gameObject.AddComponent<WorldSound>().Initialize(mall, bus);
             gameObject.AddComponent<AreaBgm>().Initialize(mall, bus, tables);
-            m_shopView.Expanded += BakeryView_Expanded;
+            m_shopView.Expanded += View_Expanded;
 
             PlazaView plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
             plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, plazaView, bus, tables, Frames);
             plazaView.Bind(mall.Plaza, bus, Frames, tables);
-            m_farmView = Instantiate(m_farmPrefab, k_FarmOrigin, Quaternion.identity, transform);
-            m_farmView.Bind(mall.Farm, bus, Frames, tables);
-            m_farmView.Expanded += FarmView_Expanded;
             m_views[mall.Bakery] = m_shopView;
             m_views[mall.Plaza] = plazaView;
-            m_views[mall.Farm] = m_farmView;
+
+            for (int i = 0; i < mall.Farms.Count; i++)
+            {
+                FarmView farmView = Instantiate(m_farmPrefab, k_FarmOrigin + k_FloorGap * i, Quaternion.identity, transform);
+                farmView.Bind(mall.Farms[i], bus, Frames, tables);
+                farmView.Expanded += View_Expanded;
+                m_farmViews.Add(farmView);
+                m_views[mall.Farms[i]] = farmView;
+            }
+
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
             FollowWombat();
@@ -118,12 +126,12 @@ namespace ZooTycoon.World
         {
             if (m_shopView != null)
             {
-                m_shopView.Expanded -= BakeryView_Expanded;
+                m_shopView.Expanded -= View_Expanded;
             }
 
-            if (m_farmView != null)
+            foreach (FarmView farmView in m_farmViews)
             {
-                m_farmView.Expanded -= FarmView_Expanded;
+                farmView.Expanded -= View_Expanded;
             }
 
             m_areaChanged?.Dispose();
@@ -138,20 +146,10 @@ namespace ZooTycoon.World
             m_camera.Follow(view.Wombat, view.Bounds);
         }
 
-        private void BakeryView_Expanded()
+        // 굴을 팠다(빵집 · 농장 층): 웜뱃이 있는 곳의 카메라 경계를 다시 잰다
+        private void View_Expanded()
         {
-            if (m_mall.Active == m_mall.Bakery)
-            {
-                m_camera.SetBounds(m_shopView.Bounds);
-            }
-        }
-
-        private void FarmView_Expanded()
-        {
-            if (m_mall.Active == m_mall.Farm)
-            {
-                m_camera.SetBounds(m_farmView.Bounds);
-            }
+            m_camera.SetBounds(m_views[m_mall.Active].Bounds);
         }
 
         private void Bus_AreaChanged(Events.AreaChanged e)

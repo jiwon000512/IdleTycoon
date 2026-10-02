@@ -24,6 +24,8 @@ namespace ZooTycoon.Core
         public const string k_Bake = "bake";
         public const string k_Upgrade = "upgrade";
         public const string k_Dig = "dig";
+        // 설계 39: 계단 파기(시트 줄, 아래층 열기)
+        public const string k_DigFloor = "dig_floor";
         // 설계 22: 딴짓 중인 점원 깨우기
         public const string k_Wake = "wake";
         // 설계 24: 똥 치우기

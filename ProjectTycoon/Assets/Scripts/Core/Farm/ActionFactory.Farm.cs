@@ -2,10 +2,10 @@ using System.Collections.Generic;
 
 namespace ZooTycoon.Core
 {
-    // 설계 25 → 설계 27 · 35: 농장 행동(갈기·심기 버튼·심기 시트·거두기). 굴 파기는 공용 Dig(ActionFactory.cs)
+    // 설계 25 → 설계 27 · 35 · 39: 농장 행동(갈기·심기 버튼·심기 시트·거두기·계단 파기). 굴 파기는 공용 Dig(ActionFactory.cs)
     public static partial class ActionFactory
     {
-        // 설계 27 갈기(버튼): 판 흙 칸을 코인(FarmConfigTable tillCost)으로 밭 칸으로. 코인이 모자라면 버튼이 꺼진다(편집 카드 · 시트 줄과 같은 규칙)
+        // 설계 27 갈기(버튼): 판 흙 칸을 코인(그 층 FarmFloorTable tillCost)으로 밭 칸으로. 코인이 모자라면 버튼이 꺼진다(편집 카드 · 시트 줄과 같은 규칙)
         private sealed class Till : InteractAction
         {
             public Till(ActionTable table) : base(table)
@@ -19,17 +19,41 @@ namespace ZooTycoon.Core
 
             public override bool CanDo(Worker worker, Interactable target)
             {
-                return target is PlotInteractable plot && !plot.IsTilled && worker.Wallet.Coins >= plot.Farm.Config.TillCost;
+                return target is PlotInteractable plot && !plot.IsTilled && worker.Wallet.Coins >= plot.Farm.Floor.TillCost;
             }
 
             public override void Do(Worker worker, Interactable target)
             {
                 PlotInteractable plot = (PlotInteractable)target;
 
-                if (worker.Wallet.TrySpendCoins(plot.Farm.Config.TillCost))
+                if (worker.Wallet.TrySpendCoins(plot.Farm.Floor.TillCost))
                 {
                     plot.Till();
                 }
+            }
+        }
+
+        // 설계 39 계단 파기(시트 줄): 계단 자리에서 아래층 openCost를 치르면 아래층이 열린다(FarmArea.TryOpenLower). 굴 파기 시트와 같은 틀
+        private sealed class DigFloor : SheetAction
+        {
+            public DigFloor(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is StairInteractable;
+            }
+
+            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
+            {
+                double cost = ((StairInteractable)target).Farm.Lower.Floor.OpenCost;
+                return new[] { new SheetOption(null, SheetOption.Afford(worker, cost), cost) };
+            }
+
+            public override bool TryChoose(Worker worker, Interactable target, string option)
+            {
+                return ((StairInteractable)target).Farm.TryOpenLower(worker);
             }
         }
 

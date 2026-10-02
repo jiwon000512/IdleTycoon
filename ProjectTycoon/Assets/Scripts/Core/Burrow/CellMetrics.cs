@@ -52,11 +52,11 @@ namespace ZooTycoon.Core
             return CellRect(cell).DistanceTo(p);
         }
 
-        // 판 칸으로 굴 마스크(한 칸 = 1/40유닛)
-        public BurrowShape.Result Build(IReadOnlyCollection<Cell> cells)
+        // 판 칸으로 굴 마스크(한 칸 = 1/40유닛). carve = 칸 밖에 더 판 사각형(설계 39 계단 굴)
+        public BurrowShape.Result Build(IReadOnlyCollection<Cell> cells, NavRect? carve = null)
         {
             int unit = (int)BurrowShape.k_PixelsPerUnit;
-            return BurrowShape.Build(cells, (int)Math.Round(m_cellWidth * unit), (int)Math.Round(m_cellHeight * unit), (int)Math.Round(m_entranceHeight * unit));
+            return BurrowShape.Build(cells, (int)Math.Round(m_cellWidth * unit), (int)Math.Round(m_cellHeight * unit), (int)Math.Round(m_entranceHeight * unit), carve);
         }
     }
 }

@@ -66,7 +66,8 @@ namespace ZooTycoon.Core
             return Build(cells, Pixels(tables, ConfigTable.k_CellWidth), Pixels(tables, ConfigTable.k_CellHeight), Pixels(tables, ConfigTable.k_EntranceHeight));
         }
 
-        public static Result Build(IReadOnlyCollection<Cell> cells, int cellWidth, int cellHeight, int entranceHeight)
+        // 설계 39: carve = 칸 밖에 더 파 둔 사각형(굴 원점 기준 유닛, y 위). 농장 계단 굴. 벽 띠는 없다
+        public static Result Build(IReadOnlyCollection<Cell> cells, int cellWidth, int cellHeight, int entranceHeight, NavRect? carve = null)
         {
             int radius = k_RoundRadius;
             int margin = radius + 2;
@@ -82,7 +83,14 @@ namespace ZooTycoon.Core
             int originX = minCol * cellWidth - margin;
             int originY = -margin;
             int width = (maxCol - minCol + 1) * cellWidth + margin * 2;
-            int height = RowTop(maxRow + 1, cellHeight, entranceHeight) + margin * 2;
+            int bottom0 = RowTop(maxRow + 1, cellHeight, entranceHeight);
+
+            if (carve.HasValue)
+            {
+                bottom0 = Math.Max(bottom0, Pixels(-carve.Value.YMin));
+            }
+
+            int height = bottom0 + margin * 2;
             bool[,] mask = new bool[width, height];
             int[,] wallRow = new int[width, height];
             HashSet<Cell> set = cells as HashSet<Cell> ?? new HashSet<Cell>(cells);
@@ -104,8 +112,26 @@ namespace ZooTycoon.Core
                 }
             }
 
+            if (carve.HasValue)
+            {
+                NavRect r = carve.Value;
+
+                for (int y = Pixels(-r.YMax) - originY; y < Pixels(-r.YMin) - originY; y++)
+                {
+                    for (int x = Pixels(r.XMin) - originX; x < Pixels(r.XMax) - originX; x++)
+                    {
+                        mask[x, y] = true;
+                    }
+                }
+            }
+
             RoundCorners(mask, radius);
             return new Result(mask, wallRow, originX, originY);
+        }
+
+        private static int Pixels(float units)
+        {
+            return (int)Math.Round(units * k_PixelsPerUnit);
         }
 
         // 줄 윗변 y(칸). row 0 = 입구 줄

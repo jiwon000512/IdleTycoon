@@ -1,6 +1,6 @@
 {
   "table": "FarmConfigTable",
-  "version": 5,
+  "version": 6,
   "notes": [
     "설계 25 밀 농사 → 설계 27 칸 밭: 농장 굴 숫자. id = 농장(지금 main 하나). 광장 계단 오른쪽 문과 이어지고, 처음부터 열려 있다.",
     "floorCols·floorRows: 한 층의 칸 범위(빵집·광장과 같은 칸, 가로 가운데 정렬, 첫 줄은 입구 줄). 이 밖은 파지 못한다(다 차면 아래층은 설계 32).",
@@ -9,9 +9,10 @@
     "version 2 (2026-09-30, 설계 27 칸 밭): cols·rows·startPlots 삭제(밭은 놓는 사물이 아니라 판 칸), 위 칸 추가.",
     "version 3 (2026-09-30, 추가 요청 5 안 A): fieldInset = 밭 몸통 여백(유닛, 칸 둘레). 익은 밭은 발이 몸통 안에 들 때만 거둔다(여백은 걷는 길). 그림도 이 여백 안쪽에 테두리(make_farm_art.py INSET = 유닛 × 40칸).",
     "version 4 (2026-09-30, 설계 28 똥 거름 · 덤): manureItem = 심을 때 창고에 있으면 1개 쓰는 거름 재료, manureGrowScale = 그 밭의 자라는 시간 배율(0.6 = −40%). bonusItem · bonusChance = 거둘 때 그 확률로 하나 나오는 덤 재료, 거름 준 밭은 확률 × manureBonusScale. 값은 시작값.",
-    "version 5 (2026-10-01, 설계 38 농장 점원): barnX · barnY = 농장 점원 자리(입구 오른쪽 모종 작업대 앞 바닥, 농장 원점 기준 유닛). 작업대 그림은 입구 장식(BakeryBaker k_FarmProps)."
+    "version 5 (2026-10-01, 설계 38 농장 점원): barnX · barnY = 농장 점원 자리(입구 오른쪽 모종 작업대 앞 바닥, 농장 원점 기준 유닛). 작업대 그림은 입구 장식(BakeryBaker k_FarmProps).",
+    "version 6 (2026-10-02, 설계 39 농장 아래층): 층마다 다른 칸 · 값(floorCols · floorRows · startRows · startFields · digBaseCost · digCostGrowth · tillCost)을 FarmFloorTable로 옮겼다. 이 표는 농장 공통(밭 여백 · 거름 · 덤 · 작업대 자리)."
   ],
   "rows": [
-    { "id": "main", "floorCols": 4, "floorRows": 4, "startRows": 2, "startFields": 2, "digBaseCost": 100, "digCostGrowth": 1.3, "tillCost": 50, "fieldInset": 0.25, "manureItem": "manure", "manureGrowScale": 0.6, "bonusItem": "gem", "bonusChance": 0.2, "manureBonusScale": 2, "barnX": 1.55, "barnY": -2.2 }
+    { "id": "main", "fieldInset": 0.25, "manureItem": "manure", "manureGrowScale": 0.6, "bonusItem": "gem", "bonusChance": 0.2, "manureBonusScale": 2, "barnX": 1.55, "barnY": -2.2 }
   ]
 }
