@@ -558,6 +558,8 @@ MonoBehaviour:
   - {fileID: 1744716737, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -1318970324, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -335888746, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 1103276501, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 953913029, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   m_say: {fileID: 189585583338742853}
   m_sayTail: {fileID: 1538249281462167207}
   m_sayText: {fileID: 8035653125867364676}

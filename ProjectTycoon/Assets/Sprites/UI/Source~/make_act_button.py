@@ -166,12 +166,15 @@ def clean():  # 치우기: 빗자루(삽과 같은 기울기)
     return outline(np.asarray(im).copy())
 
 
-def till():  # 갈기(설계 27 더미): 괭이 — 나무 자루 + 오른쪽 위 강철 날
+def till():  # 갈기(2026-10-02 사용자 선택 B 쇠스랑, 시안 A 괭이 · C 흙 이랑은 버림): 두 칸 굵기 나무 자루 + 가로대 + 아래로 난 발 넷
     im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
-    d.line([(3, 15), (12, 6)], fill=WOOD + (255,), width=2)
-    d.line([(2, 16), (4, 14)], fill=WOOD_D + (255,), width=2)    # 손잡이 끝
-    d.polygon([(10, 3), (16, 3), (16, 6), (13, 6), (13, 10), (10, 10)], fill=STEEL + (255,))
-    d.polygon([(13, 6), (16, 6), (16, 7), (13, 10)], fill=STEEL_D + (255,))
+    for i in range(8):
+        d.point((2 + i, 15 - i), fill=WOOD + (255,))
+        d.point((2 + i, 16 - i), fill=WOOD_D + (255,))
+    d.line([(8, 6), (15, 3)], fill=STEEL_D + (255,))
+    d.line([(8, 5), (15, 2)], fill=STEEL + (255,))
+    for x, y in ((9, 6), (11, 5), (13, 4), (15, 3)):
+        d.line([(x, y), (x + 1, y + 6)], fill=STEEL + (255,))
     return outline(np.asarray(im).copy())
 
 

@@ -463,5 +463,50 @@
    6,
    0
   ]
+ },
+ "icon_edit": {
+  "w": 18,
+  "h": 18,
+  "border": null
+ },
+ "icon_clerk": {
+  "w": 18,
+  "h": 18,
+  "border": null
+ },
+ "star_empty": {
+  "w": 19,
+  "h": 18,
+  "border": null
+ },
+ "star_brown": {
+  "w": 19,
+  "h": 18,
+  "border": null
+ },
+ "star_silver": {
+  "w": 19,
+  "h": 18,
+  "border": null
+ },
+ "star_gold": {
+  "w": 19,
+  "h": 18,
+  "border": null
+ },
+ "star_rainbow": {
+  "w": 19,
+  "h": 18,
+  "border": null
+ },
+ "news_frame": {
+  "w": 64,
+  "h": 64,
+  "border": [
+   7,
+   7,
+   9,
+   30
+  ]
  }
 }
