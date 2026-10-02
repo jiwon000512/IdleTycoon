@@ -1,11 +1,12 @@
 {
   "table": "BubbleTable",
-  "version": 2,
+  "version": 3,
   "notes": [
     "설계 22 (2026-09-26) 이모지 말풍선. 손님·점원·웜뱃 머리 위 한 자리에 하나. 그림은 Sprites/World/Shop/bubble_sheet.png(칸 폭 52px, 지금 wait_sheet 틀)의 칸 번호.",
     "frame: 첫 칸 번호. frames: 프레임 수(1이면 정지). frameSeconds: 프레임 간격(초). seconds: 보이는 시간(초), 0 = 상태형(다음 말풍선·지우기까지).",
-    "쓰임: wait = 손님 두리번·점원 멍 · note = 산책 · question = 웜뱃이 가까이 옴 · alert = 깨어남 · heart = 결제·광장 기분 · angry = 해고(손님이 빵을 못 찾고 나갈 때는 띄우지 않는다, 2026-09-25 결정) · chat = 수다. 코드는 id로만 부른다. 더미 글리프는 Shop/Source~/make_bubble_sheet.py, 실제 시트는 아트방.",
-    "version 2 (2026-09-29, 설계 24 웜뱃 똥): yuck — 똥에 길이 막혀 빵을 포기한 손님(찡그림, 1.5초). 시트 10번째 칸(더미 글리프)."
+    "쓰임: wait = 손님 두리번·점원 멍 · note = 산책 · question = 웜뱃이 가까이 옴 · alert = 깨어남 · heart = 결제·광장 기분 · angry = 해고(손님이 빵을 못 찾고 나갈 때는 띄우지 않는다, 2026-09-25 결정) · chat = 수다. 코드는 id로만 부른다. 시트는 아트방(Shop/Source~/make_bubble_sheet.py가 만든다).",
+    "version 2 (2026-09-29, 설계 24 웜뱃 똥): yuck — 똥에 길이 막혀 빵을 포기한 손님(찡그림, 1.5초). 시트 10번째 칸(더미 글리프).",
+    "version 3 (2026-10-02, 아트방 시안 C 「색 + 그늘 + 움직임」): 시트 10칸 → 17칸(칸 폭 52 그대로, 틀 · 기다림 점 칸 0~2는 그대로). note · question · alert · heart · angry · chat · yuck이 두 칸씩 번갈아 돈다(frames 2 · frameSeconds 0.35), 첫 칸 3 · 5 · 7 · 9 · 11 · 13 · 15. yuck은 똥 + 김 더미 대신 「> <」 눈 · 물결 입 연두 얼굴."
   ],
   "rows": [
     {
@@ -18,50 +19,50 @@
     {
       "id": "note",
       "frame": 3,
-      "frames": 1,
-      "frameSeconds": 0,
+      "frames": 2,
+      "frameSeconds": 0.35,
       "seconds": 0
     },
     {
       "id": "question",
-      "frame": 4,
-      "frames": 1,
-      "frameSeconds": 0,
+      "frame": 5,
+      "frames": 2,
+      "frameSeconds": 0.35,
       "seconds": 0
     },
     {
       "id": "alert",
-      "frame": 5,
-      "frames": 1,
-      "frameSeconds": 0,
+      "frame": 7,
+      "frames": 2,
+      "frameSeconds": 0.35,
       "seconds": 1.0
     },
     {
       "id": "heart",
-      "frame": 6,
-      "frames": 1,
-      "frameSeconds": 0,
+      "frame": 9,
+      "frames": 2,
+      "frameSeconds": 0.35,
       "seconds": 1.0
     },
     {
       "id": "angry",
-      "frame": 7,
-      "frames": 1,
-      "frameSeconds": 0,
+      "frame": 11,
+      "frames": 2,
+      "frameSeconds": 0.35,
       "seconds": 1.5
     },
     {
       "id": "chat",
-      "frame": 8,
-      "frames": 1,
-      "frameSeconds": 0,
+      "frame": 13,
+      "frames": 2,
+      "frameSeconds": 0.35,
       "seconds": 0
     },
     {
       "id": "yuck",
-      "frame": 9,
-      "frames": 1,
-      "frameSeconds": 0,
+      "frame": 15,
+      "frames": 2,
+      "frameSeconds": 0.35,
       "seconds": 1.5
     }
   ]

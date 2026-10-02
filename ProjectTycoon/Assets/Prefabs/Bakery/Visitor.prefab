@@ -478,6 +478,13 @@ MonoBehaviour:
   - {fileID: -639695686, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -994334760, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -1161175582, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 112917289, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 556843776, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -426106603, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1874632917, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 1744716737, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1318970324, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -335888746, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   m_carry: {fileID: 5920128972911689525}
   m_say: {fileID: 787311070246025210}
   m_sayTail: {fileID: 3655535604830181188}
