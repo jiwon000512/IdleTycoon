@@ -46,7 +46,8 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 - 예외: 머리 위 이모지 말풍선 `World/Shop/bubble_sheet`(틀과 이모지가 한 칸)는 지금 그림을 쓴다.
 - 시트 칩(칩 시안 A, 2026-10-01): 개수는 칩 오른쪽 위 `pill` 배지(진갈색 95%, 0이면 강조색), 아래 줄은 `icon_clock` + 초, 해금 칩은 `icon_lock` + `CoinValue`. 큰 아이콘과 같은 그림을 작게 한 번 더 넣지 않는다.
 - 정보 창(창고 시안 A, 2026-09-30): 틀 이름은 `pill_tag` 이름표를 틀 윗변 왼쪽에 걸치고, 큰 아이콘은 `chip` 칸 안에, 값은 `pill` 안에, 목록 줄 사이는 그늘색 4px 구분선. 줄 아이콘은 고정 폭 칸 가운데에 둔다(이름 시작을 맞춘다).
-- 화면 전용: 협상 `nego_scene`·`nego_bar`·`nego_bar_tick`·`nego_arrow`·`nego_ribbon`, 점원 `clerk_frame`·`clerk_frame_empty`·`clerk_badge_*`·`clerk_table`·`clerk_gauge*`(채움은 일머리 · 월급 모자람 주황, 월급날 초록 `_green`).
+- 아이콘 칸(설계 41, 2026-10-02 사용자 「글씨로만 나열되어 읽기가 싫어짐」): 조건 · 보상 같은 목록은 글 줄 대신 `InfoTile` 칸(`chip` + 아이콘 + 값 + 두 글자 이름 + 체크). 아이콘은 칸마다 같은 상자 가운데에 정수 배로 놓아 값 줄을 맞춘다.
+- 화면 전용: 협상 `nego_scene`·`nego_bar`·`nego_bar_tick`·`nego_arrow`·`nego_ribbon`, 점원 `clerk_frame`·`clerk_frame_empty`·`clerk_badge_*`·`clerk_table`·`clerk_gauge*`(채움은 일머리 · 월급 모자람 주황, 월급날 초록 `_green`), 소식지 `news_frame`(제호 띠 9-slice, 제호는 TMP).
 - 새 공용 조각이 생기면 이 표를 고치고, 옛 조각은 쓰던 곳을 모두 바꾼 뒤 PNG·생성 스크립트 줄·`ui_slices.json` 항목을 지운다.
 
 ## 3. 단위와 임포트
