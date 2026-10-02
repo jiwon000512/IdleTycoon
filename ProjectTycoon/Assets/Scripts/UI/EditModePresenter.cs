@@ -55,6 +55,7 @@ namespace ZooTycoon.UI
             {
                 bus.Subscribe<Events.CoinsChanged>(_ => RefreshCards()),
                 bus.Subscribe<Events.LayoutChanged>(_ => RefreshCards()),
+                bus.Subscribe<Events.StarsChanged>(_ => RefreshCards()),
                 bus.Subscribe<Events.AreaChanged>(_ => RefreshCards()),
             };
         }
@@ -106,15 +107,17 @@ namespace ZooTycoon.UI
             {
                 int stored = Area.StoredCount(kind.Id);
                 bool maxed = Area.IsMaxed(kind.Id);
+                int star = Area.StarNeeded(kind.Id);
                 double price = Area.PriceOf(kind.Id);
-                string sub = stored > 0 ? m_tables.Format("edit_stored", stored) : maxed ? m_tables.Text("row_max") : BigNumberFormatter.Format(price);
+                string sub = stored > 0 ? m_tables.Format("edit_stored", stored) : maxed ? m_tables.Text("row_max")
+                    : star >= 0 ? m_tables.Format("row_star_needed", star) : BigNumberFormatter.Format(price);
                 m_cards.Add(new EditModeView.CardData
                 {
                     KindId = kind.Id,
                     IconPath = kind.Icon,
                     Label = m_tables.Text("kind_" + kind.Id),
                     Sub = sub,
-                    Enabled = stored > 0 || !maxed && coins >= price,
+                    Enabled = stored > 0 || !maxed && star < 0 && coins >= price,
                 });
             }
 

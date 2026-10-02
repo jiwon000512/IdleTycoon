@@ -102,6 +102,18 @@ namespace ZooTycoon.Core
             return CountOf(kindId) >= KindOf(kindId).Price.Max;
         }
 
+        // 설계 40: 가게 별 마일스톤 상한에 닿았나(값 상한 price.max와 따로)
+        public bool IsCapped(string kindId)
+        {
+            return CountOf(kindId) >= Wombat.Worker.Wallet.Stars.Cap(Id, kindId);
+        }
+
+        // 별 상한에 막혔으면 그 상한이 풀리는 별(편집 카드 「★n 필요」), 아니면 −1
+        public int StarNeeded(string kindId)
+        {
+            return !IsMaxed(kindId) && IsCapped(kindId) ? Wombat.Worker.Wallet.Stars.StarFor(Id, kindId, CountOf(kindId) + 1) : -1;
+        }
+
         // 편집에서 집기: 그 점 위에 그려진 사물(뒤에 있는 것 = 위쪽부터 그려지므로 마지막 것). 값이 없는 종류(석상)는 고정이라 집지 않는다
         public IPlaced ThingAt(Vector2 p)
         {
@@ -138,7 +150,7 @@ namespace ZooTycoon.Core
         {
             IPlacedKind kind = KindOf(kindId);
 
-            if (IsMaxed(kindId) || Check(kind, at, null) != PlacementCheck.Ok || !Wombat.Worker.Wallet.TrySpendCoins(PriceOf(kindId)))
+            if (IsMaxed(kindId) || IsCapped(kindId) || Check(kind, at, null) != PlacementCheck.Ok || !Wombat.Worker.Wallet.TrySpendCoins(PriceOf(kindId)))
             {
                 return false;
             }

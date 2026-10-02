@@ -17,6 +17,8 @@ namespace ZooTycoon.Core
         public Blessing Blessing { get; private set; }
         // 설계 31: 유물(칸에 끼운 것만 효과)
         public Relics Relics { get; private set; }
+        // 설계 40: 가게 별(별마다 능력 · 마일스톤 상한)
+        public Stars Stars { get; private set; }
 
         private ZooState(double coins, EventBus bus)
         {
@@ -30,6 +32,7 @@ namespace ZooTycoon.Core
             ZooState state = new ZooState(tables.Get<ConfigTable>(ConfigTable.k_StartCoins).Value, bus);
             state.Blessing = new Blessing(tables, bus);
             state.Relics = new Relics(tables, state, bus);
+            state.Stars = new Stars(tables, bus);
 
             foreach (ItemTable item in tables.GetAll<ItemTable>())
             {
@@ -39,10 +42,10 @@ namespace ZooTycoon.Core
             return state;
         }
 
-        // 설계 31: 효과 배수. 축복과 유물이 같은 효과면 곱한다(굽기 · 계산 속도 · 빵 값 · 손님 · 자람, 효과 키는 BlessingTable.k_*)
+        // 설계 31: 효과 배수. 축복과 유물이 같은 효과면 곱한다(굽기 · 계산 속도 · 빵 값 · 손님 · 자람, 효과 키는 BlessingTable.k_*). 설계 40: 별마다 능력도 곱한다
         public double Scale(string effect)
         {
-            return (1d + Blessing.Boost(effect)) * (1d + Relics.Value(effect));
+            return (1d + Blessing.Boost(effect)) * (1d + Relics.Value(effect)) * (1d + Stars.Value(effect));
         }
 
         public void AddCoins(double amount)

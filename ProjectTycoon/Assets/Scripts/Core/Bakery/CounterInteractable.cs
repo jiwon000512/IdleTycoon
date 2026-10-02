@@ -118,8 +118,25 @@ namespace ZooTycoon.Core
             price *= doubled ? 2d : 1d;
             m_till.AddCoins(price);
             Bakery.Bus.Publish(new Events.BakeryVisitorPaid(head, price, doubled));
+            Tip(head, price);
             Repath();
             OnChanged();
+        }
+
+        // 설계 40: 가게 별이 tipFrom 이상이면 계산마다 확률로 팁(그 계산 값 × tipRate). 확률이 0이면 난수를 굴리지 않는다
+        private void Tip(BakeryVisitor visitor, double price)
+        {
+            Stars stars = Bakery.Wallet.Stars;
+            double chance = stars.TipChance(Bakery.Id);
+
+            if (chance <= 0d || Bakery.Random.NextDouble() >= chance)
+            {
+                return;
+            }
+
+            double tip = Math.Max(1d, Math.Round(price * stars.Config(Bakery.Id).TipRate));
+            m_till.AddCoins(tip);
+            Bakery.Bus.Publish(new Events.Tipped(visitor, tip));
         }
 
         // 빵을 집은 손님이 줄 끝에 선다(번호를 받고 그 자리로 걷는다)

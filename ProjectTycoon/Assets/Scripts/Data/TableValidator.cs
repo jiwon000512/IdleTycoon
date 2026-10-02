@@ -23,7 +23,7 @@ namespace ZooTycoon.Data
         private static readonly string[] k_BubbleIds =
         {
             BubbleTable.k_Wait, BubbleTable.k_Note, BubbleTable.k_Question, BubbleTable.k_Alert, BubbleTable.k_Heart, BubbleTable.k_Angry, BubbleTable.k_Chat,
-            BubbleTable.k_Yuck,
+            BubbleTable.k_Yuck, BubbleTable.k_Wow,
         };
         // 시트를 열거나 곳을 옮기는 행동은 버튼으로만
         private static readonly string[] k_ManualOnlyActionIds = { ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_OpenPlant };
@@ -58,6 +58,7 @@ namespace ZooTycoon.Data
             ValidateBlessings(tables, errors);
             ValidateRelics(tables, errors);
             ValidateFarmConfig(tables, errors);
+            ValidateStars(tables, errors);
 
             return errors;
         }
@@ -247,7 +248,7 @@ namespace ZooTycoon.Data
                 }
             }
 
-            CheckRequired<DialogueTable>(tables, new[] { DialogueTable.k_ClerkWake, DialogueTable.k_MerchantHello }, errors);
+            CheckRequired<DialogueTable>(tables, new[] { DialogueTable.k_ClerkWake, DialogueTable.k_MerchantHello, DialogueTable.k_JudgePass, DialogueTable.k_JudgeFail }, errors);
         }
 
         // 설계 08 v0.5
@@ -802,6 +803,55 @@ namespace ZooTycoon.Data
                     errors.Add($"FarmFloorTable '{floor.Id}': StringTable에 clerk_tab_{floor.Id}가 있어야 한다.");
                 }
             }
+        }
+
+        // 설계 40: 별 평가 공식 값의 범위, 보상 재료 · 평가단장 외형, 가게마다 star 0 마일스톤(상한 모두 > 0), 마일스톤 글은 StringTable에
+        private static void ValidateStars(TableSet tables, List<string> errors)
+        {
+            HashSet<string> items = Ids<ItemTable>(tables);
+            HashSet<string> strings = Ids<StringTable>(tables);
+            IReadOnlyList<StarMilestoneTable> milestones = tables.GetAll<StarMilestoneTable>();
+
+            foreach (StarConfigTable star in tables.GetAll<StarConfigTable>())
+            {
+                VisitorTable judge = tables.GetAll<VisitorTable>().FirstOrDefault(v => v.Id == star.JudgeLook);
+
+                if (star.TimeBase <= 0d || star.TimePerStar < 0d || star.TimeMax < star.TimeBase || star.BigTime <= 0d || star.BigEvery < 2 || star.Rush < 1d
+                    || star.ServeBase < 1 || star.ServePerStar < 0 || star.SellBase < 1 || star.SellPerStar < 0d || star.LostBase < 0 || star.LostEvery < 1
+                    || star.PriceBonus < 0d || star.VisitorsBonus < 0d || star.AdmirePerStar < 0d || star.Cooldown < 0d)
+                {
+                    errors.Add($"StarConfigTable '{star.Id}': 시간 > 0(최대 ≥ 기본), bigEvery ≥ 2, rush ≥ 1, 만족 · 판매 기본 ≥ 1, lostEvery ≥ 1, 나머지 값 ≥ 0이어야 한다.");
+                }
+
+                if (star.TipFrom < 0 || star.TipBase < 0d || star.TipPerStar < 0d || star.TipMax < star.TipBase || star.TipMax > 1d || star.TipRate <= 0d)
+                {
+                    errors.Add($"StarConfigTable '{star.Id}': 팁은 tipFrom ≥ 0, 0 ≤ tipBase ≤ tipMax ≤ 1, tipPerStar ≥ 0, tipRate > 0이어야 한다.");
+                }
+
+                if (star.RewardItem == null || !items.Contains(star.RewardItem) || star.RewardCount < 0 || judge == null || judge.Role != VisitorRole.Judge)
+                {
+                    errors.Add($"StarConfigTable '{star.Id}': rewardItem은 ItemTable에, rewardCount ≥ 0, judgeLook은 VisitorTable의 judge 행이어야 한다.");
+                }
+
+                StarMilestoneTable start = milestones.FirstOrDefault(m => m.Shop == star.Id && m.Star == 0);
+
+                if (start == null || start.ShelfMax <= 0 || start.OvenMax <= 0 || start.CounterMax <= 0 || start.UpgradeMax <= 0)
+                {
+                    errors.Add($"StarMilestoneTable: '{star.Id}' 가게의 star 0 행이 있고 상한이 모두 0보다 커야 한다.");
+                }
+            }
+
+            foreach (StarMilestoneTable milestone in milestones)
+            {
+                if (tables.GetAll<StarConfigTable>().All(c => c.Id != milestone.Shop) || milestone.Star < 0 || milestone.ShelfMax < 0 || milestone.OvenMax < 0
+                    || milestone.CounterMax < 0 || milestone.UpgradeMax < 0 || milestone.Text != null && !strings.Contains(milestone.Text)
+                    || milestones.Count(m => m.Shop == milestone.Shop && m.Star == milestone.Star) > 1)
+                {
+                    errors.Add($"StarMilestoneTable '{milestone.Id}': shop은 StarConfigTable에, star ≥ 0(가게마다 한 행), 상한 ≥ 0, text는 null이거나 StringTable에 있어야 한다.");
+                }
+            }
+
+            CheckRequired<StarConfigTable>(tables, new[] { BakeryArea.k_Id }, errors);
         }
 
         private static void CheckId(string table, string id, List<string> errors)

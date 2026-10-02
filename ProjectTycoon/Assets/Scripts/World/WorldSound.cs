@@ -48,6 +48,9 @@ namespace ZooTycoon.World
                 // 설계 27: 갈기는 파기 소리(더미)
                 bus.Subscribe<Events.Tilled>(e => PlayIn(e.Plot.Area, SoundTable.k_Dig)),
                 bus.Subscribe<Events.FloorOpened>(Bus_FloorOpened),
+                // 설계 40: 평가 시작(종) · 팁. 통과 · 실패 소리는 소식지가 낸다
+                bus.Subscribe<Events.EvaluationStarted>(_ => PlayIn(m_mall.Bakery, SoundTable.k_EvalStart)),
+                bus.Subscribe<Events.Tipped>(e => PlayIn(e.Visitor.Bakery, SoundTable.k_Tip)),
             };
         }
 

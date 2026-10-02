@@ -17,6 +17,7 @@ namespace ZooTycoon.Game
         private ClerkPresenter m_clerkPresenter;
         private InventoryPresenter m_inventoryPresenter;
         private StatuePresenter m_statuePresenter;
+        private EvaluationPresenter m_evaluationPresenter;
         private RelicCartPresenter m_relicPresenter;
         private RelicPresenter m_relicsPresenter;
         private ControlHudView m_hudView;
@@ -36,6 +37,8 @@ namespace ZooTycoon.Game
             ClerkPopupView clerkView = ui.Open<ClerkPopupView>();
             InventoryView inventoryView = ui.Open<InventoryView>();
             StatueView statueView = ui.Open<StatueView>();
+            // 설계 40: 평가 팝업 · 소식지
+            EvaluationView evaluationView = ui.Open<EvaluationView>();
             RelicCartView relicView = ui.Open<RelicCartView>();
             // 뽑기 결과는 뽑기 메인 위에 뜬다(설계 36)
             RelicDrawResultView relicResultView = ui.Open<RelicDrawResultView>();
@@ -48,6 +51,7 @@ namespace ZooTycoon.Game
             m_clerkPresenter = new ClerkPresenter(clerkView, game.Mall, game.Bus, game.Tables);
             m_inventoryPresenter = new InventoryPresenter(inventoryView, game.State, game.Bus, game.Tables);
             m_statuePresenter = new StatuePresenter(statueView, game.State, game.Bus, game.Tables);
+            m_evaluationPresenter = new EvaluationPresenter(evaluationView, game.State, game.Bus, game.Tables);
             m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
             m_relicPresenter = new RelicCartPresenter(relicView, relicResultView, game.State, game.Bus, game.Tables, m_relicsPresenter.Open);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
@@ -84,6 +88,7 @@ namespace ZooTycoon.Game
             m_clerkPresenter?.Dispose();
             m_inventoryPresenter?.Dispose();
             m_statuePresenter?.Dispose();
+            m_evaluationPresenter?.Dispose();
             m_relicPresenter?.Dispose();
             m_relicsPresenter?.Dispose();
         }
@@ -99,6 +104,7 @@ namespace ZooTycoon.Game
             m_clerkPresenter.SetEditing(editing);
             m_inventoryPresenter.SetEditing(editing);
             m_statuePresenter.SetEditing(editing);
+            m_evaluationPresenter.SetEditing(editing);
             m_relicPresenter.SetEditing(editing);
             m_relicsPresenter.SetEditing(editing);
             WorldManager.Instance.SetEditing(editing);

@@ -593,7 +593,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void AddOven_NeedsEmptySlotAndChargesGrowingCost()
         {
-            BakeryArea shop = Create();
+            BakeryArea shop = Create(edit: TestTables.LiftStarCaps);
 
             Assert.That(PlaceOven(shop, new Cell(-1, 3)), Is.False);
             Assert.That(PlaceOven(shop, new Cell(0, 3)), Is.True);
@@ -1006,7 +1006,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void SheetOptions_PoorWhenShort_MaxWhenMaxed()
         {
-            BakeryArea shop = Create(c => c.MaxCustomers = 0);
+            BakeryArea shop = Create(c => c.MaxCustomers = 0, TestTables.LiftStarCaps);
             SheetOption speed = Options(shop, ActionTable.k_Upgrade, shop.Ovens[0])[0];
             Assert.That(speed.State, Is.EqualTo(SheetOptionState.Enabled));
             Assert.That(speed.Before, Is.EqualTo(1d));

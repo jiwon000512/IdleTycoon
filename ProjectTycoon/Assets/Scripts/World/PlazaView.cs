@@ -58,6 +58,7 @@ namespace ZooTycoon.World
 
         private readonly Dictionary<DecorationData, GameObject> m_decor = new Dictionary<DecorationData, GameObject>();
         private PlazaArea m_plaza;
+        private TableSet m_tables;
         private FrameCache m_frames;
         private GhostView m_ghost;
         private bool m_editing;
@@ -94,7 +95,8 @@ namespace ZooTycoon.World
             float wallBottom = -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit;
             m_door.localPosition = new Vector3(layout.DoorFloor.X, wallBottom, 0f);
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
-            m_sign.text = tables.Text(k_SignKey);
+            m_tables = tables;
+            SetSign(0);
             m_farmDoor.localPosition = new Vector3(layout.FarmDoorFloor.X, wallBottom, 0f);
             m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);
@@ -108,7 +110,23 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged),
+                bus.Subscribe<Events.StarsChanged>(Bus_StarsChanged),
             };
+        }
+
+        // 설계 40: 빵집 간판에 별 수(「빵집 ★7」, 0이면 이름만). 별 색 단계 그림은 아트방
+        private void SetSign(int stars)
+        {
+            m_sign.text = stars > 0 ? m_tables.Format("sign_stars", m_tables.Text(k_SignKey), stars) : m_tables.Text(k_SignKey);
+        }
+
+        private void Bus_StarsChanged(Events.StarsChanged e)
+        {
+            if (e.Shop == BakeryArea.k_Id)
+            {
+                SetSign(e.Count);
+                StartCoroutine(Fx.Bounce(m_sign.transform));
+            }
         }
 
         public void ShowGhost(IPlacedKind kind, System.Numerics.Vector2 at, bool ok)

@@ -77,6 +77,9 @@ namespace ZooTycoon.Core
         // 손님·점원이 곳을 드나드는 바닥 점(구멍·문·계단 아래). 웜뱃이 여기 서 있어도 드나드는 길은 막지 않는다
         internal abstract bool IsPassage(Vector2 p);
 
+        // 설계 40: 웜뱃 · 점원이 이 곳을 나갈 수 있나(빵집은 평가 중에 가게를 지킨다)
+        public virtual bool CanLeave => true;
+
         // 설계 25: 온 곳(from)에서 들어설 때 서는 바닥. 기본은 입구(광장은 그 곳의 문 앞)
         protected virtual Vector2 EntranceFrom(WombatArea from)
         {

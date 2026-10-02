@@ -1,13 +1,14 @@
 {
   "table": "DialogueTable",
-  "version": 4,
+  "version": 5,
   "notes": [
     "설계 22 (2026-09-26) 대화. 줄(lines)을 lineSeconds 간격으로 말하는 이의 머리 위 글자 말풍선에 차례로 띄운다(조작을 막지 않는다).",
     "line.speaker: clerk(대화를 건 점원) · partner(수다 상대 점원) · visitor(예비). line.texts: StringTable id 목록, 하나를 균등 난수로 고른다. line.bubble: 같이 띄울 이모지(BubbleTable id, 없으면 null).",
     "첫 쓰임 clerk_wake(깨우기). 손님·평론가 대화는 행을 더한다.",
     "version 2 (2026-09-28, 기획서 v0.15 과묵한 주인공): 웜뱃은 말하지 않는다 — speaker wombat 삭제, clerk_wake는 점원 한 줄.",
     "version 3 (2026-09-28, 점원 수다): speaker partner 추가, 수다 대화 clerk_chat_* 3개(어느 것을 쓸지는 ClerkConfigTable chatDialogues). 수다 건 점원(clerk)과 상대(partner)가 번갈아 말한다.",
-    "version 4 (2026-10-01, 설계 34 행상과 대화): merchant_hello — 광장 떠돌이 행상(너구리)에게 말을 걸면 첫 줄(speaker visitor) 가운데 하나를 말한 뒤 뽑기 팝업이 뜬다."
+    "version 4 (2026-10-01, 설계 34 행상과 대화): merchant_hello — 광장 떠돌이 행상(너구리)에게 말을 걸면 첫 줄(speaker visitor) 가운데 하나를 말한 뒤 뽑기 팝업이 뜬다.",
+    "version 5 (2026-10-02, 설계 40 별 평가): judge_pass · judge_fail — 평가가 끝나면 평가단장(speaker visitor)이 셋 중 하나를 말한다."
   ],
   "rows": [
     {
@@ -121,6 +122,20 @@
           ],
           "bubble": null
         }
+      ]
+    },
+    {
+      "id": "judge_pass",
+      "lineSeconds": 2.5,
+      "lines": [
+        { "speaker": "visitor", "texts": ["say_judge_pass_1", "say_judge_pass_2", "say_judge_pass_3"], "bubble": null }
+      ]
+    },
+    {
+      "id": "judge_fail",
+      "lineSeconds": 2.5,
+      "lines": [
+        { "speaker": "visitor", "texts": ["say_judge_fail_1", "say_judge_fail_2", "say_judge_fail_3"], "bubble": null }
       ]
     }
   ]

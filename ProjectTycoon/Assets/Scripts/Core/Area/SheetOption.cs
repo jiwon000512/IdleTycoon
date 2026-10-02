@@ -8,6 +8,8 @@ namespace ZooTycoon.Core
         Max,
         Blocked,
         Lacking,
+        // 설계 40: 가게 별이 모자라 잠김(「★n 필요」)
+        Locked,
     }
 
     // 설계 13 v0.5: 시트 한 줄의 데이터. 글자는 UI가 행동 id별 서식으로 만든다

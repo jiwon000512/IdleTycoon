@@ -29,6 +29,9 @@ namespace ZooTycoon.Core
         public const string k_ClerkWake = "clerk_wake";
         // 설계 34: 행상에게 말을 걸면 첫 줄 중 하나
         public const string k_MerchantHello = "merchant_hello";
+        // 설계 40: 평가가 끝나면 평가단장의 한마디(통과 · 실패)
+        public const string k_JudgePass = "judge_pass";
+        public const string k_JudgeFail = "judge_fail";
 
         public double LineSeconds { get; set; }
         public List<DialogueLineData> Lines { get; set; }

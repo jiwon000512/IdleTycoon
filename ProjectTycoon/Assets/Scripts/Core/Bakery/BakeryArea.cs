@@ -21,6 +21,7 @@ namespace ZooTycoon.Core
         private readonly List<IPlacedKind> m_shopKinds = new List<IPlacedKind>();
         private readonly DigSet m_digs;
         private readonly PassageInteractable m_exit;
+        private readonly BoardInteractable m_board;
 
         public const string k_Id = "bakery";
 
@@ -38,6 +39,10 @@ namespace ZooTycoon.Core
         public override string Id => k_Id;
         // 설계 25: 오븐이 재료를 꺼내는 창고
         public ZooState Wallet => m_state;
+        // 설계 40: 별 평가(입구 칠판에서 부른다)
+        public Evaluation Evaluation { get; }
+        // 평가 중에는 웜뱃 · 점원이 가게를 지킨다
+        public override bool CanLeave => !Evaluation.Running;
 
         protected override BurrowNav WombatNav => Layout.WombatNav;
         protected override Vector2 Entrance => Layout.HoleFloor;
@@ -79,6 +84,9 @@ namespace ZooTycoon.Core
             Layout = new BakeryLayout(tables);
             m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells, this);
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
+            Evaluation = new Evaluation(this, state.Stars, bus);
+            m_board = new BoardInteractable(Row(BoardInteractable.k_Id), this, Evaluation);
+            InitJudge();
 
             // 설계 25: 밭도 price가 있어 빵집이 파는 종류를 적는다(Create와 같은 셋)
             foreach (string id in new[] { ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id })
@@ -178,7 +186,25 @@ namespace ZooTycoon.Core
 
         protected override void TickArea(double dt)
         {
+            Evaluation.Tick(dt);
             TickVisitors(dt);
+            TickJudge(dt);
+            TickGuard();
+        }
+
+        // 설계 40: 평가 중 구멍 앞 띠에 들어서면 웜뱃이 「…」(나가지 않는다). 벗어나면 지운다
+        private void TickGuard()
+        {
+            bool atHole = WombatPresent && !CanLeave && m_exit.DistanceTo(Wombat.Mover.Position) <= (float)m_exit.Table.Range;
+
+            if (atHole)
+            {
+                Wombat.Bubble.Show(BubbleTable.k_Wait);
+            }
+            else if (Wombat.Bubble.Id == BubbleTable.k_Wait)
+            {
+                Wombat.Bubble.Clear();
+            }
         }
 
         // 설계 21: 점원 자리는 오븐 → 계산대
@@ -317,6 +343,7 @@ namespace ZooTycoon.Core
             Placed.AddRange(m_ovens);
             Placed.AddRange(m_counters);
             Placed.Add(m_exit);
+            Placed.Add(m_board);
             Placed.AddRange(m_digs.Things);
         }
 

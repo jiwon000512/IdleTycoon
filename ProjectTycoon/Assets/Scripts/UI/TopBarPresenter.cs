@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -15,6 +17,7 @@ namespace ZooTycoon.UI
         private readonly IDisposable m_coins;
         private readonly IDisposable m_blessing;
         private readonly IDisposable m_merchant;
+        private readonly IDisposable[] m_evaluation;
 
         private double m_last;
         private double m_spent;
@@ -29,6 +32,11 @@ namespace ZooTycoon.UI
             m_coins = bus.Subscribe<Events.CoinsChanged>(Bus_CoinsChanged);
             m_blessing = bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged);
             m_merchant = bus.Subscribe<Events.MerchantChanged>(Bus_MerchantChanged);
+            m_evaluation = new[]
+            {
+                bus.Subscribe<Events.EvaluationStarted>(Bus_EvaluationStarted),
+                bus.Subscribe<Events.EvaluationEnded>(_ => m_view.HideEvaluation()),
+            };
             RefreshCoins();
             ShowMerchant(merchant, false);
         }
@@ -38,6 +46,26 @@ namespace ZooTycoon.UI
             m_coins.Dispose();
             m_blessing.Dispose();
             m_merchant.Dispose();
+
+            foreach (IDisposable subscription in m_evaluation)
+            {
+                subscription.Dispose();
+            }
+        }
+
+        // 설계 40: 평가 알약(「평가 ★7」 · 남은 시간)과 조건 알약(만족 · 판 빵(빵 아이콘) · 실망)
+        private void Bus_EvaluationStarted(Events.EvaluationStarted e)
+        {
+            Evaluation evaluation = e.Evaluation;
+            List<TopBarView.GoalData> goals = evaluation.Goals.Select(goal => new TopBarView.GoalData
+            {
+                IconPath = goal.Kind == Evaluation.GoalKind.Sell ? goal.Bread.Sprite : null,
+                Text = goal.Kind == Evaluation.GoalKind.Serve ? m_tables.Text("goal_serve") : goal.Kind == Evaluation.GoalKind.Sell ? goal.Bread.Name : m_tables.Text("goal_lost"),
+                Value = () => goal.Progress + "/" + goal.Target,
+                Done = () => goal.Kind != Evaluation.GoalKind.Lost && goal.Done,
+                Bad = () => goal.Kind == Evaluation.GoalKind.Lost && goal.Progress >= goal.Target,
+            }).ToList();
+            m_view.ShowEvaluation(evaluation.NextStar, m_tables.Format("eval_pill", evaluation.NextStar), () => evaluation.Remaining, goals);
         }
 
         // 설계 31 · 32 · 34: 행상 알약은 늘 보인다. 오는 중 · 서 있음은 「행상」 + 떠날 때까지(서기 전에는 머무는 초 그대로),

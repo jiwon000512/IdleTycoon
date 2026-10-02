@@ -52,6 +52,7 @@ namespace ZooTycoon.Game
             Add("행상", new[] { Opt("부르기", Summon) });
             Add("똥 싸기(웜뱃 둘레)", new[] { 1, 3, 5 }.Select(n => Opt(n + "개", () => Poop(n))));
             Add("농장 층", new[] { Opt("지금 층 다 파기", DigFloor), Opt("아래층 열기(무료)", OpenLower) });
+            Add("빵집 평가", new[] { Opt("바로 통과(별 +1)", () => PassEvaluation(1)), Opt("별 +5", () => PassEvaluation(5)) });
         }
 
         private void Add(string name, IEnumerable<Option> options)
@@ -147,6 +148,17 @@ namespace ZooTycoon.Game
             StairInteractable stair = farm.Things.OfType<StairInteractable>().Single();
             farm.TryChoose(ActionTable.k_DigFloor, stair, null);
             return AreaName(farm.Lower) + " 열림";
+        }
+
+        // 설계 40: 쉬는 시간을 무시하고 평가를 count번 통과(소식지 · 보상까지 실제와 같다)
+        private string PassEvaluation(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                Mall.Bakery.Evaluation.PassNow();
+            }
+
+            return "빵집 별 " + State.Stars.Count(BakeryArea.k_Id) + "개";
         }
 
         private string Poop(int count)

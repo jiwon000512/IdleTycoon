@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 38,
+  "version": 39,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -41,7 +41,8 @@
     "version 35 (2026-10-01, 설계 35 작물 · 밭 시트): 밭 시트 제목 sheet_plot_title · 상태 sheet_plot_status(거름 개수), 칩 시안 A 「배지 + 시계 줄」(아트방, 사용자 선택): 아래 줄 글자를 개수 배지 · 시계 · 자물쇠로 바꿔 chip_bread_stock(×{0}) → chip_count({0}), chip_bread_seconds → chip_seconds, chip_unlock 삭제.",
     "version 36 (2026-10-01, 설계 36 반짝돌 뽑기): 뽑기는 유물 하나 · 메인과 결과 팝업을 나눠 relic_cart_lead 문구 변경, 고르기 문구 relic_pick · relic_pick_hint와 결과 윗줄 relic_got_new · relic_got_star 삭제(이름표 relic_new · relic_star_up이 맡는다), 결과 닫기 relic_ok 추가.",
     "version 37 (2026-10-01, 설계 38 농장 점원): 점원 팝업 가게 탭 clerk_tab_farm(탭 이름 = clerk_tab_<곳 id>), 농장 점원 자리 이름 kind_barn(자리 알약 「밭일 1」).",
-    "version 38 (2026-10-02, 설계 39 농장 아래층): 점원 탭 clerk_tab_farm 「농장」 → 「농장 1층」, clerk_tab_farm2 · farm3, 계단 자리 시트(sheet_stair_title · sheet_stair_status · row_dig_floor · row_dig_floor_effect)와 표식 tag_stair."
+    "version 38 (2026-10-02, 설계 39 농장 아래층): 점원 탭 clerk_tab_farm 「농장」 → 「농장 1층」, clerk_tab_farm2 · farm3, 계단 자리 시트(sheet_stair_title · sheet_stair_status · row_dig_floor · row_dig_floor_effect)와 표식 tag_stair.",
+    "version 39 (2026-10-02, 설계 40 별 평가): 평가 팝업 · 상단 평가 알약 · 소식지 · 마일스톤 · 「★n 필요」 · 팁 팝업 · 간판 별 · 평가단장 한마디."
   ],
   "rows": [
     {
@@ -763,6 +764,170 @@
     {
       "id": "say_merchant_hello_3",
       "ko": "오늘은 뭐가 나올까?"
+    },
+    {
+      "id": "row_star_needed",
+      "ko": "★{0} 필요"
+    },
+    {
+      "id": "eval_title",
+      "ko": "빵집 평가"
+    },
+    {
+      "id": "eval_stars",
+      "ko": "별 {0}개"
+    },
+    {
+      "id": "eval_no_stars",
+      "ko": "아직 별이 없다"
+    },
+    {
+      "id": "eval_bonus_price",
+      "ko": "빵 값 +{0}%"
+    },
+    {
+      "id": "eval_bonus_visitors",
+      "ko": "손님 +{0}%"
+    },
+    {
+      "id": "eval_next",
+      "ko": "★{0} 평가 · {1}초"
+    },
+    {
+      "id": "eval_next_big",
+      "ko": "★{0} 큰 평가 · {1}초"
+    },
+    {
+      "id": "eval_rush",
+      "ko": "평가 동안 손님이 {0}배로 온다"
+    },
+    {
+      "id": "goal_serve",
+      "ko": "평가단 만족"
+    },
+    {
+      "id": "goal_lost",
+      "ko": "실망한 평가단"
+    },
+    {
+      "id": "goal_serve_line",
+      "ko": "평가단 {0}명 만족"
+    },
+    {
+      "id": "goal_sell_line",
+      "ko": "{0} {1}개 팔기"
+    },
+    {
+      "id": "goal_lost_line",
+      "ko": "실망한 평가단 {0}명 이하"
+    },
+    {
+      "id": "eval_unlock",
+      "ko": "★{0}이 되면"
+    },
+    {
+      "id": "eval_reward_line",
+      "ko": "반짝돌 +{0}"
+    },
+    {
+      "id": "eval_call",
+      "ko": "평가 부르기"
+    },
+    {
+      "id": "eval_again",
+      "ko": "다시 부르기 {0}"
+    },
+    {
+      "id": "eval_running",
+      "ko": "평가 중"
+    },
+    {
+      "id": "eval_pill",
+      "ko": "평가 ★{0}"
+    },
+    {
+      "id": "news_title",
+      "ko": "굴 소식"
+    },
+    {
+      "id": "news_pass",
+      "ko": "웜뱃 빵집, 별 {0}개!"
+    },
+    {
+      "id": "news_fail",
+      "ko": "아쉬워요"
+    },
+    {
+      "id": "news_ok",
+      "ko": "좋아!"
+    },
+    {
+      "id": "news_retry",
+      "ko": "다음엔 꼭!"
+    },
+    {
+      "id": "news_short",
+      "ko": "모자란 것"
+    },
+    {
+      "id": "milestone_shelf",
+      "ko": "진열대 {0}개까지"
+    },
+    {
+      "id": "milestone_oven",
+      "ko": "오븐 {0}개까지"
+    },
+    {
+      "id": "milestone_counter",
+      "ko": "계산대 {0}개까지"
+    },
+    {
+      "id": "milestone_upgrade",
+      "ko": "업그레이드 {0}단계까지"
+    },
+    {
+      "id": "milestone_tip",
+      "ko": "계산할 때 팁이 나온다"
+    },
+    {
+      "id": "milestone_next_shop",
+      "ko": "다음 가게 문(준비 중)"
+    },
+    {
+      "id": "tip_popup",
+      "ko": "팁 +{0}"
+    },
+    {
+      "id": "sign_stars",
+      "ko": "{0} ★{1}"
+    },
+    {
+      "id": "say_judge_pass_1",
+      "ko": "바삭하고 좋아요!"
+    },
+    {
+      "id": "say_judge_pass_2",
+      "ko": "별 하나 드릴게요!"
+    },
+    {
+      "id": "say_judge_pass_3",
+      "ko": "또 오고 싶은 가게예요!"
+    },
+    {
+      "id": "say_judge_fail_1",
+      "ko": "아직은 조금 아쉬워요."
+    },
+    {
+      "id": "say_judge_fail_2",
+      "ko": "손님을 놓쳤네요."
+    },
+    {
+      "id": "say_judge_fail_3",
+      "ko": "다음엔 기대할게요!"
+    },
+    {
+      "id": "eval_tip",
+      "ko": "팁 확률 {0}%"
     }
   ]
 }

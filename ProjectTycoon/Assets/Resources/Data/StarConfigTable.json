@@ -1,0 +1,14 @@
+{
+  "table": "StarConfigTable",
+  "version": 1,
+  "notes": [
+    "설계 40 별 평가: 행 = 가게(id = 곳 id). n = 지금 별 수(다음 평가는 ★n+1). 별은 끝없이 세고 조건은 공식으로 커진다. 숫자는 모두 시작값.",
+    "평가 시간 = min(timeBase + timePerStar × n, timeMax), 다음 별이 bigEvery의 배수면 큰 평가(bigTime, 정해진 빵 두 종). rush: 평가 중 손님 간격 ÷ rush.",
+    "조건: 평가단 만족(계산) serveBase + servePerStar × n명 · 정해진 빵(해금한 빵을 별마다 돌림) sellBase + ⌊sellPerStar × n⌋개 · 실망한 평가단 상한 max(0, lostBase − ⌊n / lostEvery⌋). 만족 · 판매를 다 채우면 그 자리에서 통과, 실망이 상한을 넘거나 시간이 다 되면 실패(cooldown초 쉼).",
+    "별마다 능력: 빵 값 +priceBonus · 손님 +visitorsBonus(축복 · 유물과 같은 효과 배수에 곱함). 팁: tipFrom별부터 계산마다 확률 min(tipMax, tipBase + tipPerStar × (n − tipFrom)), 팁 = 그 계산 값 × tipRate. 통과 보상 rewardItem × rewardCount.",
+    "boardX · boardY: 평가판(입구 칠판 장식 앞 바닥, 가게 원점 기준 유닛). judgeX · judgeY: 평가단장이 서는 곳. judgeLook: 평가단장 외형(VisitorTable judge 행, 그림은 아트방 전 임시). admirePerStar: 광장 손님이 들를 곳에 닿을 때 감탄 ✨ 확률 = admirePerStar × 별(최대 1)."
+  ],
+  "rows": [
+    { "id": "bakery", "timeBase": 60, "timePerStar": 10, "timeMax": 120, "bigTime": 150, "bigEvery": 5, "rush": 2, "serveBase": 10, "servePerStar": 3, "sellBase": 3, "sellPerStar": 0.5, "lostBase": 3, "lostEvery": 3, "priceBonus": 0.02, "visitorsBonus": 0.01, "tipFrom": 3, "tipBase": 0.05, "tipPerStar": 0.01, "tipMax": 0.3, "tipRate": 0.5, "rewardItem": "gem", "rewardCount": 3, "cooldown": 180, "boardX": 1.2, "boardY": -1.9, "judgeX": 1.75, "judgeY": -2.15, "judgeLook": "v07", "admirePerStar": 0.02 }
+  ]
+}

@@ -49,6 +49,12 @@ namespace ZooTycoon.Core
         public const string k_DrawReveal = "draw_reveal";
         // 유물 행상이 좌판 자리에 섬(아트방 도착 B)
         public const string k_MerchantArrive = "merchant_arrive";
+        // 설계 40 별 평가: 시작 · 통과 · 실패 · 팁 · 별 색이 오름(아트방 소리 전 임시 파일)
+        public const string k_EvalStart = "eval_start";
+        public const string k_EvalPass = "eval_pass";
+        public const string k_EvalFail = "eval_fail";
+        public const string k_Tip = "tip";
+        public const string k_StarTier = "star_tier";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -89,6 +95,11 @@ namespace ZooTycoon.Core
             k_DrawBreak,
             k_DrawReveal,
             k_MerchantArrive,
+            k_EvalStart,
+            k_EvalPass,
+            k_EvalFail,
+            k_Tip,
+            k_StarTier,
         };
 
         // Resources/ 기준, 확장자 없음

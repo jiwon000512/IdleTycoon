@@ -8,7 +8,8 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 설계 08 v0.5 · 손님 동선 설계 v0.2: BakeryArea 손님 사건 → 손님 개체 생성·연출·삭제. 걷기와 판단은 Core가 하고 개체는 그 위치를 그린다.
-    // 설계 21 → 설계 38: 빵집 점원 그림은 같은 프리팹으로 곳 공용 ClerkViews가 그린다(자리에 닿으면 사물이 튄다)
+    // 설계 21 → 설계 38: 빵집 점원 그림은 같은 프리팹으로 곳 공용 ClerkViews가 그린다(자리에 닿으면 사물이 튄다).
+    // 설계 40: 평가단장도 같은 프리팹(평가가 끝나면 한마디 말풍선), 팁은 그 손님 머리 위 「팁 +N」(코인 팝업 위에 쌓인다)
     public sealed class BakeryVisitorSpawner : MonoBehaviour
     {
         private const string k_CoinKey = "coin_popup";
@@ -24,6 +25,7 @@ namespace ZooTycoon.World
         private FrameCache m_frames;
         private IDisposable[] m_subscriptions;
         private ClerkViews m_clerks;
+        private VisitorView m_judge;
 
         public void Initialize(BakeryArea shop, BakeryView view, EventBus bus, TableSet tables, FrameCache frames)
         {
@@ -39,6 +41,10 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorPaid>(Bus_VisitorPaid),
                 bus.Subscribe<Events.BakeryVisitorGaveUp>(Bus_VisitorGaveUp),
                 bus.Subscribe<Events.BakeryVisitorLeft>(Bus_VisitorLeft),
+                bus.Subscribe<Events.Tipped>(Bus_Tipped),
+                bus.Subscribe<Events.JudgeArrived>(Bus_JudgeArrived),
+                bus.Subscribe<Events.JudgeLeft>(Bus_JudgeLeft),
+                bus.Subscribe<Events.EvaluationEnded>(Bus_EvaluationEnded),
             };
             m_clerks = new ClerkViews(this, shop, bus, m_prefab, tables, frames, view.transform, view.Bounce);
         }
@@ -99,6 +105,35 @@ namespace ZooTycoon.World
             if (Mine(e.Visitor))
             {
                 m_units[e.Visitor].ShowCarry(null);
+            }
+        }
+
+        private void Bus_Tipped(Events.Tipped e)
+        {
+            if (Mine(e.Visitor) && m_units.TryGetValue(e.Visitor, out VisitorView unit))
+            {
+                unit.Pay(m_tables.Format("tip_popup", e.Coins.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
+            }
+        }
+
+        private void Bus_JudgeArrived(Events.JudgeArrived e)
+        {
+            m_judge = Instantiate(m_prefab, transform);
+            m_judge.Initialize(e.Judge, m_frames, m_view.transform);
+        }
+
+        private void Bus_JudgeLeft(Events.JudgeLeft e)
+        {
+            Destroy(m_judge.gameObject);
+            m_judge = null;
+        }
+
+        // 평가단장이 결과 한마디(소식지와 같은 줄)
+        private void Bus_EvaluationEnded(Events.EvaluationEnded e)
+        {
+            if (e.Evaluation == m_shop.Evaluation && m_judge != null)
+            {
+                m_judge.Say(m_tables.Text(e.Evaluation.LastLine), (float)Judge.k_LingerSeconds);
             }
         }
 

@@ -15,6 +15,8 @@ namespace ZooTycoon.Core
         public const string k_Chat = "chat";
         // 설계 24: 똥에 길이 막힌 손님
         public const string k_Yuck = "yuck";
+        // 설계 40: 별 가게를 본 광장 손님의 감탄 ✨
+        public const string k_Wow = "wow";
 
         public int Frame { get; set; }
         public int Frames { get; set; }

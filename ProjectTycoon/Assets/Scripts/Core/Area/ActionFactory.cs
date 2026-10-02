@@ -13,7 +13,7 @@ namespace ZooTycoon.Core
             ActionTable.k_Open, ActionTable.k_OpenDig, ActionTable.k_Exit, ActionTable.k_Enter, ActionTable.k_Upgrade,
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
             ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_OpenPlant, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
-            ActionTable.k_Talk, ActionTable.k_DigFloor,
+            ActionTable.k_Talk, ActionTable.k_DigFloor, ActionTable.k_Evaluate,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -39,6 +39,7 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Statue: return new OpenStatue(table);
                 case ActionTable.k_Talk: return new TalkToMerchant(table);
                 case ActionTable.k_DigFloor: return new DigFloor(table);
+                case ActionTable.k_Evaluate: return new OpenBoard(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");
             }
         }
@@ -70,6 +71,12 @@ namespace ZooTycoon.Core
                 return target is PassageInteractable;
             }
 
+            // 설계 40: 가게를 지키는 동안(평가 중)은 넘어가지 않는다
+            public override bool CanDo(Worker worker, Interactable target)
+            {
+                return target is PassageInteractable && target.Area.CanLeave;
+            }
+
             public override void Do(Worker worker, Interactable target)
             {
                 ((PassageInteractable)target).Pass();
@@ -94,7 +101,7 @@ namespace ZooTycoon.Core
                 int level = target.UpgradeLevel;
                 bool maxed = level >= upgrade.MaxLevel;
                 double cost = upgrade.Cost(level);
-                SheetOptionState state = maxed ? SheetOptionState.Max : SheetOption.Afford(worker, cost);
+                SheetOptionState state = maxed ? SheetOptionState.Max : Starless(worker, target, level) ? SheetOptionState.Locked : SheetOption.Afford(worker, cost);
                 return new[] { new SheetOption(null, state, cost, level, target.UpgradeValue(level), target.UpgradeValue(maxed ? level : level + 1)) };
             }
 
@@ -103,13 +110,19 @@ namespace ZooTycoon.Core
                 UpgradeInfo upgrade = target.Table.Upgrade;
                 int level = target.UpgradeLevel;
 
-                if (level >= upgrade.MaxLevel || !worker.Wallet.TrySpendCoins(upgrade.Cost(level)))
+                if (level >= upgrade.MaxLevel || Starless(worker, target, level) || !worker.Wallet.TrySpendCoins(upgrade.Cost(level)))
                 {
                     return false;
                 }
 
                 target.Area.LevelUp(target.Table.Id);
                 return true;
+            }
+
+            // 설계 40: 가게 별 마일스톤이 업그레이드 단계 상한을 연다
+            private static bool Starless(Worker worker, Interactable target, int level)
+            {
+                return level >= worker.Wallet.Stars.Cap(target.Area.Id, Stars.k_Upgrade);
             }
         }
 
@@ -142,6 +155,24 @@ namespace ZooTycoon.Core
 
                 dig.Grid.Dig(dig.Cell);
                 return true;
+            }
+        }
+
+        // 설계 40 평가판 버튼: 평가 팝업을 연다(부르기는 팝업에서)
+        private sealed class OpenBoard : InteractAction
+        {
+            public OpenBoard(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is BoardInteractable;
+            }
+
+            public override void Do(Worker worker, Interactable target)
+            {
+                ((BoardInteractable)target).Open();
             }
         }
 

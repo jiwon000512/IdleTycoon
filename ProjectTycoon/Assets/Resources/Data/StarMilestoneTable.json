@@ -1,0 +1,16 @@
+{
+  "table": "StarMilestoneTable",
+  "version": 1,
+  "notes": [
+    "설계 40 별 마일스톤: 행 = 가게(shop)의 한 별(star). 가게마다 star 0 행이 시작 상한이고 모든 상한이 0보다 크다. 상한 0 = 앞 마일스톤 그대로.",
+    "shelfMax · ovenMax · counterMax: 사물 수 상한(InteractableTable price.max와 작은 쪽). upgradeMax: 업그레이드 단계 상한(사물 종류 공통). text: 평가 팝업 · 소식지에 보일 그 밖의 해금 글(StringTable, 없으면 null). 새 사물 · 가게가 생기면 행을 더한다."
+  ],
+  "rows": [
+    { "id": "bakery_0", "shop": "bakery", "star": 0, "shelfMax": 2, "ovenMax": 2, "counterMax": 1, "upgradeMax": 4, "text": null },
+    { "id": "bakery_1", "shop": "bakery", "star": 1, "shelfMax": 3, "ovenMax": 3, "counterMax": 0, "upgradeMax": 6, "text": null },
+    { "id": "bakery_2", "shop": "bakery", "star": 2, "shelfMax": 0, "ovenMax": 0, "counterMax": 2, "upgradeMax": 8, "text": null },
+    { "id": "bakery_3", "shop": "bakery", "star": 3, "shelfMax": 0, "ovenMax": 0, "counterMax": 0, "upgradeMax": 0, "text": "milestone_tip" },
+    { "id": "bakery_4", "shop": "bakery", "star": 4, "shelfMax": 4, "ovenMax": 4, "counterMax": 3, "upgradeMax": 10, "text": null },
+    { "id": "bakery_5", "shop": "bakery", "star": 5, "shelfMax": 0, "ovenMax": 0, "counterMax": 0, "upgradeMax": 0, "text": "milestone_next_shop" }
+  ]
+}

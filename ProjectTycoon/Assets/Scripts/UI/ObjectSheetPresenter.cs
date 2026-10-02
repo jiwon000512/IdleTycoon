@@ -255,6 +255,11 @@ namespace ZooTycoon.UI
 
         private string Cost(SheetOption option)
         {
+            if (option.State == SheetOptionState.Locked)
+            {
+                return m_tables.Format("row_star_needed", m_shop.Wallet.Stars.StarFor(m_target.Area.Id, Stars.k_Upgrade, option.Level + 1));
+            }
+
             return option.State == SheetOptionState.Max ? m_tables.Text("row_max") : BigNumberFormatter.Format(option.Cost);
         }
 

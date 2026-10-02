@@ -10,17 +10,17 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("VisitorTable", 13)]
-        [TestCase("StringTable", 38)]
+        [TestCase("VisitorTable", 14)]
+        [TestCase("StringTable", 39)]
         [TestCase("ClerkTable", 2)]
         [TestCase("ClerkConfigTable", 6)]
-        [TestCase("BubbleTable", 3)]
-        [TestCase("DialogueTable", 4)]
+        [TestCase("BubbleTable", 4)]
+        [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 16)]
-        [TestCase("InteractableTable", 17)]
+        [TestCase("ActionTable", 17)]
+        [TestCase("InteractableTable", 18)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 13)]
+        [TestCase("SoundTable", 14)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 4)]
         [TestCase("BakeryConfigTable", 8)]
@@ -30,6 +30,8 @@ namespace ZooTycoon.Tests
         [TestCase("CropTable", 4)]
         [TestCase("FarmConfigTable", 7)]
         [TestCase("FarmFloorTable", 2)]
+        [TestCase("StarConfigTable", 1)]
+        [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -285,6 +287,24 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(freeLower), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noEvery), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noTab), Is.Not.Empty);
+        }
+
+        // 설계 40: 가게 별 설정이 없음 · 몰림 1 미만 · 평가단장이 judge 행이 아님 · star 0 마일스톤 없음 · 마일스톤 글이 없는 키
+        [Test]
+        public void Validate_WhenStarDataInvalid_ReportsError()
+        {
+            TableSet slowRush = TestTables.Load();
+            slowRush.Get<StarConfigTable>(BakeryArea.k_Id).Rush = 0.5d;
+            TableSet customerJudge = TestTables.Load();
+            customerJudge.Get<StarConfigTable>(BakeryArea.k_Id).JudgeLook = "v01";
+            TableSet badText = TestTables.Load();
+            badText.Get<StarMilestoneTable>("bakery_3").Text = "no_such_key";
+
+            Assert.That(TableValidator.Validate(TestTables.LoadWithout("StarConfigTable", BakeryArea.k_Id)), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(slowRush), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(customerJudge), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(TestTables.LoadWithout("StarMilestoneTable", "bakery_0")), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(badText), Is.Not.Empty);
         }
 
         // 설계 30: 코드가 거는 축복이 표에 없음, 시간이 0, 효과 글이 없음, 쉬는 시간이 0

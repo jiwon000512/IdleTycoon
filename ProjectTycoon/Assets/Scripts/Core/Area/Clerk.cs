@@ -527,7 +527,8 @@ namespace ZooTycoon.Core
             roll *= rest;
 
 
-            if (roll < m_config.OutingChance)
+            // 설계 40: 가게를 지키는 동안(평가 중)은 외출 대신 산책
+            if (roll < m_config.OutingChance && Home.CanLeave)
             {
                 Idle = IdleKind.Outing;
                 WalkToGoal(Goal.Hole);

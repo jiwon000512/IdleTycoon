@@ -68,7 +68,9 @@ namespace ZooTycoon.Core
         public RelicMerchant Merchant { get; }
         public MerchantInteractable MerchantThing { get; }
         // 손님이 계단으로 오는 간격(손님 축복 · 풍경이면 짧아진다)
-        private double ArrivalSeconds => m_config.ArrivalSeconds / Wombat.Worker.Wallet.Scale(BlessingTable.k_Visitors);
+        // 설계 40: 빵집 평가 중에는 손님(맛 평가단)이 rush배로 몰려온다
+        private double ArrivalSeconds => m_config.ArrivalSeconds / Wombat.Worker.Wallet.Scale(BlessingTable.k_Visitors)
+            / (Bakery.Evaluation.Running ? Bakery.Evaluation.Config.Rush : 1d);
 
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다. 시작 장식은 PlazaDecorTable
         public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, random, wombat, bus)
@@ -121,6 +123,14 @@ namespace ZooTycoon.Core
         internal bool RollEmote()
         {
             return m_random.NextDouble() < m_config.EmoteChance;
+        }
+
+        // 설계 40: 빵집 별 × admirePerStar 확률로 감탄 ✨(과시). 별이 없으면 난수를 굴리지 않는다
+        internal bool RollAdmire()
+        {
+            StarConfigTable stars = Wombat.Worker.Wallet.Stars.Config(BakeryArea.k_Id);
+            double chance = stars == null ? 0d : Math.Min(1d, stars.AdmirePerStar * Wombat.Worker.Wallet.Stars.Count(BakeryArea.k_Id));
+            return chance > 0d && m_random.NextDouble() < chance;
         }
 
         // 빈 들를 곳 하나를 잡는다(난수 자리부터 돌며). 설계 37: 똥 둘레 안 자리는 찬 자리. 다 찼으면 false

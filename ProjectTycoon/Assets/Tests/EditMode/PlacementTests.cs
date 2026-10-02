@@ -20,6 +20,7 @@ namespace ZooTycoon.Tests
         public void Create()
         {
             m_tables = TestTables.Load();
+            TestTables.LiftStarCaps(m_tables);
             m_bus = new EventBus();
             m_state = ZooState.CreateNew(m_tables, m_bus);
             Wombat wombat = new Wombat(m_tables, m_state);

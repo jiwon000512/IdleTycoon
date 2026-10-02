@@ -4,6 +4,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using GameKit.Tables;
+using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
@@ -43,6 +44,15 @@ namespace ZooTycoon.Tests
 
                 return file.ToString();
             });
+        }
+
+        // 설계 40: 가게 별 마일스톤 상한을 걷어 낸다(별과 무관한 사물 값 · 업그레이드 시험용)
+        public static void LiftStarCaps(TableSet tables)
+        {
+            foreach (StarMilestoneTable milestone in tables.GetAll<StarMilestoneTable>())
+            {
+                milestone.ShelfMax = milestone.OvenMax = milestone.CounterMax = milestone.UpgradeMax = 99;
+            }
         }
 
         public static TableSet LoadWithout(string table, string id)

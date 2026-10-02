@@ -234,7 +234,11 @@ namespace ZooTycoon.Core
                 case Goal.Spot:
                     Timer = Plaza.VisitSeconds();
 
-                    if (Plaza.RollEmote())
+                    if (Plaza.RollAdmire())
+                    {
+                        Bubble.Show(BubbleTable.k_Wow);
+                    }
+                    else if (Plaza.RollEmote())
                     {
                         Bubble.Show(BubbleTable.k_Heart);
                     }
