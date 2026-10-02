@@ -1,38 +1,37 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.Game
 {
-    // 에디터 전용 치트 도구(빌드에 들어가지 않는다): ` 로 열고 닫는다. 치트를 고르고(누르기 · ↑↓) 값이 있으면 넣고 Enter.
-    // 화면 밖 개발 도구라 문구는 StringTable이 아니라 여기 둔다. 열린 동안은 Input System 키보드를 꺼 글을 칠 때 웜뱃이 걷지 않는다(IMGUI 글 칸은 따로 받는다)
+    // 에디터 전용 치트 도구(빌드에 들어가지 않는다): ` 로 열고 닫는다. 치트마다 고를 값이 버튼으로 늘어서 있고, 누르면 바로 실행된다(글 입력 없음).
+    // 지금 상태(배속 · 웜뱃이 있는 곳)는 버튼에 ▶ 표시. 화면 밖 개발 도구라 문구는 StringTable이 아니라 여기 둔다
     public sealed class CheatConsole : MonoBehaviour
     {
-        private const string k_InputName = "cheat_input";
         // 시간 건너뛰기 한 틱(초)
         private const double k_SkipStep = 0.1;
+
+        private sealed class Option
+        {
+            public string Label;
+            public Func<string> Run;
+            public Func<bool> On;
+        }
 
         private sealed class Cheat
         {
             public string Name;
-            public string Hint;
-            public string Default;
-            public Func<string, string> Run;
+            public Option[] Options;
         }
 
         private readonly List<Cheat> m_cheats = new List<Cheat>();
         private GameManager m_game;
         private bool m_open;
-        private int m_selected;
-        private string m_input = string.Empty;
         private string m_result = string.Empty;
-        private bool m_focus;
+        private Vector2 m_scroll;
 
         private Mall Mall => m_game.Mall;
         private ZooState State => m_game.State;
@@ -40,94 +39,84 @@ namespace ZooTycoon.Game
         public void Bind(GameManager game)
         {
             m_game = game;
-            string items = string.Join(" · ", game.Tables.GetAll<ItemTable>().Select(item => item.Id));
-            Add("코인", "개수", "10000", s => { State.AddCoins(Number(s)); return "코인 +" + s; });
-            Add("재료", "id 개수 (" + items + ")", "gem 50", AddItem);
-            Add("시간 건너뛰기", "초 (가게 · 밭 · 행상 · 축복 · 월급이 모두 흐른다)", "60", Skip);
-            Add("배속", "배 (1 = 보통)", "4", s => { Time.timeScale = (float)Number(s); return "배속 ×" + s; });
-            Add("행상 부르기", "값 없음 (없을 때 바로 계단으로 온다)", string.Empty, Summon);
-            Add("곳 이동", string.Join(" · ", game.Mall.Areas.Select(area => area.Id)), PlazaArea.k_Id, Move);
-            Add("똥 싸기", "개수 (지금 있는 곳, 웜뱃 둘레)", "3", Poop);
-            Add("층 다 파기", "값 없음 (지금 있는 농장 층, 무료)", string.Empty, DigFloor);
-            Select(0);
-        }
+            Add("코인", new[] { 1000d, 10000d, 100000d, 1000000d }.Select(n => Opt("+" + Short(n), () => { State.AddCoins(n); return "코인 +" + Short(n); })));
 
-        private void Add(string name, string hint, string value, Func<string, string> run)
-        {
-            m_cheats.Add(new Cheat { Name = name, Hint = hint, Default = value, Run = run });
-        }
-
-        private void Select(int index)
-        {
-            m_selected = (index + m_cheats.Count) % m_cheats.Count;
-            m_input = m_cheats[m_selected].Default;
-            m_focus = true;
-        }
-
-        private static double Number(string s)
-        {
-            return double.Parse(s.Trim(), CultureInfo.InvariantCulture);
-        }
-
-        private string AddItem(string s)
-        {
-            string[] parts = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            int count = parts.Length > 1 ? (int)Number(parts[1]) : 1;
-
-            if (!m_game.Tables.GetAll<ItemTable>().Any(item => item.Id == parts[0]))
+            foreach (int n in new[] { 10, 100 })
             {
-                return "모르는 재료: " + parts[0];
+                Add("재료 +" + n, game.Tables.GetAll<ItemTable>().Select(item => Opt(item.Name, () => AddItem(item, n))));
             }
 
-            State.AddItem(parts[0], count);
-            return parts[0] + " +" + count + " (지금 " + State.Count(parts[0]) + ")";
+            Add("시간 건너뛰기", new[] { (10d, "10초"), (60d, "1분"), (300d, "5분"), (900d, "15분") }.Select(t => Opt(t.Item2, () => Skip(t.Item1, t.Item2))));
+            Add("배속", new[] { 1f, 2f, 4f, 8f }.Select(x => Opt("×" + x, () => { Time.timeScale = x; return "배속 ×" + x; }, () => Mathf.Approximately(Time.timeScale, x))));
+            Add("곳 이동", game.Mall.Areas.Select(area => Opt(AreaName(area), () => Move(area), () => Mall.Active == area)));
+            Add("행상", new[] { Opt("부르기", Summon) });
+            Add("똥 싸기(웜뱃 둘레)", new[] { 1, 3, 5 }.Select(n => Opt(n + "개", () => Poop(n))));
+            Add("농장 층", new[] { Opt("지금 층 다 파기", DigFloor), Opt("아래층 열기(무료)", OpenLower) });
         }
 
-        private string Skip(string s)
+        private void Add(string name, IEnumerable<Option> options)
         {
-            double seconds = Number(s);
+            m_cheats.Add(new Cheat { Name = name, Options = options.ToArray() });
+        }
 
+        private static Option Opt(string label, Func<string> run, Func<bool> on = null)
+        {
+            return new Option { Label = label, Run = run, On = on };
+        }
+
+        private static string Short(double n)
+        {
+            return n >= 1000000d ? n / 1000000d + "M" : n >= 1000d ? n / 1000d + "K" : n.ToString();
+        }
+
+        private static string AreaName(WombatArea area)
+        {
+            return area is FarmArea farm ? "농장 " + farm.Number + "층" : area is BakeryArea ? "빵집" : "광장";
+        }
+
+        private string AddItem(ItemTable item, int count)
+        {
+            State.AddItem(item.Id, count);
+            return item.Name + " +" + count + " (지금 " + State.Count(item.Id) + ")";
+        }
+
+        private string Skip(double seconds, string label)
+        {
             for (double t = 0d; t < seconds; t += k_SkipStep)
             {
                 Mall.Tick(k_SkipStep);
             }
 
-            return seconds + "초 건너뜀";
+            return label + " 건너뜀(가게 · 밭 · 행상 · 축복 · 월급)";
         }
 
-        private string Summon(string s)
+        private string Summon()
         {
             RelicMerchant merchant = Mall.Plaza.Merchant;
 
             if (merchant.Phase != MerchantPhase.Away)
             {
-                return "이미 와 있다(" + merchant.Phase + ")";
+                return "행상이 이미 와 있다(" + merchant.Phase + ")";
             }
 
             merchant.Summon();
             return "행상이 계단으로 온다";
         }
 
-        private string Move(string s)
+        // 닫힌 농장 층도 간다(치트)
+        private string Move(WombatArea area)
         {
-            string to = s.Trim();
-
-            if (Mall.Active.Id == to)
+            if (Mall.Active == area)
             {
-                return "이미 " + to;
+                return "이미 " + AreaName(area);
             }
 
-            if (!Mall.Areas.Any(area => area.Id == to))
-            {
-                return "모르는 곳: " + to;
-            }
-
-            m_game.Bus.Publish(new Events.Passed(Mall.Active, to));
-            return to + "(으)로";
+            m_game.Bus.Publish(new Events.Passed(Mall.Active, area.Id));
+            return AreaName(area) + "(으)로";
         }
 
         // 설계 39: 지금 층의 남은 칸을 모두 판다(계단 표식까지 바로 보려고)
-        private string DigFloor(string s)
+        private string DigFloor()
         {
             if (!(Mall.Active is FarmArea farm))
             {
@@ -142,13 +131,27 @@ namespace ZooTycoon.Game
                 dug++;
             }
 
-            return farm.Id + " " + dug + "칸 팠다";
+            return AreaName(farm) + " " + dug + "칸 팠다";
         }
 
-        private string Poop(string s)
+        // 설계 39: 지금 층을 다 파고 아래층 값만큼 코인을 더해 계단을 연다(값 · 연출은 실제 계단 파기 그대로)
+        private string OpenLower()
+        {
+            if (!(Mall.Active is FarmArea farm) || farm.Lower == null || farm.Lower.IsOpen)
+            {
+                return "열 아래층이 있는 농장 층에서만";
+            }
+
+            DigFloor();
+            State.AddCoins(farm.Lower.Floor.OpenCost);
+            StairInteractable stair = farm.Things.OfType<StairInteractable>().Single();
+            farm.TryChoose(ActionTable.k_DigFloor, stair, null);
+            return AreaName(farm.Lower) + " 열림";
+        }
+
+        private string Poop(int count)
         {
             int dropped = 0;
-            int count = (int)Number(s);
             System.Numerics.Vector2 at = Mall.Wombat.Mover.Position;
 
             for (int i = 0; i < count * 4 && dropped < count; i++)
@@ -170,8 +173,6 @@ namespace ZooTycoon.Game
                 if (e.keyCode == KeyCode.BackQuote)
                 {
                     m_open = !m_open;
-                    m_focus = m_open;
-                    SetKeyboard(!m_open);
                 }
 
                 e.Use();
@@ -182,96 +183,46 @@ namespace ZooTycoon.Game
                 return;
             }
 
-            if (e.type == EventType.KeyDown)
-            {
-                if (e.keyCode == KeyCode.UpArrow || e.keyCode == KeyCode.DownArrow)
-                {
-                    Select(m_selected + (e.keyCode == KeyCode.UpArrow ? -1 : 1));
-                    e.Use();
-                }
-                else if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
-                {
-                    Run();
-                    e.Use();
-                }
-            }
-
-            int size = Mathf.Max(14, Screen.height / 45);
+            int size = Mathf.Max(14, Screen.height / 50);
             GUIStyle label = new GUIStyle(GUI.skin.label) { fontSize = size, wordWrap = true };
-            GUIStyle button = new GUIStyle(GUI.skin.button) { fontSize = size, alignment = TextAnchor.MiddleLeft };
-            GUIStyle field = new GUIStyle(GUI.skin.textField) { fontSize = size };
-            float width = Mathf.Min(Screen.width - 20f, size * 22f);
+            GUIStyle name = new GUIStyle(label) { fontStyle = FontStyle.Bold };
+            GUIStyle button = new GUIStyle(GUI.skin.button) { fontSize = size };
+            float width = Mathf.Min(Screen.width - 20f, size * 26f);
 
             Rect area = new Rect(10f, 10f, width, Screen.height - 20f);
             // 상자를 겹쳐 그려 뒤 화면이 덜 비치게
             GUI.Box(area, GUIContent.none);
             GUILayout.BeginArea(area, GUI.skin.box);
-            GUILayout.Label("치트 (` 닫기 · ↑↓ 고르기 · Enter 실행)", label);
-
-            for (int i = 0; i < m_cheats.Count; i++)
-            {
-                if (GUILayout.Toggle(i == m_selected, (i == m_selected ? "▶ " : "   ") + m_cheats[i].Name, button) && i != m_selected)
-                {
-                    Select(i);
-                }
-            }
-
-            GUILayout.Label(m_cheats[m_selected].Hint, label);
-            GUI.SetNextControlName(k_InputName);
-            m_input = GUILayout.TextField(m_input, field);
-
-            if (GUILayout.Button("실행", button))
-            {
-                Run();
-            }
-
+            GUILayout.Label("치트 (` 닫기 · 누르면 바로 실행)", label);
             GUILayout.Label(m_result, label);
+            m_scroll = GUILayout.BeginScrollView(m_scroll);
+
+            foreach (Cheat cheat in m_cheats)
+            {
+                GUILayout.Label(cheat.Name, name);
+                GUILayout.BeginHorizontal();
+
+                foreach (Option option in cheat.Options)
+                {
+                    bool on = option.On != null && option.On();
+
+                    if (GUILayout.Button((on ? "▶ " : string.Empty) + option.Label, button))
+                    {
+                        Run(cheat, option);
+                    }
+                }
+
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
-
-            if (m_focus)
-            {
-                GUI.FocusControl(k_InputName);
-                m_focus = false;
-            }
         }
 
-        // 플레이를 끝낼 때 열려 있었어도 키보드를 되살린다(장치 상태는 플레이를 넘어 남는다)
-        private void OnDestroy()
+        private void Run(Cheat cheat, Option option)
         {
-            SetKeyboard(true);
-        }
-
-        private static void SetKeyboard(bool enabled)
-        {
-            if (Keyboard.current == null || Keyboard.current.enabled == enabled)
-            {
-                return;
-            }
-
-            if (enabled)
-            {
-                InputSystem.EnableDevice(Keyboard.current);
-            }
-            else
-            {
-                InputSystem.DisableDevice(Keyboard.current);
-            }
-        }
-
-        private void Run()
-        {
-            Cheat cheat = m_cheats[m_selected];
-
-            try
-            {
-                m_result = cheat.Run(m_input);
-            }
-            catch (Exception ex) when (ex is FormatException || ex is IndexOutOfRangeException)
-            {
-                m_result = "값을 확인하세요: " + cheat.Hint;
-            }
-
-            Debug.Log("[치트] " + cheat.Name + " " + m_input + " → " + m_result);
+            m_result = option.Run();
+            Debug.Log("[치트] " + cheat.Name + " " + option.Label + " → " + m_result);
         }
     }
 }
