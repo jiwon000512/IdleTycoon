@@ -20,5 +20,7 @@ namespace ZooTycoon.Core
         // 설계 38: 농장 점원 자리(작업대 앞 바닥, 농장 원점 기준 유닛). 그림은 입구 장식 모종 작업대
         public double BarnX { get; set; }
         public double BarnY { get; set; }
+        // 설계 39: 굴 재료가 바뀌는 층 간격(1~earthEvery층은 첫 묶음, 그다음 earthEvery층은 다음 묶음 …, 묶음은 FarmView)
+        public int EarthEvery { get; set; }
     }
 }

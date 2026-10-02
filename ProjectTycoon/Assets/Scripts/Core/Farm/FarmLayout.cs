@@ -9,10 +9,11 @@ namespace ZooTycoon.Core
     // 설계 39: 아래층이 열린 층은 층 맨 아래 줄 밑 가운데(가운데 통로 끝)에 계단 굴을 더 판다
     public sealed class FarmLayout
     {
-        // 계단 굴 반폭 · 깊이(유닛, 계단 그림 1.6 × 1.3에 맞춤)와 아래층에서 올라와 서는 곳(굴 입구에서 아래로)
-        private const float k_StairHalfWidth = 0.8f;
-        private const float k_StairDepth = 1.4f;
-        private const float k_StairStand = 0.4f;
+        // 계단 굴 반폭 · 깊이(유닛, 계단 그림 1.3 × 0.775 + 둘레 바닥)와 아래층에서 올라와 서는 곳(굴 윗변에서 아래로, 첫 디딤판 위).
+        // 서는 곳 아래 0.25부터 통로 띠라 걷는 땅 밑변(깊이 − 몸 반 폭 0.3)보다 위여야 한다
+        private const float k_StairHalfWidth = 0.75f;
+        private const float k_StairDepth = 1.0f;
+        private const float k_StairStand = 0.3f;
 
         private static readonly NavRect[] s_noBlocked = new NavRect[0];
 

@@ -613,9 +613,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ZooTycoon.World::ZooTycoon.World.FarmView
   m_burrow: {fileID: 3624798579287713283}
-  m_floorTile: {fileID: 2800000, guid: cbe2c1fb1b307594393261131b9a1129, type: 3}
-  m_wallTile: {fileID: 2800000, guid: 882915a7e11f7f64f99f73a3c756154c, type: 3}
-  m_wallFace: {fileID: 2800000, guid: f8b8f3fe1380e1a4f8215b817762678b, type: 3}
+  m_earths:
+  - Floor: {fileID: 2800000, guid: cbe2c1fb1b307594393261131b9a1129, type: 3}
+    Wall: {fileID: 2800000, guid: 882915a7e11f7f64f99f73a3c756154c, type: 3}
+    Face: {fileID: 2800000, guid: f8b8f3fe1380e1a4f8215b817762678b, type: 3}
+    Backdrop: {fileID: 21300000, guid: 882915a7e11f7f64f99f73a3c756154c, type: 3}
+  - Floor: {fileID: 2800000, guid: dd7ee185f52182b48a48b4d49c9ca9cd, type: 3}
+    Wall: {fileID: 2800000, guid: 98c6400fbed1bc044805499e9b45d046, type: 3}
+    Face: {fileID: 2800000, guid: dc324d5bbaa06da489b86ae5118fbf3c, type: 3}
+    Backdrop: {fileID: 21300000, guid: 98c6400fbed1bc044805499e9b45d046, type: 3}
   m_arch: {fileID: 2315082637935100317}
   m_backdrop: {fileID: 4870268180189305727}
   m_stairsUp: {fileID: 21300000, guid: cf74362de9eedb2499c3c53166bef5e4, type: 3}
@@ -2023,12 +2029,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1995
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: cf74362de9eedb2499c3c53166bef5e4, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 069ae5a4631377a4aaf358d7d17153c5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
-  m_FlipY: 1
+  m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.6, y: 1.3}
+  m_Size: {x: 1.3, y: 0.775}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1

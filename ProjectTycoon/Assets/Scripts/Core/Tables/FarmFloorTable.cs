@@ -18,7 +18,5 @@ namespace ZooTycoon.Core
         public double TillCost { get; set; }
         // 이 층을 여는 계단 값(위층을 다 판 뒤 치른다). 첫 층은 0(처음부터 열림)
         public double OpenCost { get; set; }
-        // 굴 그림에 곱하는 색(#RRGGBB). 층별 그림이 오기 전 임시
-        public string Tint { get; set; }
     }
 }

@@ -176,6 +176,8 @@ namespace ZooTycoon.Editor
             }
             Import(k_FarmDir + "farm_sparkle_0.png", center);
             Import(k_FarmDir + "farm_sparkle_1.png", center);
+            // 설계 39: 내려가는 계단은 위 가운데(그림 윗변 = 방 바닥선 = 계단 굴 윗변)
+            Import(k_FarmDir + "stairs_down.png", new Vector2(0.5f, 1f));
 
             foreach (string prop in k_FarmProps)
             {
@@ -200,6 +202,10 @@ namespace ZooTycoon.Editor
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_SpriteDir + "wall_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_SpriteDir + "wall_face.png", new Vector2(0f, 1f), k_TagPpu, true);
+            // 설계 39: 농장 6층부터 붉은 흙(아트방 C, 빵집 타일과 크기 · 결이 같다)
+            Import(k_FarmDir + "floor_tile_red.png", new Vector2(0f, 1f), k_TagPpu, true);
+            Import(k_FarmDir + "wall_tile_red.png", new Vector2(0f, 1f), k_TagPpu, true);
+            Import(k_FarmDir + "wall_face_red.png", new Vector2(0f, 1f), k_TagPpu, true);
 
             foreach (string name in new[] { "b01", "b02", "b03" })
             {
@@ -639,7 +645,7 @@ namespace ZooTycoon.Editor
         }
 
         // 설계 25 → 27: 농장 굴. 굴 그림·구멍 아치·밭 칸은 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다. 파기 표식은 빵집과 같은 프리팹.
-        // 설계 39: 층 계단은 광장 계단 그림을 빌린다(2층부터 위 구멍 · 위아래로 뒤집어 내려가는 계단, 아트방 그림이 오면 바꾼다)
+        // 설계 39: 2층부터 위 구멍은 광장 계단 그림을 빌리고, 내려가는 계단은 아트방 B3(바닥에 뚫린 흙 계단 구멍, 계단 굴 윗변에 선다)
         static void BakeFarm(PlotView plot, MarkerView digTag, SpriteAnimator poop, VisitorView customer)
         {
             GameObject root = new GameObject("Farm");
@@ -650,8 +656,7 @@ namespace ZooTycoon.Editor
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
             Sprite stairs = AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png");
-            SpriteRenderer stairsDown = Renderer(root.transform, "StairsDown", stairs, Vector3.zero, k_ArchOrder);
-            stairsDown.flipY = true;
+            SpriteRenderer stairsDown = Renderer(root.transform, "StairsDown", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "stairs_down.png"), Vector3.zero, k_ArchOrder);
             stairsDown.gameObject.SetActive(false);
             GameObject props = Child(root.transform, "EntranceProps", Vector3.zero);
 
@@ -664,7 +669,7 @@ namespace ZooTycoon.Editor
 
             FarmView view = root.AddComponent<FarmView>();
             Set(view, "m_burrow", burrow);
-            SetBurrowTextures(view);
+            SetEarths(view);
             Set(view, "m_arch", arch.transform);
             Set(view, "m_backdrop", backdrop);
             Set(view, "m_stairsUp", stairs);
@@ -678,6 +683,27 @@ namespace ZooTycoon.Editor
             Set(view, "m_clerkPrefab", customer);
             Set(view, "m_wombat", wombat);
             Save(root, view, "Farm");
+        }
+
+        // 설계 39: 농장 층 재료 묶음 — [0] 빵집과 같은 흙(Shop), [1] 붉은 흙(Farm/*_red)
+        static void SetEarths(Object view)
+        {
+            string[][] earths = { new[] { k_SpriteDir, "" }, new[] { k_FarmDir, "_red" } };
+            SerializedObject so = new SerializedObject(view);
+            SerializedProperty array = so.FindProperty("m_earths");
+            array.arraySize = earths.Length;
+
+            for (int i = 0; i < earths.Length; i++)
+            {
+                SerializedProperty earth = array.GetArrayElementAtIndex(i);
+                string dir = earths[i][0], suffix = earths[i][1];
+                earth.FindPropertyRelative("Floor").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(dir + "floor_tile" + suffix + ".png");
+                earth.FindPropertyRelative("Wall").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(dir + "wall_tile" + suffix + ".png");
+                earth.FindPropertyRelative("Face").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>(dir + "wall_face" + suffix + ".png");
+                earth.FindPropertyRelative("Backdrop").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(dir + "wall_tile" + suffix + ".png");
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static void SetBurrowTextures(Object view)

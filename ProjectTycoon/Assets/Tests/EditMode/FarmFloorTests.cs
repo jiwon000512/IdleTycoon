@@ -138,7 +138,7 @@ namespace ZooTycoon.Tests
             Assert.That(First.Things.OfType<StairInteractable>(), Is.Empty);
             Assert.That(First.Things.OfType<PassageInteractable>().Select(passage => passage.To), Is.EquivalentTo(new[] { PlazaArea.k_Id, Second.Id }));
             Assert.That(First.Layout.Nav.IsWalkable(First.Layout.StairFloor), Is.True);
-            Assert.That(First.Layout.Nav.IsWalkable(First.Layout.StairFloor - new Vector2(0f, 0.5f)), Is.True, "계단 굴 안쪽 띠까지 걷는다");
+            Assert.That(First.Layout.Nav.IsWalkable(First.Layout.StairFloor - new Vector2(0f, 0.3f)), Is.True, "계단 굴 안쪽 띠까지 걷는다");
         }
 
         // 계단 굴 아래로 걸어 들어가면 2층 위 구멍 앞에 서고, 2층 위 구멍으로 올라가면 1층 계단 굴 안에 선다. 2층 위 구멍은 광장이 아니라 1층으로 간다

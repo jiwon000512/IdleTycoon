@@ -28,8 +28,8 @@ namespace ZooTycoon.Tests
         [TestCase("PlazaDecorTable", 1)]
         [TestCase("ItemTable", 5)]
         [TestCase("CropTable", 4)]
-        [TestCase("FarmConfigTable", 6)]
-        [TestCase("FarmFloorTable", 1)]
+        [TestCase("FarmConfigTable", 7)]
+        [TestCase("FarmFloorTable", 2)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -267,7 +267,7 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(freeTill), Is.Not.Empty);
         }
 
-        // 설계 39: 첫 층이 농장이 아님 · 첫 층에 여는 값 · 아래층이 공짜 · 색조가 #RRGGBB가 아님 · 점원 탭 글 없음
+        // 설계 39: 첫 층이 농장이 아님 · 첫 층에 여는 값 · 아래층이 공짜 · 점원 탭 글 없음 · 흙 바뀌는 층 간격 0
         [Test]
         public void Validate_WhenFarmFloorDataInvalid_ReportsError()
         {
@@ -275,15 +275,15 @@ namespace ZooTycoon.Tests
             paidFirst.Get<FarmFloorTable>(FarmArea.k_Id).OpenCost = 10d;
             TableSet freeLower = TestTables.Load();
             freeLower.GetAll<FarmFloorTable>()[1].OpenCost = 0d;
-            TableSet badTint = TestTables.Load();
-            badTint.GetAll<FarmFloorTable>()[1].Tint = "red";
+            TableSet noEvery = TestTables.Load();
+            noEvery.Get<FarmConfigTable>(FarmConfigTable.k_Main).EarthEvery = 0;
             TableSet noTab = TestTables.Load();
             noTab.GetAll<FarmFloorTable>()[1].Id = "farm9";
 
             Assert.That(TableValidator.Validate(TestTables.LoadWithout("FarmFloorTable", FarmArea.k_Id)), Is.Not.Empty);
             Assert.That(TableValidator.Validate(paidFirst), Is.Not.Empty);
             Assert.That(TableValidator.Validate(freeLower), Is.Not.Empty);
-            Assert.That(TableValidator.Validate(badTint), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noEvery), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noTab), Is.Not.Empty);
         }
 

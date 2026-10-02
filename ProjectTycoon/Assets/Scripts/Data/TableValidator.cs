@@ -10,7 +10,6 @@ namespace ZooTycoon.Data
     public static class TableValidator
     {
         private static readonly Regex k_IdPattern = new Regex("^[a-z][a-z0-9_]*$");
-        private static readonly Regex k_HexColor = new Regex("^#[0-9A-Fa-f]{6}$");
         private static readonly Regex k_VisitorIdPattern = new Regex("^v[0-9]{2}$");
         private static readonly Regex k_BreadIdPattern = new Regex("^b[0-9]{2}$");
         // 코드에 클래스가 있는 사물(행동은 ActionFactory.Ids)
@@ -761,9 +760,9 @@ namespace ZooTycoon.Data
                     errors.Add($"FarmConfigTable '{farm.Id}': manureItem·bonusItem은 ItemTable에 있고, manureGrowScale은 0 초과 1 이하, bonusChance는 0~1, manureBonusScale은 1 이상이어야 한다.");
                 }
 
-                if (farm.FieldInset < 0d || farm.FieldInset >= 1d)
+                if (farm.FieldInset < 0d || farm.FieldInset >= 1d || farm.EarthEvery < 1)
                 {
-                    errors.Add($"FarmConfigTable '{farm.Id}': fieldInset는 0 이상 1 미만이어야 한다.");
+                    errors.Add($"FarmConfigTable '{farm.Id}': fieldInset는 0 이상 1 미만, earthEvery는 1 이상이어야 한다.");
                 }
             }
 
@@ -772,7 +771,7 @@ namespace ZooTycoon.Data
         }
 
         // 설계 27 · 39: 층은 시작 칸(가운데 두 열 × startRows줄, 입구 줄 포함)을 담고, 시작 밭은 시작 칸의 밭 줄 안, 값은 0보다 크고 증가율은 1 이상.
-        // 첫 층은 농장(FarmArea.k_Id)이고 처음부터 열려 openCost 0, 아래층은 openCost > 0. 색조는 #RRGGBB, 층마다 점원 팝업 탭 글(clerk_tab_<id>)
+        // 첫 층은 농장(FarmArea.k_Id)이고 처음부터 열려 openCost 0, 아래층은 openCost > 0. 층마다 점원 팝업 탭 글(clerk_tab_<id>)
         private static void ValidateFarmFloors(TableSet tables, List<string> errors)
         {
             IReadOnlyList<FarmFloorTable> floors = tables.GetAll<FarmFloorTable>();
@@ -798,9 +797,9 @@ namespace ZooTycoon.Data
                     errors.Add($"FarmFloorTable '{floor.Id}': openCost는 첫 층 0, 아래층은 0보다 커야 한다.");
                 }
 
-                if (floor.Tint == null || !k_HexColor.IsMatch(floor.Tint) || !strings.Contains("clerk_tab_" + floor.Id))
+                if (!strings.Contains("clerk_tab_" + floor.Id))
                 {
-                    errors.Add($"FarmFloorTable '{floor.Id}': tint는 #RRGGBB이고 StringTable에 clerk_tab_{floor.Id}가 있어야 한다.");
+                    errors.Add($"FarmFloorTable '{floor.Id}': StringTable에 clerk_tab_{floor.Id}가 있어야 한다.");
                 }
             }
         }

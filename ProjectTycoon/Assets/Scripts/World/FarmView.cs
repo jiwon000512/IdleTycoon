@@ -11,8 +11,9 @@ namespace ZooTycoon.World
     // 설계 25 → 설계 27: 농장 굴 화면. 굴 그림은 빵집·광장과 같은 BurrowPainter(판 칸이 늘면 다시 칠한다), 구멍 아치(광장으로)는 첫 줄 가운데, 파기 표식·연출은 공용 DigView.
     // 밭은 Core FarmArea.Plots(판 칸마다 하나, 사라지지 않는다)를 객체 키로 맞추고, 대상인 흙 칸 위에 갈기 값 표식, 거두면 밭 위로 재료 아이콘과 「+3」이 떠오른다.
     // 놓는 사물이 없어 편집 그림자·외곽선은 없다(편집 모드 = 파기 표식 전부).
-    // 설계 39: 층마다 화면 하나. 굴 그림 · 둘레 흙에 층 색조(FarmFloorTable tint)를 곱하고, 2층부터 위 구멍은 올라가는 계단. 다 판 층은 맨 아래 가운데에
-    // 계단 값 표식, 아래층이 열리면 그 자리에 계단 굴이 파이고(흙덩이) 내려가는 계단이 선다(층별 그림은 아트방 · 지금은 광장 계단을 빌려 씀)
+    // 설계 39: 층마다 화면 하나. 굴 재료(바닥 · 벽 · 윗벽 띠 · 둘레 흙)는 FarmConfigTable earthEvery층마다 다음 묶음(1~5층 빵집과 같은 흙, 6층~ 붉은 흙),
+    // 2층부터 위 구멍은 올라가는 계단. 다 판 층은 맨 아래 가운데에
+    // 계단 값 표식, 아래층이 열리면 그 자리에 계단 굴이 파이고(흙덩이) 내려가는 계단이 선다(층별 굴 그림은 아트방 · 지금은 색조)
     public sealed class FarmView : MonoBehaviour, IAreaView
     {
         private const string k_PopupKey = "harvest_popup";
@@ -43,13 +44,11 @@ namespace ZooTycoon.World
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
-        [Tooltip("바닥·벽·윗벽 띠 재료(빵집과 같은 것)")]
-        [SerializeField] private Texture2D m_floorTile;
-        [SerializeField] private Texture2D m_wallTile;
-        [SerializeField] private Texture2D m_wallFace;
+        [Tooltip("설계 39: 층 재료 묶음. [0] = 빵집과 같은 흙, [1] = 붉은 흙 …. 묶음이 모자라면 마지막 것")]
+        [SerializeField] private Earth[] m_earths;
         [Tooltip("구멍 아치(나가기 대상이면 튄다)")]
         [SerializeField] private Transform m_arch;
-        [Tooltip("설계 39: 둘레 흙(층 색조를 곱한다)")]
+        [Tooltip("설계 39: 둘레 흙(층 재료의 벽 타일을 깐다)")]
         [SerializeField] private SpriteRenderer m_backdrop;
         [Tooltip("설계 39: 2층부터 위 구멍 그림(올라가는 계단)")]
         [SerializeField] private Sprite m_stairsUp;
@@ -84,9 +83,20 @@ namespace ZooTycoon.World
         private ClerkViews m_clerkViews;
         private Interactable m_shownTarget;
         private MarkerView m_stairTag;
+        private Earth m_earth;
         private bool m_editing;
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
+
+        // 설계 39: 굴 재료 한 묶음(바닥 · 벽 · 윗벽 띠는 굴 그림이 픽셀을 읽고, 둘레 흙은 벽 타일 그림)
+        [Serializable]
+        private struct Earth
+        {
+            public Texture2D Floor;
+            public Texture2D Wall;
+            public Texture2D Face;
+            public Sprite Backdrop;
+        }
 
         // 굴을 팠다(카메라 경계가 넓어진다)
         public event Action Expanded;
@@ -125,12 +135,11 @@ namespace ZooTycoon.World
             m_dig = new DigView(this, m_digTagPrefab, tables, farm.Grid, cell => ToWorld(cells.CellCenter(cell)), new Vector2(cells.CellWidth, cells.CellHeight), m_digSeconds);
             m_poopViews = new PoopViews(this, farm, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, ToWorld);
             m_clerkViews = new ClerkViews(this, farm, bus, m_clerkPrefab, tables, frames, transform, null);
+            m_earth = m_earths[Math.Min((farm.Number - 1) / farm.Config.EarthEvery, m_earths.Length - 1)];
+            m_backdrop.sprite = m_earth.Backdrop;
             Repaint();
             m_arch.localPosition = new Vector3(farm.Layout.HoleFloor.X, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f);
             m_entranceProps.localPosition = m_arch.localPosition;
-            ColorUtility.TryParseHtmlString(farm.Floor.Tint, out Color tint);
-            m_burrow.color = tint;
-            m_backdrop.color = tint;
 
             if (farm.Upper != null)
             {
@@ -227,7 +236,7 @@ namespace ZooTycoon.World
         {
             BurrowShape.Result shape = m_farm.Layout.Shape;
             Sprite old = m_burrow.sprite;
-            m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
+            m_burrow.sprite = BurrowPainter.Paint(shape, m_earth.Floor, m_earth.Wall, m_earth.Face);
             m_burrow.transform.localPosition = new Vector3(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit, 0f);
 
             if (old != null)
