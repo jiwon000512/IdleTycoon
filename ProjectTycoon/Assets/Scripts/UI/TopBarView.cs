@@ -12,7 +12,7 @@ namespace ZooTycoon.UI
     // 연출 1차: 상단 바는 코인만. 값이 바뀌면 0.25초 동안 숫자가 오른다(첫 표시는 즉시)
     // 숫자는 공용 코인 캡슐(Prefabs/UI/CoinPill) 안의 금색 글자.
     // 설계 30: 석상 축복이 걸린 동안 코인 아래 축복 알약(아이콘 · 효과 · 남은 시간, 마지막 10초는 깜빡임). 그동안 쓴 코인 표시는 그 아래로 내려간다.
-    // 설계 40: 별 평가 중에는 맨 위에 평가 알약(「평가 ★7」 · 남은 시간)과 조건 알약(이름 · 진행/목표, 채우면 초록 · 실망이 상한에 닿으면 빨강)이 쌓인다.
+    // 설계 40 · 41: 별 평가 중에는 화면 위 가운데에 평가 카드 하나(별 · 「★7 평가」 · 남은 시간과 줄어드는 막대 · 조건 칸: 아이콘 + 진행/목표, 채우면 초록 체크 · 실망이 상한에 닿으면 빨강). 왼쪽 알약 줄과 따로다.
     // 설계 31 · 32: 떠돌이 행상 알약은 늘 보인다(행상이 있으면 「행상 2:59」, 없으면 회색 얼굴 + 시간만 「13:57」, 2026-10-01 사용자 B). 알약은 코인 아래로 위에서부터 쌓인다(축복 → 행상)
     public sealed class TopBarView : UIView
     {
@@ -22,20 +22,16 @@ namespace ZooTycoon.UI
         private const double k_BlinkSeconds = 10d;
         private const float k_BlinkSpeed = 4f;
         private const float k_BlinkMin = 0.45f;
+        // 평가 카드 밑과 왼쪽 알약 사이
+        private const float k_CardGap = 8f;
         // 행상이 없을 때 얼굴 아이콘 색
         private static readonly Color k_AwayFace = new Color(0.45f, 0.45f, 0.45f);
-        // 설계 40 조건 값 색: 채움(초록) · 실망 상한에 닿음(빨강). 어두운 알약 위라 밝게
-        private static readonly Color k_GoalDone = new Color32(0x9F, 0xE0, 0xA8, 0xFF);
-        private static readonly Color k_GoalBad = new Color32(0xFF, 0x9A, 0x8A, 0xFF);
-
-        // 설계 40 조건 알약 한 줄: 아이콘(없으면 null) · 이름 · 값(진행/목표) · 채움 · 위험
+        // 설계 41 조건 칸 하나: 아이콘(아이콘 목록 id 또는 Resources 경로) · 값(진행/목표) · 상태. 매 프레임 읽는다
         public sealed class GoalData
         {
-            public string IconPath;
-            public string Text;
+            public string Icon;
             public Func<string> Value;
-            public Func<bool> Done;
-            public Func<bool> Bad;
+            public Func<InfoTile.State> State;
         }
 
         [SerializeField] private TMP_Text m_coinsText;
@@ -52,18 +48,19 @@ namespace ZooTycoon.UI
         [SerializeField] private Image m_merchantIcon;
         [SerializeField] private TMP_Text m_merchantText;
         [SerializeField] private TMP_Text m_merchantTime;
-        [Tooltip("설계 40 평가 알약(맨 위): 「평가 ★7」 · 남은 시간")]
+        [Tooltip("설계 41 평가 카드(화면 위 가운데): 별 · 「★7 평가」 · 남은 시간 · 시간 막대 · 조건 칸")]
         [SerializeField] private CanvasGroup m_evaluation;
         [SerializeField] private Image m_evaluationIcon;
         [Tooltip("별 그림(EvaluationView와 같은 다섯 장)")]
         [SerializeField] private Sprite[] m_stars;
         [SerializeField] private TMP_Text m_evaluationText;
         [SerializeField] private TMP_Text m_evaluationTime;
-        [Tooltip("설계 40 조건 알약(평가 알약 아래, 큰 평가는 넷): 아이콘(판 빵만) · 이름 · 진행/목표")]
-        [SerializeField] private CanvasGroup[] m_goals;
-        [SerializeField] private Image[] m_goalIcons;
-        [SerializeField] private TMP_Text[] m_goalTexts;
-        [SerializeField] private TMP_Text[] m_goalValues;
+        [Tooltip("남은 시간 막대(Filled)")]
+        [SerializeField] private Image m_evaluationBar;
+        [Tooltip("조건 칸(큰 평가는 넷)")]
+        [SerializeField] private InfoTile[] m_goals;
+        [Tooltip("이름으로 찾는 조건 아이콘(말풍선 ♥ · !!). 빵은 Resources 경로")]
+        [SerializeField] private List<InfoTile.IconRef> m_icons = new List<InfoTile.IconRef>();
 
         private Func<double, string> m_format;
         private double m_from;
@@ -77,6 +74,7 @@ namespace ZooTycoon.UI
         private float m_blessingDelay;
         private Func<double> m_merchantLeft;
         private Func<double> m_evaluationLeft;
+        private double m_evaluationTotal;
         private IReadOnlyList<GoalData> m_goalData;
         private float m_pillTop;
 
@@ -89,7 +87,7 @@ namespace ZooTycoon.UI
             m_merchant.gameObject.SetActive(false);
             m_evaluation.gameObject.SetActive(false);
 
-            foreach (CanvasGroup goal in m_goals)
+            foreach (InfoTile goal in m_goals)
             {
                 goal.gameObject.SetActive(false);
             }
@@ -145,12 +143,13 @@ namespace ZooTycoon.UI
             }
         }
 
-        // 설계 40: 평가 알약 · 조건 알약을 켠다(값은 매 프레임 읽기 함수로)
-        public void ShowEvaluation(int star, string header, Func<double> remaining, IReadOnlyList<GoalData> goals)
+        // 설계 41: 평가 카드를 켠다(남은 시간 · 조건 값은 매 프레임 읽기 함수로). total = 평가 전체 초(막대)
+        public void ShowEvaluation(int star, string header, Func<double> remaining, double total, IReadOnlyList<GoalData> goals)
         {
             m_evaluationIcon.sprite = EvaluationView.StarSprite(m_stars, star);
             m_evaluationText.text = header;
             m_evaluationLeft = remaining;
+            m_evaluationTotal = total;
             m_goalData = goals;
             m_evaluation.gameObject.SetActive(true);
 
@@ -161,9 +160,7 @@ namespace ZooTycoon.UI
 
                 if (shown)
                 {
-                    m_goalIcons[i].gameObject.SetActive(goals[i].IconPath != null);
-                    m_goalIcons[i].sprite = goals[i].IconPath != null ? Resources.Load<Sprite>(goals[i].IconPath) : null;
-                    m_goalTexts[i].text = goals[i].Text;
+                    m_goals[i].SetIcon(InfoTile.Find(m_icons, goals[i].Icon));
                 }
             }
 
@@ -176,24 +173,18 @@ namespace ZooTycoon.UI
         {
             m_evaluationLeft = null;
             m_evaluation.gameObject.SetActive(false);
-
-            foreach (CanvasGroup goal in m_goals)
-            {
-                goal.gameObject.SetActive(false);
-            }
-
             Stack();
         }
 
         private void RefreshEvaluation()
         {
-            m_evaluationTime.text = BigNumberFormatter.Clock(m_evaluationLeft());
+            double left = m_evaluationLeft();
+            m_evaluationTime.text = BigNumberFormatter.Clock(left);
+            m_evaluationBar.fillAmount = m_evaluationTotal > 0d ? Mathf.Clamp01((float)(left / m_evaluationTotal)) : 0f;
 
             for (int i = 0; i < m_goalData.Count && i < m_goals.Length; i++)
             {
-                GoalData goal = m_goalData[i];
-                m_goalValues[i].text = goal.Value();
-                m_goalValues[i].color = goal.Bad() ? k_GoalBad : goal.Done() ? k_GoalDone : Color.white;
+                m_goals[i].SetValue(m_goalData[i].Value(), m_goalData[i].State());
             }
         }
 
@@ -205,17 +196,19 @@ namespace ZooTycoon.UI
             Stack();
         }
 
-        // 켜진 알약을 위에서부터 붙여 놓고, 쓴 코인 표시는 맨 아래 알약 밑으로
+        // 켜진 알약을 위에서부터 붙여 놓고, 쓴 코인 표시는 맨 아래 알약 밑으로. 평가 카드가 떠 있으면 그 아래부터
         private void Stack()
         {
             float y = m_pillTop;
 
-            List<CanvasGroup> pills = new List<CanvasGroup> { m_evaluation };
-            pills.AddRange(m_goals);
-            pills.Add(m_blessing);
-            pills.Add(m_merchant);
+            if (m_evaluation.gameObject.activeSelf)
+            {
+                RectTransform card = (RectTransform)m_evaluation.transform;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(card);
+                y = Mathf.Min(y, card.anchoredPosition.y - card.rect.height - k_CardGap);
+            }
 
-            foreach (CanvasGroup pill in pills)
+            foreach (CanvasGroup pill in new[] { m_blessing, m_merchant })
             {
                 if (!pill.gameObject.activeSelf)
                 {

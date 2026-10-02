@@ -1,6 +1,6 @@
 {
   "table": "SoundTable",
-  "version": 14,
+  "version": 15,
   "notes": [
     "설계 10·23: 효과음. id는 코드(SoundTable.k_*)와 같아야 하고, 어느 사건에 나는지는 코드(World WorldSound · UI View)가 정한다. 재생은 GameKit SoundManager(GameManager.Init이 이 표를 등록한다).",
     "clip: Resources/ 기준 경로(확장자 없음). Assets/Audio/Source~/make_sfx.py로 합성한 실제 소리(2026-09-24 사용자 선택). 바꿀 때는 같은 경로에 덮어쓴다.",
@@ -18,7 +18,8 @@
     "version 11 (2026-09-30, 설계 30 석상 축복): statue_roll은 빌 때 이름이 돌기 시작, statue_legend를 statue_blessed(축복이 멈춰 걸림)로 바꿈, blessing_end(축복이 풀림) 추가. make_sfx.py 1차(에이전트 판단).",
     "version 12 (2026-10-01, 반짝돌 뽑기 돌 깨기 · 아트방 시안 A 「칩튠 돌」): draw_tap_0 · draw_tap_1(금 0 · 1) · draw_crack(금 2) · draw_break(산산조각) · draw_reveal(유물 솟기) 추가. 뽑기에서 빌려 쓰던 statue_roll은 석상에만.",
     "version 13 (2026-10-02, 아트방 도착 B 「행상 가락」 · 덤 A 「유리 티링」): merchant_arrive(행상이 좌판에 섬, 네 음) 추가. bonus는 같은 경로에 덮어씀(유리알 종 두 번). 덤 소리는 덤 팝업과 같은 때(거두기 0.25초 뒤).",
-    "version 14 (2026-10-02, 설계 40 별 평가): eval_start(평가 시작) · eval_pass(통과) · eval_fail(실패) · tip(팁) · star_tier(별 색이 오름) 추가. 아트방 소리 전이라 있는 소리 파일을 빌린다."
+    "version 14 (2026-10-02, 설계 40 별 평가): eval_start(평가 시작) · eval_pass(통과) · eval_fail(실패) · tip(팁) · star_tier(별 색이 오름) 추가. 아트방 소리 전이라 있는 소리 파일을 빌린다.",
+    "version 15 (2026-10-02, 아트방 「칩튠 팡파르」 A): 별 평가 다섯 소리를 빌린 파일에서 새 파일(Audio/eval_start · eval_pass · eval_fail · tip · star_tier)로, 음량 0.5(시안 흐름 그대로)."
   ],
   "rows": [
     { "id": "pay", "clip": "Audio/pay", "volume": 0.6, "minGap": 0.1, "comboSeconds": 2.5, "pitchStep": 0.05, "pitchMax": 1.3 },
@@ -57,10 +58,10 @@
     { "id": "draw_break", "clip": "Audio/draw_break", "volume": 0.6, "minGap": 0.05, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "draw_reveal", "clip": "Audio/draw_reveal", "volume": 0.6, "minGap": 0.05, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
     { "id": "merchant_arrive", "clip": "Audio/merchant_arrive", "volume": 0.5, "minGap": 0.2, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
-    { "id": "eval_start", "clip": "Audio/merchant_arrive", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
-    { "id": "eval_pass", "clip": "Audio/statue_blessed", "volume": 0.6, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
-    { "id": "eval_fail", "clip": "Audio/nego_bad", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
-    { "id": "tip", "clip": "Audio/bonus", "volume": 0.4, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
-    { "id": "star_tier", "clip": "Audio/draw_reveal", "volume": 0.6, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
+    { "id": "eval_start", "clip": "Audio/eval_start", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "eval_pass", "clip": "Audio/eval_pass", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "eval_fail", "clip": "Audio/eval_fail", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "tip", "clip": "Audio/tip", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 },
+    { "id": "star_tier", "clip": "Audio/star_tier", "volume": 0.5, "minGap": 0.1, "comboSeconds": 0, "pitchStep": 0, "pitchMax": 1 }
   ]
 }

@@ -10,6 +10,7 @@ namespace ZooTycoon.World
     // 설계 08 v0.5 · 손님 동선 설계 v0.2: BakeryArea 손님 사건 → 손님 개체 생성·연출·삭제. 걷기와 판단은 Core가 하고 개체는 그 위치를 그린다.
     // 설계 21 → 설계 38: 빵집 점원 그림은 같은 프리팹으로 곳 공용 ClerkViews가 그린다(자리에 닿으면 사물이 튄다).
     // 설계 40: 평가단장도 같은 프리팹(평가가 끝나면 한마디 말풍선), 팁은 그 손님 머리 위 「팁 +N」(코인 팝업 위에 쌓인다)
+    // 설계 41: 평가 중에 들어온 손님(맛 평가단) 머리 위에 수첩 표식
     public sealed class BakeryVisitorSpawner : MonoBehaviour
     {
         private const string k_CoinKey = "coin_popup";
@@ -78,6 +79,7 @@ namespace ZooTycoon.World
 
             VisitorView unit = Instantiate(m_prefab, transform);
             unit.Initialize(e.Visitor, m_frames, m_view.transform);
+            unit.MarkWhile(() => m_shop.Evaluation.IsJudge(e.Visitor));
             m_units[e.Visitor] = unit;
         }
 

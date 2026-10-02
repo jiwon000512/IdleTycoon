@@ -58,6 +58,10 @@ namespace ZooTycoon.Core
         public IReadOnlyList<Goal> Goals => m_goals;
         public IReadOnlyList<Goal> NextGoals => MakeGoals();
         public string Shop => m_shop.Id;
+
+        // 설계 41: 평가 중에 들어온 손님(맛 평가단)인가. 머리 위 수첩 표식
+        public bool IsJudge(BakeryVisitor visitor) => Running && m_judges.Contains(visitor);
+
         // 끝난 평가의 평가단장 한마디(StringTable id, DialogueTable judge_pass · judge_fail 중 하나). 말풍선 · 소식지가 같은 줄을 쓴다
         public string LastLine { get; private set; }
 

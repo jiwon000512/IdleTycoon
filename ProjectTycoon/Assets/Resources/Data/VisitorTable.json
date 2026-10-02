@@ -1,6 +1,6 @@
 {
   "table": "VisitorTable",
-  "version": 14,
+  "version": 15,
   "notes": [
     "기획서 4장 관광객(v0.14). v1.14부터 빵집 손님 외형 전용: 손님이 들어올 때마다 한 행을 고른다.",
     "sprite·idleSheet·moveSheet·backIdleSheet·backMoveSheet는 Resources/ 기준 경로(확장자 없음). idle·move 시트가 null이면 sprite 1장, back 시트가 null이면 앞모습 시트를 쓴다.",
@@ -16,7 +16,8 @@
     "version 11 (2026-09-29, 캐릭터 애니메이션 B3): idleFrameRate·moveFrameRate 삭제 — 프레임마다 다른 시간(숨쉬기 4 · 걷기 8)을 손님 프리팹(VisitorView m_idleSeconds · m_walkSeconds)이 갖는다. blinkSheet·sideBlinkSheet 추가(눈 감은 숨쉬기, 눈이 없으면 null). 시트는 Shop/Source~/make_anim.py(부위 조립)가 만든다.",
     "version 12 (2026-09-29, 딴짓): fidgetSheet·backFidgetSheet·sideFidgetSheet 추가 — 서 있을 때 가끔 숨쉬기 사이에 한 번 끼워 넣는 동작(두리번 · 귀 쫑긋 · 꼬리 살랑 등, 종 · 방향마다 한 벌, 없으면 null). 한 칸 시간 · 간격은 손님 프리팹(VisitorView m_fidgetFrameSeconds · m_fidgetEvery). 시트는 Shop/Source~/make_anim.py.",
     "version 13 (2026-10-01, 설계 31 떠돌이 행상): role merchant 행 v06(PlazaConfigTable.merchantLook). 광장 손님 · 점원 외형으로는 뽑히지 않는다. 그림은 아트방 너구리 시트(Tanuki, 칸 폭 112px).",
-    "version 14 (2026-10-02, 설계 40 별 평가): role judge 추가 — 평가단장(StarConfigTable judgeLook). v07은 펭귄 그림을 임시로 빌린다(아트방 그림 전)."
+    "version 14 (2026-10-02, 설계 40 별 평가): role judge 추가 — 평가단장(StarConfigTable judgeLook). v07은 펭귄 그림을 임시로 빌린다(아트방 그림 전).",
+    "version 15 (2026-10-02, 아트방 「안경 평론가」 부엉이): 평가단장 v07의 그림을 빌린 펭귄에서 Sprites/Visitors/Owl/Owl*로(칸 구성은 다른 손님과 같다)."
   ],
   "rows": [
     {
@@ -143,18 +144,18 @@
       "id": "v07",
       "name": "평가단장",
       "role": "judge",
-      "sprite": "Sprites/Visitors/Penguin/Penguin",
-      "idleSheet": "Sprites/Visitors/Penguin/Penguin_Idle",
-      "moveSheet": "Sprites/Visitors/Penguin/Penguin_Move",
-      "backIdleSheet": "Sprites/Visitors/Penguin/Penguin_BackIdle",
-      "backMoveSheet": "Sprites/Visitors/Penguin/Penguin_BackMove",
-      "sideIdleSheet": "Sprites/Visitors/Penguin/Penguin_SideIdle",
-      "sideMoveSheet": "Sprites/Visitors/Penguin/Penguin_SideMove",
-      "blinkSheet": "Sprites/Visitors/Penguin/Penguin_Blink",
-      "sideBlinkSheet": "Sprites/Visitors/Penguin/Penguin_SideBlink",
-      "fidgetSheet": "Sprites/Visitors/Penguin/Penguin_Fidget",
-      "backFidgetSheet": "Sprites/Visitors/Penguin/Penguin_BackFidget",
-      "sideFidgetSheet": "Sprites/Visitors/Penguin/Penguin_SideFidget",
+      "sprite": "Sprites/Visitors/Owl/Owl",
+      "idleSheet": "Sprites/Visitors/Owl/Owl_Idle",
+      "moveSheet": "Sprites/Visitors/Owl/Owl_Move",
+      "backIdleSheet": "Sprites/Visitors/Owl/Owl_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/Owl/Owl_BackMove",
+      "sideIdleSheet": "Sprites/Visitors/Owl/Owl_SideIdle",
+      "sideMoveSheet": "Sprites/Visitors/Owl/Owl_SideMove",
+      "blinkSheet": "Sprites/Visitors/Owl/Owl_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/Owl/Owl_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/Owl/Owl_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/Owl/Owl_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/Owl/Owl_SideFidget",
       "scale": 1,
       "carryAt": "head",
       "handRatio": 0.33

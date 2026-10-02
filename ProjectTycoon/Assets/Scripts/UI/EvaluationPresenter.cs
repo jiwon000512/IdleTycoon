@@ -1,16 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 40 평가 팝업: 평가판 버튼(EvaluationBoardOpened)으로 「빵집 평가」를 열고, 부르기를 Core Evaluation에 잇는다.
-    // 평가가 끝나면(EvaluationEnded) 같은 틀에 「굴 소식」: 통과면 별 · 평가단장 한마디 · 쌓인 능력 · 보상 · 새 마일스톤, 실패면 모자란 조건. 편집 모드에서는 닫는다
+    // 설계 40 · 41 평가 팝업: 평가판 버튼(EvaluationBoardOpened)으로 「빵집 평가」를 열고, 부르기를 Core Evaluation에 잇는다.
+    // 평가가 끝나면(EvaluationEnded) 「굴 소식」: 통과면 별 · 평가단장 한마디 · 얻은 것 칸, 실패면 조건 칸. 글 목록 대신 아이콘 칸(설계 41). 편집 모드에서는 닫는다
     public sealed class EvaluationPresenter : IDisposable
     {
+        // 말풍선 칸과 같은 아이콘(EvaluationView 아이콘 목록 id)
+        private const string k_HeartIcon = "heart";
+        private const string k_AngryIcon = "angry";
+
         private readonly EvaluationView m_view;
         private readonly ZooState m_state;
         private readonly TableSet m_tables;
@@ -65,116 +70,114 @@ namespace ZooTycoon.UI
             m_news = false;
             StarConfigTable config = m_evaluation.Config;
             int stars = Stars;
-            List<string> lines = new List<string>
-            {
-                m_tables.Format(m_evaluation.IsBig ? "eval_next_big" : "eval_next", m_evaluation.NextStar, m_evaluation.Seconds.ToString("0", CultureInfo.InvariantCulture)),
-                m_tables.Format("eval_rush", config.Rush.ToString("0.#", CultureInfo.InvariantCulture)),
-            };
-
-            foreach (Evaluation.Goal goal in m_evaluation.NextGoals)
-            {
-                lines.Add(GoalLine(goal));
-            }
-
-            lines.Add(string.Empty);
-            lines.Add(m_tables.Format("eval_unlock", m_evaluation.NextStar));
-            lines.Add(m_tables.Format("eval_bonus_price", Percent(config.PriceBonus)));
-            lines.Add(m_tables.Format("eval_bonus_visitors", Percent(config.VisitorsBonus)));
-            lines.AddRange(MilestoneLines(m_state.Stars.Milestone(m_evaluation.Shop, m_evaluation.NextStar)));
-            lines.Add(m_tables.Format("eval_reward_line", config.RewardCount));
-
-            m_view.Show(new EvaluationView.PageData
+            int next = m_evaluation.NextStar;
+            double tip = m_state.Stars.TipChance(m_evaluation.Shop);
+            m_view.ShowBoard(new EvaluationView.BoardData
             {
                 Title = m_tables.Text("eval_title"),
                 Stars = stars,
-                Name = stars > 0 ? m_tables.Format("eval_stars", stars) : m_tables.Text("eval_no_stars"),
-                Effect = m_tables.Format("eval_bonus_price", Percent(stars * config.PriceBonus)),
-                Time = m_tables.Format("eval_bonus_visitors", Percent(stars * config.VisitorsBonus)),
-                Hint = string.Join("\n", lines),
+                Name = m_tables.Format("eval_stars", stars),
+                Sub = stars == 0 ? m_tables.Text("eval_no_stars") : tip > 0d ? m_tables.Format("eval_tip", Percent(tip)) : null,
+                Price = m_tables.Format("eval_percent", Percent(stars * config.PriceBonus)),
+                Visitors = m_tables.Format("eval_percent", Percent(stars * config.VisitorsBonus)),
+                Tag = m_tables.Format(m_evaluation.IsBig ? "eval_tag_big" : "eval_tag", next),
+                Time = m_tables.Format("eval_seconds", m_evaluation.Seconds.ToString("0", CultureInfo.InvariantCulture)),
+                Rush = m_tables.Format("eval_times", config.Rush.ToString("0.#", CultureInfo.InvariantCulture)),
+                Goals = m_evaluation.NextGoals.Select(goal => GoalTile(goal, false)).ToList(),
+                UnlockTag = m_tables.Format("eval_unlock", next),
+                Rewards = RewardTiles(next),
+                Extra = MilestoneText(next),
                 Button = () => m_evaluation.Running ? m_tables.Text("eval_running")
                     : m_evaluation.CanStart ? m_tables.Text("eval_call") : m_tables.Format("eval_again", BigNumberFormatter.Clock(m_evaluation.Cooldown)),
                 ButtonEnabled = () => m_evaluation.CanStart,
             });
         }
 
-        // 통과: 쌓인 능력 · 팁 · 보상 · 새 마일스톤. 실패: 못 채운 조건(진행/목표)
+        // 통과: 이번 별로 얻은 것(칸) · 팁 · 글 해금. 실패: 조건 칸(못 채운 것 빨강, 채운 것 초록 체크)
         private void ShowNews(bool passed)
         {
             m_news = true;
-            StarConfigTable config = m_evaluation.Config;
             int stars = Stars;
-            List<string> lines = new List<string>();
-
-            if (passed)
+            double tip = m_state.Stars.TipChance(m_evaluation.Shop);
+            string[] extra = { tip > 0d ? m_tables.Format("eval_tip", Percent(tip)) : null, MilestoneText(stars) };
+            m_view.ShowNews(new EvaluationView.NewsData
             {
-                lines.Add(m_tables.Format("eval_bonus_price", Percent(stars * config.PriceBonus)));
-                lines.Add(m_tables.Format("eval_bonus_visitors", Percent(stars * config.VisitorsBonus)));
-                double tip = m_state.Stars.TipChance(m_evaluation.Shop);
+                Masthead = m_tables.Text("news_title"),
+                Title = passed ? m_tables.Format("news_pass", stars) : m_tables.Text("news_fail"),
+                Stars = passed ? stars : 0,
+                Line = m_tables.Format("news_line", m_tables.Text(m_evaluation.LastLine)),
+                BoxLabel = m_tables.Text(passed ? "news_gain" : "news_short"),
+                Rewards = passed ? RewardTiles(stars) : null,
+                Goals = passed ? null : m_evaluation.Goals.Select(goal => GoalTile(goal, true)).ToList(),
+                Extra = passed ? string.Join("\n", extra.Where(line => line != null)) : null,
+                Button = m_tables.Text(passed ? "news_ok" : "news_retry"),
+            });
+        }
 
-                if (tip > 0d)
-                {
-                    lines.Add(m_tables.Format("eval_tip", Percent(tip)));
-                }
+        // 조건 칸: 미리 보기는 목표(10명 · 3개 · 3명까지), 결과는 진행(6/10 · 실망 4명)과 채움 · 모자람
+        private InfoTile.Data GoalTile(Evaluation.Goal goal, bool result)
+        {
+            InfoTile.Data tile = new InfoTile.Data
+            {
+                State = !result ? InfoTile.State.Normal : goal.Done ? InfoTile.State.Done : InfoTile.State.Bad,
+            };
 
-                lines.Add(m_tables.Format("eval_reward_line", config.RewardCount));
-                lines.AddRange(MilestoneLines(m_state.Stars.Milestone(m_evaluation.Shop, stars)));
+            switch (goal.Kind)
+            {
+                case Evaluation.GoalKind.Serve:
+                    tile.Icon = k_HeartIcon;
+                    tile.Caption = m_tables.Text("goal_serve_cap");
+                    tile.Value = result ? m_tables.Format("eval_progress", goal.Progress, goal.Target) : m_tables.Format("goal_people", goal.Target);
+                    break;
+                case Evaluation.GoalKind.Sell:
+                    tile.Icon = goal.Bread.Sprite;
+                    tile.Caption = m_tables.Format("goal_sell_cap", goal.Bread.Name);
+                    tile.Value = result ? m_tables.Format("eval_progress", goal.Progress, goal.Target) : m_tables.Format("goal_pieces", goal.Target);
+                    break;
+                default:
+                    tile.Icon = k_AngryIcon;
+                    tile.Caption = m_tables.Text("goal_lost_cap");
+                    tile.Value = result ? m_tables.Format("goal_people", goal.Progress) : m_tables.Format("goal_until", goal.Target);
+                    break;
             }
-            else
-            {
-                lines.Add(m_tables.Text("news_short"));
 
-                foreach (Evaluation.Goal goal in m_evaluation.Goals)
+            return tile;
+        }
+
+        // 별 star개가 되면 얻는 것: 별마다 능력 둘 · 마일스톤 상한(지금 → 다음) · 보상
+        private List<InfoTile.Data> RewardTiles(int star)
+        {
+            StarConfigTable config = m_evaluation.Config;
+            string shop = m_evaluation.Shop;
+            List<InfoTile.Data> tiles = new List<InfoTile.Data>
+            {
+                new InfoTile.Data { Icon = m_tables.Get<BlessingTable>(BlessingTable.k_Price).Icon, Value = m_tables.Format("eval_percent", Percent(config.PriceBonus)) },
+                new InfoTile.Data { Icon = m_tables.Get<BlessingTable>(BlessingTable.k_Visitors).Icon, Value = m_tables.Format("eval_percent", Percent(config.VisitorsBonus)) },
+            };
+            StarMilestoneTable milestone = m_state.Stars.Milestone(shop, star);
+
+            if (milestone != null)
+            {
+                foreach ((int value, string kind) in new[] { (milestone.ShelfMax, ShelfInteractable.k_Id), (milestone.OvenMax, OvenInteractable.k_Id), (milestone.CounterMax, CounterInteractable.k_Id), (milestone.UpgradeMax, ZooTycoon.Core.Stars.k_Upgrade) })
                 {
-                    if (!goal.Done || goal.Kind == Evaluation.GoalKind.Lost && goal.Progress > goal.Target)
+                    if (value > 0)
                     {
-                        lines.Add(GoalLine(goal) + " " + goal.Progress + "/" + goal.Target);
+                        int from = m_state.Stars.CapAt(shop, kind, star - 1);
+                        string text = from == int.MaxValue ? value.ToString(CultureInfo.InvariantCulture) : m_tables.Format("eval_from_to", from, value);
+                        tiles.Add(new InfoTile.Data { Icon = kind, Value = text });
                     }
                 }
             }
 
-            m_view.Show(new EvaluationView.PageData
-            {
-                Title = m_tables.Text("news_title"),
-                Stars = passed ? stars : 0,
-                Name = passed ? m_tables.Format("news_pass", stars) : m_tables.Text("news_fail"),
-                Effect = m_tables.Text(m_evaluation.LastLine),
-                Time = string.Empty,
-                Hint = string.Join("\n", lines),
-                Button = () => m_tables.Text(passed ? "news_ok" : "news_retry"),
-                ButtonEnabled = () => true,
-            });
+            tiles.Add(new InfoTile.Data { Icon = m_tables.Get<ItemTable>(config.RewardItem).Icon, Value = m_tables.Format("eval_times", config.RewardCount) });
+            return tiles;
         }
 
-        private string GoalLine(Evaluation.Goal goal)
+        // 칸으로 못 그리는 해금(팁이 나온다 · 다음 가게)
+        private string MilestoneText(int star)
         {
-            switch (goal.Kind)
-            {
-                case Evaluation.GoalKind.Serve: return m_tables.Format("goal_serve_line", goal.Target);
-                case Evaluation.GoalKind.Sell: return m_tables.Format("goal_sell_line", goal.Bread.Name, goal.Target);
-                default: return m_tables.Format("goal_lost_line", goal.Target);
-            }
-        }
-
-        // 마일스톤 한 행: 바뀌는 상한마다 한 줄 + 그 밖의 해금 글
-        private IEnumerable<string> MilestoneLines(StarMilestoneTable milestone)
-        {
-            if (milestone == null)
-            {
-                yield break;
-            }
-
-            foreach ((int value, string key) in new[] { (milestone.ShelfMax, "milestone_shelf"), (milestone.OvenMax, "milestone_oven"), (milestone.CounterMax, "milestone_counter"), (milestone.UpgradeMax, "milestone_upgrade") })
-            {
-                if (value > 0)
-                {
-                    yield return m_tables.Format(key, value);
-                }
-            }
-
-            if (milestone.Text != null)
-            {
-                yield return m_tables.Text(milestone.Text);
-            }
+            string text = m_state.Stars.Milestone(m_evaluation.Shop, star)?.Text;
+            return text != null ? m_tables.Text(text) : null;
         }
 
         private void Bus_BoardOpened(Events.EvaluationBoardOpened e)

@@ -53,19 +53,19 @@ namespace ZooTycoon.UI
             }
         }
 
-        // 설계 40: 평가 알약(「평가 ★7」 · 남은 시간)과 조건 알약(만족 · 판 빵(빵 아이콘) · 실망)
+        // 설계 41: 평가 카드(「★7 평가」 · 남은 시간 · 막대)와 조건 칸(♥ 만족 · 판 빵 · !! 실망, 말풍선과 같은 그림)
         private void Bus_EvaluationStarted(Events.EvaluationStarted e)
         {
             Evaluation evaluation = e.Evaluation;
             List<TopBarView.GoalData> goals = evaluation.Goals.Select(goal => new TopBarView.GoalData
             {
-                IconPath = goal.Kind == Evaluation.GoalKind.Sell ? goal.Bread.Sprite : null,
-                Text = goal.Kind == Evaluation.GoalKind.Serve ? m_tables.Text("goal_serve") : goal.Kind == Evaluation.GoalKind.Sell ? goal.Bread.Name : m_tables.Text("goal_lost"),
-                Value = () => goal.Progress + "/" + goal.Target,
-                Done = () => goal.Kind != Evaluation.GoalKind.Lost && goal.Done,
-                Bad = () => goal.Kind == Evaluation.GoalKind.Lost && goal.Progress >= goal.Target,
+                Icon = goal.Kind == Evaluation.GoalKind.Sell ? goal.Bread.Sprite : goal.Kind == Evaluation.GoalKind.Serve ? "heart" : "angry",
+                Value = () => m_tables.Format("eval_progress", goal.Progress, goal.Target),
+                State = () => goal.Kind == Evaluation.GoalKind.Lost
+                    ? goal.Progress >= goal.Target ? InfoTile.State.Bad : InfoTile.State.Normal
+                    : goal.Done ? InfoTile.State.Done : InfoTile.State.Normal,
             }).ToList();
-            m_view.ShowEvaluation(evaluation.NextStar, m_tables.Format("eval_pill", evaluation.NextStar), () => evaluation.Remaining, goals);
+            m_view.ShowEvaluation(evaluation.NextStar, m_tables.Format(evaluation.IsBig ? "eval_tag_big" : "eval_tag", evaluation.NextStar), () => evaluation.Remaining, evaluation.Seconds, goals);
         }
 
         // 설계 31 · 32 · 34: 행상 알약은 늘 보인다. 오는 중 · 서 있음은 「행상」 + 떠날 때까지(서기 전에는 머무는 초 그대로),

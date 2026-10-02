@@ -8,7 +8,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 설계 40 검증: 별 마일스톤 상한(사물 수 · 업그레이드) · 조건 공식 · 통과(별 · 능력 · 보상) · 실패(쉬는 시간) · 평가 중 가게 지키기 · 팁 확률. 실제 JSON 값
+    // 설계 40 · 41 검증: 별 마일스톤 상한(사물 수 · 업그레이드) · 조건 공식 · 통과(별 · 능력 · 보상) · 실패(쉬는 시간) · 평가 중 가게 지키기 · 평가단 · 팁 확률. 실제 JSON 값
     public sealed class EvaluationTests
     {
         private const double k_Dt = 0.02;
@@ -173,6 +173,37 @@ namespace ZooTycoon.Tests
             Assert.That(m_mall.Active, Is.SameAs(m_shop));
             Assert.That(m_shop.Wombat.Bubble.Id, Is.EqualTo(BubbleTable.k_Wait));
             Assert.That(Vector2.Distance(m_shop.Judge.Position, m_shop.Layout.Nav.Snap(new Vector2((float)Config.JudgeX, (float)Config.JudgeY))), Is.LessThan(0.05f));
+        }
+
+        // 설계 41 수첩 표식: 평가 중에 들어온 손님만 평가단, 평가가 끝나면 아무도 아니다
+        [Test]
+        public void Judges_AreOnlyVisitorsAdmittedDuringEvaluation()
+        {
+            BakeryVisitor before = Admit();
+            Evaluation.TryStart();
+            BakeryVisitor during = Admit();
+
+            Assert.That(Evaluation.IsJudge(before), Is.False);
+            Assert.That(Evaluation.IsJudge(during), Is.True);
+
+            Evaluation.PassNow();
+            Assert.That(Evaluation.IsJudge(during), Is.False);
+        }
+
+        // 설계 41 평가판의 「2→3」: 별 n개일 때 상한(CapAt)은 별을 n개 딴 뒤의 상한(Cap)과 같다
+        [Test]
+        public void CapAt_MatchesCapAfterThatManyStars()
+        {
+            Stars stars = m_state.Stars;
+            string[] kinds = { ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id, Stars.k_Upgrade };
+            int[] now = kinds.Select(k => stars.Cap(BakeryArea.k_Id, k)).ToArray();
+            int[] next = kinds.Select(k => stars.CapAt(BakeryArea.k_Id, k, 1)).ToArray();
+
+            Assert.That(kinds.Select(k => stars.CapAt(BakeryArea.k_Id, k, 0)), Is.EqualTo(now));
+            Assert.That(next, Is.Not.EqualTo(now), "★1 마일스톤이 상한을 연다");
+
+            Evaluation.PassNow();
+            Assert.That(kinds.Select(k => stars.Cap(BakeryArea.k_Id, k)), Is.EqualTo(next));
         }
 
         // 팁은 tipFrom별부터, 별마다 오르고 최대에서 멈춘다

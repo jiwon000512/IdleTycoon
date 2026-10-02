@@ -23,6 +23,10 @@ namespace ZooTycoon.World
         [Tooltip("설계 22 이모지 말풍선(BubbleTable 칸 번호 = bubble_sheet 칸). Core Bubble 상태를 매 프레임 읽는다")]
         [SerializeField] private SpriteRenderer m_bubble;
         [SerializeField] private Sprite[] m_bubbleFrames;
+        [Tooltip("설계 41 평가단 수첩 표식(머리 위). 말풍선 · 글자 말풍선 · 머리에 인 빵과 같은 자리라 그동안 숨긴다")]
+        [SerializeField] private SpriteRenderer m_mark;
+        [Tooltip("표식을 머리 꼭대기에서 띄우는 높이(3px)")]
+        [SerializeField] private float m_markLift = 0.0375f;
         [Tooltip("집은 빵. 계산할 때까지 앞발(또는 머리 위)에")]
         [SerializeField] private SpriteRenderer m_carry;
         [Tooltip("대화 글자 말풍선(9-slice 상자 + 글)")]
@@ -78,6 +82,7 @@ namespace ZooTycoon.World
         private Facing m_facing = Facing.Down;
         private bool m_carryOnHead;
         private Coroutine m_saying;
+        private System.Func<bool> m_marked;
 
         private Vector3 HeadOffset => new Vector3(0f, m_height, 0f);
         // 2026-09-23: 집은 빵은 visitors.carryAt 자리에 든다. 앞발이면 옆모습에서 보는 쪽으로 내민다
@@ -112,6 +117,8 @@ namespace ZooTycoon.World
             m_bubble.transform.localPosition = HeadOffset;
             m_say.transform.localPosition = HeadOffset + Vector3.up * Bubbles.SayLift;
             m_bubble.enabled = false;
+            m_mark.transform.localPosition = HeadOffset + Vector3.up * m_markLift;
+            m_mark.enabled = false;
             m_carry.enabled = false;
             Bubbles.HideSay(m_say, m_sayTail, m_sayText);
             Update();
@@ -158,6 +165,12 @@ namespace ZooTycoon.World
             PopCoin(amount);
         }
 
+        // 설계 41: marked가 참인 동안 머리 위에 평가단 표식(빵집 손님만)
+        public void MarkWhile(System.Func<bool> marked)
+        {
+            m_marked = marked;
+        }
+
         // 머리 위 코인 + 금액(손님 결제 · 점원 월급)
         public void PopCoin(string amount)
         {
@@ -184,6 +197,8 @@ namespace ZooTycoon.World
             SetAlpha(alpha);
             Facing facing = m_walker.Facing;
             Bubbles.Show(m_bubble, m_bubbleFrames, m_walker.Bubble, m_saying == null && alpha > 0f);
+            m_mark.enabled = m_marked != null && m_marked() && !m_bubble.enabled && m_saying == null && !(m_carrying && m_carryOnHead) && alpha > 0f;
+            m_mark.color = new Color(1f, 1f, 1f, alpha);
             Show(facing, m_walker.Moving && !m_walker.Paused);
             m_facing = facing;
             m_carry.sortingOrder = m_carryOnHead ? k_CarryFrontOrder : Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder);

@@ -107,8 +107,8 @@ namespace ZooTycoon.Editor
             // 굴 환경 A2: 피벗 = 구멍 밑변 = 띠 밑변(입구 줄 바닥 윗변)
             Import(k_SpriteDir + "arch.png", bottom);
 
-            // 설계 24: 똥(poop_0·1 = 냄새 김 2프레임, Source~/make_poop.py)
-            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "wait", "poop_0", "poop_1" })
+            // 설계 24: 똥(poop_0·1 = 냄새 김 2프레임, Source~/make_poop.py) · 설계 41 평가단 수첩 표식(judge_mark, Source~/make_judge_mark.py)
+            foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "wait", "poop_0", "poop_1", "judge_mark" })
             {
                 Import(k_SpriteDir + name + ".png", bottom);
             }
@@ -478,6 +478,8 @@ namespace ZooTycoon.Editor
             Set(customer, "m_coinPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             Set(customer, "m_carry", carry);
             BakeBubbles(root.transform, customer, 0.8f);
+            // 설계 41 평가단 수첩 표식(아트방 「수첩과 연필」): 말풍선 자리, 높이는 실행 중에 맞춘다
+            Set(customer, "m_mark", Renderer(root.transform, "Mark", Load("judge_mark"), new Vector3(0f, 0.8f, 0f), 50));
             return Save(root, customer, "Visitor");
         }
 

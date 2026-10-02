@@ -10,17 +10,17 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("VisitorTable", 14)]
-        [TestCase("StringTable", 39)]
+        [TestCase("VisitorTable", 15)]
+        [TestCase("StringTable", 40)]
         [TestCase("ClerkTable", 2)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 17)]
+        [TestCase("ActionTable", 18)]
         [TestCase("InteractableTable", 18)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 14)]
+        [TestCase("SoundTable", 15)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 4)]
         [TestCase("BakeryConfigTable", 8)]

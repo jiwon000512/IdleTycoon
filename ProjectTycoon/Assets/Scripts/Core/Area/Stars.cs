@@ -56,9 +56,15 @@ namespace ZooTycoon.Core
         // 지금 별까지 마일스톤 중 그 칸이 0이 아닌 마지막 값. 표에 그 가게가 없으면 상한 없음
         public int Cap(string shop, string kind)
         {
+            return CapAt(shop, kind, Count(shop));
+        }
+
+        // 별 star개일 때의 상한(설계 41 평가판 · 소식지의 「2→3」)
+        public int CapAt(string shop, string kind, int star)
+        {
             int cap = int.MaxValue;
 
-            foreach (StarMilestoneTable milestone in Milestones(shop).Where(m => m.Star <= Count(shop)))
+            foreach (StarMilestoneTable milestone in Milestones(shop).Where(m => m.Star <= star))
             {
                 int value = CapOf(milestone, kind);
                 cap = value > 0 ? value : cap;
