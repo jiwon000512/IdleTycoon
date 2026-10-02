@@ -1,213 +1,223 @@
-# 설계 22 이모지 말풍선 더미 시트: wait_sheet(52×36, 점 셋 3프레임)의 빈 틀 위에 글리프를 칸(2px) 단위로 찍는다.
-# 칸 순서 = BubbleTable frame: 0~2 점(그대로) · 3 ♪ · 4 ? · 5 ! · 6 ♥ · 7 !! · 8 💬(작은 말풍선 둘) · 9 🤢(설계 24: 똥 + 냄새 김). 실제 아트는 아트방(같은 틀·같은 칸 순서).
-# 깨우기 · 치우기(설계 24) · 심기(설계 25) 버튼 아이콘(Resources/Sprites/Actions/wake.png · clean.png · plant.png, 18×18)도 같은 팔레트로 더미를 찍는다.
+# 설계 22 이모지 말풍선 시트(2026-10-02 사용자 선택 C 「색 + 그늘 + 움직임」, 시안 A 굵은 한 색 · B 색 + 그늘(정지)은 버림).
+# 틀과 기다림 점 셋은 wait_sheet(52×36, 2026-09-25 시안 A) 그대로, 안의 기호 일곱을 칸(2px) 무늬로 찍는다. 기호는 10줄 안,
+# 바탕색 + 아래 · 오른쪽 한 톤 어둡게 + 왼쪽 위 밝은 한 획(사물 그림의 빛), 기호마다 두 칸이 번갈아 돈다.
+# 칸 순서(BubbleTable frame · frames): 0~2 점 셋 · 3~4 ♪(통통) · 5~6 ?(통통) · 7~8 !(통통) · 9~10 ♥(콩닥) · 11~12 !!(좌우 떨림)
+#   · 13~14 💬(두 말풍선 번갈아 들썩) · 15~16 🤢(메스꺼운 얼굴, 내려앉으며 볼이 부풂)
+# 출력 ../bubble_sheet.png(칸 폭 52px · 17칸). 실행: Windows Python(Pillow · numpy) make_bubble_sheet.py
 import os
+import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHOP = os.path.join(HERE, '..')
-ACTIONS = os.path.join(SHOP, '..', '..', '..', 'Resources', 'Sprites', 'Actions')
-CELL = 52
-INK = (52, 32, 32, 255)
-CREAM = (240, 228, 216, 255)
-DOT = (92, 76, 66, 255)
-RED = (166, 75, 60, 255)
-PINK = (222, 96, 108, 255)
-POOP = (108, 76, 52, 255)
-STINK = (132, 150, 96, 255)
-STRAW = (214, 170, 96, 255)
-LEAF = (86, 128, 64, 255)
-SOIL = (108, 76, 52, 255)
+CELL_W = 26  # 칸 수(한 칸 = 2px)
+CREAM = (240, 228, 216)
+DOT = (92, 76, 66)
 
-GLYPHS = {
+# '#' 바탕 · 'x' 얼굴 이목구비 · 'c' 크림(말풍선 안 점)
+G = {
     'note': [
-        "....##..",
-        "....#.#.",
-        "....#..#",
-        "....#..#",
-        "....#...",
-        "..###...",
-        ".####...",
-        "..##....",
+        "......##....",
+        "......####..",
+        "......##.##.",
+        "......##..##",
+        "......##...#",
+        "......##....",
+        "...#####....",
+        "..######....",
+        "..#####.....",
+        "...###......",
     ],
     'question': [
-        ".####...",
-        "#....#..",
-        ".....#..",
-        "....#...",
-        "...#....",
-        "...#....",
-        "........",
-        "...#....",
-    ],
-    'alert': [
-        "..##....",
-        "..##....",
-        "..##....",
-        "..##....",
-        "..##....",
-        "........",
-        "..##....",
-        "..##....",
-    ],
-    'heart': [
-        ".##..##.",
-        "########",
-        "########",
-        "########",
-        ".######.",
         "..####..",
+        ".######.",
+        "##....##",
+        "......##",
+        "....###.",
+        "...###..",
         "...##...",
         "........",
+        "...##...",
+        "...##...",
+    ],
+    'alert': [
+        "##",
+        "##",
+        "##",
+        "##",
+        "##",
+        "##",
+        "..",
+        "##",
+        "##",
+    ],
+    'heart': [
+        ".###....###.",
+        "#####..#####",
+        "############",
+        "############",
+        "############",
+        ".##########.",
+        "..########..",
+        "...######...",
+        "....####....",
+        ".....##.....",
+    ],
+    'heart_small': [
+        "..##....##..",
+        ".####..####.",
+        ".##########.",
+        ".##########.",
+        "..########..",
+        "...######...",
+        "....####....",
+        ".....##.....",
     ],
     'angry': [
-        ".##..##.",
-        ".##..##.",
-        ".##..##.",
-        ".##..##.",
-        ".##..##.",
-        "........",
-        ".##..##.",
-        ".##..##.",
+        "##..##",
+        "##..##",
+        "##..##",
+        "##..##",
+        "##..##",
+        "##..##",
+        "......",
+        "##..##",
+        "##..##",
     ],
-    'chat': [
-        "####....",
-        "#..#....",
-        "####....",
+    'chat_l': [
+        ".######.",
+        "########",
+        "#c#c#c##",
+        "########",
+        ".######.",
+        ".##.....",
         ".#......",
-        "....####",
-        "....#..#",
-        "....####",
+    ],
+    'chat_r': [
+        ".######.",
+        "########",
+        "##c#c#c#",
+        "########",
+        ".######.",
+        ".....##.",
         "......#.",
     ],
-    # 설계 24: 똥(#) 위에 냄새 김(+)
+    # 🤢 꼭 감은 눈(> <) · 물결 입
     'yuck': [
-        ".+..+...",
-        "+..+....",
-        ".+..+...",
-        "..####..",
-        ".######.",
-        ".######.",
-        ".######.",
-        "........",
+        "..######..",
+        ".########.",
+        "##x####x##",
+        "###x##x###",
+        "##x####x##",
+        "##########",
+        "###x##x###",
+        "##x#xx#x##",
+        ".########.",
+        "..######..",
     ],
 }
-COLORS = {'note': DOT, 'question': DOT, 'alert': RED, 'heart': PINK, 'angry': RED, 'chat': DOT, 'yuck': POOP}
-# 두 번째 색(+)
-COLORS2 = {'yuck': STINK}
-ORDER = ['note', 'question', 'alert', 'heart', 'angry', 'chat', 'yuck']
+
+# 바탕 · 그늘 · 하이라이트
+TONE = {
+    'note': ((200, 120, 72), (156, 86, 52), (240, 192, 150)),
+    'question': ((84, 132, 170), (60, 98, 134), (176, 210, 228)),
+    'alert': ((206, 82, 62), (156, 54, 44), (244, 172, 152)),
+    'heart': ((226, 96, 112), (178, 62, 82), (250, 198, 202)),
+    'angry': ((206, 82, 62), (156, 54, 44), (244, 172, 152)),
+    'chat_l': ((104, 160, 138), (74, 122, 104), (190, 226, 210)),
+    'chat_r': ((214, 150, 92), (168, 108, 62), (244, 208, 166)),
+    'yuck': ((150, 178, 104), (110, 140, 74), (206, 224, 170)),
+}
+TONE['heart_small'] = TONE['heart']
+FEATURE = (58, 76, 42)
 
 
-def blank_frame(sheet):
-    frame = sheet.crop((0, 0, CELL, sheet.height)).copy()
-    px = frame.load()
-    for y in range(frame.height):
-        for x in range(frame.width):
-            if px[x, y][:3] == DOT[:3]:
-                px[x, y] = CREAM
-    return frame
+def mask(name):
+    rows = G[name]
+    m = np.array([[c == '#' for c in r] for r in rows])
+    x = np.array([[c in 'xc' for c in r] for r in rows])
+    return m | x, x
 
 
-def stamp(frame, glyph, color, color2=None):
-    px = frame.load()
-    rows = len(glyph)
-    cols = len(glyph[0])
-    # 글리프 1칸 = 2px, 말풍선 안쪽(꼬리 위) 가운데
-    ox = (CELL - cols * 2) // 2
-    oy = (26 - rows * 2) // 2 + 2
-    for r, line in enumerate(glyph):
-        for c, ch in enumerate(line):
-            if ch in '#+':
-                for dy in range(2):
-                    for dx in range(2):
-                        px[ox + c * 2 + dx, oy + r * 2 + dy] = color if ch == '#' else color2
+def place(name, dy=0, dx=0):
+    # 말풍선 안쪽(크림 1~13줄) 가운데, 10줄 기호는 3~12줄
+    m, _ = mask(name)
+    h, w = m.shape
+    return 3 + (10 - h) // 2 + dy, 13 - (w + 1) // 2 + dx
+
+
+def paint(rgb, name, dy=0, dx=0):
+    m, x = mask(name)
+    h, w = m.shape
+    top, left = place(name, dy, dx)
+    base, shade, light = TONE[name]
+    for j in range(h):
+        for i in range(w):
+            if not m[j, i]:
+                continue
+            if G[name][j][i] == 'c':
+                col = CREAM
+            elif x[j, i]:
+                col = FEATURE
+            else:
+                # 그늘: 아래 · 오른쪽이 바깥인 칸(빛은 왼쪽 위에서)
+                below = j + 1 >= h or not m[j + 1, i]
+                right = i + 1 >= w or not m[j, i + 1]
+                col = shade if (below or right) else base
+            rgb[top + j, left + i] = col
+    # 하이라이트 한 획: 위가 바깥이고 아래 · 오른쪽이 바탕인 첫 칸에서 가로 2칸(♪ · ! · !!은 1칸)
+    body = m & ~x
+    for j in range(h):
+        hits = [i for i in range(w) if body[j, i] and (j == 0 or not m[j - 1, i]) and i + 1 < w and body[j, i + 1]
+                and j + 1 < h and m[j + 1, i]]
+        if hits:
+            i = hits[0]
+            rgb[top + j, left + i] = light
+            if name not in ('alert', 'angry', 'note') and body[j, i + 1]:
+                rgb[top + j, left + i + 1] = light
+            break
+
+
+def blank_frame(wait):
+    # 빈 말풍선 틀: 기다림 첫 칸에서 점을 크림으로 지운다
+    f = wait[:, :CELL_W].copy()
+    f[(f[..., :3] == DOT).all(-1) & (f[..., 3] > 0)] = CREAM + (255,)
+    return f
+
+
+def glyph(blank, parts):
+    f = blank.copy()
+    for name, dy, dx in parts:
+        paint(f[..., :3], name, dy, dx)
+    return f
+
+
+def yuck_puffed(blank):
+    # 🤢 두 번째 칸: 한 칸 내려앉으며 양 볼이 한 칸씩 부푼다
+    f = glyph(blank, [('yuck', 1, 0)])
+    top, left = place('yuck', 1, 0)
+    for j in (top + 5, top + 6):
+        for i in (left - 1, left + 10):
+            f[j, i] = TONE['yuck'][1] + (255,)
+    return f
 
 
 def make_sheet():
-    wait = Image.open(os.path.join(SHOP, 'wait_sheet.png')).convert('RGBA')
-    frames = [wait.crop((i * CELL, 0, (i + 1) * CELL, wait.height)) for i in range(3)]
-    for name in ORDER:
-        frame = blank_frame(wait)
-        stamp(frame, GLYPHS[name], COLORS[name], COLORS2.get(name))
-        frames.append(frame)
-    sheet = Image.new('RGBA', (CELL * len(frames), wait.height), (0, 0, 0, 0))
-    for i, f in enumerate(frames):
-        sheet.alpha_composite(f, (i * CELL, 0))
-    sheet.save(os.path.join(SHOP, 'bubble_sheet.png'))
-    print('bubble_sheet', sheet.size)
-
-
-def make_wake_icon():
-    # 18×18: 둥근 크림 바탕 + 붉은 「!」 (open.png와 같은 팔레트)
-    im = Image.new('RGBA', (18, 18), (0, 0, 0, 0))
-    px = im.load()
-    for y in range(18):
-        for x in range(18):
-            dx, dy = x - 8.5, y - 8.5
-            d = dx * dx + dy * dy
-            if d <= 64:
-                px[x, y] = CREAM if d <= 49 else INK
-    for y in range(4, 11):
-        for x in range(8, 10):
-            px[x, y] = RED
-    for y in range(12, 14):
-        for x in range(8, 10):
-            px[x, y] = RED
-    os.makedirs(ACTIONS, exist_ok=True)
-    im.save(os.path.join(ACTIONS, 'wake.png'))
-    print('wake icon')
-
-
-def make_clean_icon():
-    # 설계 24 치우기: 둥근 크림 바탕 + 세운 빗자루(진갈색 자루 · 묶음 띠, 아래로 벌어지는 짚색 솔). 기운 선은 「금지」로 읽혀 세웠다
-    im = Image.new('RGBA', (18, 18), (0, 0, 0, 0))
-    px = im.load()
-    for y in range(18):
-        for x in range(18):
-            dx, dy = x - 8.5, y - 8.5
-            d = dx * dx + dy * dy
-            if d <= 64:
-                px[x, y] = CREAM if d <= 49 else INK
-    for y in range(3, 10):
-        for x in range(8, 10):
-            px[x, y] = INK
-    for x in range(7, 11):
-        px[x, 10] = INK
-    for y in range(11, 15):
-        spread = (y - 11) // 2
-        for x in range(7 - spread, 11 + spread):
-            px[x, y] = STRAW
-    os.makedirs(ACTIONS, exist_ok=True)
-    im.save(os.path.join(ACTIONS, 'clean.png'))
-    print('clean icon')
-
-
-def make_plant_icon():
-    # 설계 25 심기: 둥근 크림 바탕 + 흙 둔덕 위 두 잎 새싹
-    im = Image.new('RGBA', (18, 18), (0, 0, 0, 0))
-    px = im.load()
-    for y in range(18):
-        for x in range(18):
-            dx, dy = x - 8.5, y - 8.5
-            d = dx * dx + dy * dy
-            if d <= 64:
-                px[x, y] = CREAM if d <= 49 else INK
-    for y in range(12, 15):
-        half = 2 + (y - 12)
-        for x in range(9 - half, 9 + half):
-            px[x, y] = SOIL
-    for y in range(7, 12):
-        px[8, y] = LEAF
-        px[9, y] = LEAF
-    for x, y in ((6, 6), (7, 6), (5, 5), (6, 5), (7, 7), (10, 5), (11, 5), (11, 4), (12, 4), (10, 6)):
-        px[x, y] = LEAF
-    os.makedirs(ACTIONS, exist_ok=True)
-    im.save(os.path.join(ACTIONS, 'plant.png'))
-    print('plant icon')
+    wait = np.asarray(Image.open(os.path.join(SHOP, 'wait_sheet.png')).convert('RGBA'))[::2, ::2]
+    blank = blank_frame(wait)
+    frames = [wait[:, i * CELL_W:(i + 1) * CELL_W] for i in range(3)]
+    frames += [glyph(blank, [('note', 0, 0)]), glyph(blank, [('note', -1, 1)])]
+    frames += [glyph(blank, [('question', 0, 0)]), glyph(blank, [('question', -1, 0)])]
+    frames += [glyph(blank, [('alert', 0, 0)]), glyph(blank, [('alert', -1, 0)])]
+    frames += [glyph(blank, [('heart', 0, 0)]), glyph(blank, [('heart_small', 0, 0)])]
+    frames += [glyph(blank, [('angry', 0, 0)]), glyph(blank, [('angry', 0, 1)])]
+    # 💬 왼쪽 위 · 오른쪽 아래 두 말풍선, 두 번째 칸은 오른쪽이 올라오고 왼쪽이 내려간다
+    frames += [glyph(blank, [('chat_l', -2, -4), ('chat_r', 2, 5)]), glyph(blank, [('chat_l', -1, -4), ('chat_r', 1, 5)])]
+    frames += [glyph(blank, [('yuck', 0, 0)]), yuck_puffed(blank)]
+    sheet = np.concatenate(frames, axis=1)
+    Image.fromarray(np.repeat(np.repeat(sheet, 2, 0), 2, 1)).save(os.path.join(SHOP, 'bubble_sheet.png'))
+    print('bubble_sheet', sheet.shape[1] // CELL_W, 'frames', sheet.shape[1] * 2, 'x', sheet.shape[0] * 2)
 
 
 if __name__ == '__main__':
     make_sheet()
-    make_wake_icon()
-    make_clean_icon()
-    make_plant_icon()
