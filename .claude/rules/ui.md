@@ -38,7 +38,7 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 | 칩·탭·카드 | `chip` · `chip_selected` | 9-slice 6칸. `make_chip.py` |
 | 알약 | `pill`(값·HUD·토스트) · `pill_tag`(이름표) | 원본 15칸 · 18칸. `make_pill.py` |
 | 말풍선 | `bubble` + `bubble_tail` | 꼬리는 말하는 쪽으로 옮기고 오른쪽은 좌우 뒤집기. 월드도 같은 그림(복사본 `World/Shop/`) |
-| 코인 | `World/coin` | UI·월드 공용, 40×44 |
+| 코인 | `World/coin` | UI·월드 공용, 40×44. UI에서 한 칸 2px로 잘아도 지금 그림으로 확정(2026-10-04 사용자) |
 | 코인 값 | 프리팹 `Prefabs/UI/CoinPill` · `CoinValue` | 월드 위(HUD)는 `CoinPill`: 어두운 회색 반투명 `pill` + 코인 + 금색 값. 밝은 바탕(버튼·줄) 위는 `CoinValue`: 캡슐 없이 코인 + 진갈색 값. 값 글자는 둘 다 `Cost`, 폭은 글자에 맞춰 늘어난다 |
 | 값 표식(월드) | `tag_cost` | 크림 알약 40×17칸 + 글자색 글자(파기 · 갈기 값, `DigTag` 프리팹). `make_tag_cost.py`, 월드 복사본은 `Import UI Sprites`가 `World/Shop/`에 |
 
