@@ -20,6 +20,7 @@ namespace ZooTycoon.Game
         private EvaluationPresenter m_evaluationPresenter;
         private RelicCartPresenter m_relicPresenter;
         private RelicPresenter m_relicsPresenter;
+        private LocationPresenter m_locationPresenter;
         private ControlHudView m_hudView;
 
         private void Awake()
@@ -30,6 +31,8 @@ namespace ZooTycoon.Game
             UIManager ui = UIManager.Instance;
             TopBarView topBarView = ui.Open<TopBarView>();
             m_hudView = ui.Open<ControlHudView>();
+            // 설계 42: 곳 이름 팻말은 HUD와 같은 층(팝업 아래)
+            LocationView locationView = ui.Open<LocationView>();
             // 유물 버튼은 메뉴 버튼 줄이라 팝업들보다 아래에 깐다
             RelicView relicsView = ui.Open<RelicView>();
             ObjectSheetView sheetView = ui.Open<ObjectSheetView>();
@@ -53,6 +56,7 @@ namespace ZooTycoon.Game
             m_statuePresenter = new StatuePresenter(statueView, game.State, game.Bus, game.Tables);
             m_evaluationPresenter = new EvaluationPresenter(evaluationView, game.State, game.Bus, game.Tables);
             m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
+            m_locationPresenter = new LocationPresenter(locationView, game.Mall, game.Bus, game.Tables);
             m_relicPresenter = new RelicCartPresenter(relicView, relicResultView, game.State, game.Bus, game.Tables, m_relicsPresenter.Open);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;
@@ -91,6 +95,7 @@ namespace ZooTycoon.Game
             m_evaluationPresenter?.Dispose();
             m_relicPresenter?.Dispose();
             m_relicsPresenter?.Dispose();
+            m_locationPresenter?.Dispose();
         }
 
         private void Hud_SheetRequested(Interactable target)
