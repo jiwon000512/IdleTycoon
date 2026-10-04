@@ -11,7 +11,7 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 15)]
-        [TestCase("StringTable", 40)]
+        [TestCase("StringTable", 41)]
         [TestCase("ClerkTable", 2)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
@@ -23,7 +23,7 @@ namespace ZooTycoon.Tests
         [TestCase("SoundTable", 15)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 4)]
-        [TestCase("BakeryConfigTable", 8)]
+        [TestCase("BakeryConfigTable", 9)]
         [TestCase("PlazaConfigTable", 6)]
         [TestCase("PlazaDecorTable", 1)]
         [TestCase("ItemTable", 5)]

@@ -142,7 +142,7 @@ namespace ZooTycoon.Core
             {
                 m_detourWait = k_DetourGap;
 
-                if (Mover.Detour(Area.Wombat.Mover.Position, Reach()) && !Blocked())
+                if (Mover.Detour(Area.Wombat.Mover.Position, DetourReach()) && !Blocked())
                 {
                     m_yielded = 0d;
                     return false;
@@ -165,6 +165,13 @@ namespace ZooTycoon.Core
         private float Reach()
         {
             return Math.Min(k_YieldRadius, Vector2.Distance(Position, Area.Wombat.Mover.Position) - 0.01f);
+        }
+
+        // 돌아가는 길은 반 칸 넓게 찾는다. 길 찾기는 격자 점만 재서, 점은 둘레 밖인데 점 사이 선분이 둘레를 스치면 Blocked가 참으로 남아
+        // 길을 바꿨다 되돌리며 제자리에서 떨었다(2026-10-02)
+        private float DetourReach()
+        {
+            return Math.Min(k_YieldRadius + BurrowNav.k_Step * 0.5f, Vector2.Distance(Position, Area.Wombat.Mover.Position) - 0.01f);
         }
 
         // 지금 걷는 선분의 앞 k_YieldLook 안에서 웜뱃 둘레로 들어가는가

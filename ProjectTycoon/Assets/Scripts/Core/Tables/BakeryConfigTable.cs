@@ -19,5 +19,12 @@ namespace ZooTycoon.Core
         // 굴 격자 설계 v0.5: 파기 비용 = digBaseCost × digCostGrowth^(판 칸 수)
         public double DigBaseCost { get; set; }
         public double DigCostGrowth { get; set; }
+        // 시작 배치(2026-10-02 아트방 도면 C): 새 게임 사물의 밑변 가운데(가게 원점 기준 유닛, 위 +)
+        public double ShelfX { get; set; }
+        public double ShelfY { get; set; }
+        public double CounterX { get; set; }
+        public double CounterY { get; set; }
+        public double OvenX { get; set; }
+        public double OvenY { get; set; }
     }
 }

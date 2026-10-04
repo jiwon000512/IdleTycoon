@@ -14,6 +14,8 @@ namespace ZooTycoon.Tests
     {
         private const double k_Dt = 0.02;
         private const double k_Tolerance = 0.06;
+        // 아무 사물 거리에도 들지 않는 곳(계산대 오른쪽 아래)
+        private static readonly Vector2 k_Away = new Vector2(1.69f, -8f);
 
         private EventBus m_bus;
         private ZooState m_state;
@@ -143,13 +145,14 @@ namespace ZooTycoon.Tests
             return m_time;
         }
 
-        // 조이스틱으로 웜뱃을 끈다: 웜뱃 자리 높이까지 세로 → 가로 → 세로(계산대를 돌아가는 길). 닿으면 손을 뗀다
+        // 조이스틱으로 웜뱃을 끈다: 웜뱃 땅의 길(사물을 돌아가는 꺾임점)을 차례로 민다. 닿으면 손을 뗀다
         private void WalkTo(BakeryArea shop, Vector2 target)
         {
-            float homeY = shop.Layout.WombatHome.Y;
-            Steer(shop, new Vector2(shop.Wombat.Mover.Position.X, homeY));
-            Steer(shop, new Vector2(target.X, homeY));
-            Steer(shop, target);
+            foreach (Vector2 point in shop.Layout.WombatNav.FindPath(shop.Wombat.Mover.Position, target))
+            {
+                Steer(shop, point);
+            }
+
             shop.Wombat.SetInput(Vector2.Zero);
         }
 
@@ -167,14 +170,14 @@ namespace ZooTycoon.Tests
         }
 
         // 진열대 앞(아래)·오븐 위: 설계 09 대상 거리(1.3) 안에서 그 사물이 가장 가까운 곳
-        private static Vector2 ShelfStand(BakeryArea shop, Cell cell)
+        private static Vector2 ShelfStand(ShelfInteractable shelf)
         {
-            return shop.Layout.ShelfBase(cell) - new Vector2(0f, 0.55f);
+            return shelf.Position - new Vector2(0f, 0.55f);
         }
 
-        private static Vector2 OvenStand(BakeryArea shop, Cell cell)
+        private static Vector2 OvenStand(Vector2 oven)
         {
-            return shop.Layout.OvenBase(cell) + new Vector2(0f, 1.05f);
+            return oven + new Vector2(0f, 1.05f);
         }
 
         // 손님을 막아 두고 굽기 → 꺼내기 → 채우기 → 계산대 자리로 돌아오기
@@ -182,20 +185,19 @@ namespace ZooTycoon.Tests
         {
             int before = m_config.MaxCustomers;
             m_config.MaxCustomers = 0;
-            Cell ovenCell = new Cell(-1, 3);
             OvenInteractable oven = shop.Ovens[0];
             Assert.That(shop.TryChoose(ActionTable.k_Bake, oven, breadId), Is.True);
             RunUntil(shop, () => oven.Ready > 0);
-            CarryToShelf(shop, ovenCell, breadId);
+            CarryToShelf(shop, oven, breadId);
             WalkTo(shop, shop.Layout.WombatHome);
             Assert.That(StockOf(shop, breadId), Is.GreaterThanOrEqualTo(count));
             m_config.MaxCustomers = before;
         }
 
         // 꺼내기는 오븐 range에, 채우기는 진열대 range에 들어가면 저절로(설계 09 v0.4, 2026-09-23 꺼내기도 auto)
-        private void CarryToShelf(BakeryArea shop, Cell ovenCell, string breadId)
+        private void CarryToShelf(BakeryArea shop, OvenInteractable oven, string breadId)
         {
-            WalkTo(shop, OvenStand(shop, ovenCell));
+            WalkTo(shop, OvenStand(oven.Position));
             Assert.That(shop.Wombat.Worker.Hands.Count, Is.GreaterThan(0));
             WalkTo(shop, ShelfFor(shop, breadId).Position - new Vector2(0f, 0.55f));
         }
@@ -376,21 +378,21 @@ namespace ZooTycoon.Tests
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
             double stockedAt = -1d;
             m_bus.Subscribe<Events.ThingChanged>(e => stockedAt = stockedAt < 0d && e.Thing is ShelfInteractable ? m_time : stockedAt);
-            CarryToShelf(shop, new Cell(-1, 3), "b01");
+            CarryToShelf(shop, shop.Ovens[0], "b01");
             RunUntil(shop, () => picked >= 0d);
 
             Assert.That(picked - stockedAt, Is.LessThan(k_Tolerance));
             Assert.That(gaveUp, Is.EqualTo(0));
         }
 
-        // 줄 머리가 계산을 마치면 뒤 손님이 머리 자리로 걸어간다
+        // 줄 머리가 계산을 마치면 뒤 손님이 머리 자리로 걸어간다(계산은 뒤 손님이 줄에 닿을 만큼 길게)
         [Test]
         public void Queue_ShiftsForwardAfterPayment()
         {
             BakeryArea shop = Create(c =>
             {
                 m_arrivalSeconds = 0.5d;
-                c.CheckoutSeconds = 3d;
+                c.CheckoutSeconds = 10d;
             });
             Stock(shop, "b01", 6);
             m_config.MaxCustomers = 2;
@@ -458,7 +460,7 @@ namespace ZooTycoon.Tests
             Assert.That(StockOf(shop, "b01"), Is.EqualTo(0));
             Assert.That(shop.TryChoose(ActionTable.k_Bake, shop.Ovens[0], "b01"), Is.False);
 
-            WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+            WalkTo(shop, OvenStand(shop.Ovens[0].Position));
             Assert.That(shop.Wombat.Worker.Hands.Count, Is.EqualTo(6));
             Assert.That(shop.Wombat.Worker.Hands.Bread.Id, Is.EqualTo("b01"));
             Assert.That(shop.Ovens[0].IsEmpty, Is.True);
@@ -480,7 +482,7 @@ namespace ZooTycoon.Tests
             shop.TryChoose(ActionTable.k_Bake, shop.Ovens[0], "b01");
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
-            CarryToShelf(shop, new Cell(-1, 3), "b01");
+            CarryToShelf(shop, shop.Ovens[0], "b01");
 
             Assert.That(StockOf(shop, "b01"), Is.EqualTo(4));
             Assert.That(shop.Wombat.Worker.Hands.Count, Is.EqualTo(2));
@@ -524,9 +526,9 @@ namespace ZooTycoon.Tests
         {
             BakeryArea shop = Create();
 
-            Assert.That(PlaceShelf(shop, new Cell(-1, 1)), Is.False);
+            Assert.That(PlaceShelf(shop, new Cell(0, 1)), Is.False);
             Assert.That(PlaceShelf(shop, new Cell(1, 1)), Is.False);
-            Assert.That(PlaceShelf(shop, new Cell(0, 1)), Is.True);
+            Assert.That(PlaceShelf(shop, new Cell(-1, 3)), Is.True);
             Assert.That(shop.Shelves[1].Bread, Is.Null);
             Assert.That(m_state.Coins, Is.EqualTo(200d));
             Assert.That(shop.PriceOf(ShelfInteractable.k_Id), Is.EqualTo(300d));
@@ -568,7 +570,7 @@ namespace ZooTycoon.Tests
                 c.MaxCustomers = 0;
                 c.ShelfCapacity = 4;
             });
-            Assert.That(PlaceShelf(shop, new Cell(0, 1)), Is.True);
+            Assert.That(PlaceShelf(shop, new Cell(-1, 3)), Is.True);
             ShelfInteractable first = shop.Shelves[0];
             ShelfInteractable second = shop.Shelves[1];
             BreadTable toast = m_tables.Get<BreadTable>("b01");
@@ -595,16 +597,16 @@ namespace ZooTycoon.Tests
         {
             BakeryArea shop = Create(edit: TestTables.LiftStarCaps);
 
-            Assert.That(PlaceOven(shop, new Cell(-1, 3)), Is.False);
-            Assert.That(PlaceOven(shop, new Cell(0, 3)), Is.True);
+            Assert.That(shop.TryBuy(OvenInteractable.k_Id, shop.Ovens[0].Position), Is.False);
+            Assert.That(PlaceOven(shop, new Cell(-1, 3)), Is.True);
             Assert.That(shop.Ovens.Count, Is.EqualTo(2));
-            Assert.That(shop.Ovens[1].Position, Is.EqualTo(shop.Layout.OvenBase(new Cell(0, 3))));
+            Assert.That(shop.Ovens[1].Position, Is.EqualTo(shop.Layout.OvenBase(new Cell(-1, 3))));
             Assert.That(m_state.Coins, Is.EqualTo(50d));
             Assert.That(shop.PriceOf(OvenInteractable.k_Id), Is.EqualTo(900d));
-            Assert.That(PlaceOven(shop, new Cell(0, 1)), Is.False);
+            Assert.That(PlaceOven(shop, new Cell(0, 3)), Is.False);
 
             m_state.AddCoins(100000d);
-            Assert.That(PlaceOven(shop, new Cell(0, 1)), Is.True);
+            Assert.That(PlaceOven(shop, new Cell(0, 3)), Is.True);
             shop.Grid.Dig(new Cell(1, 3));
             Assert.That(PlaceOven(shop, new Cell(1, 3)), Is.True);
             shop.Grid.Dig(new Cell(1, 1));
@@ -671,11 +673,11 @@ namespace ZooTycoon.Tests
             Run(shop, 1d);
             Assert.That(changed, Is.EqualTo(0));
 
-            WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+            WalkTo(shop, OvenStand(shop.Ovens[0].Position));
             Assert.That(shop.Target, Is.SameAs(shop.Ovens[0]));
             Assert.That(shop.TargetAction.Id, Is.EqualTo(ActionTable.k_Open));
 
-            WalkTo(shop, new Vector2(1.69f, shop.Layout.WombatHome.Y));
+            WalkTo(shop, k_Away);
             Assert.That(shop.Target, Is.Null);
             Assert.That(shop.TargetAction, Is.Null);
             Assert.That(shop.TryInteract(), Is.False);
@@ -696,7 +698,7 @@ namespace ZooTycoon.Tests
             RunUntil(shop, () => customer != null && customer.Phase == VisitorPhase.Queued);
 
             double coins = m_state.Coins;
-            WalkTo(shop, new Vector2(1.69f, shop.Layout.WombatHome.Y));
+            WalkTo(shop, k_Away);
             Assert.That(shop.IsInRange(shop.Counter), Is.False);
             Run(shop, m_config.CheckoutSeconds + 0.1d);
             Assert.That(m_state.Coins, Is.EqualTo(coins));
@@ -773,7 +775,7 @@ namespace ZooTycoon.Tests
             shop.TryChoose(ActionTable.k_Bake, shop.Ovens[0], "b01");
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
-            CarryToShelf(shop, new Cell(-1, 3), "b01");
+            CarryToShelf(shop, shop.Ovens[0], "b01");
             RunUntil(shop, () => picked >= 0d);
             Run(shop, 0.1d);
 
@@ -789,7 +791,7 @@ namespace ZooTycoon.Tests
             shop.TryChoose(ActionTable.k_Bake, shop.Ovens[0], "b01");
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
-            WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+            WalkTo(shop, OvenStand(shop.Ovens[0].Position));
             Run(shop, 0.1d);
 
             Assert.That(shop.Target, Is.InstanceOf<OvenInteractable>());
@@ -825,7 +827,7 @@ namespace ZooTycoon.Tests
             shop.TryChoose(ActionTable.k_Bake, shop.Ovens[0], "b01");
             RunUntil(shop, () => shop.Ovens[0].Ready > 0);
 
-            WalkTo(shop, OvenStand(shop, new Cell(-1, 3)));
+            WalkTo(shop, OvenStand(shop.Ovens[0].Position));
             Assert.That(shop.Wombat.Worker.Hands.Count, Is.EqualTo(0));
             Assert.That(shop.TargetAction.Id, Is.EqualTo(ActionTable.k_TakeOut));
 
@@ -841,8 +843,8 @@ namespace ZooTycoon.Tests
         {
             BakeryArea shop = Create(c => c.MaxCustomers = 0);
             m_state.AddCoins(10000d);
-            Cell slot = new Cell(0, 3);
-            WalkTo(shop, OvenStand(shop, slot));
+            Cell slot = new Cell(-1, 3);
+            WalkTo(shop, OvenStand(shop.Layout.OvenBase(slot)));
             Assert.That(shop.Target, Is.Null);
             List<string> events = new List<string>();
             m_bus.Subscribe<Events.LayoutChanged>(_ => events.Add("layout"));
@@ -975,13 +977,13 @@ namespace ZooTycoon.Tests
         {
             BakeryArea shop = Create(c => c.MaxCustomers = 0);
             m_state.AddCoins(10000d);
-            WalkTo(shop, ShelfStand(shop, new Cell(-1, 1)));
+            WalkTo(shop, ShelfStand(shop.Shelves[0]));
             Interactable shelf = shop.Target;
             Assert.That(shelf, Is.InstanceOf<ShelfInteractable>());
             int changed = 0;
             m_bus.Subscribe<Events.TargetChanged>(_ => changed++);
 
-            Assert.That(PlaceOven(shop, new Cell(0, 3)), Is.True);
+            Assert.That(PlaceOven(shop, new Cell(-1, 3)), Is.True);
             Run(shop, 0.1d);
 
             Assert.That(shop.Target, Is.SameAs(shelf));
@@ -994,7 +996,7 @@ namespace ZooTycoon.Tests
         {
             BakeryArea shop = Create(c => c.MaxCustomers = 0);
             m_state.AddCoins(1000d);
-            Assert.That(PlaceOven(shop, new Cell(0, 3)), Is.True);
+            Assert.That(PlaceOven(shop, new Cell(-1, 3)), Is.True);
 
             Assert.That(shop.TryChoose(ActionTable.k_Upgrade, shop.Ovens[0], null), Is.True);
 

@@ -7,7 +7,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 손님 동선 설계 v0.2 검증 1: 기본 굴(진열대 (−1,1), 오븐 (−1,3))의 줄 자리·서는 자리·길
+    // 손님 동선 설계 v0.2 검증 1: 기본 굴(BakeryConfigTable 시작 배치)의 줄 자리·서는 자리·길
     public sealed class BakeryLayoutTests
     {
         private BakeryArea Create()
@@ -38,12 +38,12 @@ namespace ZooTycoon.Tests
             }
 
             // 설계 18: 머리는 계산대 앞(아래), 웜뱃은 뒤(위). 줄은 입구 구멍 아래에서 떨어져 있다
-            Assert.That(slots[0].Y, Is.LessThan(shop.Layout.CounterBase.Y));
+            Assert.That(slots[0].Y, Is.LessThan(shop.Counter.Position.Y));
 
             foreach (Vector2 slot in slots)
             {
                 Assert.That(Vector2.Distance(slot, shop.Layout.HoleFloor), Is.GreaterThan(1f));
-                Assert.That(slot.Y, Is.LessThan(shop.Layout.ShelfBase(new Cell(-1, 1)).Y - 1.1f));
+                Assert.That(slot.Y, Is.LessThan(shop.Shelves[0].Position.Y - 1.1f));
             }
         }
 
@@ -69,9 +69,14 @@ namespace ZooTycoon.Tests
                 }
             }
 
-            // 첫 자리는 가운데 쪽 옆: 진열대를 왼쪽에 두고 선다
-            Assert.That(spots[0].X, Is.GreaterThan(shop.Layout.ShelfBase(new Cell(-1, 1)).X));
-            Assert.That(shop.Layout.ShelfFacing(shop.Shelves[0], spots[0]), Is.EqualTo(Facing.Left));
+            // 구멍에서 가까운 자리부터: 시작 진열대(오른쪽 위)는 가운데 쪽 왼쪽 옆이 먼저고, 진열대를 오른쪽에 두고 선다
+            for (int i = 1; i < spots.Count; i++)
+            {
+                Assert.That(Vector2.Distance(spots[i - 1], shop.Layout.HoleFloor), Is.LessThanOrEqualTo(Vector2.Distance(spots[i], shop.Layout.HoleFloor)));
+            }
+
+            Assert.That(spots[0].X, Is.LessThan(shop.Shelves[0].Position.X));
+            Assert.That(shop.Layout.ShelfFacing(shop.Shelves[0], spots[0]), Is.EqualTo(Facing.Right));
         }
 
         // 입구 → 진열대, 진열대 → 줄 머리, 줄 머리 → 입구 모두 이어지고 가로·세로로만 걷는다
@@ -108,8 +113,9 @@ namespace ZooTycoon.Tests
         [Test]
         public void WombatNav_OpensWombatHomeOnly()
         {
-            BakeryLayout layout = Create().Layout;
-            Vector2 counter = layout.CounterBase + new Vector2(0f, 0.2f);
+            BakeryArea shop = Create();
+            BakeryLayout layout = shop.Layout;
+            Vector2 counter = shop.Counter.Position + new Vector2(0f, 0.2f);
 
             Assert.That(layout.WombatNav.IsWalkable(layout.WombatHome), Is.True);
             Assert.That(layout.Nav.IsWalkable(layout.WombatHome), Is.False);

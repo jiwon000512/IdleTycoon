@@ -341,7 +341,7 @@ namespace ZooTycoon.Editor
         {
             GameObject root = new GameObject("Counter");
             CounterView counter = root.AddComponent<CounterView>();
-            // 몸체 + 출력기는 SortingGroup(밑변 = CounterBase)으로 묶는다. 안 묶으면 출력기의 order 3이 전역이라 계산대 앞에 선 웜뱃 위에 그려진다(2026-09-25). 웜뱃은 그룹 밖(root 자식)
+            // 몸체 + 출력기는 SortingGroup(밑변 = 계산대 위치)으로 묶는다. 안 묶으면 출력기의 order 3이 전역이라 계산대 앞에 선 웜뱃 위에 그려진다(2026-09-25). 웜뱃은 그룹 밖(root 자식)
             // 설계 18: 프리팹 원점 = 계산대 밑변(진열대·오븐과 같다). 옛 「계산대 줄 윗변」 원점은 자유 배치에서 그림이 1.55 아래로 어긋났다
             GameObject body = Child(root.transform, "Body", Vector3.zero);
             body.AddComponent<SortingGroup>();

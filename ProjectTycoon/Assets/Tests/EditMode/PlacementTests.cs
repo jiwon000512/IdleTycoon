@@ -7,7 +7,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.Tests
 {
-    // 설계 18: 자유 배치 규칙(벽 밖·겹침·작업 자리·입구)과 사기·옮기기·보관하기. 빵집 시작 배치(진열대 (−1,1)·오븐 (−1,3)·계산대 가운데)와 광장 시작 장식 위에서
+    // 설계 18: 자유 배치 규칙(벽 밖·겹침·작업 자리·입구)과 사기·옮기기·보관하기. 빵집 시작 배치(표: 오븐 입구 왼쪽·진열대 오른쪽 위·계산대 가운데 아래)와 광장 시작 장식 위에서
     public sealed class PlacementTests
     {
         private TableSet m_tables;
@@ -28,13 +28,22 @@ namespace ZooTycoon.Tests
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 100).ToArray()), wombat, m_bus);
         }
 
+        // 시작 배치(2026-10-02 아트방 도면 C)는 표 자리이고, 사물마다 배치 검사(벽 안·겹침·작업 자리·닿음)를 통과한다. 웜뱃은 계산대 뒤에서 시작
         [Test]
-        public void StartLayout_MatchesOldCellPositions()
+        public void StartLayout_ComesFromTable_AndPassesPlacementCheck()
         {
-            Assert.That(m_shop.Shelves[0].Position, Is.EqualTo(m_shop.Layout.ShelfBase(new Cell(-1, 1))));
-            Assert.That(m_shop.Ovens[0].Position, Is.EqualTo(m_shop.Layout.OvenBase(new Cell(-1, 3))));
-            Assert.That(m_shop.Counter.Position, Is.EqualTo(m_shop.Layout.CounterBase));
-            Assert.That(m_shop.Layout.WombatHome, Is.EqualTo(m_shop.Layout.CounterBase + new Vector2(0f, 0.4f)));
+            BakeryConfigTable config = m_shop.Config;
+            Assert.That(m_shop.Shelves[0].Position, Is.EqualTo(new Vector2((float)config.ShelfX, (float)config.ShelfY)));
+            Assert.That(m_shop.Ovens[0].Position, Is.EqualTo(new Vector2((float)config.OvenX, (float)config.OvenY)));
+            Assert.That(m_shop.Counter.Position, Is.EqualTo(new Vector2((float)config.CounterX, (float)config.CounterY)));
+            Assert.That(m_shop.Layout.WombatHome, Is.EqualTo(m_shop.Counter.Position + new Vector2(0f, 0.4f)));
+            Assert.That(m_shop.Wombat.Mover.Position, Is.EqualTo(m_shop.Layout.WombatHome));
+
+            foreach (IPlaced thing in new IPlaced[] { m_shop.Shelves[0], m_shop.Ovens[0], m_shop.Counter })
+            {
+                Assert.That(m_shop.CanMove(thing, thing.Position), Is.EqualTo(PlacementCheck.Ok), thing.Kind.Id);
+            }
+
             Assert.That(m_shop.ShopKinds.Select(k => k.Id), Is.EqualTo(new[] { "shelf", "oven", "counter" }));
         }
 
@@ -43,11 +52,11 @@ namespace ZooTycoon.Tests
         {
             BakeryLayout layout = m_shop.Layout;
 
-            Assert.That(m_shop.CanPlace("shelf", layout.ShelfBase(new Cell(0, 1))), Is.EqualTo(PlacementCheck.Ok));
+            Assert.That(m_shop.CanPlace("shelf", layout.ShelfBase(new Cell(-1, 3))), Is.EqualTo(PlacementCheck.Ok));
             // 벽 밖(안 판 칸)
             Assert.That(m_shop.CanPlace("shelf", layout.ShelfBase(new Cell(1, 1))), Is.EqualTo(PlacementCheck.OutsideFloor));
             // 시작 진열대 위
-            Assert.That(m_shop.CanPlace("shelf", layout.ShelfBase(new Cell(-1, 1))), Is.EqualTo(PlacementCheck.Overlaps));
+            Assert.That(m_shop.CanPlace("shelf", layout.ShelfBase(new Cell(0, 1))), Is.EqualTo(PlacementCheck.Overlaps));
             // 입구 구멍 아래 바닥을 덮음
             Assert.That(m_shop.CanPlace("shelf", layout.HoleFloor + new Vector2(0f, -0.2f)), Is.EqualTo(PlacementCheck.Overlaps));
             // 오븐을 입구 줄 벽에 붙이면 웜뱃 자리(위 1.05)가 벽 안
@@ -79,11 +88,11 @@ namespace ZooTycoon.Tests
             m_bus.Subscribe<Events.LayoutChanged>(e => layoutChanged += e.Area == m_shop ? 1 : 0);
 
             Assert.That(m_shop.PriceOf("shelf"), Is.EqualTo(150d));
-            Assert.That(m_shop.TryBuy("shelf", layout.ShelfBase(new Cell(0, 1))), Is.True);
+            Assert.That(m_shop.TryBuy("shelf", layout.ShelfBase(new Cell(-1, 3))), Is.True);
             Assert.That(m_state.Coins, Is.EqualTo(200d));
             Assert.That(m_shop.PriceOf("shelf"), Is.EqualTo(300d));
             Assert.That(m_shop.TryBuy("shelf", layout.ShelfBase(new Cell(0, 3))), Is.False, "코인 부족");
-            Assert.That(m_shop.TryBuy("shelf", layout.ShelfBase(new Cell(0, 1))), Is.False, "겹침");
+            Assert.That(m_shop.TryBuy("shelf", layout.ShelfBase(new Cell(-1, 3))), Is.False, "겹침");
 
             m_state.AddCoins(10000d);
             Assert.That(m_shop.TryBuy("shelf", layout.ShelfBase(new Cell(0, 3))), Is.True);
@@ -139,7 +148,7 @@ namespace ZooTycoon.Tests
             Assert.That(m_shop.Layout.QueueSlots(second)[0], Is.Not.EqualTo(m_shop.Layout.QueueSlots(m_shop.Counter)[0]));
             Assert.That(m_shop.Layout.Nav.IsWalkable(second.WorkerSpot), Is.False, "손님은 웜뱃 자리로 못 간다");
             Assert.That(m_shop.Layout.WombatNav.IsWalkable(second.WorkerSpot), Is.True);
-            Assert.That(m_shop.ShortestQueue(Vector2.Zero), Is.SameAs(m_shop.Counter));
+            Assert.That(m_shop.ShortestQueue(m_shop.Counter.Position), Is.SameAs(m_shop.Counter), "줄이 같으면 가까운 계산대");
             Assert.That(m_shop.Layout.WombatHome, Is.EqualTo(m_shop.Counter.WorkerSpot));
 
             Assert.That(m_shop.TryStore(second), Is.True);

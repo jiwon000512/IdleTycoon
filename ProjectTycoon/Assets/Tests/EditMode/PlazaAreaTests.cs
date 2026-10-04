@@ -102,8 +102,8 @@ namespace ZooTycoon.Tests
             Assert.That(m_mall.Active, Is.SameAs(m_shop));
             Assert.That(m_plaza.WombatPresent, Is.False);
 
-            // 계산대를 오른쪽으로 돌아 구멍 아래 바닥선까지는 안 넘어가고, 위로 밀어 띠에 들면 넘어간다
-            Steer(new Vector2(2.4f, home.Y), new Vector2(2.4f, hole.Y), hole);
+            // 진열대 거리 밖(왼쪽)으로 올라 구멍 아래 바닥선까지는 안 넘어가고, 위로 밀어 띠에 들면 넘어간다
+            Steer(new Vector2(-0.6f, home.Y), new Vector2(-0.6f, hole.Y), hole);
             Assert.That(m_mall.Active, Is.SameAs(m_shop));
             Assert.That(m_shop.Target, Is.Not.InstanceOf<PassageInteractable>());
             PushUntil(new Vector2(0f, 1f), m_plaza);
@@ -219,7 +219,7 @@ namespace ZooTycoon.Tests
             Vector2 home = m_shop.Layout.WombatHome;
             Vector2 hole = m_shop.Layout.HoleFloor;
 
-            Steer(new Vector2(2.4f, home.Y), new Vector2(2.4f, hole.Y), hole);
+            Steer(new Vector2(-0.6f, home.Y), new Vector2(-0.6f, hole.Y), hole);
             PushUntil(new Vector2(0f, 1f), m_plaza);
             m_mall.Wombat.SetInput(Vector2.Zero);
             Run(0.1d);

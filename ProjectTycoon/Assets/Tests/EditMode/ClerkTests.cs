@@ -206,20 +206,22 @@ namespace ZooTycoon.Tests
         {
             BakeryArea shop = Create();
             Clerk clerk = Hire(shop, shop.Ovens[0]);
-            bool sideways = false;
+            bool turned = false;
 
+            // 자리 0.15 안(격자 점 → 자리의 마지막 한 걸음)에서는 보는 방향이 바뀌지 않는다. 옆에서 다가오는 길이면 옆모습 그대로 닿는다
             for (double t = 0d; t < 30d && !clerk.Working; t += k_Dt)
             {
+                Facing before = clerk.Facing;
                 shop.Tick(k_Dt);
 
-                if (clerk.Moving && Vector2.Distance(clerk.Position, clerk.WorkerSpot) < 0.3f)
+                if (clerk.Moving && Vector2.Distance(clerk.Position, clerk.WorkerSpot) < 0.15f)
                 {
-                    sideways |= clerk.Facing == Facing.Left || clerk.Facing == Facing.Right;
+                    turned |= clerk.Facing != before;
                 }
             }
 
             Assert.That(clerk.Working, Is.True);
-            Assert.That(sideways, Is.False, "자리 앞에서 옆모습이 됐다");
+            Assert.That(turned, Is.False, "자리 앞 마지막 한 걸음에서 돌아섰다");
         }
 
         // 2026-09-26 사용자 버그: 진열대가 가득 차면 자리에서 좌우로 떨렸다. 든 채로 자리에 서서 기다리다 자리가 나면 채운다(그동안 오븐은 계속 굽는다)

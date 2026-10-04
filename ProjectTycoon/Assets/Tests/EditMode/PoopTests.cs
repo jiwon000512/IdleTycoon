@@ -74,13 +74,14 @@ namespace ZooTycoon.Tests
             }
         }
 
-        // 진열대에 식빵을 채우고 손님 하나를 들여, 빵을 집고 줄로 걷기 시작할 때까지
-        private BakeryVisitor VisitorHeadingToQueue(BakeryArea shop)
+        // 진열대에 식빵을 채우고 손님 하나를 들여, 빵을 집기 시작할 때까지. 줄 길은 집고 나서 찾는다
+        // (걷는 중에 생긴 똥은 지금 선분 끝점부터 피하므로, 진열대 → 줄의 긴 첫 선분 위에 막으면 피하지 못한다)
+        private BakeryVisitor VisitorPicking(BakeryArea shop)
         {
             shop.Shelves[0].Put(m_tables.Get<BreadTable>("b01"), 4);
             shop.Admit(m_tables.GetAll<VisitorTable>()[0]);
             BakeryVisitor visitor = shop.Visitors[0];
-            RunUntil(shop, () => visitor.Phase == VisitorPhase.ToQueue);
+            RunUntil(shop, () => visitor.Phase == VisitorPhase.Picking);
             return visitor;
         }
 
@@ -189,10 +190,10 @@ namespace ZooTycoon.Tests
         public void Visitor_GoesAroundWhenOnePassageIsBlocked()
         {
             BakeryArea shop = Create();
-            BakeryVisitor visitor = VisitorHeadingToQueue(shop);
-            BlockPassage(shop, -1f);
+            BakeryVisitor visitor = VisitorPicking(shop);
+            BlockPassage(shop, 1f);
             float closest = float.MaxValue;
-            float right = float.MinValue;
+            float left = float.MaxValue;
 
             for (double t = 0d; t < 20d && visitor.Phase != VisitorPhase.Queued; t += k_Dt)
             {
@@ -203,13 +204,13 @@ namespace ZooTycoon.Tests
                     closest = Math.Min(closest, Vector2.Distance(visitor.Position, poop.Position));
                 }
 
-                right = Math.Max(right, visitor.Position.X);
+                left = Math.Min(left, visitor.Position.X);
             }
 
             Assert.That(visitor.Phase, Is.EqualTo(VisitorPhase.Queued));
             Assert.That(visitor.Disgusted, Is.False);
             Assert.That(closest, Is.GreaterThanOrEqualTo((float)Config(ConfigTable.k_PoopAvoidRadius) - 0.05f));
-            Assert.That(right, Is.GreaterThan(shop.Counter.Position.X + 1f));
+            Assert.That(left, Is.LessThan(shop.Counter.Position.X - 1f));
         }
 
         // 두 통로가 다 막히면 🤢 → 줄에서 빠지고 든 빵을 버리고 구멍으로 나간다
@@ -217,11 +218,11 @@ namespace ZooTycoon.Tests
         public void Visitor_GivesUpWhenTheQueueIsCutOff()
         {
             BakeryArea shop = Create();
-            BakeryVisitor visitor = VisitorHeadingToQueue(shop);
+            BakeryVisitor visitor = VisitorPicking(shop);
             BlockPassage(shop, -1f);
             BlockPassage(shop, 1f);
 
-            Run(shop, 0.1d);
+            RunUntil(shop, () => visitor.Disgusted, 2d);
 
             Assert.That(visitor.Disgusted, Is.True);
             Assert.That(visitor.Angry, Is.True);
@@ -254,7 +255,7 @@ namespace ZooTycoon.Tests
         public void LeavingVisitor_PassesThroughWhenCutOff()
         {
             BakeryArea shop = Create();
-            BakeryVisitor visitor = VisitorHeadingToQueue(shop);
+            BakeryVisitor visitor = VisitorPicking(shop);
             RunUntil(shop, () => visitor.Paid);
             BlockPassage(shop, -1f);
             BlockPassage(shop, 1f);

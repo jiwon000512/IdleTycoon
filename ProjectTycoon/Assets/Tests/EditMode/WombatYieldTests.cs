@@ -87,7 +87,8 @@ namespace ZooTycoon.Tests
             List<Vector2> around = nav.FindPath(from, to, avoid, k_Radius);
 
             Assert.That(around.Count, Is.GreaterThan(0));
-            Assert.That(BurrowNav.Length(from, around), Is.GreaterThan(BurrowNav.Length(from, straight)));
+            // 꺾인 길은 반대로 꺾어 같은 길이로 돌 수 있다
+            Assert.That(BurrowNav.Length(from, around), Is.GreaterThanOrEqualTo(BurrowNav.Length(from, straight)));
             Vector2 p = from;
 
             foreach (Vector2 q in around)
@@ -124,6 +125,28 @@ namespace ZooTycoon.Tests
             Assert.That(Vector2.Distance(visitor.Position, visitor.Spot), Is.LessThan(0.01f));
             Assert.That(closest, Is.GreaterThanOrEqualTo(k_Radius - 0.05f));
             Assert.That(waited, Is.False);
+        }
+
+        // 2026-10-02: 웜뱃 둘레가 길의 격자 점 사이만 스치면(점은 둘레 밖, 선분은 안) 돌아가는 길을 찾았다 버렸다 하며 제자리에서 떨었다
+        [Test]
+        public void Visitor_PassesAWombatGrazingItsPath()
+        {
+            BakeryArea shop = Create();
+            BakeryVisitor visitor = WalkingVisitor(shop);
+            Vector2 dir = Step(visitor.Facing);
+            Vector2 side = new Vector2(-dir.Y, dir.X);
+            Vector2 ahead = shop.Layout.Nav.Snap(visitor.Position + dir * 1.2f) + dir * 0.1f;
+            Vector2 block = shop.Layout.WombatNav.IsWalkable(ahead + side * 0.795f) ? ahead + side * 0.795f : ahead - side * 0.795f;
+            Assert.That(Vector2.Distance(block, visitor.Spot), Is.GreaterThan(k_Radius + 0.1f));
+            shop.Wombat.Mover.Place(block);
+
+            for (double t = 0d; t < 15d && visitor.Moving; t += k_Dt)
+            {
+                shop.Tick(k_Dt);
+            }
+
+            Assert.That(visitor.Moving, Is.False);
+            Assert.That(Vector2.Distance(visitor.Position, visitor.Spot), Is.LessThan(0.01f));
         }
 
         [Test]

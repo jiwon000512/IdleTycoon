@@ -94,11 +94,11 @@ namespace ZooTycoon.Core
                 m_shopKinds.Add(Row(id));
             }
 
-            // 시작 배치(옛 칸 자리 그대로): 왼쪽 열(−1) 자리 줄에 빈 진열대와 오븐, 계산대 줄 가운데에 계산대. 첫 빵은 해금된 채 시작(설계 17)
+            // 시작 배치는 표(오븐 입구 왼쪽 · 진열대 오른쪽 위 · 계산대 가운데 아래). 첫 빵은 해금된 채 시작(설계 17)
             m_unlocked.Add(tables.GetAll<BreadTable>()[0]);
-            Create(Row(ShelfInteractable.k_Id), Layout.ShelfBase(new Cell(-1, 1)));
-            Create(Row(OvenInteractable.k_Id), Layout.OvenBase(new Cell(-1, 3)));
-            Create(Row(CounterInteractable.k_Id), Layout.CounterBase);
+            Create(Row(ShelfInteractable.k_Id), new Vector2((float)m_config.ShelfX, (float)m_config.ShelfY));
+            Create(Row(OvenInteractable.k_Id), new Vector2((float)m_config.OvenX, (float)m_config.OvenY));
+            Create(Row(CounterInteractable.k_Id), new Vector2((float)m_config.CounterX, (float)m_config.CounterY));
             RebuildLayout();
             EnterAt(Layout.WombatHome);
         }

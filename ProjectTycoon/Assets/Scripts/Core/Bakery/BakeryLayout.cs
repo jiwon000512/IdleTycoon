@@ -6,16 +6,13 @@ using GameKit.Tables;
 namespace ZooTycoon.Core
 {
     // 손님 동선 설계 v0.2 3·4·6·7장 · 설계 18: 가게 배치의 단일 출처. 놓인 사물 → 걷는 땅·줄 자리(계산대마다)·서는 자리(진열대마다), 구멍, 굴 마스크.
-    // 사물 바닥 사각형·자리 오프셋은 표(InteractableTable)에서 오고, 칸 좌표(CellCenter 등)는 시작 배치와 파기에만 쓴다.
+    // 사물 바닥 사각형·자리 오프셋은 표(InteractableTable)에서, 시작 배치는 BakeryConfigTable에서 오고, 칸 좌표(CellCenter 등)는 파기와 테스트에만 쓴다.
     // 좌표는 가게 원점(입구 줄 윗변 가운데) 기준 유닛, y 위
     public sealed class BakeryLayout
     {
-        // 시작 배치용 사물 밑변(그림 발끝): 진열대·오븐은 칸 가운데에서, 계산대는 계산대 줄 윗변에서 아래로
+        // 테스트용 칸 자리의 사물 밑변(그림 발끝): 칸 가운데에서 아래로
         public const float k_ShelfDrop = 0.65f;
         public const float k_OvenDrop = 0.85f;
-        public const float k_CounterDrop = 1.55f;
-        // 시작 계산대 줄(굴 격자 설계 v0.5)
-        public const int k_CounterRow = 2;
 
         // 웜뱃 바닥 자리(손님이 계산대 뒤로 지나가지 않게): 계산대 윗변부터 뒤 자리 위 k_WombatBack까지, 좌우 half
         private const float k_WombatHalf = 0.4f;
@@ -50,8 +47,6 @@ namespace ZooTycoon.Core
         // 굴 환경 A2: 아치 구멍 밑변(= 띠 밑변) 바로 위에서 톡 나온다
         public Vector2 HoleInside => new Vector2(0f, -(BurrowShape.k_EntranceFloorTop - 1) / BurrowShape.k_PixelsPerUnit);
         public Vector2 HoleFloor => new Vector2(0f, -2.2f);
-        // 시작 계산대 밑변(계산대 줄 윗변 가운데에서 아래로)
-        public Vector2 CounterBase => new Vector2(0f, -RowTop(k_CounterRow) - k_CounterDrop);
 
         public BakeryLayout(TableSet tables)
         {
@@ -68,7 +63,7 @@ namespace ZooTycoon.Core
             return m_cells.CellCenter(cell);
         }
 
-        // 시작 배치·테스트용 칸 자리
+        // 테스트용 칸 자리
         public Vector2 ShelfBase(Cell cell)
         {
             return CellCenter(cell) - new Vector2(0f, k_ShelfDrop);
@@ -91,7 +86,7 @@ namespace ZooTycoon.Core
             return m_cells.DistanceToCell(cell, p);
         }
 
-        // 진열대의 서는 자리(표 순서: 오른쪽 옆 → 왼쪽 옆 → 앞 둘). 놓이지 않은(보관된) 진열대는 없음
+        // 진열대의 서는 자리(구멍에서 가까운 순). 놓이지 않은(보관된) 진열대는 없음
         public IReadOnlyList<Vector2> ShelfSpots(ShelfInteractable shelf)
         {
             return shelf != null && m_shelfSpots.TryGetValue(shelf, out List<Vector2> spots) ? spots : m_noSpots;
@@ -218,7 +213,8 @@ namespace ZooTycoon.Core
             return slots;
         }
 
-        // 7장: 표의 손님 자리 순서대로. 걷는 땅이 아니거나 줄·구멍 아래·다른 진열대 자리와 가까우면 뺀다
+        // 7장: 표의 손님 자리 중 걷는 땅이 아니거나 줄·구멍 아래·다른 진열대 자리와 가까운 것은 빼고, 구멍에서 가까운 자리부터(넘칠 때 첫 자리 근처에 선다).
+        // 벽 쪽 좁은 옆자리가 먼저면 오가는 길에 손님이 몰렸다(2026-10-02 시작 배치 C)
         private void BuildShelfSpots(IReadOnlyList<ShelfInteractable> shelves)
         {
             m_shelfSpots.Clear();
@@ -244,6 +240,7 @@ namespace ZooTycoon.Core
                     }
                 }
 
+                spots.Sort((a, b) => Vector2.Distance(a, HoleFloor).CompareTo(Vector2.Distance(b, HoleFloor)));
                 m_shelfSpots[shelf] = spots;
             }
         }

@@ -59,10 +59,10 @@ namespace ZooTycoon.Tests
         [Test]
         public void StarZero_CapsOvensAndUpgrades_UntilFirstStar()
         {
-            Assert.That(m_shop.TryBuy(OvenInteractable.k_Id, m_shop.Layout.OvenBase(new Cell(0, 3))), Is.True);
+            Assert.That(m_shop.TryBuy(OvenInteractable.k_Id, m_shop.Layout.OvenBase(new Cell(-1, 3))), Is.True);
             Assert.That(m_shop.IsCapped(OvenInteractable.k_Id), Is.True);
             Assert.That(m_shop.StarNeeded(OvenInteractable.k_Id), Is.EqualTo(1));
-            Assert.That(m_shop.TryBuy(OvenInteractable.k_Id, m_shop.Layout.OvenBase(new Cell(0, 1))), Is.False);
+            Assert.That(m_shop.TryBuy(OvenInteractable.k_Id, m_shop.Layout.OvenBase(new Cell(0, 3))), Is.False);
 
             OvenInteractable oven = m_shop.Ovens[0];
 
@@ -77,7 +77,7 @@ namespace ZooTycoon.Tests
             Evaluation.PassNow();
             Assert.That(m_state.Stars.Count(BakeryArea.k_Id), Is.EqualTo(1));
             Assert.That(m_shop.StarNeeded(OvenInteractable.k_Id), Is.EqualTo(-1));
-            Assert.That(m_shop.TryBuy(OvenInteractable.k_Id, m_shop.Layout.OvenBase(new Cell(0, 1))), Is.True);
+            Assert.That(m_shop.TryBuy(OvenInteractable.k_Id, m_shop.Layout.OvenBase(new Cell(0, 3))), Is.True);
             Assert.That(m_shop.TryChoose(ActionTable.k_Upgrade, oven, null), Is.True);
         }
 
