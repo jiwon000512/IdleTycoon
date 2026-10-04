@@ -261,5 +261,16 @@ namespace ZooTycoon.Core
                 Area = area;
             }
         }
+
+        // 설계 43: 자리를 비운 동안을 정산했다(불러올 때 · 앱이 뒤에서 돌아왔을 때). 팝업이 보인다
+        public readonly struct OfflineSettled
+        {
+            public readonly OfflineReport Report;
+
+            public OfflineSettled(OfflineReport report)
+            {
+                Report = report;
+            }
+        }
     }
 }

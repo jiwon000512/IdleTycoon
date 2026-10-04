@@ -32,6 +32,17 @@ namespace ZooTycoon.Core
             return count;
         }
 
+        // 설계 43: 저장할 가게별 별
+        internal IReadOnlyDictionary<string, int> Counts => m_counts;
+
+        internal void Restore(IReadOnlyDictionary<string, int> counts)
+        {
+            foreach (KeyValuePair<string, int> pair in counts)
+            {
+                m_counts[pair.Key] = pair.Value;
+            }
+        }
+
         // 평가를 통과했다
         internal void Add(string shop)
         {

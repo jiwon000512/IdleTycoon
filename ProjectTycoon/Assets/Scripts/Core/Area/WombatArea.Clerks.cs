@@ -145,6 +145,28 @@ namespace ZooTycoon.Core
             return true;
         }
 
+        // 설계 43: 저장할 대기 후보(아직 안 채웠으면 비었다)
+        internal IReadOnlyList<Candidate> WaitingCandidates => m_candidates;
+
+        // 저장한 점원을 값 없이 들인다(구멍에서 나와 자리로 간다. ClerkHired를 내지 않아 줌인 · 소리 · 이름 말하기가 없다)
+        internal void RestoreClerk(Candidate candidate, Interactable thing, int wage, string product)
+        {
+            Clerk clerk = new Clerk(++m_nextClerkId, candidate, thing, wage, this);
+
+            if (product != null)
+            {
+                clerk.TrySetProduct(product);
+            }
+
+            m_clerks.Add(clerk);
+        }
+
+        internal void RestoreCandidates(IEnumerable<Candidate> candidates)
+        {
+            m_candidates.Clear();
+            m_candidates.AddRange(candidates);
+        }
+
         // 자리는 바로 비고, 점원은 구멍으로 걸어 나간 뒤 사라진다(ClerkLeft)
         public void Fire(Clerk clerk, FireReason reason)
         {

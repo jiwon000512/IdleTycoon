@@ -58,6 +58,18 @@ namespace ZooTycoon.Core
             Area.Bus.Publish(new Events.Tilled(this));
         }
 
+        // 설계 43: 저장한 갈림 · 작물(없으면 빈 밭) · 남은 초 · 거름
+        internal void Restore(bool tilled, CropTable crop, double remaining, bool fertilized)
+        {
+            IsTilled = tilled;
+
+            if (crop != null)
+            {
+                Plant(crop, fertilized);
+                Remaining = Math.Min(remaining, m_growSeconds);
+            }
+        }
+
         public void Plant(CropTable crop, bool fertilized)
         {
             Crop = crop;

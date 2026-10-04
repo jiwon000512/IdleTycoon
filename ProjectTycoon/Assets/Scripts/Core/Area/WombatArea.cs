@@ -181,6 +181,17 @@ namespace ZooTycoon.Core
             return level;
         }
 
+        // 설계 43: 저장할 업그레이드 단계(사물 종류 id → 단계)
+        internal IReadOnlyDictionary<string, int> UpgradeLevels => m_upgradeLevels;
+
+        internal void RestoreUpgrades(IReadOnlyDictionary<string, int> levels)
+        {
+            foreach (KeyValuePair<string, int> pair in levels)
+            {
+                m_upgradeLevels[pair.Key] = pair.Value;
+            }
+        }
+
         internal void LevelUp(string interactableId)
         {
             m_upgradeLevels[interactableId] = UpgradeLevel(interactableId) + 1;

@@ -184,6 +184,12 @@ namespace ZooTycoon.Core
             m_unlocked.Add(bread);
         }
 
+        // 설계 43: 불러온 뒤 웜뱃은 첫 계산대 뒤에서 시작한다(배치가 바뀌었으니 자리를 다시 잡는다)
+        internal void PlaceWombatHome()
+        {
+            EnterAt(Layout.WombatHome);
+        }
+
         protected override void TickArea(double dt)
         {
             Evaluation.Tick(dt);

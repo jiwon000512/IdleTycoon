@@ -160,6 +160,64 @@ namespace ZooTycoon.Core
             return true;
         }
 
+        // 설계 43: 저장할 놓인 것(값이 있는 종류만, 놓인 순서. 석상 같은 고정 사물은 뺀다)
+        internal List<IPlaced> SavedThings()
+        {
+            List<IPlaced> things = new List<IPlaced>();
+
+            foreach (IPlaced thing in PlacedThings)
+            {
+                if (thing.Kind.Price != null)
+                {
+                    things.Add(thing);
+                }
+            }
+
+            return things;
+        }
+
+        // 저장한 배치로 덮는다: 시작 사물을 치우고 저장한 종류 · 자리에 값 없이 놓는다(검사 없이, 저장할 때 놓을 수 있던 자리).
+        // 표에 없어진 종류는 건너뛴다. 돌려주는 목록은 넘긴 순서와 같다(건너뛴 자리는 null)
+        internal List<IPlaced> RestorePlacement(IEnumerable<KeyValuePair<string, Vector2>> things, IReadOnlyDictionary<string, int> stored)
+        {
+            List<IPlaced> created = new List<IPlaced>();
+
+            foreach (IPlaced thing in SavedThings())
+            {
+                Destroy(thing);
+            }
+
+            foreach (KeyValuePair<string, Vector2> thing in things)
+            {
+                IPlacedKind kind = FindKind(thing.Key);
+                created.Add(kind != null ? Create(kind, thing.Value) : null);
+            }
+
+            foreach (KeyValuePair<string, int> pair in stored)
+            {
+                if (FindKind(pair.Key) != null)
+                {
+                    m_stored[pair.Key] = pair.Value;
+                }
+            }
+
+            OnPlacementChanged();
+            return created;
+        }
+
+        private IPlacedKind FindKind(string kindId)
+        {
+            foreach (IPlacedKind kind in ShopKinds)
+            {
+                if (kind.Id == kindId)
+                {
+                    return kind;
+                }
+            }
+
+            return null;
+        }
+
         public bool TryPlaceStored(string kindId, Vector2 at)
         {
             IPlacedKind kind = KindOf(kindId);

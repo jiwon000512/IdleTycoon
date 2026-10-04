@@ -44,6 +44,12 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.ClerkPaid>(Bus_ClerkPaid),
                 bus.Subscribe<Events.DialogueLine>(Bus_DialogueLine),
             };
+
+            // 설계 43: 불러온 점원(인사 · 튐 없이)
+            foreach (Clerk clerk in area.Clerks)
+            {
+                AddUnit(clerk);
+            }
         }
 
         public void Dispose()
@@ -68,19 +74,24 @@ namespace ZooTycoon.World
                 return;
             }
 
+            // 굴에서 나오면서 이름을 말한다(카메라가 당겨 비추는 동안)
+            AddUnit(clerk).Say(clerk.Name, k_HelloSeconds);
+
+            if (m_bounce != null)
+            {
+                m_host.StartCoroutine(BounceOnArrive(clerk));
+            }
+        }
+
+        private VisitorView AddUnit(Clerk clerk)
+        {
             VisitorView unit = UnityEngine.Object.Instantiate(m_prefab, m_origin);
             unit.Initialize(clerk, m_frames, m_origin);
             m_units[clerk] = unit;
             Action<Interactable> handler = _ => unit.ShowCarry(clerk.Worker.Hands.Bread != null ? m_frames.Get(clerk.Worker.Hands.Bread.Sprite)[0] : null);
             clerk.Worker.Hands.Changed += handler;
             m_hands[clerk] = handler;
-            // 굴에서 나오면서 이름을 말한다(카메라가 당겨 비추는 동안)
-            unit.Say(clerk.Name, k_HelloSeconds);
-
-            if (m_bounce != null)
-            {
-                m_host.StartCoroutine(BounceOnArrive(clerk));
-            }
+            return unit;
         }
 
         // 고용되어 자리로 가는 중: 처음 닿으면 사물이 튄다(그 전에 그만두면 그만)

@@ -21,6 +21,7 @@ namespace ZooTycoon.Game
         private RelicCartPresenter m_relicPresenter;
         private RelicPresenter m_relicsPresenter;
         private LocationPresenter m_locationPresenter;
+        private OfflinePresenter m_offlinePresenter;
         private ControlHudView m_hudView;
 
         private void Awake()
@@ -45,6 +46,8 @@ namespace ZooTycoon.Game
             RelicCartView relicView = ui.Open<RelicCartView>();
             // 뽑기 결과는 뽑기 메인 위에 뜬다(설계 36)
             RelicDrawResultView relicResultView = ui.Open<RelicDrawResultView>();
+            // 설계 43: 돌아왔을 때 팝업은 맨 위
+            OfflineView offlineView = ui.Open<OfflineView>();
             WorldManager world = WorldManager.Instance;
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables, game.Mall.Plaza.Merchant);
@@ -57,6 +60,7 @@ namespace ZooTycoon.Game
             m_evaluationPresenter = new EvaluationPresenter(evaluationView, game.State, game.Bus, game.Tables);
             m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
             m_locationPresenter = new LocationPresenter(locationView, game.Mall, game.Bus, game.Tables);
+            m_offlinePresenter = new OfflinePresenter(offlineView, game.Bus, game.Tables);
             m_relicPresenter = new RelicCartPresenter(relicView, relicResultView, game.State, game.Bus, game.Tables, m_relicsPresenter.Open);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;
@@ -67,6 +71,7 @@ namespace ZooTycoon.Game
             m_editPresenter.HeldChanged += world.SetHeld;
 
             world.Initialize(game.Tables, game.Mall, game.Bus);
+            game.PublishPendingOffline();
 #if UNITY_EDITOR
             gameObject.AddComponent<CheatConsole>().Bind(game);
 #endif
@@ -96,6 +101,7 @@ namespace ZooTycoon.Game
             m_relicPresenter?.Dispose();
             m_relicsPresenter?.Dispose();
             m_locationPresenter?.Dispose();
+            m_offlinePresenter?.Dispose();
         }
 
         private void Hud_SheetRequested(Interactable target)

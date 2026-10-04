@@ -96,7 +96,7 @@ namespace ZooTycoon.World
             m_door.localPosition = new Vector3(layout.DoorFloor.X, wallBottom, 0f);
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
             m_tables = tables;
-            SetSign(0);
+            SetSign(plaza.Wombat.Worker.Wallet.Stars.Count(BakeryArea.k_Id));
             m_farmDoor.localPosition = new Vector3(layout.FarmDoorFloor.X, wallBottom, 0f);
             m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);

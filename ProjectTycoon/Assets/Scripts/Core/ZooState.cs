@@ -13,6 +13,8 @@ namespace ZooTycoon.Core
         private readonly Dictionary<string, int> m_items = new Dictionary<string, int>(StringComparer.Ordinal);
 
         public double Coins { get; private set; }
+        // 설계 43: 저장할 창고(재료 id → 개수)
+        internal IReadOnlyDictionary<string, int> Items => m_items;
         // 설계 30: 석상 축복(가게 전부에 걸리는 시간제 효과)
         public Blessing Blessing { get; private set; }
         // 설계 31: 유물(칸에 끼운 것만 효과)
@@ -46,6 +48,20 @@ namespace ZooTycoon.Core
         public double Scale(string effect)
         {
             return (1d + Blessing.Boost(effect)) * (1d + Relics.Value(effect)) * (1d + Stars.Value(effect));
+        }
+
+        // 설계 43: 저장한 지갑 · 창고로 덮는다(표에 없어진 재료도 그대로 둔다. 쓰는 곳이 없을 뿐)
+        internal void Restore(double coins, IReadOnlyDictionary<string, int> items)
+        {
+            Coins = coins;
+
+            foreach (KeyValuePair<string, int> item in items)
+            {
+                m_items[item.Key] = item.Value;
+            }
+
+            OnCoinsChanged();
+            OnItemsChanged();
         }
 
         public void AddCoins(double amount)

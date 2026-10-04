@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 41,
+  "version": 42,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -44,7 +44,8 @@
     "version 38 (2026-10-02, 설계 39 농장 아래층): 점원 탭 clerk_tab_farm 「농장」 → 「농장 1층」, clerk_tab_farm2 · farm3, 계단 자리 시트(sheet_stair_title · sheet_stair_status · row_dig_floor · row_dig_floor_effect)와 표식 tag_stair.",
     "version 39 (2026-10-02, 설계 40 별 평가): 평가 팝업 · 상단 평가 알약 · 소식지 · 마일스톤 · 「★n 필요」 · 팁 팝업 · 간판 별 · 평가단장 한마디.",
     "version 40 (2026-10-02, 설계 41 평가 화면 다듬기): 글 줄 대신 아이콘 칸. 이름표 eval_tag · eval_tag_big, 칸 값 eval_seconds · eval_times · eval_percent · eval_from_to · eval_progress · goal_people · goal_pieces · goal_until, 칸 이름 goal_serve_cap · goal_sell_cap · goal_lost_cap, 소식지 news_gain · news_line. eval_unlock 「★{0}이 되면」 → 「별 {0}개가 되면」(★5이 되면처럼 조사가 틀려서). 글 줄 열여섯(eval_bonus_price · eval_bonus_visitors · eval_next · eval_next_big · eval_rush · goal_serve · goal_lost · goal_serve_line · goal_sell_line · goal_lost_line · eval_reward_line · eval_pill · milestone_shelf · milestone_oven · milestone_counter · milestone_upgrade) 삭제.",
-    "version 41 (2026-10-02, 설계 42 곳 이름 팻말): loc_bakery · loc_plaza(키는 loc_ + 곳 id) · loc_farm(「농장 {0}층」, 농장은 층 번호)."
+    "version 41 (2026-10-02, 설계 42 곳 이름 팻말): loc_bakery · loc_plaza(키는 loc_ + 곳 id) · loc_farm(「농장 {0}층」, 농장은 층 번호).",
+    "version 42 (2026-10-04, 설계 43 저장 · 오프라인): 돌아왔을 때 팝업 offline_title · offline_hours · offline_minutes(비운 시간) · offline_coins(코인 칸 이름) · offline_sales · offline_wages(코인 칸 아래 두 줄) · offline_take(받기)."
   ],
   "rows": [
     {
@@ -470,6 +471,34 @@
     {
       "id": "loc_farm",
       "ko": "농장 {0}층"
+    },
+    {
+      "id": "offline_title",
+      "ko": "자리를 비운 동안"
+    },
+    {
+      "id": "offline_hours",
+      "ko": "{0}시간 {1}분"
+    },
+    {
+      "id": "offline_minutes",
+      "ko": "{0}분"
+    },
+    {
+      "id": "offline_coins",
+      "ko": "코인"
+    },
+    {
+      "id": "offline_sales",
+      "ko": "판매 +{0}"
+    },
+    {
+      "id": "offline_wages",
+      "ko": "월급 -{0}"
+    },
+    {
+      "id": "offline_take",
+      "ko": "받기"
     },
     {
       "id": "chip_ingredient",

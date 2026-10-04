@@ -53,6 +53,9 @@ namespace ZooTycoon.Game
             Add("똥 싸기(웜뱃 둘레)", new[] { 1, 3, 5 }.Select(n => Opt(n + "개", () => Poop(n))));
             Add("농장 층", new[] { Opt("지금 층 다 파기", DigFloor), Opt("아래층 열기(무료)", OpenLower) });
             Add("빵집 평가", new[] { Opt("바로 통과(별 +1)", () => PassEvaluation(1)), Opt("별 +5", () => PassEvaluation(5)) });
+            // 설계 43: 오프라인 정산을 바로(팝업까지) · 저장
+            Add("오프라인", new[] { (600d, "10분"), (3600d, "1시간"), (28800d, "8시간") }.Select(t => Opt(t.Item2, () => Offline(t.Item1, t.Item2))));
+            Add("저장", new[] { Opt("지금 저장", () => { m_game.Save(); return "저장함"; }), Opt("저장 지우기(다음 플레이 새 게임)", () => { m_game.DeleteSave(); return "저장을 지웠다. 이번 플레이는 닫을 때 저장하지 않는다"; }) });
         }
 
         private void Add(string name, IEnumerable<Option> options)
@@ -89,6 +92,12 @@ namespace ZooTycoon.Game
             }
 
             return label + " 건너뜀(가게 · 밭 · 행상 · 축복 · 월급)";
+        }
+
+        private string Offline(double seconds, string label)
+        {
+            OfflineReport report = m_game.SettleOffline(seconds);
+            return label + " 정산: 코인 +" + report.Coins + "(판매 " + report.Sales + " · 월급 " + report.Wages + "), 재료 " + string.Join(", ", report.Items.Select(p => p.Key + " " + p.Value));
         }
 
         private string Summon()

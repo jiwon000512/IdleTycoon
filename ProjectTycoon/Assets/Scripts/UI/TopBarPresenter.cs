@@ -39,6 +39,14 @@ namespace ZooTycoon.UI
             };
             RefreshCoins();
             ShowMerchant(merchant, false);
+
+            // 설계 43: 불러온 축복(돌아가는 연출 없이)
+            BlessingTable active = state.Blessing.Active;
+
+            if (active != null)
+            {
+                m_view.ShowBlessing(active.Icon, StatuePresenter.EffectText(m_tables, active), () => state.Blessing.Remaining, 0f);
+            }
         }
 
         public void Dispose()

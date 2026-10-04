@@ -155,9 +155,9 @@ namespace ZooTycoon.UI
             m_tag.text = page.Tag;
             m_time.text = page.Time;
             m_rush.text = page.Rush;
-            Fill(m_goals, page.Goals);
+            InfoTile.Fill(m_goals, page.Goals, m_icons);
             m_unlockTag.text = page.UnlockTag;
-            Fill(m_rewards, page.Rewards);
+            InfoTile.Fill(m_rewards, page.Rewards, m_icons);
             SetLine(m_extra, page.Extra);
             Refresh();
         }
@@ -183,8 +183,8 @@ namespace ZooTycoon.UI
             m_boxLabel.text = page.BoxLabel;
             m_newsRewards.gameObject.SetActive(page.Rewards != null);
             m_newsGoals.gameObject.SetActive(page.Goals != null);
-            Fill(m_newsRewards, page.Rewards);
-            Fill(m_newsGoals, page.Goals);
+            InfoTile.Fill(m_newsRewards, page.Rewards, m_icons);
+            InfoTile.Fill(m_newsGoals, page.Goals, m_icons);
             SetLine(m_newsExtra, page.Extra);
             m_newsButtonLabel.text = page.Button;
         }
@@ -211,34 +211,6 @@ namespace ZooTycoon.UI
         {
             text.text = value ?? string.Empty;
             text.gameObject.SetActive(!string.IsNullOrEmpty(value));
-        }
-
-        // 첫 자식이 본. 모자라면 복제하고 남으면 끈다
-        private void Fill(RectTransform parent, IReadOnlyList<InfoTile.Data> items)
-        {
-            if (items == null)
-            {
-                return;
-            }
-
-            InfoTile template = parent.GetChild(0).GetComponent<InfoTile>();
-
-            for (int i = parent.childCount; i < items.Count; i++)
-            {
-                Instantiate(template, parent);
-            }
-
-            for (int i = 0; i < parent.childCount; i++)
-            {
-                InfoTile tile = parent.GetChild(i).GetComponent<InfoTile>();
-                bool shown = i < items.Count;
-                tile.gameObject.SetActive(shown);
-
-                if (shown)
-                {
-                    tile.Show(InfoTile.Find(m_icons, items[i].Icon), items[i]);
-                }
-            }
         }
 
         private void Update()

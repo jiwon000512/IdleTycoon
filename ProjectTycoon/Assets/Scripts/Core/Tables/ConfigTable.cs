@@ -25,6 +25,11 @@ namespace ZooTycoon.Core
         public const string k_PoopMax = "poopMax";
         public const string k_PoopGap = "poopGap";
         public const string k_PoopAvoidRadius = "poopAvoidRadius";
+        // 설계 43: 저장 · 오프라인
+        public const string k_AutosaveSeconds = "autosaveSeconds";
+        public const string k_OfflineMaxSeconds = "offlineMaxSeconds";
+        public const string k_OfflineMinSeconds = "offlineMinSeconds";
+        public const string k_OfflineTripSeconds = "offlineTripSeconds";
 
         public double Value { get; set; }
     }

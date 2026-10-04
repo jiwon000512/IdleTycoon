@@ -40,6 +40,12 @@ namespace ZooTycoon.Core
             m_untilNext = m_config.MerchantFirst;
         }
 
+        // 설계 43: 저장한 「다음에 올 때까지」. 머물던 행상은 떠난 것으로 본다
+        internal void Restore(double untilNext)
+        {
+            m_untilNext = untilNext;
+        }
+
         // 다음 틱에 오게 한다(없을 때만, 에디터 치트)
         public void Summon()
         {

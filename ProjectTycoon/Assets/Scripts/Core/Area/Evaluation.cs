@@ -48,7 +48,8 @@ namespace ZooTycoon.Core
         public bool Running { get; private set; }
         public double Remaining { get; private set; }
         // 떨어진 뒤 다시 부를 때까지 남은 초
-        public double Cooldown { get; private set; }
+        // 설계 43: 저장 · 오프라인 정산이 되살린다
+        public double Cooldown { get; internal set; }
         public bool CanStart => !Running && Cooldown <= 0d;
         // 이번(또는 다음) 평가가 주는 별 · 큰 평가인가
         public int NextStar => m_stars.Count(Shop) + 1;

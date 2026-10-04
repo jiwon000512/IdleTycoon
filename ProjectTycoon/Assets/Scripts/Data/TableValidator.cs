@@ -32,6 +32,7 @@ namespace ZooTycoon.Data
             ConfigTable.k_StartCoins, ConfigTable.k_CellWidth, ConfigTable.k_CellHeight, ConfigTable.k_EntranceHeight,
             ConfigTable.k_WalkSpeed, ConfigTable.k_WombatSpeed, ConfigTable.k_HopSeconds, ConfigTable.k_CarryCapacity, ConfigTable.k_PlaceCell,
             ConfigTable.k_PoopEvery, ConfigTable.k_PoopChance, ConfigTable.k_PoopMax, ConfigTable.k_PoopGap, ConfigTable.k_PoopAvoidRadius,
+            ConfigTable.k_AutosaveSeconds, ConfigTable.k_OfflineMaxSeconds, ConfigTable.k_OfflineMinSeconds, ConfigTable.k_OfflineTripSeconds,
         };
 
         public static IReadOnlyList<string> Validate(TableSet tables)

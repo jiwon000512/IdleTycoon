@@ -207,6 +207,30 @@ namespace ZooTycoon.Tests
             return (float)(BurrowNav.Length(from, shop.Layout.Nav.FindPath(from, to)) / speed);
         }
 
+        // 줄 자리(maxCustomers)보다 많은 손님이 줄을 서도 끝자리에 겹쳐 선다(광장 문에서 한 명 넘칠 수 있다. 2026-10-04 범위 밖 예외)
+        [Test]
+        public void Queue_LongerThanSlots_StandsAtLastSlot()
+        {
+            BakeryArea shop = Create();
+            m_state.AddCoins(10000d);
+            Assert.That(shop.TryFindSpot(ShelfInteractable.k_Id, new Vector2(0f, -3f), out Vector2 spot), Is.True);
+            Assert.That(shop.TryBuy(ShelfInteractable.k_Id, spot), Is.True);
+
+            foreach (ShelfInteractable shelf in shop.Shelves)
+            {
+                shelf.Put(m_tables.Get<BreadTable>("b01"), 8);
+            }
+
+            shop.Wombat.Mover.Place(shop.Layout.HoleFloor);
+
+            for (int i = 0; i <= m_config.MaxCustomers; i++)
+            {
+                shop.Admit(m_look);
+            }
+
+            RunUntil(shop, () => shop.Counter.Queue.Count > m_config.MaxCustomers, 120d);
+        }
+
         [Test]
         public void UpgradeValue_ByUpgradeAndLevel_MatchesConfigPlusEffect()
         {

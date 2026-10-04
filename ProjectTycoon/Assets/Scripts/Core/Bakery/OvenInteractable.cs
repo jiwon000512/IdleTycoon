@@ -53,6 +53,15 @@ namespace ZooTycoon.Core
             return true;
         }
 
+        // 설계 43: 저장한 굽는 빵(없으면 빈 오븐) · 마지막 빵 · 남은 초 · 다 구운 수
+        internal void Restore(BreadTable bread, BreadTable last, double remaining, int ready)
+        {
+            Bread = bread;
+            LastBread = last;
+            Remaining = bread != null ? remaining : 0d;
+            Ready = bread != null ? ready : 0;
+        }
+
         // 남은 초(올림)가 바뀔 때만 알린다. 진행 막대는 화면이 매 프레임 Progress를 읽는다
         public override void Tick(double dt)
         {

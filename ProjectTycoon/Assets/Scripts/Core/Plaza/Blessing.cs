@@ -41,6 +41,14 @@ namespace ZooTycoon.Core
             return true;
         }
 
+        // 설계 43: 저장한 축복(없으면 null) · 남은 초 · 쉬는 초
+        internal void Restore(BlessingTable active, double remaining, double cooldown)
+        {
+            Active = active;
+            Remaining = active != null ? remaining : 0d;
+            Cooldown = cooldown;
+        }
+
         public void Tick(double dt)
         {
             bool changed = false;

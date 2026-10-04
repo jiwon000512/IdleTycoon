@@ -34,6 +34,26 @@ namespace ZooTycoon.Core
             All = tables.GetAll<RelicTable>();
         }
 
+        // 설계 43: 저장할 별(유물 id → 별) · 주판 셈
+        internal IReadOnlyDictionary<string, int> AllStars => m_stars;
+        internal int Sales => m_sales;
+
+        // 저장한 별 · 칸 · 주판 셈으로 덮는다(칸은 앞에서부터, 남는 칸은 빈다)
+        internal void Restore(IReadOnlyDictionary<string, int> stars, IReadOnlyList<RelicTable> slots, int sales)
+        {
+            foreach (KeyValuePair<string, int> pair in stars)
+            {
+                m_stars[pair.Key] = pair.Value;
+            }
+
+            for (int i = 0; i < m_slots.Length; i++)
+            {
+                m_slots[i] = i < slots.Count ? slots[i] : null;
+            }
+
+            m_sales = sales;
+        }
+
         public int Stars(RelicTable relic)
         {
             m_stars.TryGetValue(relic.Id, out int stars);

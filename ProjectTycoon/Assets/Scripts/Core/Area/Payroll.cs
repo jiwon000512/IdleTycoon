@@ -13,6 +13,15 @@ namespace ZooTycoon.Core
         private readonly EventBus m_bus;
         private double m_untilPayday;
 
+        // 설계 43: 다음 월급날까지 남은 초(저장 · 오프라인 정산)
+        public double UntilPayday
+        {
+            get => m_untilPayday;
+            internal set => m_untilPayday = value;
+        }
+
+        internal double Period => m_config.WagePeriodSeconds;
+
         // 다음 월급날까지 찬 정도(0~1)
         public double Progress => 1d - m_untilPayday / m_config.WagePeriodSeconds;
 

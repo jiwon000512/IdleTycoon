@@ -168,11 +168,13 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 길이 똥에 막혔는지는 손님이 본다(설계 24)
+        // 길이 똥에 막혔는지는 손님이 본다(설계 24). 줄 자리(maxCustomers)보다 길면 끝자리에 겹쳐 선다
+        // (광장 문에서 한 명 넘칠 수 있다. 2026-10-04 오프라인 시뮬 대조: 느린 계산 점원 혼자일 때 여기서 범위 밖 예외)
         private void WalkToSlot(int index)
         {
             BakeryLayout layout = Bakery.Layout;
-            m_queue[index].WalkTo(layout.QueueSlots(this)[index], layout.QueueFacing(this, index));
+            int slot = Math.Min(index, layout.QueueSlots(this).Count - 1);
+            m_queue[index].WalkTo(layout.QueueSlots(this)[slot], layout.QueueFacing(this, slot));
         }
     }
 }

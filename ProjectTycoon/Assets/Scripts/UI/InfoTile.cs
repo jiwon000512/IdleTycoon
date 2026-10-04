@@ -58,6 +58,34 @@ namespace ZooTycoon.UI
             return Resources.Load<Sprite>(id);
         }
 
+        // 칸 줄 채우기: 첫 자식이 본. 모자라면 복제하고 남으면 끈다(평가판 · 소식지 · 오프라인 팝업)
+        public static void Fill(RectTransform parent, IReadOnlyList<Data> items, IReadOnlyList<IconRef> icons)
+        {
+            if (items == null)
+            {
+                return;
+            }
+
+            InfoTile template = parent.GetChild(0).GetComponent<InfoTile>();
+
+            for (int i = parent.childCount; i < items.Count; i++)
+            {
+                Instantiate(template, parent);
+            }
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                InfoTile tile = parent.GetChild(i).GetComponent<InfoTile>();
+                bool shown = i < items.Count;
+                tile.gameObject.SetActive(shown);
+
+                if (shown)
+                {
+                    tile.Show(Find(icons, items[i].Icon), items[i]);
+                }
+            }
+        }
+
         public void Show(Sprite icon, Data data)
         {
             SetIcon(icon);

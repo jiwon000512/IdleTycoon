@@ -134,6 +134,13 @@ namespace ZooTycoon.Core
             return true;
         }
 
+        // 설계 43: 저장에서 열린 층(값 · 사건 없이). 위층에 내려가는 통로가 선다
+        internal void RestoreOpen()
+        {
+            IsOpen = true;
+            Upper?.Rebuild();
+        }
+
         internal override bool IsPassage(Vector2 p)
         {
             return Vector2.DistanceSquared(p, Layout.HoleFloor) < 1e-4f;
