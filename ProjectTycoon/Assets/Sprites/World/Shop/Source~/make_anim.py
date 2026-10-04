@@ -10,7 +10,7 @@
 #   웜뱃: ../wombat_<방향>{,_1,_2,_3}.png · _walk_0~7 · _blink_0~3 · _fidget(시트) (BakeryBaker가 임포트)
 #   손님: Resources/Sprites/Visitors/<이름>/<이름>_{Idle,Move,BackIdle,BackMove,SideIdle,SideMove,Blink,SideBlink,Fidget,BackFidget,SideFidget}.png
 #         (가로 1행, 칸 폭 104px, 발끝 = 아래 끝. 슬라이스는 ZooTycoon/Bake/Import Visitor Sheets)
-#   점원 회색 웜뱃: 웜뱃 프레임의 털 5색만 바꾼 같은 시트(WombatGray)
+#   점원 회색 웜뱃: 웜뱃 기본 그림의 털 5색을 바꾸고 요리사 모자를 얹은 그림(make_clerk.py)을 웜뱃 좌표로 조립한 시트(WombatGray)
 # 사용: python make_anim.py [미리보기 폴더]
 import os
 import sys
@@ -20,6 +20,7 @@ from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from anim_parts import Sprite, save, opaque
 from anim_specs import WOMBAT, VISITORS
+from make_clerk import build as clerk_base
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHOP = os.path.join(HERE, '..')
@@ -199,11 +200,32 @@ def animate(path, spec, view, name, issues):
     return idle, walk, blink, fidget
 
 
-def recolor(a, table):
-    b = a.copy()
-    for src, dst in table.items():
-        b[(b[..., :3] == src).all(-1) & opaque(b), :3] = dst
-    return b
+# 점원 요리사 모자(make_clerk.py): 모자 칸(12~29열)은 귀가 한 박자 늦게 움직이는 범위에서 뺀다(같이 밀리면 모자가 찢어진다).
+#   옆모습은 귀가 모자 띠 밑에 끼어 있어 귀 늦게 움직이기를 끈다
+CLERK_EARS = {'front': [(5, 11), (30, 36)], 'back': [(4, 11), (30, 37)], 'side': []}
+
+
+def shifted(spec, dy, ears):
+    """WOMBAT 좌표를 dy줄 내린 사본(점원 모자 높이만큼 늘린 줄) + 모자 칸을 뺀 귀 범위"""
+    s = {k: v for k, v in spec.items()}
+    s['feet'] = [dict(f, rows=(f['rows'][0] + dy, f['rows'][1] + dy)) if 'rows' in f else dict(f) for f in spec['feet']]
+    for k in ('ear', 'stretch'):
+        if k in s:
+            s[k] += dy
+    for k in ('paw', 'tail'):
+        if k in s:
+            r0, r1, c0, c1 = s[k]
+            s[k] = (r0 + dy, r1 + dy, c0, c1)
+    if 'eyes' in s:
+        s['eyes'] = [(r0 + dy, r1 + dy, c0, c1) for r0, r1, c0, c1 in s['eyes']]
+    if 'blink' in s:
+        s['blink'] = [(r + dy, c, ch) for r, c, ch in s['blink']]
+    if 'blink_fill' in s:
+        s['blink_fill'] = (s['blink_fill'][0] + dy, s['blink_fill'][1])
+    if 'clear_rows' in s:
+        s['clear_rows'] = [r + dy for r in s['clear_rows']]
+    s['ears'] = ears
+    return s
 
 
 def sheet(frames, path, cell=CELL):
@@ -256,9 +278,14 @@ def main():
         sheet(fidget, os.path.join(SHOP, f'wombat_{view}_fidget.png'))
         wombat[view] = (idle, walk, blink, fidget)
     made['wombat'] = wombat
-    # 점원 회색 웜뱃: 같은 프레임의 털색만
+    # 점원 회색 웜뱃 + 요리사 모자(2026-10-02): 털색을 바꾸고 모자를 얹은 기본 그림을 웜뱃 좌표(모자 줄만큼 내림)로 조립
     folder, table = GRAY
-    gray = {v: tuple([recolor(f, table) for f in group] for group in frames) for v, frames in wombat.items()}
+    gray = {}
+    for view, spec in WOMBAT.items():
+        base, pad = clerk_base(view, table)
+        path = os.path.join(HERE, f'clerk_{view}_base.png')
+        save(base, path)
+        gray[view] = animate(path, shifted(spec, pad, CLERK_EARS[view]), view, 'wombat', issues)
     sheets(folder, gray)
     sheet([gray['front'][0][0]], os.path.join(SHEETS, folder, folder + '.png'))
     made['gray'] = gray
