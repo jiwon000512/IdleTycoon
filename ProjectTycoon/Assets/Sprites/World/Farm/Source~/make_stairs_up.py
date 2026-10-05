@@ -19,7 +19,7 @@ LAMP = (196, 132, 70)   # 윗층 등불빛
 
 
 def main():
-    cells, _ = snap_codex.snap(os.path.join(RAW, 'stairs_up_a.png'), 12, square=True, min_hole=40, mean_merge=True)
+    cells, _ = snap_codex.snap(os.path.join(RAW, 'stairs_up_a.png'), square=True, min_hole=40, raw=True)
     Image.fromarray(np.repeat(np.repeat(cells, PX, 0), PX, 1)).save(os.path.join(HERE, '..', 'stairs_up.png'))
     print('stairs_up cells', cells.shape[1], 'x', cells.shape[0])
 

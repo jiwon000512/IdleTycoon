@@ -2,14 +2,16 @@
   "table": "BgmTable",
   "version": 1,
   "notes": [
-    "설계 23: 곳마다 배경음악. id = 곳(bakery · plaza · farm, 코드 BgmTable.k_*). 행이 없는 곳에서는 지금 곡을 이어서 튼다.",
+    "설계 23: 곳마다 배경음악. id = 곳 id(bakery · plaza · farm · fishing). 행이 없는 곳에서는 지금 곡을 이어서 튼다.",
     "clip: Resources/ 기준 경로(확장자 없음). 원본은 Assets/Audio/Source~/bgm(ACE-Step 1.5 → mellow.py → loop.py). volume: 0~1, SoundManager 전체 배율과 곱한다.",
     "2026-09-28: 광장 = 「등불 광장」(plaza_d.toml → mellow.py 2.0 0.3 7000 굴 울림 → loop.py 5~22마디 48.6초).",
-    "2026-09-30: 농장 = 「굴 속 들판」(farm_c.toml, 80 BPM D장조 → mellow.py 2.0 0.3 7000 → loop.py 11~25마디 42.0초, 이음새 0.938). 시안 a · b는 기록. 에이전트가 수치(튀는 음 6.3dB · 무게중심 310Hz)로 골랐고 사용자 피드백 대기."
+    "2026-09-30: 농장 = 「굴 속 들판」(farm_c.toml, 80 BPM D장조 → mellow.py 2.0 0.3 7000 → loop.py 11~25마디 42.0초, 이음새 0.938). 시안 a · b는 기록. 에이전트가 수치(튀는 음 6.3dB · 무게중심 310Hz)로 골랐고 사용자 피드백 대기.",
+    "2026-10-05: 낚시터 = bgm_fishing(80 BPM F장조, 낮은 패드 · 펠트 피아노 · 첼로 · 물방울 글로켄, 48.0초 루프). 아트방이 시안 여섯(Audio/Source~/bgm/fishing_a~f.toml) 중 수치(튀는 음 9.4dB · 무게중심 333Hz)로 골랐고 사용자 피드백 대기."
   ],
   "rows": [
     { "id": "bakery", "clip": "Audio/bgm_bakery", "volume": 0.25 },
     { "id": "plaza", "clip": "Audio/bgm_plaza", "volume": 0.25 },
-    { "id": "farm", "clip": "Audio/bgm_farm", "volume": 0.25 }
+    { "id": "farm", "clip": "Audio/bgm_farm", "volume": 0.25 },
+    { "id": "fishing", "clip": "Audio/bgm_fishing", "volume": 0.25 }
   ]
 }

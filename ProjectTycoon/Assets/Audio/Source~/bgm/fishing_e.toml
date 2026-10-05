@@ -1,0 +1,12 @@
+caption = "quiet underground creek theme heard inside an earthen burrow, fingerpicked acoustic guitar, soft marimba and kalimba, gentle recorder melody, low cello drone and soft felt piano in the low register, soft flowing water mood, slow peaceful pace, warm and simple, major key, sparse notes, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 78
+keyscale = "D major"
+timesignature = "4"
+seed = 4405
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/fishing_e"
+audio_format = "wav"
+backend = "pt"
+thinking = false

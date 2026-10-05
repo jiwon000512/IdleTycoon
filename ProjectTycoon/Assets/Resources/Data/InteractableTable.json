@@ -101,9 +101,9 @@
       "depth": 0.45,
       "spots": [
         {
-          "dx": 0,
-          "dy": 1.05,
-          "face": "down",
+          "dx": -1.0,
+          "dy": -0.02,
+          "face": "right",
           "role": "worker"
         }
       ],

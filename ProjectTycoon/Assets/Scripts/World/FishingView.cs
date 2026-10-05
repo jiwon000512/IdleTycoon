@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Rendering;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -11,7 +12,7 @@ namespace ZooTycoon.World
 {
     // 설계 44: 낚시터 화면. 굴 그림은 광장처럼 고정 방(BurrowPainter), 구멍 아치(광장으로)는 첫 줄 가운데.
     // 물길은 아트방 「흙 도랑」을 굴 그림처럼 칸마다 칠한다(StreamPainter). 설계 45: 판 데까지만 물이고 끝은 둑으로 막힌다. 파면 다시 칠하고, 막다른 끝 앞 땅에 파기 값.
-    // 말뚝은 아트방 「나무 말뚝」(발끝 피벗), 대는 「통통한 대」(피벗 = 꽂는 자리)를 말뚝 윗면 구멍에 꽂는다(피벗 정렬이라 말뚝 뒤). 대는 돌리지도 뒤집지도 않고, 감는 동안 끄덕인다.
+    // 말뚝은 아트방 「나무 말뚝」(발끝 피벗), 대는 「통통한 대」(피벗 = 꽂는 자리)를 말뚝 윗면 구멍에 꽂는다(말뚝 앞, 밑동 밧줄 깃이 구멍을 덮는다). 대는 돌리지도 뒤집지도 않고, 감는 동안 끄덕인다.
     // 물고기는 아트방 「둥근 귀염」 위에서 본 모습(오른쪽을 봄, 월척은 2배), 낚이면 옆모습(창고 아이콘)으로 튄다. 물고기 · 말뚝은 매 프레임 Core에서 읽어 맞춘다.
     // 팻말(물때 · 놓침)과 값 표식(소환 · 열기 · 파기)은 값 표식 알약(MarkerView, 1배), 붙잡힌 월척 · 낚은 대물 위는 「!」 말풍선. 낚으면 재료 팝업, 쿵 · 털썩 · 파기는 웜뱃 동작.
     // 낚시 폴리싱: 감는 대 끝에서 물고기까지 낚싯줄, 물고기는 물길 방향으로 눕고 살랑인다(90도 단위). 낚으면 대 끝으로 튀어 오르고, 놓치면 막다른 끝에서 사라진다.
@@ -26,6 +27,8 @@ namespace ZooTycoon.World
         private const int k_FishOrder = -1980;
         private const int k_RangeOrder = -1975;
         private const int k_TopOrder = 1000;
+        // 「!」 말풍선은 값 알약(k_TopOrder · 글 +1) 위: 같은 순서면 알약과 섞여 그려진다
+        private const int k_AlertOrder = k_TopOrder + 2;
         private static readonly Color k_Water = new Color32(0x3E, 0x7F, 0x95, 255);
         private static readonly Color k_WaterLight = new Color32(0xDD, 0xF1, 0xF5, 255);
         private static readonly Color k_Dirt = new Color32(0x8A, 0x5A, 0x36, 255);
@@ -38,14 +41,14 @@ namespace ZooTycoon.World
         // 아트방 설계 45 A 「말뚝에 맞춘 대」, Source~/make_rods.py가 다시 출력한다
         private static readonly Dictionary<string, Vector2> k_RodTips = new Dictionary<string, Vector2>
         {
-            { "rod_bamboo", new Vector2(14f, 38f) },
-            { "rod_bamboo_pull", new Vector2(16f, 38f) },
-            { "rod_iron", new Vector2(13f, 38f) },
-            { "rod_iron_pull", new Vector2(15f, 38f) },
-            { "rod_bait", new Vector2(13f, 38f) },
-            { "rod_bait_pull", new Vector2(15f, 38f) },
-            { "rod_pulley", new Vector2(2f, 30f) },
-            { "rod_bent", new Vector2(13f, 28f) },
+            { "rod_bamboo", new Vector2(13f, 38f) },
+            { "rod_bamboo_pull", new Vector2(15f, 38f) },
+            { "rod_iron", new Vector2(12f, 38f) },
+            { "rod_iron_pull", new Vector2(14f, 38f) },
+            { "rod_bait", new Vector2(12f, 38f) },
+            { "rod_bait_pull", new Vector2(14f, 38f) },
+            { "rod_pulley", new Vector2(1f, 30f) },
+            { "rod_bent", new Vector2(12f, 28f) },
         };
         // 월척 물고기 배율(정수 배라 칸 격자 그대로) · 가로 물길에서 물고기를 흙 면 아래 물 가운데로 내리는 거리
         private const float k_TrophyScale = 2f;
@@ -57,6 +60,11 @@ namespace ZooTycoon.World
         private const float k_RodHeight = 0.95f;
         private const float k_PopupHeight = 1.2f;
         private const float k_TagRise = 1.3f;
+        // 물결 한 칸 초(아트방 「고인 물」 수정)
+        private const float k_WaterFrameSeconds = 0.35f;
+        // 등급 별: 발끝 아래 높이 · 별 사이(8칸 = 별 7칸 + 틈 1칸)
+        private const float k_StarDrop = 0.15f;
+        private const float k_StarGap = 0.2f;
         // 놓침 팻말: 막다른 끝에서 위로(물길 위 둑 가운데쯤)
         private const float k_MissedRise = 0.9f;
         // 낚싯줄 굵기 · 낚은 물고기가 대 끝까지 튀는 초 · 높이 · 살랑임(칸) · 글 알약이 떠오르는 초
@@ -75,8 +83,8 @@ namespace ZooTycoon.World
         [SerializeField] private Texture2D m_floorTile;
         [SerializeField] private Texture2D m_wallTile;
         [SerializeField] private Texture2D m_wallFace;
-        [Tooltip("설계 44: 물길 재료(아트방 「흙 도랑」, 굴 재료처럼 픽셀을 읽는다)")]
-        [SerializeField] private Texture2D m_waterTile;
+        [Tooltip("설계 44: 물길 재료(아트방 「흙 도랑」, 굴 재료처럼 픽셀을 읽는다). 물 타일은 물결 네 칸(water_tile_0~3)을 k_WaterFrameSeconds마다 돈다")]
+        [SerializeField] private Texture2D[] m_waterTiles;
         [SerializeField] private Texture2D m_streamFace;
         [Tooltip("설계 44: 물속 물고기(아트방 「둥근 귀염」 <재료 id>_swim, 오른쪽을 봄, 가운데 피벗)")]
         [SerializeField] private Sprite[] m_fishSwim;
@@ -85,6 +93,8 @@ namespace ZooTycoon.World
         [Tooltip("설계 44: 말뚝 · 잠긴 말뚝(아트방 「나무 말뚝」, 발끝 피벗)")]
         [SerializeField] private Sprite m_stake;
         [SerializeField] private Sprite m_stakeLocked;
+        [Tooltip("말뚝 밑 등급 별(아트방 7×7칸, 가운데 피벗)")]
+        [SerializeField] private Sprite m_stakeStar;
         [Tooltip("설계 44: 낚싯대(아트방 「통통한 대」 rod_<계열>_<등급> · rod_<특별한 대 id> · 월척을 붙잡은 rod_bent, 피벗 = 꽂는 자리)")]
         [SerializeField] private Sprite[] m_rods;
         [Tooltip("구멍 아치(나가기 대상이면 튄다)")]
@@ -115,6 +125,8 @@ namespace ZooTycoon.World
         private Sprite m_square;
         private Sprite m_halfRing;
         private SpriteRenderer m_stream;
+        // ponytail: 물결 칸마다 물길 전체를 한 장씩(568×588 넷 ≈ 5MB). 물길이 더 커지면 물 칸만 따로 그리는 층으로
+        private Sprite[] m_streamFrames = new Sprite[0];
         private MarkerView m_waveSign;
         private MarkerView m_missedSign;
         private MarkerView m_priceTag;
@@ -138,10 +150,11 @@ namespace ZooTycoon.World
             public float Phase;
         }
 
-        // 말뚝 하나: 기둥 · 대 · 등급 별 셋 · 「!」 말풍선 · 낚싯줄
+        // 말뚝 하나: 몸(기둥 + 대) · 등급 별 셋 · 「!」 말풍선 · 낚싯줄
         private sealed class StakeArt
         {
             public StakeInteractable Stake;
+            public Transform Body;
             public SpriteRenderer Post;
             public SpriteRenderer Rod;
             public SpriteRenderer[] Stars;
@@ -175,7 +188,8 @@ namespace ZooTycoon.World
 
             BuildStream();
             BuildStakes();
-            m_waveSign = NewTag(ToWorld(new System.Numerics.Vector2(-3.6f, -1.9f)));
+            // 물때 팻말: 입구 아치 위쪽 가운데(옆에 두면 좁은 폰에서 알약 폭 2.1이 화면 밖으로 잘린다). 들어온 웜뱃이 머리 위에 든 대(발끝 위 1.15)보다 위
+            m_waveSign = NewTag(ToWorld(new System.Numerics.Vector2(fishing.Layout.HoleFloor.X, -0.6f)));
             m_missedSign = NewTag(Vector3.zero);
             m_priceTag = NewTag(Vector3.zero);
             m_priceTag.gameObject.SetActive(false);
@@ -188,7 +202,7 @@ namespace ZooTycoon.World
             catchHolder.localPosition = new Vector3(fishing.Catch.Position.X, fishing.Catch.Position.Y, 0f);
             FishTable boss = tables.Get<FishTable>(fishing.Config.BossFish);
             m_catch = NewRenderer(catchHolder, "Body", m_frames.Get(tables.Get<ItemTable>(boss.Item).Icon)[0], Color.white, 0);
-            m_catchAlert = NewRenderer(catchHolder, "Alert", null, Color.white, k_TopOrder);
+            m_catchAlert = NewRenderer(catchHolder, "Alert", null, Color.white, k_AlertOrder);
             m_catchAlert.transform.localPosition = Vector3.up * (m_catch.sprite.bounds.size.y / 2f + 0.35f);
             m_wombat.Bind(fishing, transform, frames);
 
@@ -228,6 +242,7 @@ namespace ZooTycoon.World
                 return;
             }
 
+            m_stream.sprite = m_streamFrames[(int)(Time.time / k_WaterFrameSeconds) % m_streamFrames.Length];
             SyncFish();
             SyncStakes();
             SyncRanges();
@@ -302,13 +317,14 @@ namespace ZooTycoon.World
         // 물길을 다시 칠한다(앞 그림의 텍스처는 버린다)
         private void PaintStream()
         {
-            if (m_stream.sprite != null)
+            foreach (Sprite frame in m_streamFrames)
             {
-                Destroy(m_stream.sprite.texture);
-                Destroy(m_stream.sprite);
+                Destroy(frame.texture);
+                Destroy(frame);
             }
 
-            m_stream.sprite = StreamPainter.Paint(m_fishing.Layout.Shape, m_fishing.Layout, m_waterTile, m_streamFace);
+            m_streamFrames = m_waterTiles.Select(tile => StreamPainter.Paint(m_fishing.Layout.Shape, m_fishing.Layout, tile, m_streamFace)).ToArray();
+            m_stream.sprite = m_streamFrames[0];
         }
 
         private void SyncFish()
@@ -389,23 +405,22 @@ namespace ZooTycoon.World
                 Transform holder = new GameObject("Stake" + stake.Index).transform;
                 holder.SetParent(transform, false);
                 holder.localPosition = new Vector3(stake.Position.X, stake.Position.Y, 0f);
-                SpriteRenderer post = NewRenderer(holder, "Post", m_stake, Color.white, 0);
-                post.spriteSortPoint = SpriteSortPoint.Pivot;
-                SpriteRenderer rod = NewRenderer(holder, "Rod", null, Color.white, 0);
-                rod.spriteSortPoint = SpriteSortPoint.Pivot;
+                // 기둥 + 대는 SortingGroup(발끝)으로 묶어 대를 기둥 앞에: 대 밑동의 밧줄 깃이 윗면 구멍을 덮어 꽂힌 모습이 된다
+                Transform body = new GameObject("Body", typeof(SortingGroup)).transform;
+                body.SetParent(holder, false);
+                SpriteRenderer post = NewRenderer(body, "Post", m_stake, Color.white, 0);
+                SpriteRenderer rod = NewRenderer(body, "Rod", null, Color.white, 1);
                 SpriteRenderer[] stars = new SpriteRenderer[3];
 
                 for (int i = 0; i < stars.Length; i++)
                 {
-                    stars[i] = NewRenderer(holder, "Star", m_square, k_Star, 1);
-                    stars[i].transform.localPosition = new Vector3((i - 1) * 0.12f, -0.15f, 0f);
-                    stars[i].transform.localScale = new Vector3(0.08f, 0.08f, 1f);
+                    stars[i] = NewRenderer(holder, "Star", m_stakeStar, Color.white, 1);
                 }
 
-                SpriteRenderer alert = NewRenderer(holder, "Alert", null, Color.white, k_TopOrder);
+                SpriteRenderer alert = NewRenderer(holder, "Alert", null, Color.white, k_AlertOrder);
                 alert.transform.localPosition = Vector3.up * k_TagRise;
                 SpriteRenderer line = NewRenderer(holder, "Line", m_square, k_Line, 1);
-                m_stakes.Add(new StakeArt { Stake = stake, Post = post, Rod = rod, Stars = stars, Alert = alert, Line = line });
+                m_stakes.Add(new StakeArt { Stake = stake, Body = body, Post = post, Rod = rod, Stars = stars, Alert = alert, Line = line });
             }
         }
 
@@ -433,9 +448,13 @@ namespace ZooTycoon.World
                     art.Line.transform.localScale = new Vector3(d.magnitude, k_LineWidth, 1f);
                 }
 
+                // 등급 수만큼 말뚝 가운데에 맞춰 늘어놓는다
+                int shown = stake.Rod != null && !stake.Rod.IsSpecial ? Math.Min(stake.Grade, art.Stars.Length) : 0;
+
                 for (int i = 0; i < art.Stars.Length; i++)
                 {
-                    art.Stars[i].enabled = stake.Rod != null && !stake.Rod.IsSpecial && i < stake.Grade;
+                    art.Stars[i].enabled = i < shown;
+                    art.Stars[i].transform.localPosition = new Vector3((i - (shown - 1) / 2f) * k_StarGap, -k_StarDrop, 0f);
                 }
 
                 art.Alert.enabled = stake.Hooked != null;
@@ -443,14 +462,14 @@ namespace ZooTycoon.World
             }
         }
 
-        // 대는 그림 그대로(돌리지도 뒤집지도 않는다). 감는 동안 곧은 판 ↔ 당김 판을 번갈아 쓰고(당김 판이 없는 특별한 대는 그대로), 월척을 붙잡으면 휜 대로 바꿔 한 칸씩 떤다
+        // 대는 그림 그대로(돌리지도 뒤집지도 않는다). 감는 동안 곧은 판 ↔ 당김 판을 번갈아 쓰고(당김 판이 없는 특별한 대는 그대로), 월척을 붙잡으면 휜 대로 바꿔 말뚝째 한 칸씩 떤다(대 밑동 테가 말뚝 테에서 어긋나지 않게)
         private void SyncRod(StakeArt art)
         {
             bool hooked = art.Stake.Hooked != null;
             bool pull = !hooked && art.Stake.Reeling != null && Mathf.Repeat(Time.time + art.Stake.Index * 0.17f, k_PullSeconds) < k_PullSeconds / 2f;
             art.Rod.sprite = hooked ? m_rodSprites["rod_bent"] : RodSprite(art.Stake.Rod, art.Stake.Grade, pull);
-            float shake = hooked ? Mathf.Round(Mathf.Sin(Time.time * 30f)) * Fx.k_Cell : 0f;
-            art.Rod.transform.localPosition = new Vector3(shake, k_RodSocket, 0f);
+            art.Rod.transform.localPosition = new Vector3(0f, k_RodSocket, 0f);
+            art.Body.localPosition = new Vector3(hooked ? Mathf.Round(Mathf.Sin(Time.time * 30f)) * Fx.k_Cell : 0f, 0f, 0f);
         }
 
         // 계열 대는 rod_<계열>_<등급>(3등급까지, 당김 판은 _pull), 특별한 대는 rod_<id>. 그림이 없는 계열(그물 · 등불, 아직 소환에 안 나옴)은 대나무대
@@ -601,7 +620,7 @@ namespace ZooTycoon.World
 
             if (e.Fish.Trophy && m_fishing.WombatPresent && m_fishing.Wombat.Busy)
             {
-                m_wombat.Act(0, 8, (float)m_fishing.Config.HaulSeconds);
+                m_wombat.Haul((float)m_fishing.Config.HaulSeconds);
             }
         }
 
@@ -704,7 +723,7 @@ namespace ZooTycoon.World
                 return;
             }
 
-            m_wombat.Act(8, 4, (float)m_fishing.Config.ThumpSeconds);
+            m_wombat.Thump((float)m_fishing.Config.ThumpSeconds);
             Splash(ToWorld(m_fishing.Layout.NearestOnStream(e.At)), 2);
         }
 

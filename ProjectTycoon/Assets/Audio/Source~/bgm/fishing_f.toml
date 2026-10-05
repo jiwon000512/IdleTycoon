@@ -1,0 +1,12 @@
+caption = "warm quiet theme for an underground fishing creek lit by warm lanterns deep inside a burrow, bright but gentle major key, low warm pad chords, soft felt piano in the low and middle register, gentle cello and upright bass, sparse soft glockenspiel notes like water drops, slow calm pace, cozy cave echo, peaceful and quiet, simple melody, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 80
+keyscale = "F major"
+timesignature = "4"
+seed = 4406
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/fishing_f"
+audio_format = "wav"
+backend = "pt"
+thinking = false

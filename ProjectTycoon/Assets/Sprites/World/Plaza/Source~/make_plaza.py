@@ -104,7 +104,7 @@ def ripple_frames(a, ring):
     blue = (a[..., 2] > a[..., 0] + 20) & (a[..., 3] > 0)
     cols, cnt = np.unique(a[blue][:, :3], axis=0, return_counts=True)
     base = cols[np.argmax(cnt)]
-    water = blue & (a[..., :3] == base).all(2)
+    water = blue & (np.abs(a[..., :3].astype(int) - base.astype(int)).sum(2) < 45)   # 원본 그대로라 물빛이 칸마다 조금씩 달라 비슷한 색까지(2026-10-05)
     frames = [a.copy() for _ in range(4)]
     seen = np.zeros_like(water)
     H, W = water.shape
@@ -150,7 +150,7 @@ for key, items in SHEETS.items():
             pad = (max(box[0] - 6, 0), max(box[1] - 6, 0), box[2] + 6, box[3] + 6)
             src = os.path.join(TMP, 'src.png')
             im.crop(pad).save(src)
-            a, _ = snap_codex.snap(src, 12)
+            a, _ = snap_codex.snap(src, raw=True)   # 원본 그대로(2026-10-05)
         else:
             a = pixel(im, box, width)
             if rel.endswith('awning'):

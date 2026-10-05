@@ -87,6 +87,8 @@ namespace ZooTycoon.World
         {
             VisitorView unit = UnityEngine.Object.Instantiate(m_prefab, m_origin);
             unit.Initialize(clerk, m_frames, m_origin);
+            // 재료가 모자라 기다리는 오븐 점원은 「밀 모자라요」(기다림 말풍선만으로는 왜 멈췄는지 모른다)
+            unit.SayWhile(() => clerk.Missing != null && clerk.Bubble.Id == BubbleTable.k_Wait ? m_tables.Format("clerk_missing", clerk.Missing.Name) : null);
             m_units[clerk] = unit;
             Action<Interactable> handler = _ => unit.ShowCarry(clerk.Worker.Hands.Bread != null ? m_frames.Get(clerk.Worker.Hands.Bread.Sprite)[0] : null);
             clerk.Worker.Hands.Changed += handler;

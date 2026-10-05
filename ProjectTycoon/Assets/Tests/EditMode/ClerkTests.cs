@@ -522,8 +522,8 @@ namespace ZooTycoon.Tests
             Clerk clerk = Hire(shop, oven);
             Assert.That(RunUntil(shop, () => clerk.Working), Is.True);
 
-            // 왼쪽으로(오른쪽은 계산대 바닥과 겹친다)
-            Vector2 to = oven.Position + new Vector2(-0.4f, 0f);
+            // 오른쪽으로(왼쪽은 점원 자리(오븐 왼쪽)가 벽에 닿는다)
+            Vector2 to = oven.Position + new Vector2(0.4f, 0f);
             Assert.That(shop.TryMove(oven, to), Is.True);
             Assert.That(clerk.Working, Is.False);
             Assert.That(RunUntil(shop, () => clerk.Working, 10d), Is.True);

@@ -1,0 +1,12 @@
+caption = "lazy fishing afternoon at an underground creek deep in a burrow, soft fingerpicked acoustic guitar, gentle chiptune triangle melody, low upright bass, sparse soft glockenspiel notes like water droplets, relaxed and warm, quiet, major key, simple melody, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 84
+keyscale = "C major"
+timesignature = "4"
+seed = 4402
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/fishing_b"
+audio_format = "wav"
+backend = "pt"
+thinking = false

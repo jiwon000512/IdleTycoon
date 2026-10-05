@@ -22,7 +22,6 @@ from make_dig import blobs  # noqa: E402
 P = 10                                         # 바탕 한 칸 px
 GHOST, GHOST_IN = (226, 216, 244), (204, 192, 232)
 ARCH_X, BASE, ARCH_W, ARCH_H = 66, 92, 60, 49  # 바탕의 아치 자리(칸)
-LINE = (52, 32, 32)
 MAX_RISE = 6
 
 
@@ -56,18 +55,7 @@ def cut(path):
     keep = m[y0:y1, x0:x1].copy()
     p = np.zeros((y1 - y0, x1 - x0, 4), np.int64)
     p[keep, :3] = c[y0:y1, x0:x1][keep]
-    # 가장자리 흐림 회색
-    pad = np.pad(keep, 1)
-    edge = keep & ~(pad[:-2, 1:-1] & pad[2:, 1:-1] & pad[1:-1, :-2] & pad[1:-1, 2:])
-    grey = keep & (p[..., :3].max(-1) - p[..., :3].min(-1) < 30)
-    bright = p[..., :3].sum(-1) >= 480
-    p[grey & ~bright, :3] = LINE
-    keep &= ~(grey & bright & edge)
     p[keep, 3] = 255
-    p[~keep] = 0
-    p = snap_codex.merge_colors(p, keep, 12)
-    cols = np.unique(p[keep][:, :3], axis=0)
-    p[keep & (p[..., :3] == cols[cols.sum(1).argmin()]).all(-1), :3] = LINE
     # 자리(칸): 장식 밑변 가운데가 아치 밑변 가운데에서 옆 dx · 위 dy
     dx = (col0 + (x0 + x1) / 2) - (ARCH_X + ARCH_W / 2)
     dy = BASE - (row0 + y1)
@@ -92,9 +80,9 @@ def board(p):
 
 if __name__ == '__main__':
     p, dx, dy = cut(os.path.join(RAW, 'fishing_door_b.png'))
-    assert p.shape[1] <= 68 and len(np.unique(p[p[..., 3] > 0][:, :3], axis=0)) <= 12
+    assert p.shape[1] <= 68
     Image.fromarray(np.repeat(np.repeat(p, 2, 0), 2, 1), 'RGBA').save(os.path.join(HERE, '..', 'fishing_door.png'))
-    bw, bh, bx, by = board(p)
+    bw, bh, bx, by = board(snap_codex.merge_colors(p.astype(np.int64), p[..., 3] > 0, 12).astype(np.uint8))   # 판 자리 찾기에만 색을 합친 사본
     print('fishing_door.png %d x %d 칸' % (p.shape[1], p.shape[0]))
     print('자리: 피벗(아래 가운데)이 아치 밑변 가운데에서 옆 %.1f칸 · 위 %.1f칸 = (%.4f, %.4f) 유닛' % (dx, dy, dx / 40, dy / 40))
     print('이름 판 %d x %d 칸, 가운데 = 아치 밑변 가운데에서 (%.1f, %.1f)칸 = (%.4f, %.4f) 유닛' % (bw, bh, dx + bx, dy + by, (dx + bx) / 40, (dy + by) / 40))

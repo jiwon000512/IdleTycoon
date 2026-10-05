@@ -52,7 +52,7 @@ def main():
             g = np.asarray(Image.open(p).convert('RGB')).astype(float).mean(2)
             px, phx = snap_codex.grid(np.abs(np.diff(g, axis=1)).sum(0), period, 0.02)
             py, phy = snap_codex.grid(np.abs(np.diff(g, axis=0)).sum(1), period, 0.02)
-            cells, _ = snap_codex.snap(p, 12, fixed=(px, phx, py, phy), min_hole=40, mean_merge=True)
+            cells, _ = snap_codex.snap(p, fixed=(px, phx, py, phy), min_hole=40, raw=True)   # 원본 그대로(2026-10-05)
             h, w = cells.shape[:2]
             assert h <= N and w <= N, (k, w, h)
             out = np.zeros((N, N, 4), np.uint8)

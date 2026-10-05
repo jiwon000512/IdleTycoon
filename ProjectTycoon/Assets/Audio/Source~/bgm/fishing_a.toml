@@ -1,0 +1,12 @@
+caption = "calm fishing theme by a quiet underground stream inside a cozy burrow, gently plucked ukulele and soft kalimba, slow lapping marimba arpeggios like water, low warm cello drone and soft felt piano in the low register, lazy peaceful pace, cozy cave echo, warm and simple, major key, sparse notes, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 76
+keyscale = "G major"
+timesignature = "4"
+seed = 4401
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/fishing_a"
+audio_format = "wav"
+backend = "pt"
+thinking = false

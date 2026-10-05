@@ -44,7 +44,7 @@ def blockout():
 
 
 def main():
-    a, _ = snap_codex.snap(os.path.join(RAW, 'stairs_down_b.png'), 12, square=True, min_hole=40, mean_merge=True)
+    a, _ = snap_codex.snap(os.path.join(RAW, 'stairs_down_b.png'), square=True, min_hole=40, raw=True)
     a = a.copy()
     a[39:43] = a[43:47].copy()
     a = a[12:43].copy()

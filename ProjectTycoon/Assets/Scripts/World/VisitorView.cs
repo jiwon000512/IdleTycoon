@@ -83,6 +83,8 @@ namespace ZooTycoon.World
         private bool m_carryOnHead;
         private Coroutine m_saying;
         private System.Func<bool> m_marked;
+        private System.Func<string> m_note;
+        private string m_noteShown;
 
         private Vector3 HeadOffset => new Vector3(0f, m_height, 0f);
         // 2026-09-23: 집은 빵은 visitors.carryAt 자리에 든다. 앞발이면 옆모습에서 보는 쪽으로 내민다
@@ -171,6 +173,12 @@ namespace ZooTycoon.World
             m_marked = marked;
         }
 
+        // note가 글을 주는 동안 머리 위 글자 말풍선(점원이 기다리는 재료). 대사(Say)가 먼저, 그동안 이모지 말풍선은 숨긴다
+        public void SayWhile(System.Func<string> note)
+        {
+            m_note = note;
+        }
+
         // 머리 위 코인 + 금액(손님 결제 · 점원 월급)
         public void PopCoin(string amount)
         {
@@ -196,8 +204,29 @@ namespace ZooTycoon.World
             transform.position = position;
             SetAlpha(alpha);
             Facing facing = m_walker.Facing;
-            Bubbles.Show(m_bubble, m_bubbleFrames, m_walker.Bubble, m_saying == null && alpha > 0f);
-            m_mark.enabled = m_marked != null && m_marked() && !m_bubble.enabled && m_saying == null && !(m_carrying && m_carryOnHead) && alpha > 0f;
+            string note = m_saying == null && alpha > 0f ? m_note?.Invoke() : null;
+
+            // 대사가 끝나면(HideSay) 다시 띄우도록 대사 동안은 띄운 글을 잊는다
+            if (m_saying != null)
+            {
+                m_noteShown = null;
+            }
+            else if (note != m_noteShown)
+            {
+                if (note != null)
+                {
+                    Bubbles.ShowSay(m_say, m_sayTail, m_sayText, note, m_sayPadding);
+                }
+                else
+                {
+                    Bubbles.HideSay(m_say, m_sayTail, m_sayText);
+                }
+
+                m_noteShown = note;
+            }
+
+            Bubbles.Show(m_bubble, m_bubbleFrames, m_walker.Bubble, m_saying == null && note == null && alpha > 0f);
+            m_mark.enabled = m_marked != null && m_marked() && !m_bubble.enabled && m_saying == null && note == null && !(m_carrying && m_carryOnHead) && alpha > 0f;
             m_mark.color = new Color(1f, 1f, 1f, alpha);
             Show(facing, m_walker.Moving && !m_walker.Paused);
             m_facing = facing;

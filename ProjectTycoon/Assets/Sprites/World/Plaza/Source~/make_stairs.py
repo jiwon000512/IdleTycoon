@@ -56,7 +56,7 @@ def blockout(light=(250, 226, 160), path=os.path.join(RAW, 'stairs_blockout16.pn
 
 
 def main():
-    cells, _ = snap_codex.snap(os.path.join(RAW, 'stairs_b.png'), 12, square=True, min_hole=40, mean_merge=True)
+    cells, _ = snap_codex.snap(os.path.join(RAW, 'stairs_b.png'), square=True, min_hole=40, raw=True)
     Image.fromarray(np.repeat(np.repeat(cells, PX, 0), PX, 1)).save(os.path.join(HERE, '..', 'stairs.png'))
     print('stairs cells', cells.shape[1], 'x', cells.shape[0])
 

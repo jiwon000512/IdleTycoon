@@ -1,7 +1,8 @@
 # 낚시터 물길 「흙 도랑」(2026-10-05 사용자 선택 A, 컨셉 raw/stream_concept_a.png · 프롬프트 raw/prompt_stream.txt).
 # 물길 끝 바닥 구멍은 설계 45(막다른 끝)로 지웠다.
 # 물길은 굴 그리기(BurrowPainter)처럼 칸마다 칠한다: 물길 꺾은선이 어떻게 바뀌어도 곧은 · 꺾임 조각을 따로 두지 않는다.
-#   ../water_tile.png  32×32(한 텍셀 = 한 칸) 이음새 없는 물: 청록 바탕 · 짙은 얼룩 · 밝은 물결 · 반짝 점. 굴 원점 기준 칸 좌표로 샘플
+#   ../water_tile_0~3.png  32×32(한 텍셀 = 한 칸) 이음새 없는 물 4칸: 청록 바탕 · 짙은 얼룩 · 밝은 물결 · 반짝 점. 굴 원점 기준 칸 좌표로 샘플.
+#                      물결 획이 한 칸씩 오르내리고 반짝 점이 번갈아 켜진다(방향 없음, 옛 한 장짜리 water_tile.png = 0번)
 #   ../stream_face.png 64×F(14) 먼 둑 흙 면: 굴 윗벽 띠 wall_face의 지층(14~27줄)을 조금 그늘지게 + 맨 위 선 · 맨 아래 젖은 선.
 #                      위가 물 밖인 물 칸의 위 F줄에 깔고(가로로 이어 붙음), 그 아래 물 첫 줄은 밝은 거품 줄 LIGHT
 #   둑 바깥 고리: 물 밖 거리 1 = 선 LINE, 2~3 = 턱 LIP, 4 = 선(방 둘레 턱과 같은 색). 물 안 옆 벽(좌우가 물 밖) 2칸은 DEEP
@@ -29,8 +30,11 @@ def tex(p):
     return np.asarray(Image.open(p).convert('RGBA'))
 
 
-def water_tile(seed=3):
+def water_tile(seed=3, frame=0):
+    # frame 0~3(2026-10-05 품질 루프 「물이 고여 있네?」): 밝은 물결 획이 한 칸씩 오르내리고(0 → 위 → 0 → 아래) 반짝 점은 번갈아 켜진다.
+    #   흐르는 방향이 없어 S자 물길 어느 구간에도 맞는다. frame 0 = 옛 한 장짜리 물 그림과 같다
     rnd = random.Random(seed)
+    bob = (0, -1, 0, 1)[frame]
     t = np.zeros((32, 32, 4), np.uint8)
     t[..., :3] = WATER
     t[..., 3] = 255
@@ -40,14 +44,17 @@ def water_tile(seed=3):
         for dy in range(h):
             for dx in range(w - abs(dy - h // 2) * 2):
                 t[(y + dy) % 32, (x + dx + abs(dy - h // 2)) % 32, :3] = DEEP
-    # 밝은 물결: 짧은 가로 획(가운데가 한 칸 위로 솟은 「︵」)
-    for _ in range(3):
+    # 밝은 물결: 짧은 가로 획(가운데가 한 칸 위로 솟은 「︵」). 획마다 오르내림을 엇갈려(홀짝) 한꺼번에 움직이지 않게
+    for i in range(3):
         y, x, w = rnd.randrange(32), rnd.randrange(32), rnd.randrange(7, 11)
+        b = bob if i % 2 == 0 else -bob
         for dx in range(w):
             lift = 1 if 0 < dx < w - 1 else 0
-            t[(y - lift) % 32, (x + dx) % 32, :3] = LIGHT
-    for _ in range(2):
-        t[rnd.randrange(32), rnd.randrange(32), :3] = SHINE
+            t[(y - lift + b) % 32, (x + dx) % 32, :3] = LIGHT
+    for i in range(2):
+        y, x = rnd.randrange(32), rnd.randrange(32)
+        if frame in (0, 2) and i == 0 or frame in (1, 3) and i == 1 or frame == 0:
+            t[y, x, :3] = SHINE
     return t
 
 
@@ -142,9 +149,10 @@ def paste(img, sp_path, cell_xy, scale=0.5, bottom=True):
 
 if __name__ == '__main__':
     water, face = water_tile(), stream_face()
-    Image.fromarray(water, 'RGBA').save(os.path.join(OUT, 'water_tile.png'))
+    for k in range(4):   # 물결 움직임 4칸(게임이 물길을 네 장 칠해 0.35초마다 돌린다)
+        Image.fromarray(water_tile(frame=k), 'RGBA').save(os.path.join(OUT, 'water_tile_%d.png' % k))
     Image.fromarray(face, 'RGBA').save(os.path.join(OUT, 'stream_face.png'))
-    print('water_tile', water.shape[1], 'x', water.shape[0], '· stream_face', face.shape[1], 'x', face.shape[0])
+    print('water_tile_0~3', water.shape[1], 'x', water.shape[0], '· stream_face', face.shape[1], 'x', face.shape[0])
     if len(sys.argv) > 1:
         cfg = json.load(open(os.path.join(A, 'Resources', 'Data', 'FishingConfigTable.json'), encoding='utf-8'))['rows'][0]
         img, (ox, oy), pts = mock(cfg, water, face)

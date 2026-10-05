@@ -1,0 +1,60 @@
+# 낚시터 웜뱃 동작 엉덩이 쿵 · 털썩 앉기(2026-10-05 아트방). Codex CLI: codex exec --skip-git-repo-check -s workspace-write -c model_reasoning_effort=low -i thump_ref_sheet.png - < 이 글
+# thump_ref_sheet.png = 3줄(앞 · 옆 · 뒤) × 6칸 빈 시트, 여섯째 칸에 지금 웜뱃(한 칸 5px). 시안 A 통통 폴짝 · 곰인형 / B 크게 뛰어 쿵 · 강아지 / C 만세 폴짝 · 식빵 중 사용자 A = thump_sheet_a.png
+# 털썩 두 칸은 「하체가 길어지는 느낌, 짜리몽땅한 상태로」로 [털썩 고침](-i thump_sheet_a.png)을 두 번 뽑아 둘째 = thump_sit_fix.png
+
+[공통]
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference file).
+
+Image 1 is a sprite-sheet template of this cozy pixel-art game: 3 rows x 6 columns of slots (thin light grey frames) on white.
+Row 1 = FRONT view, row 2 = RIGHT SIDE view (facing right), row 3 = BACK view.
+Column 6 of every row already holds the finished wombat main character standing normally, seen from that row's view, at the exact game scale.
+Columns 1 to 5 are empty.
+
+Paint the full sheet as ONE image with exactly the layout of image 1 and WITHOUT the grey slot frames:
+column 6 of every row = the standing wombat of image 1, unchanged;
+columns 1 to 5 of every row = poses 1 to 5 below, seen from that row's view, the same wombat, at exactly the same scale and big-pixel size as column 6 of that row. Poses on the ground stand on the same baseline as column 6 of that row; the jumping pose floats above that baseline.
+
+FRONT ROW RULE (most important after size): in every front pose the face stays fully visible and exactly as big as in column 6 (two small eyes, the big dark nose, the mouth). The head never tips down toward the viewer and we never see the top of its head. The round body may squash down or stretch up, but the head keeps its shape. The front paws are short separate limbs drawn in front of the body; do not add bulges or dark shading on the sides of the face.
+BACK ROW: we see its back and its round bottom with a stubby tail, no face.
+
+SIZE: every pose is exactly as big as the standing wombat in column 6 of its row, made of the same big square pixels. Squashing makes it a little shorter and wider, never smaller or larger overall. Do not draw anything outside its slot.
+
+CAMERA: the same camera as image 1 for all views: looking DOWN from about 30 degrees above, orthographic, no perspective.
+
+STYLE: chunky pixel art game sprite exactly like image 1: large blocky square pixels, no anti-aliasing, no blur; a dark brown outline (#342020) one big pixel wide around each silhouette; the same soft low-saturation palette and the exact same fur colors as image 1, flat colors, no gradients, no dithering; dust puffs are small round light-tan blobs with the same dark outline; plain solid white background; no slot frames, no ground line, no ground shadow, no text, no numbers, no arrows, no motion lines, no border, no watermark.
+
+POSES 1-3 = BUM THUMP (the wombat hops and slams its round bottom on the bank so nearby fish freeze):
+[a]
+Pose 1: it crouches low, body squashed down, front paws up by its chest, getting ready.
+Pose 2: a small hop: the whole wombat is in the air, its feet a quarter of its height above the baseline, legs tucked, body round like a ball.
+Pose 3: it lands bottom-first with a THUMP: body squashed wide and flat on the baseline, eyes squeezed shut, one small round dust puff on each side at the ground.
+POSES 4-5 = PLOP SIT (it plops down on its bottom next to a fishing rod and stays sitting):
+Pose 4: it drops onto its bottom, half way down, front paws raised for balance.
+Pose 5: it sits on its bottom like a teddy bear, both hind feet sticking forward, front paws resting on its round belly, content relaxed face.
+Save the image as thump_a.png in the current working directory and reply with only the path.
+[b]
+Pose 1: it crouches very low, body squashed down hard, front paws touching the floor in front.
+Pose 2: a big jump: the whole wombat is high in the air, its feet half of its height above the baseline, body stretched tall, front paws thrown up.
+Pose 3: it slams down bottom-first: body squashed very wide and flat on the baseline, mouth open, a small crack in the ground under it and two dust puffs flying out to the sides.
+POSES 4-5 = PLOP SIT (it plops down on its bottom next to a fishing rod and stays sitting):
+Pose 4: it flops down heavily, body squashed wide as its bottom hits the ground.
+Pose 5: it sits upright like a dog: hind legs folded under it, front paws planted on the ground in front, head up, alert happy face.
+Save the image as thump_b.png in the current working directory and reply with only the path.
+[c]
+Pose 1: it rises on tiptoe, body stretched tall, front paws raised high above its head.
+Pose 2: a hop: the whole wombat is in the air, its feet a third of its height above the baseline, front paws still raised, cheerful face.
+Pose 3: it lands bottom-first with a THUMP: body squashed wide on the baseline, front paws flung out to the sides, a ring of tiny dust puffs around it on the ground.
+POSES 4-5 = PLOP SIT (it plops down on its bottom next to a fishing rod and stays sitting):
+Pose 4: it lowers itself, body squashed down, paws tucked in.
+Pose 5: it settles into a low cozy loaf: sitting flat on its bottom with paws tucked under its chest, body round and low, eyes half closed and calm.
+Save the image as thump_c.png in the current working directory and reply with only the path.
+[털썩 고침]
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference file).
+
+Image 1 is a finished sprite sheet of this cozy pixel-art game: 3 rows (FRONT view, RIGHT SIDE view facing right, BACK view) x 6 columns of the wombat main character. Keep the canvas size, the white background and columns 1, 2, 3 and 6 of every row EXACTLY as they are (same place, same pixels).
+
+Repaint ONLY columns 4 and 5 of every row (the PLOP SIT poses), because they look wrong: the sitting wombat is as tall as the standing one, so its legs make the lower body look long. Fix it like this:
+Column 4: it drops onto its bottom, half way down, body already squashing, front paws raised for balance.
+Column 5: it sits plump and SHORT like a chubby teddy bear: the round body is squashed LOWER and a little WIDER than the standing wombat of column 6 (only about four fifths of its height, the head just as big as in column 6), sitting flat on its round bottom; very short stubby hind feet poke straight out in front at the very bottom (just the round foot pads showing in the front view, small feet sticking forward in the side view, little feet peeking out at the sides in the back view); front paws resting on its round belly; content relaxed face. No long legs, no visible thighs, never taller than column 6.
+
+Same chunky pixel style, the same big square pixels and the same scale as column 6 of that row, the same fur colors, a dark brown outline (#342020) one big pixel wide, flat colors, no gradients, no anti-aliasing, plain white background, no frames, no text. Every pose stands on the same baseline as column 6 of its row.

@@ -1,0 +1,12 @@
+caption = "playful cozy fishing theme for a cute pixel-art idle game, soft chiptune square lead in a low register, mellow marimba, round plucked bass, light soft hand percussion, gentle bubbling synth like a stream, bouncy but quiet, warm cave echo, major key, simple melody, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 88
+keyscale = "Bb major"
+timesignature = "4"
+seed = 4403
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/fishing_c"
+audio_format = "wav"
+backend = "pt"
+thinking = false

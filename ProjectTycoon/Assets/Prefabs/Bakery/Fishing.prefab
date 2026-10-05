@@ -635,7 +635,11 @@ MonoBehaviour:
   m_floorTile: {fileID: 2800000, guid: cbe2c1fb1b307594393261131b9a1129, type: 3}
   m_wallTile: {fileID: 2800000, guid: 882915a7e11f7f64f99f73a3c756154c, type: 3}
   m_wallFace: {fileID: 2800000, guid: f8b8f3fe1380e1a4f8215b817762678b, type: 3}
-  m_waterTile: {fileID: 2800000, guid: d6d2c028730c49747bd19237f8e70597, type: 3}
+  m_waterTiles:
+  - {fileID: 2800000, guid: 126da0b3280700c4daf2e4126333c2c9, type: 3}
+  - {fileID: 2800000, guid: 6ccf1745414358546b1526b77272d1f7, type: 3}
+  - {fileID: 2800000, guid: 71d3b79d457b5e64ab7fd34c6f7b1e04, type: 3}
+  - {fileID: 2800000, guid: fe0044dda960b9849965e1ba4c2e22e0, type: 3}
   m_streamFace: {fileID: 2800000, guid: dd1107fb60d98ac418a11cb31c603548, type: 3}
   m_fishSwim:
   - {fileID: 21300000, guid: b53a26b567f0bb441af2e6be39ec787a, type: 3}
@@ -664,6 +668,7 @@ MonoBehaviour:
   - {fileID: 953913029, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   m_stake: {fileID: 21300000, guid: 7422622990b0bd44e94788e38f2443e2, type: 3}
   m_stakeLocked: {fileID: 21300000, guid: 583ac2df038ffaa4cbc3448b5f401723, type: 3}
+  m_stakeStar: {fileID: 21300000, guid: 6cffbae7fd54a8e4e9a05b65200a11d1, type: 3}
   m_rods:
   - {fileID: 21300000, guid: 0c35810b445253a449812916f878ab2d, type: 3}
   - {fileID: 21300000, guid: 4cb058cd7d0546842a8c88a807b46033, type: 3}
@@ -1540,6 +1545,27 @@ MonoBehaviour:
   - {fileID: 4549313566546246839, guid: feaa579b4b0389b4693468a3c3d34b0d, type: 3}
   - {fileID: -8162282521236139493, guid: feaa579b4b0389b4693468a3c3d34b0d, type: 3}
   - {fileID: 3612512070666734628, guid: feaa579b4b0389b4693468a3c3d34b0d, type: 3}
+  m_frontThump:
+  - {fileID: 8721078313357414028, guid: 301a3ee2d47221648a9574792f92386b, type: 3}
+  - {fileID: 7633771811923107648, guid: 301a3ee2d47221648a9574792f92386b, type: 3}
+  - {fileID: -2405383933875878543, guid: 301a3ee2d47221648a9574792f92386b, type: 3}
+  m_backThump:
+  - {fileID: -9125918393730876136, guid: 9337e19c4a3f4b3409e72f1ca5de7b90, type: 3}
+  - {fileID: 6371804639094163807, guid: 9337e19c4a3f4b3409e72f1ca5de7b90, type: 3}
+  - {fileID: 1883284796603384045, guid: 9337e19c4a3f4b3409e72f1ca5de7b90, type: 3}
+  m_sideThump:
+  - {fileID: 2030742782141331601, guid: d6c13000ec6ba6e49a81b9b6f218c57d, type: 3}
+  - {fileID: -2109242567413870508, guid: d6c13000ec6ba6e49a81b9b6f218c57d, type: 3}
+  - {fileID: 7185122268664323312, guid: d6c13000ec6ba6e49a81b9b6f218c57d, type: 3}
+  m_frontSit:
+  - {fileID: 4290058275525118145, guid: 323a32a37dd21604787f9136f4ecf29b, type: 3}
+  - {fileID: -7386603995622999404, guid: 323a32a37dd21604787f9136f4ecf29b, type: 3}
+  m_backSit:
+  - {fileID: -9057753965811366142, guid: c5c1f5d1eb39a7c428bf652df22d0c1b, type: 3}
+  - {fileID: 1359465130868488434, guid: c5c1f5d1eb39a7c428bf652df22d0c1b, type: 3}
+  m_sideSit:
+  - {fileID: -1825765601914503393, guid: 2131cf1c14c5a6642a0e17b287645c2a, type: 3}
+  - {fileID: 6415347675310974190, guid: 2131cf1c14c5a6642a0e17b287645c2a, type: 3}
   m_digThrowFrame: 8
   m_carry:
   - {fileID: 6743362454323707022}

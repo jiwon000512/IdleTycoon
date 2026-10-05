@@ -55,6 +55,11 @@ namespace ZooTycoon.Core
         public const string k_EvalFail = "eval_fail";
         public const string k_Tip = "tip";
         public const string k_StarTier = "star_tier";
+        // 설계 44 낚시터(아트방 1차): 낚음 · 놓침 · 엉덩이 쿵 · 털썩(월척 · 대물 곁 앉기)
+        public const string k_FishCatch = "fish_catch";
+        public const string k_FishEscape = "fish_escape";
+        public const string k_Thump = "thump";
+        public const string k_Haul = "haul";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -100,6 +105,10 @@ namespace ZooTycoon.Core
             k_EvalFail,
             k_Tip,
             k_StarTier,
+            k_FishCatch,
+            k_FishEscape,
+            k_Thump,
+            k_Haul,
         };
 
         // Resources/ 기준, 확장자 없음

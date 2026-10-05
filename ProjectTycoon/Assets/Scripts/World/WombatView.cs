@@ -46,6 +46,13 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_frontDig;
         [SerializeField] private Sprite[] m_backDig;
         [SerializeField] private Sprite[] m_sideDig;
+        [Tooltip("설계 44 아트방 A 「통통 폴짝 · 곰인형」: 엉덩이 쿵 3칸(웅크림 · 폴짝 · 쿵) · 털썩 앉기 2칸(앉는 중 · 앉음), 방향마다 시트 한 장(Source~/make_thump.py)")]
+        [SerializeField] private Sprite[] m_frontThump;
+        [SerializeField] private Sprite[] m_backThump;
+        [SerializeField] private Sprite[] m_sideThump;
+        [SerializeField] private Sprite[] m_frontSit;
+        [SerializeField] private Sprite[] m_backSit;
+        [SerializeField] private Sprite[] m_sideSit;
         [SerializeField] private int m_digThrowFrame = 8;
         [Tooltip("든 빵 층(아래부터). 보이는 층 수의 상한")]
         [SerializeField] private SpriteRenderer[] m_carry;
@@ -91,13 +98,19 @@ namespace ZooTycoon.World
         private int m_shownCarry;
         private int m_lastCount;
         private Coroutine m_saying;
-        private Sprite[] m_frontSit;
-        private Sprite[] m_backSit;
-        private Sprite[] m_sideSit;
+        // 앉아 있는 동안 도는 한 칸(털썩 시트의 앉음 칸) · 앞 프레임에 앉아 있었나(앉기 시작에 털썩을 한 번)
+        private Sprite[] m_frontSeated;
+        private Sprite[] m_backSeated;
+        private Sprite[] m_sideSeated;
+        private bool m_wasSitting;
         private float m_blinkIn;
         private float m_fidgetIn;
         private Sprite m_square;
         private float m_dustTimer;
+        // 설계 44 쿵 · 털썩 칸 순서(아트방): 쿵 = 웅크림 둘 · 폴짝 셋 · 쿵 셋, 털썩 = 앉는 중 둘 · 앉음. 한 칸 0.0625초(쿵 0.5초 ÷ 8)
+        private static readonly int[] k_ThumpOrder = { 0, 0, 1, 1, 1, 2, 2, 2 };
+        private static readonly int[] k_SitDown = { 0, 0, 1 };
+        private const float k_ActFrameSeconds = 0.0625f;
         // 발소리(2026-09-30 사용자 요청): 걷기 프레임 가운데 몸이 내려앉는 칸(m_walkBob −1)에 한 번씩
         private static readonly int[] k_StepFrames = { 1, 5 };
         private int m_lastFrame = -1;
@@ -108,10 +121,10 @@ namespace ZooTycoon.World
             m_bubble.enabled = false;
             Bubbles.HideSay(m_say, m_sayTail, m_sayText);
             m_fidgetIn = m_fidgetEvery.x;
-            // 설계 44: 앉은 자세는 그림이 올 때까지 굴 파기 첫 칸(웅크림)
-            m_frontSit = new[] { m_frontDig[0] };
-            m_backSit = new[] { m_backDig[0] };
-            m_sideSit = new[] { m_sideDig[0] };
+            // 설계 44: 앉아 있는 동안은 털썩 시트의 앉음 칸
+            m_frontSeated = new[] { m_frontSit[1] };
+            m_backSeated = new[] { m_backSit[1] };
+            m_sideSeated = new[] { m_sideSit[1] };
         }
 
         // 설계 22: 대화 글자 말풍선
@@ -231,15 +244,26 @@ namespace ZooTycoon.World
             switch (facing)
             {
                 case Facing.Up:
-                    frames = moving ? m_backWalk : sitting ? m_backSit : m_backIdle;
+                    frames = moving ? m_backWalk : sitting ? m_backSeated : m_backIdle;
                     break;
                 case Facing.Down:
-                    frames = moving ? m_frontWalk : sitting ? m_frontSit : m_frontIdle;
+                    frames = moving ? m_frontWalk : sitting ? m_frontSeated : m_frontIdle;
                     break;
                 default:
-                    frames = moving ? m_sideWalk : sitting ? m_sideSit : m_sideIdle;
+                    frames = moving ? m_sideWalk : sitting ? m_sideSeated : m_sideIdle;
                     break;
             }
+
+            // 앉기 시작: 털썩(앉는 중 → 앉음)을 한 번 끼운 뒤 앉음 칸으로
+            if (sitting && !m_wasSitting)
+            {
+                SoundManager.Instance.Play(SoundTable.k_Haul);
+                m_playing = frames;
+                m_animator.Play(frames, m_idleSeconds);
+                m_animator.Interject(Sequence(SitSheet(), k_SitDown, k_ActFrameSeconds), k_ActFrameSeconds, true);
+            }
+
+            m_wasSitting = sitting;
 
             m_renderer.flipX = facing == Facing.Left;
             // 든 빵도 몸과 같이 오르내린다(걷기 · 숨쉬기 프레임만, 딴짓은 몸 높이가 그대로)
@@ -321,12 +345,51 @@ namespace ZooTycoon.World
             return m_digThrowFrame * frameSeconds;
         }
 
-        // 설계 44: 쿵 · 털썩 같은 짧은 동작을 지금 방향으로 seconds 동안 바로(그림이 올 때까지 굴 파기 시트의 from부터 count칸을 빌린다)
-        public void Act(int from, int count, float seconds)
+        // 설계 44 엉덩이 쿵: 웅크림 · 폴짝 · 쿵을 seconds 동안 바로(아트방 순서 k_ThumpOrder). 소리는 쿵 칸(2)이 처음 나올 때
+        public void Thump(float seconds)
         {
+            float frameSeconds = seconds / k_ThumpOrder.Length;
+            PlayNow(Sequence(ThumpSheet(), k_ThumpOrder, frameSeconds), frameSeconds);
+            StartCoroutine(PlayLater(SoundTable.k_Thump, frameSeconds * System.Array.IndexOf(k_ThumpOrder, 2)));
+        }
+
+        // 설계 44 월척 털썩: 털썩 앉아(앉는 중 → 앉음) seconds가 다 될 때까지 앉음 칸을 유지한 뒤 일어선다
+        public void Haul(float seconds)
+        {
+            PlayNow(Sequence(SitSheet(), k_SitDown, seconds), k_ActFrameSeconds);
+            SoundManager.Instance.Play(SoundTable.k_Haul);
+        }
+
+        private static IEnumerator PlayLater(string id, float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            SoundManager.Instance.Play(id);
+        }
+
+        // order대로 고른 칸. seconds가 order보다 길면 마지막 칸을 이어 붙인다(한 칸 k_ActFrameSeconds)
+        private static Sprite[] Sequence(Sprite[] sheet, int[] order, float seconds)
+        {
+            int count = Mathf.Max(order.Length, Mathf.RoundToInt(seconds / k_ActFrameSeconds));
             Sprite[] frames = new Sprite[count];
-            System.Array.Copy(DigSheet(), from, frames, 0, count);
-            PlayNow(frames, seconds / count);
+
+            for (int i = 0; i < count; i++)
+            {
+                frames[i] = sheet[order[Mathf.Min(i, order.Length - 1)]];
+            }
+
+            return frames;
+        }
+
+        private Sprite[] ThumpSheet()
+        {
+            Facing facing = m_area.Wombat.Mover.Facing;
+            return facing == Facing.Down ? m_frontThump : facing == Facing.Up ? m_backThump : m_sideThump;
+        }
+
+        private Sprite[] SitSheet()
+        {
+            Facing facing = m_area.Wombat.Mover.Facing;
+            return facing == Facing.Down ? m_frontSit : facing == Facing.Up ? m_backSit : m_sideSit;
         }
 
         private Sprite[] DigSheet()

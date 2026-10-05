@@ -6,7 +6,7 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 43: 자리를 비운 동안 정산(OfflineSettled)이 오면 팝업. 코인 칸 + 늘어난(줄어든) 재료 칸, 월급을 냈으면 판매 · 월급 두 줄
+    // 설계 43: 자리를 비운 동안 정산(OfflineSettled)이 오면 팝업. 코인 칸(0이면 없음) + 늘어난(줄어든) 재료 칸, 월급을 냈으면 판매 · 월급 두 줄
     public sealed class OfflinePresenter : IDisposable
     {
         private const string k_CoinIcon = "coin";
@@ -31,10 +31,13 @@ namespace ZooTycoon.UI
 
         private void Show(OfflineReport report)
         {
-            List<InfoTile.Data> tiles = new List<InfoTile.Data>
+            // 코인 칸은 번 것이 있거나 월급 줄이 뜰 때만(판매 없이 「+0」은 왜 떴나 싶다)
+            List<InfoTile.Data> tiles = new List<InfoTile.Data>();
+
+            if (report.Coins > 0d || report.Wages > 0d)
             {
-                new InfoTile.Data { Icon = k_CoinIcon, Value = "+" + BigNumberFormatter.Format(report.Coins), Caption = m_tables.Text("offline_coins") },
-            };
+                tiles.Add(new InfoTile.Data { Icon = k_CoinIcon, Value = "+" + BigNumberFormatter.Format(report.Coins), Caption = m_tables.Text("offline_coins") });
+            }
 
             foreach (ItemTable item in m_tables.GetAll<ItemTable>())
             {

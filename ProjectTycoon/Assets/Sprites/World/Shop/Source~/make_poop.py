@@ -47,7 +47,7 @@ def with_stink(cells, stink):
 
 
 if __name__ == '__main__':
-    cells, _ = snap_codex.snap(RAW, 12, square=True)
+    cells, _ = snap_codex.snap(RAW, square=True, raw=True)
     for i, stink in enumerate(STINK):
         a = with_stink(cells, stink)
         Image.fromarray(np.repeat(np.repeat(a, PX, 0), PX, 1)).save(os.path.join(OUT, 'poop_%d.png' % i))

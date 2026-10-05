@@ -46,7 +46,7 @@ def split(cells, gap=2):
 
 
 def sheet(v):
-    cells, _ = snap_codex.snap(os.path.join(RAW, 'bakery_props_%s.png' % v), 256, square=True, min_hole=40)
+    cells, _ = snap_codex.snap(os.path.join(RAW, 'bakery_props_%s.png' % v), square=True, min_hole=40, raw=True)   # 원본 그대로(2026-10-05)
     return split(cells)
 
 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     for name, v, i in PROPS:
         if v not in sheets:
             sheets[v] = sheet(v)
-        o = snap_codex.merge_colors(sheets[v][i].copy(), sheets[v][i][..., 3] > 0, 12)
+        o = sheets[v][i]
         path = os.path.join(OUT, 'bakery_prop_%s.png' % name)
         Image.fromarray(np.repeat(np.repeat(o, PX, axis=0), PX, axis=1)).save(path)
         print(os.path.relpath(path, HERE), 'cells', o.shape[1], 'x', o.shape[0], 'colors', len(np.unique(o[o[..., 3] > 0][:, :3], axis=0)))

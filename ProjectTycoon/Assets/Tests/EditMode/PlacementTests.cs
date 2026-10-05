@@ -59,8 +59,8 @@ namespace ZooTycoon.Tests
             Assert.That(m_shop.CanPlace("shelf", layout.ShelfBase(new Cell(0, 1))), Is.EqualTo(PlacementCheck.Overlaps));
             // 입구 구멍 아래 바닥을 덮음
             Assert.That(m_shop.CanPlace("shelf", layout.HoleFloor + new Vector2(0f, -0.2f)), Is.EqualTo(PlacementCheck.Overlaps));
-            // 오븐을 입구 줄 벽에 붙이면 웜뱃 자리(위 1.05)가 벽 안
-            Assert.That(m_shop.CanPlace("oven", new Vector2(-1.6875f, -2.3f)), Is.EqualTo(PlacementCheck.NoWorkSpot));
+            // 오븐을 왼쪽 벽에 붙이면 점원 자리(왼쪽 1.0)가 벽 안
+            Assert.That(m_shop.CanPlace("oven", new Vector2(-2.5f, -2.8f)), Is.EqualTo(PlacementCheck.NoWorkSpot));
         }
 
         // 설계 20: 카드 탭 자리 — 시작 진열대 위(겹침)를 주면 가장 가까운 고리의 빈 자리를 찾고, 굴 밖 멀리를 주면 못 찾는다

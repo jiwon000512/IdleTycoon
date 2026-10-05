@@ -4,6 +4,7 @@ using UnityEngine;
 namespace ZooTycoon.World
 {
     // 설계 09: 직교 카메라가 웜뱃을 부드럽게 따라가고, 가게 경계(판 칸 + 둘레 흙 한 칸) 밖을 비추지 않게 가둔다.
+    // 오른쪽 메뉴 버튼 줄이 덮는 폭은 빼고 본다: 웜뱃은 남은 폭의 가운데, 경계도 오른쪽으로 그 폭만큼 더 간다
     // 설계 18: 편집 모드에서는 따라가지 않고 빈 곳 드래그로 팬(같은 경계 안)
     // 비추기(Spot): 잠깐 다른 곳을 당겨서 보여 주고 웜뱃에게 돌아온다(점원이 굴에서 나올 때). 조작하면 바로 돌아온다
     [RequireComponent(typeof(Camera))]
@@ -16,6 +17,8 @@ namespace ZooTycoon.World
         [Tooltip("비추기: 당겨 보는 배율(정수 배라야 픽셀이 고르다)과 당기고 푸는 시간(초)")]
         [SerializeField] private float m_spotZoom = 2f;
         [SerializeField] private float m_spotSeconds = 0.25f;
+        [Tooltip("오른쪽 메뉴 버튼 줄이 덮는 화면 폭 비율. 카메라가 경계 오른쪽으로 그만큼 더 가서 오른쪽 끝 사물이 버튼 밑에서 나온다")]
+        [SerializeField] private float m_rightInset = 0.13f;
 
         private Camera m_camera;
         private Transform m_target;
@@ -49,7 +52,7 @@ namespace ZooTycoon.World
         {
             m_target = target;
             m_bounds = bounds;
-            Apply(Clamp(target.position));
+            Apply(Clamp(Frame(target.position)));
         }
 
         // 굴을 넓히면 경계가 바뀐다
@@ -83,7 +86,7 @@ namespace ZooTycoon.World
             }
 
             Vector2 focus = spot ? m_spot() : (Vector2)m_target.position;
-            Vector2 next = Vector2.SmoothDamp(transform.position, Clamp(focus), ref m_velocity, spot ? m_spotSeconds : m_followSeconds, Mathf.Infinity, spot ? Time.unscaledDeltaTime : Time.deltaTime);
+            Vector2 next = Vector2.SmoothDamp(transform.position, Clamp(Frame(focus)), ref m_velocity, spot ? m_spotSeconds : m_followSeconds, Mathf.Infinity, spot ? Time.unscaledDeltaTime : Time.deltaTime);
             Apply(next);
         }
 
@@ -92,11 +95,17 @@ namespace ZooTycoon.World
             transform.position = new Vector3(focus.x, focus.y, k_Depth);
         }
 
+        // 따라가는 것을 버튼 줄이 덮지 않는 폭의 가운데에 둔다(카메라를 버튼 줄 반 폭만큼 오른쪽으로)
+        private Vector2 Frame(Vector2 at)
+        {
+            return at + new Vector2(m_camera.orthographicSize * m_camera.aspect * m_rightInset, 0f);
+        }
+
         private Vector2 Clamp(Vector2 focus)
         {
             float hh = m_camera.orthographicSize;
             float hw = hh * m_camera.aspect;
-            return new Vector2(ClampAxis(focus.x, m_bounds.xMin + hw, m_bounds.xMax - hw),
+            return new Vector2(ClampAxis(focus.x, m_bounds.xMin + hw, m_bounds.xMax - hw + 2f * hw * m_rightInset),
                 ClampAxis(focus.y, m_bounds.yMin + hh, m_bounds.yMax - hh));
         }
 

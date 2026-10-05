@@ -21,12 +21,12 @@ FAITHFUL = [('sack', 12, None), ('scarecrow', 12, None), ('bench', 10, (12.48, 9
 
 
 def faithful(name, max_colors, grid):
-    # 원본 격자 그대로(공용 World/Source~/snap_codex.py). grid: 없으면 찾는다, 네 값이면 그 격자, 'bench_period'면 작업대 주기 근처에서 찾는다
+    # 원본 그대로(공용 World/Source~/snap_codex.py raw, 2026-10-05 색 합치기 · 외곽선 칠하기 없이 다시 옮김, max_colors는 쓰지 않는다). grid: 없으면 찾는다, 네 값이면 그 격자, 'bench_period'면 작업대 주기 근처에서 찾는다
     path = os.path.join(RAW, 'prop_%s_part.png' % name)
     if grid == 'bench_period':
-        cells, _ = snap_codex.snap(path, max_colors, cell=(12.48, 11.12))
+        cells, _ = snap_codex.snap(path, max_colors, cell=(12.48, 11.12), raw=True)
     else:
-        cells, _ = snap_codex.snap(path, max_colors, fixed=grid)
+        cells, _ = snap_codex.snap(path, max_colors, fixed=grid, raw=True)
     return cells
 
 

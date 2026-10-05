@@ -94,6 +94,8 @@ namespace ZooTycoon.Core
         public IdleKind Idle { get; private set; }
         // 외출 중(구멍 안, 광장에 그림이 있다)
         public bool Away { get; private set; }
+        // 오븐 점원: 재료가 모자라 못 굽고 기다리는 재료(굽기 시작하면 없음). 화면은 기다림 말풍선 동안 이 재료를 글로 띄운다
+        public ItemTable Missing { get; private set; }
         // 딴짓 종류의 말풍선(광장이 외출 점원에게 띄운다)
         public string IdleBubbleId => IdleBubble();
         // 자리에 붙어 일하는 중(걷기·딴짓·퇴장 아님). 계산대는 이때만 계산을 돌린다
@@ -364,11 +366,19 @@ namespace ZooTycoon.Core
                 return BtStatus.Success;
             }
 
-            if (!oven.TryStart(Home.Tables.Get<BreadTable>(Product)))
+            BreadTable bread = Home.Tables.Get<BreadTable>(Product);
+
+            if (!oven.TryStart(bread))
             {
+                IngredientData lacking = bread.Ingredients.Find(i => oven.Bakery.Wallet.Count(i.Item) < i.Count);
+                Missing = lacking != null ? Home.Tables.Get<ItemTable>(lacking.Item) : null;
                 Bubble.Show(BubbleTable.k_Wait);
+                return BtStatus.Success;
             }
-            else if (Bubble.Id == BubbleTable.k_Wait)
+
+            Missing = null;
+
+            if (Bubble.Id == BubbleTable.k_Wait)
             {
                 Bubble.Clear();
             }

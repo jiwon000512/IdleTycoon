@@ -22,7 +22,7 @@ STATUE_RAW = os.path.join(HERE, 'raw', 'statue125_a.png')
 
 # 사용자가 고른 그림(63×65칸)을 만든 격자를 그대로 적어 둔다(가로 주기 · 시작, 세로 주기 · 시작). 자동은 시작점이 1/4px 달라 칸이 한 줄씩 밀린다. 하이라이트는 구멍으로 뚫지 않게
 GRID = (17.867, 16.0, 17.60966, 1.0)
-cells, _ = snap_codex.snap(STATUE_RAW, 12, fixed=GRID, min_hole=40)
+cells, _ = snap_codex.snap(STATUE_RAW, fixed=GRID, min_hole=40, raw=True)   # 원본 그대로(2026-10-05)
 img = Image.fromarray(np.repeat(np.repeat(cells, 2, 0), 2, 1), 'RGBA')
 img.save(os.path.join(HERE, '..', 'statue.png'))
 print('statue', img.size, 'cells', cells.shape[1], 'x', cells.shape[0])
