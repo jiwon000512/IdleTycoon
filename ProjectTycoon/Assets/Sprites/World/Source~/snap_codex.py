@@ -4,10 +4,12 @@
 #   1. 격자: 외곽선 두께 = 한 칸이라 진한 구간 길이의 최빈값으로 대략의 칸 크기를 잡고(원본마다 10~20px로 다름), 그 ±15% 안에서
 #      칸 경계(밝기가 크게 바뀌는 곳)를 가장 잘 짚는 (주기, 시작점)을 찾는다. 넓은 범위를 그냥 찾으면 절반 · 두 배 주기에 속는다.
 #   2. 칸 색: 칸 가운데 50%의 중앙값.
-#   3. 흰 바탕: 가장자리에서 이어진 흰 칸 + 안쪽에 갇힌 순백 칸(구멍)은 투명, 투명과 맞닿은 흰빛 번짐 칸은 두 번 벗긴다.
-#   4. 색: 거리 24 안은 한 색. 그래도 --colors보다 많으면 Lab 거리(색상 차이 2배)로 가장 가까운 두 색을 합친다(art.md 한 물체 12색 안).
-#   5. 가장 어두운 색과 맨 바깥 칸은 외곽선 (52,32,32)(art.md).
-# 사용: snap_codex.py <원본.png> <출력.png> [--colors=12] [--px=2] [--cell=가로[,세로] 대략 칸 크기 px]   출력은 한 칸 = px 픽셀(월드 2px), 여백을 잘라 저장
+#   3. 흰 바탕: 가장자리에서 이어진 흰 칸 + 안쪽에 갇힌 순백 칸(구멍)은 투명.
+#   --raw(새 그림, 2026-10-05 사용자 「그림 퀄리티에 변형이 생기는 규칙은 다 지운다」): 여기서 끝. 원본 픽셀 크기 · 색 그대로.
+#     원본이 잘게(반 칸) 그려졌어도 줄이지 않는다: 바탕 한 칸(10px) = 2텍셀이므로 원본 픽셀 하나 = 2 × 주기/10 텍셀(반 칸이면 --px=1).
+#   raw가 아닐 때(이미 들어간 옛 그림을 그대로 다시 만들 때만): 투명과 맞닿은 흰빛 번짐 칸을 두 번 벗기고, 거리 24 안은 한 색,
+#     --colors보다 많으면 Lab 거리로 가장 가까운 두 색을 합치고, 가장 어두운 색과 맨 바깥 칸을 외곽선 (52,32,32)으로.
+# 사용: snap_codex.py <원본.png> <출력.png> [--raw] [--colors=12] [--px=2] [--cell=가로[,세로] 대략 칸 크기 px]   출력은 원본 픽셀 하나 = px 픽셀, 여백을 잘라 저장
 import sys
 import numpy as np
 from PIL import Image
@@ -69,7 +71,10 @@ def merge_colors(a, mask, limit, mean=False):
         a[mask & (a[..., :3] == cols[src]).all(2), :3] = cols[dst]
 
 
-def snap(path, max_colors=12, cell=None, fixed=None, square=False, min_hole=1, mean_merge=False):
+def snap(path, max_colors=12, cell=None, fixed=None, square=False, min_hole=1, mean_merge=False, raw=False):
+    # raw: 원본 그대로(2026-10-05 사용자 「그림 퀄리티에 변형이 생기는 규칙은 다 지운다」). 칸 색은 칸 가운데 중앙값 그대로,
+    #   밝은 가장자리 벗기기 · 색 합치기(max_colors · mean_merge) · 외곽선 색 바꾸기를 하지 않는다. 바탕(가장자리에서 이어진 흰 칸) · 구멍만 투명.
+    #   새 그림은 raw=True. 기본값(raw=False)은 이미 들어간 그림을 그대로 다시 만들 때의 옛 동작
     # min_hole: 안쪽에 갇힌 순백 덩이가 이 칸 수 이상이면 구멍(투명). 흰 하이라이트 한 획이 있는 그림(수레 덮개 등)은 크게 준다
     #   (하이라이트가 뚫리면 옆의 밝은 천까지 번짐으로 벗겨져 흰 얼룩이 된다). mean_merge: merge_colors의 mean
     # square: 원본 픽셀이 정사각형인 그림(한 장에 큰 물체 하나). 세로 주기를 가로 주기 ±2% 안에서만 찾아, 가로 · 세로가 따로 잡혀 찌그러지는 것을 막는다
@@ -128,6 +133,12 @@ def snap(path, max_colors=12, cell=None, fixed=None, square=False, min_hole=1, m
         if len(blob) >= min_hole:
             for j, i in blob:
                 mask[j, i] = False
+    if raw:
+        out = np.zeros((ch, cw, 4), np.uint8)
+        out[..., :3] = cells.round().astype(np.uint8)
+        out[..., 3] = np.where(mask, 255, 0)
+        ys_, xs_ = np.nonzero(mask)
+        return out[ys_.min():ys_.max() + 1, xs_.min():xs_.max() + 1], (px_, phx, py_, phy)
     for _ in range(2):
         pad = np.pad(mask, 1)
         edge = ~(pad[:-2, 1:-1] & pad[2:, 1:-1] & pad[1:-1, :-2] & pad[1:-1, 2:])
@@ -155,7 +166,7 @@ def snap(path, max_colors=12, cell=None, fixed=None, square=False, min_hole=1, m
 if __name__ == '__main__':
     args = [x for x in sys.argv[1:] if not x.startswith('--')]
     opts = dict((x[2:].split('=') + ['1'])[:2] for x in sys.argv[1:] if x.startswith('--'))
-    cells, g = snap(args[0], int(opts.get('colors', 12)), tuple(float(v) for v in opts['cell'].split(',')) if 'cell' in opts else None)
+    cells, g = snap(args[0], int(opts.get('colors', 12)), tuple(float(v) for v in opts['cell'].split(',')) if 'cell' in opts else None, raw='raw' in opts)
     px = int(opts.get('px', 2))
     Image.fromarray(np.repeat(np.repeat(cells, px, 0), px, 1)).save(args[1])
     n = len(np.unique(cells[cells[..., 3] > 0][:, :3], axis=0))

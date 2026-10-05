@@ -17,7 +17,8 @@ import snap_codex  # noqa: E402
 PX = 2
 
 
-def blockout():
+def blockout(light=(250, 226, 160), path=os.path.join(RAW, 'stairs_blockout16.png')):
+    """light = 맨 위 빛(광장은 햇빛, 농장 올라가는 계단은 윗층 등불빛 make_stairs_up.py)"""
     a = np.asarray(Image.open(ARCH).convert('RGBA'))[::PX, ::PX].copy().astype(int)
     h, w = a.shape[:2]
     op = a[..., 3] > 0
@@ -45,12 +46,12 @@ def blockout():
             elif k < 30:
                 c = (214, 170, 118) if k % 6 in (4, 5) else (150, 104, 74)   # 같은 폭의 디딤판 · 챌판
             else:
-                c = (250, 226, 160)                                     # 햇빛
+                c = light                                               # 맨 위 빛
             a[y, x, :3] = c
     big = Image.fromarray(a.astype(np.uint8)).resize((w * 16, h * 16), Image.NEAREST)
     out = Image.new('RGBA', (big.width + 128, big.height + 128), (255, 255, 255, 255))
     out.alpha_composite(big, (64, 64))
-    out.convert('RGB').save(os.path.join(RAW, 'stairs_blockout16.png'))
+    out.convert('RGB').save(path)
     print('blockout', w, 'x', h)
 
 
