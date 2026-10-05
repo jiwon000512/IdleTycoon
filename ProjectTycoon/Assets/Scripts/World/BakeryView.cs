@@ -366,7 +366,7 @@ namespace ZooTycoon.World
             }
 
             Repaint();
-            m_dig.Play(e.Cell);
+            m_dig.Play(e.Cell, WombatView.Dig());
             OnExpanded();
         }
 

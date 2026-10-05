@@ -127,6 +127,8 @@ namespace ZooTycoon.Editor
                 }
 
                 VisitorSheetImporter.Import(k_SpriteDir + "wombat_" + side + "_fidget.png", true);
+                // 굴 파기 「웅크려 퍼 던지기」 12칸, 칸 폭 120px(Source~/make_dig.py)
+                VisitorSheetImporter.Import(k_SpriteDir + "wombat_" + side + "_dig.png", true, 120);
             }
 
             for (int i = 0; i < k_TimerFrames; i++)
@@ -385,6 +387,7 @@ namespace ZooTycoon.Editor
                 SetArray(mover, "m_" + side + "Idle", Frames("wombat_" + side, IdleSuffixes));
                 SetArray(mover, "m_" + side + "Walk", Frames("wombat_" + side, WalkSuffixes));
                 SetArray(mover, "m_" + side + "Fidget", LoadFrames("wombat_" + side + "_fidget"));
+                SetArray(mover, "m_" + side + "Dig", LoadFrames("wombat_" + side + "_dig"));
             }
 
             SetArray(mover, "m_frontBlink", Frames("wombat_front", BlinkSuffixes));

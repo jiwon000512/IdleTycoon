@@ -153,6 +153,9 @@ namespace ZooTycoon.Core
                     return false;
                 }
 
+                // 웜뱃이 그 칸 쪽을 보고 파는 동안 선다(판 사건을 받는 그림이 방향 · 파는 중을 읽으니 파기 전에)
+                Wombat wombat = dig.Area.Wombat;
+                wombat.Dig(dig.ClosestPoint(wombat.Mover.Position));
                 dig.Grid.Dig(dig.Cell);
                 return true;
             }

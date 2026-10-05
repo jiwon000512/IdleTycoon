@@ -1,0 +1,490 @@
+fileFormatVersion: 2
+guid: 094e49b2e01bccc4dab4e598850e1a84
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6935062420745867920
+    second: wombat_front_dig_0
+  - first:
+      213: -7089214020548292857
+    second: wombat_front_dig_1
+  - first:
+      213: 468781965320721510
+    second: wombat_front_dig_2
+  - first:
+      213: 5208955256203532972
+    second: wombat_front_dig_3
+  - first:
+      213: 625855558103753090
+    second: wombat_front_dig_4
+  - first:
+      213: 5529983153015462068
+    second: wombat_front_dig_5
+  - first:
+      213: -963445942762360697
+    second: wombat_front_dig_6
+  - first:
+      213: 7111273013510372189
+    second: wombat_front_dig_7
+  - first:
+      213: -5320207609589787612
+    second: wombat_front_dig_8
+  - first:
+      213: 3405142463453073652
+    second: wombat_front_dig_9
+  - first:
+      213: -1955745510857712461
+    second: wombat_front_dig_10
+  - first:
+      213: -4623741712228087954
+    second: wombat_front_dig_11
+  - first:
+      213: -3388363881295884920
+    second: wombat_front_dig_12
+  - first:
+      213: -2959608198236825141
+    second: wombat_front_dig_13
+  - first:
+      213: -6944499138503106208
+    second: wombat_front_dig_14
+  - first:
+      213: 5172662784539182288
+    second: wombat_front_dig_15
+  - first:
+      213: 3479298853983261029
+    second: wombat_front_dig_16
+  - first:
+      213: -3396049648768152355
+    second: wombat_front_dig_17
+  - first:
+      213: -7774512664091647678
+    second: wombat_front_dig_18
+  - first:
+      213: 8278497628006493809
+    second: wombat_front_dig_19
+  - first:
+      213: -8840364374846584710
+    second: wombat_front_dig_20
+  - first:
+      213: -8611581561121463650
+    second: wombat_front_dig_21
+  - first:
+      213: -508913259137171361
+    second: wombat_front_dig_22
+  - first:
+      213: -2005462475761100292
+    second: wombat_front_dig_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 80
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: wombat_front_dig_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa4e098317dc94a42a53aa9d92a77c76
+      internalID: -6935062420745867920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_1
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cbeddd2453a4d8b4dba2ab6ae2c82295
+      internalID: -7089214020548292857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_2
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 78b5e29131bfdf24eb8e8247a99f5b49
+      internalID: 468781965320721510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_3
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b52913dd49315e34ea81541ad8f3d1bd
+      internalID: 5208955256203532972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_4
+      rect:
+        serializedVersion: 2
+        x: 480
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3fba9a11eab0f4247aaef59f86655a54
+      internalID: 625855558103753090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_5
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 95d22cb9fa2cf884a8e83528c24ef600
+      internalID: 5529983153015462068
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_6
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 145928cb821c00f43ae983024fa3c50b
+      internalID: -963445942762360697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_7
+      rect:
+        serializedVersion: 2
+        x: 840
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 91f241e22e6f74046bab748cf4ba374d
+      internalID: 7111273013510372189
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_8
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 93b26901af7ad204e87c550741ddb32e
+      internalID: -5320207609589787612
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_9
+      rect:
+        serializedVersion: 2
+        x: 1080
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f95104ecef0d08a4394de067a2efa847
+      internalID: 3405142463453073652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_10
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60b57c29a8a5b82439e487e6210f3c71
+      internalID: -1955745510857712461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: wombat_front_dig_11
+      rect:
+        serializedVersion: 2
+        x: 1320
+        y: 0
+        width: 120
+        height: 98
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ced69b1c15901c4aa95e2767bcd5611
+      internalID: -4623741712228087954
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5eb0ff5cb62ad1a40aaaa97c51f10afb
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      wombat_front_dig_0: -6935062420745867920
+      wombat_front_dig_1: -7089214020548292857
+      wombat_front_dig_10: -1955745510857712461
+      wombat_front_dig_11: -4623741712228087954
+      wombat_front_dig_12: -3388363881295884920
+      wombat_front_dig_13: -2959608198236825141
+      wombat_front_dig_14: -6944499138503106208
+      wombat_front_dig_15: 5172662784539182288
+      wombat_front_dig_16: 3479298853983261029
+      wombat_front_dig_17: -3396049648768152355
+      wombat_front_dig_18: -7774512664091647678
+      wombat_front_dig_19: 8278497628006493809
+      wombat_front_dig_2: 468781965320721510
+      wombat_front_dig_20: -8840364374846584710
+      wombat_front_dig_21: -8611581561121463650
+      wombat_front_dig_22: -508913259137171361
+      wombat_front_dig_23: -2005462475761100292
+      wombat_front_dig_3: 5208955256203532972
+      wombat_front_dig_4: 625855558103753090
+      wombat_front_dig_5: 5529983153015462068
+      wombat_front_dig_6: -963445942762360697
+      wombat_front_dig_7: 7111273013510372189
+      wombat_front_dig_8: -5320207609589787612
+      wombat_front_dig_9: 3405142463453073652
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

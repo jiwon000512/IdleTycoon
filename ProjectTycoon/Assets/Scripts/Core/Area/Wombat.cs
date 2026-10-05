@@ -22,12 +22,18 @@ namespace ZooTycoon.Core
         public bool Guided => Mover.Moving;
         // 설계 24: 이번 틱에 걸은 거리(조이스틱 · 시스템 이동만. 순간 이동 Place는 세지 않는다)
         public double Walked { get; private set; }
+        // 2026-10-05: 굴을 판 뒤 그 자리에 서 있는 시간(초)과 남은 시간. 파는 동안 조이스틱 · 시스템 이동 모두 멈춘다
+        public double DigSeconds { get; }
+        public bool Digging => m_digLeft > 0d;
+
+        private double m_digLeft;
 
         public Wombat(TableSet tables, ZooState wallet)
         {
             Mover = new Mover(Vector2.Zero, Facing.Down);
             Worker = new Worker(new Hands((int)tables.Get<ConfigTable>(ConfigTable.k_CarryCapacity).Value), wallet);
             Speed = tables.Get<ConfigTable>(ConfigTable.k_WombatSpeed).Value;
+            DigSeconds = tables.Get<ConfigTable>(ConfigTable.k_WombatDigSeconds).Value;
             Bubble = new BubbleState(tables);
         }
 
@@ -49,6 +55,13 @@ namespace ZooTycoon.Core
         {
             Bubble.Tick(dt);
             Walked = 0d;
+
+            if (Digging)
+            {
+                m_digLeft -= dt;
+                Moving = false;
+                return;
+            }
 
             if (WaitingRelease)
             {
@@ -100,6 +113,14 @@ namespace ZooTycoon.Core
             Mover.Place(Mover.Position);
             Moving = false;
             Walked = 0d;
+        }
+
+        // 굴을 판다: 하던 이동을 멈추고 at(파는 칸) 쪽을 본 채 DigSeconds 동안 그 자리에 선다
+        internal void Dig(Vector2 at)
+        {
+            Stop();
+            Mover.Facing = Mover.FacingOf(at - Mover.Position);
+            m_digLeft = DigSeconds;
         }
 
         internal void WaitRelease()

@@ -73,11 +73,17 @@ namespace ZooTycoon.World
             }
         }
 
-        // 굴을 팠다: 새 칸 자리에 흙빛 사각형을 얹어 밝아지게 하고, 흙덩이가 튄다
-        public void Play(Cell cell)
+        // 굴을 팠다: 새 칸 자리에 흙빛 사각형을 얹어 밝아지게 하고, clodDelay초 뒤(웜뱃이 흙을 던질 때) 흙덩이가 튄다
+        public void Play(Cell cell, float clodDelay)
         {
             Vector3 center = m_cellCenter(cell);
             m_host.StartCoroutine(Fade(center));
+            m_host.StartCoroutine(ClodsAfter(center, clodDelay));
+        }
+
+        private IEnumerator ClodsAfter(Vector3 center, float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
             Clods(center);
         }
 

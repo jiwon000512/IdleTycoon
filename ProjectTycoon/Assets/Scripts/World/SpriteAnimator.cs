@@ -79,10 +79,27 @@ namespace ZooTycoon.World
         }
 
         // 돌던 프레임이 처음으로 돌아올 때 frames를 한 칸 frameSeconds씩 한 번 보이고 돌던 프레임으로 돌아간다(딴짓).
-        // 앞뒤가 모두 돌던 프레임의 처음(기본 자세)이라 이어진다. 다른 프레임을 Play하면 취소
-        public void Interject(Sprite[] frames, float frameSeconds)
+        // 앞뒤가 모두 돌던 프레임의 처음(기본 자세)이라 이어진다. 다른 프레임을 Play하면 취소.
+        // now: 기다리지 않고 바로 첫 칸부터(굴 파기). 끼워 넣던 것은 끊는다
+        public void Interject(Sprite[] frames, float frameSeconds, bool now = false)
         {
-            if (frames != null && frames.Length > 1 && m_frames != null && m_loopFrames == null)
+            if (now && frames != null && m_frames != null)
+            {
+                if (m_loopFrames == null)
+                {
+                    m_loopFrames = m_frames;
+                    m_loopSeconds = m_seconds;
+                }
+
+                m_frames = frames;
+                m_seconds = new[] { frameSeconds };
+                m_pending = null;
+                m_overlayLeft = 0f;
+                m_index = 0;
+                m_elapsed = 0f;
+                Show();
+            }
+            else if (frames != null && frames.Length > 1 && m_frames != null && m_loopFrames == null)
             {
                 m_pending = frames;
                 m_pendingSeconds = new[] { frameSeconds };

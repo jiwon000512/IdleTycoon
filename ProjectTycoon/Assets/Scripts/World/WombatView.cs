@@ -42,6 +42,11 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_sideFidget;
         [SerializeField] private Vector2 m_fidgetEvery = new Vector2(6f, 12f);
         [SerializeField] private float m_fidgetFrameSeconds = 0.08f;
+        [Tooltip("굴 파기 「웅크려 퍼 던지기」(방향마다 시트 한 장, Shop/Source~/make_dig.py) · 흙을 던지는 칸 번호(흙덩이가 이때 튄다). 한 칸 시간은 ConfigTable wombatDigSeconds ÷ 칸 수")]
+        [SerializeField] private Sprite[] m_frontDig;
+        [SerializeField] private Sprite[] m_backDig;
+        [SerializeField] private Sprite[] m_sideDig;
+        [SerializeField] private int m_digThrowFrame = 8;
         [Tooltip("든 빵 층(아래부터). 보이는 층 수의 상한")]
         [SerializeField] private SpriteRenderer[] m_carry;
         [Tooltip("맨 아래 빵 가운데 높이(유닛, 발끝 기준) = 앞발 0.21 + 빵 반쯤")]
@@ -207,8 +212,8 @@ namespace ZooTycoon.World
                 StartCoroutine(Fx.Burst(m_origin, m_square, transform.position + Vector3.up * k_DustUp, k_DustCount, k_DustSpread, k_DustLift, 0f, k_DustSeconds, k_DustCells, k_Dust, 0));
             }
 
-            // 계산대 뒤(위)에서 줄 머리가 서 있으면 계산 중 앞모습(손님은 아래)
-            if (!moving && m_shop != null && ServingAtCounter())
+            // 계산대 뒤(위)에서 줄 머리가 서 있으면 계산 중 앞모습(손님은 아래). 굴을 파는 동안은 판 칸 쪽 그대로
+            if (!moving && m_shop != null && !m_area.Wombat.Digging && ServingAtCounter())
             {
                 facing = Facing.Down;
             }
@@ -296,6 +301,20 @@ namespace ZooTycoon.World
             }
 
             m_lastCount = count;
+        }
+
+        // 굴을 팠다(빵집 · 농장 칸): 지금 보는 방향으로 퍼 던지기를 바로 한 번, 웜뱃이 서 있는 시간(Wombat.DigSeconds)에 맞춰. 흙을 던지기까지 남은 초를 돌려준다
+        // 웜뱃은 판 칸 쪽으로 돌아서므로 그 방향 숨쉬기를 먼저 깔아 둔다(Update가 방향이 바뀌었다고 다시 Play해 끼워 넣기를 지우지 않게, 끝나면 그 숨쉬기로)
+        public float Dig()
+        {
+            Facing facing = m_area.Wombat.Mover.Facing;
+            m_playing = facing == Facing.Down ? m_frontIdle : facing == Facing.Up ? m_backIdle : m_sideIdle;
+            m_animator.Play(m_playing, m_idleSeconds);
+            m_renderer.flipX = facing == Facing.Left;
+            Sprite[] frames = facing == Facing.Down ? m_frontDig : facing == Facing.Up ? m_backDig : m_sideDig;
+            float frameSeconds = (float)m_area.Wombat.DigSeconds / frames.Length;
+            m_animator.Interject(frames, frameSeconds, true);
+            return m_digThrowFrame * frameSeconds;
         }
 
         private Sprite Icon(BreadTable bread)

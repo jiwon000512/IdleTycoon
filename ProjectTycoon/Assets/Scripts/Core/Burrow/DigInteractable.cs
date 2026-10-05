@@ -23,5 +23,12 @@ namespace ZooTycoon.Core
         {
             return m_cells.DistanceToCell(Cell, p);
         }
+
+        // 칸 사각형에서 p에 가장 가까운 점(웜뱃이 파는 쪽을 본다)
+        public Vector2 ClosestPoint(Vector2 p)
+        {
+            NavRect r = m_cells.CellRect(Cell);
+            return new Vector2(System.Math.Clamp(p.X, r.XMin, r.XMax), System.Math.Clamp(p.Y, r.YMin, r.YMax));
+        }
     }
 }

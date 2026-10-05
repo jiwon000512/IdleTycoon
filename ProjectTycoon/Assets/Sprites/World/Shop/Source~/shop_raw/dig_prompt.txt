@@ -1,0 +1,29 @@
+# 굴 파기 동작 2차(2026-10-05). Codex CLI: codex exec --skip-git-repo-check -s workspace-write -c model_reasoning_effort=low -i dig_ref_sheet.png - < 이 글
+# dig_ref_sheet.png = 3×4칸 빈 시트, 넷째 칸에 지금 웜뱃 앞 · 옆 · 뒤 서 있기. 시안 셋(A 웅크려 퍼 던지기 · B 앞발 번갈아 긁기 · C 뛰어올라 내리찍기) 중 사용자 A = dig_sheet_raw.png
+# 1차(옆모습 콘셉트 → 시트, 앞모습 얼굴 덧붙이기)는 앞모습이 광대처럼 보여 버렸다
+
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference file).
+
+Image 1 is a sprite-sheet template of this cozy pixel-art game: 3 rows x 4 columns of slots (thin light grey frames) on white.
+Row 1 = FRONT view, row 2 = RIGHT SIDE view (facing right), row 3 = BACK view.
+Column 4 of every row already holds the finished wombat main character standing normally, seen from that row's view, at the exact game scale.
+Columns 1, 2 and 3 are empty.
+
+Paint the full sheet as ONE wide image with exactly the layout of image 1 and WITHOUT the grey slot frames:
+column 4 of every row = the standing wombat of image 1, unchanged;
+columns 1, 2, 3 of every row = poses 1, 2, 3 of the DIGGING ACTION below, seen from that row's view, the same wombat, at exactly the same scale and big-pixel size as column 4 of that row, standing on the same baseline as column 4 of that row.
+
+FRONT ROW RULE (most important after size): in every front pose the face stays fully visible and exactly as big as in column 4 (two small eyes, the big dark nose, the mouth). The head never tips down toward the viewer and we never see the top of its head. The round body may squash down or stretch up, but the head keeps its shape. The front paws are short separate limbs drawn in front of the body; do not add bulges or dark shading on the sides of the face.
+BACK ROW: we see its back, no face; the paws show beside or above the body when they reach out.
+
+SIZE: every pose is exactly as big as the standing wombat in column 4 of its row, made of the same big square pixels. Squashing makes it a little shorter and wider, never smaller or larger overall. Do not draw anything outside its slot.
+
+CAMERA: the same camera as image 1 for all views: looking DOWN from about 30 degrees above, orthographic, no perspective.
+
+STYLE: chunky pixel art game sprite exactly like image 1: large blocky square pixels, no anti-aliasing, no blur; a dark brown outline (#342020) one big pixel wide around each silhouette; the same soft low-saturation palette as image 1, flat colors, no gradients, no dithering; soil clods are small brown blobs with the same dark outline; plain solid white background; no slot frames, no ground line, no ground shadow, no text, no numbers, no arrows, no motion lines, no border, no watermark.
+
+DIGGING ACTION:
+SQUAT AND FLING. Pose 1: the wombat squats low, its round body squashed down, both front paws pressed into the floor right in front of its feet, eyes looking down at the paws but the whole face still facing us. Pose 2: still squatting, both paws scrape back toward its belly, pulling a small lump of brown soil between its feet. Pose 3: it springs up tall and stretches, both front paws thrown up above its head, three or four small soil clods flying up and back over its head; happy squint.
+In the RIGHT SIDE row the body leans forward over its paws in poses 1 and 2 (head lowered toward the floor, face in profile still clear) and leans back in pose 3.
+
+Save the image as dig_a.png in the current working directory and reply with only the path.

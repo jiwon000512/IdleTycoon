@@ -536,6 +536,31 @@ namespace ZooTycoon.Tests
             Assert.That(shop.Grid.Cells.Count, Is.EqualTo(9));
         }
 
+        // 2026-10-05 사용자 「파는 도중에 움직여짐」 · 「파는 땅쪽을 바라보게」: 굴을 판 웜뱃은 그 칸 쪽을 보고 wombatDigSeconds 동안 조이스틱을 밀어도 서 있고, 그 뒤 걷는다
+        [Test]
+        public void Dig_FacesCellAndHoldsWombatForDigSeconds()
+        {
+            BakeryArea shop = Create(c => c.MaxCustomers = 0);
+            m_state.AddCoins(1000d);
+            Vector2 home = shop.Layout.WombatHome;
+            double seconds = Config(ConfigTable.k_WombatDigSeconds);
+            DigInteractable dig = DigAt(shop, new Cell(1, 1));
+            Facing toward = Mover.FacingOf(dig.ClosestPoint(home) - home);
+            shop.Wombat.Mover.Facing = toward == Facing.Up ? Facing.Down : Facing.Up;
+
+            Assert.That(shop.TryChoose(ActionTable.k_Dig, dig, null), Is.True);
+            Assert.That(shop.Wombat.Mover.Facing, Is.EqualTo(toward));
+            shop.Wombat.SetInput(new Vector2(1f, 0f));
+            Run(shop, seconds - 0.1d);
+            Assert.That(shop.Wombat.Digging, Is.True);
+            Assert.That(shop.Wombat.Moving, Is.False);
+            Assert.That(shop.Wombat.Mover.Position, Is.EqualTo(home));
+
+            Run(shop, 0.3d);
+            Assert.That(shop.Wombat.Digging, Is.False);
+            Assert.That(shop.Wombat.Mover.Position.X, Is.GreaterThan(home.X + 0.1f));
+        }
+
         [Test]
         public void Bake_LockedBread_Fails()
         {

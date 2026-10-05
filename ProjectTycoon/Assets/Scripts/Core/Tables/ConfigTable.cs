@@ -17,6 +17,8 @@ namespace ZooTycoon.Core
         public const string k_HopSeconds = "hopSeconds";
         // 설계 09 · 리뷰 R2: 웜뱃이 드는 빵 수(웜뱃의 값이라 빵집 설정이 아니라 여기)
         public const string k_CarryCapacity = "carryCapacity";
+        // 2026-10-05: 굴을 판 웜뱃이 그 자리에 서 있는 시간(초). 파기 동작이 이 시간에 맞춰 돈다
+        public const string k_WombatDigSeconds = "wombatDigSeconds";
         // 설계 18: 배치 격자 한 변(유닛). 사물 밑변 가운데를 여기에 맞춘다
         public const string k_PlaceCell = "placeCell";
         // 설계 24 → 37: 웜뱃 똥(곳 공용). poopEvery 유닛 걸을 때마다 poopChance로 하나(곳마다 바닥에 poopMax까지, 다른 똥 poopGap 안이면 건너뜀). 손님은 둘레 poopAvoidRadius 안을 걷지 않는다
