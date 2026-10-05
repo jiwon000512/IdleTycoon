@@ -9,9 +9,18 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteRenderer m_body;
         [SerializeField] private TextMeshPro m_text;
 
+        private float m_width;
+
+        // 글이 길면 알약이 옆으로 늘어난다(구운 폭보다 줄지는 않는다)
         public void Show(string text)
         {
-            m_text.text = text;
+            if (m_text.text != text)
+            {
+                m_width = m_width > 0f ? m_width : m_body.size.x;
+                m_text.text = text;
+                m_body.size = new Vector2(Mathf.Max(m_width, m_text.GetPreferredValues(text).x + m_body.size.y), m_body.size.y);
+            }
+
             gameObject.SetActive(true);
         }
 

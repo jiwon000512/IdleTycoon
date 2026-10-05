@@ -42,7 +42,7 @@ namespace ZooTycoon.World
         }
 
         // 월드 한 칸(2px ÷ PPU 80)
-        private const float k_Cell = 0.025f;
+        public const float k_Cell = 0.025f;
 
         // 한 변 1유닛 흰 네모(색·크기는 쓰는 쪽이). 부르는 쪽이 들고 있는다
         public static Sprite NewSquare()

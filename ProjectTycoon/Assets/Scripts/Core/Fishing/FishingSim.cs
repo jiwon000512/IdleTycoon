@@ -14,6 +14,8 @@ namespace ZooTycoon.Core
         private readonly List<Fish> m_fish = new List<Fish>();
         private readonly Dictionary<StakeInteractable, Fish> m_hooks = new Dictionary<StakeInteractable, Fish>();
         private readonly Dictionary<StakeInteractable, double> m_whirls = new Dictionary<StakeInteractable, double>();
+        // 말뚝마다 이번 틱에 감은 물고기(화면의 낚싯줄)
+        private readonly Dictionary<StakeInteractable, Fish> m_targets = new Dictionary<StakeInteractable, Fish>();
 
         public IReadOnlyList<Fish> Fish => m_fish;
         // 낚였다(물고기 · 감은 말뚝, 털썩이면 그 말뚝) · 놓쳤다
@@ -31,6 +33,12 @@ namespace ZooTycoon.Core
         public Fish HookOf(StakeInteractable stake)
         {
             return m_hooks.TryGetValue(stake, out Fish fish) ? fish : null;
+        }
+
+        // 그 말뚝 대가 지금 감는 물고기(붙잡은 월척 포함, 없으면 null)
+        public Fish TargetOf(StakeInteractable stake)
+        {
+            return HookOf(stake) ?? (m_targets.TryGetValue(stake, out Fish fish) && m_fish.Contains(fish) ? fish : null);
         }
 
         public void Spawn(Fish fish)
@@ -152,8 +160,11 @@ namespace ZooTycoon.Core
 
             if (target == null)
             {
+                m_targets.Remove(stake);
                 return;
             }
+
+            m_targets[stake] = target;
 
             if (target.Trophy)
             {

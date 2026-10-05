@@ -163,6 +163,7 @@ namespace ZooTycoon.Core
             RodTable kind = families[Math.Min(families.Count - 1, (int)(Random.NextDouble() * families.Count))];
             Summons++;
             stake.Put(kind, PickGrade());
+            Bus.Publish(new Events.RodSummoned(stake));
         }
 
         private int PickGrade()
@@ -217,6 +218,7 @@ namespace ZooTycoon.Core
             }
 
             stake.RaiseGrade();
+            Bus.Publish(new Events.RodsMerged(stake, partners.ToArray()));
         }
 
         internal List<StakeInteractable> MergePartners(StakeInteractable stake)
@@ -434,6 +436,7 @@ namespace ZooTycoon.Core
                 FishSizeData size = boss.Sizes[0];
                 Sim.Spawn(new Fish(boss, 0, false, size.Min * StageScale));
                 m_bossOut = true;
+                Bus.Publish(new Events.WaveStarted(this, true));
                 return;
             }
 
@@ -441,6 +444,8 @@ namespace ZooTycoon.Core
             {
                 m_queue.Add((m_clock + delay, fish));
             }
+
+            Bus.Publish(new Events.WaveStarted(this, false));
         }
 
         private double StageScale => Math.Pow(Config.WeightGrowth, Stage - 1);
@@ -519,6 +524,8 @@ namespace ZooTycoon.Core
 
         private void Sim_Escaped(Fish fish)
         {
+            Bus.Publish(new Events.FishEscaped(this, fish));
+
             if (fish.Boss)
             {
                 EndBoss(false);

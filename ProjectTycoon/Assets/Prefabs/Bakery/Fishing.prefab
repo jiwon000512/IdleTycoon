@@ -640,6 +640,20 @@ MonoBehaviour:
   m_drainHole: {fileID: 21300000, guid: c790bdcecc0ea3047a10906491c1c493, type: 3}
   m_stake: {fileID: 21300000, guid: 7422622990b0bd44e94788e38f2443e2, type: 3}
   m_stakeLocked: {fileID: 21300000, guid: 583ac2df038ffaa4cbc3448b5f401723, type: 3}
+  m_rods:
+  - {fileID: 21300000, guid: 0c35810b445253a449812916f878ab2d, type: 3}
+  - {fileID: 21300000, guid: 4cb058cd7d0546842a8c88a807b46033, type: 3}
+  - {fileID: 21300000, guid: c63449f287453d448ba510eabacd301f, type: 3}
+  - {fileID: 21300000, guid: a30d6da4346e6a64692b7d153a233292, type: 3}
+  - {fileID: 21300000, guid: e42014f0aeb859e4e89aefd3db120b6f, type: 3}
+  - {fileID: 21300000, guid: 63f43c364cebe59469dc4153994b9e85, type: 3}
+  - {fileID: 21300000, guid: 60965153db37dcd4cb88560037b6e718, type: 3}
+  - {fileID: 21300000, guid: 8c489494d7bfd4848a27df43003d9b4d, type: 3}
+  - {fileID: 21300000, guid: 453a963829af63442a3b38df015791ae, type: 3}
+  - {fileID: 21300000, guid: ef3d9c7babf1f2f4aaac903d732242aa, type: 3}
+  - {fileID: 21300000, guid: 4e8b55a6bdc2f794da528259d87271c7, type: 3}
+  - {fileID: 21300000, guid: a73a9d100a3f0ac4aa0e056f961d843a, type: 3}
+  - {fileID: 21300000, guid: 4c926cd5be801a34aa826ec3ddd11f58, type: 3}
   m_arch: {fileID: 5366539367141159210}
   m_hut: {fileID: 4118149295389777748}
   m_tagPrefab: {fileID: 2695013931679785543, guid: 97aa13a92e14cdf42beedaa907855fa1, type: 3}

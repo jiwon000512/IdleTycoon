@@ -111,9 +111,14 @@ namespace ZooTycoon.Tests
         public void Fish_SwimTheStream_AndEscapeAtTheEnd()
         {
             Create();
+            int waves = 0;
+            int escaped = 0;
+            m_bus.Subscribe<Events.WaveStarted>(e => waves += e.Boss ? 0 : 1);
+            m_bus.Subscribe<Events.FishEscaped>(_ => escaped++);
 
             Run(1d);
             Assert.That(m_fishing.Wave, Is.EqualTo(1));
+            Assert.That(waves, Is.EqualTo(1), "물때 시작 사건");
             Assert.That(m_fishing.Fish, Is.Not.Empty);
             Fish first = m_fishing.Fish[0];
             float s = first.S;
@@ -121,6 +126,7 @@ namespace ZooTycoon.Tests
             Assert.That(first.S - s, Is.EqualTo((float)first.Kind.Speed).Within(0.1f), "속도대로");
 
             Assert.That(RunUntil(() => m_fishing.Missed > 0, 60d), Is.True, "대가 없으면 끝에서 놓친다");
+            Assert.That(escaped, Is.EqualTo(m_fishing.Missed), "놓칠 때마다 사건");
         }
 
         [Test]
@@ -130,9 +136,12 @@ namespace ZooTycoon.Tests
             GoFishing();
             double coins = m_state.Coins;
             double price = m_fishing.SummonPrice;
+            StakeInteractable summoned = null;
+            m_bus.Subscribe<Events.RodSummoned>(e => summoned = e.Stake);
 
             Assert.That(ActionAt(Stake(0)), Is.EqualTo(ActionTable.k_Summon));
             Press(Stake(0));
+            Assert.That(summoned, Is.SameAs(Stake(0)));
             Assert.That(m_state.Coins, Is.EqualTo(coins - price).Within(1e-6));
             Assert.That(Stake(0).Rod.Id, Is.EqualTo(RodTable.k_Bamboo));
             Assert.That(Stake(0).Grade, Is.EqualTo(1));
@@ -140,7 +149,9 @@ namespace ZooTycoon.Tests
             Assert.That(ActionAt(Stake(0)), Is.EqualTo(ActionTable.k_Carry), "꽂힌 말뚝은 소환이 아니라 들기");
 
             int minnows = m_state.Count("fish_minnow");
-            Assert.That(RunUntil(() => m_state.Count("fish_minnow") > minnows, 120d), Is.True, "지나가는 피라미를 감아 낚는다");
+            bool reeled = false;
+            Assert.That(RunUntil(() => (reeled |= Stake(0).Reeling != null) && m_state.Count("fish_minnow") > minnows, 120d), Is.True, "지나가는 피라미를 감아 낚는다");
+            Assert.That(reeled, Is.True, "감는 동안 Reeling(낚싯줄)");
             Assert.That(m_fishing.Log["minnow"].Caught, Is.GreaterThan(0));
         }
 
@@ -169,7 +180,11 @@ namespace ZooTycoon.Tests
 
             Press(Stake(2));
             Assert.That(ActionAt(Stake(0)), Is.EqualTo(ActionTable.k_Merge));
+            Events.RodsMerged merged = default;
+            m_bus.Subscribe<Events.RodsMerged>(e => merged = e);
             Press(Stake(0));
+            Assert.That(merged.Into, Is.SameAs(Stake(0)));
+            Assert.That(merged.From, Is.EquivalentTo(new[] { Stake(1), Stake(2) }));
             Assert.That(Stake(0).Grade, Is.EqualTo(2));
             Assert.That(Stake(1).Rod, Is.Null);
             Assert.That(Stake(2).Rod, Is.Null);

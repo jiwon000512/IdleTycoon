@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -9,11 +10,16 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 설계 44: 낚시터 화면. 굴 그림은 광장처럼 고정 방(BurrowPainter), 구멍 아치(광장으로)는 첫 줄 가운데.
-    // 물길은 아트방 「흙 도랑」을 굴 그림처럼 칸마다 칠하고(StreamPainter) 끝에 바닥 구멍. 물고기 · 말뚝 · 대 · 사거리 원은 그림이 올 때까지 코드로 그린다(네모 · 타원 · 고리).
-    // 말뚝은 아트방 「나무 말뚝」(발끝 피벗, 대는 윗면 구멍에 꽂는다). 물고기 · 말뚝은 매 프레임 Core에서 읽어 맞춘다.
+    // 물길은 아트방 「흙 도랑」을 굴 그림처럼 칸마다 칠하고(StreamPainter) 끝에 바닥 구멍. 물고기 · 사거리 원은 그림이 올 때까지 코드로 그린다(타원 · 고리).
+    // 말뚝은 아트방 「나무 말뚝」(발끝 피벗), 대는 「통통한 대」(피벗 = 꽂는 자리)를 말뚝 윗면 구멍에 꽂는다(피벗 정렬이라 말뚝 뒤). 대는 돌리지 않고 좌우만 뒤집는다.
+    // 물고기 · 말뚝은 매 프레임 Core에서 읽어 맞춘다.
     // 팻말(물때 · 놓침)과 값 표식(소환 · 열기) · 「!!」은 값 표식 알약(MarkerView). 낚으면 재료 팝업, 쿵 · 털썩은 웜뱃 짧은 동작
+    // 낚시 폴리싱: 감는 대 끝에서 물고기까지 낚싯줄, 물고기는 물길 방향으로 눕고 살랑인다(90도 단위). 낚으면 대 끝으로 튀어 오르고, 놓치면 구멍으로 빨려 든다.
+    // 소환은 등급만큼 반짝임(드묾 · 전설 글), 합치기는 짝 대가 날아와 합쳐진다
     public sealed class FishingView : MonoBehaviour, IAreaView
     {
+        // 합칠 때 짝 대가 날아오는 초(소리도 이때)
+        public const float k_MergeSeconds = 0.3f;
         private const string k_PopupKey = "harvest_popup";
         // 그림 층: 굴(−2000) 위에 물, 그 위에 물고기 · 사거리 원, 팝업 · 알갱이는 맨 위
         private const int k_WaterOrder = -1985;
@@ -28,25 +34,32 @@ namespace ZooTycoon.World
         private static readonly Color k_Range = new Color32(0xF6, 0xE3, 0xCC, 70);
         private static readonly Color k_BarBack = new Color32(0x2A, 0x1F, 0x17, 200);
         private static readonly Color k_BarFill = new Color32(0xF6, 0xE3, 0xCC, 255);
-        // 계열 색(그림이 올 때까지 막대 색)
-        private static readonly Dictionary<string, Color> k_FamilyColors = new Dictionary<string, Color>
+        // 대 끝(줄이 나오는 점): 꽂는 자리에서 칸(1/40유닛), 등급은 같다. 없는 대(등대 · 통발)는 줄 없이 그림 가운데로 낚는다. 아트방 Source~/make_rods.py가 다시 출력한다
+        private static readonly Dictionary<string, Vector2> k_RodTips = new Dictionary<string, Vector2>
         {
-            { RodTable.k_Bamboo, new Color32(0x7F, 0xB3, 0x6A, 255) },
-            { RodTable.k_Iron, new Color32(0x9A, 0xA6, 0xB2, 255) },
-            { RodTable.k_Bait, new Color32(0xE2, 0x57, 0x4C, 255) },
+            { "rod_bamboo", new Vector2(22f, 55f) },
+            { "rod_iron", new Vector2(20f, 55f) },
+            { "rod_bait", new Vector2(21f, 55f) },
+            { "rod_pulley", new Vector2(1f, 38f) },
+            { "rod_bent", new Vector2(59f, 48f) },
         };
-        private static readonly Color k_SpecialColor = new Color32(0xF2, 0xC1, 0x4E, 255);
         // 크기[작은 · 보통 · 큰] · 대물 물고기 길이(유닛)
         private static readonly float[] k_FishLengths = { 0.45f, 0.6f, 0.8f };
         private const float k_BossLength = 1.8f;
-        private const float k_RodLength = 0.9f;
-        private const float k_RodWidth = 0.06f;
-        private const float k_RodLean = 20f;
-        private const float k_RodBent = 55f;
-        // 말뚝 윗면 구멍(대를 꽂는 자리): 발끝에서 위로(17칸, 아트방 make_stakes.py)
+        // 말뚝 윗면 구멍(대를 꽂는 자리): 발끝에서 위로(17칸, 아트방 make_stakes.py) · 대 높이(56칸)
         private const float k_RodSocket = 0.425f;
+        private const float k_RodHeight = 1.4f;
         private const float k_PopupHeight = 1.2f;
         private const float k_TagRise = 1.3f;
+        // 낚싯줄 굵기 · 낚은 물고기가 대 끝까지 튀는 초 · 높이 · 살랑임(칸) · 글 알약이 떠오르는 초
+        private const float k_LineWidth = 0.025f;
+        private const float k_CatchSeconds = 0.35f;
+        private const float k_CatchArc = 0.8f;
+        private const float k_WobbleCells = 2f;
+        private const float k_RiseSeconds = 0.9f;
+        // 낚은 대물이 둑에 누워 있으면 이 간격으로 튄다(골라 달라고)
+        private const float k_NudgeSeconds = 1.2f;
+        private static readonly Color k_Line = new Color32(0xF6, 0xE3, 0xCC, 200);
         // 값 표식 알약(굴 파기 표식 크기)을 줄여 쓰는 배율: 「!!」 · 팻말 · 값
         private const float k_AlertScale = 0.45f;
         private const float k_SignScale = 0.7f;
@@ -64,6 +77,8 @@ namespace ZooTycoon.World
         [Tooltip("설계 44: 말뚝 · 잠긴 말뚝(아트방 「나무 말뚝」, 발끝 피벗)")]
         [SerializeField] private Sprite m_stake;
         [SerializeField] private Sprite m_stakeLocked;
+        [Tooltip("설계 44: 낚싯대(아트방 「통통한 대」 rod_<계열>_<등급> · rod_<특별한 대 id> · 월척을 붙잡은 rod_bent, 피벗 = 꽂는 자리)")]
+        [SerializeField] private Sprite[] m_rods;
         [Tooltip("구멍 아치(나가기 대상이면 튄다)")]
         [SerializeField] private Transform m_arch;
         [Tooltip("점원 오두막(그림이 올 때까지 농장 작업대)")]
@@ -95,8 +110,12 @@ namespace ZooTycoon.World
         private MarkerView m_waveSign;
         private MarkerView m_missedSign;
         private MarkerView m_priceTag;
-        private Rod m_carried;
+        private readonly Dictionary<string, Sprite> m_rodSprites = new Dictionary<string, Sprite>();
+        private SpriteRenderer m_carried;
         private SpriteRenderer m_catch;
+        private MarkerView m_catchAlert;
+        // 대물이 둑으로 날아가는 동안은 누운 대물을 아직 안 보인다
+        private bool m_landing;
         private Rect m_bounds;
 
         // 물고기 하나: 그림자 · 감기 막대(뒤 · 앞)
@@ -106,6 +125,8 @@ namespace ZooTycoon.World
             public SpriteRenderer BarBack;
             public SpriteRenderer BarFill;
             public float Length;
+            public Color Color;
+            public float Phase;
         }
 
         // 말뚝 하나: 기둥 · 대 · 등급 별 셋 · 「!!」
@@ -113,16 +134,10 @@ namespace ZooTycoon.World
         {
             public StakeInteractable Stake;
             public SpriteRenderer Post;
-            public Rod Rod;
+            public SpriteRenderer Rod;
             public SpriteRenderer[] Stars;
             public MarkerView Alert;
-        }
-
-        // 막대 하나(기둥 위에서 기울어진 대)
-        private sealed class Rod
-        {
-            public Transform Pivot;
-            public SpriteRenderer Stick;
+            public SpriteRenderer Line;
         }
 
         public Vector3 Origin => transform.position;
@@ -156,19 +171,26 @@ namespace ZooTycoon.World
             m_missedSign = NewTag(ToWorld(drain + new System.Numerics.Vector2(0f, -1.0f)), k_SignScale);
             m_priceTag = NewTag(Vector3.zero, k_SignScale);
             m_priceTag.gameObject.SetActive(false);
-            m_carried = NewRod(transform, "Carried");
+            m_rods.ToList().ForEach(sprite => m_rodSprites[sprite.name] = sprite);
+            m_carried = NewRenderer(transform, "Carried", null, Color.white, 1);
             // 튀기(Fx.Bounce)는 배율을 1로 되돌리므로 늘인 그림은 한 겹 안에 둔다
             Transform catchHolder = new GameObject("BossCatch").transform;
             catchHolder.SetParent(transform, false);
             catchHolder.localPosition = new Vector3(fishing.Catch.Position.X, fishing.Catch.Position.Y, 0f);
             m_catch = NewRenderer(catchHolder, "Body", m_ellipse, k_Trophy, 0);
             m_catch.transform.localScale = new Vector3(k_BossLength, k_BossLength * 0.45f, 1f);
+            m_catchAlert = NewTag(catchHolder.position + Vector3.up * k_TagRise, k_AlertScale);
+            m_catchAlert.Show("!");
             m_wombat.Bind(fishing, transform, frames);
 
             m_subscriptions = new[]
             {
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.FishCaught>(Bus_FishCaught),
+                bus.Subscribe<Events.FishEscaped>(Bus_FishEscaped),
+                bus.Subscribe<Events.WaveStarted>(Bus_WaveStarted),
+                bus.Subscribe<Events.RodSummoned>(Bus_RodSummoned),
+                bus.Subscribe<Events.RodsMerged>(Bus_RodsMerged),
                 bus.Subscribe<Events.Thumped>(Bus_Thumped),
             };
         }
@@ -199,20 +221,31 @@ namespace ZooTycoon.World
             SyncFish();
             SyncStakes();
             SyncRanges();
-            m_waveSign.Show(m_fishing.BossOut ? m_tables.Text("fishing_boss") : m_tables.Format("fishing_wave", Math.Max(1, m_fishing.Wave), m_fishing.Config.BossEvery));
+            SyncPriceTag();
+            m_waveSign.Show(m_fishing.BossOut ? m_tables.Format("fishing_boss", m_fishing.Stage)
+                : m_tables.Format("fishing_wave", m_fishing.Stage, Math.Max(1, m_fishing.Wave), m_fishing.Config.BossEvery));
             m_missedSign.Show(m_tables.Format("fishing_missed", m_fishing.Missed));
 
             RodTable carried = m_fishing.Carried;
-            m_carried.Pivot.gameObject.SetActive(carried != null);
+            m_carried.gameObject.SetActive(carried != null);
 
+            // 든 대는 머리 위에 눕힌다(90도라 칸 격자 그대로, 꽂는 자리가 오른쪽 끝)
             if (carried != null)
             {
-                m_carried.Pivot.position = m_wombat.transform.position + new Vector3(0f, 1.15f, 0f);
-                m_carried.Pivot.localRotation = Quaternion.Euler(0f, 0f, 90f);
-                m_carried.Stick.color = ColorOf(carried);
+                m_carried.sprite = RodSprite(carried, m_fishing.CarriedGrade);
+                m_carried.transform.position = m_wombat.transform.position + new Vector3(k_RodHeight / 2f, 1.15f, 0f);
+                m_carried.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
             }
 
-            m_catch.transform.parent.gameObject.SetActive(m_fishing.Choice != null);
+            bool waiting = m_fishing.Choice != null && !m_landing;
+            m_catch.transform.parent.gameObject.SetActive(waiting);
+            m_catchAlert.gameObject.SetActive(waiting);
+
+            if (waiting && Mathf.Repeat(Time.time, k_NudgeSeconds) < Time.deltaTime)
+            {
+                StartCoroutine(Fx.Bounce(m_catch.transform.parent));
+                m_catchAlert.Bounce();
+            }
         }
 
         private void OnDestroy()
@@ -253,8 +286,16 @@ namespace ZooTycoon.World
                     m_fish[fish] = art;
                 }
 
-                Vector3 at = ToWorld(m_fishing.Layout.PointAt(fish.S));
+                // 물길 방향으로 눕고(90도 단위라 칸 격자 그대로) 옆으로 살랑인다. 쿵에 멈추면 깜빡이고, 붙잡힌 월척은 몸부림친다
+                System.Numerics.Vector2 dir = m_fishing.Layout.PointAt(fish.S + 0.05f) - m_fishing.Layout.PointAt(fish.S - 0.05f);
+                bool vertical = Math.Abs(dir.Y) > Math.Abs(dir.X);
+                bool stunned = fish.StunLeft > 0d && fish.HookedBy == null;
+                float wobble = fish.HookedBy != null ? Mathf.Sin(Time.time * 30f) : stunned ? 0f : Mathf.Sin(Time.time * 5f + art.Phase);
+                Vector3 at = ToWorld(m_fishing.Layout.PointAt(fish.S)) + (vertical ? Vector3.right : Vector3.up) * (Mathf.Round(wobble * k_WobbleCells) * Fx.k_Cell);
                 art.Body.transform.position = at;
+                art.Body.transform.localRotation = Quaternion.Euler(0f, 0f, vertical ? (dir.Y < 0f ? -90f : 90f) : 0f);
+                art.Body.flipX = !vertical && dir.X < 0f;
+                art.Body.color = stunned && Mathf.Repeat(Time.time, 0.2f) < 0.1f ? k_WaterLight : art.Color;
                 bool reeling = fish.Reeled > 0d && !fish.Trophy;
                 art.BarBack.gameObject.SetActive(reeling);
                 art.BarFill.gameObject.SetActive(reeling);
@@ -271,24 +312,35 @@ namespace ZooTycoon.World
 
             foreach (Fish gone in m_fish.Keys.Where(f => !m_fishing.Fish.Contains(f)).ToList())
             {
-                Destroy(m_fish[gone].Body.gameObject);
-                Destroy(m_fish[gone].BarBack.gameObject);
-                Destroy(m_fish[gone].BarFill.gameObject);
-                m_fish.Remove(gone);
+                Destroy(TakeFish(gone).gameObject);
             }
+        }
+
+        // 물고기 그림을 목록에서 떼어 몸만 돌려준다(감기 막대는 지운다). 없으면 null
+        private Transform TakeFish(Fish fish)
+        {
+            if (!m_fish.Remove(fish, out FishArt art))
+            {
+                return null;
+            }
+
+            Destroy(art.BarBack.gameObject);
+            Destroy(art.BarFill.gameObject);
+            return art.Body.transform;
         }
 
         private FishArt NewFish(Fish fish)
         {
             float length = fish.Boss ? k_BossLength : k_FishLengths[Mathf.Clamp(fish.Size, 0, k_FishLengths.Length - 1)];
-            SpriteRenderer body = NewRenderer(transform, "Fish", m_ellipse, fish.Trophy ? k_Trophy : k_Shadow, k_FishOrder);
+            Color color = fish.Trophy ? k_Trophy : k_Shadow;
+            SpriteRenderer body = NewRenderer(transform, "Fish", m_ellipse, color, k_FishOrder);
             body.transform.localScale = new Vector3(length, length * 0.4f, 1f);
             SpriteRenderer back = NewRenderer(transform, "ReelBack", m_square, k_BarBack, k_TopOrder - 2);
             back.transform.localScale = new Vector3(length, 0.1f, 1f);
             SpriteRenderer fill = NewRenderer(transform, "ReelFill", m_square, k_BarFill, k_TopOrder - 1);
             back.gameObject.SetActive(false);
             fill.gameObject.SetActive(false);
-            return new FishArt { Body = body, BarBack = back, BarFill = fill, Length = length };
+            return new FishArt { Body = body, BarBack = back, BarFill = fill, Length = length, Color = color, Phase = UnityEngine.Random.value * Mathf.PI * 2f };
         }
 
         // ---------- 말뚝 · 대 ----------
@@ -302,8 +354,8 @@ namespace ZooTycoon.World
                 holder.localPosition = new Vector3(stake.Position.X, stake.Position.Y, 0f);
                 SpriteRenderer post = NewRenderer(holder, "Post", m_stake, Color.white, 0);
                 post.spriteSortPoint = SpriteSortPoint.Pivot;
-                Rod rod = NewRod(holder, "Rod");
-                rod.Pivot.localPosition = new Vector3(0f, k_RodSocket, 0f);
+                SpriteRenderer rod = NewRenderer(holder, "Rod", null, Color.white, 0);
+                rod.spriteSortPoint = SpriteSortPoint.Pivot;
                 SpriteRenderer[] stars = new SpriteRenderer[3];
 
                 for (int i = 0; i < stars.Length; i++)
@@ -316,7 +368,8 @@ namespace ZooTycoon.World
                 MarkerView alert = NewTag(ToWorld(stake.Position) + Vector3.up * k_TagRise, k_AlertScale);
                 alert.Show("!!");
                 alert.gameObject.SetActive(false);
-                m_stakes.Add(new StakeArt { Stake = stake, Post = post, Rod = rod, Stars = stars, Alert = alert });
+                SpriteRenderer line = NewRenderer(holder, "Line", m_square, k_Line, 1);
+                m_stakes.Add(new StakeArt { Stake = stake, Post = post, Rod = rod, Stars = stars, Alert = alert, Line = line });
             }
         }
 
@@ -326,12 +379,22 @@ namespace ZooTycoon.World
             {
                 StakeInteractable stake = art.Stake;
                 art.Post.sprite = stake.Open ? m_stake : m_stakeLocked;
-                art.Rod.Pivot.gameObject.SetActive(stake.Rod != null);
+                art.Rod.gameObject.SetActive(stake.Rod != null);
 
                 if (stake.Rod != null)
                 {
-                    art.Rod.Stick.color = ColorOf(stake.Rod);
-                    art.Rod.Pivot.localRotation = Quaternion.Euler(0f, 0f, stake.Hooked != null ? -k_RodBent : -k_RodLean);
+                    SyncRod(art);
+                }
+
+                art.Line.enabled = stake.Reeling != null && m_fish.ContainsKey(stake.Reeling) && k_RodTips.ContainsKey(TipKey(art.Rod.sprite));
+
+                if (art.Line.enabled)
+                {
+                    Vector3 tip = TipOf(art.Rod);
+                    Vector3 d = m_fish[stake.Reeling].Body.transform.position - tip;
+                    art.Line.transform.position = tip + d / 2f;
+                    art.Line.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+                    art.Line.transform.localScale = new Vector3(d.magnitude, k_LineWidth, 1f);
                 }
 
                 for (int i = 0; i < art.Stars.Length; i++)
@@ -349,6 +412,58 @@ namespace ZooTycoon.World
                     }
                 }
             }
+        }
+
+        // 대는 그림 그대로(돌리지 않는다). 감는 물고기가 왼쪽이면 좌우를 뒤집고, 월척을 붙잡으면 휜 대로 바꿔 한 칸씩 떤다
+        private void SyncRod(StakeArt art)
+        {
+            Fish reeling = art.Stake.Reeling;
+            bool hooked = art.Stake.Hooked != null;
+            art.Rod.sprite = hooked ? m_rodSprites["rod_bent"] : RodSprite(art.Stake.Rod, art.Stake.Grade);
+            art.Rod.flipX = reeling != null && m_fishing.Layout.PointAt(reeling.S).X < art.Stake.Position.X;
+            float shake = hooked ? Mathf.Round(Mathf.Sin(Time.time * 30f)) * Fx.k_Cell : 0f;
+            art.Rod.transform.localPosition = new Vector3(shake, k_RodSocket, 0f);
+        }
+
+        // 계열 대는 rod_<계열>_<등급>(3등급까지), 특별한 대는 rod_<id>. 그림이 없는 계열(그물 · 등불, 아직 소환에 안 나옴)은 대나무대
+        private Sprite RodSprite(RodTable rod, int grade)
+        {
+            int shown = Mathf.Clamp(grade, 1, 3);
+            string name = rod.IsSpecial ? "rod_" + rod.Id : "rod_" + rod.Family + "_" + shown;
+            return m_rodSprites.TryGetValue(name, out Sprite sprite) ? sprite : m_rodSprites["rod_bamboo_" + shown];
+        }
+
+        // rod_bamboo_2 → rod_bamboo
+        private static string TipKey(Sprite sprite)
+        {
+            int grade = sprite.name.LastIndexOf('_');
+            return grade > 0 && char.IsDigit(sprite.name[grade + 1]) ? sprite.name.Substring(0, grade) : sprite.name;
+        }
+
+        // 줄이 나오는 점(뒤집으면 왼쪽). 대 끝이 없으면 그림 가운데
+        private static Vector3 TipOf(SpriteRenderer rod)
+        {
+            Vector2 cells = k_RodTips.TryGetValue(TipKey(rod.sprite), out Vector2 tip) ? tip : new Vector2(0f, rod.sprite.rect.height / 4f);
+            return rod.transform.position + new Vector3(rod.flipX ? -cells.x : cells.x, cells.y, 0f) * Fx.k_Cell;
+        }
+
+        // 대상 말뚝 위 값: 잠겼으면 열기, 비었으면 소환(들고 있으면 없음). 열거나 소환하면 바로 바뀐다
+        private void SyncPriceTag()
+        {
+            StakeInteractable stake = m_fishing.WombatPresent ? m_fishing.Target as StakeInteractable : null;
+            string price = stake == null ? null
+                : !stake.Open ? m_tables.Format("tag_open_stake", BigNumberText(stake.Cost))
+                : stake.Rod == null && m_fishing.Carried == null ? m_tables.Format("tag_summon", BigNumberText(m_fishing.SummonPrice))
+                : null;
+
+            if (price == null)
+            {
+                m_priceTag.gameObject.SetActive(false);
+                return;
+            }
+
+            m_priceTag.transform.position = ToWorld(stake.Position) + Vector3.up * k_TagRise;
+            m_priceTag.Show(price);
         }
 
         // 들고 있으면 열린 말뚝마다 그 대의 사거리, 아니면 대상 말뚝의 사거리
@@ -385,24 +500,9 @@ namespace ZooTycoon.World
             }
         }
 
-        private Rod NewRod(Transform parent, string name)
-        {
-            Transform pivot = new GameObject(name).transform;
-            pivot.SetParent(parent, false);
-            SpriteRenderer stick = NewRenderer(pivot, "Stick", m_square, Color.white, 1);
-            stick.transform.localPosition = new Vector3(0f, k_RodLength / 2f, 0f);
-            stick.transform.localScale = new Vector3(k_RodWidth, k_RodLength, 1f);
-            return new Rod { Pivot = pivot, Stick = stick };
-        }
-
-        private static Color ColorOf(RodTable rod)
-        {
-            return rod.IsSpecial ? k_SpecialColor : k_FamilyColors.TryGetValue(rod.Family, out Color color) ? color : Color.white;
-        }
-
         // ---------- 사건 ----------
 
-        // 대상 말뚝이 튀고, 비었으면 소환 값 · 잠겼으면 열기 값을 그 위에
+        // 대상이 된 말뚝 · 낚은 대물 · 아치가 튄다(값 표식은 SyncPriceTag)
         private void Bus_TargetChanged(Events.TargetChanged e)
         {
             if (e.Area != m_fishing)
@@ -410,19 +510,9 @@ namespace ZooTycoon.World
                 return;
             }
 
-            m_priceTag.gameObject.SetActive(false);
-
             if (m_fishing.Target is StakeInteractable stake)
             {
                 StartCoroutine(Fx.Bounce(m_stakes[stake.Index].Post.transform.parent));
-                string price = !stake.Open ? m_tables.Format("tag_open_stake", BigNumberText(stake.Cost))
-                    : stake.Rod == null && m_fishing.Carried == null ? m_tables.Format("tag_summon", BigNumberText(m_fishing.SummonPrice)) : null;
-
-                if (price != null)
-                {
-                    m_priceTag.transform.position = ToWorld(stake.Position) + Vector3.up * k_TagRise;
-                    m_priceTag.Show(price);
-                }
             }
             else if (m_fishing.Target is BossCatchInteractable)
             {
@@ -434,7 +524,8 @@ namespace ZooTycoon.World
             }
         }
 
-        // 낚았다: 물보라 알갱이, 재료 팝업(감은 말뚝 위). 웜뱃이 털썩한 월척이면 웜뱃이 끌어올리는 동작
+        // 낚았다: 물보라 알갱이, 물고기가 대 끝으로 튀어 올라 닿으면 재료 팝업(감은 말뚝 위). 대물은 둑으로 날아가 눕는다.
+        // 웜뱃이 털썩한 월척이면 웜뱃이 끌어올리는 동작
         private void Bus_FishCaught(Events.FishCaught e)
         {
             if (e.Fishing != m_fishing)
@@ -442,14 +533,106 @@ namespace ZooTycoon.World
                 return;
             }
 
-            Vector3 at = m_fish.TryGetValue(e.Fish, out FishArt art) ? art.Body.transform.position : ToWorld(e.Stake.Position);
+            Transform body = TakeFish(e.Fish);
+            Vector3 at = body != null ? body.position : ToWorld(e.Stake.Position);
             Splash(at, e.Fish.Boss ? 3 : 1);
-            CoinPopup popup = Instantiate(m_popupPrefab, ToWorld(e.Stake.Position) + Vector3.up * k_PopupHeight, Quaternion.identity, transform);
-            popup.Show(m_tables.Format(k_PopupKey, e.Count), m_frames.Get(m_tables.Get<ItemTable>(e.Fish.Kind.Item).Icon)[0]);
+            string amount = m_tables.Format(k_PopupKey, e.Count);
+            Sprite icon = m_frames.Get(m_tables.Get<ItemTable>(e.Fish.Kind.Item).Icon)[0];
+            Vector3 popupAt = ToWorld(e.Stake.Position) + Vector3.up * k_PopupHeight;
+
+            if (body == null)
+            {
+                ShowPopup(popupAt, amount, icon);
+            }
+            else if (e.Fish.Boss)
+            {
+                m_landing = true;
+                StartCoroutine(Fly(body, m_catch.transform.parent.position, k_CatchArc * 1.5f, 1f, () =>
+                {
+                    m_landing = false;
+                    Splash(m_catch.transform.parent.position, 2);
+                    ShowPopup(popupAt, amount, icon);
+                }));
+            }
+            else
+            {
+                StartCoroutine(Fly(body, TipOf(m_stakes[e.Stake.Index].Rod), k_CatchArc, 0.5f, () => ShowPopup(popupAt, amount, icon)));
+            }
 
             if (e.Fish.Trophy && m_fishing.WombatPresent && m_fishing.Wombat.Busy)
             {
                 m_wombat.Act(0, 8, (float)m_fishing.Config.HaulSeconds);
+            }
+        }
+
+        // 놓쳤다: 물고기가 구멍으로 빨려 들고 놓침 팻말이 튄다
+        private void Bus_FishEscaped(Events.FishEscaped e)
+        {
+            if (e.Fishing != m_fishing)
+            {
+                return;
+            }
+
+            Transform body = TakeFish(e.Fish);
+            Vector3 drain = ToWorld(m_fishing.Layout.Stream[m_fishing.Layout.Stream.Count - 1]);
+
+            if (body != null)
+            {
+                StartCoroutine(Fly(body, drain, 0f, 0f, null));
+            }
+
+            m_missedSign.Bounce();
+        }
+
+        private void Bus_WaveStarted(Events.WaveStarted e)
+        {
+            if (e.Fishing == m_fishing)
+            {
+                m_waveSign.Bounce();
+            }
+        }
+
+        // 소환: 말뚝이 튀고 등급만큼 반짝임. 드묾 · 전설이면 그 글이 떠오른다
+        private void Bus_RodSummoned(Events.RodSummoned e)
+        {
+            if (e.Stake.Fishing != m_fishing)
+            {
+                return;
+            }
+
+            StakeArt art = m_stakes[e.Stake.Index];
+            int grade = e.Stake.Grade;
+            Vector3 top = ToWorld(e.Stake.Position) + Vector3.up * (k_RodSocket + k_RodHeight / 2f);
+            StartCoroutine(Fx.Bounce(art.Post.transform.parent));
+            StartCoroutine(Fx.Burst(transform, m_square, top, 4 + 6 * grade, 0.6f * grade, 2f, 9f, 0.3f + 0.15f * grade, 3, grade > 1 ? k_Star : k_WaterLight, k_TopOrder));
+
+            if (grade > 1)
+            {
+                StartCoroutine(Rise(m_tables.Text("rod_grade_" + Math.Min(grade, 3)), ToWorld(e.Stake.Position) + Vector3.up * k_TagRise));
+            }
+        }
+
+        // 합치기: 짝 대가 날아와 꽂히면 합친 말뚝이 튀고 별빛이 튄다
+        private void Bus_RodsMerged(Events.RodsMerged e)
+        {
+            if (e.Into.Fishing != m_fishing)
+            {
+                return;
+            }
+
+            StakeArt into = m_stakes[e.Into.Index];
+
+            for (int i = 0; i < e.From.Length; i++)
+            {
+                SpriteRenderer from = m_stakes[e.From[i].Index].Rod;
+                SpriteRenderer flying = NewRenderer(transform, "MergingRod", from.sprite, Color.white, k_TopOrder - 3);
+                flying.flipX = from.flipX;
+                flying.transform.position = from.transform.position;
+                StartCoroutine(Fly(flying.transform, into.Rod.transform.position, k_CatchArc, 1f, i > 0 ? null : (Action)(() =>
+                {
+                    StartCoroutine(Fx.Bounce(into.Post.transform.parent));
+                    StartCoroutine(Fx.Burst(transform, m_square, TipOf(into.Rod), 16, 1.2f, 2.4f, 9f, 0.6f, 3, k_Star, k_TopOrder));
+                })));
             }
         }
 
@@ -462,6 +645,50 @@ namespace ZooTycoon.World
 
             m_wombat.Act(8, 4, (float)m_fishing.Config.ThumpSeconds);
             Splash(ToWorld(m_fishing.Layout.NearestOnStream(e.At)), 2);
+        }
+
+        // target이 to까지 k_CatchSeconds 동안 포물선(arc 높이)으로 날며 배율이 endScale배가 된 뒤 사라진다
+        private IEnumerator Fly(Transform target, Vector3 to, float arc, float endScale, Action landed)
+        {
+            Vector3 from = target.position;
+            Vector3 scale = target.localScale;
+
+            if (target.TryGetComponent(out SpriteRenderer body))
+            {
+                body.sortingOrder = k_TopOrder - 3;
+            }
+
+            for (float t = 0f; t < k_CatchSeconds; t += Time.deltaTime)
+            {
+                float k = t / k_CatchSeconds;
+                target.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * arc);
+                target.localScale = scale * Mathf.Lerp(1f, endScale, k);
+                yield return null;
+            }
+
+            Destroy(target.gameObject);
+            landed?.Invoke();
+        }
+
+        // 잠깐 떠올라 사라지는 글 알약(드묾 · 전설)
+        private IEnumerator Rise(string text, Vector3 at)
+        {
+            MarkerView tag = NewTag(at, k_SignScale);
+            tag.Show(text);
+            tag.Bounce();
+
+            for (float t = 0f; t < k_RiseSeconds; t += Time.deltaTime)
+            {
+                tag.transform.position = at + Vector3.up * (t / k_RiseSeconds * 0.5f);
+                yield return null;
+            }
+
+            Destroy(tag.gameObject);
+        }
+
+        private void ShowPopup(Vector3 at, string amount, Sprite icon)
+        {
+            Instantiate(m_popupPrefab, at, Quaternion.identity, transform).Show(amount, icon);
         }
 
         private void Splash(Vector3 at, int strength)

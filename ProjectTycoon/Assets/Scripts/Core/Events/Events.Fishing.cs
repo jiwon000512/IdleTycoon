@@ -22,6 +22,56 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 물고기가 물길 끝 구멍으로 빠졌다(놓침 팻말 · 물보라). 대물이면 BossResolved도 온다
+        public readonly struct FishEscaped
+        {
+            public readonly FishingArea Fishing;
+            public readonly Fish Fish;
+
+            public FishEscaped(FishingArea fishing, Fish fish)
+            {
+                Fishing = fishing;
+                Fish = fish;
+            }
+        }
+
+        // 물때가 시작됐다(팻말 튐 · 대물이면 「대물이 온다!」)
+        public readonly struct WaveStarted
+        {
+            public readonly FishingArea Fishing;
+            public readonly bool Boss;
+
+            public WaveStarted(FishingArea fishing, bool boss)
+            {
+                Fishing = fishing;
+                Boss = boss;
+            }
+        }
+
+        // 빈 말뚝에 대를 소환했다(등급마다 다른 반짝임 · 드묾 · 전설 글)
+        public readonly struct RodSummoned
+        {
+            public readonly StakeInteractable Stake;
+
+            public RodSummoned(StakeInteractable stake)
+            {
+                Stake = stake;
+            }
+        }
+
+        // 같은 대 셋을 합쳤다: From = 비워진 짝 말뚝들(대가 Into로 날아간다)
+        public readonly struct RodsMerged
+        {
+            public readonly StakeInteractable Into;
+            public readonly StakeInteractable[] From;
+
+            public RodsMerged(StakeInteractable into, StakeInteractable[] from)
+            {
+                Into = into;
+                From = from;
+            }
+        }
+
         // 엉덩이 쿵(물결 · 소리)
         public readonly struct Thumped
         {

@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 43,
+  "version": 44,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -46,7 +46,8 @@
     "version 40 (2026-10-02, 설계 41 평가 화면 다듬기): 글 줄 대신 아이콘 칸. 이름표 eval_tag · eval_tag_big, 칸 값 eval_seconds · eval_times · eval_percent · eval_from_to · eval_progress · goal_people · goal_pieces · goal_until, 칸 이름 goal_serve_cap · goal_sell_cap · goal_lost_cap, 소식지 news_gain · news_line. eval_unlock 「★{0}이 되면」 → 「별 {0}개가 되면」(★5이 되면처럼 조사가 틀려서). 글 줄 열여섯(eval_bonus_price · eval_bonus_visitors · eval_next · eval_next_big · eval_rush · goal_serve · goal_lost · goal_serve_line · goal_sell_line · goal_lost_line · eval_reward_line · eval_pill · milestone_shelf · milestone_oven · milestone_counter · milestone_upgrade) 삭제.",
     "version 41 (2026-10-02, 설계 42 곳 이름 팻말): loc_bakery · loc_plaza(키는 loc_ + 곳 id) · loc_farm(「농장 {0}층」, 농장은 층 번호).",
     "version 42 (2026-10-04, 설계 43 저장 · 오프라인): 돌아왔을 때 팝업 offline_title · offline_hours · offline_minutes(비운 시간) · offline_coins(코인 칸 이름) · offline_sales · offline_wages(코인 칸 아래 두 줄) · offline_take(받기).",
-    "version 43 (2026-10-05, 설계 44 낚시 디펜스): 곳 이름 · 광장 문 간판 · 점원 탭(낚시터) · 오두막 · 물고기 획득처 · 사용처 · 물때 팻말(fishing_wave · fishing_boss · fishing_missed · fishing_stage) · 소환 · 열기 값 표식 · 대물 3택 1 팝업 · 낚싯대 이름(rod_<id>)과 특별한 대 설명(rod_<id>_desc)."
+    "version 43 (2026-10-05, 설계 44 낚시 디펜스): 곳 이름 · 광장 문 간판 · 점원 탭(낚시터) · 오두막 · 물고기 획득처 · 사용처 · 물때 팻말(fishing_wave · fishing_boss · fishing_missed · fishing_stage) · 소환 · 열기 값 표식 · 대물 3택 1 팝업 · 낚싯대 이름(rod_<id>)과 특별한 대 설명(rod_<id>_desc).",
+    "version 44 (2026-10-05, 낚시 폴리싱): 물때 팻말에 단계(fishing_wave 「{0}단계 · 물때 {1}/{2}」 · fishing_boss 「{0}단계 대물!」), 곳 팻말 fishing_boss_coming · fishing_stage(「{0}단계!」) · fishing_boss_missed, 소환 등급 글 rod_grade_2 · rod_grade_3."
   ],
   "rows": [
     {
@@ -999,11 +1000,11 @@
     },
     {
       "id": "fishing_wave",
-      "ko": "물때 {0} / {1}"
+      "ko": "{0}단계 · 물때 {1}/{2}"
     },
     {
       "id": "fishing_boss",
-      "ko": "대물!"
+      "ko": "{0}단계 대물!"
     },
     {
       "id": "fishing_missed",
@@ -1011,7 +1012,23 @@
     },
     {
       "id": "fishing_stage",
-      "ko": "{0}단계"
+      "ko": "{0}단계!"
+    },
+    {
+      "id": "fishing_boss_coming",
+      "ko": "대물이 온다!"
+    },
+    {
+      "id": "fishing_boss_missed",
+      "ko": "대물을 놓쳤다"
+    },
+    {
+      "id": "rod_grade_2",
+      "ko": "드묾!"
+    },
+    {
+      "id": "rod_grade_3",
+      "ko": "전설!"
     },
     {
       "id": "tag_summon",

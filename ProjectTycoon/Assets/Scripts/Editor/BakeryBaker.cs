@@ -215,6 +215,15 @@ namespace ZooTycoon.Editor
             Import(k_FishingDir + "drain_hole.png", center);
             Import(k_FishingDir + "stake.png", bottom);
             Import(k_FishingDir + "stake_locked.png", bottom);
+
+            // 낚싯대(아트방 「통통한 대」): 피벗 = 꽂는 자리(그림 맨 아랫줄의 칸, Source~/make_rods.py)
+            foreach ((string name, int socket) in RodSockets)
+            {
+                string path = k_FishingDir + name + ".png";
+                byte[] png = System.IO.File.ReadAllBytes(path);
+                int width = png[16] << 24 | png[17] << 16 | png[18] << 8 | png[19];
+                Import(path, new Vector2(socket * 2f / width, 0f));
+            }
             Import(k_FarmDir + "wall_tile_red.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_FarmDir + "wall_face_red.png", new Vector2(0f, 1f), k_TagPpu, true);
 
@@ -423,6 +432,11 @@ namespace ZooTycoon.Editor
         }
 
         // 파기 비용 태그: 칸 가운데에 태그만. 탭 영역 = 태그
+        // 낚싯대 그림 · 꽂는 자리 칸(계열 대는 등급 셋이 같다)
+        static IEnumerable<(string Name, int Socket)> RodSockets =>
+            new[] { ("bamboo", 6), ("iron", 6), ("bait", 9) }.SelectMany(f => new[] { 1, 2, 3 }.Select(g => ("rod_" + f.Item1 + "_" + g, f.Item2)))
+            .Concat(new[] { ("rod_pulley", 10), ("rod_lighthouse", 6), ("rod_whirlpool", 11), ("rod_bent", 8) });
+
         static MarkerView BakeDigTag()
         {
             GameObject root = new GameObject("DigTag");
@@ -741,6 +755,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_drainHole", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "drain_hole.png"));
             Set(view, "m_stake", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake.png"));
             Set(view, "m_stakeLocked", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_locked.png"));
+            SetArray(view, "m_rods", RodSockets.Select(rod => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + rod.Name + ".png")).ToArray());
             Set(view, "m_arch", arch.transform);
             Set(view, "m_hut", hut.transform);
             Set(view, "m_tagPrefab", digTag);
