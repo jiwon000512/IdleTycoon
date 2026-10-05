@@ -73,9 +73,9 @@ namespace ZooTycoon.Game
             return n >= 1000000d ? n / 1000000d + "M" : n >= 1000d ? n / 1000d + "K" : n.ToString();
         }
 
-        private static string AreaName(WombatArea area)
+        private string AreaName(WombatArea area)
         {
-            return area is FarmArea farm ? "농장 " + farm.Number + "층" : area is BakeryArea ? "빵집" : "광장";
+            return area is FarmArea farm ? "농장 " + farm.Number + "층" : m_game.Tables.Text("loc_" + area.Id);
         }
 
         private string AddItem(ItemTable item, int count)

@@ -37,6 +37,8 @@ namespace ZooTycoon.Core
         private const float k_AtSpot = 0.05f;
         // 진열대 앞 서는 자리(진열대 밑변 가운데 기준). 손님 앞자리(0·0.6, −0.7) 왼쪽
         private static readonly Vector2 k_ShelfStand = new Vector2(-0.6f, -0.7f);
+        // 설계 44: 말뚝 앞에 서는 곳(말뚝 기준점 아래)
+        private static readonly Vector2 k_StakeStand = new Vector2(0f, -0.5f);
         private const float k_StandSearch = 1f;
         // 딴짓 시간 흔들림: 일머리로 정한 시간 × 0.75~1.25
         private const double k_IdleJitter = 0.5;
@@ -46,6 +48,7 @@ namespace ZooTycoon.Core
             Spot,
             Shelf,
             Plot,
+            Stake,
             Hole,
         }
 
@@ -61,6 +64,7 @@ namespace ZooTycoon.Core
         private Goal m_goal;
         private ShelfInteractable m_shelf;
         private PlotInteractable m_plot;
+        private StakeInteractable m_stake;
         private int m_servedAtStart;
         private bool m_idling;
         private double m_idleLeft;
@@ -123,9 +127,14 @@ namespace ZooTycoon.Core
                     Product = barn.Farm.UnlockedCrops[0].Id;
                     m_cycle = BuildFarmCycle();
                     break;
-                default:
+                case CounterInteractable _:
                     m_cycle = BuildCounterCycle();
                     break;
+                case FishingHutInteractable _:
+                    m_cycle = BuildFishingCycle();
+                    break;
+                default:
+                    throw new InvalidOperationException($"점원 자리 '{thing.Table.Id}'의 일이 없다.");
             }
 
             m_leave = new BtSequence<Clerk>(
@@ -285,6 +294,17 @@ namespace ZooTycoon.Core
                 new BtAction<Clerk>(c => c.StartWalkToSpot(), (c, dt) => c.TickWalk()),
                 new BtAction<Clerk>(null, (c, dt) => c.NextPlot() != null ? BtStatus.Success : BtStatus.Running),
                 new BtAction<Clerk>(c => c.StartTend(), (c, dt) => c.TickTend()),
+                new BtAction<Clerk>(c => c.StartWalkToSpot(), (c, dt) => c.TickWalk()),
+                new BtAction<Clerk>(c => c.StartIdle(), (c, dt) => c.TickIdle(dt)));
+        }
+
+        // 설계 44: 오두막에서 기다리다 합칠 셋 · 오래 버틴 월척이 있으면 그 말뚝으로 가서 처리하고 돌아와 딴짓 판정
+        private static BtNode<Clerk> BuildFishingCycle()
+        {
+            return new BtSequence<Clerk>(
+                new BtAction<Clerk>(c => c.StartWalkToSpot(), (c, dt) => c.TickWalk()),
+                new BtAction<Clerk>(null, (c, dt) => c.NextChore() != null ? BtStatus.Success : BtStatus.Running),
+                new BtAction<Clerk>(c => c.StartChores(), (c, dt) => c.TickChores()),
                 new BtAction<Clerk>(c => c.StartWalkToSpot(), (c, dt) => c.TickWalk()),
                 new BtAction<Clerk>(c => c.StartIdle(), (c, dt) => c.TickIdle(dt)));
         }
@@ -476,6 +496,55 @@ namespace ZooTycoon.Core
             if (plot != null)
             {
                 WalkToGoal(Goal.Plot);
+            }
+        }
+
+        // 할 일이 있는 말뚝: 합칠 셋이 모인 말뚝, 없으면 오래 버틴 월척. 없으면 null
+        private StakeInteractable NextChore()
+        {
+            FishingArea fishing = ((FishingHutInteractable)Thing).Fishing;
+            return fishing.MergeableStake() ?? fishing.OverdueTrophy();
+        }
+
+        private bool StartChores()
+        {
+            WalkToStake(NextChore());
+            return true;
+        }
+
+        // 말뚝에 닿으면 다시 보고(웜뱃이 먼저 했을 수 있다) 합치거나 거든다. 다음 할 일이 없으면 끝
+        private BtStatus TickChores()
+        {
+            if (Moving)
+            {
+                return BtStatus.Running;
+            }
+
+            if (m_stake != null)
+            {
+                FishingArea fishing = m_stake.Fishing;
+
+                if (fishing.MergePartners(m_stake) != null)
+                {
+                    fishing.Merge(m_stake);
+                }
+                else if (m_stake.Hooked != null && m_stake.Hooked.HookedFor >= fishing.Config.TrophyHoldSeconds)
+                {
+                    fishing.ClerkHaul(m_stake);
+                }
+            }
+
+            WalkToStake(NextChore());
+            return m_stake != null ? BtStatus.Running : BtStatus.Success;
+        }
+
+        private void WalkToStake(StakeInteractable stake)
+        {
+            m_stake = stake;
+
+            if (stake != null)
+            {
+                WalkToGoal(Goal.Stake);
             }
         }
 
@@ -822,6 +891,10 @@ namespace ZooTycoon.Core
                     break;
                 case Goal.Plot:
                     Mover.WalkTo(nav, nav.Snap(((BarnInteractable)Thing).Farm.Layout.Cells.CellCenter(m_plot.Cell)), Facing.Down);
+                    break;
+                case Goal.Stake:
+                    Vector2 stand = nav.Snap(m_stake.Position + k_StakeStand);
+                    Mover.WalkTo(nav, nav.IsWalkable(stand) || !nav.TryNearestFree(stand, _ => false, k_StandSearch, out Vector2 free) ? stand : free, Facing.Up);
                     break;
                 default:
                     Mover.WalkTo(nav, Home.HoleFloor, Facing.Up);

@@ -9,12 +9,12 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 11 · 설계 18: 굴 밖 광장. 굴 그림은 빵집과 같은 BurrowPainter로 칠하고, 빵집 문(아치·차양·간판)·농장 문(아치·간판, 설계 25)·지상 계단은 Core PlazaLayout이 정한 자리에 놓는다.
+    // 설계 11 · 설계 18: 굴 밖 광장. 굴 그림은 빵집과 같은 BurrowPainter로 칠하고, 곳으로 가는 문(아치·간판, 빵집은 차양도, 설계 25 · 44)·지상 계단은 Core PlazaLayout이 정한 자리에 놓는다.
     // 장식은 Core PlazaArea.Decor를 객체 키로 맞춘다(놓이면 만들고 옮기면 옮기고 치우면 지운다). 웜뱃이 문 앞에 서면(대상이 문) 그 문이 한 번 튄다
     public sealed class PlazaView : MonoBehaviour, IAreaView
     {
-        private const string k_SignKey = "sign_bakery";
-        private const string k_FarmSignKey = "sign_farm";
+        // 문 간판 글 = 이것 + 갈 곳 id(빵집은 별 수와 함께)
+        private const string k_SignPrefix = "sign_";
         // 설계 29 · 30: 석상에 빌 때 반짝 알갱이(거두기 덤과 같은 두 빛깔). 축복이 걸린 동안은 k_GlowSeconds마다 금빛 알갱이 몇 개
         private static readonly Color k_SparkLight = new Color32(0xFB, 0xF4, 0xE6, 255);
         private static readonly Color k_SparkGold = new Color32(0xF0, 0xD8, 0x90, 255);
@@ -38,12 +38,8 @@ namespace ZooTycoon.World
         [SerializeField] private Texture2D m_floorTile;
         [SerializeField] private Texture2D m_wallTile;
         [SerializeField] private Texture2D m_wallFace;
-        [Tooltip("빵집 문(아치 + 차양 + 간판). 원점 = 구멍 밑변 가운데")]
-        [SerializeField] private Transform m_door;
-        [SerializeField] private TextMeshPro m_sign;
-        [Tooltip("농장 문(아치 + 간판). 원점 = 구멍 밑변 가운데")]
-        [SerializeField] private Transform m_farmDoor;
-        [SerializeField] private TextMeshPro m_farmSign;
+        [Tooltip("설계 44: 곳으로 가는 문 그림(갈 곳 id마다 하나, PlazaConfigTable doors). 원점 = 구멍 밑변 가운데")]
+        [SerializeField] private DoorArt[] m_doors;
         [Tooltip("지상 계단. 원점 = 띠 밑변 가운데")]
         [SerializeField] private Transform m_stairs;
         [SerializeField] private WombatView m_wombat;
@@ -55,6 +51,14 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteAnimator m_poopPrefab;
         [SerializeField] private Sprite[] m_poopFrames;
         [SerializeField] private float m_poopFrameRate = 2f;
+
+        [Serializable]
+        private struct DoorArt
+        {
+            public string To;
+            public Transform Root;
+            public TextMeshPro Sign;
+        }
 
         private readonly Dictionary<DecorationData, GameObject> m_decor = new Dictionary<DecorationData, GameObject>();
         private PlazaArea m_plaza;
@@ -93,12 +97,17 @@ namespace ZooTycoon.World
             m_burrow.transform.localPosition = new Vector3(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit, 0f);
 
             float wallBottom = -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit;
-            m_door.localPosition = new Vector3(layout.DoorFloor.X, wallBottom, 0f);
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
             m_tables = tables;
+
+            foreach (PlazaDoor door in layout.Doors)
+            {
+                DoorArt art = Art(door.To);
+                art.Root.localPosition = new Vector3(door.Floor.X, wallBottom, 0f);
+                art.Sign.text = tables.Text(k_SignPrefix + door.To);
+            }
+
             SetSign(plaza.Wombat.Worker.Wallet.Stars.Count(BakeryArea.k_Id));
-            m_farmDoor.localPosition = new Vector3(layout.FarmDoorFloor.X, wallBottom, 0f);
-            m_farmSign.text = tables.Text(k_FarmSignKey);
             m_ghost = GhostView.Create(transform);
             m_statue.localPosition = new Vector3(plaza.Statue.Position.X, plaza.Statue.Position.Y, 0f);
             m_poopViews = new PoopViews(this, plaza, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, p => transform.position + new Vector3(p.X, p.Y, 0f));
@@ -115,9 +124,15 @@ namespace ZooTycoon.World
         }
 
         // 설계 40: 빵집 간판에 별 수(「빵집 ★7」, 0이면 이름만). 별 색 단계 그림은 아트방
+        private DoorArt Art(string to)
+        {
+            return m_doors.First(door => door.To == to);
+        }
+
         private void SetSign(int stars)
         {
-            m_sign.text = stars > 0 ? m_tables.Format("sign_stars", m_tables.Text(k_SignKey), stars) : m_tables.Text(k_SignKey);
+            string name = m_tables.Text(k_SignPrefix + BakeryArea.k_Id);
+            Art(BakeryArea.k_Id).Sign.text = stars > 0 ? m_tables.Format("sign_stars", name, stars) : name;
         }
 
         private void Bus_StarsChanged(Events.StarsChanged e)
@@ -125,7 +140,7 @@ namespace ZooTycoon.World
             if (e.Shop == BakeryArea.k_Id)
             {
                 SetSign(e.Count);
-                StartCoroutine(Fx.Bounce(m_sign.transform));
+                StartCoroutine(Fx.Bounce(Art(BakeryArea.k_Id).Sign.transform));
             }
         }
 
@@ -255,7 +270,7 @@ namespace ZooTycoon.World
         {
             if (e.Area == m_plaza && m_plaza.Target is PassageInteractable passage)
             {
-                StartCoroutine(Fx.Bounce(passage.To == FarmArea.k_Id ? m_farmDoor : m_door));
+                StartCoroutine(Fx.Bounce(Art(passage.To).Root));
             }
 
             if (e.Area == m_plaza && m_plaza.Target is StatueInteractable)

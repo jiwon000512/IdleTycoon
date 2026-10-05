@@ -169,7 +169,7 @@ namespace ZooTycoon.Tests
             PlazaLayout plaza = m_plaza.Layout;
             Vector2 below = new Vector2(0f, -0.8f);
 
-            Steer(plaza.DoorFloor + below, plaza.FarmDoorFloor + below, plaza.FarmDoorFloor);
+            Steer(plaza.DoorTo(BakeryArea.k_Id).Floor + below, plaza.DoorTo(FarmArea.k_Id).Floor + below, plaza.DoorTo(FarmArea.k_Id).Floor);
             Assert.That(m_mall.Active, Is.SameAs(m_plaza));
             PushUntil(new Vector2(0f, 1f), m_farm);
 
@@ -179,7 +179,7 @@ namespace ZooTycoon.Tests
 
             PushUntil(new Vector2(0f, 1f), m_plaza);
 
-            Assert.That(m_plaza.Wombat.Mover.Position, Is.EqualTo(plaza.FarmDoorFloor));
+            Assert.That(m_plaza.Wombat.Mover.Position, Is.EqualTo(plaza.DoorTo(FarmArea.k_Id).Floor));
         }
 
         // 밭 칸에 서면 버튼 = 심기(밭 시트 → 밀 칩). 자라는 동안은 밭에 서 있어도 거두지 않고, 익은 밭 칸에 발이 들면 저절로 거둬 창고로(들고 다니지 않는다). 옆 칸에서는 거두지 않는다
@@ -498,7 +498,7 @@ namespace ZooTycoon.Tests
         public void PlazaDecor_CannotBlockFarmDoor()
         {
             Create();
-            Vector2 at = m_plaza.Snap(m_plaza.Layout.FarmDoorFloor + new Vector2(0f, -0.2f));
+            Vector2 at = m_plaza.Snap(m_plaza.Layout.DoorTo(FarmArea.k_Id).Floor + new Vector2(0f, -0.2f));
 
             Assert.That(m_plaza.CanPlace("bench_log", at), Is.EqualTo(PlacementCheck.Overlaps));
         }
@@ -589,7 +589,7 @@ namespace ZooTycoon.Tests
         {
             Create();
             PlazaLayout layout = m_plaza.Layout;
-            Vector2 from = layout.DoorFloor + new Vector2(0f, -0.8f);
+            Vector2 from = layout.DoorTo(BakeryArea.k_Id).Floor + new Vector2(0f, -0.8f);
             Vector2 to = from + new Vector2(0f, -2.4f);
             Assert.That(layout.WombatNav.IsWalkable(to), Is.True);
 

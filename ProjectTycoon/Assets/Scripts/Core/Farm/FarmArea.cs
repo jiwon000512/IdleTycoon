@@ -146,6 +146,11 @@ namespace ZooTycoon.Core
             return Vector2.DistanceSquared(p, Layout.HoleFloor) < 1e-4f;
         }
 
+        public override string PlazaGate => Upper?.PlazaGate ?? Id;
+        // 놓는 사물은 없지만 편집 모드에서 파기 표식을 본다
+        public override bool Editable => true;
+        internal override Interactable FixedClerkSlot => Barn;
+
         // 설계 39: 아래층에서 올라오면 계단 굴 안에 선다
         protected override Vector2 EntranceFrom(WombatArea from)
         {

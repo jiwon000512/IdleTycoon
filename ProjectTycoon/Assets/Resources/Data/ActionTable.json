@@ -1,6 +1,6 @@
 {
   "table": "ActionTable",
-  "version": 18,
+  "version": 19,
   "notes": [
     "설계 09 v0.4 → 설계 13 v0.5: 웜뱃이 사물에서 하는 행동. 하는 일은 행동 클래스(ActionFactory 안 중첩 클래스, id로 만든다), 이 표는 어떻게 하는지(mode)와 버튼 아이콘. 어느 사물에서 되는지는 InteractableTable.json actions.",
     "mode: auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로 · manual = 상호작용 버튼(지금 할 수 있는 첫 manual 행동) · sheet = 시트의 한 줄(줄을 누르면 산다). take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
@@ -23,7 +23,8 @@
     "version 15 (2026-10-01, 설계 35 작물 · 밭 시트): open_plant(manual, 아이콘 Actions/plant) — 갈아 놓은 빈 밭에서 밭 시트를 연다. plant는 manual → sheet: 연 작물마다 칩(고르면 심는다, 거름 자동 1개) + 다음 작물 해금 칩(값 CropTable unlockCost, 사면 열리고 그 밭에 바로 심는다).",
     "version 16 (2026-10-02, 설계 39 농장 아래층): dig_floor(sheet) 추가 — 계단 자리 시트 줄, 아래층 openCost를 치르면 아래층이 열린다.",
     "version 17 (2026-10-02, 설계 40 별 평가): evaluate(manual) 추가 — 평가판 앞 버튼, 평가 팝업을 연다. 아이콘은 아트방 전 돋보기(open)를 빌린다.",
-    "version 18 (2026-10-02, 설계 41): evaluate 아이콘을 빌린 돋보기(open)에서 아트방 「평가표 클립보드」(Sprites/Actions/evaluate)로."
+    "version 18 (2026-10-02, 설계 41): evaluate 아이콘을 빌린 돋보기(open)에서 아트방 「평가표 클립보드」(Sprites/Actions/evaluate)로.",
+    "version 19 (2026-10-05, 설계 44 낚시 디펜스): 낚시터 버튼 여섯. summon(빈 말뚝에 코인으로 대 소환) · open_stake(잠긴 말뚝 열기) · carry(대 들기 · 놓기 · 맞바꾸기) · merge(같은 대 셋 합치기) · haul(붙잡힌 월척 털썩 · 대물을 감는 말뚝 곁에 앉기) · thump(물가에서 엉덩이 쿵) · choose_rod(낚은 대물 시트에서 특별한 대 하나 고르기). 아이콘은 그림이 올 때까지 지금 아이콘을 빌린다."
   ],
   "rows": [
     {
@@ -125,6 +126,41 @@
       "id": "evaluate",
       "mode": "manual",
       "icon": "Sprites/Actions/evaluate"
+    },
+    {
+      "id": "summon",
+      "mode": "manual",
+      "icon": "Sprites/Actions/plant"
+    },
+    {
+      "id": "open_stake",
+      "mode": "manual",
+      "icon": "Sprites/Actions/dig"
+    },
+    {
+      "id": "carry",
+      "mode": "manual",
+      "icon": "Sprites/Actions/talk"
+    },
+    {
+      "id": "merge",
+      "mode": "manual",
+      "icon": "Sprites/Actions/statue"
+    },
+    {
+      "id": "haul",
+      "mode": "manual",
+      "icon": "Sprites/Actions/wake"
+    },
+    {
+      "id": "thump",
+      "mode": "manual",
+      "icon": "Sprites/Actions/till"
+    },
+    {
+      "id": "choose_rod",
+      "mode": "sheet",
+      "icon": null
     }
   ]
 }

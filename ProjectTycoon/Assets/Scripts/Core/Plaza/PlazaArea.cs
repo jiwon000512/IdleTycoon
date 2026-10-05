@@ -8,7 +8,7 @@ using GameKit.Tables;
 namespace ZooTycoon.Core
 {
     // 설계 11 3장 · 설계 13 · 리뷰 R2 · 설계 18: 광장. 지상 계단으로 손님이 오고(도착 타이머), 빵집에서 나간 손님은 문에서 다시 나온다.
-    // 손님 한 명의 할 일은 PlazaVisitor, 여기는 손님 목록과 들를 곳 자리표. 사물은 빵집 문·농장 문(설계 25, 들어가기). 장식은 자유 배치(WombatArea.Placement)
+    // 손님 한 명의 할 일은 PlazaVisitor, 여기는 손님 목록과 들를 곳 자리표. 사물은 곳으로 가는 문(설계 25 · 44, 들어가기). 장식은 자유 배치(WombatArea.Placement)
     public sealed class PlazaArea : WombatArea
     {
         public const string k_Id = "plaza";
@@ -36,29 +36,22 @@ namespace ZooTycoon.Core
         public override string Id => k_Id;
 
         protected override BurrowNav WombatNav => Layout.WombatNav;
-        protected override Vector2 Entrance => Layout.DoorFloor;
-
-        protected override IEnumerable<Vector2> Doors
-        {
-            get
-            {
-                yield return Layout.DoorFloor;
-                yield return Layout.FarmDoorFloor;
-            }
-        }
+        // 손님이 드나드는 빵집 문
+        public PlazaDoor BakeryDoor => Layout.DoorTo(BakeryArea.k_Id);
+        protected override Vector2 Entrance => BakeryDoor.Floor;
+        protected override IEnumerable<Vector2> Doors => Layout.Doors.Select(door => door.Floor);
 
         // 행상 자리도 웜뱃이 곁에 서 있다고 영영 기다리지 않는다(설계 34)
         internal override bool IsPassage(Vector2 p)
         {
-            return Vector2.DistanceSquared(p, Layout.DoorFloor) < 1e-4f || Vector2.DistanceSquared(p, Layout.StairsFloor) < 1e-4f
-                || Vector2.DistanceSquared(p, Layout.FarmDoorFloor) < 1e-4f
+            return Layout.Doors.Any(door => Vector2.DistanceSquared(p, door.Floor) < 1e-4f) || Vector2.DistanceSquared(p, Layout.StairsFloor) < 1e-4f
                 || Vector2.DistanceSquared(p, new Vector2((float)m_config.MerchantX, (float)m_config.MerchantY)) < 1e-4f;
         }
 
-        // 설계 25: 농장에서 오면 농장 문 앞에 선다
+        // 설계 25 · 44: 온 곳의 문 앞에 선다
         protected override Vector2 EntranceFrom(WombatArea from)
         {
-            return from is FarmArea ? Layout.FarmDoorFloor : Layout.DoorFloor;
+            return from == null ? Entrance : DoorOf(from).Floor;
         }
         protected override BurrowShape.Result Shape => Layout.Shape;
         // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt)
@@ -79,8 +72,12 @@ namespace ZooTycoon.Core
             m_random = random;
             Bakery = bakery;
             Layout = new PlazaLayout(tables);
-            Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.DoorFloor, BakeryArea.k_Id));
-            Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, Layout.FarmDoorFloor, FarmArea.k_Id));
+
+            foreach (PlazaDoor door in Layout.Doors)
+            {
+                Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, door.Floor, door.To));
+            }
+
             Statue = new StatueInteractable(tables.Get<InteractableTable>(StatueInteractable.k_Id), this, new Vector2((float)m_config.StatueX, (float)m_config.StatueY), random);
             Placed.Add(Statue);
             Merchant = new RelicMerchant(this, tables);
@@ -209,22 +206,18 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 38: 점원이 사는 곳의 광장 문(빵집 문 · 농장 문). 손님은 빵집 문
-        internal Vector2 DoorFloorOf(WombatArea home)
+        // 설계 38 · 44: 그 곳(점원이 사는 곳)으로 가는 광장 문. 손님은 빵집 문
+        internal PlazaDoor DoorOf(WombatArea home)
         {
-            return home is FarmArea ? Layout.FarmDoorFloor : Layout.DoorFloor;
-        }
-
-        internal Vector2 DoorInsideOf(WombatArea home)
-        {
-            return home is FarmArea ? Layout.FarmDoorInside : Layout.DoorInside;
+            return Layout.DoorTo(home.PlazaGate);
         }
 
         // 외출한 점원(빵집 · 농장)이 그 곳의 문에서 나온다
         private void Bus_ClerkWentOut(Events.ClerkWentOut e)
         {
             Clerk clerk = e.Clerk;
-            PlazaVisitor figure = new PlazaVisitor(++m_nextVisitorId, clerk.Look, this, DoorInsideOf(clerk.Home), DoorFloorOf(clerk.Home), int.MaxValue, false, clerk);
+            PlazaDoor door = DoorOf(clerk.Home);
+            PlazaVisitor figure = new PlazaVisitor(++m_nextVisitorId, clerk.Look, this, door.Inside, door.Floor, int.MaxValue, false, clerk);
             m_clerkFigures[clerk] = figure;
             ClerkInteractable thing = new ClerkInteractable(Tables.Get<InteractableTable>(ClerkInteractable.k_Id), clerk, this, () => figure.Position);
             m_clerkThings[clerk] = thing;
@@ -349,7 +342,7 @@ namespace ZooTycoon.Core
 
             BakeryVisitor customer = e.Visitor;
             int visits = customer.Angry ? 0 : RandomIndex(m_config.VisitsMax + 1);
-            Spawn(new PlazaVisitor(++m_nextVisitorId, customer.Look, this, Layout.DoorInside, Layout.DoorFloor, visits, false));
+            Spawn(new PlazaVisitor(++m_nextVisitorId, customer.Look, this, BakeryDoor.Inside, BakeryDoor.Floor, visits, false));
         }
 
         private void Spawn(PlazaVisitor visitor)

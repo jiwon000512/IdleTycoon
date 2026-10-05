@@ -51,6 +51,8 @@ namespace ZooTycoon.UI
         private float m_panelCompact;
         private Coroutine m_panelFx;
 
+        private bool m_editable = true;
+
         public event Action EditClicked;
         public event Action DoneClicked;
         // 카드 종류와 패널 위 화면 가운데의 월드 점
@@ -90,7 +92,14 @@ namespace ZooTycoon.UI
             }
 
             m_dragArea.gameObject.SetActive(editing);
-            m_editButton.gameObject.SetActive(!editing);
+            m_editButton.gameObject.SetActive(!editing && m_editable);
+        }
+
+        // 설계 44: 편집할 것이 없는 곳(낚시터)은 편집 버튼을 숨긴다
+        public void SetEditable(bool editable)
+        {
+            m_editable = editable;
+            m_editButton.gameObject.SetActive(editable && !m_dragArea.gameObject.activeSelf);
         }
 
         public void SetTexts(string storeHint, string done)

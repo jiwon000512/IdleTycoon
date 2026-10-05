@@ -150,7 +150,7 @@ namespace ZooTycoon.Game
             SystemRandom random = new SystemRandom();
             Wombat wombat = new Wombat(Tables, State);
             BakeryArea bakery = new BakeryArea(State, Tables, random, wombat, Bus);
-            Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), new FarmArea(Tables, random, wombat, Bus), Bus);
+            Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), new FarmArea(Tables, random, wombat, Bus), Bus, new FishingArea(Tables, random, wombat, Bus));
         }
 
         // 깨진 파일 · 덮다가 실패(표가 바뀌어 맞지 않음)면 새 게임으로 시작하고 파일은 .bad로 남긴다(30초 뒤 덮어써 잃지 않게)

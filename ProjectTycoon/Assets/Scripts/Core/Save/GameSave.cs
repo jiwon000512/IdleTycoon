@@ -135,6 +135,18 @@ namespace ZooTycoon.Core
                 case PlazaArea plaza:
                     save.MerchantUntil = plaza.Merchant.UntilNext;
                     break;
+                case FishingArea fishing:
+                    save.Fishing = new FishingSave
+                    {
+                        Stage = fishing.Stage,
+                        Summons = fishing.Summons,
+                        Stakes = fishing.Stakes.Select(stake => new StakeSave { Open = stake.Open, Rod = stake.Rod?.Id, Grade = stake.Grade }).ToList(),
+                        Carried = fishing.Carried?.Id,
+                        CarriedGrade = fishing.CarriedGrade,
+                        Choice = fishing.Choice?.Select(rod => rod.Id).ToList() ?? new List<string>(),
+                        Log = new Dictionary<string, FishRecord>(fishing.Log),
+                    };
+                    break;
             }
 
             return save;
@@ -185,6 +197,14 @@ namespace ZooTycoon.Core
                 case PlazaArea plaza:
                     plaza.Merchant.Restore(save.MerchantUntil);
                     break;
+                case FishingArea fishing when save.Fishing != null:
+                    FishingSave f = save.Fishing;
+                    fishing.Restore(f.Stage, f.Summons,
+                        f.Stakes.Select(s => (s.Open, Find<RodTable>(tables, s.Rod), s.Grade)),
+                        Find<RodTable>(tables, f.Carried), f.CarriedGrade,
+                        f.Choice.Select(id => Find<RodTable>(tables, id)).Where(rod => rod != null).ToList(),
+                        f.Log.Where(pair => Find<FishTable>(tables, pair.Key) != null).ToDictionary(pair => pair.Key, pair => pair.Value));
+                    break;
             }
 
             area.RestoreUpgrades(save.Upgrades);
@@ -209,7 +229,7 @@ namespace ZooTycoon.Core
 
             foreach (ClerkSave c in save.Clerks)
             {
-                Interactable thing = c.Thing >= 0 ? (c.Thing < placed.Count ? placed[c.Thing] as Interactable : null) : (area as FarmArea)?.Barn;
+                Interactable thing = c.Thing >= 0 ? (c.Thing < placed.Count ? placed[c.Thing] as Interactable : null) : area.FixedClerkSlot;
                 VisitorTable look = Find<VisitorTable>(tables, c.Look);
 
                 if (thing != null && look != null && area.CanStaff(thing) && area.ClerkOf(thing) == null)

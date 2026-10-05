@@ -61,6 +61,8 @@ namespace ZooTycoon.Core
 
         // 설계 25: 곳 id(통로가 가는 곳 · BgmTable 행). 곳 클래스의 k_Id
         public abstract string Id { get; }
+        // 설계 44: 광장에서 이 곳으로 가는 문의 id(PlazaConfigTable doors). 농장 아래층은 맨 위층 문
+        public virtual string PlazaGate => Id;
 
         protected abstract BurrowNav WombatNav { get; }
         protected abstract Vector2 Entrance { get; }
@@ -76,6 +78,9 @@ namespace ZooTycoon.Core
 
         // 손님·점원이 곳을 드나드는 바닥 점(구멍·문·계단 아래). 웜뱃이 여기 서 있어도 드나드는 길은 막지 않는다
         internal abstract bool IsPassage(Vector2 p);
+
+        // 설계 44: 편집 모드가 할 일이 있나(놓는 사물이 있거나 파는 곳). 낚시터는 없다(편집 버튼을 숨긴다)
+        public virtual bool Editable => ShopKinds.Count > 0;
 
         // 설계 40: 웜뱃 · 점원이 이 곳을 나갈 수 있나(빵집은 평가 중에 가게를 지킨다)
         public virtual bool CanLeave => true;
@@ -211,7 +216,13 @@ namespace ZooTycoon.Core
         {
             WombatPresent = false;
             Wombat.Stop();
+            OnWombatLeft();
             RefreshTarget();
+        }
+
+        // 웜뱃이 나간 뒤(낚시터는 들고 있던 대를 제자리에 둔다)
+        protected virtual void OnWombatLeft()
+        {
         }
 
         protected void EnterAt(Vector2 position)

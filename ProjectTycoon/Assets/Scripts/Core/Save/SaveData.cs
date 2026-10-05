@@ -23,7 +23,7 @@ namespace ZooTycoon.Core
         public List<AreaSave> Areas = new List<AreaSave>();
     }
 
-    // 곳 하나. 곳마다 쓰는 칸만 채운다(빵집: 칸 · 사물 · 빵 · 평가, 농장: 열림 · 칸 · 밭 · 작물, 광장: 사물 · 행상)
+    // 곳 하나. 곳마다 쓰는 칸만 채운다(빵집: 칸 · 사물 · 빵 · 평가, 농장: 열림 · 칸 · 밭 · 작물, 광장: 사물 · 행상, 낚시터: Fishing)
     public sealed class AreaSave
     {
         public string Id;
@@ -40,6 +40,27 @@ namespace ZooTycoon.Core
         public bool Open;
         public List<PlotSave> Plots = new List<PlotSave>();
         public double MerchantUntil;
+        public FishingSave Fishing;
+    }
+
+    // 설계 44: 낚시터. 말뚝(열림 · 대 · 등급, 말뚝 순서) · 단계 · 소환 수 · 든 대 · 남은 3택 1 · 어종 기록.
+    // 떠 있는 물고기 · 붙잡은 월척 · 물때 진행은 저장하지 않는다(다시 열면 물때 1부터)
+    public sealed class FishingSave
+    {
+        public int Stage;
+        public int Summons;
+        public List<StakeSave> Stakes = new List<StakeSave>();
+        public string Carried;
+        public int CarriedGrade;
+        public List<string> Choice = new List<string>();
+        public Dictionary<string, FishRecord> Log = new Dictionary<string, FishRecord>();
+    }
+
+    public sealed class StakeSave
+    {
+        public bool Open;
+        public string Rod;
+        public int Grade;
     }
 
     // 놓인 사물 하나(놓인 순서). 진열대는 빵 · 재고, 오븐은 빵 · 남은 초 · 다 구운 수 · 마지막 빵

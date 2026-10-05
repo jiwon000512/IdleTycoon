@@ -158,6 +158,8 @@ namespace ZooTycoon.UI
                 button.transform.Find("Effect").GetComponent<TMP_Text>().text = row.Effect;
                 TMP_Text cost = button.transform.Find("Price/Cost").GetComponent<TMP_Text>();
                 cost.text = row.Cost;
+                // 설계 44: 값이 없는 줄(대물 뱃속 3택 1)은 코인 칸을 숨긴다
+                button.transform.Find("Price").gameObject.SetActive(!string.IsNullOrEmpty(row.Cost));
                 cost.color = row.State == SheetRowState.Enabled ? k_CostOk : row.State == SheetRowState.Poor ? k_CostPoor : k_CostMuted;
                 button.GetComponent<CanvasGroup>().alpha = row.State == SheetRowState.Poor ? 0.55f : row.State == SheetRowState.Enabled ? 1f : 0.7f;
             }

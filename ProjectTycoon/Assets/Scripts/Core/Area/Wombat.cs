@@ -22,11 +22,14 @@ namespace ZooTycoon.Core
         public bool Guided => Mover.Moving;
         // 설계 24: 이번 틱에 걸은 거리(조이스틱 · 시스템 이동만. 순간 이동 Place는 세지 않는다)
         public double Walked { get; private set; }
-        // 2026-10-05: 굴을 판 뒤 그 자리에 서 있는 시간(초)과 남은 시간. 파는 동안 조이스틱 · 시스템 이동 모두 멈춘다
+        // 2026-10-05: 굴을 판 뒤 그 자리에 서 있는 시간(초)
         public double DigSeconds { get; }
-        public bool Digging => m_digLeft > 0d;
+        // 굴 파기 · 엉덩이 쿵 · 털썩처럼 짧은 동작 중(그 자리에 선다, 조이스틱 · 시스템 이동 모두 멈춘다)
+        public bool Busy => m_busyLeft > 0d;
+        // 설계 44: 대물을 감는 말뚝 곁에 털썩 앉아 있다. 조이스틱을 밀면 일어난다
+        public bool Sitting { get; private set; }
 
-        private double m_digLeft;
+        private double m_busyLeft;
 
         public Wombat(TableSet tables, ZooState wallet)
         {
@@ -56,11 +59,22 @@ namespace ZooTycoon.Core
             Bubble.Tick(dt);
             Walked = 0d;
 
-            if (Digging)
+            if (Busy)
             {
-                m_digLeft -= dt;
+                m_busyLeft -= dt;
                 Moving = false;
                 return;
+            }
+
+            if (Sitting)
+            {
+                Sitting = Input == Vector2.Zero;
+                Moving = false;
+
+                if (Sitting)
+                {
+                    return;
+                }
             }
 
             if (WaitingRelease)
@@ -113,14 +127,29 @@ namespace ZooTycoon.Core
             Mover.Place(Mover.Position);
             Moving = false;
             Walked = 0d;
+            Sitting = false;
         }
 
-        // 굴을 판다: 하던 이동을 멈추고 at(파는 칸) 쪽을 본 채 DigSeconds 동안 그 자리에 선다
-        internal void Dig(Vector2 at)
+        // 짧은 동작: 하던 이동을 멈추고 at 쪽을 본 채 seconds 동안 그 자리에 선다
+        internal void Hold(Vector2 at, double seconds)
         {
             Stop();
             Mover.Facing = Mover.FacingOf(at - Mover.Position);
-            m_digLeft = DigSeconds;
+            m_busyLeft = seconds;
+        }
+
+        // 굴을 판다: 파는 칸 쪽을 보고 DigSeconds 동안
+        internal void Dig(Vector2 at)
+        {
+            Hold(at, DigSeconds);
+        }
+
+        // 설계 44: at(말뚝) 쪽을 보고 털썩 앉는다
+        internal void Sit(Vector2 at)
+        {
+            Stop();
+            Mover.Facing = Mover.FacingOf(at - Mover.Position);
+            Sitting = true;
         }
 
         internal void WaitRelease()

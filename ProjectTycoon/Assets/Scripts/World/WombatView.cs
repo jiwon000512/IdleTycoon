@@ -91,6 +91,9 @@ namespace ZooTycoon.World
         private int m_shownCarry;
         private int m_lastCount;
         private Coroutine m_saying;
+        private Sprite[] m_frontSit;
+        private Sprite[] m_backSit;
+        private Sprite[] m_sideSit;
         private float m_blinkIn;
         private float m_fidgetIn;
         private Sprite m_square;
@@ -105,6 +108,10 @@ namespace ZooTycoon.World
             m_bubble.enabled = false;
             Bubbles.HideSay(m_say, m_sayTail, m_sayText);
             m_fidgetIn = m_fidgetEvery.x;
+            // 설계 44: 앉은 자세는 그림이 올 때까지 굴 파기 첫 칸(웅크림)
+            m_frontSit = new[] { m_frontDig[0] };
+            m_backSit = new[] { m_backDig[0] };
+            m_sideSit = new[] { m_sideDig[0] };
         }
 
         // 설계 22: 대화 글자 말풍선
@@ -213,23 +220,24 @@ namespace ZooTycoon.World
             }
 
             // 계산대 뒤(위)에서 줄 머리가 서 있으면 계산 중 앞모습(손님은 아래). 굴을 파는 동안은 판 칸 쪽 그대로
-            if (!moving && m_shop != null && !m_area.Wombat.Digging && ServingAtCounter())
+            if (!moving && m_shop != null && !m_area.Wombat.Busy && ServingAtCounter())
             {
                 facing = Facing.Down;
             }
 
             Sprite[] frames;
+            bool sitting = !moving && m_area.Wombat.Sitting;
 
             switch (facing)
             {
                 case Facing.Up:
-                    frames = moving ? m_backWalk : m_backIdle;
+                    frames = moving ? m_backWalk : sitting ? m_backSit : m_backIdle;
                     break;
                 case Facing.Down:
-                    frames = moving ? m_frontWalk : m_frontIdle;
+                    frames = moving ? m_frontWalk : sitting ? m_frontSit : m_frontIdle;
                     break;
                 default:
-                    frames = moving ? m_sideWalk : m_sideIdle;
+                    frames = moving ? m_sideWalk : sitting ? m_sideSit : m_sideIdle;
                     break;
             }
 
@@ -307,14 +315,33 @@ namespace ZooTycoon.World
         // 웜뱃은 판 칸 쪽으로 돌아서므로 그 방향 숨쉬기를 먼저 깔아 둔다(Update가 방향이 바뀌었다고 다시 Play해 끼워 넣기를 지우지 않게, 끝나면 그 숨쉬기로)
         public float Dig()
         {
+            Sprite[] frames = DigSheet();
+            float frameSeconds = (float)m_area.Wombat.DigSeconds / frames.Length;
+            PlayNow(frames, frameSeconds);
+            return m_digThrowFrame * frameSeconds;
+        }
+
+        // 설계 44: 쿵 · 털썩 같은 짧은 동작을 지금 방향으로 seconds 동안 바로(그림이 올 때까지 굴 파기 시트의 from부터 count칸을 빌린다)
+        public void Act(int from, int count, float seconds)
+        {
+            Sprite[] frames = new Sprite[count];
+            System.Array.Copy(DigSheet(), from, frames, 0, count);
+            PlayNow(frames, seconds / count);
+        }
+
+        private Sprite[] DigSheet()
+        {
+            Facing facing = m_area.Wombat.Mover.Facing;
+            return facing == Facing.Down ? m_frontDig : facing == Facing.Up ? m_backDig : m_sideDig;
+        }
+
+        private void PlayNow(Sprite[] frames, float frameSeconds)
+        {
             Facing facing = m_area.Wombat.Mover.Facing;
             m_playing = facing == Facing.Down ? m_frontIdle : facing == Facing.Up ? m_backIdle : m_sideIdle;
             m_animator.Play(m_playing, m_idleSeconds);
             m_renderer.flipX = facing == Facing.Left;
-            Sprite[] frames = facing == Facing.Down ? m_frontDig : facing == Facing.Up ? m_backDig : m_sideDig;
-            float frameSeconds = (float)m_area.Wombat.DigSeconds / frames.Length;
             m_animator.Interject(frames, frameSeconds, true);
-            return m_digThrowFrame * frameSeconds;
         }
 
         private Sprite Icon(BreadTable bread)

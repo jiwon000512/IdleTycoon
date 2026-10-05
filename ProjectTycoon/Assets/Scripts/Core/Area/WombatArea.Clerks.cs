@@ -23,6 +23,9 @@ namespace ZooTycoon.Core
         public ClerkConfigTable ClerkConfig => m_clerkConfig;
         public IReadOnlyList<Clerk> Clerks => m_clerks;
 
+        // 설계 44: 놓지 않는 고정 점원 자리(농장 작업대 · 낚시터 오두막). 저장은 자리 번호 대신 이것으로 되살린다
+        internal virtual Interactable FixedClerkSlot => null;
+
         // 점원을 둘 수 있는 사물(점원 팝업의 자리 줄 순서). 점원이 없는 곳은 비었다
         public virtual IEnumerable<Interactable> ClerkSlots
         {

@@ -6,7 +6,7 @@ using GameKit.Tables;
 namespace ZooTycoon.Core
 {
     // 설계 11 2장 · 설계 18: 광장 배치의 단일 출처. 빵집과 같은 칸 격자(가로 cols칸 가운데 정렬 × 세로 rows칸)로 굴 그림·걷는 땅을 만들고,
-    // 뒷벽에 빵집 문(계단 왼쪽 칸 가운데)과 지상 계단(가운데)을 둔다. 장식은 곳이 들고 있고 Rebuild로 걷는 땅·들를 곳을 다시 만든다.
+    // 뒷벽에 곳으로 가는 문(설계 44: PlazaConfigTable doors, 칸 가운데)과 지상 계단(가운데)을 둔다. 장식은 곳이 들고 있고 Rebuild로 걷는 땅·들를 곳을 다시 만든다.
     // 좌표는 광장 원점(첫 줄 윗변 가운데) 기준 유닛, y 위
     public sealed class PlazaLayout
     {
@@ -20,11 +20,8 @@ namespace ZooTycoon.Core
         public BurrowNav Nav { get; private set; }
         public BurrowNav WombatNav { get; private set; }
         public IReadOnlyList<PlazaSpot> Spots => m_spots;
-        public Vector2 DoorInside { get; }
-        public Vector2 DoorFloor { get; }
-        // 설계 25: 농장 문(계단 오른쪽 칸 가운데, 빵집 문과 마주 본다). 설계 38: 농장 점원이 외출할 때 여기로 드나든다
-        public Vector2 FarmDoorInside { get; }
-        public Vector2 FarmDoorFloor { get; }
+        // 설계 44: 뒷벽 문들(빵집 · 농장 · …). 그 곳 점원도 외출할 때 그 문으로 드나든다(설계 38)
+        public IReadOnlyList<PlazaDoor> Doors { get; }
         public Vector2 StairsInside { get; }
         public Vector2 StairsFloor { get; }
         // 광장 크기(유닛): 가로는 가운데 정렬, 세로는 원점부터 아래로
@@ -42,14 +39,32 @@ namespace ZooTycoon.Core
             Height = (float)(entranceHeight + (plaza.Rows - 1) * cellHeight);
 
             float inside = -(BurrowShape.k_EntranceFloorTop - 1) / BurrowShape.k_PixelsPerUnit;
-            float doorX = (float)(-0.5 * cellWidth);
-            DoorInside = new Vector2(doorX, inside);
-            DoorFloor = new Vector2(doorX, k_HoleFloorY);
-            FarmDoorInside = new Vector2(-doorX, inside);
-            FarmDoorFloor = new Vector2(-doorX, k_HoleFloorY);
+            List<PlazaDoor> doors = new List<PlazaDoor>();
+
+            foreach (PlazaDoorData door in plaza.Doors)
+            {
+                float x = (float)((door.Col - plaza.Cols / 2d + 0.5) * cellWidth);
+                doors.Add(new PlazaDoor(door.To, new Vector2(x, inside), new Vector2(x, k_HoleFloorY)));
+            }
+
+            Doors = doors;
             StairsInside = new Vector2(0f, inside);
             StairsFloor = new Vector2(0f, k_HoleFloorY);
             Rebuild(new List<DecorationData>());
+        }
+
+        // 그 곳으로 가는 문(PlazaGate). 없으면 null
+        public PlazaDoor DoorTo(string areaId)
+        {
+            foreach (PlazaDoor door in Doors)
+            {
+                if (door.To == areaId)
+                {
+                    return door;
+                }
+            }
+
+            return null;
         }
 
         // 장식 · 석상 바닥을 막고, 들를 곳은 격자에 붙이되 걷는 땅이 아니면 뺀다(장식이 벽에 붙어 있을 때)
@@ -84,6 +99,21 @@ namespace ZooTycoon.Core
                     }
                 }
             }
+        }
+    }
+
+    // 설계 44: 뒷벽 문 하나. 구멍 안(나타나는 곳) · 아래 바닥(내려앉는 곳)
+    public sealed class PlazaDoor
+    {
+        public string To { get; }
+        public Vector2 Inside { get; }
+        public Vector2 Floor { get; }
+
+        public PlazaDoor(string to, Vector2 inside, Vector2 floor)
+        {
+            To = to;
+            Inside = inside;
+            Floor = floor;
         }
     }
 

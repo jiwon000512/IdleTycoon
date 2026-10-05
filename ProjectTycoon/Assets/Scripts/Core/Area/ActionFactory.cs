@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ZooTycoon.Core
 {
     // 설계 13 v0.6: 표 행 → 행동. 행동 클래스는 여기 중첩 클래스로 두고 sim마다 partial 파일로 나눈다(공통: 이 파일 — 열기·통로·업그레이드·굴 파기·똥 치우기·점원 깨우기, 빵집: ActionFactory.Bakery.cs, 농장: ActionFactory.Farm.cs, 광장: ActionFactory.Plaza.cs).
-    // 새 행동 = 그 sim 파일에 중첩 클래스 하나 + 여기 case 한 줄과 Ids 한 칸 + ActionTable 한 줄
+    // 새 행동 = 그 sim 파일에 중첩 클래스 하나 + 여기 case 한 줄과 Ids 한 칸 + ActionTable 한 줄(낚시: Fishing/ActionFactory.Fishing.cs)
     public static partial class ActionFactory
     {
         // 코드에 행동 클래스가 있는 id 전부(검증기가 표와 맞춘다)
@@ -14,6 +14,7 @@ namespace ZooTycoon.Core
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
             ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_OpenPlant, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
             ActionTable.k_Talk, ActionTable.k_DigFloor, ActionTable.k_Evaluate,
+            ActionTable.k_Summon, ActionTable.k_OpenStake, ActionTable.k_Carry, ActionTable.k_Merge, ActionTable.k_Haul, ActionTable.k_Thump, ActionTable.k_ChooseRod,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -40,6 +41,13 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Talk: return new TalkToMerchant(table);
                 case ActionTable.k_DigFloor: return new DigFloor(table);
                 case ActionTable.k_Evaluate: return new OpenBoard(table);
+                case ActionTable.k_Summon: return new Summon(table);
+                case ActionTable.k_OpenStake: return new OpenStake(table);
+                case ActionTable.k_Carry: return new CarryRod(table);
+                case ActionTable.k_Merge: return new MergeRods(table);
+                case ActionTable.k_Haul: return new Haul(table);
+                case ActionTable.k_Thump: return new Thump(table);
+                case ActionTable.k_ChooseRod: return new ChooseRod(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");
             }
         }

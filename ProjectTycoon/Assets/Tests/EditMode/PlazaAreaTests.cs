@@ -120,7 +120,7 @@ namespace ZooTycoon.Tests
             Assert.That(m_shop.WombatPresent, Is.False);
             Assert.That(m_shop.IsInRange(m_shop.Counter), Is.False);
             Assert.That(m_plaza.WombatPresent, Is.True);
-            Assert.That(m_plaza.Wombat.Mover.Position, Is.EqualTo(m_plaza.Layout.DoorFloor));
+            Assert.That(m_plaza.Wombat.Mover.Position, Is.EqualTo(m_plaza.Layout.DoorTo(BakeryArea.k_Id).Floor));
             Assert.That(m_plaza.Target, Is.Null);
 
             // 놓았다가 그 자리에서 다시 위로 조금만(조이스틱 0.3) 밀어도 물러서지 않고 빵집
@@ -182,7 +182,7 @@ namespace ZooTycoon.Tests
             PlazaVisitor back = null;
             m_bus.Subscribe<Events.PlazaVisitorArrived>(e =>
             {
-                if (Vector2.Distance(e.Visitor.Position, m_plaza.Layout.DoorInside) < 1e-3f)
+                if (Vector2.Distance(e.Visitor.Position, m_plaza.Layout.DoorTo(BakeryArea.k_Id).Inside) < 1e-3f)
                 {
                     back ??= e.Visitor;
                 }
@@ -201,7 +201,7 @@ namespace ZooTycoon.Tests
             Create();
             PlazaLayout layout = m_plaza.Layout;
 
-            Assert.That(layout.Nav.IsWalkable(layout.DoorFloor), Is.True);
+            Assert.That(layout.Nav.IsWalkable(layout.DoorTo(BakeryArea.k_Id).Floor), Is.True);
             Assert.That(layout.Nav.IsWalkable(layout.StairsFloor), Is.True);
             Assert.That(m_plaza.Decor.Count, Is.EqualTo(m_tables.GetAll<PlazaDecorTable>().Count));
             // 벽에 붙은 화분의 벽 쪽 자리만 빠진다

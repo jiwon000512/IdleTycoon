@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -22,6 +23,7 @@ namespace ZooTycoon.Editor
         const string k_DecorDir = "Assets/Resources/Sprites/Decor/";
         // 설계 25: 밭 그림(Farm/Source~/make_farm.py), 작물 단계 그림(CropTable sprite), 재료 아이콘(ItemTable icon)
         const string k_FarmDir = "Assets/Sprites/World/Farm/";
+        const string k_FishingDir = "Assets/Sprites/World/Fishing/";
         const string k_CropDir = "Assets/Resources/Sprites/Farm/";
         const string k_ItemDir = "Assets/Resources/Sprites/Items/";
         // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 줄 셋(칸 밑변 기준, 뒷줄부터. 줄 그림은 104칸 폭 · 익으면 26칸 높이. 밑변은 make_farm_art.py ROW_CELLS 18 · 42 · 66칸 = 이랑 셋의 아래에서 6칸).
@@ -95,8 +97,9 @@ namespace ZooTycoon.Editor
             BakeShop(shelf, shelfSign, oven, counter, digTag, poop, customer);
             BakePlaza(customer, poop);
             BakeFarm(BakePlot(), digTag, poop, customer);
+            BakeFishing(digTag, poop, customer);
             AssetDatabase.SaveAssets();
-            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza·Plot·Farm";
+            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza·Plot·Farm·Fishing";
         }
 
         static void ImportSprites()
@@ -206,6 +209,12 @@ namespace ZooTycoon.Editor
             Import(k_SpriteDir + "wall_face.png", new Vector2(0f, 1f), k_TagPpu, true);
             // 설계 39: 농장 6층부터 붉은 흙(아트방 C, 빵집 타일과 크기 · 결이 같다)
             Import(k_FarmDir + "floor_tile_red.png", new Vector2(0f, 1f), k_TagPpu, true);
+            // 설계 44: 낚시터 물길 재료(굴 타일처럼 픽셀을 읽는다) · 바닥 구멍(가운데 피벗, StreamPainter.HoleCenter)
+            Import(k_FishingDir + "water_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
+            Import(k_FishingDir + "stream_face.png", new Vector2(0f, 1f), k_TagPpu, true);
+            Import(k_FishingDir + "drain_hole.png", center);
+            Import(k_FishingDir + "stake.png", bottom);
+            Import(k_FishingDir + "stake_locked.png", bottom);
             Import(k_FarmDir + "wall_tile_red.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_FarmDir + "wall_face_red.png", new Vector2(0f, 1f), k_TagPpu, true);
 
@@ -556,14 +565,24 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
 
+            // 설계 25 · 44: 곳으로 가는 문(PlazaConfigTable doors와 같은 곳). 빵집 문은 차양, 간판은 계단 쪽에서 비킨다(빵집 왼쪽 · 농장 오른쪽)
             GameObject door = Child(root.transform, "BakeryDoor", Vector3.zero);
             Renderer(door.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
             Renderer(door.transform, "Awning", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "awning.png"), new Vector3(0f, k_AwningHeight, 0f), k_ArchOrder + 1);
             TextMeshPro sign = DoorSign(door.transform, -k_SignOffsetX);
-            // 설계 25: 농장 문(계단 오른쪽). 간판은 빵집 문과 마주 보게 오른쪽
             GameObject farmDoor = Child(root.transform, "FarmDoor", Vector3.zero);
             Renderer(farmDoor.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
             TextMeshPro farmSign = DoorSign(farmDoor.transform, k_SignOffsetX);
+            // 설계 44: 낚시터 문(왼쪽 끝 칸, 간판은 바깥쪽 왼쪽 — 빵집 간판과 겹치지 않게). 그림이 올 때까지 빵집 아치
+            GameObject fishingDoor = Child(root.transform, "FishingDoor", Vector3.zero);
+            Renderer(fishingDoor.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
+            TextMeshPro fishingSign = DoorSign(fishingDoor.transform, -k_SignOffsetX);
+            List<(string to, Transform root, TextMeshPro sign)> doors = new List<(string, Transform, TextMeshPro)>
+            {
+                (BakeryArea.k_Id, door.transform, sign),
+                (FarmArea.k_Id, farmDoor.transform, farmSign),
+                (FishingArea.k_Id, fishingDoor.transform, fishingSign),
+            };
             SpriteRenderer stairs = Renderer(root.transform, "Stairs", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png"), Vector3.zero, k_ArchOrder);
             WombatView wombat = BakeWombat(root.transform, Vector3.zero);
             // 설계 29: 웜뱃 석상(분수 자리, 발끝으로 깊이 정렬). 크기는 그림 칸 수로(2026-09-30 처음의 1.5배, 스케일 1)
@@ -573,10 +592,19 @@ namespace ZooTycoon.Editor
             PlazaView view = root.AddComponent<PlazaView>();
             Set(view, "m_burrow", burrow);
             SetBurrowTextures(view);
-            Set(view, "m_door", door.transform);
-            Set(view, "m_sign", sign);
-            Set(view, "m_farmDoor", farmDoor.transform);
-            Set(view, "m_farmSign", farmSign);
+            SerializedObject so = new SerializedObject(view);
+            SerializedProperty doorArts = so.FindProperty("m_doors");
+            doorArts.arraySize = doors.Count;
+
+            for (int i = 0; i < doors.Count; i++)
+            {
+                SerializedProperty art = doorArts.GetArrayElementAtIndex(i);
+                art.FindPropertyRelative("To").stringValue = doors[i].to;
+                art.FindPropertyRelative("Root").objectReferenceValue = doors[i].root;
+                art.FindPropertyRelative("Sign").objectReferenceValue = doors[i].sign;
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
             Set(view, "m_stairs", stairs.transform);
             Set(view, "m_wombat", wombat);
             Set(view, "m_statue", statue.transform);
@@ -688,6 +716,40 @@ namespace ZooTycoon.Editor
             Set(view, "m_clerkPrefab", customer);
             Set(view, "m_wombat", wombat);
             Save(root, view, "Farm");
+        }
+
+        // 설계 44: 낚시터. 굴 그림(고정 방) · 물길 · 말뚝 · 대 · 물고기는 실행 중 FishingView가 Core 배치대로 그린다(그림이 올 때까지 코드 그림).
+        // 오두막은 그림이 올 때까지 농장 작업대
+        static void BakeFishing(MarkerView digTag, SpriteAnimator poop, VisitorView customer)
+        {
+            GameObject root = new GameObject("Fishing");
+            SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
+            backdrop.drawMode = SpriteDrawMode.Tiled;
+            backdrop.tileMode = SpriteTileMode.Continuous;
+            backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
+            SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
+            SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
+            SpriteRenderer hut = Renderer(root.transform, "Hut", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "farm_prop_bench.png"), Vector3.zero, 0);
+            hut.spriteSortPoint = SpriteSortPoint.Pivot;
+            WombatView wombat = BakeWombat(root.transform, Vector3.zero);
+
+            FishingView view = root.AddComponent<FishingView>();
+            Set(view, "m_burrow", burrow);
+            SetBurrowTextures(view);
+            Set(view, "m_waterTile", AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + "water_tile.png"));
+            Set(view, "m_streamFace", AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + "stream_face.png"));
+            Set(view, "m_drainHole", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "drain_hole.png"));
+            Set(view, "m_stake", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake.png"));
+            Set(view, "m_stakeLocked", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_locked.png"));
+            Set(view, "m_arch", arch.transform);
+            Set(view, "m_hut", hut.transform);
+            Set(view, "m_tagPrefab", digTag);
+            Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
+            Set(view, "m_poopPrefab", poop);
+            SetArray(view, "m_poopFrames", Frames("poop", "_0", "_1"));
+            Set(view, "m_clerkPrefab", customer);
+            Set(view, "m_wombat", wombat);
+            Save(root, view, "Fishing");
         }
 
         // 설계 39: 농장 층 재료 묶음 — [0] 빵집과 같은 흙(Shop), [1] 붉은 흙(Farm/*_red)

@@ -18,6 +18,7 @@ namespace ZooTycoon.Data
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
             PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id, StairInteractable.k_Id,
+            StakeInteractable.k_Id, StreamBankInteractable.k_Id, FishingHutInteractable.k_Id, BossCatchInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -60,6 +61,7 @@ namespace ZooTycoon.Data
             ValidateRelics(tables, errors);
             ValidateFarmConfig(tables, errors);
             ValidateStars(tables, errors);
+            ValidateFishing(tables, errors);
 
             return errors;
         }
@@ -122,7 +124,7 @@ namespace ZooTycoon.Data
                 }
             }
 
-            CheckRequired<ClerkTable>(tables, new[] { OvenInteractable.k_Id, CounterInteractable.k_Id, BarnInteractable.k_Id }, errors);
+            CheckRequired<ClerkTable>(tables, new[] { OvenInteractable.k_Id, CounterInteractable.k_Id, BarnInteractable.k_Id, FishingHutInteractable.k_Id }, errors);
         }
 
         private static bool HasWorkerSpot(InteractableTable thing)
@@ -644,6 +646,17 @@ namespace ZooTycoon.Data
                 {
                     errors.Add($"PlazaConfigTable '{plaza.Id}': browseChance·emoteChance는 0~1이어야 한다.");
                 }
+
+                // 설계 44: 뒷벽 문은 칸 안 · 서로 다른 칸 · 서로 다른 곳이고, 손님이 드나드는 빵집 문이 있다
+                PlazaDoorData[] doors = plaza.Doors ?? new PlazaDoorData[0];
+
+                if (doors.Any(d => string.IsNullOrEmpty(d.To) || d.Col < 0 || d.Col >= plaza.Cols)
+                    || doors.Select(d => d.Col).Distinct().Count() != doors.Length
+                    || doors.Select(d => d.To).Distinct().Count() != doors.Length
+                    || doors.All(d => d.To != BakeryArea.k_Id))
+                {
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': doors는 칸 안(0 ~ cols−1) · 서로 다른 칸 · 서로 다른 곳이고 bakery 문이 있어야 한다.");
+                }
             }
 
             CheckRequired<PlazaConfigTable>(tables, new[] { PlazaConfigTable.k_Main }, errors);
@@ -864,6 +877,92 @@ namespace ZooTycoon.Data
         }
 
         // 코드가 Id로 부르는 행이 모두 있어야 한다
+        // 설계 44: 낚시터 숫자 · 낚싯대 · 물고기. 물길은 축 정렬 점 둘 이상, 말뚝 하나 이상 열림, 비중 · 배수 · 시간 > 0,
+        // 소환에 나오는 계열 대 · 특별한 대 셋 · 떼 물고기 · 대물 행이 있고, 물고기 재료는 ItemTable에, 크기는 min ≤ max
+        private static void ValidateFishing(TableSet tables, List<string> errors)
+        {
+            CheckRequired<FishingConfigTable>(tables, new[] { FishingConfigTable.k_Main }, errors);
+            CheckRequired<RodTable>(tables, new[] { RodTable.k_Bamboo, RodTable.k_Iron, RodTable.k_Bait }, errors);
+            HashSet<string> items = Ids<ItemTable>(tables);
+
+            foreach (FishingConfigTable config in tables.GetAll<FishingConfigTable>())
+            {
+                FishingPointData[] stream = config.Stream ?? new FishingPointData[0];
+                bool axis = stream.Length >= 2 && Enumerable.Range(1, stream.Length - 1).All(i => stream[i].X == stream[i - 1].X || stream[i].Y == stream[i - 1].Y);
+                FishTable boss = tables.GetAll<FishTable>().FirstOrDefault(f => f.Id == config.BossFish);
+
+                if (config.Cols < 2 || config.Rows < 2 || !axis || config.StreamWidth <= 0d)
+                {
+                    errors.Add($"FishingConfigTable '{config.Id}': cols · rows는 2 이상, stream은 축 정렬 점 둘 이상, streamWidth > 0이어야 한다.");
+                }
+
+                if (config.Stakes == null || !config.Stakes.Any(s => s.Cost <= 0d) || config.Stakes.Any(s => s.Cost < 0d))
+                {
+                    errors.Add($"FishingConfigTable '{config.Id}': stakes는 하나 이상 처음부터 열려(cost 0) 있고 cost는 0 이상이어야 한다.");
+                }
+
+                if (config.WaveSeconds <= 0d || config.SpawnGap < 0d || config.SchoolBase < 1 || config.SchoolPerStage < 0d || config.WeightGrowth < 1d
+                    || config.BossEvery < 2 || boss == null || !boss.Boss)
+                {
+                    errors.Add($"FishingConfigTable '{config.Id}': waveSeconds > 0, spawnGap ≥ 0, schoolBase ≥ 1, schoolPerStage ≥ 0, weightGrowth ≥ 1, bossEvery ≥ 2, bossFish는 FishTable의 boss 행이어야 한다.");
+                }
+
+                if (config.TrophyChance < 0d || config.TrophyChance > 1d || config.TrophyWeightScale < 1d || config.TrophyCatch < 1 || config.TrophyHoldSeconds <= 0d || config.HaulSeconds <= 0d)
+                {
+                    errors.Add($"FishingConfigTable '{config.Id}': trophyChance는 0~1, trophyWeightScale ≥ 1, trophyCatch ≥ 1, trophyHoldSeconds · haulSeconds > 0이어야 한다.");
+                }
+
+                if (config.SummonCost <= 0d || config.SummonGrowth < 1d || config.GradeWeights == null || config.GradeWeights.Length < 1 || config.GradeWeights.Any(w => w < 0d)
+                    || config.GradeWeights.Sum() <= 0d || config.GradeScale < 1d || config.MergeCount < 2)
+                {
+                    errors.Add($"FishingConfigTable '{config.Id}': summonCost > 0, summonGrowth ≥ 1, gradeWeights는 0 이상이고 합 > 0, gradeScale ≥ 1, mergeCount ≥ 2여야 한다.");
+                }
+
+                if (config.FamilySteps == null || config.FamilyScales == null || config.FamilySteps.Length != config.FamilyScales.Length
+                    || config.FamilySteps.Any(n => n < 2) || config.FamilyScales.Any(x => x < 1d))
+                {
+                    errors.Add($"FishingConfigTable '{config.Id}': familySteps · familyScales는 같은 길이, 문턱은 2 이상, 배수는 1 이상이어야 한다.");
+                }
+
+                if (config.ThumpRadius <= 0d || config.ThumpStun <= 0d || config.ThumpCooldown <= 0d || config.ThumpSeconds <= 0d || config.SitScale < 1d)
+                {
+                    errors.Add($"FishingConfigTable '{config.Id}': thumpRadius · thumpStun · thumpCooldown · thumpSeconds > 0, sitScale ≥ 1이어야 한다.");
+                }
+            }
+
+            foreach (RodTable rod in tables.GetAll<RodTable>())
+            {
+                if (string.IsNullOrEmpty(rod.Family) || rod.Reel <= 0d || rod.Range <= 0d || rod.SmallScale <= 0d || rod.BigScale <= 0d || rod.Slow <= 0d || rod.Slow > 1d)
+                {
+                    errors.Add($"RodTable '{rod.Id}': family가 있고 reel · range · smallScale · bigScale > 0, slow는 0 초과 1 이하여야 한다.");
+                }
+
+                if (rod.IsSpecial && (rod.Special != RodTable.k_Pulley && rod.Special != RodTable.k_Lighthouse && rod.Special != RodTable.k_Whirlpool || rod.Effect <= 0d))
+                {
+                    errors.Add($"RodTable '{rod.Id}': special은 pulley · lighthouse · whirlpool 중 하나이고 effect > 0이어야 한다.");
+                }
+            }
+
+            if (!tables.GetAll<RodTable>().Any(rod => !rod.IsSpecial && !rod.Locked) || tables.GetAll<RodTable>().Count(rod => rod.IsSpecial) < 3)
+            {
+                errors.Add("RodTable: 소환에 나오는 계열 대가 하나 이상, 특별한 대가 셋 이상 있어야 한다.");
+            }
+
+            foreach (FishTable fish in tables.GetAll<FishTable>())
+            {
+                if (!items.Contains(fish.Item ?? "") || fish.Speed <= 0d || fish.Spawn < 0d || fish.Sizes == null || fish.Sizes.Length < 1
+                    || fish.Sizes.Any(size => size.Min <= 0d || size.Max < size.Min || size.Chance < 0d) || fish.Sizes.Sum(size => size.Chance) <= 0d)
+                {
+                    errors.Add($"FishTable '{fish.Id}': item은 ItemTable에, speed > 0, spawn ≥ 0, sizes는 0 < min ≤ max이고 chance 합 > 0이어야 한다.");
+                }
+            }
+
+            if (!tables.GetAll<FishTable>().Any(fish => !fish.Boss && fish.Spawn > 0d))
+            {
+                errors.Add("FishTable: 떼에 나오는 물고기(spawn > 0)가 하나 이상 있어야 한다.");
+            }
+        }
+
         private static void CheckRequired<T>(TableSet tables, string[] ids, List<string> errors) where T : Table<string>
         {
             HashSet<string> have = Ids<T>(tables);

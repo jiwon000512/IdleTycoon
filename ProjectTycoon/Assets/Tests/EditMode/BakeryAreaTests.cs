@@ -552,12 +552,12 @@ namespace ZooTycoon.Tests
             Assert.That(shop.Wombat.Mover.Facing, Is.EqualTo(toward));
             shop.Wombat.SetInput(new Vector2(1f, 0f));
             Run(shop, seconds - 0.1d);
-            Assert.That(shop.Wombat.Digging, Is.True);
+            Assert.That(shop.Wombat.Busy, Is.True);
             Assert.That(shop.Wombat.Moving, Is.False);
             Assert.That(shop.Wombat.Mover.Position, Is.EqualTo(home));
 
             Run(shop, 0.3d);
-            Assert.That(shop.Wombat.Digging, Is.False);
+            Assert.That(shop.Wombat.Busy, Is.False);
             Assert.That(shop.Wombat.Mover.Position.X, Is.GreaterThan(home.X + 0.1f));
         }
 

@@ -47,8 +47,9 @@ namespace ZooTycoon.Core
             Clerk = clerk;
             m_stall = stall;
             WombatArea home = clerk != null ? clerk.Home : (WombatArea)plaza.Bakery;
-            m_doorFloor = plaza.DoorFloorOf(home);
-            m_doorInside = plaza.DoorInsideOf(home);
+            PlazaDoor door = plaza.DoorOf(home);
+            m_doorFloor = door.Floor;
+            m_doorInside = door.Inside;
             m_visitsLeft = visits;
             m_wantsShop = wantsShop;
 

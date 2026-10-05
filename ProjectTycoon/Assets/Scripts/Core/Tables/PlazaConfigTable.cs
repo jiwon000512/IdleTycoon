@@ -37,5 +37,14 @@ namespace ZooTycoon.Core
         // 설계 34: 행상이 서는 좌판 자리(발 위치, 수레 없이 행상만)
         public double MerchantX { get; set; }
         public double MerchantY { get; set; }
+        // 설계 44: 뒷벽 문(갈 곳 id · 칸 번호). 빵집 문은 손님이 드나든다
+        public PlazaDoorData[] Doors { get; set; }
+    }
+
+    // 광장 뒷벽 문 하나: 갈 곳 id(그 곳의 PlazaGate) · 칸 번호(왼쪽 칸이 0, 문은 칸 가운데)
+    public sealed class PlazaDoorData
+    {
+        public string To { get; set; }
+        public int Col { get; set; }
     }
 }

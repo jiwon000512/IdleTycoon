@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using GameKit.Tables;
@@ -11,22 +12,22 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 15)]
-        [TestCase("StringTable", 42)]
-        [TestCase("ClerkTable", 2)]
+        [TestCase("StringTable", 43)]
+        [TestCase("ClerkTable", 3)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 18)]
-        [TestCase("InteractableTable", 18)]
+        [TestCase("ActionTable", 19)]
+        [TestCase("InteractableTable", 19)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 15)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 6)]
         [TestCase("BakeryConfigTable", 9)]
-        [TestCase("PlazaConfigTable", 6)]
+        [TestCase("PlazaConfigTable", 7)]
         [TestCase("PlazaDecorTable", 1)]
-        [TestCase("ItemTable", 5)]
+        [TestCase("ItemTable", 6)]
         [TestCase("CropTable", 4)]
         [TestCase("FarmConfigTable", 7)]
         [TestCase("FarmFloorTable", 2)]
@@ -34,6 +35,9 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
+        [TestCase("FishingConfigTable", 1)]
+        [TestCase("RodTable", 1)]
+        [TestCase("FishTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -83,6 +87,47 @@ namespace ZooTycoon.Tests
         {
             TableSet tables = TestTables.Load();
             tables.Get<ConfigTable>(ConfigTable.k_PoopChance).Value = chance;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 설계 44: 낚시터 물길은 축 정렬 · 낚싯대 slow는 1 이하 · 물고기 재료는 ItemTable에
+        [Test]
+        public void Validate_WhenFishingStreamDiagonal_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<FishingConfigTable>(FishingConfigTable.k_Main).Stream[1].Y += 1d;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenRodSlowAboveOne_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<RodTable>(RodTable.k_Bait).Slow = 1.5d;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenFishItemMissing_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.GetAll<FishTable>()[0].Item = "no_such_item";
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 설계 44: 광장 문은 칸 안 · 겹치지 않음 · 빵집 문이 있다
+        [TestCase(4, "fishing")]
+        [TestCase(2, "fishing")]
+        [TestCase(0, "bakery")]
+        public void Validate_WhenPlazaDoorBad_ReportsError(int col, string to)
+        {
+            TableSet tables = TestTables.Load();
+            PlazaConfigTable plaza = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
+            plaza.Doors = plaza.Doors.Append(new PlazaDoorData { To = to, Col = col }).ToArray();
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }

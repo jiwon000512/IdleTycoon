@@ -191,7 +191,7 @@ namespace ZooTycoon.Tests
             Assert.That(RunUntil(() => clerk.Away), Is.True, "외출");
             PlazaVisitor figure = m_mall.Plaza.Visitors.Single(visitor => visitor.Clerk == clerk);
             Assert.That(RunUntil(() => !figure.Hopping, 2d), Is.True);
-            Assert.That(Vector2.Distance(figure.Position, m_mall.Plaza.Layout.FarmDoorFloor), Is.LessThan(0.1f), "농장 문에서 나온다");
+            Assert.That(Vector2.Distance(figure.Position, m_mall.Plaza.Layout.DoorTo(FarmArea.k_Id).Floor), Is.LessThan(0.1f), "농장 문에서 나온다");
 
             Assert.That(RunUntil(() => !clerk.Away && !clerk.Idling), Is.True, "농장 문으로 돌아와 다시 일한다");
             Assert.That(m_mall.Plaza.Visitors.Any(visitor => visitor.Clerk == clerk), Is.False);

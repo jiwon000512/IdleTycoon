@@ -1,0 +1,120 @@
+{
+  "table": "FishingConfigTable",
+  "version": 1,
+  "notes": [
+    "설계 44 낚시 디펜스 숫자. id = 낚시터(지금 main 하나). 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위. 전부 시작값이며 플레이로 튠한다.",
+    "cols · rows: 방 칸 수(광장처럼 고정 방). stream: 물길 꺾은선(축 정렬, 첫 점 = 물고기가 나오는 곳(벽 밖에서 들어온다), 끝 점 = 빠지는 구멍) · streamWidth: 폭(걸을 수 없다).",
+    "stakes: 말뚝 자리(x · y · cost, cost 0은 처음부터 열림). hutX · hutY: 점원 오두막 자리. catchX · catchY: 낚은 대물이 눕는 자리(뱃속 3택 1을 고르는 곳).",
+    "waveSeconds: 떼가 나오는 간격(초). spawnGap: 떼 안 물고기 간격(초). 떼 마릿수 = schoolBase + (단계 − 1) × schoolPerStage(내림). 무게 × weightGrowth^(단계 − 1).",
+    "bossEvery: 이 물때마다 대물(마지막 물때). 대물이 끝나야(낚거나 놓쳐야) 물때 1로. bossFish: FishTable 대물 행.",
+    "trophyChance: 떼 물고기가 월척일 확률 · trophyWeightScale: 무게 배수 · trophyCatch: 낚으면 재료 개수 · trophyHoldSeconds: 점원이 거들기까지 대가 버티는 초 · haulSeconds: 털썩 동작 동안 웜뱃이 서는 초.",
+    "summonCost × summonGrowth^소환 수 = 소환 값. gradeWeights: 등급 비중[보통, 드묾, 전설]. gradeScale: 등급마다 감는 힘 배수. mergeCount: 같은 계열 · 등급 몇 개를 합치나.",
+    "familySteps · familyScales: 판의 같은 계열 개수가 familySteps[i] 이상이면 그 계열 감는 힘 × familyScales[i](큰 문턱 하나만).",
+    "thumpRadius · thumpStun · thumpCooldown · thumpSeconds: 엉덩이 쿵 반지름 · 멈추는 초 · 쉬는 초 · 웜뱃이 제자리에 서는 초. sitScale: 대물 때 앉은 말뚝의 감는 힘 배수.",
+    "version 1 (2026-10-05, 설계 44): 처음 만듦."
+  ],
+  "rows": [
+    {
+      "id": "main",
+      "cols": 4,
+      "rows": 5,
+      "stream": [
+        {
+          "x": 7.0,
+          "y": -3.6
+        },
+        {
+          "x": -4.6,
+          "y": -3.6
+        },
+        {
+          "x": -4.6,
+          "y": -6.8
+        },
+        {
+          "x": 4.6,
+          "y": -6.8
+        },
+        {
+          "x": 4.6,
+          "y": -10.0
+        },
+        {
+          "x": -3.0,
+          "y": -10.0
+        }
+      ],
+      "streamWidth": 1.4,
+      "stakes": [
+        {
+          "x": -3.0,
+          "y": -5.2,
+          "cost": 0
+        },
+        {
+          "x": 2.0,
+          "y": -5.2,
+          "cost": 0
+        },
+        {
+          "x": -1.0,
+          "y": -8.4,
+          "cost": 0
+        },
+        {
+          "x": 3.0,
+          "y": -8.4,
+          "cost": 0
+        },
+        {
+          "x": 6.0,
+          "y": -8.4,
+          "cost": 800
+        },
+        {
+          "x": -5.9,
+          "y": -5.2,
+          "cost": 2000
+        }
+      ],
+      "hutX": 4.0,
+      "hutY": -2.2,
+      "catchX": -2.6,
+      "catchY": -2.2,
+      "waveSeconds": 30,
+      "spawnGap": 0.9,
+      "schoolBase": 6,
+      "schoolPerStage": 1,
+      "weightGrowth": 1.3,
+      "bossEvery": 10,
+      "bossFish": "boss_carp",
+      "trophyChance": 0.05,
+      "trophyWeightScale": 3,
+      "trophyCatch": 3,
+      "trophyHoldSeconds": 180,
+      "haulSeconds": 1.0,
+      "summonCost": 60,
+      "summonGrowth": 1.15,
+      "gradeWeights": [
+        80,
+        18,
+        2
+      ],
+      "gradeScale": 2.5,
+      "mergeCount": 3,
+      "familySteps": [
+        2,
+        4
+      ],
+      "familyScales": [
+        1.3,
+        1.8
+      ],
+      "thumpRadius": 1.8,
+      "thumpStun": 2,
+      "thumpCooldown": 15,
+      "thumpSeconds": 0.5,
+      "sitScale": 2
+    }
+  ]
+}

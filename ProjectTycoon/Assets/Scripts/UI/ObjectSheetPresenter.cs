@@ -115,6 +115,10 @@ namespace ZooTycoon.UI
                 case StairInteractable stair:
                     m_view.SetHeader(m_tables.Text("sheet_stair_title"), m_tables.Format("sheet_stair_status", stair.Farm.Lower.Number));
                     break;
+                // 설계 44: 낚은 대물 뱃속 3택 1(말뚝이 다 찼고 대를 들고 있으면 하나 비우라고)
+                case BossCatchInteractable boss:
+                    m_view.SetHeader(m_tables.Text("rod_choice_title"), m_tables.Text(boss.Fishing.CanChoose ? "rod_choice_hint" : "rod_choice_full"));
+                    break;
                 // 설계 35: 거름은 심을 때 하나씩 저절로 든다
                 case PlotInteractable plot:
                     m_view.SetHeader(m_tables.Text("sheet_plot_title"), m_tables.Format("sheet_plot_status", m_shop.Wallet.Count(plot.Farm.Config.ManureItem)));
@@ -248,6 +252,14 @@ namespace ZooTycoon.UI
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
+                case ActionTable.k_ChooseRod:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Text("rod_" + option.Option),
+                        Effect = m_tables.Text("rod_" + option.Option + "_desc"),
+                        Cost = "",
+                        State = RowState(option.State),
+                    };
                 default:
                     throw new InvalidOperationException($"행동 '{actionId}'의 시트 서식이 없다.");
             }
@@ -310,7 +322,7 @@ namespace ZooTycoon.UI
 
             m_view.FlashRow(index);
 
-            if (m_target is DigInteractable || m_target is StairInteractable)
+            if (m_target is DigInteractable || m_target is StairInteractable || m_target is BossCatchInteractable)
             {
                 m_view.Close();
             }

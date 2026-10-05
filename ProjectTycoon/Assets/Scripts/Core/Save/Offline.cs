@@ -64,6 +64,15 @@ namespace ZooTycoon.Core
                 bonuses += harvests * farmConfig.BonusChance * (1d + blessing.Boost(BlessingTable.k_Bonus) * share);
             }
 
+            // 설계 44: 낚시터는 지금 판으로 물때 하나를 시뮬레이션해 잰다(웜뱃 없이, 월척은 점원이 있을 때만, 대물 물때는 놓친 것으로)
+            FishingArea fishing = mall.Fishing;
+            double perSecond = (fishing.Config.BossEvery - 1d) / fishing.Config.BossEvery / fishing.Config.WaveSeconds;
+
+            foreach (KeyValuePair<string, double> fish in fishing.SimulateWave(fishing.ClerkOf(fishing.Hut) != null))
+            {
+                Add(made, fish.Key, fish.Value * perSecond);
+            }
+
             // 빵집: 손님(광장에서 가게로 오는 몫) · 계산 점원 · 오븐 점원(빵마다)
             BakeryArea bakery = mall.Bakery;
             PlazaConfigTable plazaConfig = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);

@@ -30,6 +30,10 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorPaid>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pay)),
                 bus.Subscribe<Events.BakeryVisitorPicked>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pick)),
                 bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
+                // 설계 44: 낚시터(소리가 올 때까지 지금 소리를 빌린다)
+                bus.Subscribe<Events.FishCaught>(e => PlayIn(e.Fishing, SoundTable.k_Harvest)),
+                bus.Subscribe<Events.Thumped>(e => PlayIn(e.Fishing, SoundTable.k_Dig)),
+                bus.Subscribe<Events.BossResolved>(e => PlayIn(e.Fishing, e.Caught ? SoundTable.k_EvalPass : SoundTable.k_EvalFail)),
                 bus.Subscribe<Events.Dug>(Bus_Dug),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.Upgraded>(e => PlayIn(e.Area, SoundTable.k_Upgrade)),
@@ -120,6 +124,10 @@ namespace ZooTycoon.World
                 }
 
                 m_plots[plot] = plot.IsEmpty;
+            }
+            else if (e.Thing is StakeInteractable stake)
+            {
+                PlayIn(stake.Area, SoundTable.k_Place);
             }
             else if (e.Thing is ShelfInteractable shelf)
             {

@@ -1,0 +1,11 @@
+# 낚시터 말뚝(2026-10-05 아트방). 참조 -i: stake_ref_bank8.png(물길 모형, 한 칸 8px) · stake_ref_concept.png(컨셉 A). 사용자 선택 A 나무 말뚝
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference files).
+Two pixel-art game sprites side by side on a plain white background for a cozy underground wombat-burrow fishing idle game: LEFT = an open FISHING STAKE (a spot on the bank where the player plants a fishing rod; the rod is drawn separately later and stands in the socket on top), RIGHT = the same stake LOCKED (not yet bought; it opens for coins).
+Image 1 is the game today at 8 screen pixels per art pixel: the wombat main character (42 art pixels wide), the earth floor, the water channel bank, and small brown dots marking where stakes go. Each stake is about 18 art pixels wide and 26 art pixels tall, standing on the earth floor right next to the channel, clearly smaller than the wombat.
+Image 2 is the chosen concept art of this fishing burrow (short round wooden stakes on the earth banks).
+CAMERA: orthographic three-quarter top-down like image 1: parallel projection, vertical edges stay vertical, the top surface is visible, no vanishing point, never seen from below.
+STYLE: chunky pixel art exactly like image 1: big square pixels at the same size, no anti-aliasing, no gradients, no dithering, flat muted earthy palette, dark brown outline (#342020) one pixel wide around each sprite. No ground, no shadow, no text, no letters, no numbers, no border.
+DESIGN:
+[a] A short round wooden post with a rope ring wrapped near the top and a dark round socket hole in its flat top. LOCKED: the same post with a small iron padlock hanging from a chain wrapped around it and the socket closed by a wooden plug.
+[b] A flat round stone base with a short wooden sleeve rising from its middle as the rod socket. LOCKED: the same stone base with a wooden lid fastened over the socket by two crossed rope ties and a tiny brass lock.
+[c] A forked Y-shaped wooden rod rest stuck into the earth with a small pile of pebbles at its foot. LOCKED: the same fork bundled tight with rope, with a little wooden tag hanging from it (no letters).
