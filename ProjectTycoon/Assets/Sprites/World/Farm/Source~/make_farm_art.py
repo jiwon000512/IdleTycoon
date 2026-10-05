@@ -7,7 +7,7 @@
 #   밭 속(111칸)에 들어가게 잉크가 적은 끝을 잘라 WHEAT_MAX_W칸으로. 새싹 · 줄기 단계는 세계 팔레트 쪽으로 채도 · 밝기를 누른다(PRESS, 사용자 피드백 6-2).
 #   밭 칸에 줄 셋을 겹쳐 얹고(BakeryBaker k_CropOffsets), 줄마다 반쪽 0 · 1을 번갈아 써 같은 그림이 반복되지 않게 한다.
 # 표시: 진행 게이지 「새싹 원판」 20×20칸 16장(farm_timer_00~15, 테두리가 초록으로 돌고 가운데 새싹이 자람)과 금빛 테두리 · 이삭의 다 익음 표시(farm_ready_mark). 작물 위에 뜨므로 그림은 모든 것 위(BakeryBaker k_PlotMarkOrder).
-#   2026-09-30 「무럭무럭」: 띠 셋에서 5단계(씨앗 둔덕 · 새싹 · 줄기 · 익어 가는 · 익음)를 만들고, 단계 · 반쪽마다 위 절반을 한 칸 기운 흔들림 판(_l · _r).
+#   2026-09-30 「무럭무럭」: 띠 셋에서 5단계(씨앗 둔덕 · 새싹 · 줄기 · 익어 가는 · 익음)를 만들고, 1단계부터 단계 · 반쪽마다 위 절반을 한 칸 기운 흔들림 판(_l · _r, 씨앗 둔덕은 없음).
 # 딸기(설계 35, 2026-10-01 사용자 선택 A): raw/strawberry_crop_a~c(새싹 · 줄기 · 꽃과 풋열매 · 익음 4띠, 프롬프트 raw/prompt_strawberry_crop.txt).
 #   밀과 달리 원본 격자 그대로(World/Source~/snap_codex.py, 띠마다). 원본 픽셀이 잘아(한 칸 5.6px) 띠가 330칸 넘게 나오므로 포기 사이 빈 열에서 STRAW_MAX_W칸 안으로 창 둘(반쪽 0 · 1)을 자른다.
 #   5단계 = 씨앗 둔덕(새싹 밑동 자리) · 띠 0 · 1 · 2 · 3. 꽃잎 흰색은 남긴다(바깥 배경만 지움). 흔들림 판은 밀과 같다.
@@ -297,11 +297,13 @@ def wheat():
             print('band', stage, 'half', half, 'fft', round(measured, 1), 'period', round(period, 1), 'cells', out.shape[1], 'x', out.shape[0])
             raw.setdefault(stage, []).append(pad)
     # 2026-09-30 사용자 선택 「무럭무럭」: 5단계 = 씨앗 둔덕 · 새싹(띠 0) · 줄기(띠 1) · 익어 가는(띠 2를 초록 반쯤) · 익음(띠 2).
-    # 단계마다 바람 흔들림 판 두 장(위 절반을 한 칸 왼쪽 _l · 오른쪽 _r, 밑동은 그대로)
+    # 1단계부터 단계마다 바람 흔들림 판 두 장(위 절반을 한 칸 왼쪽 _l · 오른쪽 _r, 밑동은 그대로)
     for half in range(2):
         stages = [seed_stage(raw[0][half]), raw[0][half], raw[1][half], turning_stage(raw[2][half]), raw[2][half]]
         for stage, cells in enumerate(stages):
             save(cells, os.path.join(RES, 'wheat_%d_%d.png' % (stage, half)))
+            if stage == 0:
+                continue   # 씨앗 둔덕은 흔들리지 않는다(FarmView는 1단계부터 _l · _r을 쓴다)
             save(tilt(cells, -1), os.path.join(RES, 'wheat_%d_%d_l.png' % (stage, half)))
             save(tilt(cells, 1), os.path.join(RES, 'wheat_%d_%d_r.png' % (stage, half)))
 
@@ -341,6 +343,8 @@ def strawberry():
         stages = [seed_stage(foot), raw[0][half], raw[1][half], raw[2][half], raw[3][half]]
         for stage, cells in enumerate(stages):
             save(cells, os.path.join(RES, 'strawberry_%d_%d.png' % (stage, half)))
+            if stage == 0:
+                continue   # 씨앗 둔덕은 흔들리지 않는다(FarmView는 1단계부터 _l · _r을 쓴다)
             save(tilt(cells, -1), os.path.join(RES, 'strawberry_%d_%d_l.png' % (stage, half)))
             save(tilt(cells, 1), os.path.join(RES, 'strawberry_%d_%d_r.png' % (stage, half)))
 
