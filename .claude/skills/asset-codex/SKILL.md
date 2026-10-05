@@ -30,7 +30,7 @@ echo "<프롬프트> Save the image as x.png in the current working directory an
 - ChatGPT 구독 한도를 쓴다. 필요한 장수만.
 - **참조**: 결을 맞출 확정 시안이나 게임 캡처를 준다. 캐릭터를 뽑을 때 웜뱃을 단독 참조로 주면 다른 종도 웜뱃처럼 나온다 → 사물·배경을 결 참조로 주고 종·자세는 글로.
 - **지우기 편집**: 시안에서 캐릭터·글자만 지운 판이 필요하면 그 그림을 `-i`로 주고 「remove …, keep everything else exactly the same」.
-- 프롬프트에 넣을 것: 굵은 사각 픽셀·안티에일리어싱 없음·그라데이션 없음·평면 5~7색(적게 쓰게 하는 요청이고, 옮길 때는 12색까지 살린다)·진갈색 외곽선 1칸·순백 배경·글자와 아이콘 없음. 시점은 「orthographic three-quarter top-down, parallel projection, no vanishing point, vertical edges stay vertical, never seen from below」를 따로 강하게 쓰고, 판 · 다리가 있는 가구는 **시점 블록아웃 그림**(`Shop/Source~/shop_raw/view_blockout.png`, `make_view_blockout.py`)을 `-i` 참조로 준다(말로만 시키면 판을 사다리꼴로 그린다, `art.md` 시점). UI 조각은 「9-slice용: 모서리에만 장식, 변은 길이 방향으로 균일, 안은 한 색」.
+- 프롬프트에 넣을 것: 굵은 사각 픽셀·안티에일리어싱 없음·그라데이션 없음·평면 5~7색(적게 쓰게 하는 요청이고, 옮길 때 색을 합치지 않는다)·진갈색 외곽선 1칸·순백 배경·글자와 아이콘 없음. 시점은 「orthographic three-quarter top-down, parallel projection, no vanishing point, vertical edges stay vertical, never seen from below」를 따로 강하게 쓰고, 판 · 다리가 있는 가구는 **시점 블록아웃 그림**(`Shop/Source~/shop_raw/view_blockout.png`, `make_view_blockout.py`)을 `-i` 참조로 준다(말로만 시키면 판을 사다리꼴로 그린다, `art.md` 시점). UI 조각은 「9-slice용: 모서리에만 장식, 변은 길이 방향으로 균일, 안은 한 색」.
 - 계단 · 굴처럼 안쪽이 멀어지는 구조물도 말로는 원근(위로 좁아지는 계단)이 남는다 → 같은 줄의 그림 실루엣 안에 폭이 같은 띠를 칸 무늬로 칠한 블록아웃을 한 칸 16px로 준다(`Plaza/Source~/make_stairs.py blockout`).
 - 재질(흙·돌·나무결)은 「재료 시트」 한 장에 항목을 넓은 간격으로 그리게 하면 팔레트가 맞는다.
 - **처음부터 게임 크기로 그리게 한다**(2026-09-30 사용자). 나중에 늘이거나 줄이지 않는다(정수 배가 아닌 크기 조절은 칸을 깨뜨린다).
@@ -38,18 +38,19 @@ echo "<프롬프트> Save the image as x.png in the current working directory an
   - 「Use your IMAGE GENERATION tool to paint a brand-new image, do NOT write code, do NOT resample or copy the references」를 넣는다. 빼면 Codex가 참조를 코드로 줄여 칸 크기 그대로(예: 76×64px) 저장한다 → 결과 크기가 목표 칸 수와 똑같으면 이것을 의심한다.
   - 칸 수는 대략만 맞는다(64×38칸 요청 → 57×34칸). **몇 칸 어긋나면 그림을 늘리지 않고 게임 값을 그림에 맞춘다**(장식 halfWidth · 바닥 폭 · 표식 높이 · 굴뚝 높이 등, 프로그래밍방에 넘김). 크게 틀리면(10% 넘게, 자리가 안 맞음) 다시 뽑는다.
   - Codex는 「더 작게」 · 레이아웃 격자 · 화면 px 폭을 줘도 픽셀을 잘게 해서 칸 수를 비슷하게 지킨다(똥 무더기 세 번 → 24~29칸). 크기는 **같은 화면의 완성 그림을 크기 기준으로 주는 시트**가 가장 잘 맞는다(너구리: 여우 앞 · 옆 · 뒤 시트를 주고 「여우와 같은 크기」 → 45칸).
+  - Codex가 잘게(반 칸) 그렸으면 줄이지 않고 그대로 쓴다(`--raw --px=1`). 2×2를 한 칸으로 줄이면 판자 선 · 병뚜껑이 뭉개진다(오두막 B, 2026-10-05 사용자). 크기는 그림 그대로, 자리 값을 맞춘다.
   - 이미 옛 방식(칸 수 고정)으로 들어간 그림은 원본을 원본 크기 그대로 옮기고 게임 값을 맞춘다. 크기가 달라지는 만큼 같은 화면의 캐릭터 옆에 세운 캡처로 크기를 확인받는다.
 
-## 격자 (칸 단위로 줄이기)
+## 격자 (원본 그대로 옮기기)
 
-- **월드 그림은 원본 그대로 옮긴다**(2026-09-30 사용자: 「원본에서 게임으로 옮겨지며 디자인이 깨진다」). `World/Source~/snap_codex.py <원본> <출력> [--colors=12]`가 원본의 픽셀 격자(주기·시작점)를 찾아 칸마다 가운데 색을 그대로 가져온다. 결과 한 칸 = 게임 2px.
+- **월드 그림은 원본 그대로 옮긴다**(2026-09-30 사용자: 「원본에서 게임으로 옮겨지며 디자인이 깨진다」). `World/Source~/snap_codex.py <원본> <출력> --raw`가 원본의 픽셀 격자(주기·시작점)를 찾아 칸마다 가운데 색을 그대로 가져온다. 원본 픽셀 하나 = 2 × 주기/10 텍셀(바탕 한 칸 10px 기준, 반 칸이면 `--px=1`). 줄이기 · 색 합치기 · 외곽선 색 바꾸기는 하지 않는다(2026-10-05 사용자 「그림 퀄리티에 변형이 생기는 규칙은 다 지운다」).
   - 칸 수를 짐작해 주지 않는다(`make_pixel.py --cellsw`로 억지로 맞추면 격자가 어긋나 한 칸짜리 눈·입·싹이 사라진다). 크기는 위 「처음부터 게임 크기로」대로 그릴 때 정하고, 어긋나면 게임 값을 맞춘다.
-  - 드문 색을 버리지 않는다(`--th`를 올리면 싹·모종삽 날·기둥 색이 갈색에 먹힌다). 비슷한 색만 합치고, 12색이 넘을 때만 Lab 거리로 가까운 두 색을 합친다.
-  - 흰 하이라이트 한 획이 있는 그림은 `min_hole=40`(기본은 안쪽 순백을 구멍으로 뚫고, 옆의 밝은 천까지 번짐으로 벗겨 흰 얼룩이 된다). 나무 · 천 · 금속이 섞인 물체(수레)는 `mean_merge=True`(기본 합치기는 톤이 한쪽으로 쏠려 벨벳 · 나무결이 사라진다). 둘 다 기본값은 옛 동작.
+  - 색을 합치지 않는다. `--raw` 없는 기본값(색 합치기 · 외곽선 (52,32,32))은 이미 들어간 옛 그림을 그대로 다시 만들 때만 쓴다.
+  - 흰 하이라이트 한 획이 있는 그림은 `min_hole=40`(기본은 안쪽 순백을 구멍으로 뚫어 흰 얼룩이 된다).
   - 한 시트에 그린 여러 그림(앞 · 옆 · 뒤, 옆 · 끝면)은 그림마다 찾은 주기의 중앙값 하나로 시작점만 따로 찾는다(따로 찾으면 같은 시트인데 키가 2~4칸씩 달라진다, `make_tanuki.py`).
-  - 옮긴 뒤 손으로 다시 그리지 않는다. **원본과 옮긴 그림을 나란히 놓고** 달라진 곳이 있으면 원인(격자·색 합치기)을 고친다.
-- UI 조각은 크기가 부품 규격이라 칸 수를 정해 줄인다: 같은 참조 크기 시안은 기준 시안 격자(점원·협상 941×1672, 한 칸 4.454px), 아니면 **외곽선 두께 = 한 칸**(`make_pill.py`의 `cells`).
-- 칸 색은 칸 가운데 중앙값. 비슷한 색(거리 24~28 안)을 한 색으로 모아 잡티를 없앤다.
+  - 옮긴 뒤 손으로 다시 그리지 않는다. **원본과 옮긴 그림을 나란히 놓고** 달라진 곳이 있으면 원인(격자)을 고친다.
+- UI 조각도 원본 격자로 옮긴다: 같은 참조 크기 시안은 기준 시안 격자(점원·협상 941×1672, 한 칸 4.454px), 아니면 **외곽선 두께 = 한 칸**(`make_pill.py`의 `cells`).
+- 칸 색은 칸 가운데 중앙값 그대로(색을 모으지 않는다).
 - 흰 바탕은 **가장자리에서 이어진 흰 칸만** 투명으로 한다(안쪽 밝은 선이 같이 지워지지 않게).
 - 9-slice로 늘어나는 구간은 줄마다 한 색으로 고르게 만든다.
 - 단순한 도형(말풍선·화살표·막대·눈금)은 시안에서 색만 뽑아 **칸 무늬 문자열**로 직접 그린다(`make_nego_ui.py`의 `pattern`).
@@ -61,7 +62,7 @@ echo "<프롬프트> Save the image as x.png in the current working directory an
 |---|---|
 | `Assets/Sprites/UI/Source~/make_nego_ui.py` | `Grid`(시안 → 칸), `pattern`(칸 무늬), `framed`, `trim_band`, `clear_bg` |
 | `Assets/Sprites/UI/Source~/make_panel.py` · `make_chip.py` · `make_pill.py` | 조각 하나를 시안에서 줄이는 짧은 본보기 |
-| `Assets/Sprites/World/Source~/snap_codex.py` | 월드 그림: 원본 격자 그대로 칸으로(기본). 본보기 `Farm/Source~/make_farm_props.py` |
+| `Assets/Sprites/World/Source~/snap_codex.py` | 월드 그림: 원본 그대로(`--raw`). 기본값은 옛 그림 다시 만들기용(색 합치기). 옛 본보기 `Farm/Source~/make_farm_props.py` |
 | `Assets/Sprites/World/Source~/make_pixel.py` | 옛 방식: 칸 수를 정해 격자 강제(`--px --cells --thin --th`). 원본 격자가 안 잡힐 때만 |
 | `Assets/Sprites/World/Shop/Source~/make_anim.py` · `anim_parts.py` · `anim_specs.py` | 정지 그림 한 장 → 걷기·숨쉬기·깜빡임·딴짓 프레임(부위 조립, 자동 검사 포함, 아래 「캐릭터 동작」) |
 | `Assets/Scripts/Editor/UISpriteImporter.cs` | `ui_slices.json` → 임포트, 월드 복사본(`tag_cost`·`bubble`·`bubble_tail`) |
