@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -28,7 +29,7 @@ namespace ZooTycoon.UI
             m_view.InfoClicked += View_InfoClicked;
             m_view.SlotClicked += View_SlotClicked;
             m_view.CellClicked += View_CellClicked;
-            m_view.SetLabels(tables.Text("relic_title"), tables.Text("relic_slots"), tables.Text("relic_empty"));
+            m_view.SetLabels(tables.Text("relic_title"), tables.Text("relic_slots"), tables.Text("relic_collection"));
             m_relics = bus.Subscribe<Events.RelicsChanged>(Bus_RelicsChanged);
         }
 
@@ -97,7 +98,8 @@ namespace ZooTycoon.UI
                 : Relics.Complete ? m_tables.Text("relic_complete")
                 : m_tables.Text("relic_hint");
 
-            m_view.Show(slots, cells, m_tables.Format("relic_collection", owned, Relics.All.Count),
+            m_view.Show(slots, cells, m_tables.Format("relic_count", slots.Count(slot => slot != null), slots.Count),
+                m_tables.Format("relic_count", owned, Relics.All.Count),
                 m_selected != null ? Card(m_selected) : null,
                 m_tables.Text(equipped ? "relic_unequip" : "relic_equip"), equipped || !full, hint);
         }

@@ -50,11 +50,14 @@ namespace ZooTycoon.UI
                 }
             }
 
-            bool paid = report.Wages > 0d;
-            m_view.Show(m_tables.Text("offline_title"), Duration(report.Seconds), tiles,
-                paid ? m_tables.Format("offline_sales", BigNumberFormatter.Format(report.Sales)) : null,
-                paid ? m_tables.Format("offline_wages", BigNumberFormatter.Format(report.Wages)) : null,
-                m_tables.Text("offline_take"));
+            OfflineView.Pay pay = report.Wages > 0d ? new OfflineView.Pay
+            {
+                SalesName = m_tables.Text("offline_sales"),
+                Sales = "+" + BigNumberFormatter.Format(report.Sales),
+                WagesName = m_tables.Text("offline_wages"),
+                Wages = "-" + BigNumberFormatter.Format(report.Wages),
+            } : null;
+            m_view.Show(m_tables.Text("offline_title"), Duration(report.Seconds), tiles, pay, m_tables.Text("offline_take"));
         }
 
         private string Duration(double seconds)

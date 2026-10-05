@@ -17,6 +17,12 @@ namespace ZooTycoon.UI
         {
             group.alpha = 0f;
 
+            // 팝업은 그 화면을 맨 앞으로(먼저 연 화면의 오른쪽 버튼 줄이 팝업 · 닫기 위에 그려지지 않게)
+            if (body != null)
+            {
+                group.GetComponentInParent<GameKit.UI.UIView>().transform.SetAsLastSibling();
+            }
+
             if (delay > 0f)
             {
                 yield return new WaitForSecondsRealtime(delay);

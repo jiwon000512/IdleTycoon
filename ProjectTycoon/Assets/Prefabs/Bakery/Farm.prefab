@@ -666,7 +666,7 @@ MonoBehaviour:
     Backdrop: {fileID: 21300000, guid: 98c6400fbed1bc044805499e9b45d046, type: 3}
   m_arch: {fileID: 2315082637935100317}
   m_backdrop: {fileID: 4870268180189305727}
-  m_stairsUp: {fileID: 21300000, guid: cf74362de9eedb2499c3c53166bef5e4, type: 3}
+  m_stairsUp: {fileID: 21300000, guid: 0886a40912c6fe14ab10e89d81b31e13, type: 3}
   m_stairsDown: {fileID: 3255940430246960877}
   m_entranceProps: {fileID: 8025403656029954594}
   m_plotPrefab: {fileID: 8977439784559700589, guid: fb1b15eba6ad1284184203b37cb5fdcb, type: 3}

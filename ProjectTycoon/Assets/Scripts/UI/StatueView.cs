@@ -11,9 +11,15 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 설계 30 석상 축복 팝업: 걸린 축복 카드(아이콘 · 이름 · 효과 · 남은 시간) + 안내 + 빌기 버튼(쉬는 시간이면 「다시 빌기 7:30」, 꺼짐). 광장 석상 앞 버튼으로 열린다.
-    // 빌면 카드가 축복 이름을 빠르게 넘기다 멈춘다(소리 + 한 번 부풂). 남은 시간 · 쉬는 시간은 Presenter가 준 읽기 함수로 매 프레임 그린다. 규칙은 Core Blessing · StatuePresenter
+    // 빌면 카드가 축복 이름을 빠르게 넘기다 멈춘다(소리 + 한 번 부풂). 남은 시간 · 쉬는 시간은 Presenter가 준 읽기 함수로 매 프레임 그린다. 규칙은 Core Blessing · StatuePresenter.
+    // 시안 A 「축복 여섯 줄」(아트방, 2026-10-05): 안내 아래 메달 줄(축복마다 칩 + 아이콘 4배, 걸린 것만 선택 칩, 나머지는 흐림). 빌 때 선택 테두리가 이름과 함께 돌다 멈춘다.
+    // 빈 카드는 아이콘 자리에 흐린 석상 얼굴
     public sealed class StatueView : UIView
     {
+        // 메달 줄에서 걸리지 않은 칸의 흐림(칩 · 아이콘)
+        private const float k_DimChip = 0.55f;
+        private const float k_DimIcon = 0.45f;
+
         // 카드 하나. 걸린 축복이 없으면 null
         public sealed class CardData
         {
@@ -40,6 +46,11 @@ namespace ZooTycoon.UI
         [SerializeField] private TextMeshProUGUI m_effect;
         [SerializeField] private TextMeshProUGUI m_time;
         [SerializeField] private TextMeshProUGUI m_hint;
+        [Tooltip("메달 칸 틀(첫 칸이 틀, 축복 수만큼 복제) · 칩 · 선택 칩 · 빈 카드 석상 얼굴")]
+        [SerializeField] private Image m_medalTemplate;
+        [SerializeField] private Sprite m_chip;
+        [SerializeField] private Sprite m_chipSelected;
+        [SerializeField] private Sprite m_emptyFace;
         [SerializeField] private Button m_prayButton;
         [SerializeField] private TextMeshProUGUI m_prayLabel;
 
@@ -51,6 +62,7 @@ namespace ZooTycoon.UI
         private CardData m_shown;
         private Func<double> m_cooldown;
         private bool m_canPray;
+        private readonly List<(Image Frame, Image Icon)> m_medals = new List<(Image, Image)>();
 
         public event Action CloseRequested;
         public event Action PrayClicked;
@@ -77,6 +89,19 @@ namespace ZooTycoon.UI
             m_againText = again;
         }
 
+        // 메달 줄: 축복 표 순서의 아이콘(Resources 경로)
+        public void SetMedals(IReadOnlyList<string> icons)
+        {
+            for (int i = 0; i < icons.Count; i++)
+            {
+                Image frame = i == 0 ? m_medalTemplate : Instantiate(m_medalTemplate, m_medalTemplate.transform.parent);
+                Image icon = frame.transform.GetChild(0).GetComponent<Image>();
+                icon.sprite = Resources.Load<Sprite>(icons[i]);
+                icon.rectTransform.sizeDelta = icon.sprite != null ? icon.sprite.rect.size * 4f : Vector2.zero;
+                m_medals.Add((frame, icon));
+            }
+        }
+
         public void Open()
         {
             if (m_root.activeSelf)
@@ -101,21 +126,22 @@ namespace ZooTycoon.UI
             SoundManager.Instance.Play(SoundTable.k_UiClose);
         }
 
-        // 카드(null이면 none 글) · 쉬는 시간(남은 초를 읽는 함수) · 빌 수 있나
-        public void Show(CardData card, string none, Func<double> cooldown, bool canPray)
+        // 카드(null이면 none 글) · 걸린 축복의 메달 번호(없으면 −1) · 쉬는 시간(남은 초를 읽는 함수) · 빌 수 있나
+        public void Show(CardData card, int active, string none, Func<double> cooldown, bool canPray)
         {
             StopSpin();
             SetCard(card, none);
+            SetMedals(active);
             SetPray(cooldown, canPray);
         }
 
-        // 빌었다: 이름(names)을 빠르게 넘기다 card로 멈춘다
-        public void PlayPray(CardData card, IReadOnlyList<string> names, Func<double> cooldown)
+        // 빌었다: 이름(names, 메달과 같은 순서)과 선택 테두리를 빠르게 넘기다 card · active로 멈춘다
+        public void PlayPray(CardData card, int active, IReadOnlyList<string> names, Func<double> cooldown)
         {
             StopSpin();
             SetPray(cooldown, false);
             SoundManager.Instance.Play(SoundTable.k_StatueRoll);
-            m_spin = StartCoroutine(Spin(card, names));
+            m_spin = StartCoroutine(Spin(card, active, names));
         }
 
         private void Update()
@@ -136,7 +162,7 @@ namespace ZooTycoon.UI
             }
         }
 
-        private IEnumerator Spin(CardData card, IReadOnlyList<string> names)
+        private IEnumerator Spin(CardData card, int active, IReadOnlyList<string> names)
         {
             m_icon.enabled = false;
             m_effect.text = string.Empty;
@@ -145,21 +171,39 @@ namespace ZooTycoon.UI
 
             while (elapsed < k_SpinSeconds)
             {
-                m_name.text = names[UnityEngine.Random.Range(0, names.Count)];
+                int i = UnityEngine.Random.Range(0, names.Count);
+                m_name.text = names[i];
+                SetMedals(i);
                 yield return new WaitForSeconds(k_SpinStep);
                 elapsed += k_SpinStep;
             }
 
             m_spin = null;
             SetCard(card, string.Empty);
+            SetMedals(active);
             StartCoroutine(UiFx.Pulse(m_card));
             SoundManager.Instance.Play(SoundTable.k_StatueBlessed);
         }
 
+        // 걸린 칸만 선택 칩, 걸린 것이 있으면 나머지는 흐림(없으면 모두 보통)
+        private void SetMedals(int active)
+        {
+            for (int i = 0; i < m_medals.Count; i++)
+            {
+                bool dim = active >= 0 && i != active;
+                m_medals[i].Frame.sprite = i == active ? m_chipSelected : m_chip;
+                m_medals[i].Frame.color = new Color(1f, 1f, 1f, dim ? k_DimChip : 1f);
+                m_medals[i].Icon.color = new Color(1f, 1f, 1f, dim ? k_DimIcon : 1f);
+            }
+        }
+
+        // 빈 카드는 아이콘 자리에 석상 얼굴(그림자 색). 아이콘은 4배
         private void SetCard(CardData card, string none)
         {
-            m_icon.enabled = card != null;
-            m_icon.sprite = card != null ? Resources.Load<Sprite>(card.IconPath) : null;
+            m_icon.enabled = true;
+            m_icon.sprite = card != null ? Resources.Load<Sprite>(card.IconPath) : m_emptyFace;
+            m_icon.color = card != null ? Color.white : RelicCard.k_Shadow;
+            m_icon.rectTransform.sizeDelta = m_icon.sprite != null ? m_icon.sprite.rect.size * 4f : Vector2.zero;
             m_name.text = card != null ? card.Name : none;
             m_effect.text = card != null ? card.Effect : string.Empty;
             m_shown = card;

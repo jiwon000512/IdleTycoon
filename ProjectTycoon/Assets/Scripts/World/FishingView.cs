@@ -89,7 +89,7 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_rods;
         [Tooltip("구멍 아치(나가기 대상이면 튄다)")]
         [SerializeField] private Transform m_arch;
-        [Tooltip("점원 오두막(그림이 올 때까지 농장 작업대)")]
+        [Tooltip("점원 오두막(아트방 B 「미끼 노점」, 발끝 피벗, 점원 자리 바로 뒤)")]
         [SerializeField] private Transform m_hut;
         [Tooltip("값 표식 · 팻말(빵집 파기 표식과 같은 프리팹)")]
         [SerializeField] private MarkerView m_tagPrefab;

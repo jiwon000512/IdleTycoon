@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 44,
+  "version": 45,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -47,7 +47,8 @@
     "version 41 (2026-10-02, 설계 42 곳 이름 팻말): loc_bakery · loc_plaza(키는 loc_ + 곳 id) · loc_farm(「농장 {0}층」, 농장은 층 번호).",
     "version 42 (2026-10-04, 설계 43 저장 · 오프라인): 돌아왔을 때 팝업 offline_title · offline_hours · offline_minutes(비운 시간) · offline_coins(코인 칸 이름) · offline_sales · offline_wages(코인 칸 아래 두 줄) · offline_take(받기).",
     "version 43 (2026-10-05, 설계 44 낚시 디펜스): 곳 이름 · 광장 문 간판 · 점원 탭(낚시터) · 오두막 · 물고기 획득처 · 사용처 · 물때 팻말(fishing_wave · fishing_boss · fishing_missed · fishing_stage) · 소환 · 열기 값 표식 · 대물 3택 1 팝업 · 낚싯대 이름(rod_<id>)과 특별한 대 설명(rod_<id>_desc).",
-    "version 44 (2026-10-05, 낚시 폴리싱): 물때 팻말에 단계(fishing_wave 「{0}단계 · 물때 {1}/{2}」 · fishing_boss 「{0}단계 대물!」), 곳 팻말 fishing_boss_coming · fishing_stage(「{0}단계!」) · fishing_boss_missed, 소환 등급 글 rod_grade_2 · rod_grade_3."
+    "version 44 (2026-10-05, 낚시 폴리싱): 물때 팻말에 단계(fishing_wave 「{0}단계 · 물때 {1}/{2}」 · fishing_boss 「{0}단계 대물!」), 곳 팻말 fishing_boss_coming · fishing_stage(「{0}단계!」) · fishing_boss_missed, 소환 등급 글 rod_grade_2 · rod_grade_3.",
+    "version 45 (2026-10-05, 돌아왔을 때 팝업 A 「잠든 웜뱃」): offline_sales 「판매 +{0}」 → 「판매」 · offline_wages 「월급 -{0}」 → 「월급」(칩의 이름, 값은 따로). 유물 화면 B 「아이콘 소제목」: relic_collection 「모은 유물 {0}/{1}」 → 「모은 유물」, 개수는 relic_count 「{0}/{1}」(끼운 수 · 모은 수), relic_empty(「빈 칸」) 삭제(빈 칸은 「+」)."
   ],
   "rows": [
     {
@@ -492,11 +493,11 @@
     },
     {
       "id": "offline_sales",
-      "ko": "판매 +{0}"
+      "ko": "판매"
     },
     {
       "id": "offline_wages",
-      "ko": "월급 -{0}"
+      "ko": "월급"
     },
     {
       "id": "offline_take",
@@ -644,11 +645,11 @@
     },
     {
       "id": "relic_collection",
-      "ko": "모은 유물 {0}/{1}"
+      "ko": "모은 유물"
     },
     {
-      "id": "relic_empty",
-      "ko": "빈 칸"
+      "id": "relic_count",
+      "ko": "{0}/{1}"
     },
     {
       "id": "relic_draw",

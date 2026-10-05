@@ -55,6 +55,8 @@ namespace ZooTycoon.UI
                 }
 
                 m_interactIcon.sprite = sprite;
+                // 그림 크기 × 4(행동 아이콘 PPU 25). 원본 그대로라 18칸이 아닌 아이콘도 줄이지 않는다(2026-10-05 그림 규칙)
+                m_interactIcon.SetNativeSize();
             }
 
             m_interactIcon.color = enabled ? Color.white : k_DisabledIcon;

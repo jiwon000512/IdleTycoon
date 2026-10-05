@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -35,6 +36,8 @@ namespace ZooTycoon.UI
                 m_names.Add(tables.Text(blessing.Name));
             }
 
+            m_view.SetMedals(tables.GetAll<BlessingTable>().Select(blessing => blessing.Icon).ToList());
+
             m_subscriptions = new[]
             {
                 bus.Subscribe<Events.StatueOpened>(Bus_StatueOpened),
@@ -68,6 +71,12 @@ namespace ZooTycoon.UI
             }
         }
 
+        // 걸린 축복의 표 순서 번호(메달 줄 · 이름 목록과 같은 순서, 없으면 −1)
+        private int Active()
+        {
+            return Blessing.Active == null ? -1 : m_tables.GetAll<BlessingTable>().ToList().FindIndex(blessing => blessing.Id == Blessing.Active.Id);
+        }
+
         private StatueView.CardData Card()
         {
             BlessingTable active = Blessing.Active;
@@ -83,7 +92,7 @@ namespace ZooTycoon.UI
 
         private void Refresh()
         {
-            m_view.Show(Card(), m_tables.Text("statue_none"), () => Blessing.Cooldown, Blessing.CanPray);
+            m_view.Show(Card(), Active(), m_tables.Text("statue_none"), () => Blessing.Cooldown, Blessing.CanPray);
         }
 
         private void Bus_StatueOpened(Events.StatueOpened e)
@@ -102,7 +111,7 @@ namespace ZooTycoon.UI
 
             if (e.Prayed)
             {
-                m_view.PlayPray(Card(), m_names, () => Blessing.Cooldown);
+                m_view.PlayPray(Card(), Active(), m_names, () => Blessing.Cooldown);
             }
             else if (!m_view.Spinning)
             {

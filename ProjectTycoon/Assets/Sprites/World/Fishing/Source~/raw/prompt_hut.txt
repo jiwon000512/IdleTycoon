@@ -1,0 +1,22 @@
+# 낚시 점원 오두막(2026-10-05 아트방). 시안 A 낚시 오두막 · B 미끼 노점 · C 배 움막 중 사용자 선택 B(「퀄리티를 개선하라」) → ../make_hut.py
+# 참조 -i 1: hut_ref_fishing.png(낚시터 게임 화면, 한 칸 4px), -i 2: hut_template.png(1536×1024 한 칸 10px, 웜뱃 + 오두막 상자 80×64칸 빨강 · 최소 높이 48칸 파랑 · 바닥선)
+# 첫 판(공통 + 설계)은 셋 다 잘게(6.8~9.3px) 그려져 [엄격] 문단을 넣어 다시 뽑았다. B는 그래도 9.1px이라 한 번 더 → 반 칸(5px)으로 그려진 판을 씀
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code). Keep the canvas size, the white background and the wombat of image 2 EXACTLY where and how they are: it is the main character at the exact game scale, one art pixel = 10 screen pixels, 42 art pixels wide. Remove the red and blue guides and the grey line.
+Image 1 is the game today (at 4 screen pixels per art pixel): a cozy underground wombat-burrow FISHING SPOT with an earth floor, teal water channels and wooden stakes holding chunky toy-like fishing rods. A wombat clerk works here; it needs a little HUT on the bank at the top of the room to stand in front of.
+Paint ONE hut inside the red rectangle (at most 80 art pixels wide and 64 tall, at least as tall as the blue dashed line), standing on the grey ground line: its feet are exactly on that line and NOTHING hangs or steps below it (no stairs, no porch, no platform in front). The clerk stands in front of it, so keep the lower middle simple.
+CAMERA: orthographic three-quarter top-down like image 1: parallel projection, the front face is parallel to the screen and the side walls are not visible, the roof top surface is visible from above, vertical edges stay vertical, never seen from below.
+STYLE: chunky pixel art exactly like the wombat and image 1: big square 10-pixel art pixels everywhere (never smaller), no anti-aliasing, no gradients, no dithering, flat soft earthy palette with at most 12 colors, dark brown outline (#342020) one art pixel wide around the hut. One darker tone for shaded faces and one white highlight stroke on top. No water, no ground, no shadow, no text, no letters, no numbers.
+DESIGN:
+[엄격(공통 뒤, 설계 앞)]
+IMPORTANT SIZE AND PIXELS: every art pixel is a 10 by 10 screen-pixel square on exactly the same grid as the wombat of image 2, never smaller. Keep the drawing as coarse and simple as the wombat: a few big flat shapes, every small prop at least 6 art pixels across, no fine detail, no thin lines thinner than one 10-pixel art pixel. The whole hut is only about twice as wide as the wombat (80 art pixels = 800 screen pixels) and about one and a half times as tall (64 art pixels = 640 screen pixels): it must fit inside the red rectangle. Do not redraw or resize the wombat.
+[a]
+FISHING SHACK: a small wooden plank shack with a sloped plank roof, a round porthole window, a coiled rope and a little fishing net hung on the front wall, two spare fishing rods leaning at one side and a small bait bucket at the other.
+Save the image as hut_a.png in the current working directory and reply with only the path.
+[b]
+BAIT STALL: an open-front market stall on four wooden posts under a teal-and-cream striped canvas awning, a wooden counter with a few bait jars and a small hanging fish scale, and a fish-shaped wooden plaque hanging from the awning edge.
+Save the image as hut_b.png in the current working directory and reply with only the path.
+[c]
+BOAT HUT: an old wooden rowboat stood up on its end and half buried, cut open on the front as a cozy little shelter with a round wooden door, a tiny tin chimney pipe, a lantern hanging from the bow and a small crate stool beside it.
+Save the image as hut_c.png in the current working directory and reply with only the path.

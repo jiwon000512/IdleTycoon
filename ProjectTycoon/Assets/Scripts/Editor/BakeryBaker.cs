@@ -182,8 +182,9 @@ namespace ZooTycoon.Editor
             }
             Import(k_FarmDir + "farm_sparkle_0.png", center);
             Import(k_FarmDir + "farm_sparkle_1.png", center);
-            // 설계 39: 내려가는 계단은 위 가운데(그림 윗변 = 방 바닥선 = 계단 굴 윗변)
+            // 설계 39: 내려가는 계단은 위 가운데(그림 윗변 = 방 바닥선 = 계단 굴 윗변) · 아트방 A 「흙 계단」(2층부터 위 구멍, 아래 가운데 = 띠 밑변)
             Import(k_FarmDir + "stairs_down.png", new Vector2(0.5f, 1f));
+            Import(k_FarmDir + "stairs_up.png", bottom);
 
             foreach (string prop in k_FarmProps)
             {
@@ -217,6 +218,9 @@ namespace ZooTycoon.Editor
             {
                 Import(k_FishingDir + fish + ".png", center);
             }
+
+            // 낚시 점원 오두막(아트방 B 「미끼 노점」 원본 그대로, 발끝 가운데)
+            Import(k_FishingDir + "fishing_hut.png", bottom);
             Import(k_FishingDir + "stake.png", bottom);
             Import(k_FishingDir + "stake_locked.png", bottom);
 
@@ -703,7 +707,7 @@ namespace ZooTycoon.Editor
         }
 
         // 설계 25 → 27: 농장 굴. 굴 그림·구멍 아치·밭 칸은 실행 중 FarmView가 Core 배치(FarmLayout)대로 놓는다. 파기 표식은 빵집과 같은 프리팹.
-        // 설계 39: 2층부터 위 구멍은 광장 계단 그림을 빌리고, 내려가는 계단은 아트방 B3(바닥에 뚫린 흙 계단 구멍, 계단 굴 윗변에 선다)
+        // 설계 39: 2층부터 위 구멍은 아트방 A 「흙 계단」(stairs_up), 내려가는 계단은 아트방 B3(바닥에 뚫린 흙 계단 구멍, 계단 굴 윗변에 선다)
         static void BakeFarm(PlotView plot, MarkerView digTag, SpriteAnimator poop, VisitorView customer)
         {
             GameObject root = new GameObject("Farm");
@@ -713,7 +717,7 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
-            Sprite stairs = AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png");
+            Sprite stairs = AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "stairs_up.png");
             SpriteRenderer stairsDown = Renderer(root.transform, "StairsDown", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "stairs_down.png"), Vector3.zero, k_ArchOrder);
             stairsDown.gameObject.SetActive(false);
             GameObject props = Child(root.transform, "EntranceProps", Vector3.zero);
@@ -754,7 +758,7 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
-            SpriteRenderer hut = Renderer(root.transform, "Hut", AssetDatabase.LoadAssetAtPath<Sprite>(k_FarmDir + "farm_prop_bench.png"), Vector3.zero, 0);
+            SpriteRenderer hut = Renderer(root.transform, "Hut", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "fishing_hut.png"), Vector3.zero, 0);
             hut.spriteSortPoint = SpriteSortPoint.Pivot;
             WombatView wombat = BakeWombat(root.transform, Vector3.zero);
 

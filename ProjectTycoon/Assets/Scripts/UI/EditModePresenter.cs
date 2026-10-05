@@ -121,6 +121,8 @@ namespace ZooTycoon.UI
                     IconPath = kind.Icon,
                     Label = m_tables.Text("kind_" + kind.Id),
                     Sub = sub,
+                    Coin = stored == 0 && !maxed && star < 0,
+                    Locked = stored == 0 && !maxed && star >= 0,
                     Enabled = stored > 0 || !maxed && star < 0 && coins >= price,
                 });
             }

@@ -23,9 +23,14 @@ namespace ZooTycoon.UI
         [SerializeField] private TextMeshProUGUI m_title;
         [SerializeField] private Sprite m_chip;
         [SerializeField] private Sprite m_chipSelected;
+        [Tooltip("유물 화면 B(아트방): 소제목 줄 = 아이콘 · 이름 · 개수")]
         [SerializeField] private TextMeshProUGUI m_slotsLabel;
+        [SerializeField] private TextMeshProUGUI m_slotsCount;
         [SerializeField] private RelicCard[] m_slots;
+        [Tooltip("빈 칸 가운데 「+」(칸마다)")]
+        [SerializeField] private GameObject[] m_slotPlus;
         [SerializeField] private TextMeshProUGUI m_collectionLabel;
+        [SerializeField] private TextMeshProUGUI m_collectionCount;
         [SerializeField] private RelicCard[] m_cells;
         [SerializeField] private GameObject m_info;
         [SerializeField] private RelicCard m_infoCard;
@@ -35,7 +40,6 @@ namespace ZooTycoon.UI
 
         private Vector2 m_panelRest;
         private Coroutine m_fx;
-        private string m_emptySlot;
         private Color m_effectColor;
 
         public event Action OpenClicked;
@@ -64,11 +68,11 @@ namespace ZooTycoon.UI
             m_openButton.gameObject.SetActive(visible);
         }
 
-        public void SetLabels(string title, string slots, string emptySlot)
+        public void SetLabels(string title, string slots, string collection)
         {
             m_title.text = title;
             m_slotsLabel.text = slots;
-            m_emptySlot = emptySlot;
+            m_collectionLabel.text = collection;
         }
 
         public void Open()
@@ -94,24 +98,28 @@ namespace ZooTycoon.UI
             SoundManager.Instance.Play(SoundTable.k_UiClose);
         }
 
-        // 칸(null이면 빈 칸) · 격자 · 「모은 유물 n/m」 · 고른 유물(null이면 정보 줄을 숨김)과 버튼 글 · 안내
-        public void Show(IReadOnlyList<RelicCard.Data> slots, IReadOnlyList<RelicCard.Data> cells, string collection,
+        // 칸(null이면 빈 칸) · 격자 · 끼운 수 · 모은 수(「n/m」) · 고른 유물(null이면 정보 줄을 숨김)과 버튼 글 · 안내
+        public void Show(IReadOnlyList<RelicCard.Data> slots, IReadOnlyList<RelicCard.Data> cells, string slotsCount, string collectionCount,
             RelicCard.Data info, string infoButton, bool infoButtonOn, string hint)
         {
             for (int i = 0; i < m_slots.Length; i++)
             {
                 m_slots[i].Set(slots[i], m_chip, m_chipSelected);
-                // 빈 칸은 안내 글 색으로 「빈 칸」
-                m_slots[i].Effect.text = slots[i] != null ? slots[i].Effect : m_emptySlot;
-                m_slots[i].Effect.color = slots[i] != null ? m_effectColor : m_hint.color;
+                // 빈 칸은 흐린 틀 가운데 「+」만
+                bool empty = slots[i] == null;
+                m_slots[i].Frame.color = new Color(1f, 1f, 1f, empty ? 0.6f : 1f);
+                m_slots[i].Effect.color = m_effectColor;
+                m_slotPlus[i].SetActive(empty);
             }
+
+            m_slotsCount.text = slotsCount;
 
             for (int i = 0; i < m_cells.Length; i++)
             {
                 m_cells[i].Set(cells[i], m_chip, m_chipSelected);
             }
 
-            m_collectionLabel.text = collection;
+            m_collectionCount.text = collectionCount;
             m_info.SetActive(info != null);
 
             if (info != null)

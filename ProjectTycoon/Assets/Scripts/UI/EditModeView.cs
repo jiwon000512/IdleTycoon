@@ -26,6 +26,9 @@ namespace ZooTycoon.UI
             public string IconPath;
             public string Label;
             public string Sub;
+            // 값 앞에 코인(살 수 있는 값일 때) · 별 조건으로 잠김
+            public bool Coin;
+            public bool Locked;
             public bool Enabled;
         }
 
@@ -136,7 +139,7 @@ namespace ZooTycoon.UI
                 }
 
                 CardData data = cards[i];
-                m_cards[i].Show(data.KindId, Icon(data.KindId, data.IconPath), data.Label, data.Sub, data.Enabled);
+                m_cards[i].Show(data.KindId, Icon(data.KindId, data.IconPath), data.Label, data.Sub, data.Coin, data.Locked, data.Enabled);
             }
         }
 

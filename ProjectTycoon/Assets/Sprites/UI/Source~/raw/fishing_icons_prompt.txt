@@ -1,0 +1,28 @@
+# 낚시 행동 아이콘 다섯(2026-10-05 아트방). 시안 A 물건 하나 · B 웜뱃 몸짓 · C 꾸러미 · 상태 중 사용자 선택 A → ../make_fishing_icons.py
+# 참조 -i 1: fishing_icons_template.png(1536×1024, 한 칸 12px. 윗줄 지금 행동 아이콘 dig · plant · wake · talk · clean 18×18칸, 아랫줄 빈 칸 다섯 회색 틀)
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 1 (do NOT write code). Keep the canvas size, the white background and the five icons of the top row EXACTLY where and how they are: they are the existing action-button icons of a cozy underground wombat-burrow idle game, each 18 by 18 art pixels, one art pixel = 12 screen pixels. Remove the five grey frames of the bottom row.
+In the bottom row paint FIVE NEW action icons, one inside each grey frame position, from left to right, each exactly the same size as the top-row icons (18 by 18 art pixels, filling the frame like they do), with exactly the same big 12-pixel art pixels (never smaller), the same chunky pixel style, the same dark brown outline (#342020) one art pixel wide, the same flat soft earthy palette with one darker shade and one highlight, no anti-aliasing, no gradients, no dithering, no text, no letters, no numbers, no background, no frame, no circle behind the icon.
+The new icons are for the FISHING SPOT, where the wombat plants toy-like fishing rods (big round reel, bulb grip) in wooden stakes on the bank of a teal water channel:
+[a]
+1) SUMMON (buy a random new rod for an empty stake): a small wooden crate tied with a red ribbon with a fishing rod tip poking out of it.
+2) MERGE (three same rods become one better rod): three small fishing rods bundled together with a rope band.
+3) CARRY (pick up a rod to move it): a wombat paw gripping the bulb handle of a fishing rod.
+4) PLOP (sit on a hooked giant fish to land it): a big round fish hanging from a hook on a short taut line.
+5) THUMP (slam the ground to stun nearby fish): a patch of ground cracking with two shock rings spreading out.
+Save the image as icons_a.png in the current working directory and reply with only the path.
+[b]
+1) SUMMON (buy a random new rod for an empty stake): a gold coin with a little sparkle and a small fishing rod rising from it.
+2) MERGE (three same rods become one better rod): three small rods pointing into one bright star in the middle.
+3) CARRY (pick up a rod to move it): a fishing rod with a curved moving arrow around it.
+4) PLOP (sit on a hooked giant fish to land it): a round wombat bottom with a stubby tail plopping down, with two little impact puffs.
+5) THUMP (slam the ground to stun nearby fish): a round wombat bottom slamming down onto the ground with a big downward arrow and dust puffs.
+Save the image as icons_b.png in the current working directory and reply with only the path.
+[c]
+1) SUMMON (buy a random new rod for an empty stake): a wrapped mystery gift bag with a big question-mark-shaped ribbon knot (the knot is a ribbon, not a letter).
+2) MERGE (three same rods become one better rod): one fishing rod with three small stars stacked above it.
+3) CARRY (pick up a rod to move it): a fishing rod lying across a small wooden carrying frame with two straps.
+4) PLOP (sit on a hooked giant fish to land it): a soft round cushion squashing down with little lines showing weight.
+5) THUMP (slam the ground to stun nearby fish): a small fish with dizzy spinning stars over its head.
+Save the image as icons_c.png in the current working directory and reply with only the path.
