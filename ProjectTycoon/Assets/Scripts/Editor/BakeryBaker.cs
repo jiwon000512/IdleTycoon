@@ -156,6 +156,7 @@ namespace ZooTycoon.Editor
 
             // 설계 11 광장: 차양·계단은 아래 가운데, 간판은 가운데. 장식은 Resources(DecorationTable 경로), 아래 가운데
             Import(k_PlazaDir + "awning.png", bottom);
+            Import(k_PlazaDir + "fishing_door.png", bottom);
             Import(k_PlazaDir + "sign.png", center);
             Import(k_PlazaDir + "stairs.png", bottom);
             Import(k_PlazaDir + "statue.png", bottom);
@@ -209,10 +210,13 @@ namespace ZooTycoon.Editor
             Import(k_SpriteDir + "wall_face.png", new Vector2(0f, 1f), k_TagPpu, true);
             // 설계 39: 농장 6층부터 붉은 흙(아트방 C, 빵집 타일과 크기 · 결이 같다)
             Import(k_FarmDir + "floor_tile_red.png", new Vector2(0f, 1f), k_TagPpu, true);
-            // 설계 44: 낚시터 물길 재료(굴 타일처럼 픽셀을 읽는다) · 바닥 구멍(가운데 피벗, StreamPainter.HoleCenter)
+            // 설계 44: 낚시터 물길 재료(굴 타일처럼 픽셀을 읽는다) · 물속 물고기(가운데 피벗, 아트방 「둥근 귀염」)
             Import(k_FishingDir + "water_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_FishingDir + "stream_face.png", new Vector2(0f, 1f), k_TagPpu, true);
-            Import(k_FishingDir + "drain_hole.png", center);
+            foreach (string fish in FishSwims)
+            {
+                Import(k_FishingDir + fish + ".png", center);
+            }
             Import(k_FishingDir + "stake.png", bottom);
             Import(k_FishingDir + "stake_locked.png", bottom);
 
@@ -432,10 +436,13 @@ namespace ZooTycoon.Editor
         }
 
         // 파기 비용 태그: 칸 가운데에 태그만. 탭 영역 = 태그
-        // 낚싯대 그림 · 꽂는 자리 칸(계열 대는 등급 셋이 같다)
+        // 물속 물고기 그림(이름 = 재료 id + _swim)
+        static readonly string[] FishSwims = { "fish_minnow_swim", "fish_crucian_swim", "fish_catfish_swim", "fish_boss_swim" };
+
+        // 낚싯대 그림 · 꽂는 자리 칸(계열 대는 등급 셋 · 당김 판이 같다). 아트방 설계 45 A 「말뚝에 맞춘 대」
         static IEnumerable<(string Name, int Socket)> RodSockets =>
-            new[] { ("bamboo", 6), ("iron", 6), ("bait", 9) }.SelectMany(f => new[] { 1, 2, 3 }.Select(g => ("rod_" + f.Item1 + "_" + g, f.Item2)))
-            .Concat(new[] { ("rod_pulley", 10), ("rod_lighthouse", 6), ("rod_whirlpool", 11), ("rod_bent", 8) });
+            new[] { "bamboo", "iron", "bait" }.SelectMany(f => new[] { "_1", "_2", "_3", "_1_pull", "_2_pull", "_3_pull" }.Select(g => ("rod_" + f + g, 6)))
+            .Concat(new[] { ("rod_pulley", 8), ("rod_lighthouse", 7), ("rod_whirlpool", 10), ("rod_bent", 6) });
 
         static MarkerView BakeDigTag()
         {
@@ -590,7 +597,11 @@ namespace ZooTycoon.Editor
             // 설계 44: 낚시터 문(왼쪽 끝 칸, 간판은 바깥쪽 왼쪽 — 빵집 간판과 겹치지 않게). 그림이 올 때까지 빵집 아치
             GameObject fishingDoor = Child(root.transform, "FishingDoor", Vector3.zero);
             Renderer(fishingDoor.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
-            TextMeshPro fishingSign = DoorSign(fishingDoor.transform, -k_SignOffsetX);
+            // 아트방 5번 B 「물고기 간판」: 아치 위 나무 물고기 장식(아치 꼭대기 위 6칸까지), 이름은 판자 없이 몸통 가운데 이름 판에 진갈색. 자리는 Plaza/Source~/make_fishing_door.py가 출력
+            Renderer(fishingDoor.transform, "Deco", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "fishing_door.png"), new Vector3(0.0375f, 0.55f, 0f), k_ArchOrder + 1);
+            TextMeshPro fishingSign = WorldText(fishingDoor.transform, "SignText", new Vector3(-0.025f, 0.975f, 0f), k_ArchOrder + 2);
+            fishingSign.rectTransform.sizeDelta = new Vector2(0.85f, 0.3f);
+            fishingSign.color = new Color32(66, 40, 32, 255);
             List<(string to, Transform root, TextMeshPro sign)> doors = new List<(string, Transform, TextMeshPro)>
             {
                 (BakeryArea.k_Id, door.transform, sign),
@@ -752,7 +763,8 @@ namespace ZooTycoon.Editor
             SetBurrowTextures(view);
             Set(view, "m_waterTile", AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + "water_tile.png"));
             Set(view, "m_streamFace", AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + "stream_face.png"));
-            Set(view, "m_drainHole", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "drain_hole.png"));
+            SetArray(view, "m_fishSwim", FishSwims.Select(fish => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + fish + ".png")).ToArray());
+            SetArray(view, "m_bubbleFrames", LoadFrames("bubble_sheet"));
             Set(view, "m_stake", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake.png"));
             Set(view, "m_stakeLocked", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_locked.png"));
             SetArray(view, "m_rods", RodSockets.Select(rod => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + rod.Name + ".png")).ToArray());

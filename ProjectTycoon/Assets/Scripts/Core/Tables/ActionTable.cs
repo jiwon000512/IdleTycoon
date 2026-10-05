@@ -50,6 +50,8 @@ namespace ZooTycoon.Core
         public const string k_Haul = "haul";
         public const string k_Thump = "thump";
         public const string k_ChooseRod = "choose_rod";
+        // 설계 45: 낚시터 막다른 끝 앞에서 물길 한 칸 더 파기
+        public const string k_DigStream = "dig_stream";
 
         public ActionMode Mode { get; set; }
         // 버튼 아이콘(Resources/ 기준, 확장자 없음). manual만, 나머지는 null

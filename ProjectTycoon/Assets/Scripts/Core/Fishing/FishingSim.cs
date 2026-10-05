@@ -131,7 +131,7 @@ namespace ZooTycoon.Core
 
             foreach (StakeInteractable stake in m_area.Stakes)
             {
-                if (stake.Rod != null && stake.Rod.Slow < slow && Vector2.Distance(p, stake.Position) <= m_area.RangeOf(stake))
+                if (stake.Rod != null && stake.Rod.Slow < slow && m_area.InReach(stake, p, m_area.RangeOf(stake)))
                 {
                     slow = stake.Rod.Slow;
                 }
@@ -183,14 +183,14 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 사거리 안에서 가장 멀리 내려간(구멍에 가까운) 물고기. 붙잡힌 월척은 뺀다
+        // 사거리(말뚝 위쪽 반원) 안에서 가장 멀리 내려간(막다른 끝에 가까운) 물고기. 붙잡힌 월척은 뺀다
         private Fish Frontmost(StakeInteractable stake, float range)
         {
             Fish best = null;
 
             foreach (Fish fish in m_fish)
             {
-                if (fish.HookedBy == null && (best == null || fish.S > best.S) && Vector2.Distance(m_area.Layout.PointAt(fish.S), stake.Position) <= range)
+                if (fish.HookedBy == null && (best == null || fish.S > best.S) && m_area.InReach(stake, m_area.Layout.PointAt(fish.S), range))
                 {
                     best = fish;
                 }

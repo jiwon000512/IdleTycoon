@@ -49,6 +49,8 @@ namespace ZooTycoon.Core
     {
         public int Stage;
         public int Summons;
+        // 설계 45: 물길 판 횟수(없으면 0 = 처음 길이)
+        public int Dug;
         public List<StakeSave> Stakes = new List<StakeSave>();
         public string Carried;
         public int CarriedGrade;

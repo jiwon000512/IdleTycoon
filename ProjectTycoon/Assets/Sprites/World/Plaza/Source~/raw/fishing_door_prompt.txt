@@ -1,0 +1,22 @@
+# 광장 낚시터 문 장식(2026-10-05 아트방). 시안 A 그물 차양 · B 물고기 간판 · C 뒤집은 배 중 사용자 선택 B → ../make_fishing_door.py
+# 참조 -i 1: fishing_door_ref_plaza.png(광장 윗줄 캡처 2배), -i 2: fishing_door_template.png(1536×1024 한 칸 10px, 웜뱃 + 아치 연보라 유령 + 장식 상자 빨강 · 이름 칸 파랑)
+# A는 그물 때문에 두 번 잘게(한 칸 6.7px) 그려져 [a 덧붙임]을 넣어 세 번째에 10px로 나왔다
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code). Keep the canvas size, the white background, the wombat and the pale lavender arch ghost of image 2 EXACTLY where and how they are. The wombat is the main character at the exact game scale: one art pixel = 10 screen pixels, 42 art pixels wide. The pale lavender shape is only a placement ghost of the existing stone door arch that the game already draws: keep it flat pale lavender, do not repaint, shade or outline it. Remove the red and blue guide rectangles.
+Image 1 is the game today: a cozy underground wombat-burrow plaza whose back wall has round door arches; the bakery door wears a red-and-cream striped awning over its arch top. Now the LEFT door leads to a FISHING SPOT inside the burrow, and it needs its own decoration in the same spirit as the bakery awning.
+Paint ONE fishing-themed DECORATION that sits on top of the arch ghost, inside the red rectangle only (68 art pixels wide at most; it may rise 6 art pixels above the arch top and hang at most 20 art pixels down over the arch top; never cover the lower doorway). It must contain a plain FLAT EMPTY name board area at least as big as the blue rectangle (40 by 13 art pixels), centered over the arch: one flat light wood color with no letters, the game writes the name there.
+CAMERA: orthographic three-quarter top-down like image 1, front face parallel to the screen, vertical edges stay vertical, never seen from below.
+STYLE: chunky pixel art exactly like the wombat and image 1: big square 10-pixel art pixels everywhere (never smaller), no anti-aliasing, no gradients, no dithering, flat soft earthy palette with at most 12 colors, dark brown outline (#342020) one art pixel wide around the decoration. No water, no ground, no shadow, no text, no letters, no numbers.
+DESIGN:
+[a]
+NET AWNING: a straight wooden plank beam across the arch top that is the name board, with an old rope fishing net draped under it in a few soft scallops, two small red-and-cream round floats tied on the net, and one small fish hanging on a hook at the right end.
+Save the image as door_a.png in the current working directory and reply with only the path.
+[a 덧붙임(공통 뒤, 설계 앞)]
+IMPORTANT: every art pixel is a 10 by 10 screen-pixel square on the same grid as the wombat of image 2. Keep the drawing as coarse as the wombat: the net is a very simple chunky rope lattice with big diamond holes (each hole about 3 by 3 art pixels, each rope strand one art pixel), never a fine mesh. Do not redraw or resize the wombat or the arch ghost.
+[b]
+FISH SIGNBOARD: one big chubby wooden fish-shaped signboard mounted flat on the arch top, facing left with a round eye and a little tail, its wide flat body is the name board; a short coil of rope and a red-and-cream float hang from its tail.
+Save the image as door_b.png in the current working directory and reply with only the path.
+[c]
+BOAT CANOPY: a small overturned wooden rowboat resting on the arch top as a little roof, its flat side plank facing us is the name board, two short oars crossed behind it peeking out at both ends, and a little rope with a float hanging from one end.
+Save the image as door_c.png in the current working directory and reply with only the path.

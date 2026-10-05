@@ -378,6 +378,9 @@ namespace ZooTycoon.Tests
             Press(Stake(0));
             Press(Stake(1));
             Press(m_fishing.Stakes.First(s => !s.Open));
+            m_mall.Wombat.Mover.Place(m_fishing.StreamEnd.Position);
+            Run(k_Dt);
+            Assert.That(m_fishing.TryInteract(), Is.True, "물길 한 칸 파기");
             Assert.That(RunUntil(() => m_fishing.Log.Count > 0, 120d), Is.True);
             SaveData data = GameSave.Capture(m_state, m_mall);
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
@@ -394,7 +397,70 @@ namespace ZooTycoon.Tests
             }
 
             Assert.That(m_fishing.Summons, Is.EqualTo(before.Summons));
+            Assert.That(m_fishing.Dug, Is.EqualTo(1));
+            Assert.That(m_fishing.Layout.Length, Is.EqualTo(before.Layout.Length).Within(1e-3f));
             Assert.That(m_fishing.Log.Keys, Is.EquivalentTo(before.Log.Keys));
+        }
+
+        // 설계 45: 처음은 dugStart까지만 물. 막다른 끝 앞에서 파면 코인을 내고 digStep만큼 늘고, 웜뱃은 새 물 밖으로 비킨다. 끝까지 파면 파기 대상이 없다
+        [Test]
+        public void DigStream_ExtendsForCoins_UntilThePlanEnds()
+        {
+            Create();
+            GoFishing();
+            Assert.That(m_fishing.Layout.Length, Is.EqualTo((float)Config.DugStart).Within(1e-3f));
+            int digs = 0;
+
+            while (!m_fishing.StreamFull)
+            {
+                double coins = m_state.Coins;
+                double price = m_fishing.DigPrice;
+                float length = m_fishing.Layout.Length;
+                m_mall.Wombat.Mover.Place(m_fishing.StreamEnd.Position);
+                Run(k_Dt);
+                Assert.That(m_fishing.Target, Is.SameAs(m_fishing.StreamEnd), "막다른 끝 앞이 대상");
+                Assert.That(m_fishing.TryInteract(), Is.True, "파기 버튼");
+                Assert.That(m_state.Coins, Is.EqualTo(coins - price).Within(1e-6));
+                Assert.That(m_fishing.Layout.Length, Is.EqualTo(Math.Min(length + (float)Config.DigStep, m_fishing.Layout.PlanLength)).Within(1e-3f));
+                Assert.That(m_fishing.Layout.Nav.IsWalkable(m_mall.Wombat.Mover.Position), Is.True, "웜뱃은 새 물 밖");
+                Assert.That(m_fishing.DigPrice, Is.EqualTo(price * Config.DigGrowth).Within(1e-6));
+                digs++;
+                Run(1d);
+            }
+
+            Assert.That(digs, Is.EqualTo(12));
+            Assert.That(m_fishing.Layout.Length, Is.EqualTo(m_fishing.Layout.PlanLength).Within(1e-3f));
+            m_mall.Wombat.Mover.Place(m_fishing.StreamEnd.Position + new Vector2(0f, 1.2f));
+            Run(k_Dt);
+            Assert.That(m_fishing.Target, Is.Not.SameAs(m_fishing.StreamEnd), "끝까지 팠으면 파기 대상이 없다");
+        }
+
+        // 설계 45: 대는 말뚝 위쪽 반원만 본다(사거리 안이라도 말뚝보다 아래 물고기는 안 감는다)
+        [Test]
+        public void Rod_ReelsOnlyFishAboveItsStake()
+        {
+            Create();
+            GoFishing();
+            Press(Stake(0));
+            m_mall.Wombat.Mover.Place(new Vector2(0.5f, -2.4f));
+            bool reeled = false;
+            bool below = false;
+
+            for (double t = 0d; t < 90d; t += k_Dt)
+            {
+                Fish fish = Stake(0).Reeling;
+
+                if (fish != null)
+                {
+                    reeled = true;
+                    below |= m_fishing.Layout.PointAt(fish.S).Y < Stake(0).Position.Y;
+                }
+
+                m_mall.Tick(k_Dt);
+            }
+
+            Assert.That(reeled, Is.True, "위 물길 물고기는 감는다");
+            Assert.That(below, Is.False, "말뚝 아래 물고기는 안 감는다");
         }
 
         // 오프라인 공식(물때 하나를 시뮬레이션 × 물때 수)이 실제 20분과 크게 다르지 않다

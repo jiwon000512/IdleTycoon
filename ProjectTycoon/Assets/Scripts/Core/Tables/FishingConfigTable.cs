@@ -11,9 +11,14 @@ namespace ZooTycoon.Core
         // 방 칸 수(광장처럼 파지 않는 고정 방)
         public int Cols { get; set; }
         public int Rows { get; set; }
-        // 물길: 축 정렬 선분을 잇는 점(첫 점 = 물고기가 나오는 곳, 끝 점 = 빠지는 구멍)과 폭. 걸을 수 없다
+        // 물길: 축 정렬 선분을 잇는 점(첫 점 = 물고기가 나오는 곳, 끝 점 = 끝까지 팠을 때의 막다른 끝)과 폭. 판 데는 걸을 수 없다
         public FishingPointData[] Stream { get; set; }
         public double StreamWidth { get; set; }
+        // 설계 45: 처음 판 길이 · 한 번 파면 늘어나는 길이(유닛) · 처음 파기 값 · 팔 때마다 값 배수
+        public double DugStart { get; set; }
+        public double DigStep { get; set; }
+        public double DigCost { get; set; }
+        public double DigGrowth { get; set; }
         // 말뚝 자리(값 0 = 처음부터 열림)
         public FishingStakeData[] Stakes { get; set; }
         // 점원 오두막 자리(점원이 서는 바닥) · 낚은 대물이 눕는 자리(뱃속 3택 1)

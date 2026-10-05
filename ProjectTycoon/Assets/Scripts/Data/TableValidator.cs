@@ -896,6 +896,13 @@ namespace ZooTycoon.Data
                     errors.Add($"FishingConfigTable '{config.Id}': cols · rows는 2 이상, stream은 축 정렬 점 둘 이상, streamWidth > 0이어야 한다.");
                 }
 
+                double plan = Enumerable.Range(1, System.Math.Max(0, stream.Length - 1)).Sum(i => System.Math.Abs(stream[i].X - stream[i - 1].X) + System.Math.Abs(stream[i].Y - stream[i - 1].Y));
+
+                if (config.DugStart <= 0d || config.DugStart > plan || config.DigStep <= 0d || config.DigCost <= 0d || config.DigGrowth < 1d)
+                {
+                    errors.Add($"FishingConfigTable '{config.Id}': dugStart는 0 초과 stream 길이 이하, digStep · digCost > 0, digGrowth ≥ 1이어야 한다.");
+                }
+
                 if (config.Stakes == null || !config.Stakes.Any(s => s.Cost <= 0d) || config.Stakes.Any(s => s.Cost < 0d))
                 {
                     errors.Add($"FishingConfigTable '{config.Id}': stakes는 하나 이상 처음부터 열려(cost 0) 있고 cost는 0 이상이어야 한다.");

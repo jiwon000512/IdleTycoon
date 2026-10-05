@@ -9,9 +9,8 @@ namespace ZooTycoon.World
     // 나머지는 물 타일(water_tile, 굴 원점 기준 칸 좌표), 좌우가 물 밖 2칸 안은 짙은 물. 물 밖 둑 고리(4방향 거리): 1 · 4 = 선, 2 · 3 = 턱. 그 밖은 투명
     public static class StreamPainter
     {
-        // 흙 면 줄 수(stream_face 높이) · 바닥 구멍이 물길 끝을 덮는 칸
+        // 흙 면 줄 수(stream_face 높이)
         public const int k_FaceRows = 14;
-        private const int k_HoleOverlap = 10;
         private const int k_SideShade = 2;
         private static readonly Color32 k_Light = new Color32(110, 182, 170, 255);
         private static readonly Color32 k_Deep = new Color32(48, 120, 114, 255);
@@ -87,15 +86,6 @@ namespace ZooTycoon.World
             texture.SetPixels32(pixels);
             texture.Apply(false, true);
             return Sprite.Create(texture, new Rect(0f, 0f, w, h), new Vector2(0f, 1f), ppu, 0, SpriteMeshType.FullRect);
-        }
-
-        // 바닥 구멍 그림 가운데(곳 좌표): 오른쪽 끝이 물길 끝을 k_HoleOverlap칸 덮고, 세로는 흙 면 아래 물 영역 가운데
-        public static Vector2 HoleCenter(FishingLayout layout, Sprite hole)
-        {
-            float ppu = BurrowShape.k_PixelsPerUnit;
-            System.Numerics.Vector2 end = layout.Stream[layout.Stream.Count - 1];
-            float half = layout.StreamWidth / 2f;
-            return new Vector2(end.X - half + k_HoleOverlap / ppu - hole.bounds.size.x / 2f, end.Y - k_FaceRows / ppu / 2f);
         }
 
         // 좌우로 물 밖까지 가까운 쪽 칸 수(1 = 바로 옆이 물 밖)

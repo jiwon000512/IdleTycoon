@@ -1,0 +1,23 @@
+# 낚시터 물고기(2026-10-05 아트방). 방향 시안 fish_style_a~c(참조 -i: fish_ref_water6.png) 중 사용자 선택 B 「둥근 귀염」.
+# 최종: fish_template.png(웜뱃을 한 칸 9px로 그려 넣고 물고기 목표 크기 상자)를 -i로 → fish_final.png. Codex가 물고기만 반 칸(4.5px) 픽셀로 그려, 반 칸 격자로 옮긴 뒤 2×2를 한 칸으로 줄였다(make_fish.py).
+# 대물 상자가 바탕 밖으로 잘려 fish_final의 대물은 작게 나와, 대물은 fish_style_b의 것을 원본 격자 그대로 쓴다.
+
+[방향 시안 공통]
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, crop or copy the reference file).
+A pixel-art SPRITE SHEET of the four fish of the underground fishing burrow in a cozy wombat idle game, on a plain white background, laid out in 4 columns and 2 rows with wide white gaps. Columns from left to right: MINNOW (small, slim, fast), CRUCIAN CARP (medium, round-bodied, the most common), CATFISH (bigger, heavy, slow, whiskers), and the BOSS "ROCK CARP" (a huge carp whose scales look like mossy river stones, about twice as long as the catfish).
+Row 1: each fish seen from the SIDE, jumping out of the water in an arched pose as it is hooked and flung onto the bank (no water, no line drawn), facing right. This also becomes its inventory icon.
+Row 2: the same fish seen from ABOVE as it swims in the water channel, facing right, drawn as a darker teal underwater silhouette with only a few soft color hints (it is under the water surface), so it reads on teal water.
+Image 1 is the game today at 6 screen pixels per art pixel: the teal water channel (56 art pixels wide), the bank, wooden stakes with fishing rods, and the wombat main character (42 art pixels wide). Sizes in art pixels (body length): minnow about 14, crucian about 20, catfish about 28, boss about 56.
+CAMERA: orthographic, parallel projection, no perspective.
+STYLE: chunky pixel art exactly like image 1: big square pixels at the same size, no anti-aliasing, no gradients, no dithering, flat muted palette, dark brown outline (#342020) one pixel wide around the row-1 fish (row-2 underwater silhouettes have no outline). No text, no letters, no numbers, no border, no grid.
+FISH STYLE:
+[a] NATURAL: believable freshwater fish colors (silver-green minnow with a dark side stripe, golden-brown crucian, dark grey-brown catfish with long whiskers, grey-green rock carp with stone-like scales and moss), small dot eyes like the characters of image 1.
+[b] ROUND AND CUTE: chubby, rounded toy-like fish with short fins and small dot eyes, soft friendly colors (minty minnow, peach-gold crucian, plum-grey catfish with curly whiskers, a big round mossy-stone carp with a grumpy face), matching the round chubby characters of image 1.
+[c] CAVE FISH: pale, slightly translucent-looking underground fish in creamy white, pale pink and soft lilac with tiny glowing teal spots along the sides, small dot eyes; the boss rock carp is pale grey like a cave boulder with glowing teal cracks.
+
+[최종]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code). Keep the canvas size, the white background and the wombat of image 2 EXACTLY where and how they are: it is the main character at the exact game scale, and one art pixel of this pixel art is exactly 9 screen pixels, the same as the wombat (42 art pixels wide). Remove the light grey boxes.
+Image 1 is the CHOSEN style of the four fish of this cozy underground fishing burrow: round, chubby, toy-like fish with short fins and small dot eyes (left to right: minty MINNOW, peach-gold CRUCIAN CARP, plum-grey CATFISH with curly whiskers, and the huge BOSS rock carp, round with mossy stone scales and a grumpy face). Row 1 of image 1 shows each fish from the side, row 2 from above as a dark teal underwater silhouette.
+Paint the same four fish of image 1 into the grey boxes of image 2, each one filling its box (the box is the exact size in art pixels): the upper row of boxes = the side views facing right (as if jumping out of the water, an outline around each), the lower row of boxes = the top-down dark teal underwater silhouettes facing right (no outline). From left to right: minnow, crucian, catfish, boss.
+STYLE: chunky pixel art exactly like the wombat of image 2: big square 9-pixel art pixels, no anti-aliasing, no gradients, no dithering, flat soft palette like image 1, dark brown outline (#342020) one art pixel wide on the side views. No water, no ground, no shadow, no text, no letters, no numbers, no grid.
+Save the image as t_fish.png in the current working directory and reply with only the path.

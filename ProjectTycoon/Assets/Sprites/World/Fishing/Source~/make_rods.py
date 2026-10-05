@@ -1,12 +1,14 @@
-# 낚싯대(2026-10-05 사용자 선택 C 「통통한 대」, 프롬프트 raw/prompt_rod.txt).
-# 원본 raw/rod_rods.png(대나무 · 쇠 · 미끼) · rod_specials.png(도르래탑 · 등대 · 소용돌이 통발) · rod_bent.png(월척에 휜 대, 공용):
-#   실제 말뚝을 그려 넣은 바탕(raw/rod_template_*.png) 위에 그리게 해서, 원본 격자 그대로 옮기면 말뚝이 실제와 같은 16칸이 된다.
-#   1. 원본 격자 그대로 칸으로(snap_codex). 2. 말뚝: 발끝(맨 아랫줄)에서 17칸 위(꽂는 자리)보다 아래, 말뚝 가운데 ±9칸을 지운다
-#   3. 8방향으로 이어진 덩어리로 나누고 떨어진 조각(대 끝 휨 · 물방울)은 가까운 덩어리에, 밑동이 가까운 말뚝 순서로 이름을 붙인다
-#   4. 등급: 릴 · 띠 4색(FIT)을 2등급 은(SILVER) · 3등급 금(GOLD)으로, 3등급은 대 끝 아래에 금방울(3×4칸)
-# 출력: ../rod_<bamboo|iron|bait>_<1|2|3>.png · ../rod_<pulley|lighthouse|whirlpool>.png · ../rod_bent.png(한 칸 2px · PPU 80)
-#   꽂는 자리(밑동, 피벗으로 쓸 점)와 대 끝(줄이 나오는 점)을 그림 왼쪽 아래 기준 칸으로 출력한다.
-#   대는 말뚝 뒤에 그린다(말뚝이 앞에서 밑동 · 남은 말뚝 테를 덮어 구멍에 꽂힌 모습). 사용: python make_rods.py
+# 낚싯대(2026-10-05). 1차 C 「통통한 대」(raw/rod_style_*)는 사용자 「대가 너무 큼 · 말뚝과 조화가 안 됨 · 가만히 서 있음」(설계 45)으로 다시:
+#   다시 시안 raw/rod_redo_style_a~c 중 사용자 선택 A 「말뚝에 맞춘 대」(대 밑동의 밧줄 깃이 말뚝 구멍에 앉음), 꽂는 자리에서 대 끝까지 약 0.9유닛.
+# 원본 raw/rod_rods.png(대나무 · 쇠 · 미끼 · 월척에 휜 대) · rod_specials.png(도르래탑 · 등대 · 소용돌이 통발):
+#   웜뱃과 실제 말뚝을 한 칸 10px로 그려 넣은 바탕(raw/rod_template_*.png) 위에 그리게 해서, 원본 격자 그대로 옮기면 실제 칸 크기가 된다.
+#   1. 원본 격자 그대로 칸으로(snap_codex, 색 넉넉히 48). 크기 기준 웜뱃(맨 왼쪽 덩어리)은 뺀다
+#   2. 말뚝: 발끝(맨 아랫줄)에서 17칸 위(꽂는 자리)보다 아래, 말뚝 가운데 ±9칸을 지운다
+#   3. 8방향으로 이어진 덩어리로 나누고 떨어진 조각은 가까운 덩어리에, 밑동이 가까운 말뚝 순서로 이름을 붙인다. 그림마다 12색
+#   4. 등급: 채도 낮은 색(릴 · 띠 · 쇠)을 밝기 순으로 2등급 은(SILVER) · 3등급 금(GOLD) 4단계에, 3등급은 대 끝 아래 금방울(3×4칸)
+#   5. 당김 판: 꽂는 자리 위 줄을 끝으로 갈수록 오른쪽으로 0~2칸 밀어(제곱) 살짝 휜 판(감는 동안 곧은 판과 번갈아)
+# 출력(한 칸 2px · PPU 80): ../rod_<bamboo|iron|bait>_<1|2|3>.png · _pull.png 판 · ../rod_bent.png(월척) · ../rod_<pulley|lighthouse|whirlpool>.png
+#   꽂는 자리(피벗) · 대 끝(줄이 나오는 점)을 그림 왼쪽 아래 기준 칸으로 출력한다. 대는 말뚝 뒤에 그린다. 사용: python make_rods.py
 import os
 import sys
 import numpy as np
@@ -18,7 +20,6 @@ sys.path.insert(0, os.path.join(HERE, '..', '..', 'Shop', 'Source~'))
 import snap_codex  # noqa: E402
 from make_dig import blobs  # noqa: E402
 
-FIT = [(237, 207, 177), (196, 169, 142), (154, 126, 104), (110, 82, 67)]
 SILVER = [(240, 244, 248), (196, 206, 216), (146, 158, 172), (98, 108, 124)]
 GOLD = [(252, 234, 150), (240, 196, 76), (206, 150, 44), (150, 100, 34)]
 LINE = (52, 32, 32)
@@ -27,7 +28,13 @@ SOCKET_UP = 17
 
 def cut(path, names):
     """{이름: (칸 배열, 꽂는 자리 (x, y 위에서), 대 끝 (x, y 위에서))}"""
-    cells, _ = snap_codex.snap(path, 12, square=True, min_hole=40)
+    cells, _ = snap_codex.snap(path, 48, square=True, min_hole=40)
+    op = cells[..., 3] > 0
+    # 크기 기준으로 그려 넣은 웜뱃(맨 왼쪽 열에 닿는 덩어리)은 뺀다
+    for gr in blobs(op, diag=True):
+        if min(x for _, x in gr) == 0 and len(gr) > 400:
+            for y, x in gr:
+                cells[y, x] = 0
     op = cells[..., 3] > 0
     foot = np.nonzero(op.any(1))[0].max()
     sock = foot - SOCKET_UP
@@ -63,11 +70,40 @@ def cut(path, names):
     return out
 
 
-def recolor(a, to):
+def limit12(a):
+    return snap_codex.merge_colors(a.copy(), a[..., 3] > 0, 12)
+
+
+def recolor(a, ramp):
+    """채도 낮은 색(외곽선 · 흰 빛 제외)을 밝기 순으로 ramp 4단계에"""
     a = a.copy()
-    for f, t in zip(FIT, to):
-        a[(a[..., :3] == f).all(-1) & (a[..., 3] > 0), :3] = t
+    op = a[..., 3] > 0
+    cols = {tuple(int(v) for v in c) for c in a[op][:, :3]}
+    grey = []
+    for c in cols:
+        mx, mn = max(c), min(c)
+        if mx >= 70 and mx < 245 and (mx - mn) / mx < 0.3:
+            grey.append(c)
+    if not grey:
+        return a
+    lum = sorted(grey, key=lambda c: -sum(c))
+    for i, c in enumerate(lum):
+        k = min(int(i * len(ramp) / len(lum)), len(ramp) - 1)
+        a[op & (a[..., :3] == c).all(-1), :3] = ramp[k]
     return a
+
+
+def pull(a, sock):
+    """꽂는 자리 위 줄을 끝으로 갈수록 오른쪽으로 0~2칸(제곱)"""
+    h, w = a.shape[:2]
+    out = np.zeros((h, w + 2, 4), np.uint8)
+    top = 0
+    for y in range(h):
+        up = sock[1] - y
+        t = max(up, 0) / max(sock[1] - top, 1)
+        dx = int(round(2 * t * t))
+        out[y, dx:dx + w] = np.where(a[y, :, 3:4] > 0, a[y], out[y, dx:dx + w])
+    return out
 
 
 def bell(a, tip):
@@ -90,14 +126,20 @@ def save(name, a, sock, tip):
 
 
 if __name__ == '__main__':
-    rods = cut(os.path.join(HERE, 'raw', 'rod_rods.png'), ['bamboo', 'iron', 'bait'])
-    for n, (a, sock, tip) in rods.items():
-        save('rod_%s_1' % n, a, sock, tip)
-        save('rod_%s_2' % n, recolor(a, SILVER), sock, tip)
-        g = bell(recolor(a, GOLD), tip)
-        save('rod_%s_3' % n, g, (sock[0], sock[1] + g.shape[0] - a.shape[0]), (tip[0], tip[1] + g.shape[0] - a.shape[0]))
-    for n, (a, sock, tip) in cut(os.path.join(HERE, 'raw', 'rod_specials.png'), ['pulley', 'lighthouse', 'whirlpool']).items():
-        save('rod_' + n, a, sock, tip)
-    a, sock, _ = cut(os.path.join(HERE, 'raw', 'rod_bent.png'), ['bent'])['bent']
+    rods = cut(os.path.join(HERE, 'raw', 'rod_rods.png'), ['bamboo', 'iron', 'bait', 'bent'])
+    for n in ['bamboo', 'iron', 'bait']:
+        a, sock, tip = rods[n]
+        a = limit12(a)
+        for g, img in ((1, a), (2, recolor(a, SILVER)), (3, bell(recolor(a, GOLD), tip))):
+            dy = img.shape[0] - a.shape[0]
+            s2, t2 = (sock[0], sock[1] + dy), (tip[0], tip[1] + dy)
+            save('rod_%s_%d' % (n, g), img, s2, t2)
+            p = pull(img, s2)
+            tp = np.nonzero(p[0, :, 3] > 0)[0]
+            save('rod_%s_%d_pull' % (n, g), p, s2, (int(tp.max()), 0))
+    a, sock, _ = rods['bent']
+    a = limit12(a)
     xr = int(np.nonzero((a[..., 3] > 0).any(0))[0].max())          # 휜 대 끝 = 맨 오른쪽 열의 가장 아래 칸(아래로 당겨진 끝)
     save('rod_bent', a, sock, (xr, int(np.nonzero(a[:, xr, 3] > 0)[0].max())))
+    for n, (a, sock, tip) in cut(os.path.join(HERE, 'raw', 'rod_specials.png'), ['pulley', 'lighthouse', 'whirlpool']).items():
+        save('rod_' + n, limit12(a), sock, tip)

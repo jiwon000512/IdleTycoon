@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c790bdcecc0ea3047a10906491c1c493
+guid: e8ba33ec3b3a7bd4f8b84718799a7e80
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6768204503301668453
-    second: drain_hole_0
+      213: 3072289343278067790
+    second: fish_boss_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,12 +113,12 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: drain_hole_0
+      name: fish_boss_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 136
+        width: 120
         height: 96
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b91418d1dd18212a0800000000000000
-      internalID: -6768204503301668453
+      spriteID: e40be4941e6f2aa20800000000000000
+      internalID: 3072289343278067790
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      drain_hole_0: -6768204503301668453
+      fish_boss_0: 3072289343278067790
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

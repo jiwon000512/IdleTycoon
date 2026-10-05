@@ -1,11 +1,10 @@
-# 낚시터 물길 「흙 도랑」(2026-10-05 사용자 선택 A, 컨셉 raw/stream_concept_a.png · 프롬프트 raw/prompt_stream.txt)과 바닥 구멍 「흙 구멍」(A).
+# 낚시터 물길 「흙 도랑」(2026-10-05 사용자 선택 A, 컨셉 raw/stream_concept_a.png · 프롬프트 raw/prompt_stream.txt).
+# 물길 끝 바닥 구멍은 설계 45(막다른 끝)로 지웠다.
 # 물길은 굴 그리기(BurrowPainter)처럼 칸마다 칠한다: 물길 꺾은선이 어떻게 바뀌어도 곧은 · 꺾임 조각을 따로 두지 않는다.
 #   ../water_tile.png  32×32(한 텍셀 = 한 칸) 이음새 없는 물: 청록 바탕 · 짙은 얼룩 · 밝은 물결 · 반짝 점. 굴 원점 기준 칸 좌표로 샘플
 #   ../stream_face.png 64×F(14) 먼 둑 흙 면: 굴 윗벽 띠 wall_face의 지층(14~27줄)을 조금 그늘지게 + 맨 위 선 · 맨 아래 젖은 선.
 #                      위가 물 밖인 물 칸의 위 F줄에 깔고(가로로 이어 붙음), 그 아래 물 첫 줄은 밝은 거품 줄 LIGHT
 #   둑 바깥 고리: 물 밖 거리 1 = 선 LINE, 2~3 = 턱 LIP, 4 = 선(방 둘레 턱과 같은 색). 물 안 옆 벽(좌우가 물 밖) 2칸은 DEEP
-#   ../drain_hole.png  바닥 구멍(raw/drain_hole_a.png를 원본 격자 그대로, 한 칸 2px · PPU 80). 오른쪽 테가 트여 물길이 흘러든다.
-#                      자리: 구멍 오른쪽 끝이 물길 끝(끝점 x − 폭 절반)을 10칸 덮고, 세로 가운데 = 흙 면 아래 물 영역 가운데
 # 사용: python make_stream.py [미리보기 폴더]   (미리보기: FishingConfigTable main 행의 방 · 물길 · 말뚝 그대로 칠한 모형)
 import os, sys, json, random
 import numpy as np
@@ -13,8 +12,6 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..')
-sys.path.insert(0, os.path.join(HERE, '..', '..', 'Source~'))
-import snap_codex  # noqa: E402
 A = r'C:\project\Tycoon\ProjectTycoon\Assets'
 W = os.path.join(A, 'Sprites', 'World')
 PPU = 40
@@ -64,7 +61,7 @@ def stream_face():
     return out
 
 
-def mock(cfg, water, face, hole=None):
+def mock(cfg, water, face):
     # 방: 가로 cols × cellWidth, 세로 entranceHeight + (rows − 1) × cellHeight. 위 = 윗벽 띠 40칸 + 턱 6 + 흙벽
     cw, ch, eh = 3.375, 2.4, 2.0
     width = int(cfg['cols'] * cw * PPU)
@@ -143,28 +140,14 @@ def paste(img, sp_path, cell_xy, scale=0.5, bottom=True):
     img.alpha_composite(sp, (int(x - sp.width / 2), int(y - (sp.height if bottom else sp.height / 2))))
 
 
-def drain_hole():
-    cells, _ = snap_codex.snap(os.path.join(HERE, 'raw', 'drain_hole_a.png'), 12, square=True, min_hole=40)
-    return cells
-
-
-def place_hole(img, hole, end, hw):
-    ys, xs = np.nonzero(hole[..., 3] > 0)
-    x = int(round(end[0] - hw + 10 - xs.max()))
-    y = int(round((end[1] - hw + F + end[1] + hw) / 2 - (ys.min() + ys.max()) / 2))
-    img.alpha_composite(Image.fromarray(hole, 'RGBA'), (x, y))
-
-
 if __name__ == '__main__':
-    water, face, hole = water_tile(), stream_face(), drain_hole()
+    water, face = water_tile(), stream_face()
     Image.fromarray(water, 'RGBA').save(os.path.join(OUT, 'water_tile.png'))
     Image.fromarray(face, 'RGBA').save(os.path.join(OUT, 'stream_face.png'))
-    Image.fromarray(np.repeat(np.repeat(hole, 2, 0), 2, 1), 'RGBA').save(os.path.join(OUT, 'drain_hole.png'))
-    print('water_tile', water.shape[1], 'x', water.shape[0], '· stream_face', face.shape[1], 'x', face.shape[0], '· drain_hole cells', hole.shape[1], 'x', hole.shape[0])
+    print('water_tile', water.shape[1], 'x', water.shape[0], '· stream_face', face.shape[1], 'x', face.shape[0])
     if len(sys.argv) > 1:
         cfg = json.load(open(os.path.join(A, 'Resources', 'Data', 'FishingConfigTable.json'), encoding='utf-8'))['rows'][0]
         img, (ox, oy), pts = mock(cfg, water, face)
-        place_hole(img, hole, pts[-1], cfg['streamWidth'] * PPU / 2)
         paste(img, os.path.join(W, 'Shop', 'wombat_front.png'), (ox + 1.5 * PPU, oy + 2.4 * PPU))
         os.makedirs(sys.argv[1], exist_ok=True)
         img.resize((img.width * 2, img.height * 2), Image.NEAREST).save(os.path.join(sys.argv[1], 'fishing_stream_mock.png'))

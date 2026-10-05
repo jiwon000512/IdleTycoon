@@ -22,7 +22,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 물고기가 물길 끝 구멍으로 빠졌다(놓침 팻말 · 물보라). 대물이면 BossResolved도 온다
+        // 물고기가 물길 막다른 끝에서 빠져나갔다(놓침 팻말 · 물보라). 대물이면 BossResolved도 온다
         public readonly struct FishEscaped
         {
             public readonly FishingArea Fishing;
@@ -69,6 +69,21 @@ namespace ZooTycoon.Core
             {
                 Into = into;
                 From = from;
+            }
+        }
+
+        // 설계 45: 물길을 팠다(From → To 길이 사이가 새 물, 물길 그림을 다시 칠한다)
+        public readonly struct StreamDug
+        {
+            public readonly FishingArea Fishing;
+            public readonly float From;
+            public readonly float To;
+
+            public StreamDug(FishingArea fishing, float from, float to)
+            {
+                Fishing = fishing;
+                From = from;
+                To = to;
             }
         }
 

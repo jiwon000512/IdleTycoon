@@ -637,19 +637,52 @@ MonoBehaviour:
   m_wallFace: {fileID: 2800000, guid: f8b8f3fe1380e1a4f8215b817762678b, type: 3}
   m_waterTile: {fileID: 2800000, guid: d6d2c028730c49747bd19237f8e70597, type: 3}
   m_streamFace: {fileID: 2800000, guid: dd1107fb60d98ac418a11cb31c603548, type: 3}
-  m_drainHole: {fileID: 21300000, guid: c790bdcecc0ea3047a10906491c1c493, type: 3}
+  m_fishSwim:
+  - {fileID: 21300000, guid: b53a26b567f0bb441af2e6be39ec787a, type: 3}
+  - {fileID: 21300000, guid: c65de0d930724aa4cb44df5097cfcdcd, type: 3}
+  - {fileID: 21300000, guid: f646bfc18867f6c4eadb0a9180a0b8d9, type: 3}
+  - {fileID: 21300000, guid: 4a07e1de0b4310544b6bb43769cbc15c, type: 3}
+  m_bubbleFrames:
+  - {fileID: -5436485921487181056, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -2142117228, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1796656277, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -514736552, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 1766165511, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1138865566, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 1087479234, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -639695686, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -994334760, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1161175582, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 112917289, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 556843776, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -426106603, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1874632917, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 1744716737, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -1318970324, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: -335888746, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 1103276501, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
+  - {fileID: 953913029, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   m_stake: {fileID: 21300000, guid: 7422622990b0bd44e94788e38f2443e2, type: 3}
   m_stakeLocked: {fileID: 21300000, guid: 583ac2df038ffaa4cbc3448b5f401723, type: 3}
   m_rods:
   - {fileID: 21300000, guid: 0c35810b445253a449812916f878ab2d, type: 3}
   - {fileID: 21300000, guid: 4cb058cd7d0546842a8c88a807b46033, type: 3}
   - {fileID: 21300000, guid: c63449f287453d448ba510eabacd301f, type: 3}
+  - {fileID: 21300000, guid: 1a4a39a120ceb53459323434053ba8d0, type: 3}
+  - {fileID: 21300000, guid: 5da976dfe7ed2874dbb03ad2b37d10be, type: 3}
+  - {fileID: 21300000, guid: 872770c0c8372c74f9ca133a0d2b6272, type: 3}
   - {fileID: 21300000, guid: a30d6da4346e6a64692b7d153a233292, type: 3}
   - {fileID: 21300000, guid: e42014f0aeb859e4e89aefd3db120b6f, type: 3}
   - {fileID: 21300000, guid: 63f43c364cebe59469dc4153994b9e85, type: 3}
+  - {fileID: 21300000, guid: eaa33d26c37d59642b159cb0cb2a0648, type: 3}
+  - {fileID: 21300000, guid: c4e31c163d02d4944a8c755a85f569c4, type: 3}
+  - {fileID: 21300000, guid: ae1546913683fa44a92590e3312b84f0, type: 3}
   - {fileID: 21300000, guid: 60965153db37dcd4cb88560037b6e718, type: 3}
   - {fileID: 21300000, guid: 8c489494d7bfd4848a27df43003d9b4d, type: 3}
   - {fileID: 21300000, guid: 453a963829af63442a3b38df015791ae, type: 3}
+  - {fileID: 21300000, guid: ee8bd93303814dc4c8d26b7cadb7451f, type: 3}
+  - {fileID: 21300000, guid: 77f801e89e6fd10428b9be9945f523b8, type: 3}
+  - {fileID: 21300000, guid: b7f59dd81aa8e59478dec16d1f2cc4d9, type: 3}
   - {fileID: 21300000, guid: ef3d9c7babf1f2f4aaac903d732242aa, type: 3}
   - {fileID: 21300000, guid: 4e8b55a6bdc2f794da528259d87271c7, type: 3}
   - {fileID: 21300000, guid: a73a9d100a3f0ac4aa0e056f961d843a, type: 3}

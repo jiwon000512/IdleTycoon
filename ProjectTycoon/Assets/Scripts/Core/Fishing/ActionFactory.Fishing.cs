@@ -6,6 +6,29 @@ namespace ZooTycoon.Core
     // 하는 일은 FishingArea가 갖고, 여기는 사물 종류와 할 수 있나만 본다
     public static partial class ActionFactory
     {
+        // 설계 45: 막다른 끝 앞에서 물길을 한 칸 더 판다(값은 월드 값 표식)
+        private sealed class DigStream : InteractAction
+        {
+            public DigStream(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is StreamEndInteractable;
+            }
+
+            public override bool CanDo(Worker worker, Interactable target)
+            {
+                return target is StreamEndInteractable end && end.Fishing.CanDigStream;
+            }
+
+            public override void Do(Worker worker, Interactable target)
+            {
+                ((StreamEndInteractable)target).Fishing.DigStream();
+            }
+        }
+
         private sealed class Summon : InteractAction
         {
             public Summon(ActionTable table) : base(table)

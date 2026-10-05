@@ -140,6 +140,7 @@ namespace ZooTycoon.Core
                     {
                         Stage = fishing.Stage,
                         Summons = fishing.Summons,
+                        Dug = fishing.Dug,
                         Stakes = fishing.Stakes.Select(stake => new StakeSave { Open = stake.Open, Rod = stake.Rod?.Id, Grade = stake.Grade }).ToList(),
                         Carried = fishing.Carried?.Id,
                         CarriedGrade = fishing.CarriedGrade,
@@ -199,7 +200,7 @@ namespace ZooTycoon.Core
                     break;
                 case FishingArea fishing when save.Fishing != null:
                     FishingSave f = save.Fishing;
-                    fishing.Restore(f.Stage, f.Summons,
+                    fishing.Restore(f.Stage, f.Summons, f.Dug,
                         f.Stakes.Select(s => (s.Open, Find<RodTable>(tables, s.Rod), s.Grade)),
                         Find<RodTable>(tables, f.Carried), f.CarriedGrade,
                         f.Choice.Select(id => Find<RodTable>(tables, id)).Where(rod => rod != null).ToList(),

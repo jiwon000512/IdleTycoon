@@ -11,7 +11,8 @@ namespace ZooTycoon.Core
     // 둑의 말뚝에 꽂은 대가 사거리 안 물고기를 감아 낚는다(창고로). 물때 bossEvery번째는 대물: 낚으면 다음 단계 + 특별한 대 3택 1, 놓치면 같은 단계 물때 1부터.
     // 대는 빈 말뚝에서 코인으로 소환(계열 무작위 · 등급 비중)하고, 같은 계열 · 등급 셋을 합쳐 올린다. 판의 같은 계열 개수 문턱이 그 계열을 세게 한다.
     // 웜뱃은 대를 들고 옮기고, 물가에서 엉덩이 쿵, 붙잡힌 월척에 털썩, 대물을 감는 말뚝 곁에 앉는다(ActionFactory.Fishing.cs). 점원 하나가 오두막에서 합치기 · 오래 버틴 월척을 맡는다.
-    // 놓는 사물은 없다(편집 카드 없음). 물고기는 웜뱃이 다른 곳에 있어도 흐른다
+    // 놓는 사물은 없다(편집 카드 없음). 물고기는 웜뱃이 다른 곳에 있어도 흐른다.
+    // 설계 45: 물길은 처음 절반쯤만 파여 있고 끝은 막혀 있다(끝에 닿은 물고기는 빠져나가 놓침). 막다른 끝 앞에서 코인으로 정해진 길을 한 칸씩 더 판다. 대는 말뚝 위쪽만 본다
     public sealed class FishingArea : WombatArea
     {
         public const string k_Id = "fishing";
@@ -37,6 +38,11 @@ namespace ZooTycoon.Core
         public FishingHutInteractable Hut { get; }
         // 낚은 대물(뱃속 3택 1이 남은 동안만 사물 목록에)
         public BossCatchInteractable Catch { get; }
+        // 설계 45: 막다른 끝 앞 땅(파기 버튼). 판 횟수 · 다음 파기 값 · 끝까지 팠나
+        public StreamEndInteractable StreamEnd { get; }
+        public int Dug { get; private set; }
+        public double DigPrice => Config.DigCost * Math.Pow(Config.DigGrowth, Dug);
+        public bool StreamFull => Layout.Length >= Layout.PlanLength - 1e-3f;
         internal FishingSim Sim { get; }
         public IReadOnlyList<Fish> Fish => Sim.Fish;
         // 단계(1부터, 대물을 낚을 때마다 +1) · 물때(1 ~ bossEvery, 시작 전 0) · 이번 물때에 놓친 수 · 소환한 수
@@ -81,6 +87,7 @@ namespace ZooTycoon.Core
             Bank = new StreamBankInteractable(Row(StreamBankInteractable.k_Id), this);
             Hut = new FishingHutInteractable(Row(FishingHutInteractable.k_Id), this, Layout.HutSpot);
             Catch = new BossCatchInteractable(Row(BossCatchInteractable.k_Id), this, new Vector2((float)Config.CatchX, (float)Config.CatchY));
+            StreamEnd = new StreamEndInteractable(Row(StreamEndInteractable.k_Id), this);
 
             for (int i = 0; i < Config.Stakes.Length; i++)
             {
@@ -105,6 +112,12 @@ namespace ZooTycoon.Core
         }
 
         // ---------- 대 ----------
+
+        // 설계 45: 대는 말뚝 위쪽 반원만 본다(줄이 땅을 가로지르지 않게). 감기 · 미끼 · 대물 곁 앉기가 다 이 규칙
+        internal bool InReach(StakeInteractable stake, Vector2 p, float range)
+        {
+            return p.Y >= stake.Position.Y && Vector2.Distance(p, stake.Position) <= range;
+        }
 
         // 사거리: 대 사거리 × (1 + 다른 말뚝 등대의 비율 합)
         public float RangeOf(StakeInteractable stake)
@@ -322,7 +335,37 @@ namespace ZooTycoon.Core
 
         private bool BossInRange(StakeInteractable stake)
         {
-            return Fish.Any(f => f.Boss && Vector2.Distance(Layout.PointAt(f.S), stake.Position) <= RangeOf(stake));
+            return Fish.Any(f => f.Boss && InReach(stake, Layout.PointAt(f.S), RangeOf(stake)));
+        }
+
+        internal bool CanDigStream => !StreamFull && Wombat.Worker.Wallet.Coins >= DigPrice;
+
+        // 설계 45: 정해진 길을 digStep 더 판다. 웜뱃은 판 쪽을 보고 파는 동작, 새 물에 서 있었으면 가까운 땅으로 비킨다
+        internal void DigStream()
+        {
+            if (!CanDigStream || !Wombat.Worker.Wallet.TrySpendCoins(DigPrice))
+            {
+                return;
+            }
+
+            float from = Layout.Length;
+            Wombat.Dig(StreamEnd.Position);
+            Dug++;
+            ApplyDug();
+            Bus.Publish(new Events.StreamDug(this, from, Layout.Length));
+        }
+
+        private void ApplyDug()
+        {
+            Layout.SetDug((float)(Config.DugStart + Config.DigStep * Dug));
+
+            if (WombatPresent && !Layout.Nav.IsWalkable(Layout.Nav.Snap(Wombat.Mover.Position))
+                && Layout.Nav.TryNearestFree(Wombat.Mover.Position, _ => false, (float)Config.StreamWidth * 2f, out Vector2 free))
+            {
+                Wombat.Mover.Place(free);
+            }
+
+            SyncThings();
         }
 
         internal bool CanThump => ThumpLeft <= 0d;
@@ -600,11 +643,13 @@ namespace ZooTycoon.Core
 
         internal RodTable ChoiceOrNull(int i) => m_choice != null && i < m_choice.Length ? m_choice[i] : null;
 
-        internal void Restore(int stage, int summons, IEnumerable<(bool open, RodTable rod, int grade)> stakes, RodTable carried, int carriedGrade,
+        internal void Restore(int stage, int summons, int dug, IEnumerable<(bool open, RodTable rod, int grade)> stakes, RodTable carried, int carriedGrade,
             IReadOnlyList<RodTable> choice, IReadOnlyDictionary<string, FishRecord> log)
         {
             Stage = Math.Max(1, stage);
             Summons = summons;
+            Dug = Math.Max(0, dug);
+            ApplyDug();
             int i = 0;
 
             foreach ((bool open, RodTable rod, int grade) in stakes)
@@ -666,7 +711,7 @@ namespace ZooTycoon.Core
             SyncThings();
         }
 
-        // 사물 목록: 딴짓 점원 → 똥 → 낚은 대물(있을 때) → 말뚝 → 나가기 → 물가(물가는 말뚝 · 통로에 대상을 양보한다). 오두막은 대상이 아니다
+        // 사물 목록: 딴짓 점원 → 똥 → 낚은 대물(있을 때) → 말뚝 → 막다른 끝(더 팔 수 있을 때) → 나가기 → 물가(물가는 말뚝 · 통로에 대상을 양보한다). 오두막은 대상이 아니다
         private void SyncThings()
         {
             Placed.Clear();
@@ -679,6 +724,12 @@ namespace ZooTycoon.Core
             }
 
             Placed.AddRange(m_stakes);
+
+            if (!StreamFull)
+            {
+                Placed.Add(StreamEnd);
+            }
+
             Placed.Add(m_exit);
             Placed.Add(Bank);
         }
