@@ -94,6 +94,8 @@ namespace ZooTycoon.Core
             bool[,] mask = new bool[width, height];
             int[,] wallRow = new int[width, height];
             HashSet<Cell> set = cells as HashSet<Cell> ?? new HashSet<Cell>(cells);
+            // 띠 끝이 방으로 드러난 열(x, 띠 윗변): 위 칸은 안 팠는데 옆 위 칸은 판 곳
+            List<(int x, int top)> openEnds = new List<(int x, int top)>();
 
             foreach (Cell cell in cells)
             {
@@ -110,6 +112,16 @@ namespace ZooTycoon.Core
                         wallRow[x, y] = y < top ? y - (top - k_WallHeight) + 1 : 0;
                     }
                 }
+
+                if (exposed && set.Contains(cell.Offset(-1, -1)))
+                {
+                    openEnds.Add((x0, top - k_WallHeight));
+                }
+
+                if (exposed && set.Contains(cell.Offset(1, -1)))
+                {
+                    openEnds.Add((x0 + cellWidth - 1, top - k_WallHeight));
+                }
             }
 
             if (carve.HasValue)
@@ -125,8 +137,24 @@ namespace ZooTycoon.Core
                 }
             }
 
+            // 2026-10-05 사용자 「벽 모서리가 다듬어지지 않아서 이상해」: 띠의 드러난 끝 한 열을 방 밖으로 빼 외곽선(턱 바깥 선)이
+            // 흙 덩어리 옆에서 띠 밑까지 곧게 내려가게 한다. 둥글리기 전에 빼야 덩어리 아래 모서리를 깎지 않고, 뒤에 다시 빼야 띠 밑 끝 메움이 지워진다
+            ClearColumns(mask, wallRow, openEnds);
             RoundCorners(mask, radius);
+            ClearColumns(mask, wallRow, openEnds);
             return new Result(mask, wallRow, originX, originY);
+        }
+
+        private static void ClearColumns(bool[,] mask, int[,] wallRow, List<(int x, int top)> columns)
+        {
+            foreach ((int x, int top) in columns)
+            {
+                for (int y = top; y < top + k_WallHeight; y++)
+                {
+                    mask[x, y] = false;
+                    wallRow[x, y] = 0;
+                }
+            }
         }
 
         private static int Pixels(float units)
