@@ -45,10 +45,9 @@ namespace ZooTycoon.Core
         public bool StreamFull => Layout.Length >= Layout.PlanLength - 1e-3f;
         internal FishingSim Sim { get; }
         public IReadOnlyList<Fish> Fish => Sim.Fish;
-        // 단계(1부터, 대물을 낚을 때마다 +1) · 물때(1 ~ bossEvery, 시작 전 0) · 이번 물때에 놓친 수 · 소환한 수
+        // 단계(1부터, 대물을 낚을 때마다 +1) · 물때(1 ~ bossEvery, 시작 전 0) · 소환한 수
         public int Stage { get; private set; } = 1;
         public int Wave { get; private set; }
-        public int Missed { get; private set; }
         public int Summons { get; private set; }
         public bool BossOut => m_bossOut;
         // 엉덩이 쿵을 다시 하기까지 남은 초
@@ -471,7 +470,6 @@ namespace ZooTycoon.Core
         private void NextWave()
         {
             Wave = Wave % Config.BossEvery + 1;
-            Missed = 0;
 
             if (Wave == Config.BossEvery)
             {
@@ -572,10 +570,6 @@ namespace ZooTycoon.Core
             if (fish.Boss)
             {
                 EndBoss(false);
-            }
-            else
-            {
-                Missed++;
             }
         }
 

@@ -78,6 +78,8 @@ namespace ZooTycoon.World
         // 든 빵 층 순서: 몸(0) 앞 51~, 뒷모습이면 몸 뒤 -10~
         private const int k_CarryFrontOrder = 51;
         private const int k_CarryBackOrder = -10;
+        // 설계 44 든 낚싯대: 앞 · 뒷모습은 손 자리에서 몸 오른쪽 끝으로(가슴 앞이면 얼굴 · 배를 가린다)
+        private const float k_HeldSide = 0.5f;
         // 걷는 동안 발밑에서 이는 먼지(k_DustGap초마다 알갱이 k_DustCount개가 천천히 떠오른다)
         private static readonly Color k_Dust = new Color32(0xC8, 0xA8, 0x8C, 255);
         private const float k_DustGap = 0.2f;
@@ -103,6 +105,7 @@ namespace ZooTycoon.World
         private Sprite[] m_backSeated;
         private Sprite[] m_sideSeated;
         private bool m_wasSitting;
+        private SpriteRenderer m_held;
         private float m_blinkIn;
         private float m_fidgetIn;
         private Sprite m_square;
@@ -276,6 +279,14 @@ namespace ZooTycoon.World
                 m_carry[i].sortingOrder = Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder) + i;
             }
 
+            if (m_held != null)
+            {
+                bool side = facing == Facing.Left || facing == Facing.Right;
+                m_held.transform.localPosition = side ? Vector3.zero : new Vector3(k_HeldSide, 0f, 0f);
+                m_held.flipX = facing == Facing.Left;
+                m_held.sortingOrder = Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder);
+            }
+
             // 같은 프레임 배열이면 다시 시작하지 않는다(숨쉬기가 끊기지 않게)
             if (m_playing != frames)
             {
@@ -345,12 +356,32 @@ namespace ZooTycoon.World
             return m_digThrowFrame * frameSeconds;
         }
 
-        // 설계 44 엉덩이 쿵: 웅크림 · 폴짝 · 쿵을 seconds 동안 바로(아트방 순서 k_ThumpOrder). 소리는 쿵 칸(2)이 처음 나올 때
-        public void Thump(float seconds)
+        // 설계 44 엉덩이 쿵: 웅크림 · 폴짝 · 쿵을 seconds 동안 바로(아트방 순서 k_ThumpOrder). 소리는 쿵 칸(2)이 처음 나올 때. 그때까지 초를 돌려준다(물결 고리)
+        public float Thump(float seconds)
         {
             float frameSeconds = seconds / k_ThumpOrder.Length;
+            float impact = frameSeconds * System.Array.IndexOf(k_ThumpOrder, 2);
             PlayNow(Sequence(ThumpSheet(), k_ThumpOrder, frameSeconds), frameSeconds);
-            StartCoroutine(PlayLater(SoundTable.k_Thump, frameSeconds * System.Array.IndexOf(k_ThumpOrder, 2)));
+            StartCoroutine(PlayLater(SoundTable.k_Thump, impact));
+            return impact;
+        }
+
+        // 설계 44 든 낚싯대: 돌리지 않고 세운 그대로 손에 쥔다(피벗 = 쥔 자리). null이면 빈손
+        public void Hold(Sprite rod)
+        {
+            if (m_held == null)
+            {
+                if (rod == null)
+                {
+                    return;
+                }
+
+                m_held = new GameObject("Held").AddComponent<SpriteRenderer>();
+                m_held.transform.SetParent(m_carry[0].transform.parent, false);
+            }
+
+            m_held.sprite = rod;
+            m_held.enabled = rod != null;
         }
 
         // 설계 44 월척 털썩: 털썩 앉아(앉는 중 → 앉음) seconds가 다 될 때까지 앉음 칸을 유지한 뒤 일어선다

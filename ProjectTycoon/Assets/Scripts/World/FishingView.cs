@@ -14,7 +14,7 @@ namespace ZooTycoon.World
     // 물길은 아트방 「흙 도랑」을 굴 그림처럼 칸마다 칠한다(StreamPainter). 설계 45: 판 데까지만 물이고 끝은 둑으로 막힌다. 파면 다시 칠하고, 막다른 끝 앞 땅에 파기 값.
     // 말뚝은 아트방 「나무 말뚝」(발끝 피벗), 대는 「통통한 대」(피벗 = 꽂는 자리)를 말뚝 윗면 구멍에 꽂는다(말뚝 앞, 밑동 밧줄 깃이 구멍을 덮는다). 대는 돌리지도 뒤집지도 않고, 감는 동안 끄덕인다.
     // 물고기는 아트방 「둥근 귀염」 위에서 본 모습(오른쪽을 봄, 월척은 2배), 낚이면 옆모습(창고 아이콘)으로 튄다. 물고기 · 말뚝은 매 프레임 Core에서 읽어 맞춘다.
-    // 팻말(물때 · 놓침)과 값 표식(소환 · 열기 · 파기)은 값 표식 알약(MarkerView, 1배), 붙잡힌 월척 · 낚은 대물 위는 「!」 말풍선. 낚으면 재료 팝업, 쿵 · 털썩 · 파기는 웜뱃 동작.
+    // 물때 팻말과 값 표식(소환 · 열기 · 파기)은 값 표식 알약(MarkerView, 1배), 붙잡힌 월척 · 낚은 대물 위는 「!」 말풍선. 낚으면 재료 팝업, 쿵 · 털썩 · 파기는 웜뱃 동작.
     // 낚시 폴리싱: 감는 대 끝에서 물고기까지 낚싯줄, 물고기는 물길 방향으로 눕고 살랑인다(90도 단위). 낚으면 대 끝으로 튀어 오르고, 놓치면 막다른 끝에서 사라진다.
     // 소환은 등급만큼 반짝임(드묾 · 전설 글), 합치기는 짝 대가 날아와 합쳐진다
     public sealed class FishingView : MonoBehaviour, IAreaView
@@ -60,13 +60,18 @@ namespace ZooTycoon.World
         private const float k_RodHeight = 0.95f;
         private const float k_PopupHeight = 1.2f;
         private const float k_TagRise = 1.3f;
+        // 쿵: 물결 고리가 쿵 반지름까지 퍼지는 초 · 멈춘 물고기 머리 위 별(높이 · 도는 반지름 · 빠르기)
+        private const float k_RippleSeconds = 0.45f;
+        // 든 대에서 잘라 낼 밑동 칸 수(make_rods.py가 꽂는 자리 위로 남긴 말뚝 테 · 밧줄 깃)
+        private const int k_RimCells = 5;
+        private const float k_DizzyLift = 0.25f;
+        private const float k_DizzyRadius = 0.15f;
+        private const float k_DizzySpeed = 7f;
         // 물결 한 칸 초(아트방 「고인 물」 수정)
         private const float k_WaterFrameSeconds = 0.35f;
         // 등급 별: 발끝 아래 높이 · 별 사이(8칸 = 별 7칸 + 틈 1칸)
         private const float k_StarDrop = 0.15f;
         private const float k_StarGap = 0.2f;
-        // 놓침 팻말: 막다른 끝에서 위로(물길 위 둑 가운데쯤)
-        private const float k_MissedRise = 0.9f;
         // 낚싯줄 굵기 · 낚은 물고기가 대 끝까지 튀는 초 · 높이 · 살랑임(칸) · 글 알약이 떠오르는 초
         private const float k_LineWidth = 0.025f;
         private const float k_CatchSeconds = 0.35f;
@@ -124,16 +129,16 @@ namespace ZooTycoon.World
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
         private Sprite m_halfRing;
+        private Sprite m_ring;
         private SpriteRenderer m_stream;
         // ponytail: 물결 칸마다 물길 전체를 한 장씩(568×588 넷 ≈ 5MB). 물길이 더 커지면 물 칸만 따로 그리는 층으로
         private Sprite[] m_streamFrames = new Sprite[0];
         private MarkerView m_waveSign;
-        private MarkerView m_missedSign;
         private MarkerView m_priceTag;
         private MarkerView m_digTag;
         private BubbleTable m_alert;
         private readonly Dictionary<string, Sprite> m_rodSprites = new Dictionary<string, Sprite>();
-        private SpriteRenderer m_carried;
+        private readonly Dictionary<Sprite, Sprite> m_heldRods = new Dictionary<Sprite, Sprite>();
         private SpriteRenderer m_catch;
         private SpriteRenderer m_catchAlert;
         // 대물이 둑으로 날아가는 동안은 누운 대물을 아직 안 보인다
@@ -146,6 +151,7 @@ namespace ZooTycoon.World
             public SpriteRenderer Body;
             public SpriteRenderer BarBack;
             public SpriteRenderer BarFill;
+            public SpriteRenderer Dizzy;
             public float Length;
             public float Phase;
         }
@@ -173,6 +179,7 @@ namespace ZooTycoon.World
             m_tables = tables;
             m_square = Fx.NewSquare();
             m_halfRing = NewHalfRing();
+            m_ring = NewRing();
             m_alert = tables.Get<BubbleTable>("alert");
             m_poopViews = new PoopViews(this, fishing, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, ToWorld);
             m_clerkViews = new ClerkViews(this, fishing, bus, m_clerkPrefab, tables, frames, transform, null);
@@ -190,12 +197,10 @@ namespace ZooTycoon.World
             BuildStakes();
             // 물때 팻말: 입구 아치 위쪽 가운데(옆에 두면 좁은 폰에서 알약 폭 2.1이 화면 밖으로 잘린다). 들어온 웜뱃이 머리 위에 든 대(발끝 위 1.15)보다 위
             m_waveSign = NewTag(ToWorld(new System.Numerics.Vector2(fishing.Layout.HoleFloor.X, -0.6f)));
-            m_missedSign = NewTag(Vector3.zero);
             m_priceTag = NewTag(Vector3.zero);
             m_priceTag.gameObject.SetActive(false);
             m_digTag = NewTag(Vector3.zero);
             m_rods.ToList().ForEach(sprite => m_rodSprites[sprite.name] = sprite);
-            m_carried = NewRenderer(transform, "Carried", null, Color.white, 1);
             // 튀기(Fx.Bounce)는 배율을 1로 되돌리므로 늘인 그림은 한 겹 안에 둔다
             Transform catchHolder = new GameObject("BossCatch").transform;
             catchHolder.SetParent(transform, false);
@@ -249,27 +254,19 @@ namespace ZooTycoon.World
             SyncPriceTag();
             m_waveSign.Show(m_fishing.BossOut ? m_tables.Format("fishing_boss", m_fishing.Stage)
                 : m_tables.Format("fishing_wave", m_fishing.Stage, Math.Max(1, m_fishing.Wave), m_fishing.Config.BossEvery));
-            m_missedSign.Show(m_tables.Format("fishing_missed", m_fishing.Missed));
-            // 놓침 팻말은 막다른 끝 위 둑, 파기 값은 막다른 끝 앞 땅(끝까지 팠으면 없음)
-            m_missedSign.transform.position = ToWorld(m_fishing.Layout.PointAt(m_fishing.Layout.Length)) + Vector3.up * k_MissedRise;
-            m_digTag.gameObject.SetActive(!m_fishing.StreamFull);
+            // 파기 값은 웜뱃이 막다른 끝 앞 땅을 대상으로 할 때만(빵집 · 농장 파기와 같이, 2026-10-05 사용자 「늘 떠 있는 건 별로」)
+            bool digTarget = !m_fishing.StreamFull && m_fishing.Target == m_fishing.StreamEnd;
+            m_digTag.gameObject.SetActive(digTarget);
 
-            if (!m_fishing.StreamFull)
+            if (digTarget)
             {
                 m_digTag.transform.position = ToWorld(m_fishing.StreamEnd.Position);
                 m_digTag.Show(m_tables.Format("tag_dig", BigNumberText(m_fishing.DigPrice)));
             }
 
+            // 든 대는 돌리지 않고 세운 그대로 손에(2026-10-05 사용자 「머리 위에 든 모양이 어색」)
             RodTable carried = m_fishing.Carried;
-            m_carried.gameObject.SetActive(carried != null);
-
-            // 든 대는 머리 위에 눕힌다(90도라 칸 격자 그대로, 꽂는 자리가 오른쪽 끝)
-            if (carried != null)
-            {
-                m_carried.sprite = RodSprite(carried, m_fishing.CarriedGrade);
-                m_carried.transform.position = m_wombat.transform.position + new Vector3(k_RodHeight / 2f, 1.15f, 0f);
-                m_carried.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-            }
+            m_wombat.Hold(carried != null ? HeldRod(RodSprite(carried, m_fishing.CarriedGrade)) : null);
 
             bool waiting = m_fishing.Choice != null && !m_landing;
             m_catch.transform.parent.gameObject.SetActive(waiting);
@@ -347,7 +344,14 @@ namespace ZooTycoon.World
                 art.Body.transform.position = at;
                 art.Body.transform.localRotation = Quaternion.Euler(0f, 0f, vertical ? (dir.Y < 0f ? -90f : 90f) : 0f);
                 art.Body.flipX = !vertical && dir.X < 0f;
-                art.Body.color = stunned && Mathf.Repeat(Time.time, 0.2f) < 0.1f ? k_WaterLight : Color.white;
+                art.Dizzy.enabled = stunned;
+
+                // 쿵에 멈춘 동안 별 하나가 머리 위를 돈다(그림자에 색을 곱하면 거의 안 보였다)
+                if (stunned)
+                {
+                    float angle = Time.time * k_DizzySpeed + art.Phase;
+                    art.Dizzy.transform.position = at + new Vector3(Mathf.Cos(angle) * k_DizzyRadius, k_DizzyLift + Mathf.Sin(angle) * k_DizzyRadius * 0.4f, 0f);
+                }
                 bool reeling = fish.Reeled > 0d && !fish.Trophy;
                 art.BarBack.gameObject.SetActive(reeling);
                 art.BarFill.gameObject.SetActive(reeling);
@@ -378,6 +382,7 @@ namespace ZooTycoon.World
 
             Destroy(art.BarBack.gameObject);
             Destroy(art.BarFill.gameObject);
+            Destroy(art.Dizzy.gameObject);
             return art.Body.transform;
         }
 
@@ -393,7 +398,9 @@ namespace ZooTycoon.World
             SpriteRenderer fill = NewRenderer(transform, "ReelFill", m_square, k_BarFill, k_TopOrder - 1);
             back.gameObject.SetActive(false);
             fill.gameObject.SetActive(false);
-            return new FishArt { Body = body, BarBack = back, BarFill = fill, Length = length, Phase = UnityEngine.Random.value * Mathf.PI * 2f };
+            SpriteRenderer dizzy = NewRenderer(transform, "Dizzy", m_stakeStar, Color.white, k_FishOrder + 1);
+            dizzy.enabled = false;
+            return new FishArt { Body = body, BarBack = back, BarFill = fill, Dizzy = dizzy, Length = length, Phase = UnityEngine.Random.value * Mathf.PI * 2f };
         }
 
         // ---------- 말뚝 · 대 ----------
@@ -624,7 +631,7 @@ namespace ZooTycoon.World
             }
         }
 
-        // 놓쳤다: 물고기가 막다른 끝 둑 틈으로 작아지며 빠져나가고(작은 물보라) 놓침 팻말이 튄다
+        // 놓쳤다: 물고기가 막다른 끝 둑 틈으로 작아지며 빠져나간다(작은 물보라 · 소리). 놓친 수는 띄우지 않는다(2026-10-05 사용자)
         private void Bus_FishEscaped(Events.FishEscaped e)
         {
             if (e.Fishing != m_fishing)
@@ -633,7 +640,6 @@ namespace ZooTycoon.World
             }
 
             Transform body = TakeFish(e.Fish);
-            Vector3 end = ToWorld(m_fishing.Layout.PointAt(m_fishing.Layout.Length));
 
             if (body != null)
             {
@@ -641,7 +647,6 @@ namespace ZooTycoon.World
                 StartCoroutine(Fx.Burst(transform, m_square, body.position, 4, 0.6f, 1.6f, 9f, 0.35f, 3, k_WaterLight, k_TopOrder));
             }
 
-            m_missedSign.Bounce();
         }
 
         // 설계 45: 물길을 팠다. 웜뱃이 퍼 던지는 때에 새 물을 칠하고 흙덩이가 튄다
@@ -723,8 +728,8 @@ namespace ZooTycoon.World
                 return;
             }
 
-            m_wombat.Thump((float)m_fishing.Config.ThumpSeconds);
-            Splash(ToWorld(m_fishing.Layout.NearestOnStream(e.At)), 2);
+            float impact = m_wombat.Thump((float)m_fishing.Config.ThumpSeconds);
+            StartCoroutine(Ripple(impact, ToWorld(e.At), (float)m_fishing.Config.ThumpRadius, ToWorld(m_fishing.Layout.NearestOnStream(e.At))));
         }
 
         // target이 to까지 k_CatchSeconds 동안 포물선(arc 높이)으로 날며 배율이 endScale배가 된 뒤 사라진다
@@ -769,6 +774,39 @@ namespace ZooTycoon.World
         private void ShowPopup(Vector3 at, string amount, Sprite icon)
         {
             Instantiate(m_popupPrefab, at, Quaternion.identity, transform).Show(amount, icon);
+        }
+
+        // 쿵: 쿵 칸(impact초 뒤)에 물보라와 함께 웜뱃 자리에서 고리가 쿵 반지름까지 퍼지며 사라진다(멈추는 범위를 보인다)
+        private IEnumerator Ripple(float impact, Vector3 at, float radius, Vector3 splashAt)
+        {
+            yield return new WaitForSeconds(impact);
+            Splash(splashAt, 2);
+            SpriteRenderer ring = NewRenderer(transform, "Ripple", m_ring, k_WaterLight, k_RangeOrder);
+            ring.transform.position = at;
+
+            for (float t = 0f; t < k_RippleSeconds; t += Time.deltaTime)
+            {
+                float k = t / k_RippleSeconds;
+                ring.transform.localScale = Vector3.one * radius * 2f * (1f - (1f - k) * (1f - k));
+                ring.color = new Color(k_WaterLight.r, k_WaterLight.g, k_WaterLight.b, 1f - k * k);
+                yield return null;
+            }
+
+            Destroy(ring.gameObject);
+        }
+
+        // 손에 든 대: 밑동 k_RimCells칸(원본에서 같이 옮겨진 말뚝 테 · 밧줄 깃)을 잘라 낸 그림, 피벗 = 잘린 아랫변의 꽂는 자리 가로
+        private Sprite HeldRod(Sprite rod)
+        {
+            if (!m_heldRods.TryGetValue(rod, out Sprite held))
+            {
+                Rect r = rod.rect;
+                float cut = k_RimCells * 2f;
+                held = Sprite.Create(rod.texture, new Rect(r.x, r.y + cut, r.width, r.height - cut), new Vector2(rod.pivot.x / r.width, 0f), rod.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+                m_heldRods[rod] = held;
+            }
+
+            return held;
         }
 
         private void Splash(Vector3 at, int strength)
@@ -818,6 +856,30 @@ namespace ZooTycoon.World
         }
 
         // 설계 45: 사거리 반원 고리(한 변 1유닛, 가운데 피벗, 위쪽만). 대는 말뚝 위쪽만 본다
+        // 쿵 물결 고리: 테두리만(가운데는 비움)
+        private static Sprite NewRing()
+        {
+            const int k_Size = 128;
+            const float k_Inner = 0.9f;
+            Texture2D texture = new Texture2D(k_Size, k_Size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            Color32[] pixels = new Color32[k_Size * k_Size];
+
+            for (int y = 0; y < k_Size; y++)
+            {
+                for (int x = 0; x < k_Size; x++)
+                {
+                    float dx = (x + 0.5f) / k_Size * 2f - 1f;
+                    float dy = (y + 0.5f) / k_Size * 2f - 1f;
+                    float d = dx * dx + dy * dy;
+                    pixels[y * k_Size + x] = d <= 1f && d >= k_Inner * k_Inner ? new Color32(255, 255, 255, 255) : new Color32(0, 0, 0, 0);
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            return Sprite.Create(texture, new Rect(0f, 0f, k_Size, k_Size), new Vector2(0.5f, 0.5f), k_Size);
+        }
+
         private static Sprite NewHalfRing()
         {
             const int k_Size = 128;

@@ -125,8 +125,7 @@ namespace ZooTycoon.Tests
             Run(1d);
             Assert.That(first.S - s, Is.EqualTo((float)first.Kind.Speed).Within(0.1f), "속도대로");
 
-            Assert.That(RunUntil(() => m_fishing.Missed > 0, 60d), Is.True, "대가 없으면 끝에서 놓친다");
-            Assert.That(escaped, Is.EqualTo(m_fishing.Missed), "놓칠 때마다 사건");
+            Assert.That(RunUntil(() => escaped > 0, 60d), Is.True, "대가 없으면 끝에서 놓친다(놓칠 때마다 사건)");
         }
 
         [Test]
