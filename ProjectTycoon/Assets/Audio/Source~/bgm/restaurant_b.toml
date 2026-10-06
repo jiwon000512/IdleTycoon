@@ -1,0 +1,12 @@
+caption = "warm homey theme for a small lantern-lit seafood eatery deep in a burrow, soft plucked nylon guitar and ukulele, gentle upright bass, light kalimba, a soft chiptune lead playing a simple sparse melody, low warm cello pad, cozy evening mood, calm and cheerful, quiet, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 96
+keyscale = "Bb major"
+timesignature = "4"
+seed = 4708
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/restaurant_b"
+audio_format = "wav"
+backend = "pt"
+thinking = false

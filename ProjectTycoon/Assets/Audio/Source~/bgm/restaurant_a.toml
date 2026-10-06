@@ -1,0 +1,12 @@
+caption = "cozy soft chiptune shop theme for a little aquarium sashimi restaurant inside an underground burrow in a cute pixel-art management game, gentle triangle and soft square waves, warm marimba, bubbly glockenspiel notes like rising air bubbles, low warm pad and soft chiptune bass, simple friendly melody, relaxed and welcoming rather than energetic, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 100
+keyscale = "F major"
+timesignature = "4"
+seed = 4707
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/restaurant_a"
+audio_format = "wav"
+backend = "pt"
+thinking = false

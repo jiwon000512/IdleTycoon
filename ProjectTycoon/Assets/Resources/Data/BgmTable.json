@@ -7,13 +7,14 @@
     "2026-09-28: 광장 = 「등불 광장」(plaza_d.toml → mellow.py 2.0 0.3 7000 굴 울림 → loop.py 5~22마디 48.6초).",
     "2026-09-30: 농장 = 「굴 속 들판」(farm_c.toml, 80 BPM D장조 → mellow.py 2.0 0.3 7000 → loop.py 11~25마디 42.0초, 이음새 0.938). 시안 a · b는 기록. 에이전트가 수치(튀는 음 6.3dB · 무게중심 310Hz)로 골랐고 사용자 피드백 대기.",
     "2026-10-05: 낚시터 = bgm_fishing(80 BPM F장조, 낮은 패드 · 펠트 피아노 · 첼로 · 물방울 글로켄, 48.0초 루프). 아트방이 시안 여섯(Audio/Source~/bgm/fishing_a~f.toml) 중 수치(튀는 음 9.4dB · 무게중심 333Hz)로 골랐고 사용자 피드백 대기.",
-    "version 2 (2026-10-06, 설계 47): restaurant 행 — 아트방 곡이 올 때까지 빵집 곡을 빌린다."
+    "version 2 (2026-10-06, 설계 47): restaurant 행 — 아트방 곡이 올 때까지 빵집 곡을 빌린다.",
+    "2026-10-06: 횟집 = 「수조 가게 칩튠」(restaurant_a.toml, 100 BPM F장조: 부드러운 칩튠 · 마림바 · 기포 같은 글로켄 · 낮은 패드 → mellow.py 2.0 0.3 7000 → loop.py 9~29마디 48.0초, 이음새 0.979). 사용자가 시안 셋(a~c) 중 골랐다. 빌리던 빵집 곡 자리."
   ],
   "rows": [
     { "id": "bakery", "clip": "Audio/bgm_bakery", "volume": 0.25 },
     { "id": "plaza", "clip": "Audio/bgm_plaza", "volume": 0.25 },
     { "id": "farm", "clip": "Audio/bgm_farm", "volume": 0.25 },
     { "id": "fishing", "clip": "Audio/bgm_fishing", "volume": 0.25 },
-    { "id": "restaurant", "clip": "Audio/bgm_bakery", "volume": 0.25 }
+    { "id": "restaurant", "clip": "Audio/bgm_restaurant", "volume": 0.25 }
   ]
 }

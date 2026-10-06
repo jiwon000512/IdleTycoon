@@ -1,0 +1,12 @@
+caption = "calm gentle theme for a fish tank restaurant inside a cozy cave, soft kalimba and vibraphone melody, slow rolling arpeggios like water, deep warm low pad and soft upright bass, tiny bubble sounds, peaceful and bright, simple sparse melody, cozy cave echo, major key, instrumental, loopable"
+instrumental = true
+duration = 90
+bpm = 90
+keyscale = "D major"
+timesignature = "4"
+seed = 4709
+batch_size = 1
+save_dir = "C:/project/ACE-Step-1.5/output/tycoon/restaurant_c"
+audio_format = "wav"
+backend = "pt"
+thinking = false
