@@ -9,7 +9,7 @@
 #     원본이 잘게(반 칸) 그려졌어도 줄이지 않는다: 바탕 한 칸(10px) = 2텍셀이므로 원본 픽셀 하나 = 2 × 주기/10 텍셀(반 칸이면 --px=1).
 #   raw가 아닐 때(이미 들어간 옛 그림을 그대로 다시 만들 때만): 투명과 맞닿은 흰빛 번짐 칸을 두 번 벗기고, 거리 24 안은 한 색,
 #     --colors보다 많으면 Lab 거리로 가장 가까운 두 색을 합치고, 가장 어두운 색과 맨 바깥 칸을 외곽선 (52,32,32)으로.
-# 사용: snap_codex.py <원본.png> <출력.png> [--raw] [--colors=12] [--px=2] [--cell=가로[,세로] 대략 칸 크기 px]   출력은 원본 픽셀 하나 = px 픽셀, 여백을 잘라 저장
+# 사용: snap_codex.py <원본.png> <출력.png> [--raw] [--square] [--colors=12] [--px=2] [--cell=가로[,세로] 대략 칸 크기 px]   출력은 원본 픽셀 하나 = px 픽셀, 여백을 잘라 저장
 import sys
 import numpy as np
 from PIL import Image
@@ -175,7 +175,7 @@ def snap(path, max_colors=12, cell=None, fixed=None, square=False, min_hole=1, m
 if __name__ == '__main__':
     args = [x for x in sys.argv[1:] if not x.startswith('--')]
     opts = dict((x[2:].split('=') + ['1'])[:2] for x in sys.argv[1:] if x.startswith('--'))
-    cells, g = snap(args[0], int(opts.get('colors', 12)), tuple(float(v) for v in opts['cell'].split(',')) if 'cell' in opts else None, raw='raw' in opts)
+    cells, g = snap(args[0], int(opts.get('colors', 12)), tuple(float(v) for v in opts['cell'].split(',')) if 'cell' in opts else None, raw='raw' in opts, square='square' in opts)
     px = int(opts.get('px', 2))
     Image.fromarray(np.repeat(np.repeat(cells, px, 0), px, 1)).save(args[1])
     n = len(np.unique(cells[cells[..., 3] > 0][:, :3], axis=0))

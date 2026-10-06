@@ -20,7 +20,7 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 7. **UI 프리팹이 원본이다.** 값은 프리팹을 직접 고친다(`PrefabUtility.LoadPrefabContents` → 값 → `SaveAsPrefabAsset`). 크기·위치는 프리팹에서 읽는다.
 8. **픽셀은 정수 배.** 스프라이트는 원본의 정수 배 크기로 놓는다(9-slice 가운데만 예외).
 9. **가로로 늘어나는 둥근 조각은 끝 비율을 지킨다.** 9-slice 경계는 좌우만(둥근 끝 전체), 높이는 원본 칸 수의 정수 배, `pixelsPerUnitMultiplier` = 4 / 배율.
-10. **글자는 두 벌.** 제목·이름·개수·이름표·값·버튼은 굵은 11(Galmuri11-Bold), 설명·안내 글만 보통 9(Galmuri9)(2026-09-30 사용자, 창고 시안 A). 정자체를 굵히거나 그림자를 넣지 않는다(세 번 반려됨). 새 UI 프리팹도 `FontAssetTests.UiPrefabs_UseOnlyTheTwoUiFonts`가 검사한다(굵은 11은 44, 보통 9는 36).
+10. **글자는 두 벌.** 제목·이름·개수·이름표·값·버튼은 굵은 11(Galmuri11-Bold), 설명·안내 글만 보통 9(Galmuri9)(2026-09-30 사용자, 창고 시안 A). 정자체를 굵히거나 그림자를 넣지 않는다(세 번 반려됨). 새 UI 프리팹도 `FontAssetTests.UiPrefabs_UseOnlyTheTwoUiFonts`가 검사한다(굵은 11은 44, 보통 9는 36. 예외는 곳 이름 띠의 굵은 11 2배 88 하나, 2026-10-06 사용자).
 
 ## 2. 공용 조각
 
@@ -47,7 +47,7 @@ UI(팝업·버튼·HUD·말풍선)를 만들거나 고칠 때 따른다. 이 문
 - 시트 칩(칩 시안 A, 2026-10-01): 개수는 칩 오른쪽 위 `pill` 배지(진갈색 95%, 0이면 강조색), 아래 줄은 `icon_clock` + 초, 해금 칩은 `icon_lock` + `CoinValue`. 큰 아이콘과 같은 그림을 작게 한 번 더 넣지 않는다.
 - 정보 창(창고 시안 A, 2026-09-30): 틀 이름은 `pill_tag` 이름표를 틀 윗변 왼쪽에 걸치고, 큰 아이콘은 `chip` 칸 안에, 값은 `pill` 안에, 목록 줄 사이는 그늘색 4px 구분선. 줄 아이콘은 고정 폭 칸 가운데에 둔다(이름 시작을 맞춘다).
 - 아이콘 칸(설계 41, 2026-10-02 사용자 「글씨로만 나열되어 읽기가 싫어짐」): 조건 · 보상 같은 목록은 글 줄 대신 `InfoTile` 칸(`chip` + 아이콘 + 값 + 두 글자 이름 + 체크). 아이콘은 칸마다 같은 상자 가운데에 정수 배로 놓아 값 줄을 맞춘다.
-- 화면 전용: 협상 `nego_scene`·`nego_bar`·`nego_bar_tick`·`nego_arrow`·`nego_ribbon`, 점원 `clerk_frame`·`clerk_frame_empty`·`clerk_badge_*`·`clerk_table`·`clerk_gauge*`(채움은 일머리 · 월급 모자람 주황, 월급날 초록 `_green`), 소식지 `news_frame`(제호 띠 9-slice, 제호는 TMP), 곳 이름 팻말 `loc_board`(반투명 0.55, 화면 위에서 560px, 2026-10-02 사용자).
+- 화면 전용: 협상 `nego_scene`·`nego_bar`·`nego_bar_tick`·`nego_arrow`·`nego_ribbon`, 점원 `clerk_frame`·`clerk_frame_empty`·`clerk_badge_*`·`clerk_table`·`clerk_gauge*`(채움은 일머리 · 월급 모자람 주황, 월급날 초록 `_green`), 소식지 `news_frame`(제호 띠 9-slice, 제호는 TMP), 곳 이름 띠(그림 없음: `white` 진갈색 80% 띠 + 금색 1칸 선 둘, 화면 위에서 720px, 가운데에서 펼침, 2026-10-06 사용자 시안 B).
 - 새 공용 조각이 생기면 이 표를 고치고, 옛 조각은 쓰던 곳을 모두 바꾼 뒤 PNG·생성 스크립트 줄·`ui_slices.json` 항목을 지운다.
 
 ## 3. 단위와 임포트

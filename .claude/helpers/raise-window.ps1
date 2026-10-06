@@ -1,20 +1,12 @@
 # 사용자가 볼 일이 있을 때만 그 세션의 터미널 창을 화면 맨 앞으로 올린다(.claude/settings.local.json 훅, 2026-10-01 사용자 「개입할 때 · 끝났을 때 한 번씩만」).
-#   AskUserQuestion(PreToolUse) · 권한 확인(Notification permission_prompt) · 사용자가 시킨 일의 끝(Stop). 방끼리 메시지로 시작된 턴의 끝은 올리지 않는다.
+#   AskUserQuestion(PreToolUse) · 권한 확인(Notification permission_prompt) · 사용자가 시킨 일의 끝(Stop). Stop을 건너뛰는 때(다른 방 메시지 턴 · 백그라운드를 기다리는 멈춤)는
+#   토스트(~/.claude/helpers/notify.ps1)와 같은 판정 ~/.claude/helpers/alert-filter.ps1(2026-10-06 사용자 「선택·의견이 필요할 때와 다 끝나 멈췄을 때만」).
 # 훅 프로세스는 콘솔이 없어서, 부모를 거슬러 claude.exe를 찾아 그 콘솔에 잠깐 붙고 콘솔 창의 주인(Windows Terminal 창)을 찾는다.
 # Windows는 백그라운드 프로세스의 SetForegroundWindow를 막으므로 Alt를 한 번 눌렀다 떼고 부른다.
 $hook = $null
 try { $hook = [Console]::In.ReadToEnd() | ConvertFrom-Json } catch {}
-if ($hook -and $hook.hook_event_name -eq 'Stop') {
-    if ($hook.stop_hook_active) { exit 0 }
-    # 이 턴을 연 마지막 프롬프트(도구 결과 · 시스템 주입 제외)가 다른 방의 메시지면 건너뛴다
-    $lines = [System.IO.File]::ReadAllLines($hook.transcript_path)
-    for ($i = $lines.Length - 1; $i -ge 0; $i--) {
-        $l = $lines[$i]
-        if ($l -notlike '*"type":"user"*' -or $l -like '*"tool_use_id"*' -or $l -like '*"isMeta":true*') { continue }
-        if ($l -like '*cross-session-message*') { "{0:HH:mm:ss} skip(peer turn)" -f (Get-Date) | Out-File -Encoding utf8 "$env:TEMP\raise-window.log"; exit 0 }
-        break
-    }
-}
+. "$env:USERPROFILE\.claude\helpers\alert-filter.ps1"
+if ($hook -and -not (Test-ShouldAlert $hook)) { "{0:HH:mm:ss} skip" -f (Get-Date) | Out-File -Encoding utf8 "$env:TEMP\raise-window.log"; exit 0 }
 Add-Type -Namespace Raise -Name U -MemberDefinition @'
 [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow();
 [DllImport("kernel32.dll")] public static extern bool AttachConsole(uint pid);
