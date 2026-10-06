@@ -5,9 +5,8 @@ using System.Numerics;
 namespace ZooTycoon.Core
 {
     // 설계 44: 물길 위 물고기와 대의 감기(디펜스 한 판). 낚시터가 매 프레임 돌리고, 오프라인은 같은 판으로 물때 하나를 따로 돌려 잰다(웜뱃 없이).
-    // 대는 사거리 안에서 가장 멀리 내려간 물고기를 감는다. 월척은 처음 감는 대가 붙잡아 멈추고(그 대는 다른 것을 못 감는다), 털썩해야 낚인다.
-    // 미끼는 사거리 안 물고기를 느리게, 쿵은 둘레 물고기를 잠깐 멈추게 한다. 설계 46 미끼 노점 업그레이드: 도르래면 붙잡은 월척을 멈춘 채 감아 올리고,
-    // 소용돌이면 간격마다 물길 맨 앞 물고기를 whirlDistance만큼 되돌린다
+    // 대는 사거리 안에서 가장 멀리 내려간 물고기를 감는다. 월척은 처음 감는 대가 붙잡아 멈추고(그 대는 다른 것을 못 감는다), 털썩 · 점원이 건져야 낚인다.
+    // 미끼는 사거리 안 물고기를 느리게, 쿵은 둘레 물고기를 잠깐 멈추게 한다. 설계 46 미끼 노점 소용돌이: 간격마다 물길 맨 앞 물고기를 whirlDistance만큼 되돌린다
     internal sealed class FishingSim
     {
         private readonly FishingArea m_area;
@@ -54,37 +53,10 @@ namespace ZooTycoon.Core
 
             foreach (StakeInteractable stake in m_area.Stakes)
             {
-                if (stake.Rod == null)
-                {
-                    continue;
-                }
-
-                if (m_hooks.TryGetValue(stake, out Fish hooked))
-                {
-                    ReelHooked(stake, hooked, dt);
-                }
-                else
+                if (stake.Rod != null && !m_hooks.ContainsKey(stake))
                 {
                     TickRod(stake, dt);
                 }
-            }
-        }
-
-        // 도르래: 붙잡은 월척을 멈춘 채 감는다(다 감으면 그 말뚝에서 낚인다)
-        private void ReelHooked(StakeInteractable stake, Fish fish, double dt)
-        {
-            double scale = m_area.TrophyReelScale;
-
-            if (scale <= 0d)
-            {
-                return;
-            }
-
-            fish.Reeled += m_area.ReelOf(stake, fish) * scale * dt;
-
-            if (fish.Reeled >= fish.Weight)
-            {
-                Land(stake);
             }
         }
 

@@ -963,9 +963,9 @@ namespace ZooTycoon.Data
                     errors.Add($"FishingConfigTable '{config.Id}': waveSeconds > 0, spawnGap ≥ 0, schoolBase ≥ 1, schoolPerStage ≥ 0, weightGrowth ≥ 1이어야 한다.");
                 }
 
-                if (config.TrophyChance < 0d || config.TrophyChance > 1d || config.TrophyWeightScale < 1d || config.TrophyCatch < 1 || config.TrophyHoldSeconds <= 0d || config.HaulSeconds <= 0d)
+                if (config.TrophyChance < 0d || config.TrophyChance > 1d || config.TrophyWeightScale < 1d || config.TrophyCatch < 1 || config.HaulSeconds <= 0d)
                 {
-                    errors.Add($"FishingConfigTable '{config.Id}': trophyChance는 0~1, trophyWeightScale ≥ 1, trophyCatch ≥ 1, trophyHoldSeconds · haulSeconds > 0이어야 한다.");
+                    errors.Add($"FishingConfigTable '{config.Id}': trophyChance는 0~1, trophyWeightScale ≥ 1, trophyCatch ≥ 1, haulSeconds > 0이어야 한다.");
                 }
 
                 if (config.SummonCost <= 0d || config.SummonGrowth < 1d || config.GradeWeights == null || config.GradeWeights.Length < 1 || config.GradeWeights.Any(w => w < 0d)
@@ -974,15 +974,15 @@ namespace ZooTycoon.Data
                     errors.Add($"FishingConfigTable '{config.Id}': summonCost > 0, summonGrowth ≥ 1, gradeWeights는 0 이상이고 합 > 0, gradeScale ≥ 1이어야 한다.");
                 }
 
-                // 설계 46 미끼 노점 업그레이드: 불빛 · 도르래 · 소용돌이가 다 있고 값 > 0 · 배수 ≥ 1 · 최대 ≥ 1 · 단계 효과 > 0, 소용돌이 간격은 최대 단계에서도 > 0
+                // 설계 46 미끼 노점 업그레이드: 불빛 · 소용돌이가 다 있고 값 > 0 · 배수 ≥ 1 · 최대 ≥ 1 · 단계 효과 > 0, 소용돌이 간격은 최대 단계에서도 > 0
                 FishingUpgradeData[] upgrades = config.HutUpgrades ?? new FishingUpgradeData[0];
                 FishingUpgradeData whirl = upgrades.FirstOrDefault(u => u.Id == FishingUpgradeData.k_Whirl);
 
-                if (new[] { FishingUpgradeData.k_Light, FishingUpgradeData.k_Pulley, FishingUpgradeData.k_Whirl }.Any(id => upgrades.Count(u => u.Id == id) != 1)
+                if (new[] { FishingUpgradeData.k_Light, FishingUpgradeData.k_Whirl }.Any(id => upgrades.Count(u => u.Id == id) != 1)
                     || upgrades.Any(u => string.IsNullOrEmpty(u.Name) || string.IsNullOrEmpty(u.EffectFormat) || u.BaseCost <= 0d || u.CostGrowth < 1d || u.MaxLevel < 1 || u.EffectPerLevel <= 0d)
                     || whirl == null || whirl.EffectBase - whirl.EffectPerLevel * (whirl.MaxLevel - 1) <= 0d || config.WhirlDistance <= 0d)
                 {
-                    errors.Add($"FishingConfigTable '{config.Id}': hutUpgrades는 light · pulley · whirl 한 줄씩, name · effectFormat이 있고 baseCost > 0, costGrowth ≥ 1, maxLevel ≥ 1, effectPerLevel > 0, whirl 간격은 최대 단계에서도 > 0, whirlDistance > 0이어야 한다.");
+                    errors.Add($"FishingConfigTable '{config.Id}': hutUpgrades는 light · whirl 한 줄씩, name · effectFormat이 있고 baseCost > 0, costGrowth ≥ 1, maxLevel ≥ 1, effectPerLevel > 0, whirl 간격은 최대 단계에서도 > 0, whirlDistance > 0이어야 한다.");
                 }
 
                 if (config.StageCost <= 0d || config.StageGrowth < 1d)

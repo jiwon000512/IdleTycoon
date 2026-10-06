@@ -30,11 +30,10 @@ namespace ZooTycoon.Core
         public int SchoolBase { get; set; }
         public double SchoolPerStage { get; set; }
         public double WeightGrowth { get; set; }
-        // 월척: 떼 물고기 하나가 월척일 확률 · 무게 배수 · 낚으면 재료 개수 · 점원이 거들기까지 버티는 초 · 털썩 동작 초
+        // 월척: 떼 물고기 하나가 월척일 확률 · 무게 배수 · 낚으면 재료 개수 · 털썩 동작 초
         public double TrophyChance { get; set; }
         public double TrophyWeightScale { get; set; }
         public int TrophyCatch { get; set; }
-        public double TrophyHoldSeconds { get; set; }
         public double HaulSeconds { get; set; }
         // 설계 46 대 사기: 처음 값 · 살 때마다 값 배수 · 등급 비중[보통, 드묾, 전설](뽑기) · 등급마다 감는 힘 배수
         public double SummonCost { get; set; }
@@ -44,7 +43,7 @@ namespace ZooTycoon.Core
         // 설계 46 단계 올리기(미끼 노점): 2단계로 가는 값 · 단계마다 값 배수
         public double StageCost { get; set; }
         public double StageGrowth { get; set; }
-        // 설계 46 미끼 노점 업그레이드(불빛 · 도르래 · 소용돌이, 예전 설치물 효과) · 소용돌이가 맨 앞 물고기를 되돌리는 거리(유닛)
+        // 설계 46 미끼 노점 업그레이드(불빛 · 소용돌이, 예전 설치물 효과) · 소용돌이가 맨 앞 물고기를 되돌리는 거리(유닛)
         public FishingUpgradeData[] HutUpgrades { get; set; }
         public double WhirlDistance { get; set; }
         // 계열 문턱: 판의 같은 계열 개수가 familySteps[i] 이상이면 그 계열 감는 힘 × familyScales[i]
@@ -58,11 +57,10 @@ namespace ZooTycoon.Core
     }
 
     // 설계 46 미끼 노점 업그레이드 한 줄. 값 = baseCost × costGrowth^단계, 단계 0 = 없음 · 최대 maxLevel. 효과는 코드가 id로 읽는다:
-    // light = 모든 대 사거리 × (1 + effectPerLevel × 단계) · pulley = 붙잡은 월척을 멈춘 채 감는 힘 × (effectPerLevel × 단계) · whirl = 되돌리는 간격 effectBase − effectPerLevel × (단계 − 1)초
+    // light = 모든 대 사거리 × (1 + effectPerLevel × 단계) · whirl = 되돌리는 간격 effectBase − effectPerLevel × (단계 − 1)초
     public sealed class FishingUpgradeData
     {
         public const string k_Light = "light";
-        public const string k_Pulley = "pulley";
         public const string k_Whirl = "whirl";
 
         public string Id { get; set; }

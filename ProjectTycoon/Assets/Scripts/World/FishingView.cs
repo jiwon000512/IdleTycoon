@@ -336,7 +336,7 @@ namespace ZooTycoon.World
                     float angle = Time.time * k_DizzySpeed + art.Phase;
                     art.Dizzy.transform.position = at + new Vector3(Mathf.Cos(angle) * k_DizzyRadius, k_DizzyLift + Mathf.Sin(angle) * k_DizzyRadius * 0.4f, 0f);
                 }
-                bool reeling = fish.Reeled > 0d && (!fish.Trophy || m_fishing.TrophyReelScale > 0d);
+                bool reeling = fish.Reeled > 0d;
                 art.Gauge.gameObject.SetActive(reeling);
 
                 if (reeling)
@@ -602,7 +602,8 @@ namespace ZooTycoon.World
                 StartCoroutine(Fly(body, TipOf(m_stakes[e.Stake.Index].Rod), k_CatchArc, 1f, () => ShowPopup(popupAt, amount, icon)));
             }
 
-            if (e.Fish.Trophy && m_fishing.WombatPresent && m_fishing.Wombat.Busy)
+            // 점원이 건진 월척은 웜뱃이 다른 일(쿵 · 파기)로 바빠도 끌어올리지 않는다
+            if (e.Fish.Trophy && m_fishing.WombatPresent && m_fishing.Wombat.Busy && m_fishing.Target == e.Stake)
             {
                 m_wombat.Haul((float)m_fishing.Config.HaulSeconds);
             }

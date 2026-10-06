@@ -243,10 +243,13 @@ namespace ZooTycoon.Tests
             Assert.That(Stake(0).Hooked, Is.SameAs(trophy), "아무도 없으면 계속 붙잡고 있다");
 
             int before = m_state.Count(trophy.Kind.Item);
+            bool busyOnCatch = false;
+            m_bus.Subscribe<Events.FishCaught>(_ => busyOnCatch = m_mall.Wombat.Busy);
             Assert.That(ActionAt(Stake(0)), Is.EqualTo(ActionTable.k_Haul));
             Press(Stake(0));
             Assert.That(m_state.Count(trophy.Kind.Item), Is.EqualTo(before + Config.TrophyCatch));
             Assert.That(Stake(0).Hooked, Is.Not.SameAs(trophy));
+            Assert.That(busyOnCatch, Is.True, "낚은 사건 때 웜뱃이 이미 털썩 중(화면이 끌어올리기 동작을 고른다)");
         }
 
         private void HireClerk()
@@ -255,22 +258,33 @@ namespace ZooTycoon.Tests
             Assert.That(m_fishing.TryHire(candidate, m_fishing.Hut, m_fishing.WageFor(candidate, m_fishing.Hut)), Is.True);
         }
 
+        // 월척 건지기(2026-10-06 사용자): 대가 월척을 붙잡으면 점원이 노점에서 바로 걸어가 건진다
         [Test]
-        public void Clerk_HaulsOverdueTrophy()
+        public void Clerk_ScoopsHookedTrophy_RightAway()
         {
-            Create(tweak: t =>
-            {
-                FishingConfigTable c = t.Get<FishingConfigTable>(FishingConfigTable.k_Main);
-                c.TrophyChance = 1d;
-                c.TrophyHoldSeconds = 5d;
-            });
+            Create(tweak: t => t.Get<FishingConfigTable>(FishingConfigTable.k_Main).TrophyChance = 1d);
             GoFishing();
             Buy(Stake(0));
             HireClerk();
             m_bus.Publish(new Events.Passed(m_fishing, PlazaArea.k_Id));
 
             Assert.That(RunUntil(() => Stake(0).Hooked != null, 60d), Is.True);
-            Assert.That(RunUntil(() => m_fishing.Log.Count > 0, 120d), Is.True, "오래 버틴 월척을 점원이 거든다");
+            Assert.That(RunUntil(() => m_fishing.Log.Count > 0, 20d), Is.True, "걷는 시간 안에 건진다");
+        }
+
+        // 오프라인도 점원이 있으면 걸리는 순간 건진 것으로 센다: 대가 막히지 않아 물때마다 월척 여럿
+        [Test]
+        public void Offline_WithClerk_ScoopsEveryHookedTrophy()
+        {
+            Create(tweak: t => t.Get<FishingConfigTable>(FishingConfigTable.k_Main).TrophyChance = 1d);
+            GoFishing();
+            Buy(Stake(0));
+            double Settled() => m_tables.GetAll<FishTable>().Select(f => f.Item).Distinct()
+                .Sum(id => Offline.Settle(m_state, m_mall, m_tables, 1200d).Items.TryGetValue(id, out int n) ? n : 0);
+
+            Assert.That(Settled(), Is.EqualTo(0d), "점원이 없으면 대가 첫 월척을 붙잡은 채 멈춘다");
+            HireClerk();
+            Assert.That(Settled(), Is.GreaterThan(Config.TrophyCatch * 1200d / Config.WaveSeconds), "물때 하나에 월척 하나보다 많다");
         }
 
         // 설계 46: 미끼 노점 시트에서 단계를 산다(값 stageCost × stageGrowth^(단계 − 1)). 다음 떼부터 물고기가 weightGrowth배 무겁다
@@ -331,25 +345,6 @@ namespace ZooTycoon.Tests
             BuyUpgrade(light.Id, light.MaxLevel - 1);
             Assert.That(m_fishing.TryChoose(ActionTable.k_HutUpgrade, m_fishing.Hut, light.Id), Is.False, "최대 단계");
             Assert.That(m_fishing.LevelOf(light.Id), Is.EqualTo(light.MaxLevel));
-        }
-
-        // 설계 46 도르래: 붙잡은 월척을 멈춘 채 대가 감아 올린다(털썩 · 점원 없이)
-        [Test]
-        public void HutPulley_ReelsHookedTrophy_WhileItStaysStill()
-        {
-            Create(tweak: t => t.Get<FishingConfigTable>(FishingConfigTable.k_Main).TrophyChance = 1d);
-            GoFishing();
-            Buy(Stake(0));
-            BuyUpgrade(FishingUpgradeData.k_Pulley, 5);
-            Assert.That(RunUntil(() => Stake(0).Hooked != null, 60d), Is.True);
-            Fish trophy = Stake(0).Hooked;
-            float s = trophy.S;
-            int before = m_state.Count(trophy.Kind.Item);
-            m_mall.Wombat.Mover.Place(m_fishing.Layout.HoleFloor);
-
-            Assert.That(RunUntil(() => m_state.Count(trophy.Kind.Item) > before, 120d), Is.True, "웜뱃 없이 낚인다");
-            Assert.That(trophy.S, Is.EqualTo(s), "감기는 동안 멈춰 있다");
-            Assert.That(m_state.Count(trophy.Kind.Item), Is.EqualTo(before + Config.TrophyCatch));
         }
 
         // 설계 46 소용돌이: 간격마다 물길 맨 앞 물고기를 whirlDistance만큼 되돌린다

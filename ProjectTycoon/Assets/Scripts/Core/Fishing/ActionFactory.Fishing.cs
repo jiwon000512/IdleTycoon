@@ -144,15 +144,15 @@ namespace ZooTycoon.Core
                 return fishing.LevelOf(option) < fishing.Upgrade(option).MaxLevel && fishing.BuyUpgrade(option);
             }
 
-            // 문구에 넣을 효과 값(단계 0 = 0): 불빛 = 사거리 +%, 도르래 = 월척 감기 배수, 소용돌이 = 1분에 되돌리는 번
+            // 문구에 넣을 효과 값(단계 0 = 0): 불빛 = 사거리 +%, 소용돌이 = 1분에 되돌리는 번
             private static double EffectAt(FishingUpgradeData upgrade, int level)
             {
-                switch (upgrade.Id)
+                if (upgrade.Id == FishingUpgradeData.k_Light)
                 {
-                    case FishingUpgradeData.k_Light: return System.Math.Round(upgrade.EffectPerLevel * level * 100d);
-                    case FishingUpgradeData.k_Whirl: return level > 0 ? System.Math.Round(60d / (upgrade.EffectBase - upgrade.EffectPerLevel * (level - 1))) : 0d;
-                    default: return upgrade.EffectPerLevel * level;
+                    return System.Math.Round(upgrade.EffectPerLevel * level * 100d);
                 }
+
+                return level > 0 ? System.Math.Round(60d / (upgrade.EffectBase - upgrade.EffectPerLevel * (level - 1))) : 0d;
             }
         }
 

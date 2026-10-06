@@ -35,7 +35,7 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
-        [TestCase("FishingConfigTable", 4)]
+        [TestCase("FishingConfigTable", 5)]
         [TestCase("RodTable", 2)]
         [TestCase("FishTable", 2)]
         [TestCase("DishTable", 1)]
@@ -112,7 +112,7 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 46: 미끼 노점 업그레이드는 light · pulley · whirl 한 줄씩, 시트에 나오는 대는 칩 아이콘이 있다
+        // 설계 46: 미끼 노점 업그레이드는 light · whirl 한 줄씩, 시트에 나오는 대는 칩 아이콘이 있다
         [Test]
         public void Validate_WhenHutUpgradeMissing_ReportsError()
         {

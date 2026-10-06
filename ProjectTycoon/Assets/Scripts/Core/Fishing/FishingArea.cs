@@ -10,8 +10,8 @@ namespace ZooTycoon.Core
     // 설계 44: 낚시터(낚시 디펜스). 광장 왼쪽 끝 문과 이 곳 구멍이 이어진다. 굴 속 물길(S자)로 물때마다 물고기 떼가 내려오고(FishingSim),
     // 둑의 말뚝에 꽂은 대가 사거리 안 물고기를 감아 낚는다(창고로). 물때는 waveSeconds마다 떼 하나.
     // 설계 46: 말뚝 시트에서 웜뱃이 계열을 골라 사고 등급은 뽑기(gradeWeights). 꽂힌 말뚝에서 다시 사면 옛 대는 사라진다.
-    // 미끼 노점(오두막)에서 단계(물고기 무게 · 떼)와 업그레이드 셋(불빛 사거리 · 도르래 월척 감기 · 소용돌이 되돌리기)을 코인으로 올린다. 판의 같은 계열 개수 문턱이 그 계열을 세게 한다.
-    // 웜뱃은 물가에서 엉덩이 쿵, 붙잡힌 월척에 털썩(ActionFactory.Fishing.cs). 점원 하나가 오두막에서 오래 버틴 월척을 거든다.
+    // 미끼 노점(오두막)에서 단계(물고기 무게 · 떼)와 업그레이드 둘(불빛 사거리 · 소용돌이 되돌리기)을 코인으로 올린다. 판의 같은 계열 개수 문턱이 그 계열을 세게 한다.
+    // 웜뱃은 물가에서 엉덩이 쿵, 붙잡힌 월척에 털썩(ActionFactory.Fishing.cs). 점원 하나가 오두막에서 기다리다 붙잡힌 월척을 바로 건진다(2026-10-06 사용자).
     // 놓는 사물은 없다(편집 카드 없음). 물고기는 웜뱃이 다른 곳에 있어도 흐른다.
     // 설계 45: 물길은 처음 절반쯤만 파여 있고 끝은 막혀 있다(끝에 닿은 물고기는 빠져나가 놓침). 막다른 끝 앞에서 코인으로 정해진 길을 한 칸씩 더 판다. 대는 말뚝 위쪽만 본다
     public sealed class FishingArea : WombatArea
@@ -51,8 +51,7 @@ namespace ZooTycoon.Core
         public double SummonPrice => Config.SummonCost * Math.Pow(Config.SummonGrowth, Summons);
         public double StagePrice => Config.StageCost * Math.Pow(Config.StageGrowth, Stage - 1);
         public IReadOnlyDictionary<string, int> Upgrades => m_upgrades;
-        // 도르래: 붙잡은 월척을 멈춘 채 감는 힘 배수(0 = 털썩 · 점원만) · 소용돌이: 되돌리는 간격(0 = 없음)
-        public double TrophyReelScale => Upgrade(FishingUpgradeData.k_Pulley).EffectPerLevel * LevelOf(FishingUpgradeData.k_Pulley);
+        // 소용돌이: 되돌리는 간격(0 = 없음)
         public double WhirlInterval
         {
             get
@@ -215,23 +214,24 @@ namespace ZooTycoon.Core
 
         internal void Haul(StakeInteractable stake)
         {
+            // 먼저 세워야 낚은 사건(화면)이 웜뱃 털썩인 줄 안다
             if (CanHaul(stake))
             {
-                Sim.Land(stake);
                 Wombat.Hold(stake.Position, Config.HaulSeconds);
+                Sim.Land(stake);
             }
         }
 
-        // 점원이 오래 버틴 월척을 거든다(웜뱃 동작 없이)
+        // 점원이 붙잡힌 월척을 건진다(웜뱃 동작 없이)
         internal void ClerkHaul(StakeInteractable stake)
         {
             Sim.Land(stake);
         }
 
-        // 붙잡은 지 trophyHoldSeconds가 지난 월척의 말뚝(점원)
-        internal StakeInteractable OverdueTrophy()
+        // 점원이 갈 말뚝: 가장 오래 붙잡힌 월척부터(번호 순이면 뒤 말뚝이 굶는다). 없으면 null
+        internal StakeInteractable HookedStake()
         {
-            return m_stakes.FirstOrDefault(s => s.Hooked != null && s.Hooked.HookedFor >= Config.TrophyHoldSeconds);
+            return m_stakes.Where(s => s.Hooked != null).OrderByDescending(s => s.Hooked.HookedFor).FirstOrDefault();
         }
 
         internal bool CanDigStream => !StreamFull && Wombat.Worker.Wallet.Coins >= DigPrice;
@@ -440,7 +440,7 @@ namespace ZooTycoon.Core
 
         // ---------- 오프라인 ----------
 
-        // 지금 판으로 물때 하나를 따로 돌려 낚는 재료(재료 id → 개수). 웜뱃 없이, 월척은 점원이 있을 때만(clerk)
+        // 지금 판으로 물때 하나를 따로 돌려 낚는 재료(재료 id → 개수). 웜뱃 없이, 월척은 점원이 있을 때만(clerk) 걸리는 순간 건진다(걷는 시간은 뺀 어림)
         internal Dictionary<string, double> SimulateWave(bool clerk)
         {
             const double k_Step = 0.1;
@@ -449,6 +449,12 @@ namespace ZooTycoon.Core
             Dictionary<string, double> made = new Dictionary<string, double>();
             FishingSim sim = new FishingSim(this);
             sim.Caught += (fish, _) => made[fish.Kind.Item] = (made.TryGetValue(fish.Kind.Item, out double n) ? n : 0d) + (fish.Trophy ? Config.TrophyCatch : 1);
+
+            if (clerk)
+            {
+                sim.Hooked += sim.Land;
+            }
+
             List<(double delay, Fish fish)> school = MakeSchool(new SeededRandom(Stage));
             double slowest = school.Count == 0 ? 0d : school.Min(f => f.fish.Kind.Speed);
             double end = school.Count == 0 ? 0d : school[school.Count - 1].delay + Layout.Length / slowest * k_Slack;
@@ -463,14 +469,6 @@ namespace ZooTycoon.Core
                 }
 
                 sim.Tick(k_Step);
-            }
-
-            if (clerk)
-            {
-                foreach (Fish fish in sim.Fish.Where(f => f.HookedBy != null))
-                {
-                    made[fish.Kind.Item] = (made.TryGetValue(fish.Kind.Item, out double n) ? n : 0d) + Config.TrophyCatch;
-                }
             }
 
             return made;
