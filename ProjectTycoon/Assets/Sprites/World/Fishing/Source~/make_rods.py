@@ -8,6 +8,8 @@
 #   4. 등급: 채도 낮은 색(릴 · 띠 · 쇠)을 밝기 그대로 2등급 은(SILVER) · 3등급 금(GOLD) 띠 위로 옮긴다(단계로 뭉치지 않게 이어서), 3등급은 대 끝 아래 금방울(3×4칸)
 #   5. 당김 판: 꽂는 자리 위 줄을 끝으로 갈수록 오른쪽으로 0~2칸 밀어(제곱) 살짝 휜 판(감는 동안 곧은 판과 번갈아)
 # 출력(한 칸 2px · PPU 80): ../rod_<bamboo|iron|bait>_<1|2|3>.png · _pull.png 판 · ../rod_bent.png(월척) · ../rod_<pulley|lighthouse|whirlpool>.png
+# 그물 계열(2026-10-06 설계 49 물때 디펜스, 별 대신 종류): raw/rod_net_a.png(사용자 선택 A 「뜰채」, 프롬프트 raw/prompt_rod_net.txt, 바탕 raw/rod_net_template.png)의
+#   세 대가 종류 셋이다(그물대 · 투망대 · 큰그물대). 1~3과 5만 한다(색 바꾸기 · 금방울 없음) → ../rod_net_<1|2|3>.png · _pull.png
 #   꽂는 자리(피벗) · 대 끝(줄이 나오는 점)을 그림 왼쪽 아래 기준 칸으로 출력한다.
 #   대 밑동에는 원본의 말뚝 윗면 테와 밧줄 깃이 남아 있어, 게임은 대를 말뚝 앞에 그려 깃이 구멍에 꽂힌 모습이 된다. 사용: python make_rods.py
 import os
@@ -136,4 +138,9 @@ if __name__ == '__main__':
     a, sock, _ = rods['bent']
     xr = int(np.nonzero((a[..., 3] > 0).any(0))[0].max())          # 휜 대 끝 = 맨 오른쪽 열의 가장 아래 칸(아래로 당겨진 끝)
     save('rod_bent', a, sock, (xr, int(np.nonzero(a[:, xr, 3] > 0)[0].max())))
+    # 그물 계열: 한 장의 세 대가 종류 셋(그물대 · 투망대 · 큰그물대), 원본 그대로
+    for n, (a, sock, tip) in cut(os.path.join(HERE, 'raw', 'rod_net_a.png'), ['net_1', 'net_2', 'net_3']).items():
+        save('rod_' + n, a, sock, tip)
+        p = pull(a, sock)
+        save('rod_' + n + '_pull', p, sock, (int(np.nonzero(p[0, :, 3] > 0)[0].max()), 0))
     # 특별한 대(도르래탑 · 등대 · 통발, raw/rod_specials.png)는 만들지 않는다(2026-10-05 설계 46: 설치물 · 대물 · 대 들기 · 합치기를 없애 이 그림은 만들지 않는다). 효과는 미끼 노점 업그레이드

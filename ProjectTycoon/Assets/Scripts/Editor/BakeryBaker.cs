@@ -482,12 +482,12 @@ namespace ZooTycoon.Editor
         // 물길 물결 네 칸(아트방, 0번 = 옛 water_tile)
         static readonly string[] WaterTiles = { "water_tile_0", "water_tile_1", "water_tile_2", "water_tile_3" };
 
-        // 물속 물고기 그림(이름 = 재료 id + _swim)
-        static readonly string[] FishSwims = { "fish_minnow_swim", "fish_crucian_swim", "fish_catfish_swim" };
+        // 물속 물고기 그림(이름 = 재료 id + _swim). 설계 49 대물은 fish_boss_swim(설계 46에서 지운 아트방 그림을 되살림)
+        static readonly string[] FishSwims = { "fish_minnow_swim", "fish_crucian_swim", "fish_catfish_swim", "fish_boss_swim" };
 
-        // 낚싯대 그림 · 꽂는 자리 칸(계열 대는 등급 셋 · 당김 판이 같다). 아트방 설계 45 A 「말뚝에 맞춘 대」
+        // 낚싯대 그림 · 꽂는 자리 칸(계열 대는 단 셋 · 당김 판이 같다). 아트방 설계 45 A 「말뚝에 맞춘 대」 · 설계 49 그물 계열 A 「뜰채」
         static IEnumerable<(string Name, int Socket)> RodSockets =>
-            new[] { "bamboo", "iron", "bait" }.SelectMany(f => new[] { "_1", "_2", "_3", "_1_pull", "_2_pull", "_3_pull" }.Select(g => ("rod_" + f + g, 7)))
+            new[] { "bamboo", "iron", "bait", "net" }.SelectMany(f => new[] { "_1", "_2", "_3", "_1_pull", "_2_pull", "_3_pull" }.Select(g => ("rod_" + f + g, 7)))
             .Concat(new[] { ("rod_bent", 7) });
 
         static MarkerView BakeDigTag()

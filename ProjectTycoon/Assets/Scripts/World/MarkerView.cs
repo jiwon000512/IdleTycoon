@@ -11,14 +11,17 @@ namespace ZooTycoon.World
 
         private float m_width;
 
-        // 글이 길면 알약이 옆으로 늘어난다(구운 폭보다 줄지는 않는다)
-        public void Show(string text)
+        // 알약 폭(유닛, 배율 전)
+        public float Width => m_body.size.x;
+
+        // 글이 길면 알약이 옆으로 늘어난다(구운 폭보다 줄지는 않는다). fit이면 글 폭에 맞춰 줄기도 한다(낚시판 이름표: 말뚝 사이가 좁다)
+        public void Show(string text, bool fit = false)
         {
             if (m_text.text != text)
             {
                 m_width = m_width > 0f ? m_width : m_body.size.x;
                 m_text.text = text;
-                m_body.size = new Vector2(Mathf.Max(m_width, m_text.GetPreferredValues(text).x + m_body.size.y), m_body.size.y);
+                m_body.size = new Vector2(Mathf.Max(fit ? 0f : m_width, m_text.GetPreferredValues(text).x + m_body.size.y), m_body.size.y);
             }
 
             gameObject.SetActive(true);

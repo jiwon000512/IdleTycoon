@@ -22,6 +22,8 @@ namespace ZooTycoon.UI
         private readonly IDisposable[] m_subscriptions;
 
         private Interactable m_target;
+        // 웜뱃의 대상이 아닌 사물의 시트(편집 모드에서 누른 흙 · 낚시판의 말뚝): 웜뱃 대상이 바뀌어도 닫지 않는다
+        private bool m_remote;
 
         public ObjectSheetPresenter(ObjectSheetView view, BakeryArea shop, EventBus bus, TableSet tables)
         {
@@ -58,6 +60,7 @@ namespace ZooTycoon.UI
         public void Show(Interactable target)
         {
             m_target = target;
+            m_remote = target.Area.Target != target;
             Refresh();
             m_view.Open();
         }
@@ -116,9 +119,10 @@ namespace ZooTycoon.UI
                 case StairInteractable stair:
                     m_view.SetHeader(m_tables.Text("sheet_stair_title"), m_tables.Format("sheet_stair_status", stair.Farm.Lower.Number));
                     break;
-                // 설계 46: 말뚝 = 대 사기(꽂혀 있으면 바꾸기, 등급 뽑기 비중을 아래 줄에) · 미끼 노점 = 지금 단계
+                // 설계 46 · 49: 말뚝 = 대 사기(빈 말뚝이면 단 뽑기 비중을 아래 줄에, 꽂혀 있으면 바꾸기 + 그 종류가 하는 일) · 미끼 노점 = 지금 단계
                 case StakeInteractable stake:
-                    m_view.SetHeader(stake.Rod == null ? m_tables.Text("sheet_stake_title") : m_tables.Format("sheet_stake_swap_title", m_tables.Text("rod_" + stake.Rod.Id)), GradeOdds(stake.Fishing));
+                    m_view.SetHeader(stake.Rod == null ? m_tables.Text("sheet_stake_title") : m_tables.Format("sheet_stake_swap_title", m_tables.Text("rod_" + stake.Rod.Id)),
+                        stake.Rod == null ? TierOdds(stake.Fishing) : m_tables.Text("rod_" + stake.Rod.Id + "_desc"));
                     break;
                 case FishingHutInteractable hut:
                     m_view.SetHeader(m_tables.Text("sheet_hut_title"), m_tables.Format("sheet_hut_status", hut.Fishing.Stage));
@@ -218,7 +222,7 @@ namespace ZooTycoon.UI
             };
         }
 
-        // 설계 46 대 칩: 대 · 설치물 아이콘 · 이름 · 값(자물쇠 없음). 사면 시트가 닫히고 말뚝에서 등급 뽑기
+        // 설계 46 대 칩: 계열 첫 종류의 아이콘 · 이름 · 값(자물쇠 없음). 사면 시트가 닫히고 말뚝에서 단 뽑기
         private SheetChip RodChip(SheetOption option)
         {
             RodTable rod = m_tables.Get<RodTable>(option.Option);
@@ -233,10 +237,10 @@ namespace ZooTycoon.UI
             };
         }
 
-        // 등급 뽑기에서 전설이 나올 확률(%, 한 글에 정보 하나)
-        private string GradeOdds(FishingArea fishing)
+        // 단 뽑기에서 맨 윗 종류(전설)가 바로 나올 확률(%, 한 글에 정보 하나)
+        private string TierOdds(FishingArea fishing)
         {
-            double[] weights = fishing.Config.GradeWeights;
+            double[] weights = fishing.Config.TierWeights;
             return m_tables.Format("sheet_stake_odds", Math.Round(weights[weights.Length - 1] / weights.Sum() * 100d));
         }
 
@@ -314,15 +318,6 @@ namespace ZooTycoon.UI
                         State = RowState(option.State),
                     };
                 }
-                // 설계 46 단계 올리기: 다음 단계 · 무엇이 바뀌나 · 값
-                case ActionTable.k_StageUp:
-                    return new SheetRow
-                    {
-                        Name = m_tables.Format("row_stage_up", option.Level + 1),
-                        Effect = m_tables.Text("row_stage_up_effect"),
-                        Cost = BigNumberFormatter.Format(option.Cost),
-                        State = RowState(option.State),
-                    };
                 default:
                     throw new InvalidOperationException($"행동 '{actionId}'의 시트 서식이 없다.");
             }
@@ -436,7 +431,7 @@ namespace ZooTycoon.UI
         // 걸어서 다른 사물로 가면(또는 배치가 바뀌어 대상이 사라지면) 닫는다
         private void Bus_TargetChanged(Events.TargetChanged e)
         {
-            if (e.Area == Area && m_view.IsVisible && Area.Target != m_target)
+            if (e.Area == Area && m_view.IsVisible && !m_remote && Area.Target != m_target)
             {
                 m_view.Close();
             }

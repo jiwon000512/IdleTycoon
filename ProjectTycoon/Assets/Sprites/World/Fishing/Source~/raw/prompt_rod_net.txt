@@ -1,0 +1,27 @@
+# 그물 계열 낚싯대 세 종류(2026-10-06 아트방, 설계 49 물때 디펜스): 그물대(단 1) · 투망대(단 2) · 큰그물대(단 3)를 한 벌로, 벌 셋 중 사용자 선택 A 「뜰채」(rod_net_a.png). B 「걸이 투망」 · C 「돛 그물」은 기록.
+# -i 1: rod_rods.png(지금 대, 결 · 크기 기준), -i 2: rod_net_template.png(웜뱃 + 말뚝 셋을 한 칸 10px로, 꽂는 자리 빨간 원 · 대 끝 파란 원. B는 굽은 안내선 rod_net_template_b.png), A · B는 -i 3: rod_net_c.png.
+# 처음 A · B는 그물 줄을 반 칸으로 잘게 그려 대까지 6.7px 격자가 됐다(B는 키 48칸). 「한 칸 10px」을 글로 죄면 더 잘게 나왔고, 한 칸 10px로 나온 C를 -i 3으로 주고 「이 그림의 칸 크기 · 그물 결」이라고 하니 10px 격자가 됐다.
+# 청록 물 위에 서므로 그물은 크림색 + 빨강 부표(청록 그물은 물에 묻힌다).
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code). Keep the canvas size, the white background, the wombat and the three wooden stakes of image 2 EXACTLY where and how they are: one art pixel = 10 screen pixels, the wombat is 42 art pixels wide, each stake 16 wide and 23 tall. Remove the red and blue guides. Use the same big 10-pixel art pixels everywhere, never smaller pixels.
+Image 1 shows the existing fishing rods of this cozy underground wombat-burrow fishing game: short, thick, toy-like rods with a big round wooden reel and a bulb grip, whose butt has a rope-wrapped wooden collar that sits snugly in the stake's socket hole so rod and stake read as one set.
+Paint a NEW rod family in exactly this style and scale: the NET family, three rods that throw a net over the fish to hold them still. In each stake socket plant one net rod whose rope collar sits in the socket at the red circle and whose pole tip ends at the blue circle (only 36 art pixels long, leaning right like the rods of image 1, shorter than the wombat is tall). Each keeps the same round wooden reel and bulb grip near the butt as in image 1, and a warm brown wooden pole.
+The three rods are ONE family growing from left to right: the same cream hemp net with a dark brown cord lattice and the same pole, but each one is clearly bigger and fancier than the one before. First stake = tier 1 NET ROD (plain and small). Second stake = tier 2 CAST-NET ROD (a larger net with small grey lead weights). Third stake = tier 3 GREAT NET ROD (the largest and grandest net, with red-and-white floats and shiny gold fittings).
+NET: draw every net as a solid flat cream-colored shape with a chunky lattice of dark brown cords on it (no see-through holes, no white inside the net, no fine texture), with one darker cream shade on its shadow side.
+STYLE: chunky pixel art exactly like the wombat, the stakes and image 1: no anti-aliasing, no gradients, no dithering, flat soft earthy palette, dark brown outline (#342020) one art pixel wide around everything. No fishing line, no fish, no water, no ground, no shadow, no text, no letters, no numbers. Nothing may touch or overlap the wombat or a neighboring stake.
+
+[A · B만: -i 3 rod_net_c.png]
+Image 3 is another rod set of this same NET family, already drawn at the correct pixel size: match its big 10-pixel art pixels, its pole, its reel and its net texture (flat cream fill with a square grid of dark brown cords, each cord exactly one art pixel thick, horizontal and vertical cords only, never thin diagonal lines) exactly, but give the nets the different shape described in DESIGN below instead of the flat sail of image 3. Do not draw crossbars or sails.
+
+[a]
+DESIGN - HOOP NET: each pole ends in a round wooden hoop with a net bag sagging below it, held out to the right over the water like a landing net (the hoop is seen from the front-top, so it is a wide oval). Tier 1: small hoop about 9 art pixels wide with a shallow bag. Tier 2: wider hoop about 12 art pixels wide with a deeper bag and three small grey lead weights hanging from the bag. Tier 3: big hoop about 15 art pixels wide with gold bands on the rim, a deep bag, small red-and-white floats around the hoop and a tiny red ribbon on the pole.
+Save the image as net_a.png in the current working directory and reply with only the path.
+
+[b]
+DESIGN - HANGING CAST NET: each pole follows the red guide: it rises from the socket and bends to the right like a shepherd's crook, ending in a small hook at the blue circle; nothing is drawn higher than the blue circle. A bell-shaped cast net hangs straight down from that hook by a very short rope like a lantern, narrow at the top and flaring at the bottom hem, hanging in the free space to the right of the pole and above the reel handle. Tier 1: a small narrow folded net, about 7 art pixels wide and 9 tall. Tier 2: an opened cone net about 11 art pixels wide and 13 tall with small grey lead weights along the bottom hem. Tier 3: a wide grand bell net about 15 art pixels wide and 17 tall with gold weights along the hem, small red-and-white floats around its top and a gold cap where it hangs.
+Save the image as net_b.png in the current working directory and reply with only the path.
+
+[c]
+DESIGN - SAIL NET: each pole carries a short horizontal wooden crossbar near its top, and a flat square net is stretched below the crossbar like a little sail or banner, hanging on the right side of the pole. Tier 1: a small square net about 9 art pixels wide. Tier 2: a wider net about 12 art pixels wide with a second wooden bar along its bottom edge and small grey lead weights at the bottom corners. Tier 3: a large net about 16 art pixels wide with gold caps on the bar ends, small red-and-white floats along the top bar and a tiny red pennant at the pole tip.
+Save the image as net_c.png in the current working directory and reply with only the path.

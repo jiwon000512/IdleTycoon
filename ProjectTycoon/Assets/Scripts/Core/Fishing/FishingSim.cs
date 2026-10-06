@@ -6,12 +6,17 @@ namespace ZooTycoon.Core
 {
     // 설계 44: 물길 위 물고기와 대의 감기(디펜스 한 판). 낚시터가 매 프레임 돌리고, 오프라인은 같은 판으로 물때 하나를 따로 돌려 잰다(웜뱃 없이).
     // 대는 사거리 안에서 가장 멀리 내려간 물고기를 감는다. 월척은 처음 감는 대가 붙잡아 멈추고(그 대는 다른 것을 못 감는다), 털썩 · 점원이 건져야 낚인다.
-    // 미끼는 사거리 안 물고기를 느리게, 쿵은 둘레 물고기를 잠깐 멈추게 한다. 설계 46 미끼 노점 소용돌이: 간격마다 물길 맨 앞 물고기를 whirlDistance만큼 되돌린다
+    // 미끼는 사거리 안 물고기를 느리게, 쿵은 둘레 물고기를 잠깐 멈추게 한다. 설계 46 미끼 노점 소용돌이: 간격마다 물길 맨 앞 물고기를 whirlDistance만큼 되돌린다.
+    // 설계 49 종류 특징(RodTable): 여러 마리 함께 감기(Targets) · 월척을 붙잡지 않고 감기(BigGame) · 대물 둔화(BossSlow) · 주기 멈춤(StunEvery). 대물은 붙잡히지 않고 소용돌이에도 안 밀린다
     internal sealed class FishingSim
     {
         private readonly FishingArea m_area;
         private readonly List<Fish> m_fish = new List<Fish>();
         private readonly Dictionary<StakeInteractable, Fish> m_hooks = new Dictionary<StakeInteractable, Fish>();
+        // 그물: 말뚝마다 다음 멈춤까지 남은 초
+        private readonly Dictionary<StakeInteractable, double> m_stunLeft = new Dictionary<StakeInteractable, double>();
+        // 이번에 감을 물고기(말뚝 하나를 도는 동안만 쓴다)
+        private readonly List<Fish> m_front = new List<Fish>();
         private double m_whirlLeft;
         // 말뚝마다 이번 틱에 감은 물고기(화면의 낚싯줄)
         private readonly Dictionary<StakeInteractable, Fish> m_targets = new Dictionary<StakeInteractable, Fish>();
@@ -53,11 +58,55 @@ namespace ZooTycoon.Core
 
             foreach (StakeInteractable stake in m_area.Stakes)
             {
-                if (stake.Rod != null && !m_hooks.ContainsKey(stake))
+                if (stake.Rod == null)
+                {
+                    continue;
+                }
+
+                TickStun(stake, dt);
+
+                if (!m_hooks.ContainsKey(stake))
                 {
                     TickRod(stake, dt);
                 }
             }
+        }
+
+        // 말뚝의 대가 바뀌었다(사기 · 옮기기 · 합치기 · 불러오기): 그 말뚝의 그물 주기를 처음부터 다시 센다
+        public void Forget(StakeInteractable stake)
+        {
+            m_stunLeft.Remove(stake);
+            m_targets.Remove(stake);
+        }
+
+        // 그물: StunEvery초마다 사거리 안 헤엄치는 물고기를 Stun초 멈춘다(닿은 물고기가 없으면 닿을 때까지 기다린다). 꽂은 뒤 첫 멈춤도 한 주기를 기다린다
+        private void TickStun(StakeInteractable stake, double dt)
+        {
+            RodTable rod = stake.Rod;
+
+            if (rod.StunEvery <= 0d)
+            {
+                return;
+            }
+
+            double left = m_stunLeft.TryGetValue(stake, out double waited) ? waited : rod.StunEvery;
+            left = Math.Max(0d, left - dt);
+
+            if (left <= 0d)
+            {
+                float range = m_area.RangeOf(stake);
+
+                foreach (Fish fish in m_fish)
+                {
+                    if (fish.HookedBy == null && m_area.InReach(stake, m_area.Layout.PointAt(fish.S), range))
+                    {
+                        fish.StunLeft = Math.Max(fish.StunLeft, rod.Stun);
+                        left = rod.StunEvery;
+                    }
+                }
+            }
+
+            m_stunLeft[stake] = left;
         }
 
         // 소용돌이: 간격마다 물길 맨 앞(막다른 끝에 가장 가까운) 헤엄치는 물고기를 되돌린다
@@ -80,9 +129,10 @@ namespace ZooTycoon.Core
             m_whirlLeft = interval;
             Fish front = null;
 
+            // 대물은 밀지 않는다(느린 대물이 되돌려지기만 하면 물때가 끝나지 않는다)
             foreach (Fish fish in m_fish)
             {
-                if (fish.HookedBy == null && (front == null || fish.S > front.S))
+                if (fish.HookedBy == null && !fish.Boss && (front == null || fish.S > front.S))
                 {
                     front = fish;
                 }
@@ -148,7 +198,7 @@ namespace ZooTycoon.Core
                     continue;
                 }
 
-                fish.S += (float)(fish.Kind.Speed * SlowAt(fish) * dt);
+                fish.S += (float)(fish.Speed * SlowAt(fish) * dt);
 
                 if (fish.S >= m_area.Layout.Length)
                 {
@@ -159,7 +209,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 사거리 안 미끼 중 가장 느리게 하는 값(없으면 1)
+        // 사거리 안 대 중 가장 느리게 하는 값(없으면 1). 대물에게는 대물 둔화(닻대)도 본다
         private double SlowAt(Fish fish)
         {
             double slow = 1d;
@@ -167,58 +217,75 @@ namespace ZooTycoon.Core
 
             foreach (StakeInteractable stake in m_area.Stakes)
             {
-                if (stake.Rod != null && stake.Rod.Slow < slow && m_area.InReach(stake, p, m_area.RangeOf(stake)))
+                if (stake.Rod == null)
                 {
-                    slow = stake.Rod.Slow;
+                    continue;
+                }
+
+                double rodSlow = fish.Boss ? Math.Min(stake.Rod.Slow, stake.Rod.BossSlow) : stake.Rod.Slow;
+
+                if (rodSlow < slow && m_area.InReach(stake, p, m_area.RangeOf(stake)))
+                {
+                    slow = rodSlow;
                 }
             }
 
             return slow;
         }
 
+        // 사거리 안 맨 앞부터 Targets마리를 감는다. 월척은 붙잡아 멈추고 그 대는 더 못 감는다(큰 놈 잡이 BigGame은 붙잡지 않고 그대로 감는다)
         private void TickRod(StakeInteractable stake, double dt)
         {
-            Fish target = Frontmost(stake, m_area.RangeOf(stake));
+            RodTable rod = stake.Rod;
+            Front(stake, m_area.RangeOf(stake), rod.Targets);
 
-            if (target == null)
+            if (m_front.Count == 0)
             {
                 m_targets.Remove(stake);
                 return;
             }
 
-            m_targets[stake] = target;
+            m_targets[stake] = m_front[0];
 
-            if (target.Trophy)
+            foreach (Fish target in m_front)
             {
-                target.HookedBy = stake;
-                m_hooks[stake] = target;
-                Hooked?.Invoke(stake);
-                return;
-            }
+                if (target.Trophy && rod.BigGame <= 0d)
+                {
+                    target.HookedBy = stake;
+                    m_hooks[stake] = target;
+                    Hooked?.Invoke(stake);
+                    return;
+                }
 
-            target.Reeled += m_area.ReelOf(stake, target) * dt;
+                target.Reeled += m_area.ReelOf(stake, target) * dt;
 
-            if (target.Reeled >= target.Weight)
-            {
-                Remove(target);
-                Caught?.Invoke(target, stake);
+                if (target.Reeled >= target.Weight)
+                {
+                    Remove(target);
+                    Caught?.Invoke(target, stake);
+                }
             }
         }
 
-        // 사거리(말뚝 위쪽 반원) 안에서 가장 멀리 내려간(막다른 끝에 가까운) 물고기. 붙잡힌 월척은 뺀다
-        private Fish Frontmost(StakeInteractable stake, float range)
+        // m_front에 사거리(말뚝 위쪽 반원) 안 물고기를 멀리 내려간(막다른 끝에 가까운) 순으로 count마리까지 담는다. 붙잡힌 월척은 뺀다
+        private void Front(StakeInteractable stake, float range, int count)
         {
-            Fish best = null;
+            m_front.Clear();
 
             foreach (Fish fish in m_fish)
             {
-                if (fish.HookedBy == null && (best == null || fish.S > best.S) && m_area.InReach(stake, m_area.Layout.PointAt(fish.S), range))
+                if (fish.HookedBy == null && m_area.InReach(stake, m_area.Layout.PointAt(fish.S), range))
                 {
-                    best = fish;
+                    m_front.Add(fish);
                 }
             }
 
-            return best;
+            m_front.Sort((a, b) => b.S.CompareTo(a.S));
+
+            if (m_front.Count > count)
+            {
+                m_front.RemoveRange(count, m_front.Count - count);
+            }
         }
 
         private void Remove(Fish fish)

@@ -7,10 +7,13 @@ namespace ZooTycoon.World
     // 오른쪽 메뉴 버튼 줄이 덮는 폭은 빼고 본다: 웜뱃은 남은 폭의 가운데, 경계도 오른쪽으로 그 폭만큼 더 간다
     // 설계 18: 편집 모드에서는 따라가지 않고 빈 곳 드래그로 팬(같은 경계 안)
     // 비추기(Spot): 잠깐 다른 곳을 당겨서 보여 주고 웜뱃에게 돌아온다(점원이 굴에서 나올 때). 조작하면 바로 돌아온다
+    // 설계 49 넓게 보기(Wide): 낚시판 보기 동안 절반 배율로 물러나 경계 가운데에 선다(낚시터 전체가 한 화면)
     [RequireComponent(typeof(Camera))]
     public sealed class WorldCameraController : MonoBehaviour
     {
         private const float k_Depth = -10f;
+        // 넓게 보기 배율(정수 배라야 픽셀이 고르다)
+        private const float k_WideZoom = 2f;
 
         [Tooltip("웜뱃을 따라잡는 시간(초). 작을수록 딱 붙는다")]
         [SerializeField] private float m_followSeconds = 0.15f;
@@ -30,6 +33,7 @@ namespace ZooTycoon.World
         private Func<Vector2> m_spot;
         private Func<bool> m_spotCancel;
         private float m_spotLeft;
+        private bool m_wide;
 
         private void Awake()
         {
@@ -71,14 +75,30 @@ namespace ZooTycoon.World
 
         public void Pan(Vector2 delta)
         {
-            Apply(Clamp((Vector2)transform.position + delta));
+            if (!m_wide)
+            {
+                Apply(Clamp((Vector2)transform.position + delta));
+            }
+        }
+
+        public void SetWide(bool wide)
+        {
+            m_wide = wide;
+            m_velocity = Vector2.zero;
         }
 
         private void LateUpdate()
         {
             m_spotLeft = m_spotLeft > 0f && !m_spotCancel() ? m_spotLeft - Time.unscaledDeltaTime : 0f;
             bool spot = m_spotLeft > 0f;
-            m_camera.orthographicSize = Mathf.SmoothDamp(m_camera.orthographicSize, spot ? m_size / m_spotZoom : m_size, ref m_sizeVelocity, m_spotSeconds, Mathf.Infinity, Time.unscaledDeltaTime);
+            m_camera.orthographicSize = Mathf.SmoothDamp(m_camera.orthographicSize, spot ? m_size / m_spotZoom : m_wide ? m_size * k_WideZoom : m_size, ref m_sizeVelocity, m_spotSeconds, Mathf.Infinity,
+                Time.unscaledDeltaTime);
+
+            if (m_wide)
+            {
+                Apply(Vector2.SmoothDamp(transform.position, m_bounds.center, ref m_velocity, m_spotSeconds, Mathf.Infinity, Time.unscaledDeltaTime));
+                return;
+            }
 
             if (m_target == null || !m_following)
             {

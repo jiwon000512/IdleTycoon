@@ -12,14 +12,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 15)]
-        [TestCase("StringTable", 49)]
+        [TestCase("StringTable", 50)]
         [TestCase("ClerkTable", 3)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 23)]
-        [TestCase("InteractableTable", 22)]
+        [TestCase("ActionTable", 24)]
+        [TestCase("InteractableTable", 23)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 18)]
         [TestCase("BgmTable", 2)]
@@ -35,8 +35,8 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
-        [TestCase("FishingConfigTable", 5)]
-        [TestCase("RodTable", 2)]
+        [TestCase("FishingConfigTable", 6)]
+        [TestCase("RodTable", 3)]
         [TestCase("FishTable", 2)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
@@ -119,6 +119,44 @@ namespace ZooTycoon.Tests
             TableSet tables = TestTables.Load();
             FishingConfigTable config = tables.Get<FishingConfigTable>(FishingConfigTable.k_Main);
             config.HutUpgrades = config.HutUpgrades.Where(u => u.Id != FishingUpgradeData.k_Whirl).ToArray();
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 설계 49: 대물 어종은 FishTable에 · 계열 안에서 단이 겹치지 않는다 · 주기 멈춤은 간격과 길이가 같이 있다
+        [Test]
+        public void Validate_WhenBossFishMissing_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<FishingConfigTable>(FishingConfigTable.k_Main).Boss.Fish = "no_such_fish";
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenRodTierDuplicatedInFamily_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<RodTable>("iron_3").Tier = 2;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenRodStunHasNoLength_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<RodTable>(RodTable.k_Net).Stun = 0d;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenRodStunCoversItsWholeInterval_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            RodTable net = tables.Get<RodTable>(RodTable.k_Net);
+            net.Stun = net.StunEvery;
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }

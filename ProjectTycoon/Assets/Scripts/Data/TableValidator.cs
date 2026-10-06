@@ -968,10 +968,10 @@ namespace ZooTycoon.Data
                     errors.Add($"FishingConfigTable '{config.Id}': trophyChance는 0~1, trophyWeightScale ≥ 1, trophyCatch ≥ 1, haulSeconds > 0이어야 한다.");
                 }
 
-                if (config.SummonCost <= 0d || config.SummonGrowth < 1d || config.GradeWeights == null || config.GradeWeights.Length < 1 || config.GradeWeights.Any(w => w < 0d)
-                    || config.GradeWeights.Sum() <= 0d || config.GradeScale < 1d)
+                if (config.SummonCost <= 0d || config.SummonGrowth < 1d || config.TierWeights == null || config.TierWeights.Length < 1 || config.TierWeights.Any(w => w < 0d)
+                    || config.TierWeights.Sum() <= 0d)
                 {
-                    errors.Add($"FishingConfigTable '{config.Id}': summonCost > 0, summonGrowth ≥ 1, gradeWeights는 0 이상이고 합 > 0, gradeScale ≥ 1이어야 한다.");
+                    errors.Add($"FishingConfigTable '{config.Id}': summonCost > 0, summonGrowth ≥ 1, tierWeights는 0 이상이고 합 > 0이어야 한다.");
                 }
 
                 // 설계 46 미끼 노점 업그레이드: 불빛 · 소용돌이가 다 있고 값 > 0 · 배수 ≥ 1 · 최대 ≥ 1 · 단계 효과 > 0, 소용돌이 간격은 최대 단계에서도 > 0
@@ -985,9 +985,13 @@ namespace ZooTycoon.Data
                     errors.Add($"FishingConfigTable '{config.Id}': hutUpgrades는 light · whirl 한 줄씩, name · effectFormat이 있고 baseCost > 0, costGrowth ≥ 1, maxLevel ≥ 1, effectPerLevel > 0, whirl 간격은 최대 단계에서도 > 0, whirlDistance > 0이어야 한다.");
                 }
 
-                if (config.StageCost <= 0d || config.StageGrowth < 1d)
+                // 설계 49 물때: 대물 어종은 FishTable에, 무게 · 속도 배수 > 0, 재료 ≥ 1
+                FishingBossData boss = config.Boss;
+
+                if (config.WavesPerStage < 1 || config.YieldEvery < 1 || boss == null || !tables.GetAll<FishTable>().Any(fish => fish.Id == boss.Fish)
+                    || boss.Weight <= 0d || boss.SpeedScale <= 0d || boss.Catch < 1)
                 {
-                    errors.Add($"FishingConfigTable '{config.Id}': stageCost > 0, stageGrowth ≥ 1이어야 한다.");
+                    errors.Add($"FishingConfigTable '{config.Id}': wavesPerStage · yieldEvery ≥ 1, boss.fish는 FishTable에 있고 boss.weight · speedScale > 0, boss.catch ≥ 1이어야 한다.");
                 }
 
                 if (config.FamilySteps == null || config.FamilyScales == null || config.FamilySteps.Length != config.FamilyScales.Length
@@ -1009,15 +1013,27 @@ namespace ZooTycoon.Data
                     errors.Add($"RodTable '{rod.Id}': family가 있고 reel · range · smallScale · bigScale > 0, slow는 0 초과 1 이하여야 한다.");
                 }
 
-                if (!rod.Locked && string.IsNullOrEmpty(rod.Icon))
+                // 설계 49: 단은 1부터, 계열 안에서 겹치지 않는다. 특징 칸 범위. 시트에 나오는 첫 종류는 칩 아이콘
+                if (rod.Tier < 1 || rod.UnlockStage < 1 || rod.Targets < 1 || rod.BigGame < 0d || rod.BossSlow <= 0d || rod.BossSlow > 1d || rod.StunEvery < 0d || rod.Stun < 0d
+                    || (rod.StunEvery > 0d) != (rod.Stun > 0d) || rod.StunEvery > 0d && rod.Stun >= rod.StunEvery || rod.Bonus < 0 || tables.GetAll<RodTable>().Count(other => other.Family == rod.Family && other.Tier == rod.Tier) != 1)
                 {
-                    errors.Add($"RodTable '{rod.Id}': 시트에 나오는 대(locked false)는 icon이 있어야 한다.");
+                    errors.Add($"RodTable '{rod.Id}': tier · unlockStage · targets ≥ 1, bigGame · bonus ≥ 0, bossSlow는 0 초과 1 이하, stunEvery와 stun은 둘 다 0이거나 둘 다 > 0이고 stun < stunEvery, 계열 안에서 tier가 겹치지 않아야 한다.");
+                }
+
+                if (rod.Tier == 1 && string.IsNullOrEmpty(rod.Icon))
+                {
+                    errors.Add($"RodTable '{rod.Id}': 시트에 나오는 첫 종류(tier 1)는 icon이 있어야 한다.");
+                }
+
+                if (rod.Tier > 1 && !tables.GetAll<RodTable>().Any(other => other.Family == rod.Family && other.Tier == rod.Tier - 1))
+                {
+                    errors.Add($"RodTable '{rod.Id}': 계열의 단은 1부터 빠짐없이 이어져야 한다(tier {rod.Tier - 1}이 없다).");
                 }
             }
 
-            if (!tables.GetAll<RodTable>().Any(rod => !rod.Locked))
+            if (!tables.GetAll<RodTable>().Any(rod => rod.Tier == 1 && rod.UnlockStage == 1))
             {
-                errors.Add("RodTable: 시트에 나오는 계열 대가 하나 이상 있어야 한다.");
+                errors.Add("RodTable: 처음부터 시트에 나오는 계열(tier 1 · unlockStage 1)이 하나 이상 있어야 한다.");
             }
 
             foreach (FishTable fish in tables.GetAll<FishTable>())

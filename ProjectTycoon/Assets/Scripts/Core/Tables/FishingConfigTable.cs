@@ -35,14 +35,14 @@ namespace ZooTycoon.Core
         public double TrophyWeightScale { get; set; }
         public int TrophyCatch { get; set; }
         public double HaulSeconds { get; set; }
-        // 설계 46 대 사기: 처음 값 · 살 때마다 값 배수 · 등급 비중[보통, 드묾, 전설](뽑기) · 등급마다 감는 힘 배수
+        // 설계 46 · 49 대 사기: 처음 값 · 살 때마다 값 배수 · 나오는 종류의 단 비중[첫, 둘째, 셋째](뽑기)
         public double SummonCost { get; set; }
         public double SummonGrowth { get; set; }
-        public double[] GradeWeights { get; set; }
-        public double GradeScale { get; set; }
-        // 설계 46 단계 올리기(미끼 노점): 2단계로 가는 값 · 단계마다 값 배수
-        public double StageCost { get; set; }
-        public double StageGrowth { get; set; }
+        public double[] TierWeights { get; set; }
+        // 설계 49 물때: 한 단계의 물때 수(마지막이 대물) · 대물 · 한 마리 재료가 +1 되는 단계 간격
+        public int WavesPerStage { get; set; }
+        public FishingBossData Boss { get; set; }
+        public int YieldEvery { get; set; }
         // 설계 46 미끼 노점 업그레이드(불빛 · 소용돌이, 예전 설치물 효과) · 소용돌이가 맨 앞 물고기를 되돌리는 거리(유닛)
         public FishingUpgradeData[] HutUpgrades { get; set; }
         public double WhirlDistance { get; set; }
@@ -72,6 +72,15 @@ namespace ZooTycoon.Core
         public double EffectPerLevel { get; set; }
         // 효과 전후 문구({0} 지금 {1} 다음, 숫자는 효과 값)
         public string EffectFormat { get; set; }
+    }
+
+    // 설계 49 대물: 어종(FishTable id) · 무게(× weightGrowth^(단계 − 1)) · 속도 배수 · 낚으면 재료 개수
+    public sealed class FishingBossData
+    {
+        public string Fish { get; set; }
+        public double Weight { get; set; }
+        public double SpeedScale { get; set; }
+        public int Catch { get; set; }
     }
 
     public sealed class FishingPointData

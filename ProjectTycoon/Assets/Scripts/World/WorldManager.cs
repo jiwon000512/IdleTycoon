@@ -100,6 +100,8 @@ namespace ZooTycoon.World
         public void SetEditing(bool editing)
         {
             m_camera.SetFollowing(!editing);
+            // 설계 49: 낚시터의 편집 모드는 낚시판 보기(낚시터 전체를 한 화면에)
+            m_camera.SetWide(editing && m_mall.Active is FishingArea);
 
             foreach (IAreaView view in m_views.Values)
             {
@@ -119,6 +121,17 @@ namespace ZooTycoon.World
             {
                 view.SetHeld(held);
             }
+        }
+
+        // 설계 49 낚시판 보기: 끄는 대를 손가락(곳 좌표)에 붙인다 · 놓았다
+        public void DragRod(StakeInteractable stake, System.Numerics.Vector2 at)
+        {
+            ((FishingView)m_views[stake.Fishing]).DragRod(stake, at);
+        }
+
+        public void DropRod()
+        {
+            ((FishingView)m_views[m_mall.Fishing]).DropRod();
         }
 
         public void Pan(System.Numerics.Vector2 delta)

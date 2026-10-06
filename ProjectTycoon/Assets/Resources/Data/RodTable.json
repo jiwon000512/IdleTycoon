@@ -1,68 +1,28 @@
 {
   "table": "RodTable",
-  "version": 2,
+  "version": 3,
   "notes": [
-    "설계 44 · 46 낚싯대. 열린 말뚝의 시트에서 웜뱃이 골라 산다(locked가 아닌 행, 표 순서), 등급은 뽑기(FishingConfigTable gradeWeights). 꽂힌 말뚝에서 다시 사면 옛 대는 사라진다. 예전 설치물(도르래탑 · 등대 · 통발) 효과는 미끼 노점 업그레이드(FishingConfigTable hutUpgrades).",
-    "family: 계열(계열 문턱을 센다). reel: 초당 감는 힘(1등급, 등급마다 × FishingConfigTable gradeScale). range: 사거리 반지름(유닛). smallScale · bigScale: 작은 · 큰 물고기에 감는 힘 배수(보통은 1). slow: 사거리 안 물고기 속도 배수(1 = 그대로).",
-    "net · light는 아직 시트에 나오지 않는다(locked, 뒤로). icon: 시트 칩 아이콘(Resources/ 기준 경로, locked면 null).",
+    "설계 49 낚싯대 종류. 행 하나가 종류 하나다(별 없음). family: 계열(계열 문턱을 센다) · tier: 계열 안의 단(1~3). 같은 종류 둘을 합치면 그 계열의 tier + 1 종류가 된다(없으면 못 합친다). 말뚝 시트에는 tier 1 종류가 계열 칩으로 나오고, 사면 FishingConfigTable tierWeights로 단을 뽑아 그 계열의 그 단 종류가 꽂힌다.",
+    "unlockStage: 낚시터 단계가 이 값 이상이면 시트에 나온다(tier 1 행만 본다, 1 = 처음부터). 대물을 낚아 단계가 오르면 새 계열이 열린다.",
+    "reel: 초당 감는 힘. range: 사거리 반지름(유닛). smallScale · bigScale: 작은 · 큰 물고기에 감는 힘 배수(보통은 1). slow: 사거리 안 물고기 속도 배수(1 = 그대로).",
+    "특징 칸(없으면 기본값): targets 한꺼번에 감는 마리 수(1) · bigGame 0보다 크면 월척을 붙잡지 않고 그대로 감으며 월척 · 대물에 감는 힘 × 값(0) · bossSlow 사거리 안 대물 속도 배수(1) · stunEvery 초마다 사거리 안 물고기를 stun초 멈춤(0 = 없음) · bonus 사거리 안에서 낚인 물고기 재료 +값(0).",
+    "icon: 시트 칩 아이콘(Resources/ 기준 경로, tier 1 행만). 대 그림은 화면이 rod_<family>_<tier>로 찾는다(그림이 아직 없는 계열은 대나무 그림을 빌린다).",
     "version 1 (2026-10-05, 설계 44): 처음 만듦.",
-    "version 2 (2026-10-05, 설계 46 낚시터 개편): 소환 · 합치기 · 대물 3택 1 대신 시트에서 골라 산다, icon 칸(아트방 칩 아이콘 Sprites/Rods/<id>). 특별한 대 셋(pulley · lighthouse · whirlpool) 행과 special · effect 칸 삭제(사용자 「낚싯대만 쓰고 나머지는 효과로 오두막에서 업그레이드」)."
+    "version 2 (2026-10-05, 설계 46 낚시터 개편): 소환 · 합치기 · 대물 3택 1 대신 시트에서 골라 산다, icon 칸(아트방 칩 아이콘 Sprites/Rods/<id>). 특별한 대 셋(pulley · lighthouse · whirlpool) 행과 special · effect 칸 삭제(사용자 「낚싯대만 쓰고 나머지는 효과로 오두막에서 업그레이드」).",
+    "version 3 (2026-10-06, 설계 49 물때 디펜스): 행 = 종류(계열 넷 × 단 셋 = 열둘). tier · unlockStage · 특징 칸(targets · bigGame · bossSlow · stunEvery · stun · bonus) 추가, locked 삭제. 그물 계열은 unlockStage 4(아트방 A 「뜰채」), 등불 계열(light) 행은 그림이 올 때까지 뺐다."
   ],
   "rows": [
-    {
-      "id": "bamboo",
-      "family": "bamboo",
-      "locked": false,
-      "reel": 1.2,
-      "range": 2.2,
-      "smallScale": 1.5,
-      "bigScale": 0.6,
-      "slow": 1,
-      "icon": "Sprites/Rods/bamboo"
-    },
-    {
-      "id": "iron",
-      "family": "iron",
-      "locked": false,
-      "reel": 0.9,
-      "range": 2.0,
-      "smallScale": 0.6,
-      "bigScale": 1.8,
-      "slow": 1,
-      "icon": "Sprites/Rods/iron"
-    },
-    {
-      "id": "bait",
-      "family": "bait",
-      "locked": false,
-      "reel": 0.5,
-      "range": 2.4,
-      "smallScale": 1,
-      "bigScale": 1,
-      "slow": 0.5,
-      "icon": "Sprites/Rods/bait"
-    },
-    {
-      "id": "net",
-      "family": "net",
-      "locked": true,
-      "reel": 0.6,
-      "range": 2.0,
-      "smallScale": 1,
-      "bigScale": 1,
-      "slow": 1,
-      "icon": null
-    },
-    {
-      "id": "light",
-      "family": "light",
-      "locked": true,
-      "reel": 0.6,
-      "range": 2.2,
-      "smallScale": 1,
-      "bigScale": 1,
-      "slow": 1,
-      "icon": null
-    }
+    {"id": "bamboo", "family": "bamboo", "tier": 1, "unlockStage": 1, "reel": 1.2, "range": 2.2, "smallScale": 1.5, "bigScale": 0.6, "slow": 1, "icon": "Sprites/Rods/bamboo"},
+    {"id": "bamboo_2", "family": "bamboo", "tier": 2, "unlockStage": 1, "reel": 2.4, "range": 2.2, "smallScale": 1.5, "bigScale": 0.6, "slow": 1, "targets": 2, "icon": null},
+    {"id": "bamboo_3", "family": "bamboo", "tier": 3, "unlockStage": 1, "reel": 4.0, "range": 2.4, "smallScale": 1.5, "bigScale": 0.6, "slow": 1, "targets": 99, "icon": null},
+    {"id": "iron", "family": "iron", "tier": 1, "unlockStage": 1, "reel": 0.9, "range": 2.0, "smallScale": 0.6, "bigScale": 1.8, "slow": 1, "icon": "Sprites/Rods/iron"},
+    {"id": "iron_2", "family": "iron", "tier": 2, "unlockStage": 1, "reel": 2.25, "range": 2.0, "smallScale": 0.6, "bigScale": 1.8, "slow": 1, "bigGame": 2, "icon": null},
+    {"id": "iron_3", "family": "iron", "tier": 3, "unlockStage": 1, "reel": 5.6, "range": 2.2, "smallScale": 0.6, "bigScale": 1.8, "slow": 1, "bigGame": 2, "bossSlow": 0.5, "icon": null},
+    {"id": "bait", "family": "bait", "tier": 1, "unlockStage": 1, "reel": 0.5, "range": 2.4, "smallScale": 1, "bigScale": 1, "slow": 0.5, "icon": "Sprites/Rods/bait"},
+    {"id": "bait_2", "family": "bait", "tier": 2, "unlockStage": 1, "reel": 1.25, "range": 3.0, "smallScale": 1, "bigScale": 1, "slow": 0.35, "icon": null},
+    {"id": "bait_3", "family": "bait", "tier": 3, "unlockStage": 1, "reel": 3.1, "range": 3.0, "smallScale": 1, "bigScale": 1, "slow": 0.35, "bonus": 1, "icon": null},
+    {"id": "net", "family": "net", "tier": 1, "unlockStage": 4, "reel": 0.6, "range": 2.0, "smallScale": 1, "bigScale": 1, "slow": 1, "stunEvery": 8, "stun": 1.0, "icon": "Sprites/Rods/net"},
+    {"id": "net_2", "family": "net", "tier": 2, "unlockStage": 4, "reel": 1.5, "range": 2.2, "smallScale": 1, "bigScale": 1, "slow": 1, "stunEvery": 6, "stun": 1.5, "icon": null},
+    {"id": "net_3", "family": "net", "tier": 3, "unlockStage": 4, "reel": 3.75, "range": 2.4, "smallScale": 1, "bigScale": 1, "slow": 1, "stunEvery": 4, "stun": 2.0, "icon": null}
   ]
 }

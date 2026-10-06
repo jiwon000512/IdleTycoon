@@ -36,6 +36,9 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.StreamDug>(e => PlayIn(e.Fishing, SoundTable.k_Dig)),
                 bus.Subscribe<Events.StageRaised>(e => PlayIn(e.Fishing, SoundTable.k_StageUp)),
                 bus.Subscribe<Events.FishWhirled>(e => PlayIn(e.Fishing, SoundTable.k_Whirl)),
+                // 설계 49: 대물 등장 · 합치기 소리는 아트방이 올 때까지 소용돌이 · 대 뽑기 소리를 빌린다(대물을 낚으면 단계 올림 소리)
+                bus.Subscribe<Events.BossSpawned>(e => PlayIn(e.Fishing, SoundTable.k_Whirl)),
+                bus.Subscribe<Events.RodMerged>(e => PlayIn(e.Stake.Fishing, SoundTable.k_RodReveal + Math.Min(e.Stake.Rod.Tier, 3))),
                 // 설계 47: 횟집(칼질 cut은 RestaurantView, 다 떠서 손에 dish, 문 열기 shop_open — 아트방. 담기 · 놓기 put, 꺼내기 pick, 값 pay는 빵집 소리)
                 bus.Subscribe<Events.TankFilled>(e => PlayIn(e.Tank.Area, SoundTable.k_Put)),
                 bus.Subscribe<Events.FishTaken>(e => PlayIn(e.Tank.Area, SoundTable.k_Pick)),
@@ -45,7 +48,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.RestaurantVisitorPaid>(e => PlayIn(e.Visitor.Restaurant, SoundTable.k_Pay)),
                 bus.Subscribe<Events.ShopOpened>(_ => Play(SoundTable.k_ShopOpen)),
                 bus.Subscribe<Events.RodSummoned>(e => StartCoroutine(PlayLater(FishingView.RevealSeconds(e.Stake), e.Stake.Fishing,
-                    SoundTable.k_RodReveal + Math.Min(e.Stake.Grade, 3)))),
+                    SoundTable.k_RodReveal + Math.Min(e.Stake.Rod.Tier, 3)))),
                 bus.Subscribe<Events.Dug>(Bus_Dug),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.Upgraded>(e => PlayIn(e.Area, SoundTable.k_Upgrade)),

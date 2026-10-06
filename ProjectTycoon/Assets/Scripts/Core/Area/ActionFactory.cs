@@ -14,7 +14,7 @@ namespace ZooTycoon.Core
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
             ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_OpenPlant, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
             ActionTable.k_Talk, ActionTable.k_DigFloor, ActionTable.k_Evaluate,
-            ActionTable.k_OpenSummon, ActionTable.k_Summon, ActionTable.k_OpenStake, ActionTable.k_Haul, ActionTable.k_Thump, ActionTable.k_StageUp, ActionTable.k_HutUpgrade,
+            ActionTable.k_OpenSummon, ActionTable.k_Summon, ActionTable.k_OpenStake, ActionTable.k_Haul, ActionTable.k_Thump, ActionTable.k_HutUpgrade,
             ActionTable.k_DigStream, ActionTable.k_FillTank, ActionTable.k_ServeDish, ActionTable.k_OpenShop, ActionTable.k_TakeFish, ActionTable.k_PlaceFish,
         };
 
@@ -47,7 +47,6 @@ namespace ZooTycoon.Core
                 case ActionTable.k_OpenStake: return new OpenStake(table);
                 case ActionTable.k_Haul: return new Haul(table);
                 case ActionTable.k_Thump: return new Thump(table);
-                case ActionTable.k_StageUp: return new StageUp(table);
                 case ActionTable.k_HutUpgrade: return new HutUpgrade(table);
                 case ActionTable.k_DigStream: return new DigStream(table);
                 case ActionTable.k_FillTank: return new FillTank(table);

@@ -170,6 +170,8 @@ namespace ZooTycoon.UI
         {
             if (!m_panel.gameObject.activeSelf)
             {
+                // 편집 모드에서 연 시트가 먼저 뜬 편집 패널 밑에 깔리지 않게 맨 앞으로(낚시판 보기의 대 사기)
+                transform.SetAsLastSibling();
                 m_dim.gameObject.SetActive(true);
                 m_panel.gameObject.SetActive(true);
                 Slide(m_hiddenY, 0f, k_OpenSeconds, false);

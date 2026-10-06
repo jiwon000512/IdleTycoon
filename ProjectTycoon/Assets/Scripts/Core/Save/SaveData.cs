@@ -43,7 +43,7 @@ namespace ZooTycoon.Core
         public FishingSave Fishing;
     }
 
-    // 설계 44 · 46: 낚시터. 말뚝(열림 · 대 · 등급, 말뚝 순서) · 단계 · 산 대 수 · 미끼 노점 업그레이드 단계 · 어종 기록(예전 저장의 든 대 · 3택 1 칸은 읽지 않는다).
+    // 설계 44 · 46 · 49: 낚시터. 말뚝(열림 · 대 종류, 말뚝 순서) · 단계 · 산 대 수 · 미끼 노점 업그레이드 단계 · 어종 기록(예전 저장의 든 대 · 3택 1 칸은 읽지 않는다).
     // 떠 있는 물고기 · 붙잡은 월척 · 물때 진행은 저장하지 않는다(다시 열면 물때 1부터)
     public sealed class FishingSave
     {
@@ -60,6 +60,7 @@ namespace ZooTycoon.Core
     {
         public bool Open;
         public string Rod;
+        // 옛 저장(설계 46)의 별 등급: 읽을 때만 쓴다(2 이상이면 그 계열의 그 단 종류로). 새 저장은 0
         public int Grade;
     }
 

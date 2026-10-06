@@ -69,6 +69,8 @@ namespace ZooTycoon.Game
             m_editPresenter.GhostHidden += world.HideGhost;
             m_editPresenter.Panned += world.Pan;
             m_editPresenter.HeldChanged += world.SetHeld;
+            m_editPresenter.RodDragged += world.DragRod;
+            m_editPresenter.RodDropped += world.DropRod;
 
             world.Initialize(game.Tables, game.Mall, game.Bus);
             game.PublishPendingOffline();

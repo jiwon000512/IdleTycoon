@@ -46,7 +46,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 46: 미끼 노점에서 단계를 올렸다(팻말 · 곳 팻말 「N단계!」)
+        // 설계 49: 대물을 낚아 단계가 올랐다(팻말 · 곳 이름 띠 「N단계!」, 새 계열이 열렸으면 그 이름)
         public readonly struct StageRaised
         {
             public readonly FishingArea Fishing;
@@ -57,7 +57,41 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 46: 말뚝에 대 · 설치물을 샀다(등급 뽑기 연출 · 드묾 · 전설 글). 옛 대가 있었으면 사라졌다
+        // 설계 49: 대물이 나왔다(팻말 「대물!」 · 소리) · 대물이 막다른 끝으로 빠져나갔다(물때는 1부터 다시)
+        public readonly struct BossSpawned
+        {
+            public readonly FishingArea Fishing;
+
+            public BossSpawned(FishingArea fishing)
+            {
+                Fishing = fishing;
+            }
+        }
+
+        public readonly struct BossEscaped
+        {
+            public readonly FishingArea Fishing;
+
+            public BossEscaped(FishingArea fishing)
+            {
+                Fishing = fishing;
+            }
+        }
+
+        // 설계 49: From의 대를 Stake의 같은 종류 대에 합쳤다(From은 비고 Stake는 윗 종류)
+        public readonly struct RodMerged
+        {
+            public readonly StakeInteractable Stake;
+            public readonly StakeInteractable From;
+
+            public RodMerged(StakeInteractable stake, StakeInteractable from)
+            {
+                Stake = stake;
+                From = from;
+            }
+        }
+
+        // 설계 46: 말뚝에 대를 샀다(단 뽑기 연출 · 드묾 · 전설 글). 옛 대가 있었으면 사라졌다
         public readonly struct RodSummoned
         {
             public readonly StakeInteractable Stake;

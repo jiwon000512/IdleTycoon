@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace ZooTycoon.Core
 {
-    // 설계 44 · 46: 낚시터 행동. 말뚝: 털썩 → 대 사기(시트) → 열기(actions 순서 = 버튼 우선), 물가: 엉덩이 쿵, 미끼 노점: 단계 올리기 · 업그레이드 셋(시트 줄).
+    // 설계 44 · 46 · 49: 낚시터 행동. 말뚝: 털썩 → 대 사기(시트) → 열기(actions 순서 = 버튼 우선), 물가: 엉덩이 쿵, 미끼 노점: 업그레이드 둘(시트 줄). 합치기 · 옮기기는 낚시판 보기(FishingArea.TryMoveRod).
     // 하는 일은 FishingArea가 갖고, 여기는 사물 종류와 할 수 있나만 본다
     public static partial class ActionFactory
     {
@@ -50,7 +50,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 46 대 사기(시트 칩): 계열마다 한 칩, 값은 공통. 고르면 사서 꽂는다(등급 뽑기)
+        // 설계 46 · 49 대 사기(시트 칩): 열린 계열마다 한 칩, 값은 공통. 고르면 사서 꽂는다(단 뽑기)
         private sealed class Summon : SheetAction
         {
             public Summon(ActionTable table) : base(table)
@@ -82,30 +82,6 @@ namespace ZooTycoon.Core
                 StakeInteractable stake = (StakeInteractable)target;
                 RodTable rod = stake.Fishing.ShopRods.FirstOrDefault(r => r.Id == option);
                 return rod != null && stake.Fishing.Summon(stake, rod);
-            }
-        }
-
-        // 설계 46 단계 올리기(미끼 노점 시트 줄): 값 = stageCost × stageGrowth^(단계 − 1)
-        private sealed class StageUp : SheetAction
-        {
-            public StageUp(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is FishingHutInteractable;
-            }
-
-            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
-            {
-                FishingArea fishing = ((FishingHutInteractable)target).Fishing;
-                return new[] { new SheetOption(null, SheetOption.Afford(worker, fishing.StagePrice), fishing.StagePrice, fishing.Stage) };
-            }
-
-            public override bool TryChoose(Worker worker, Interactable target, string option)
-            {
-                return ((FishingHutInteractable)target).Fishing.StageUp();
             }
         }
 

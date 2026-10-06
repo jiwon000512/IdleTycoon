@@ -54,6 +54,8 @@ namespace ZooTycoon.Game
             Add("농장 층", new[] { Opt("지금 층 다 파기", DigFloor), Opt("아래층 열기(무료)", OpenLower) });
             Add("빵집 평가", new[] { Opt("바로 통과(별 +1)", () => PassEvaluation(1)), Opt("별 +5", () => PassEvaluation(5)) });
             Add("횟집", new[] { Opt("열기(무료, 별이 모자라면 평가 통과)", OpenRestaurant) });
+            // 설계 49: 낚시터의 벽을 바로 본다(옛 저장의 높은 단계는 지금 판으로 대물을 못 낚는다)
+            Add("낚시터", new[] { Opt("1단계로", () => FishingStage(1)), Opt("단계 +1", () => FishingStage(Mall.Fishing.Stage + 1)), Opt("대물 부르기", CallBoss) });
             // 설계 43: 오프라인 정산을 바로(팝업까지) · 저장
             Add("오프라인", new[] { (600d, "10분"), (3600d, "1시간"), (28800d, "8시간") }.Select(t => Opt(t.Item2, () => Offline(t.Item1, t.Item2))));
             Add("저장", new[] { Opt("지금 저장", () => { m_game.Save(); return "저장함"; }), Opt("저장 지우기(다음 플레이 새 게임)", () => { m_game.DeleteSave(); return "저장을 지웠다. 이번 플레이는 닫을 때 저장하지 않는다"; }) });
@@ -169,6 +171,18 @@ namespace ZooTycoon.Game
             }
 
             return "빵집 별 " + State.Stars.Count(BakeryArea.k_Id) + "개";
+        }
+
+        private string FishingStage(int stage)
+        {
+            Mall.Fishing.SetStageNow(stage);
+            return "낚시터 " + Mall.Fishing.Stage + "단계";
+        }
+
+        private string CallBoss()
+        {
+            Mall.Fishing.CallBossNow();
+            return "다음 물때에 대물";
         }
 
         // 설계 47: 빵집 별을 openStar까지 채우고 값만큼 코인을 더해 광장 문 앞 시트로 연다(값 · 연출은 실제와 같다)

@@ -149,7 +149,7 @@ namespace ZooTycoon.Core
                         Summons = fishing.Summons,
                         Upgrades = new Dictionary<string, int>(fishing.Upgrades),
                         Dug = fishing.Dug,
-                        Stakes = fishing.Stakes.Select(stake => new StakeSave { Open = stake.Open, Rod = stake.Rod?.Id, Grade = stake.Grade }).ToList(),
+                        Stakes = fishing.Stakes.Select(stake => new StakeSave { Open = stake.Open, Rod = stake.Rod?.Id }).ToList(),
                         Log = new Dictionary<string, FishRecord>(fishing.Log),
                     };
                     break;

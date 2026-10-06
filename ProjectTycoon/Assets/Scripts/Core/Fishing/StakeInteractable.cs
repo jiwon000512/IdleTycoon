@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 44 · 46: 둑의 말뚝 자리 하나. 잠겨 있으면 값을 치러 열고, 열리면 시트에서 대 · 설치물을 산다(꽂혀 있으면 바꾼다).
+    // 설계 44 · 46 · 49: 둑의 말뚝 자리 하나. 잠겨 있으면 값을 치러 열고, 열리면 시트에서 대를 산다(꽂혀 있으면 바꾼다). 꽂힌 대(Rod)가 곧 종류다.
     // 대가 월척을 붙잡고 있으면(Hooked) 털썩(행동은 ActionFactory.Fishing.cs)
     public sealed class StakeInteractable : Interactable
     {
@@ -14,8 +14,6 @@ namespace ZooTycoon.Core
         public double Cost { get; }
         public bool Open { get; private set; }
         public RodTable Rod { get; private set; }
-        // 등급 1~3(살 때 뽑는다)
-        public int Grade { get; private set; }
         // 붙잡은 월척(없으면 null)
         public Fish Hooked => Fishing.Sim.HookOf(this);
         // 지금 감는 물고기(화면의 낚싯줄, 없으면 null)
@@ -41,10 +39,10 @@ namespace ZooTycoon.Core
             OnChanged();
         }
 
-        internal void Put(RodTable rod, int grade)
+        internal void Put(RodTable rod)
         {
             Rod = rod;
-            Grade = rod == null ? 0 : grade;
+            Fishing.Sim.Forget(this);
             OnChanged();
         }
 
