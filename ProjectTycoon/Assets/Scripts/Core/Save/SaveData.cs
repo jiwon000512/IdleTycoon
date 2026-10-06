@@ -53,6 +53,8 @@ namespace ZooTycoon.Core
         // 설계 45: 물길 판 횟수(없으면 0 = 처음 길이)
         public int Dug;
         public List<StakeSave> Stakes = new List<StakeSave>();
+        // 설계 50: 낚였고 낚시 소식의 확인을 기다리는 대물(BossTable id, 없으면 null)
+        public string Landed;
         public Dictionary<string, FishRecord> Log = new Dictionary<string, FishRecord>();
     }
 

@@ -27,6 +27,7 @@ namespace ZooTycoon.Editor
         const string k_CropDir = "Assets/Resources/Sprites/Farm/";
         const string k_ItemDir = "Assets/Resources/Sprites/Items/";
         const string k_RodIconDir = "Assets/Resources/Sprites/Rods/";
+        const string k_BossDir = "Assets/Resources/Sprites/Bosses/";
         const string k_RestaurantDir = "Assets/Sprites/World/Restaurant/";
         // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 줄 셋(칸 밑변 기준, 뒷줄부터. 줄 그림은 104칸 폭 · 익으면 26칸 높이. 밑변은 make_farm_art.py ROW_CELLS 18 · 42 · 66칸 = 이랑 셋의 아래에서 6칸).
         // 농사 타이머 · 다 익음 표시(Farm/farm_timer_XX · Resources/Sprites/Farm/Ready/<작물>, 작물마다는 실행 중 FarmView가 바꾼다)는 칸 윗변 위에 띄워 모든 그림 위에(2026-09-30 사용자: 작물에 가려지고 빵 모양이던 것),
@@ -223,6 +224,13 @@ namespace ZooTycoon.Editor
             {
                 Import(path.Replace('\\', '/'), center);
             }
+
+            // 설계 50 낚인 대물(아트방, BossTable sprite): 드러나는 연출과 낚시 소식의 그림
+            foreach (string path in System.IO.Directory.GetFiles(k_BossDir, "*.png"))
+            {
+                Import(path.Replace('\\', '/'), center);
+            }
+
             // 타일: 굴 그림이 픽셀을 읽고, 흙 배경은 Tiled로 깐다(왼쪽 위 피벗)
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_SpriteDir + "wall_tile.png", new Vector2(0f, 1f), k_TagPpu, true);

@@ -16,7 +16,7 @@
     { "id": "wheat", "name": "밀", "desc": "밭에서 자라는 노란 곡식. 빵 반죽의 기본 재료다.", "icon": "Sprites/Items/wheat", "start": 10 },
     { "id": "strawberry", "name": "딸기", "desc": "굴 속 밭에서 자라는 빨간 열매. 케이크 위에 얹는다.", "icon": "Sprites/Items/strawberry", "start": 0 },
     { "id": "manure", "name": "거름", "desc": "똥을 치워 만든 거름. 심을 때 밭에 섞으면 빨리 자라고 반짝돌이 더 잘 나온다.", "icon": "Sprites/Items/manure", "start": 0, "source": "inventory_source_clean", "use": "inventory_use_plant" },
-    { "id": "gem", "name": "반짝돌", "desc": "밭을 거두다 가끔 나오는 반짝이는 돌. 모아 두면 광장 유물 수레에서 쓴다.", "icon": "Sprites/Items/gem", "start": 0, "source": "inventory_source_harvest", "use": "inventory_use_relic" },
+    { "id": "gem", "name": "반짝돌", "desc": "밭을 거두거나 대물을 낚으면 나오는 반짝이는 돌. 모아 두면 광장 유물 수레에서 쓴다.", "icon": "Sprites/Items/gem", "start": 0, "source": "inventory_source_harvest", "use": "inventory_use_relic" },
     { "id": "fish_minnow", "name": "피라미", "desc": "낚시터 물길을 떼로 내려오는 작은 물고기. 빠르고 가볍다.", "icon": "Sprites/Items/fish_minnow", "start": 0, "source": "inventory_source_fishing", "use": "inventory_use_fish" },
     { "id": "fish_crucian", "name": "붕어", "desc": "낚시터 물길의 보통 물고기. 떼에 가장 흔하다.", "icon": "Sprites/Items/fish_crucian", "start": 0, "source": "inventory_source_fishing", "use": "inventory_use_fish" },
     { "id": "fish_catfish", "name": "메기", "desc": "느리지만 묵직한 물고기. 쇠낚싯대로 감는 편이 낫다.", "icon": "Sprites/Items/fish_catfish", "start": 0, "source": "inventory_source_fishing", "use": "inventory_use_fish" }

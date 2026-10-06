@@ -56,6 +56,7 @@ namespace ZooTycoon.World
         {
             m_target = target;
             m_bounds = bounds;
+            m_spotLeft = 0f;
             Apply(Clamp(Frame(target.position)));
         }
 

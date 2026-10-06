@@ -46,6 +46,7 @@ namespace ZooTycoon.UI
                 bus.Subscribe<Events.WaveStarted>(_ => RefreshWave(false)),
                 bus.Subscribe<Events.BossSpawned>(_ => RefreshWave(true)),
                 bus.Subscribe<Events.BossEscaped>(_ => RefreshWave(false)),
+                bus.Subscribe<Events.BossLanded>(_ => RefreshWave(false)),
                 bus.Subscribe<Events.StageRaised>(_ => RefreshWave(false)),
             };
             RefreshCoins();

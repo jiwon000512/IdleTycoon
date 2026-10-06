@@ -384,8 +384,8 @@ namespace ZooTycoon.Tests
             Assert.That(caught.Count, Is.EqualTo(m_fishing.Yield + 1));
         }
 
-        // 대물 무게를 거의 0으로 · 물때마다 대물: 대 하나로 단계를 차례로 올린다
-        private void CreateEasyBoss(int yieldEvery = 3)
+        // 대물 무게를 거의 0으로 · 물때마다 대물: 대 하나로 단계를 차례로 올린다. confirm이면 낚시 소식을 바로 확인한 것으로 친다
+        private void CreateEasyBoss(int yieldEvery = 3, bool confirm = true)
         {
             Create(tweak: t =>
             {
@@ -394,6 +394,12 @@ namespace ZooTycoon.Tests
                 c.Boss.Weight = 0.01d;
                 c.YieldEvery = yieldEvery;
             });
+
+            if (confirm)
+            {
+                m_bus.Subscribe<Events.BossLanded>(_ => m_fishing.ConfirmLanded());
+            }
+
             GoFishing();
             Buy(Stake(0));
         }
@@ -418,8 +424,9 @@ namespace ZooTycoon.Tests
             Assert.That(m_fishing.BossWave, Is.True);
             Assert.That(RunUntil(() => m_fishing.Fish.Any(f => f.Boss), 30d), Is.True, "떼 끝에 따라 나온다");
             Fish boss = m_fishing.Fish.First(f => f.Boss);
-            Assert.That(boss.Speed, Is.EqualTo(boss.Kind.Speed * Config.Boss.SpeedScale).Within(1e-9));
-            Assert.That(boss.Weight, Is.EqualTo(Config.Boss.Weight).Within(1e-9), "1단계 무게");
+            BossTable first = m_tables.GetAll<BossTable>()[0];
+            Assert.That(boss.Speed, Is.EqualTo(boss.Kind.Speed * first.SpeedScale).Within(1e-9));
+            Assert.That(boss.Weight, Is.EqualTo(Config.Boss.Weight * first.WeightScale).Within(1e-9), "1단계 무게");
 
             Run(Config.WaveSeconds + 2d);
             Assert.That(waves, Is.EqualTo(2), "대물이 떠 있는 동안 다음 떼는 없다");
@@ -427,28 +434,133 @@ namespace ZooTycoon.Tests
             Assert.That(m_fishing.Stage, Is.EqualTo(1));
             Assert.That(m_fishing.Wave, Is.EqualTo(0));
             Assert.That(m_fishing.BossWave, Is.False);
+            Assert.That(m_fishing.Landed, Is.Null, "놓친 대물은 소식이 없다");
             Assert.That(RunUntil(() => waves == 3, Config.WaveSeconds + 1d), Is.True, "다시 물때 1부터");
             Assert.That(m_fishing.Wave, Is.EqualTo(1));
         }
 
-        // 설계 49: 대물을 낚으면 단계 +1 · 재료 boss.catch개 · 물때는 1부터. 다음 대물은 weightGrowth배 무겁다
+        // 설계 50: 대물을 낚으면 그 단계 대물의 보상(재료 × 단계 보람 · 반짝돌)을 받고 확인을 기다린다. 기다리는 동안 보통 떼는 오지만 물때를 세지 않아 대물이 없다.
+        // 확인하면 단계 +1, 다음 대물은 표의 다음 행(제 배수 × weightGrowth)
         [Test]
-        public void Boss_Caught_RaisesTheStage()
+        public void Boss_Landed_GivesItsReward_AndRaisesTheStageOnlyWhenConfirmed()
         {
-            CreateEasyBoss();
+            CreateEasyBoss(yieldEvery: 1, confirm: false);
+            Events.BossLanded landed = default;
             int raised = 0;
+            int caught = 0;
+            Dictionary<string, int> plain = new Dictionary<string, int>();
+            m_bus.Subscribe<Events.BossLanded>(e => landed = e);
             m_bus.Subscribe<Events.StageRaised>(_ => raised++);
-            int catfish = m_state.Count("fish_catfish");
+            m_bus.Subscribe<Events.FishCaught>(e =>
+            {
+                caught += e.Fish.Boss ? 1 : 0;
+                plain[e.Fish.Kind.Item] = (plain.TryGetValue(e.Fish.Kind.Item, out int n) ? n : 0) + e.Count;
+            });
+            BossTable first = m_fishing.BossOf(1);
+            int items = m_state.Count(first.Item);
+            int gems = m_state.Count(Config.GemItem);
 
-            Assert.That(RunUntil(() => raised == 1, 60d), Is.True, "대물을 낚는다");
-            Assert.That(m_fishing.Stage, Is.EqualTo(2));
-            Assert.That(m_fishing.Wave, Is.EqualTo(0));
+            Assert.That(RunUntil(() => landed.Boss != null, 60d), Is.True, "대물을 낚는다");
+            Assert.That(landed.Boss, Is.SameAs(first));
+            Assert.That(landed.Fish.Boss, Is.True);
+            Assert.That(m_fishing.Landed, Is.SameAs(first));
+            Assert.That(m_fishing.Stage, Is.EqualTo(1), "확인 전");
+            Assert.That(raised, Is.EqualTo(0));
+            Assert.That(caught, Is.EqualTo(0), "보통 낚음 사건은 없다");
             Assert.That(m_fishing.BossWave, Is.False);
-            Assert.That(m_state.Count("fish_catfish"), Is.EqualTo(catfish + Config.Boss.Catch), "대물은 메기 재료");
+            Assert.That(m_fishing.Yield, Is.EqualTo(1));
+            Assert.That(m_state.Count(first.Item), Is.EqualTo(items + first.Count + (plain.TryGetValue(first.Item, out int crucian) ? crucian : 0)));
+            Assert.That(m_state.Count(Config.GemItem), Is.EqualTo(gems + first.Gems));
             Assert.That(m_fishing.Log.ContainsKey("catfish"), Is.False, "대물은 어종 기록에 넣지 않는다");
 
+            int waves = 0;
+            bool spawned = false;
+            m_bus.Subscribe<Events.WaveStarted>(_ => waves++);
+            m_bus.Subscribe<Events.BossSpawned>(_ => spawned = true);
+            Run(Config.WaveSeconds * 2 + 2d);
+            Assert.That(waves, Is.GreaterThanOrEqualTo(2), "보통 떼는 온다");
+            Assert.That(m_fishing.Wave, Is.EqualTo(0), "물때를 세지 않는다");
+            Assert.That(spawned, Is.False);
+            m_fishing.CallBossNow();
+            Run(Config.WaveSeconds + 1d);
+            Assert.That(spawned, Is.False, "치트로도 확인 전에는 부르지 못한다");
+
+            Assert.That(m_fishing.ConfirmLanded(), Is.True);
+            Assert.That(m_fishing.Stage, Is.EqualTo(2));
+            Assert.That(m_fishing.Landed, Is.Null);
+            Assert.That(raised, Is.EqualTo(1));
+            Assert.That(m_fishing.ConfirmLanded(), Is.False, "두 번은 안 된다");
+            Assert.That(m_fishing.Stage, Is.EqualTo(2));
+
             Assert.That(RunUntil(() => m_fishing.Fish.Any(f => f.Boss), Config.WaveSeconds + 30d), Is.True, "다음 물때의 대물");
-            Assert.That(m_fishing.Fish.First(f => f.Boss).Weight, Is.EqualTo(Config.Boss.Weight * Config.WeightGrowth).Within(1e-9));
+            BossTable second = m_fishing.BossOf(2);
+            Fish boss = m_fishing.Fish.First(f => f.Boss);
+            Assert.That(second, Is.Not.SameAs(first));
+            Assert.That(boss.Weight, Is.EqualTo(Config.Boss.Weight * second.WeightScale * Config.WeightGrowth).Within(1e-9));
+            Assert.That(boss.Speed, Is.EqualTo(boss.Kind.Speed * second.SpeedScale).Within(1e-9));
+
+            // 2단계(yieldEvery 1 → 한 마리 재료 2배): 재료에만 곱하고 반짝돌은 그대로
+            Assert.That(m_fishing.Yield, Is.EqualTo(2));
+            Assert.That(second.Item, Is.Not.Null);
+            plain.Clear();
+            items = m_state.Count(second.Item);
+            gems = m_state.Count(Config.GemItem);
+            Assert.That(RunUntil(() => m_fishing.Landed == second, 60d), Is.True, "둘째 대물을 낚는다");
+            Assert.That(m_state.Count(second.Item), Is.EqualTo(items + second.Count * 2 + (plain.TryGetValue(second.Item, out int catfish) ? catfish : 0)));
+            Assert.That(m_state.Count(Config.GemItem), Is.EqualTo(gems + second.Gems));
+        }
+
+        // 설계 50: 단계의 대물은 표 순서이고 끝나면 처음부터 되풀이한다. 재료가 없는 대물은 반짝돌만 준다
+        [Test]
+        public void BossOf_FollowsTheTableOrder_AndRepeats()
+        {
+            CreateEasyBoss();
+            IReadOnlyList<BossTable> bosses = m_tables.GetAll<BossTable>();
+            Assert.That(bosses.Count, Is.GreaterThan(1));
+            Assert.That(m_fishing.BossOf(1), Is.SameAs(bosses[0]));
+            Assert.That(m_fishing.BossOf(bosses.Count), Is.SameAs(bosses[bosses.Count - 1]));
+            Assert.That(m_fishing.BossOf(bosses.Count + 1), Is.SameAs(bosses[0]));
+
+            // 실제로 나와 낚인 대물을 차례로(확인은 바로): 표 한 바퀴 + 하나. 재료 없는 대물(황금 비단잉어)도 반짝돌을 준다
+            Assert.That(bosses.Any(b => b.Item == null), Is.True, "재료 없는 대물");
+            List<BossTable> landed = new List<BossTable>();
+            List<int> gems = new List<int> { m_state.Count(Config.GemItem) };
+            m_bus.Subscribe<Events.BossLanded>(e =>
+            {
+                landed.Add(e.Boss);
+                gems.Add(m_state.Count(Config.GemItem));
+            });
+            Assert.That(RunUntil(() => landed.Count > bosses.Count, 600d), Is.True);
+            Assert.That(landed, Is.EqualTo(bosses.Concat(new[] { bosses[0] })));
+            Assert.That(Enumerable.Range(0, landed.Count).Select(i => gems[i + 1] - gems[i]), Is.EqualTo(landed.Select(b => b.Gems)));
+        }
+
+        // 치트로 단계를 바꿔도 물속 대물은 나올 때의 대물이다(무게 · 그림 · 보상이 한 행)
+        [Test]
+        public void Boss_InTheWater_KeepsItsRow_WhenTheStageChanges()
+        {
+            CreateEasyBoss(confirm: false);
+            Assert.That(m_fishing.BossWave, Is.True, "1단계 대물이 나와 있다");
+            m_fishing.SetStageNow(3);
+            Assert.That(RunUntil(() => m_fishing.Landed != null, 60d), Is.True);
+            Assert.That(m_fishing.Landed, Is.SameAs(m_fishing.BossOf(1)));
+        }
+
+        // 설계 50: 확인을 기다리던 대물은 저장을 넘어 남는다(다시 들어오면 소식이 뜬다)
+        [Test]
+        public void Save_KeepsTheLandedBoss_UntilConfirmed()
+        {
+            CreateEasyBoss(confirm: false);
+            Assert.That(RunUntil(() => m_fishing.Landed != null, 60d), Is.True);
+            string id = m_fishing.Landed.Id;
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(GameSave.Capture(m_state, m_mall));
+
+            Create();
+            GameSave.Apply(Newtonsoft.Json.JsonConvert.DeserializeObject<SaveData>(json), m_state, m_mall, m_tables);
+            Assert.That(m_fishing.Landed?.Id, Is.EqualTo(id));
+            Assert.That(m_fishing.Stage, Is.EqualTo(1));
+            Assert.That(m_fishing.ConfirmLanded(), Is.True);
+            Assert.That(m_fishing.Stage, Is.EqualTo(2));
         }
 
         // 치트 창이 쓰는 길: 단계를 정하면 물때는 1부터, 대물을 부르면 다음 물때가 대물
@@ -520,8 +632,8 @@ namespace ZooTycoon.Tests
             }));
 
             Assert.That(m_fishing.Candidates, Is.Not.Empty);
-            Assert.That(m_fishing.Candidates.All(c => c.Look.Id == "v99"), Is.True, "낚시터 전용 외형");
-            Assert.That(m_shop.Candidates.All(c => c.Look.Id != "v99"), Is.True, "빵집은 기본 외형");
+            Assert.That(m_fishing.Candidates.All(c => c.Look.Area == FishingArea.k_Id), Is.True, "낚시터 전용 외형");
+            Assert.That(m_shop.Candidates.All(c => c.Look.Area == null), Is.True, "빵집은 기본 외형");
         }
 
         // 미끼 노점 시트에는 업그레이드 줄만 있다(단계는 사지 않는다)

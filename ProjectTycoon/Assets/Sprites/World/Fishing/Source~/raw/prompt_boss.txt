@@ -1,0 +1,26 @@
+# 단계 대물 그림(2026-10-06 아트방, 낚시 연출 개선 리뷰 C → 설계 50). 시안 셋을 사용자에게 보인 뒤 셋을 모두 쓰기로 했다:
+#   A 바위잉어(boss_a.png, 1단계) · B 대왕 메기(boss_b.png, 2단계) · C 황금 비단잉어(boss_c.png, 3단계). 낚인 옆모습(위 상자)만 쓴다(make_boss.py).
+#   물속에서 위에서 본 모습(아래 상자)은 「물속에서는 그림자 그대로, 낚여 나올 때 드러난다」로 쓰지 않는다. 원본에만 남아 있다.
+# -i 1: fish_style_b.png(고른 물고기 결 「둥근 귀염」), -i 2: boss_template.png(웜뱃 + 메기 아이콘을 한 칸 10px로, 위 상자 60×40칸 · 아래 상자 60×26칸).
+# B · C는 처음에 지금 그림자의 1.5배 길이(92~96칸)로 나와, A를 -i 3으로 주고 [크기] 문단을 더해 다시 뽑았다(그래도 A보다 길다: 옆모습 A 66칸 · B 92칸(한 칸 8.6px) · C 83칸).
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code). Keep the canvas size, the white background, the wombat and the small catfish of image 2 EXACTLY where and how they are: they show the exact game scale (one art pixel = 10 by 10 screen pixels; the wombat is 42 art pixels wide; the small purple catfish below it is an ordinary fish of the game). Remove the two light grey boxes.
+Image 1 shows the fish of this cozy underground fishing-burrow idle game in their chosen style: round, chubby, toy-like fish with short fins and small dot eyes; row 1 = side views, row 2 = top views.
+Paint the BOSS FISH of the game in the same style, in two views. It is the huge guardian fish that appears every tenth wave and blocks the way, about twice as long as the catfish.
+UPPER BOX = SIDE VIEW facing right, as it leaps out of the water when it is finally caught (slightly arched, lively, fins spread), with a dark brown outline (#342020) one art pixel wide. It fills the box: about 58 art pixels long and 38 tall.
+LOWER BOX = TOP VIEW facing right, seen straight from above as it swims in the water channel: the same fish with the same colors and markings, clearly showing both eyes and its character, mirror-symmetric about its long axis, with an outline one art pixel wide in deep navy-teal (#16343a, not brown) so it reads on teal water. It fills the box: about 58 art pixels long and 24 wide.
+It must read as a BOSS: bolder colors than the ordinary fish and a face with attitude (grumpy and fierce but still cute). Both views must clearly be the same creature.
+STYLE: chunky pixel art exactly like the wombat: big square art pixels of 10 by 10 screen pixels (never smaller pixels, no thin lines), no anti-aliasing, no gradients, no dithering, flat muted palette with one shade color per area and one small white highlight. No water, no bubbles, no splash, no ground, no shadow, no text, no letters, no numbers.
+
+[크기 — B · C만, -i 3 boss_a.png]
+SIZE (most important): Image 3 shows another boss design of this game at the CORRECT size and pixel size. Paint this boss exactly as big as the fish of image 3: the side view no longer than 66 art pixels from the tip of the tail to the tip of the whiskers and about 50 tall, the top view no longer than 65 art pixels and about 38 wide, with the same big 10 by 10 screen pixel art pixels. Everything (tail, fins, whiskers) must stay inside the positions of the two grey boxes. Do not copy the design of image 3, only its size and pixel size. Keep the body round and chubby rather than long: short tail, short whiskers.
+
+[a]
+DESIGN - ROCK CARP: a huge round carp whose scales look like mossy river stones (grey-green and ochre stone plates with a few patches of bright green moss), olive-brown fins, cream belly and thick cream lips, a heavy grumpy frown and a small angry eye. It is the boss of image 1, made brighter and more colorful.
+
+[b]
+DESIGN - KING CATFISH: a giant plum-purple catfish, the boss version of the small catfish of image 2: a broad flat head, a wide frowning mouth, four long curly whiskers, a cream belly, a notched scarred tail fin and a small golden crest of three short spikes on top of its head like a crown (a part of its body, not a hat).
+
+[c]
+DESIGN - GOLDEN KOI: a giant koi carp in warm gold-orange with a few big red and white patches, long flowing fins and tail, short whiskers, a round red spot on its forehead and small proud eyes under thick dark eyebrow marks.

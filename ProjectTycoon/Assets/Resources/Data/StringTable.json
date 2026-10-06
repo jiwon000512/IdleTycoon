@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 51,
+  "version": 52,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -54,7 +54,8 @@
     "version 48 (2026-10-05, 설계 46 낚시터 개편): 대물 · 3택 1 · 특별한 대 · 소환 값 표식 문구 삭제(fishing_boss · fishing_boss_coming · fishing_boss_missed · rod_choice_* · rod_pulley · rod_lighthouse · rod_whirlpool · *_desc · tag_summon · inventory_source_fishing_boss), fishing_wave 「{0}단계」(물때 수 없음), 대 사기 · 미끼 노점 시트 문구 추가(sheet_stake_* · sheet_hut_* · row_stage_up*).",
     "version 49 (2026-10-06, 설계 47 수조 횟집): 편집 카드 kind_tank · kind_cutting_board · kind_dining_table, 곳 이름 loc_restaurant · 문 간판 sign_restaurant, 시트(sheet_tank_* · sheet_board_* · sheet_gate_* · row_open_shop*), 닫힌 문 표식 tag_open_shop, 손님 결제 팝업은 coin_popup 그대로. ★5 마일스톤 milestone_next_shop 「다음 가게 문(준비 중)」 → 「횟집 문」.",
     "version 50 (2026-10-06, 설계 49 물때 디펜스): 종류 이름 · 설명(rod_<id> · rod_<id>_desc 열둘, rod_light 삭제) · rod_merged · fishing_wave_count · fishing_boss · fishing_boss_missed · fishing_unlock · edit_fishing_hint 추가, 단계 사기 문구(row_stage_up · row_stage_up_effect) 삭제.",
-    "version 51 (2026-10-06, 낚시 연출 개선 · 사용자 결정): 물때는 노점 위 팻말 대신 상단 알약(fishing_wave_count 삭제, wave_pill 「물때」 · wave_pill_count 「{0}/{1}」 추가)."
+    "version 51 (2026-10-06, 낚시 연출 개선 · 사용자 결정): 물때는 노점 위 팻말 대신 상단 알약(fishing_wave_count 삭제, wave_pill 「물때」 · wave_pill_count 「{0}/{1}」 추가).",
+    "version 52 (2026-10-06, 설계 50 대물 소식): 대물 이름 · 소식지 제목 · 한 줄(boss_<id> · boss_<id>_title · boss_<id>_line 셋) · fishing_news_next 「다음 단계로」 · fishing_news_yield 「이제 한 마리에 재료 {0}개」(다음 단계의 재료 배수) 추가."
   ],
   "rows": [
     {
@@ -1032,6 +1033,50 @@
     {
       "id": "fishing_unlock",
       "ko": "새 낚싯대 {0}"
+    },
+    {
+      "id": "boss_rock_carp",
+      "ko": "바위잉어"
+    },
+    {
+      "id": "boss_rock_carp_title",
+      "ko": "바위잉어를 낚았다!"
+    },
+    {
+      "id": "boss_rock_carp_line",
+      "ko": "이끼 낀 강돌 같은 물길의 터줏대감"
+    },
+    {
+      "id": "boss_king_catfish",
+      "ko": "대왕 메기"
+    },
+    {
+      "id": "boss_king_catfish_title",
+      "ko": "대왕 메기를 낚았다!"
+    },
+    {
+      "id": "boss_king_catfish_line",
+      "ko": "깊은 물에서 수염을 드리운 느림보 왕"
+    },
+    {
+      "id": "boss_gold_koi",
+      "ko": "황금 비단잉어"
+    },
+    {
+      "id": "boss_gold_koi_title",
+      "ko": "황금 비단잉어를 낚았다!"
+    },
+    {
+      "id": "boss_gold_koi_line",
+      "ko": "번쩍이는 비늘로 물살을 가르는 재주꾼"
+    },
+    {
+      "id": "fishing_news_next",
+      "ko": "다음 단계로"
+    },
+    {
+      "id": "fishing_news_yield",
+      "ko": "이제 한 마리에 재료 {0}개"
     },
     {
       "id": "rod_grade_2",

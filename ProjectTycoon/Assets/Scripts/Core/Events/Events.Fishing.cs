@@ -46,7 +46,24 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 49: 대물을 낚아 단계가 올랐다(팻말 · 곳 이름 띠 「N단계!」, 새 계열이 열렸으면 그 이름)
+        // 설계 50: 대물을 낚았다(보상은 이미 들어왔다). 그림자가 Boss의 모습으로 드러나고 낚시 소식이 뜬다. 단계는 확인(ConfirmLanded)해야 오른다
+        public readonly struct BossLanded
+        {
+            public readonly FishingArea Fishing;
+            public readonly Fish Fish;
+            public readonly BossTable Boss;
+            public readonly StakeInteractable Stake;
+
+            public BossLanded(FishingArea fishing, Fish fish, BossTable boss, StakeInteractable stake)
+            {
+                Fishing = fishing;
+                Fish = fish;
+                Boss = boss;
+                Stake = stake;
+            }
+        }
+
+        // 설계 49 · 50: 낚시 소식을 확인해 단계가 올랐다(팻말 · 곳 이름 띠 「N단계!」, 새 계열이 열렸으면 그 이름)
         public readonly struct StageRaised
         {
             public readonly FishingArea Fishing;

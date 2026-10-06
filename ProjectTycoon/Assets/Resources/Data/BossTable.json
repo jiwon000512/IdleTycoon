@@ -1,0 +1,17 @@
+{
+  "table": "BossTable",
+  "version": 1,
+  "notes": [
+    "설계 50 낚시터 대물. 행 하나가 대물 하나이고 표 순서가 단계 순서다. 표 끝까지 가면 처음부터 되풀이한다(단계 n의 대물 = (n − 1) mod 행 수번째 행).",
+    "물속에서는 공통 그림자(fish_boss_swim)로 헤엄치고, 낚이는 순간 sprite(Resources/ 기준 경로, 낚인 옆모습)로 드러난다. 낚시 소식(결과 화면)에도 같은 그림이 뜬다.",
+    "weightScale · speedScale: FishingConfigTable boss.weight × weightGrowth^(단계 − 1), boss.fish의 속도 위에 곱하는 배수.",
+    "item · count: 낚으면 받는 재료(ItemTable id, 없으면 null · 0)와 개수(× 한 마리 재료 배수). gems: 반짝돌 개수(FishingConfigTable gemItem, 배수를 곱하지 않는다).",
+    "이름 · 소식지 제목 · 한 줄 소개는 StringTable boss_<id> · boss_<id>_title · boss_<id>_line.",
+    "version 1 (2026-10-06, 설계 50): 처음 만듦. 바위잉어 · 대왕 메기 · 황금 비단잉어(아트방 시안 셋, 사용자 「단계별로 기획」). 그림은 Sprites/Bosses/<id>(아트방)."
+  ],
+  "rows": [
+    { "id": "rock_carp", "sprite": "Sprites/Bosses/rock_carp", "weightScale": 1.0, "speedScale": 0.5, "item": "fish_crucian", "count": 10, "gems": 2 },
+    { "id": "king_catfish", "sprite": "Sprites/Bosses/king_catfish", "weightScale": 1.3, "speedScale": 0.4, "item": "fish_catfish", "count": 10, "gems": 3 },
+    { "id": "gold_koi", "sprite": "Sprites/Bosses/gold_koi", "weightScale": 0.8, "speedScale": 0.8, "item": null, "count": 0, "gems": 5 }
+  ]
+}

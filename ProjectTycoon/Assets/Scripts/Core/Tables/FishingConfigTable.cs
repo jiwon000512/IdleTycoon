@@ -43,6 +43,9 @@ namespace ZooTycoon.Core
         public int WavesPerStage { get; set; }
         public FishingBossData Boss { get; set; }
         public int YieldEvery { get; set; }
+        // 설계 50: 대물이 주는 반짝돌 재료(ItemTable id) · 낚인 대물이 드러나 멈춰 있는 초(그 뒤에 낚시 소식)
+        public string GemItem { get; set; }
+        public double BossShowSeconds { get; set; }
         // 설계 46 미끼 노점 업그레이드(불빛 · 소용돌이, 예전 설치물 효과) · 소용돌이가 맨 앞 물고기를 되돌리는 거리(유닛)
         public FishingUpgradeData[] HutUpgrades { get; set; }
         public double WhirlDistance { get; set; }
@@ -74,13 +77,11 @@ namespace ZooTycoon.Core
         public string EffectFormat { get; set; }
     }
 
-    // 설계 49 대물: 어종(FishTable id) · 무게(× weightGrowth^(단계 − 1)) · 속도 배수 · 낚으면 재료 개수
+    // 설계 49 · 50 대물 공통: 물속 어종(FishTable id: 그림자 · 기준 속도) · 기준 무게(× weightGrowth^(단계 − 1)). 대물마다 다른 값은 BossTable
     public sealed class FishingBossData
     {
         public string Fish { get; set; }
         public double Weight { get; set; }
-        public double SpeedScale { get; set; }
-        public int Catch { get; set; }
     }
 
     public sealed class FishingPointData

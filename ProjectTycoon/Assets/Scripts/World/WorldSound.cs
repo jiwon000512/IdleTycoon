@@ -32,7 +32,8 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
                 // 설계 44 · 46: 낚시터(쿵 · 털썩은 웜뱃 동작 칸에 맞춰 WombatView). 대 사기 소리는 등급 뽑기 별이 다 켜진 때 등급별(별마다 소리는 FishingView)
                 // 설계 49: 대물을 낚으면 큰 첨벙 + 단계 올림 종이 한 소리(보통 낚음 · 단계 올림 소리와 겹치지 않게 그것만)
-                bus.Subscribe<Events.FishCaught>(e => PlayIn(e.Fishing, e.Fish.Boss ? SoundTable.k_BossCaught : SoundTable.k_FishCatch)),
+                bus.Subscribe<Events.FishCaught>(e => PlayIn(e.Fishing, SoundTable.k_FishCatch)),
+                bus.Subscribe<Events.BossLanded>(e => PlayIn(e.Fishing, SoundTable.k_BossCaught)),
                 bus.Subscribe<Events.FishEscaped>(e => PlayIn(e.Fishing, SoundTable.k_FishEscape)),
                 bus.Subscribe<Events.StreamDug>(e => PlayIn(e.Fishing, SoundTable.k_Dig)),
                 bus.Subscribe<Events.FishWhirled>(e => PlayIn(e.Fishing, SoundTable.k_Whirl)),

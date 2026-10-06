@@ -52,6 +52,7 @@ namespace ZooTycoon.World
         private IDisposable m_areaChanged;
         private IDisposable m_clerkHired;
         private IDisposable m_bossSpawned;
+        private IDisposable m_bossLanded;
 
         public FrameCache Frames { get; } = new FrameCache();
 
@@ -92,6 +93,7 @@ namespace ZooTycoon.World
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
             m_bossSpawned = bus.Subscribe<Events.BossSpawned>(e => StartCoroutine(SpotBoss(e.Fishing)));
+            m_bossLanded = bus.Subscribe<Events.BossLanded>(Bus_BossLanded);
             FollowWombat();
         }
 
@@ -179,6 +181,7 @@ namespace ZooTycoon.World
             m_areaChanged?.Dispose();
             m_clerkHired?.Dispose();
             m_bossSpawned?.Dispose();
+            m_bossLanded?.Dispose();
 
             base.OnDestroy();
         }
@@ -198,6 +201,16 @@ namespace ZooTycoon.World
         private void Bus_AreaChanged(Events.AreaChanged e)
         {
             FollowWombat();
+        }
+
+        // 설계 50: 대물이 낚여 드러나 있는 동안 그 말뚝을 비춘다(웜뱃이 낚시터에 있을 때만, 조이스틱을 움직이면 바로 돌아온다. 낚시판 보기에서는 이미 다 보인다)
+        private void Bus_BossLanded(Events.BossLanded e)
+        {
+            if (m_mall.Active == e.Fishing)
+            {
+                Vector2 at = (Vector2)m_views[e.Fishing].Origin + new Vector2(e.Stake.Position.X, e.Stake.Position.Y);
+                m_camera.Spot(() => at, (float)e.Fishing.Config.BossShowSeconds, () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
+            }
         }
 
         // 설계 49(2026-10-06 사용자): 대물이 물에 들어오는 순간 잠깐 그쪽을 비춘다. 웜뱃이 낚시터에 있을 때만, 조이스틱을 움직이면 바로 돌아온다

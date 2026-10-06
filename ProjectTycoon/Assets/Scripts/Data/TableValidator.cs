@@ -995,10 +995,10 @@ namespace ZooTycoon.Data
                 // 설계 49 물때: 대물 어종은 FishTable에, 무게 · 속도 배수 > 0, 재료 ≥ 1
                 FishingBossData boss = config.Boss;
 
-                if (config.WavesPerStage < 1 || config.YieldEvery < 1 || boss == null || !tables.GetAll<FishTable>().Any(fish => fish.Id == boss.Fish)
-                    || boss.Weight <= 0d || boss.SpeedScale <= 0d || boss.Catch < 1)
+                if (config.WavesPerStage < 1 || config.YieldEvery < 1 || boss == null || !tables.GetAll<FishTable>().Any(fish => fish.Id == boss.Fish) || boss.Weight <= 0d
+                    || !items.Contains(config.GemItem ?? "") || config.BossShowSeconds <= 0d)
                 {
-                    errors.Add($"FishingConfigTable '{config.Id}': wavesPerStage · yieldEvery ≥ 1, boss.fish는 FishTable에 있고 boss.weight · speedScale > 0, boss.catch ≥ 1이어야 한다.");
+                    errors.Add($"FishingConfigTable '{config.Id}': wavesPerStage · yieldEvery ≥ 1, boss.fish는 FishTable에 있고 boss.weight > 0, gemItem은 ItemTable에 있고 bossShowSeconds > 0이어야 한다.");
                 }
 
                 if (config.FamilySteps == null || config.FamilyScales == null || config.FamilySteps.Length != config.FamilyScales.Length
@@ -1010,6 +1010,31 @@ namespace ZooTycoon.Data
                 if (config.ThumpRadius <= 0d || config.ThumpStun <= 0d || config.ThumpCooldown <= 0d || config.ThumpSeconds <= 0d)
                 {
                     errors.Add($"FishingConfigTable '{config.Id}': thumpRadius · thumpStun · thumpCooldown · thumpSeconds > 0이어야 한다.");
+                }
+            }
+
+            // 설계 50 대물: 하나 이상, 그림 경로 · 배수 > 0, 재료는 ItemTable에 있고 개수와 짝(재료가 없으면 0), 반짝돌 ≥ 0
+            if (tables.GetAll<BossTable>().Count == 0)
+            {
+                errors.Add("BossTable: 행이 하나도 없다(단계마다 대물이 있어야 한다).");
+            }
+
+            HashSet<string> bossStrings = Ids<StringTable>(tables);
+
+            foreach (BossTable boss in tables.GetAll<BossTable>())
+            {
+                if (string.IsNullOrEmpty(boss.Sprite) || boss.WeightScale <= 0d || boss.SpeedScale <= 0d || boss.Gems < 0 || boss.Item != null && !items.Contains(boss.Item)
+                    || (boss.Item == null) != (boss.Count == 0) || boss.Count < 0)
+                {
+                    errors.Add($"BossTable '{boss.Id}': sprite가 있고 weightScale · speedScale > 0, gems ≥ 0, item은 ItemTable에 있고 count ≥ 1(item이 없으면 count 0)이어야 한다.");
+                }
+
+                foreach (string key in new[] { "boss_" + boss.Id, "boss_" + boss.Id + "_title", "boss_" + boss.Id + "_line" })
+                {
+                    if (!bossStrings.Contains(key))
+                    {
+                        errors.Add($"BossTable '{boss.Id}': StringTable에 '{key}'가 없다(이름 · 소식지 제목 · 한 줄).");
+                    }
                 }
             }
 

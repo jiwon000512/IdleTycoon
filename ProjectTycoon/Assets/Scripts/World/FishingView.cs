@@ -91,6 +91,8 @@ namespace ZooTycoon.World
         private const float k_HeadAt = 0.4f;
         private const float k_CatchSeconds = 0.35f;
         private const float k_CatchArc = 0.8f;
+        // 설계 50: 드러난 대물이 멈춰 있는 높이(감은 대 끝 위)
+        private const float k_BossLift = 1f;
         private const float k_WobbleCells = 2f;
         private const float k_RiseSeconds = 0.9f;
         private static readonly Color k_Line = new Color32(0xF6, 0xE3, 0xCC, 200);
@@ -232,6 +234,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
                 bus.Subscribe<Events.FishCaught>(Bus_FishCaught),
                 bus.Subscribe<Events.FishEscaped>(Bus_FishEscaped),
+                bus.Subscribe<Events.BossLanded>(Bus_BossLanded),
                 bus.Subscribe<Events.RodSummoned>(Bus_RodSummoned),
                 bus.Subscribe<Events.RodMerged>(Bus_RodMerged),
                 bus.Subscribe<Events.NetCast>(Bus_NetCast),
@@ -699,7 +702,7 @@ namespace ZooTycoon.World
 
             Transform body = TakeFish(e.Fish);
             Vector3 at = body != null ? body.position : ToWorld(e.Stake.Position);
-            Splash(at, e.Fish.Boss ? 3 : 1);
+            Splash(at, 1);
             string amount = m_tables.Format(k_PopupKey, e.Count);
             Sprite icon = m_frames.Get(m_tables.Get<ItemTable>(e.Fish.Kind.Item).Icon)[0];
             Vector3 popupAt = ToWorld(e.Stake.Position) + Vector3.up * k_PopupHeight;
@@ -710,12 +713,6 @@ namespace ZooTycoon.World
                 side.sprite = icon;
                 side.color = Color.white;
                 body.localRotation = Quaternion.identity;
-
-                // 낚인 대물은 월척처럼 큰 옆모습으로 튄다
-                if (e.Fish.Boss)
-                {
-                    body.localScale = Vector3.one * k_TrophyScale;
-                }
             }
 
             if (body == null)
@@ -732,6 +729,50 @@ namespace ZooTycoon.World
             {
                 m_wombat.Haul((float)m_fishing.Config.HaulSeconds);
             }
+        }
+
+        // 설계 50: 대물이 낚였다. 큰 물보라와 함께 그림자가 그 대물의 모습으로 드러나 감은 대 끝 위로 솟고, 이름이 떠오른 채 멈춰 있다가 사라진다.
+        // 낚인 때부터 bossShowSeconds 뒤에 낚시 소식(UI)이 뜬다
+        private void Bus_BossLanded(Events.BossLanded e)
+        {
+            if (e.Fishing != m_fishing)
+            {
+                return;
+            }
+
+            Transform body = TakeFish(e.Fish);
+
+            if (body != null)
+            {
+                StartCoroutine(ShowBoss(body, e.Boss, TipOf(m_stakes[e.Stake.Index].Rod) + Vector3.up * k_BossLift));
+            }
+        }
+
+        private IEnumerator ShowBoss(Transform body, BossTable boss, Vector3 to)
+        {
+            Vector3 from = body.position;
+            Splash(from, 3);
+            SpriteRenderer side = body.GetComponent<SpriteRenderer>();
+            side.sprite = m_frames.Get(boss.Sprite)[0];
+            side.color = Color.white;
+            side.flipX = false;
+            side.sortingOrder = k_TopOrder - 3;
+            body.localRotation = Quaternion.identity;
+            body.localScale = Vector3.one;
+
+            for (float t = 0f; t < k_CatchSeconds; t += Time.deltaTime)
+            {
+                float k = t / k_CatchSeconds;
+                body.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * k_CatchArc);
+                yield return null;
+            }
+
+            body.position = to;
+            StartCoroutine(Fx.Bounce(body));
+            StartCoroutine(Fx.Burst(transform, m_square, to, 16, 1.8f, 2.4f, 9f, 0.6f, 4, k_Star, k_TopOrder));
+            StartCoroutine(Rise(m_tables.Text("boss_" + boss.Id), to + Vector3.up * (side.sprite.bounds.extents.y + 0.3f)));
+            yield return new WaitForSeconds((float)m_fishing.Config.BossShowSeconds - k_CatchSeconds);
+            Destroy(body.gameObject);
         }
 
         // 놓쳤다: 물고기가 막다른 끝 둑 틈으로 작아지며 빠져나간다(작은 물보라 · 소리). 놓친 수는 띄우지 않는다(2026-10-05 사용자)

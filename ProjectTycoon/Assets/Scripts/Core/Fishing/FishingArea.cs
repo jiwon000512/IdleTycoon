@@ -12,6 +12,7 @@ namespace ZooTycoon.Core
     // 설계 46: 말뚝 시트에서 웜뱃이 계열을 골라 사고 단은 뽑기(tierWeights). 꽂힌 말뚝에서 다시 사면 옛 대는 사라진다.
     // 미끼 노점(오두막)에서 업그레이드 둘(불빛 사거리 · 소용돌이 되돌리기)을 코인으로 올린다. 판의 같은 계열 개수 문턱이 그 계열을 세게 한다.
     // 설계 49 물때 디펜스: 단계는 사지 않는다. wavesPerStage번째 물때 떼 끝에 대물이 나오고, 낚으면 단계 +1(새 계열이 열리고 한 마리 재료가 는다), 놓치면 그대로, 둘 다 물때는 1부터.
+    // 설계 50 대물 소식: 대물은 단계마다 다르다(BossTable, 되풀이). 낚으면 보상을 받고 확인을 기다리며(Landed), 낚시 소식에서 확인(ConfirmLanded)해야 단계가 오른다.
     // 별 대신 종류(RodTable 행): 같은 종류 둘을 합치면 그 계열의 윗 종류. 옮기기 · 바꾸기 · 합치기는 낚시판 보기(편집 모드)에서 끌어서(TryMoveRod)
     // 웜뱃은 물가에서 엉덩이 쿵, 붙잡힌 월척에 털썩(ActionFactory.Fishing.cs). 점원 하나가 오두막에서 기다리다 붙잡힌 월척을 바로 건진다(2026-10-06 사용자).
     // 놓는 사물은 없다(편집 카드 없음). 물고기는 웜뱃이 다른 곳에 있어도 흐른다.
@@ -33,6 +34,8 @@ namespace ZooTycoon.Core
         private double m_waveElapsed;
         // 나왔거나 나올 차례를 기다리는 대물(낚이거나 빠져나갈 때까지 다음 떼는 오지 않는다)
         private Fish m_boss;
+        // 그 대물의 행(나올 때의 단계로 정한다)
+        private BossTable m_bossRow;
 
         public FishingConfigTable Config { get; }
         public FishingLayout Layout { get; }
@@ -51,8 +54,10 @@ namespace ZooTycoon.Core
         public int Stage { get; private set; } = 1;
         public int Wave { get; private set; }
         public bool BossWave => m_boss != null;
+        // 설계 50: 낚였고 낚시 소식의 확인을 기다리는 대물(없으면 null). 기다리는 동안 보통 떼는 오지만 물때 수를 세지 않는다
+        public BossTable Landed { get; private set; }
         // 한 마리 재료 개수(단계 보람)
-        public int Yield => 1 + (Stage - 1) / Config.YieldEvery;
+        public int Yield => YieldAt(Stage);
         public int Summons { get; private set; }
         // 엉덩이 쿵을 다시 하기까지 남은 초
         public double ThumpLeft { get; private set; }
@@ -408,7 +413,11 @@ namespace ZooTycoon.Core
         // 다음 물때 떼. wavesPerStage번째면 떼 끝에 대물이 따라 나온다
         private void NextWave()
         {
-            Wave++;
+            if (Landed == null)
+            {
+                Wave++;
+            }
+
             List<(double delay, Fish fish)> school = MakeSchool(Random);
 
             foreach ((double delay, Fish fish) in school)
@@ -420,11 +429,39 @@ namespace ZooTycoon.Core
 
             if (Wave >= Config.WavesPerStage)
             {
-                FishingBossData boss = Config.Boss;
-                m_boss = new Fish(Tables.Get<FishTable>(boss.Fish), 2, false, boss.Weight * StageScale, true, boss.SpeedScale);
+                BossTable boss = BossOf(Stage);
+                m_bossRow = boss;
+                m_boss = new Fish(Tables.Get<FishTable>(Config.Boss.Fish), 2, false, Config.Boss.Weight * boss.WeightScale * StageScale, true, boss.SpeedScale);
                 m_queue.Add((m_clock + school.Count * Config.SpawnGap, m_boss));
                 Bus.Publish(new Events.BossSpawned(this));
             }
+        }
+
+        // 그 단계의 한 마리 재료 배수
+        public int YieldAt(int stage)
+        {
+            return 1 + (stage - 1) / Config.YieldEvery;
+        }
+
+        // 그 단계의 대물(표 순서, 끝나면 처음부터 되풀이)
+        public BossTable BossOf(int stage)
+        {
+            IReadOnlyList<BossTable> bosses = Tables.GetAll<BossTable>();
+            return bosses[(Math.Max(1, stage) - 1) % bosses.Count];
+        }
+
+        // 설계 50: 낚시 소식에서 확인했다 → 다음 단계(물때는 1부터). 기다리는 대물이 없으면 false
+        public bool ConfirmLanded()
+        {
+            if (Landed == null)
+            {
+                return false;
+            }
+
+            Landed = null;
+            Stage++;
+            Bus.Publish(new Events.StageRaised(this));
+            return true;
         }
 
         // 치트 · 검증: 단계를 정하고 물때를 1부터 · 다음 틱에 대물 물때를 연다(이미 대물이 있으면 그대로)
@@ -432,11 +469,12 @@ namespace ZooTycoon.Core
         {
             Stage = Math.Max(1, stage);
             Wave = 0;
+            Landed = null;
         }
 
         public void CallBossNow()
         {
-            if (m_boss == null)
+            if (m_boss == null && Landed == null)
             {
                 Wave = Config.WavesPerStage - 1;
                 m_waveElapsed = Config.WaveSeconds;
@@ -502,23 +540,32 @@ namespace ZooTycoon.Core
 
         private void Sim_Caught(Fish fish, StakeInteractable stake)
         {
-            int count = CatchCount(fish);
-            Wombat.Worker.Wallet.AddItem(fish.Kind.Item, count);
-
-            if (!fish.Boss)
-            {
-                Record(fish);
-            }
-            Bus.Publish(new Events.FishCaught(this, fish, count, stake));
-
-            // 설계 49: 대물을 낚으면 다음 단계(물때는 1부터)
+            // 설계 50: 대물은 그 단계 대물의 보상(재료 × 단계 보람 · 반짝돌)을 주고 확인을 기다린다(어종 기록 · 보통 낚음 사건은 없다)
             if (fish == m_boss)
             {
+                BossTable boss = m_bossRow;
                 m_boss = null;
                 Wave = 0;
-                Stage++;
-                Bus.Publish(new Events.StageRaised(this));
+                Landed = boss;
+
+                if (boss.Item != null)
+                {
+                    Wombat.Worker.Wallet.AddItem(boss.Item, boss.Count * Yield);
+                }
+
+                if (boss.Gems > 0)
+                {
+                    Wombat.Worker.Wallet.AddItem(Config.GemItem, boss.Gems);
+                }
+
+                Bus.Publish(new Events.BossLanded(this, fish, boss, stake));
+                return;
             }
+
+            int count = CatchCount(fish);
+            Wombat.Worker.Wallet.AddItem(fish.Kind.Item, count);
+            Record(fish);
+            Bus.Publish(new Events.FishCaught(this, fish, count, stake));
         }
 
         private void Sim_Escaped(Fish fish)
@@ -533,10 +580,10 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 낚은 물고기 한 마리의 재료 개수: (대물 · 월척 · 보통) × 단계 보람 + 그 자리를 사거리에 둔 덤 대(꿀떡밥)
+        // 낚은 물고기 한 마리의 재료 개수: (월척 · 보통) × 단계 보람 + 그 자리를 사거리에 둔 덤 대(꿀떡밥). 대물의 보상은 BossTable
         private int CatchCount(Fish fish)
         {
-            int count = (fish.Boss ? Config.Boss.Catch : fish.Trophy ? Config.TrophyCatch : 1) * Yield;
+            int count = (fish.Trophy ? Config.TrophyCatch : 1) * Yield;
             Vector2 at = Layout.PointAt(fish.S);
             return count + m_stakes.Where(s => s.Rod != null && s.Rod.Bonus > 0 && InReach(s, at, RangeOf(s))).Sum(s => s.Rod.Bonus);
         }
@@ -593,11 +640,13 @@ namespace ZooTycoon.Core
 
         // ---------- 저장 ----------
 
-        // grade: 옛 저장(설계 46)의 별 등급. 2 이상이면 그 계열의 그 단 종류로 옮긴다
-        internal void Restore(int stage, int summons, IReadOnlyDictionary<string, int> upgrades, int dug, IEnumerable<(bool open, RodTable rod, int grade)> stakes, IReadOnlyDictionary<string, FishRecord> log)
+        // grade: 옛 저장(설계 46)의 별 등급. 2 이상이면 그 계열의 그 단 종류로 옮긴다. landed: 확인을 기다리던 대물(없으면 null)
+        internal void Restore(int stage, int summons, IReadOnlyDictionary<string, int> upgrades, int dug, IEnumerable<(bool open, RodTable rod, int grade)> stakes, IReadOnlyDictionary<string, FishRecord> log,
+            BossTable landed)
         {
             Stage = Math.Max(1, stage);
             Summons = summons;
+            Landed = landed;
 
             m_upgrades.Clear();
 

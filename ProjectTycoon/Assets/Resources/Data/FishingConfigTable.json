@@ -1,6 +1,6 @@
 {
   "table": "FishingConfigTable",
-  "version": 6,
+  "version": 7,
   "notes": [
     "설계 44 낚시 디펜스 숫자. id = 낚시터(지금 main 하나). 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위. 전부 시작값이며 플레이로 튠한다.",
     "cols · rows: 방 칸 수(광장처럼 고정 방). stream: 끝까지 팠을 때의 물길 꺾은선(축 정렬, 첫 점 = 물고기가 나오는 곳(벽 밖에서 들어온다), 끝 점 = 다 판 막다른 끝) · streamWidth: 폭(판 데는 걸을 수 없다).",
@@ -9,7 +9,8 @@
     "waveSeconds: 떼가 나오는 간격(초). spawnGap: 떼 안 물고기 간격(초). 떼 마릿수 = schoolBase + (단계 − 1) × schoolPerStage(내림). 무게 × weightGrowth^(단계 − 1).",
     "trophyChance: 떼 물고기가 월척일 확률 · trophyWeightScale: 무게 배수 · trophyCatch: 낚으면 재료 개수 · haulSeconds: 털썩 동작 동안 웜뱃이 서는 초.",
     "summonCost × summonGrowth^산 대 수 = 대 값(계열이 다 같다). tierWeights: 살 때 나오는 종류의 단 비중[첫, 둘째, 셋째](RodTable tier).",
-    "설계 49 물때: wavesPerStage번째 물때 떼 끝에 대물(boss: fish 어종 · weight 무게(× weightGrowth^(단계 − 1)) · speedScale 속도 배수 · catch 낚으면 재료 개수). 대물이 낚이면 단계 +1, 빠져나가면 그대로, 둘 다 물때는 1부터. 대물이 떠 있는 동안 다음 떼는 오지 않는다.",
+    "설계 49 · 50 물때: wavesPerStage번째 물때 떼 끝에 대물(boss: fish 물속 어종(그림자 · 기준 속도) · weight 기준 무게(× weightGrowth^(단계 − 1))). 어느 대물인지 · 무게와 속도 배수 · 보상은 BossTable(단계 순서). 대물이 낚이면 보상을 받고 낚시 소식(결과 화면)을 확인해야 단계 +1, 빠져나가면 그대로, 둘 다 물때는 1부터. 대물이 떠 있는 동안 다음 떼는 오지 않고, 확인을 기다리는 동안은 보통 떼만 온다(물때 수를 세지 않는다).",
+    "gemItem: 대물이 주는 반짝돌 재료(ItemTable id). bossShowSeconds: 낚인 대물이 드러나 멈춰 있는 초(그 뒤에 낚시 소식이 뜬다).",
     "yieldEvery: 한 마리 재료 = 1 + ⌊(단계 − 1) ÷ yieldEvery⌋(월척 · 대물 개수에도 곱한다).",
     "hutUpgrades: 미끼 노점 업그레이드(예전 설치물 효과). 값 = baseCost × costGrowth^단계, 최대 maxLevel. light = 모든 대 사거리 +effectPerLevel/단계 · whirl = effectBase − effectPerLevel × (단계 − 1)초마다 물길 맨 앞 물고기를 whirlDistance만큼 되돌린다. effectFormat {0} 지금 · {1} 다음(불빛 %, 소용돌이 1분에 몇 번).",
     "familySteps · familyScales: 판의 같은 계열 개수가 familySteps[i] 이상이면 그 계열 감는 힘 × familyScales[i](큰 문턱 하나만).",
@@ -19,7 +20,8 @@
     "version 3 (2026-10-05, 아트방 낚시 오두막 B 「미끼 노점」): hutX 4.0 → 4.1(폭 2.2인 오두막이 낚은 대물과 안 겹치게).",
     "version 4 (2026-10-05, 설계 46 낚시터 개편): 대물 · 합치기 · 대물 곁 앉기 삭제(bossEvery · bossFish · catchX · catchY · mergeCount · sitScale), 대는 시트에서 골라 산다, 단계는 미끼 노점에서 산다(stageCost 500 · stageGrowth 1.8), 설치물 효과는 미끼 노점 업그레이드 셋(hutUpgrades · whirlDistance).",
     "version 5 (2026-10-06, 월척 건지기 · 사용자 결정): 점원은 대가 붙잡은 월척을 바로 건진다(trophyHoldSeconds 삭제). 도르래 업그레이드 삭제(hutUpgrades는 light · whirl 둘, 점원이 바로 건지면 헛것이 되어서).",
-    "version 6 (2026-10-06, 설계 49 물때 디펜스): 단계는 사지 않고 대물을 낚아 올린다(stageCost · stageGrowth 삭제, wavesPerStage · boss · yieldEvery 추가). 별 대신 종류라 gradeScale 삭제(감는 힘은 RodTable 종류마다), gradeWeights → tierWeights."
+    "version 6 (2026-10-06, 설계 49 물때 디펜스): 단계는 사지 않고 대물을 낚아 올린다(stageCost · stageGrowth 삭제, wavesPerStage · boss · yieldEvery 추가). 별 대신 종류라 gradeScale 삭제(감는 힘은 RodTable 종류마다), gradeWeights → tierWeights.",
+    "version 7 (2026-10-06, 설계 50 대물 소식): boss에서 speedScale · catch 삭제(대물마다 다른 값은 BossTable로), gemItem · bossShowSeconds 추가."
   ],
   "rows": [
     {
@@ -118,7 +120,9 @@
         2
       ],
       "wavesPerStage": 10,
-      "boss": { "fish": "catfish", "weight": 16, "speedScale": 0.5, "catch": 10 },
+      "boss": { "fish": "catfish", "weight": 16 },
+      "gemItem": "gem",
+      "bossShowSeconds": 1.5,
       "yieldEvery": 3,
       "hutUpgrades": [
         { "id": "light", "name": "불빛", "baseCost": 800, "costGrowth": 2.2, "maxLevel": 5, "effectBase": 0, "effectPerLevel": 0.1, "effectFormat": "사거리 +{0}% → +{1}%" },
