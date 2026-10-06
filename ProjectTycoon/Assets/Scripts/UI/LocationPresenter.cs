@@ -5,8 +5,8 @@ using ZooTycoon.Core;
 
 namespace ZooTycoon.UI
 {
-    // 설계 42: 곳이 바뀌면(AreaChanged) 곳 이름 팻말. 게임을 시작할 때도 한 번. 농장은 층마다 「농장 n층」
-    // 설계 46: 낚시터에서 미끼 노점으로 단계를 올리면 같은 팻말로 「n단계!」
+    // 설계 42: 곳이 바뀌면(AreaChanged) 곳 이름 띠. 게임을 시작할 때도 한 번. 농장은 층마다 「농장 n층」
+    // 설계 46: 낚시터에서 미끼 노점으로 단계를 올리면 같은 띠로 「n단계!」
     public sealed class LocationPresenter : IDisposable
     {
         private readonly LocationView m_view;

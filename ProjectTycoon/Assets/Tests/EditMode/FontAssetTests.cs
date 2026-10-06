@@ -30,6 +30,7 @@ namespace ZooTycoon.Tests
         }
 
         // UI 규칙 1장 10(2026-09-30): UI 글자는 굵은 11(44)과 보통 9(36) 두 벌뿐이다. 새 UI 프리팹도 여기서 걸린다
+        // 예외는 곳 이름 띠 하나: 굵은 11의 2배(88, 2026-10-06 사용자 시안 B)
         [Test]
         public void UiPrefabs_UseOnlyTheTwoUiFonts()
         {
@@ -43,7 +44,9 @@ namespace ZooTycoon.Tests
                 {
                     string font = $"{text.font.name}/{text.fontSize}";
 
-                    if (font != "Galmuri11-Bold/44" && font != "Galmuri9/36")
+                    bool title = path.EndsWith("/LocationView.prefab") && font == "Galmuri11-Bold/88";
+
+                    if (font != "Galmuri11-Bold/44" && font != "Galmuri9/36" && !title)
                     {
                         wrong += $"{path} {text.name} {font} · ";
                     }
