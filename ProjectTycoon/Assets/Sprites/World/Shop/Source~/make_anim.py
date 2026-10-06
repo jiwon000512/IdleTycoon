@@ -11,6 +11,8 @@
 #   손님: Resources/Sprites/Visitors/<이름>/<이름>_{Idle,Move,BackIdle,BackMove,SideIdle,SideMove,Blink,SideBlink,Fidget,BackFidget,SideFidget}.png
 #         (가로 1행, 칸 폭 104px, 발끝 = 아래 끝. 슬라이스는 ZooTycoon/Bake/Import Visitor Sheets)
 #   점원 회색 웜뱃: 웜뱃 기본 그림의 털 5색을 바꾸고 요리사 모자를 얹은 그림(make_clerk.py)을 웜뱃 좌표로 조립한 시트(WombatGray)
+#   곳마다 다른 점원(2026-10-06): 같은 회색 웜뱃에 머리쓰개만 다른 그림(make_clerk_hats.py)으로 시트 한 벌씩
+#         (농장 WombatFarmer 밀짚모자 · 낚시터 WombatAngler 벙거지 + 찌 · 횟집 WombatSushi 남색 두건)
 # 사용: python make_anim.py [미리보기 폴더]
 import os
 import sys
@@ -21,6 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from anim_parts import Sprite, save, opaque
 from anim_specs import WOMBAT, VISITORS
 from make_clerk import build as clerk_base
+from make_clerk_hats import build as hat_base, HATS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHOP = os.path.join(HERE, '..')
@@ -205,23 +208,23 @@ def animate(path, spec, view, name, issues):
 CLERK_EARS = {'front': [(5, 11), (30, 36)], 'back': [(4, 11), (30, 37)], 'side': []}
 
 
-def shifted(spec, dy, ears):
-    """WOMBAT 좌표를 dy줄 내린 사본(점원 모자 높이만큼 늘린 줄) + 모자 칸을 뺀 귀 범위"""
+def shifted(spec, dy, ears, dx=0):
+    """WOMBAT 좌표를 dy줄 내리고 dx열 민 사본(점원 모자 높이 · 챙 폭만큼 늘린 줄 · 열) + 모자 칸을 뺀 귀 범위(ears는 옮긴 뒤 좌표)"""
     s = {k: v for k, v in spec.items()}
-    s['feet'] = [dict(f, rows=(f['rows'][0] + dy, f['rows'][1] + dy)) if 'rows' in f else dict(f) for f in spec['feet']]
+    s['feet'] = [dict(f, rows=(f['rows'][0] + dy, f['rows'][1] + dy), cols=(f['cols'][0] + dx, f['cols'][1] + dx)) if 'rows' in f else dict(f) for f in spec['feet']]
     for k in ('ear', 'stretch'):
         if k in s:
             s[k] += dy
     for k in ('paw', 'tail'):
         if k in s:
             r0, r1, c0, c1 = s[k]
-            s[k] = (r0 + dy, r1 + dy, c0, c1)
+            s[k] = (r0 + dy, r1 + dy, c0 + dx, c1 + dx)
     if 'eyes' in s:
-        s['eyes'] = [(r0 + dy, r1 + dy, c0, c1) for r0, r1, c0, c1 in s['eyes']]
+        s['eyes'] = [(r0 + dy, r1 + dy, c0 + dx, c1 + dx) for r0, r1, c0, c1 in s['eyes']]
     if 'blink' in s:
-        s['blink'] = [(r + dy, c, ch) for r, c, ch in s['blink']]
+        s['blink'] = [(r + dy, c + dx, ch) for r, c, ch in s['blink']]
     if 'blink_fill' in s:
-        s['blink_fill'] = (s['blink_fill'][0] + dy, s['blink_fill'][1])
+        s['blink_fill'] = (s['blink_fill'][0] + dy, s['blink_fill'][1] + dx)
     if 'clear_rows' in s:
         s['clear_rows'] = [r + dy for r in s['clear_rows']]
     s['ears'] = ears
@@ -289,6 +292,17 @@ def main():
     sheets(folder, gray)
     sheet([gray['front'][0][0]], os.path.join(SHEETS, folder, folder + '.png'))
     made['gray'] = gray
+    # 곳마다 다른 점원(2026-10-06): 회색 웜뱃 + 머리쓰개(make_clerk_hats.py). 머리쓰개가 귀를 덮거나 걸쳐 있어 귀 늦게 움직이기는 끈다
+    for place, hat_folder in HATS.items():
+        hats = {}
+        for view, spec in WOMBAT.items():
+            base, top, side = hat_base(place, view, table)
+            path = os.path.join(HERE, f'clerk_{place}_{view}_base.png')
+            save(base, path)
+            hats[view] = animate(path, shifted(spec, top, [], side), view, 'wombat', issues)
+        sheets(hat_folder, hats)
+        sheet([hats['front'][0][0]], os.path.join(SHEETS, hat_folder, hat_folder + '.png'))
+        made[place] = hats
     # 손님
     for animal, views in VISITORS.items():
         frames = {v: animate(os.path.join(HERE, f'{animal}_{v}.png'), spec, v, animal, issues) for v, spec in views.items()}

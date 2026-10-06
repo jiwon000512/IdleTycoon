@@ -18,7 +18,8 @@
     "version 13 (2026-10-01, 설계 31 떠돌이 행상): role merchant 행 v06(PlazaConfigTable.merchantLook). 광장 손님 · 점원 외형으로는 뽑히지 않는다. 그림은 아트방 너구리 시트(Tanuki, 칸 폭 112px).",
     "version 14 (2026-10-02, 설계 40 별 평가): role judge 추가 — 평가단장(StarConfigTable judgeLook). v07은 펭귄 그림을 임시로 빌린다(아트방 그림 전).",
     "version 15 (2026-10-02, 아트방 「안경 평론가」 부엉이): 평가단장 v07의 그림을 빌린 펭귄에서 Sprites/Visitors/Owl/Owl*로(칸 구성은 다른 손님과 같다).",
-    "version 16 (2026-10-06, 곳마다 다른 점원 — 사용자 「웜뱃 점원들 리소스: 농부 · 낚시터 · 횟집」): area 칸(clerk 행만, 곳 종류 id bakery · farm · fishing · restaurant). 그 곳 종류와 area가 같은 clerk 행이 있으면 그 행들 중에서만 고르고, 없으면 area가 없는(null) 기본 clerk 행 중에서 고른다. area 없는 clerk 행이 하나는 있어야 한다."
+    "version 16 (2026-10-06, 곳마다 다른 점원 — 사용자 「웜뱃 점원들 리소스: 농부 · 낚시터 · 횟집」): area 칸(clerk 행만, 곳 종류 id bakery · farm · fishing · restaurant). 그 곳 종류와 area가 같은 clerk 행이 있으면 그 행들 중에서만 고르고, 없으면 area가 없는(null) 기본 clerk 행 중에서 고른다. area 없는 clerk 행이 하나는 있어야 한다.",
+    "version 16 덧붙임 (2026-10-06, 아트방 머리쓰개 셋 — 사용자 선택 농장 A · 낚시터 A · 횟집 C): v08 농부 웜뱃(farm, 밀짚모자) · v09 낚시꾼 웜뱃(fishing, 벙거지 + 찌) · v10 횟집 웜뱃(restaurant, 남색 두건). v05와 같은 회색 웜뱃에 머리쓰개만 다른 시트(Shop/Source~/make_clerk_hats.py → make_anim.py). handRatio는 든 빵 높이가 v05와 같게 시트 높이(90 · 94 · 82px)에 맞췄다."
   ],
   "rows": [
     {
@@ -160,6 +161,69 @@
       "scale": 1,
       "carryAt": "head",
       "handRatio": 0.33
+    },
+    {
+      "id": "v08",
+      "name": "농부 웜뱃",
+      "role": "clerk",
+      "area": "farm",
+      "sprite": "Sprites/Visitors/WombatFarmer/WombatFarmer",
+      "idleSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_Idle",
+      "moveSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_Move",
+      "backIdleSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_BackMove",
+      "sideIdleSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_SideIdle",
+      "sideMoveSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_SideMove",
+      "blinkSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/WombatFarmer/WombatFarmer_SideFidget",
+      "scale": 1,
+      "carryAt": "hand",
+      "handRatio": 0.17
+    },
+    {
+      "id": "v09",
+      "name": "낚시꾼 웜뱃",
+      "role": "clerk",
+      "area": "fishing",
+      "sprite": "Sprites/Visitors/WombatAngler/WombatAngler",
+      "idleSheet": "Sprites/Visitors/WombatAngler/WombatAngler_Idle",
+      "moveSheet": "Sprites/Visitors/WombatAngler/WombatAngler_Move",
+      "backIdleSheet": "Sprites/Visitors/WombatAngler/WombatAngler_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/WombatAngler/WombatAngler_BackMove",
+      "sideIdleSheet": "Sprites/Visitors/WombatAngler/WombatAngler_SideIdle",
+      "sideMoveSheet": "Sprites/Visitors/WombatAngler/WombatAngler_SideMove",
+      "blinkSheet": "Sprites/Visitors/WombatAngler/WombatAngler_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/WombatAngler/WombatAngler_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/WombatAngler/WombatAngler_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/WombatAngler/WombatAngler_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/WombatAngler/WombatAngler_SideFidget",
+      "scale": 1,
+      "carryAt": "hand",
+      "handRatio": 0.16
+    },
+    {
+      "id": "v10",
+      "name": "횟집 웜뱃",
+      "role": "clerk",
+      "area": "restaurant",
+      "sprite": "Sprites/Visitors/WombatSushi/WombatSushi",
+      "idleSheet": "Sprites/Visitors/WombatSushi/WombatSushi_Idle",
+      "moveSheet": "Sprites/Visitors/WombatSushi/WombatSushi_Move",
+      "backIdleSheet": "Sprites/Visitors/WombatSushi/WombatSushi_BackIdle",
+      "backMoveSheet": "Sprites/Visitors/WombatSushi/WombatSushi_BackMove",
+      "sideIdleSheet": "Sprites/Visitors/WombatSushi/WombatSushi_SideIdle",
+      "sideMoveSheet": "Sprites/Visitors/WombatSushi/WombatSushi_SideMove",
+      "blinkSheet": "Sprites/Visitors/WombatSushi/WombatSushi_Blink",
+      "sideBlinkSheet": "Sprites/Visitors/WombatSushi/WombatSushi_SideBlink",
+      "fidgetSheet": "Sprites/Visitors/WombatSushi/WombatSushi_Fidget",
+      "backFidgetSheet": "Sprites/Visitors/WombatSushi/WombatSushi_BackFidget",
+      "sideFidgetSheet": "Sprites/Visitors/WombatSushi/WombatSushi_SideFidget",
+      "scale": 1,
+      "carryAt": "hand",
+      "handRatio": 0.19
     }
   ]
 }

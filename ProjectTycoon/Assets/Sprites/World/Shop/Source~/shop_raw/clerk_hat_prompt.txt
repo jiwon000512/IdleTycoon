@@ -1,0 +1,39 @@
+# 곳마다 다른 점원 머리쓰개(2026-10-06 아트방, 사용자 「웜뱃 점원들 리소스: 농부 · 낚시장 · 횟집」). 곳마다 시안 셋 중 사용자 선택:
+#   농장 A 밀짚모자(clerk_hat_farm.png) · 낚시터 A 벙거지 + 찌(clerk_hat_fishing.png) · 횟집 C 남색 두건(clerk_hat_restaurant.png).
+#   버린 시안: 농장 B 삿갓(턱끈이 얼굴을 지나감) · C 체크 머릿수건 + 새싹, 낚시터 B 선장 모자 · C 노란 우비 모자, 횟집 A 머리띠(가운데 빨간 점이 일장기처럼 보임) · B 낮은 조리모.
+# -i 1: clerk_hat_ref.png(지금 빵집 점원 앞 · 옆 · 뒤, 요리사 모자), -i 2: clerk_hat_template.png(모자 없는 회색 웜뱃 앞 · 옆 · 뒤, 한 칸 10px).
+# Codex가 몸은 칸 그대로 두고 머리쓰개만 그려, 원본 격자 그대로 옮기면 몸 아래 절반이 원래 그림과 칸 · 색이 모두 같았다(make_clerk_hats.py align).
+#   옆모습은 바탕에서 반 칸(5px) 어긋나게 놓여 있어 방향마다 따로 잘라 격자를 찾는다.
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code). Image 2 shows one character of a cozy pixel-art idle game three times: a round grey wombat shop clerk seen from the FRONT (left), from the SIDE facing right (middle) and from the BACK (right), drawn with big square art pixels (one art pixel = 10 by 10 screen pixels). Keep the canvas size, the white background and all three wombats EXACTLY as they are: same position, size, body, fur colors, face, ears, feet and outline. Do not redraw, move or restyle them.
+Only ADD one piece of HEADWEAR to the wombat, the same headwear on all three views, drawn consistently as the same object seen from the front, from the right side and from behind. Image 1 shows the existing bakery clerk of the same game wearing a chef hat: match how snugly its hat sits pulled down on the head (not floating above it), its chunky pixel size, its flat colors with one shade color and its dark outline.
+CAMERA: like image 1, the character is seen from the front and slightly from above, so a little of the top of the headwear is visible. Parallel projection, no perspective.
+STYLE: exactly the same big 10 by 10 screen pixel art pixels as the wombat (never smaller pixels, no thin lines), no anti-aliasing, no gradients, no dithering, flat soft muted colors with one darker shade, dark outline (#241818) one art pixel wide around the headwear. The headwear may cover the top of the head and part of the ears but never the eyes, nose or mouth. Do NOT add clothes, aprons, scarves, tools, props, text, letters, numbers, ground or shadow. Nothing else changes.
+
+[farm a — 선택]
+HEADWEAR - FARMER'S STRAW HAT: a round woven straw hat in warm pale yellow with a wide flat brim and a low rounded crown, a red ribbon band around the crown. The brim is wide enough to stick out past the head on both sides; the ears poke up through or in front of the brim.
+
+[farm b]
+HEADWEAR - CONICAL STRAW HAT: a low wide cone-shaped straw farmer hat (like an Asian rice-farmer hat) in warm tan with a few darker woven rings, sitting low on the head like a little roof, with a thin brown chin cord. The ears are hidden under the hat.
+
+[farm c]
+HEADWEAR - FARMER'S HEAD TOWEL: a white cotton towel with red checks tied around the top of the head like a farmer's bandana, with a small knot and two short ends at the back of the head, and one tiny green two-leaf sprout tucked into the towel on top. The ears stick out below the towel.
+
+[fishing a — 선택]
+HEADWEAR - FISHING BUCKET HAT: a soft olive-green fisherman's bucket hat with a short downward brim all around, pulled down on the head, with one small red-and-white fishing float pinned on its side. The ears stick out below the brim.
+
+[fishing b]
+HEADWEAR - CAPTAIN'S CAP: a small white boat captain's cap with a flat puffy top, a navy blue band and a short navy visor at the front, with a tiny gold anchor badge on the front. It sits between the ears, which stay visible.
+
+[fishing c]
+HEADWEAR - YELLOW RAIN HAT: a bright but soft yellow fisherman's rain hat (sou'wester) with a rounded crown and a brim that is short at the front and longer and drooping at the back, pulled down on the head. The ears are hidden under the hat.
+
+[restaurant a]
+HEADWEAR - SUSHI CHEF HEADBAND: a white twisted cloth headband (hachimaki) tied around the forehead above the eyes, with a small knot and two short ends at the side-back of the head and one small red dot at the center front. The ears stick out above the headband.
+
+[restaurant b]
+HEADWEAR - SUSHI CHEF CAP: a low flat-topped white Japanese sushi chef cap (a short cylinder, much lower than a tall chef hat) with a navy blue band around its bottom edge, sitting between the ears, which stay visible.
+
+[restaurant c — 선택]
+HEADWEAR - INDIGO BANDANA: a deep indigo-blue cloth bandana (tenugui) covering the top of the head like a cap, with a few small white wave marks on it, tied in a small knot with two short ends at the back of the head. The ears stick out below the bandana.
