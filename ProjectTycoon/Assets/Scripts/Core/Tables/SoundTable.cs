@@ -60,6 +60,12 @@ namespace ZooTycoon.Core
         public const string k_FishEscape = "fish_escape";
         public const string k_Thump = "thump";
         public const string k_Haul = "haul";
+        // 설계 46 대 사기 등급 뽑기: 별이 켜질 때마다 · 꽂힐 때 등급별(1 · 2 · 3)
+        public const string k_RodStar = "rod_star";
+        public const string k_RodReveal = "rod_reveal_";
+        // 낚시터 단계 올림(미끼 노점) · 소용돌이가 맨 앞 물고기를 되돌림
+        public const string k_StageUp = "stage_up";
+        public const string k_Whirl = "whirl";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -109,6 +115,12 @@ namespace ZooTycoon.Core
             k_FishEscape,
             k_Thump,
             k_Haul,
+            k_RodStar,
+            k_RodReveal + 1,
+            k_RodReveal + 2,
+            k_RodReveal + 3,
+            k_StageUp,
+            k_Whirl,
         };
 
         // Resources/ 기준, 확장자 없음

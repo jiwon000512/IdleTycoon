@@ -21,7 +21,7 @@ namespace ZooTycoon.Tests
         [TestCase("ActionTable", 22)]
         [TestCase("InteractableTable", 21)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 16)]
+        [TestCase("SoundTable", 17)]
         [TestCase("BgmTable", 1)]
         [TestCase("ConfigTable", 6)]
         [TestCase("BakeryConfigTable", 9)]

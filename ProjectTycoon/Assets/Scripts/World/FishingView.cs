@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
+using GameKit.Audio;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -692,6 +693,7 @@ namespace ZooTycoon.World
             {
                 m_revealing[stake] = i + 1;
                 StartCoroutine(Fx.Bounce(art.Stars[i].transform));
+                SoundManager.Instance.Play(SoundTable.k_RodStar);
                 yield return new WaitForSeconds(k_RevealStep);
             }
 
