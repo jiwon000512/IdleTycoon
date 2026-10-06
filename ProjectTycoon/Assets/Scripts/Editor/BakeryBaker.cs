@@ -54,6 +54,7 @@ namespace ZooTycoon.Editor
         // 가게 유닛(웜뱃·손님) 기본 크기: 한 칸 2px, PPU 80 = 42칸 캐릭터 약 1.05유닛. 스케일은 1로 두고 크기는 PPU로 정한다
         const float k_UnitPpu = 80f;
         const int k_TimerFrames = 16;
+        const int k_ReelFrames = 16;
         const int k_SmokeFrames = 12;
         const int k_BackdropOrder = -2100;
         const int k_BurrowOrder = -2000;
@@ -249,6 +250,16 @@ namespace ZooTycoon.Editor
             {
                 Import(k_FishingDir + "whirl_" + i + ".png", center);
             }
+
+            // 감기 게이지(아트방 B 「릴」 16칸, 00 = 0%): 피벗 = 릴 가운데(왼쪽 15px · 아래 15px / 40×30)
+            for (int i = 0; i < k_ReelFrames; i++)
+            {
+                Import(k_FishingDir + ReelFrame(i) + ".png", new Vector2(0.375f, 0.5f));
+            }
+
+            // 낚싯줄 찌(아트방 A 「동글 찌」): 피벗 = 맨 위 가운데(줄이 닿는 막대 끝)
+            Import(k_FishingDir + "bobber_0.png", new Vector2(0.5f, 1f));
+            Import(k_FishingDir + "bobber_1.png", new Vector2(0.5f, 1f));
 
             // 낚싯대(아트방 「통통한 대」): 피벗 = 꽂는 자리(그림 맨 아랫줄의 칸, Source~/make_rods.py)
             foreach ((string name, int socket) in RodSockets)
@@ -813,6 +824,8 @@ namespace ZooTycoon.Editor
             Set(view, "m_stakeLocked", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_locked.png"));
             Set(view, "m_stakeStar", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_star.png"));
             SetArray(view, "m_whirl", Enumerable.Range(0, 4).Select(i => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "whirl_" + i + ".png")).ToArray());
+            SetArray(view, "m_bobber", new[] { AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "bobber_0.png"), AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "bobber_1.png") });
+            SetArray(view, "m_reelGauge", Enumerable.Range(0, k_ReelFrames).Select(i => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + ReelFrame(i) + ".png")).ToArray());
             SetArray(view, "m_rods", RodSockets.Select(rod => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + rod.Name + ".png")).ToArray());
             Set(view, "m_arch", arch.transform);
             Set(view, "m_hut", hut.transform);
@@ -963,6 +976,11 @@ namespace ZooTycoon.Editor
         static string CounterTimerFrame(int i)
         {
             return "counter_timer_c_" + i.ToString("00");
+        }
+
+        static string ReelFrame(int i)
+        {
+            return "reel_gauge_" + i.ToString("00");
         }
 
         static string TimerFrame(int i)

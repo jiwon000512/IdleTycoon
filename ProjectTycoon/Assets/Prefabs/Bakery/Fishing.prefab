@@ -673,6 +673,26 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 471db8bf88c913e4496146e9e446415f, type: 3}
   - {fileID: 21300000, guid: 1c5bd47e59b4084439c755303cf8a237, type: 3}
   - {fileID: 21300000, guid: a3186e5b5db11ec40a7bab59ee7523c5, type: 3}
+  m_reelGauge:
+  - {fileID: 21300000, guid: 4d5e1bde51eda764db25bebd6d600c20, type: 3}
+  - {fileID: 21300000, guid: f71f773d4349e754885c6cc2efbfe465, type: 3}
+  - {fileID: 21300000, guid: d8642db4e36620446866f5921076c973, type: 3}
+  - {fileID: 21300000, guid: d23f7bda6acdfa44c92caf42983ed3a5, type: 3}
+  - {fileID: 21300000, guid: fb6b6e4439e3e9845ab2f0c6077b2145, type: 3}
+  - {fileID: 21300000, guid: 2f3ee5006e72bf345a8d1ff73939b8ff, type: 3}
+  - {fileID: 21300000, guid: 14567fddff8ba1349b78205c452d9586, type: 3}
+  - {fileID: 21300000, guid: 83be18dcb59a5b84cbab6d0ea39b9473, type: 3}
+  - {fileID: 21300000, guid: 52d91c0f4e58f014e9174dfc8dac2987, type: 3}
+  - {fileID: 21300000, guid: 2cbf153fe98df134394aa463f00c6457, type: 3}
+  - {fileID: 21300000, guid: 9ca0daed83f36ca4f839f57da04bd8f3, type: 3}
+  - {fileID: 21300000, guid: 4cf5954cebfc6164b8532d8ea82816eb, type: 3}
+  - {fileID: 21300000, guid: 2b7d6ff3c86f80c47af41c32fcbe9d1c, type: 3}
+  - {fileID: 21300000, guid: c3851d5600e5f6240ba9c6c50040258b, type: 3}
+  - {fileID: 21300000, guid: caf9a821621a0f84298650e007ac80ee, type: 3}
+  - {fileID: 21300000, guid: f8ce1a19a4ea17c4283040573bd36069, type: 3}
+  m_bobber:
+  - {fileID: 21300000, guid: cbdaea1408ba2dd43941d9d81ee22eb6, type: 3}
+  - {fileID: 21300000, guid: 28a0724ebe5a6344e83abdedc9897665, type: 3}
   m_rods:
   - {fileID: 21300000, guid: 0c35810b445253a449812916f878ab2d, type: 3}
   - {fileID: 21300000, guid: 4cb058cd7d0546842a8c88a807b46033, type: 3}

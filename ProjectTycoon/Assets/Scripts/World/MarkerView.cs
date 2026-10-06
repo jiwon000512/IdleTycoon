@@ -24,8 +24,14 @@ namespace ZooTycoon.World
             gameObject.SetActive(true);
         }
 
+        // 숨은 태그(값 알약이 꺼진 물길 끝 등)는 튈 것이 없다
         public void Bounce()
         {
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
             StartCoroutine(Fx.Bounce(m_body.transform));
         }
     }
