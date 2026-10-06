@@ -14,7 +14,7 @@ description: 그림 리소스(캐릭터·캐릭터 동작·소품·배경·UI �
 3. **칸 단위로 옮긴다**(아래 「격자」). 월드 그림은 원본 격자 그대로, 원본과 나란히 비교한다.
 4. **게임에 끼워 캡처한다.** 에셋을 바꾸지 않고, 플레이 중 런타임 스프라이트(`Texture2D.LoadImage` + `Sprite.Create`)를 실제 부품에 끼워 게임 폰트 그대로 찍는다.
 5. **비교 페이지**(아티팩트)에 지금 모습과 시안을 나란히 놓고 장단점을 적어 고르게 한다.
-6. **적용**: 원본 시안은 `Source~/raw/`, 만드는 스크립트는 `Source~/make_*.py`, 결과 PNG는 제자리. UI 조각은 `ui_slices.json` + 메뉴 `Import UI Sprites`. 쓰던 곳을 모두 바꾸고 옛 조각(PNG·스크립트 줄·json 항목)을 지운다. 캡처로 확인한다.
+6. **적용**: 원본 시안은 `Source~/raw/`, 만드는 스크립트는 `Source~/make_*.py`, 결과 PNG는 제자리. UI 조각은 `ui_slices.json` + 메뉴 `Import UI Sprites`. 쓰던 곳을 모두 바꾸고 옛 조각(PNG·스크립트 줄·json 항목)을 지운다. 지우기 전에 `.meta`의 guid로 프리팹 · 씬 · 에셋 참조를 찾는다(`grep -rl <guid> Assets --include=*.prefab --include=*.unity --include=*.asset`). 프리팹은 이름이 아니라 guid로 가리켜 이름 검색에 안 잡힌다(2026-10-05 Fishing.prefab m_rods가 지운 그림을 가리켜 낚시터 초기화가 멈춤). 걸리면 프로그래밍방에 먼저 알린다. 캡처로 확인한다.
 
 사용자가 「하나씩」이라고 했으면 조각 하나를 끝낸 뒤 다음 조각으로 간다.
 

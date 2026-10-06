@@ -48,7 +48,7 @@ description: 이 프로젝트(ProjectTycoon)의 Unity 에디터를 CLI로 다룰
 - **에셋 조작(삭제·임포트·굽기·프리팹 저장)과 `recompile`·`run_tests`는 `playMode=stopped`에서만.** 플레이 중 굽기는 실행 중 값이 프리팹에 저장되고, 플레이 중 재컴파일은 도메인 리로드로 오류가 난다. 사용자가 작업을 요청한 상태면 `editor_stop`으로 끄고 진행한다.
 - 플레이 종료 직후 바로 에셋을 지우면 에디터가 멈춘 적이 있다 → `stopped`를 확인하고 2초 뒤에.
 - `run_tests`는 한 번만 부른다. 같은 명령을 겹쳐 부르면 테스트 러너가 깨진다.
-- 재컴파일은 플레이가 끝날 때까지 미뤄진다. 플레이 중의 「컴파일 0」은 새 코드를 검사한 결과가 아니다.
+- 플레이 중에 스크립트를 고치면 다음 `run_script` 때 다시 컴파일돼 도메인이 다시 읽히고 `GameManager.Instance`가 빈다(화면만 남음, 2026-10-05). 스크립트는 플레이를 끈 뒤 고친다. 플레이 중의 「컴파일 0」은 새 코드를 검사한 결과가 아니다.
 - 콘솔은 세션을 넘어 남는다. 판정 전에 `clear_console`. 잘못된 명령을 부르면 그 호출이 콘솔 오류 1건으로 남는다.
 - 콘솔의 `Failed to handle /api/exec request: Main thread operation timed out`은 도메인 리로드 중에 보낸 명령이 기다리다 난 도구 오류다(게임 오류 아님). `compile.sh`를 한 번 더 돌리면 사라진다.
 - 콘솔의 `TreeViewController NullReference`·`GUIClips`는 에디터 내부 오류다. 게임 오류는 `error CS`와 게임 스택만 본다.
