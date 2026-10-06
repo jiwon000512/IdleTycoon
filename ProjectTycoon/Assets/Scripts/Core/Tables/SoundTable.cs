@@ -63,9 +63,12 @@ namespace ZooTycoon.Core
         // 설계 46 대 사기 등급 뽑기: 별이 켜질 때마다 · 꽂힐 때 등급별(1 · 2 · 3)
         public const string k_RodStar = "rod_star";
         public const string k_RodReveal = "rod_reveal_";
-        // 낚시터 단계 올림(미끼 노점) · 소용돌이가 맨 앞 물고기를 되돌림
-        public const string k_StageUp = "stage_up";
+        // 소용돌이가 맨 앞 물고기를 되돌림
         public const string k_Whirl = "whirl";
+        // 설계 49(아트방): 대물 등장 · 대물 낚음(단계 올림 종을 품는다) · 낚싯대 합치기
+        public const string k_BossAppear = "boss_appear";
+        public const string k_BossCaught = "boss_caught";
+        public const string k_RodMerge = "rod_merge";
         // 설계 47 횟집: 도마에서 회를 뜨는 동안 칼질마다 · 다 떠서 접시가 손에 · 광장 문 앞에서 처음 엶
         public const string k_Cut = "cut";
         public const string k_Dish = "dish";
@@ -123,8 +126,10 @@ namespace ZooTycoon.Core
             k_RodReveal + 1,
             k_RodReveal + 2,
             k_RodReveal + 3,
-            k_StageUp,
             k_Whirl,
+            k_BossAppear,
+            k_BossCaught,
+            k_RodMerge,
             k_Cut,
             k_Dish,
             k_ShopOpen,

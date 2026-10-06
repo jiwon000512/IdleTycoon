@@ -18,14 +18,17 @@ namespace ZooTycoon.Core
         // 이번에 감을 물고기(말뚝 하나를 도는 동안만 쓴다)
         private readonly List<Fish> m_front = new List<Fish>();
         private double m_whirlLeft;
-        // 말뚝마다 이번 틱에 감은 물고기(화면의 낚싯줄)
-        private readonly Dictionary<StakeInteractable, Fish> m_targets = new Dictionary<StakeInteractable, Fish>();
+        // 말뚝마다 이번 틱에 감은 물고기(화면의 낚싯줄, 맨 앞부터. 여러 마리 감는 대는 줄도 여럿)
+        private readonly Dictionary<StakeInteractable, List<Fish>> m_reeling = new Dictionary<StakeInteractable, List<Fish>>();
+        private static readonly Fish[] s_none = new Fish[0];
 
         public IReadOnlyList<Fish> Fish => m_fish;
         // 낚였다(물고기 · 감은 말뚝, 털썩이면 그 말뚝) · 놓쳤다
         public event Action<Fish, StakeInteractable> Caught;
         public event Action<Fish> Escaped;
         public event Action<StakeInteractable> Hooked;
+        // 그물이 사거리 안 물고기를 멈췄다(말뚝)
+        public event Action<StakeInteractable> Stunned;
         // 소용돌이가 되돌렸다(물고기 · 되돌리기 전 자리)
         public event Action<Fish, float> Whirled;
 
@@ -42,7 +45,29 @@ namespace ZooTycoon.Core
         // 그 말뚝 대가 지금 감는 물고기(붙잡은 월척 포함, 없으면 null)
         public Fish TargetOf(StakeInteractable stake)
         {
-            return HookOf(stake) ?? (m_targets.TryGetValue(stake, out Fish fish) && m_fish.Contains(fish) ? fish : null);
+            if (m_hooks.TryGetValue(stake, out Fish hooked))
+            {
+                return hooked;
+            }
+
+            // 다른 대가 먼저 낚아 간 물고기는 건너뛴다
+            IReadOnlyList<Fish> reeling = TargetsOf(stake);
+
+            for (int i = 0; i < reeling.Count; i++)
+            {
+                if (m_fish.Contains(reeling[i]))
+                {
+                    return reeling[i];
+                }
+            }
+
+            return null;
+        }
+
+        // 그 말뚝 대가 지금 감는 물고기 전부(붙잡은 월척이면 그것 하나). 낚여 사라진 물고기가 한 틱 남아 있을 수 있다
+        public IReadOnlyList<Fish> TargetsOf(StakeInteractable stake)
+        {
+            return m_reeling.TryGetValue(stake, out List<Fish> reeling) ? reeling : (IReadOnlyList<Fish>)s_none;
         }
 
         public void Spawn(Fish fish)
@@ -76,7 +101,7 @@ namespace ZooTycoon.Core
         public void Forget(StakeInteractable stake)
         {
             m_stunLeft.Remove(stake);
-            m_targets.Remove(stake);
+            m_reeling.Remove(stake);
         }
 
         // 그물: StunEvery초마다 사거리 안 헤엄치는 물고기를 Stun초 멈춘다(닿은 물고기가 없으면 닿을 때까지 기다린다). 꽂은 뒤 첫 멈춤도 한 주기를 기다린다
@@ -103,6 +128,11 @@ namespace ZooTycoon.Core
                         fish.StunLeft = Math.Max(fish.StunLeft, rod.Stun);
                         left = rod.StunEvery;
                     }
+                }
+
+                if (left > 0d)
+                {
+                    Stunned?.Invoke(stake);
                 }
             }
 
@@ -239,18 +269,21 @@ namespace ZooTycoon.Core
             RodTable rod = stake.Rod;
             Front(stake, m_area.RangeOf(stake), rod.Targets);
 
-            if (m_front.Count == 0)
+            if (!m_reeling.TryGetValue(stake, out List<Fish> reeling))
             {
-                m_targets.Remove(stake);
-                return;
+                reeling = new List<Fish>();
+                m_reeling[stake] = reeling;
             }
 
-            m_targets[stake] = m_front[0];
+            reeling.Clear();
+            reeling.AddRange(m_front);
 
             foreach (Fish target in m_front)
             {
                 if (target.Trophy && rod.BigGame <= 0d)
                 {
+                    reeling.Clear();
+                    reeling.Add(target);
                     target.HookedBy = stake;
                     m_hooks[stake] = target;
                     Hooked?.Invoke(stake);
@@ -261,6 +294,7 @@ namespace ZooTycoon.Core
 
                 if (target.Reeled >= target.Weight)
                 {
+                    reeling.Remove(target);
                     Remove(target);
                     Caught?.Invoke(target, stake);
                 }

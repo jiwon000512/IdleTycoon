@@ -26,6 +26,8 @@ namespace ZooTycoon.Core
     {
         public string Name { get; set; }
         public VisitorRole Role { get; set; }
+        // 점원 외형(clerk 행)이 쓰이는 곳 종류 id(bakery · farm · fishing · restaurant). null = 전용 행이 없는 곳이 쓰는 기본
+        public string Area { get; set; }
         public string Sprite { get; set; }
         public string IdleSheet { get; set; }
         public string MoveSheet { get; set; }

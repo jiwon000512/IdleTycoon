@@ -92,6 +92,7 @@ namespace ZooTycoon.Core
             Sim.Caught += Sim_Caught;
             Sim.Escaped += Sim_Escaped;
             Sim.Hooked += stake => stake.Refresh();
+            Sim.Stunned += stake => Bus.Publish(new Events.NetCast(stake));
             Sim.Whirled += (fish, from) => Bus.Publish(new Events.FishWhirled(this, fish, from));
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
             Bank = new StreamBankInteractable(Row(StreamBankInteractable.k_Id), this);
@@ -240,11 +241,16 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // p에서 radius 안의 가장 가까운 말뚝(낚시판 보기의 손가락, 없으면 null)
-        public StakeInteractable StakeAt(Vector2 p, float radius)
+        // 낚시판 보기: 손가락이 말뚝을 잡는 반지름과, 대 그림(말뚝 위로 솟는다)까지 잡히게 올려 보는 높이(유닛)
+        private const float k_GrabRadius = 1.1f;
+        private const float k_GrabLift = 0.4f;
+
+        // 낚시판 보기의 손가락(곳 좌표) 밑 말뚝(없으면 null). 화면(끄는 대의 사거리)과 편집 모드가 같은 판정을 쓴다
+        public StakeInteractable StakeUnder(Vector2 p)
         {
-            StakeInteractable best = m_stakes.OrderBy(s => Vector2.Distance(s.Position, p)).First();
-            return Vector2.Distance(best.Position, p) <= radius ? best : null;
+            Vector2 at = p - new Vector2(0f, k_GrabLift);
+            StakeInteractable best = m_stakes.OrderBy(s => Vector2.Distance(s.Position, at)).First();
+            return Vector2.Distance(best.Position, at) <= k_GrabRadius ? best : null;
         }
 
         internal bool CanOpen(StakeInteractable stake)

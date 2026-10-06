@@ -77,11 +77,18 @@ namespace ZooTycoon.Data
 
             bool customer = false;
             bool clerk = false;
+            string[] lookAreas = { BakeryArea.k_Id, FarmArea.k_Id, FishingArea.k_Id, RestaurantArea.k_Id };
 
             foreach (VisitorTable visitor in tables.GetAll<VisitorTable>())
             {
                 customer |= visitor.Role == VisitorRole.Customer;
-                clerk |= visitor.Role == VisitorRole.Clerk;
+                // 곳 전용 점원 외형이 없는 곳이 쓰는 기본(area 없는 clerk 행)이 하나는 있어야 한다
+                clerk |= visitor.Role == VisitorRole.Clerk && visitor.Area == null;
+
+                if (visitor.Area != null && (visitor.Role != VisitorRole.Clerk || !lookAreas.Contains(visitor.Area)))
+                {
+                    errors.Add($"VisitorTable '{visitor.Id}': area는 clerk 행에만, 곳 종류 id({string.Join(" · ", lookAreas)}) 중 하나여야 한다.");
+                }
 
                 if (!k_VisitorIdPattern.IsMatch(visitor.Id))
                 {
@@ -99,10 +106,10 @@ namespace ZooTycoon.Data
                 }
             }
 
-            // 설계 21: 손님 외형과 점원 외형이 하나씩은 있어야 한다
+            // 설계 21: 손님 외형과 (area 없는) 점원 외형이 하나씩은 있어야 한다
             if (tables.GetAll<VisitorTable>().Count > 0 && (!customer || !clerk))
             {
-                errors.Add("VisitorTable: role customer와 clerk 행이 하나씩은 있어야 한다.");
+                errors.Add("VisitorTable: role customer 행과 area 없는 clerk 행이 하나씩은 있어야 한다.");
             }
         }
 

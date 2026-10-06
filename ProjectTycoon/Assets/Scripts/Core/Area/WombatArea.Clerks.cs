@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace ZooTycoon.Core
@@ -212,14 +213,18 @@ namespace ZooTycoon.Core
                 }
             });
 
-            foreach (VisitorTable look in Tables.GetAll<VisitorTable>())
+            // 곳마다 다른 점원(2026-10-06 사용자): 이 곳 종류 전용 외형(VisitorTable area)이 있으면 그 행들만, 없으면 area가 없는 기본 행
+            List<VisitorTable> looks = Tables.GetAll<VisitorTable>().Where(look => look.Role == VisitorRole.Clerk).ToList();
+            m_clerkLooks.AddRange(looks.Where(look => look.Area == LookArea));
+
+            if (m_clerkLooks.Count == 0)
             {
-                if (look.Role == VisitorRole.Clerk)
-                {
-                    m_clerkLooks.Add(look);
-                }
+                m_clerkLooks.AddRange(looks.Where(look => look.Area == null));
             }
         }
+
+        // 점원 외형을 고르는 곳 종류 id(농장은 층이 여럿이어도 하나). 생성자에서 읽으니 하위 클래스의 필드에 기대지 않는다
+        protected virtual string LookArea => Id;
 
         // 점원 틱 → 딴짓 사물 → 대화 → 나간 점원 정리
         private void TickClerks(double dt)

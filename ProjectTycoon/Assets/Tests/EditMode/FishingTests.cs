@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using GameKit.Events;
 using GameKit.Tables;
@@ -41,9 +42,9 @@ namespace ZooTycoon.Tests
 
         private FishingConfigTable Config => m_tables.Get<FishingConfigTable>(FishingConfigTable.k_Main);
 
-        private void Create(double roll = 0.3, Action<TableSet> tweak = null)
+        private void Create(double roll = 0.3, Action<TableSet> tweak = null, TableSet tables = null)
         {
-            m_tables = TestTables.Load();
+            m_tables = tables ?? TestTables.Load();
             m_tables.Get<BakeryConfigTable>(BakeryConfigTable.k_Bakery).MaxCustomers = 0;
             tweak?.Invoke(m_tables);
             m_bus = new EventBus();
@@ -243,7 +244,7 @@ namespace ZooTycoon.Tests
             Assert.That(Stake(0).Rod.Id, Is.EqualTo(RodTable.k_Bamboo));
         }
 
-        // 한 틱에 감긴(Reeled가 늘어난) 물고기 수의 최댓값
+        // 한 틱에 감긴(Reeled가 늘어난) 물고기 수의 최댓값. 화면의 낚싯줄(Targets)도 그 수를 넘지 않고 맨 앞이 Reeling이다
         private int MostReeledAtOnce(double seconds)
         {
             Dictionary<Fish, double> before = new Dictionary<Fish, double>();
@@ -252,6 +253,8 @@ namespace ZooTycoon.Tests
             for (double t = 0d; t < seconds; t += k_Dt)
             {
                 m_mall.Tick(k_Dt);
+                Assert.That(Stake(0).Targets.Count, Is.LessThanOrEqualTo(Stake(0).Rod.Targets));
+                Assert.That(Stake(0).Targets.FirstOrDefault(), Is.SameAs(Stake(0).Reeling));
                 most = Math.Max(most, m_fishing.Fish.Count(f => before.TryGetValue(f, out double reeled) && f.Reeled > reeled));
                 before = m_fishing.Fish.ToDictionary(f => f, f => f.Reeled);
             }
@@ -323,7 +326,10 @@ namespace ZooTycoon.Tests
             GoFishing();
             Buy(Stake(0), RodTable.k_Net);
             m_mall.Wombat.Mover.Place(m_fishing.Layout.HoleFloor);
+            StakeInteractable cast = null;
+            m_bus.Subscribe<Events.NetCast>(e => cast = e.Stake);
             Assert.That(RunUntil(() => m_fishing.Fish.Any(f => f.StunLeft > 0d), 60d), Is.True, "쿵 없이 멈춘다");
+            Assert.That(cast, Is.SameAs(Stake(0)), "멈춘 순간의 사건(화면의 물결)");
         }
 
         // 그물은 꽂은 뒤 한 주기를 기다린다(꽂거나 옮기자마자 멈추면 말뚝을 돌려 가며 물고기를 세울 수 있다): 사거리에 물고기가 있어도 바로 멈추지 않는다
@@ -499,6 +505,23 @@ namespace ZooTycoon.Tests
             double plain = Settled(3);
             Assert.That(plain, Is.GreaterThan(0d));
             Assert.That(Settled(1), Is.EqualTo(plain * 2d).Within(2d));
+        }
+
+        // 곳마다 다른 점원(VisitorTable area): 낚시터 전용 외형 행이 있으면 낚시터 후보는 그 외형만, 전용 행이 없는 빵집은 area 없는 기본 외형
+        [Test]
+        public void ClerkLook_UsesTheRowForThisPlace_WhenOneExists()
+        {
+            Create(tables: TestTables.Load("VisitorTable", rows =>
+            {
+                JToken row = rows.First(r => (string)r["role"] == "clerk").DeepClone();
+                row["id"] = "v99";
+                row["area"] = FishingArea.k_Id;
+                rows.Add(row);
+            }));
+
+            Assert.That(m_fishing.Candidates, Is.Not.Empty);
+            Assert.That(m_fishing.Candidates.All(c => c.Look.Id == "v99"), Is.True, "낚시터 전용 외형");
+            Assert.That(m_shop.Candidates.All(c => c.Look.Id != "v99"), Is.True, "빵집은 기본 외형");
         }
 
         // 미끼 노점 시트에는 업그레이드 줄만 있다(단계는 사지 않는다)

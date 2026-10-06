@@ -16,8 +16,9 @@ namespace ZooTycoon.Core
         public RodTable Rod { get; private set; }
         // 붙잡은 월척(없으면 null)
         public Fish Hooked => Fishing.Sim.HookOf(this);
-        // 지금 감는 물고기(화면의 낚싯줄, 없으면 null)
+        // 지금 감는 물고기(맨 앞 하나, 없으면 null) · 전부(화면의 낚싯줄: 여러 마리 감는 대는 여럿)
         public Fish Reeling => Rod == null ? null : Fishing.Sim.TargetOf(this);
+        public System.Collections.Generic.IReadOnlyList<Fish> Targets => Fishing.Sim.TargetsOf(this);
 
         internal StakeInteractable(InteractableTable table, FishingArea fishing, int index, Vector2 position, double cost) : base(table, fishing)
         {

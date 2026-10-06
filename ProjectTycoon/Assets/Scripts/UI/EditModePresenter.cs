@@ -13,9 +13,6 @@ namespace ZooTycoon.UI
     // 설계 49: 낚시터의 편집 모드는 낚시판 보기 — 말뚝을 누르면 대 사기 시트(잠긴 말뚝은 열기), 대를 끌어 다른 말뚝에 놓으면 옮기기 · 바꾸기 · 합치기(FishingArea.TryMoveRod)
     public sealed class EditModePresenter : IDisposable
     {
-        // 낚시판 보기: 손가락이 말뚝을 잡는 반지름과, 대 그림(말뚝 위로 솟는다)까지 잡히게 올려 보는 높이(유닛)
-        private const float k_StakeGrabRadius = 1.1f;
-        private const float k_StakeGrabLift = 0.4f;
         // 누른 자리에서 이만큼(유닛) 안 벗어났으면 손가락이 밀린 누르기로 본다
         private const float k_TapSlack = 0.5f;
 
@@ -146,11 +143,6 @@ namespace ZooTycoon.UI
             m_view.SetStoreHint(m_tables.Text(Area is FishingArea ? "edit_fishing_hint" : m_cards.Count == 0 ? "edit_dig_hint" : "edit_store_hint"));
         }
 
-        private static StakeInteractable StakeUnder(FishingArea fishing, Vector2 at)
-        {
-            return fishing.StakeAt(at - new Vector2(0f, k_StakeGrabLift), k_StakeGrabRadius);
-        }
-
         private Vector2 ToArea(Vector2 world)
         {
             return world - m_originOf(Area);
@@ -197,7 +189,7 @@ namespace ZooTycoon.UI
 
             if (Area is FishingArea fishing)
             {
-                m_pressedStake = StakeUnder(fishing, at);
+                m_pressedStake = fishing.StakeUnder(at);
                 m_pressedAt = at;
                 m_travel = 0f;
                 return;
@@ -252,7 +244,7 @@ namespace ZooTycoon.UI
         // 낚시판 보기: 끌었으면 놓은 자리의 말뚝으로(옮기기 · 바꾸기 · 합치기), 눌렀다 뗐으면 잠긴 말뚝은 열고 열린 말뚝은 대 사기 시트
         private void ReleaseStake(FishingArea fishing, StakeInteractable pressed, Vector2 at)
         {
-            StakeInteractable target = m_moved ? StakeUnder(fishing, at) : pressed;
+            StakeInteractable target = m_moved ? fishing.StakeUnder(at) : pressed;
 
             if (target != pressed)
             {

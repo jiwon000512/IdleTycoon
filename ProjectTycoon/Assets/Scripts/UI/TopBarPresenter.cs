@@ -18,15 +18,18 @@ namespace ZooTycoon.UI
         private readonly IDisposable m_blessing;
         private readonly IDisposable m_merchant;
         private readonly IDisposable[] m_evaluation;
+        private readonly IDisposable[] m_wave;
+        private readonly Mall m_mall;
 
         private double m_last;
         private double m_spent;
 
-        public TopBarPresenter(TopBarView view, ZooState state, EventBus bus, TableSet tables, RelicMerchant merchant)
+        public TopBarPresenter(TopBarView view, ZooState state, EventBus bus, TableSet tables, RelicMerchant merchant, Mall mall)
         {
             m_view = view;
             m_state = state;
             m_tables = tables;
+            m_mall = mall;
 
             m_last = state.Coins;
             m_coins = bus.Subscribe<Events.CoinsChanged>(Bus_CoinsChanged);
@@ -37,8 +40,17 @@ namespace ZooTycoon.UI
                 bus.Subscribe<Events.EvaluationStarted>(Bus_EvaluationStarted),
                 bus.Subscribe<Events.EvaluationEnded>(_ => m_view.HideEvaluation()),
             };
+            m_wave = new[]
+            {
+                bus.Subscribe<Events.AreaChanged>(_ => RefreshWave(false)),
+                bus.Subscribe<Events.WaveStarted>(_ => RefreshWave(false)),
+                bus.Subscribe<Events.BossSpawned>(_ => RefreshWave(true)),
+                bus.Subscribe<Events.BossEscaped>(_ => RefreshWave(false)),
+                bus.Subscribe<Events.StageRaised>(_ => RefreshWave(false)),
+            };
             RefreshCoins();
             ShowMerchant(merchant, false);
+            RefreshWave(false);
 
             // 설계 43: 불러온 축복(돌아가는 연출 없이)
             BlessingTable active = state.Blessing.Active;
@@ -58,6 +70,30 @@ namespace ZooTycoon.UI
             foreach (IDisposable subscription in m_evaluation)
             {
                 subscription.Dispose();
+            }
+
+            foreach (IDisposable subscription in m_wave)
+            {
+                subscription.Dispose();
+            }
+        }
+
+        // 설계 49: 낚시터에 있는 동안 물때 알약(「물때 7/10」, 대물 물때에는 「대물!」이 톡 튄다). 노점 위 팻말은 입구에 서면 메뉴 버튼에 가렸다(2026-10-06 사용자)
+        private void RefreshWave(bool pulse)
+        {
+            FishingArea fishing = m_mall.Fishing;
+
+            if (m_mall.Active != fishing)
+            {
+                m_view.HideWave();
+            }
+            else if (fishing.BossWave)
+            {
+                m_view.ShowWave(m_tables.Text("fishing_boss"), null, pulse);
+            }
+            else
+            {
+                m_view.ShowWave(m_tables.Text("wave_pill"), m_tables.Format("wave_pill_count", Math.Max(1, fishing.Wave), fishing.Config.WavesPerStage), pulse);
             }
         }
 

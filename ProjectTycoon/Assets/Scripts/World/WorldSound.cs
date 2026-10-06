@@ -31,14 +31,14 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorPicked>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pick)),
                 bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
                 // 설계 44 · 46: 낚시터(쿵 · 털썩은 웜뱃 동작 칸에 맞춰 WombatView). 대 사기 소리는 등급 뽑기 별이 다 켜진 때 등급별(별마다 소리는 FishingView)
-                bus.Subscribe<Events.FishCaught>(e => PlayIn(e.Fishing, SoundTable.k_FishCatch)),
+                // 설계 49: 대물을 낚으면 큰 첨벙 + 단계 올림 종이 한 소리(보통 낚음 · 단계 올림 소리와 겹치지 않게 그것만)
+                bus.Subscribe<Events.FishCaught>(e => PlayIn(e.Fishing, e.Fish.Boss ? SoundTable.k_BossCaught : SoundTable.k_FishCatch)),
                 bus.Subscribe<Events.FishEscaped>(e => PlayIn(e.Fishing, SoundTable.k_FishEscape)),
                 bus.Subscribe<Events.StreamDug>(e => PlayIn(e.Fishing, SoundTable.k_Dig)),
-                bus.Subscribe<Events.StageRaised>(e => PlayIn(e.Fishing, SoundTable.k_StageUp)),
                 bus.Subscribe<Events.FishWhirled>(e => PlayIn(e.Fishing, SoundTable.k_Whirl)),
-                // 설계 49: 대물 등장 · 합치기 소리는 아트방이 올 때까지 소용돌이 · 대 뽑기 소리를 빌린다(대물을 낚으면 단계 올림 소리)
-                bus.Subscribe<Events.BossSpawned>(e => PlayIn(e.Fishing, SoundTable.k_Whirl)),
-                bus.Subscribe<Events.RodMerged>(e => PlayIn(e.Stake.Fishing, SoundTable.k_RodReveal + Math.Min(e.Stake.Rod.Tier, 3))),
+                // 설계 49(아트방): 대물 등장 「두둥」 · 합치기 「물방울 둘이 하나로」(날아간 대가 꽂히는 때에 퐁당이 맞게 바로)
+                bus.Subscribe<Events.BossSpawned>(e => PlayIn(e.Fishing, SoundTable.k_BossAppear)),
+                bus.Subscribe<Events.RodMerged>(e => PlayIn(e.Stake.Fishing, SoundTable.k_RodMerge)),
                 // 설계 47: 횟집(칼질 cut은 RestaurantView, 다 떠서 손에 dish, 문 열기 shop_open — 아트방. 담기 · 놓기 put, 꺼내기 pick, 값 pay는 빵집 소리)
                 bus.Subscribe<Events.TankFilled>(e => PlayIn(e.Tank.Area, SoundTable.k_Put)),
                 bus.Subscribe<Events.FishTaken>(e => PlayIn(e.Tank.Area, SoundTable.k_Pick)),

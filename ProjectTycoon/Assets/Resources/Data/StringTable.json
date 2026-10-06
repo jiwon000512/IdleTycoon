@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 50,
+  "version": 51,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -53,7 +53,8 @@
     "version 47 (2026-10-05, 사용자 「놓침은 표시하지 않기로 한다」): fishing_missed 삭제(놓침 팻말과 놓친 수를 없앰).",
     "version 48 (2026-10-05, 설계 46 낚시터 개편): 대물 · 3택 1 · 특별한 대 · 소환 값 표식 문구 삭제(fishing_boss · fishing_boss_coming · fishing_boss_missed · rod_choice_* · rod_pulley · rod_lighthouse · rod_whirlpool · *_desc · tag_summon · inventory_source_fishing_boss), fishing_wave 「{0}단계」(물때 수 없음), 대 사기 · 미끼 노점 시트 문구 추가(sheet_stake_* · sheet_hut_* · row_stage_up*).",
     "version 49 (2026-10-06, 설계 47 수조 횟집): 편집 카드 kind_tank · kind_cutting_board · kind_dining_table, 곳 이름 loc_restaurant · 문 간판 sign_restaurant, 시트(sheet_tank_* · sheet_board_* · sheet_gate_* · row_open_shop*), 닫힌 문 표식 tag_open_shop, 손님 결제 팝업은 coin_popup 그대로. ★5 마일스톤 milestone_next_shop 「다음 가게 문(준비 중)」 → 「횟집 문」.",
-    "version 50 (2026-10-06, 설계 49 물때 디펜스): 종류 이름 · 설명(rod_<id> · rod_<id>_desc 열둘, rod_light 삭제) · rod_merged · fishing_wave_count · fishing_boss · fishing_boss_missed · fishing_unlock · edit_fishing_hint 추가, 단계 사기 문구(row_stage_up · row_stage_up_effect) 삭제."
+    "version 50 (2026-10-06, 설계 49 물때 디펜스): 종류 이름 · 설명(rod_<id> · rod_<id>_desc 열둘, rod_light 삭제) · rod_merged · fishing_wave_count · fishing_boss · fishing_boss_missed · fishing_unlock · edit_fishing_hint 추가, 단계 사기 문구(row_stage_up · row_stage_up_effect) 삭제.",
+    "version 51 (2026-10-06, 낚시 연출 개선 · 사용자 결정): 물때는 노점 위 팻말 대신 상단 알약(fishing_wave_count 삭제, wave_pill 「물때」 · wave_pill_count 「{0}/{1}」 추가)."
   ],
   "rows": [
     {
@@ -1013,8 +1014,12 @@
       "ko": "{0}단계!"
     },
     {
-      "id": "fishing_wave_count",
-      "ko": "물때 {0}/{1}"
+      "id": "wave_pill",
+      "ko": "물때"
+    },
+    {
+      "id": "wave_pill_count",
+      "ko": "{0}/{1}"
     },
     {
       "id": "fishing_boss",

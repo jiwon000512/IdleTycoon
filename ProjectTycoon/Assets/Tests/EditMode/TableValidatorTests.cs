@@ -11,8 +11,8 @@ namespace ZooTycoon.Tests
     // 데이터-테이블-규칙 7장
     public sealed class TableValidatorTests
     {
-        [TestCase("VisitorTable", 15)]
-        [TestCase("StringTable", 50)]
+        [TestCase("VisitorTable", 16)]
+        [TestCase("StringTable", 51)]
         [TestCase("ClerkTable", 3)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
@@ -21,7 +21,7 @@ namespace ZooTycoon.Tests
         [TestCase("ActionTable", 24)]
         [TestCase("InteractableTable", 23)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 18)]
+        [TestCase("SoundTable", 19)]
         [TestCase("BgmTable", 2)]
         [TestCase("ConfigTable", 6)]
         [TestCase("BakeryConfigTable", 9)]
@@ -119,6 +119,17 @@ namespace ZooTycoon.Tests
             TableSet tables = TestTables.Load();
             FishingConfigTable config = tables.Get<FishingConfigTable>(FishingConfigTable.k_Main);
             config.HutUpgrades = config.HutUpgrades.Where(u => u.Id != FishingUpgradeData.k_Whirl).ToArray();
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 곳마다 다른 점원: area는 clerk 행에만 · 곳 종류 id만, area 없는 기본 clerk 행이 하나는 있어야 한다
+        [TestCase("market")]
+        [TestCase("farm")]
+        public void Validate_WhenClerkLookAreaWrongOrNoDefault_ReportsError(string area)
+        {
+            TableSet tables = TestTables.Load();
+            tables.GetAll<VisitorTable>().First(v => v.Role == VisitorRole.Clerk).Area = area;
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }

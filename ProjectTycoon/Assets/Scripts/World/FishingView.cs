@@ -18,7 +18,7 @@ namespace ZooTycoon.World
     // 단계 팻말과 값 표식(열기 · 파기 · 단계 올리기)은 값 표식 알약(MarkerView, 1배), 붙잡힌 월척 위는 「!」 말풍선. 낚으면 재료 팝업, 쿵 · 털썩 · 파기는 웜뱃 동작.
     // 낚시 폴리싱: 감는 대 끝에서 물고기까지 낚싯줄, 물고기는 물길 방향으로 눕고 살랑인다(90도 단위). 낚으면 대 끝으로 튀어 오르고, 놓치면 막다른 끝에서 사라진다.
     // 설계 46 · 49 대 사기: 단 뽑기 — 말뚝이 단 수만큼 튄 뒤(k_RevealStep마다) 대가 꽂히며 단만큼 반짝임(드묾 · 전설 글). 별 그림은 없다(대 그림과 이름이 종류)
-    // 설계 49: 미끼 노점 위 팻말 둘(단계 · 물때 n/10, 대물 물때는 「대물!」). 대물은 fish_boss_swim. 합치기는 끈 대가 날아와 꽂히고 새 종류 이름이 뜬다.
+    // 설계 49: 물때 n/10은 상단 알약(TopBarView, 노점 위 팻말은 입구에서 안 보였다). 대물은 fish_boss_swim. 합치기는 끈 대가 날아와 꽂히고 새 종류 이름이 뜬다.
     // 낚시판 보기(SetEditing): 말뚝마다 이름표(종류 · 「대 사기」 · 「열기 n」, 절반 배율이라 2배) · 끄는 대는 손가락을 따라간다(DragRod)
     public sealed class FishingView : MonoBehaviour, IAreaView
     {
@@ -56,12 +56,15 @@ namespace ZooTycoon.World
         };
         // 월척 물고기 배율(정수 배라 칸 격자 그대로) · 가로 물길에서 물고기를 흙 면 아래 물 가운데로 내리는 거리
         private const float k_TrophyScale = 2f;
-        // 설계 49: 대물 그림 이름 · 물때 팻말이 단계 팻말 위로 뜨는 높이 · 낚시판 보기 이름표(배율 · 말뚝 발끝 아래) · 끄는 대 배율
+        // 설계 49: 대물 그림 이름 · 낚시판 보기 이름표(배율 · 말뚝 발끝 아래) · 끄는 대 배율
         private const string k_BossSwim = "fish_boss_swim";
-        private const float k_WaveSignLift = 0.45f;
         private const float k_BoardTagScale = 2f;
         private const float k_BoardTagDrop = 0.45f;
         private const float k_DragScale = 2f;
+        // 연출 개선(2026-10-06): 대물 감기 게이지 배율 · 끄는 동안 합칠 수 있는 말뚝의 금빛 고리 지름(유닛) · 단계가 오를 때 말뚝이 차례로 튀는 간격(초)
+        private const float k_BossGaugeScale = 2f;
+        private const float k_MergeHintSize = 1.7f;
+        private const float k_CheerStep = 0.06f;
         private const float k_WaterDrop = StreamPainter.k_FaceRows / BurrowShape.k_PixelsPerUnit / 2f;
         // 감는 동안 곧은 판 ↔ 당김 판을 번갈아 쓰는 한 번의 초
         private const float k_PullSeconds = 0.5f;
@@ -137,6 +140,7 @@ namespace ZooTycoon.World
         private readonly Dictionary<Fish, FishArt> m_fish = new Dictionary<Fish, FishArt>();
         private readonly List<StakeArt> m_stakes = new List<StakeArt>();
         private readonly List<SpriteRenderer> m_ranges = new List<SpriteRenderer>();
+        private readonly List<SpriteRenderer> m_mergeHints = new List<SpriteRenderer>();
         private FishingArea m_fishing;
         private FrameCache m_frames;
         private TableSet m_tables;
@@ -150,7 +154,6 @@ namespace ZooTycoon.World
         // ponytail: 물결 칸마다 물길 전체를 한 장씩(568×588 넷 ≈ 5MB). 물길이 더 커지면 물 칸만 따로 그리는 층으로
         private Sprite[] m_streamFrames = new Sprite[0];
         private MarkerView m_stageSign;
-        private MarkerView m_waveSign;
         private MarkerView m_priceTag;
         private MarkerView m_digTag;
         private BubbleTable m_alert;
@@ -174,18 +177,19 @@ namespace ZooTycoon.World
             public Vector3 Head;
         }
 
-        // 말뚝 하나: 몸(기둥 + 대) · 낚시판 보기 이름표 · 「!」 말풍선 · 낚싯줄
+        // 말뚝 하나: 몸(기둥 + 대) · 낚시판 보기 이름표 · 「!」 말풍선 · 낚싯줄과 찌(감는 물고기마다 하나씩 늘린다)
         private sealed class StakeArt
         {
             public StakeInteractable Stake;
+            public Transform Holder;
             public Transform Body;
             public SortingGroup Group;
             public SpriteRenderer Post;
             public SpriteRenderer Rod;
             public MarkerView Tag;
             public SpriteRenderer Alert;
-            public SpriteRenderer Line;
-            public SpriteRenderer Bobber;
+            public readonly List<SpriteRenderer> Lines = new List<SpriteRenderer>();
+            public readonly List<SpriteRenderer> Bobbers = new List<SpriteRenderer>();
         }
 
         public Vector3 Origin => transform.position;
@@ -217,7 +221,6 @@ namespace ZooTycoon.World
             BuildStakes();
             // 단계 팻말 「물고기 N단계」: 단계를 올리는 미끼 노점 지붕 위(2026-10-06 사용자, 입구 아치 위에서는 뭔지 몰랐다)
             m_stageSign = NewTag(ToWorld(fishing.Layout.HutSpot + new System.Numerics.Vector2(0f, k_StageSignLift)));
-            m_waveSign = NewTag(ToWorld(fishing.Layout.HutSpot + new System.Numerics.Vector2(0f, k_StageSignLift + k_WaveSignLift)));
             m_priceTag = NewTag(Vector3.zero);
             m_priceTag.gameObject.SetActive(false);
             m_digTag = NewTag(Vector3.zero);
@@ -231,6 +234,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.FishEscaped>(Bus_FishEscaped),
                 bus.Subscribe<Events.RodSummoned>(Bus_RodSummoned),
                 bus.Subscribe<Events.RodMerged>(Bus_RodMerged),
+                bus.Subscribe<Events.NetCast>(Bus_NetCast),
                 bus.Subscribe<Events.StageRaised>(Bus_StageRaised),
                 bus.Subscribe<Events.BossSpawned>(Bus_BossSpawned),
                 bus.Subscribe<Events.BossEscaped>(Bus_BossEscaped),
@@ -282,9 +286,9 @@ namespace ZooTycoon.World
             SyncFish();
             SyncStakes();
             SyncRanges();
+            SyncMergeHints();
             SyncPriceTag();
             m_stageSign.Show(m_tables.Format("fishing_wave", m_fishing.Stage));
-            m_waveSign.Show(m_fishing.BossWave ? m_tables.Text("fishing_boss") : m_tables.Format("fishing_wave_count", Math.Max(1, m_fishing.Wave), m_fishing.Config.WavesPerStage));
             // 파기 값은 웜뱃이 막다른 끝 앞 땅을 대상으로 할 때만(빵집 · 농장 파기와 같이, 2026-10-05 사용자 「늘 떠 있는 건 별로」)
             bool digTarget = !m_fishing.StreamFull && m_fishing.Target == m_fishing.StreamEnd;
             m_digTag.gameObject.SetActive(digTarget);
@@ -410,6 +414,14 @@ namespace ZooTycoon.World
             float length = sprite.bounds.size.x * body.transform.localScale.x;
             SpriteRenderer gauge = NewRenderer(transform, "Gauge", m_reelGauge[0], Color.white, k_TopOrder - 1);
             gauge.gameObject.SetActive(false);
+
+            // 대물: 감기 게이지를 2배로, 물이 들어오는 쪽에서 큰 물보라와 함께 나타난다
+            if (fish.Boss)
+            {
+                gauge.transform.localScale = Vector3.one * k_BossGaugeScale;
+                Splash(ToWorld(m_fishing.Layout.PointAt(0.6f)), 3);
+            }
+
             SpriteRenderer dizzy = NewRenderer(transform, "Dizzy", m_stakeStar, Color.white, k_FishOrder + 1);
             dizzy.enabled = false;
             return new FishArt { Body = body, Gauge = gauge, Dizzy = dizzy, Length = length, Phase = UnityEngine.Random.value * Mathf.PI * 2f };
@@ -434,10 +446,7 @@ namespace ZooTycoon.World
                 tag.gameObject.SetActive(false);
                 SpriteRenderer alert = NewRenderer(holder, "Alert", null, Color.white, k_AlertOrder);
                 alert.transform.localPosition = Vector3.up * k_TagRise;
-                SpriteRenderer line = NewRenderer(holder, "Line", m_square, k_Line, 1);
-                // 찌는 물고기 위 · 줄 아래
-                SpriteRenderer bobber = NewRenderer(holder, "Bobber", m_bobber[0], Color.white, k_FishOrder + 2);
-                m_stakes.Add(new StakeArt { Stake = stake, Body = body, Group = body.GetComponent<SortingGroup>(), Post = post, Rod = rod, Tag = tag, Alert = alert, Line = line, Bobber = bobber });
+                m_stakes.Add(new StakeArt { Stake = stake, Holder = holder, Body = body, Group = body.GetComponent<SortingGroup>(), Post = post, Rod = rod, Tag = tag, Alert = alert });
             }
         }
 
@@ -460,24 +469,7 @@ namespace ZooTycoon.World
                     SyncRod(art);
                 }
 
-                art.Line.enabled = art.Rod.gameObject.activeSelf && !dragged && stake.Reeling != null && m_fish.ContainsKey(stake.Reeling) && k_RodTips.ContainsKey(TipKey(art.Rod.sprite));
-
-                if (art.Line.enabled)
-                {
-                    Vector3 tip = TipOf(art.Rod);
-                    Vector3 d = m_fish[stake.Reeling].Head - tip;
-                    art.Line.transform.position = tip + d / 2f;
-                    art.Line.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
-                    art.Line.transform.localScale = new Vector3(d.magnitude, k_LineWidth, 1f);
-                }
-
-                art.Bobber.enabled = art.Line.enabled && bobbed.Add(stake.Reeling);
-
-                if (art.Bobber.enabled)
-                {
-                    art.Bobber.transform.position = m_fish[stake.Reeling].Head;
-                    art.Bobber.sprite = m_bobber[Pulling(art) ? 1 : 0];
-                }
+                SyncLines(art, art.Rod.gameObject.activeSelf && !dragged && k_RodTips.ContainsKey(TipKey(art.Rod.sprite)), bobbed);
 
                 // 낚시판 보기: 말뚝마다 이름표(잠긴 말뚝 = 여는 값 · 빈 말뚝 = 대 사기 · 꽂힌 말뚝 = 종류 이름)
                 art.Tag.gameObject.SetActive(m_board);
@@ -498,6 +490,46 @@ namespace ZooTycoon.World
         }
 
         // 대는 그림 그대로(돌리지도 뒤집지도 않는다). 감는 동안 곧은 판 ↔ 당김 판을 번갈아 쓰고, 월척을 붙잡으면 휜 대로 바꿔 말뚝째 한 칸씩 떤다(대 밑동 테가 말뚝 테에서 어긋나지 않게)
+        // 낚싯줄 · 찌: 감는 물고기마다 하나(쌍줄대는 둘, 회오리대는 사거리 안 모두). 찌는 물고기 위 · 줄 아래이고, 두 대가 한 물고기를 감으면 하나만
+        private void SyncLines(StakeArt art, bool shown, HashSet<Fish> bobbed)
+        {
+            IReadOnlyList<Fish> targets = art.Stake.Targets;
+            int used = 0;
+
+            for (int i = 0; shown && i < targets.Count; i++)
+            {
+                if (!m_fish.TryGetValue(targets[i], out FishArt reeled))
+                {
+                    continue;
+                }
+
+                if (used == art.Lines.Count)
+                {
+                    art.Lines.Add(NewRenderer(art.Holder, "Line", m_square, k_Line, 1));
+                    art.Bobbers.Add(NewRenderer(art.Holder, "Bobber", m_bobber[0], Color.white, k_FishOrder + 2));
+                }
+
+                Vector3 tip = TipOf(art.Rod);
+                Vector3 d = reeled.Head - tip;
+                SpriteRenderer line = art.Lines[used];
+                line.enabled = true;
+                line.transform.position = tip + d / 2f;
+                line.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+                line.transform.localScale = new Vector3(d.magnitude, k_LineWidth, 1f);
+                SpriteRenderer bobber = art.Bobbers[used];
+                bobber.enabled = bobbed.Add(targets[i]);
+                bobber.transform.position = reeled.Head;
+                bobber.sprite = m_bobber[Pulling(art) ? 1 : 0];
+                used++;
+            }
+
+            for (int i = used; i < art.Lines.Count; i++)
+            {
+                art.Lines[i].enabled = false;
+                art.Bobbers[i].enabled = false;
+            }
+        }
+
         // 낚시판 보기에서 끄는 대는 손가락 밑(대 가운데)에 2배로, 다른 말뚝 위로 그려진다
         private void SyncRod(StakeArt art)
         {
@@ -563,12 +595,50 @@ namespace ZooTycoon.World
             m_priceTag.Show(price);
         }
 
-        // 대상 말뚝의 사거리(설계 45: 말뚝 위쪽 반원)
+        // 낚시판 보기에서 대를 끄는 동안 합칠 수 있는 말뚝(같은 종류이고 윗 종류가 있다)에 금빛 고리가 숨쉰다
+        private void SyncMergeHints()
+        {
+            RodTable rod = m_dragged?.Rod;
+            int shown = 0;
+
+            if (rod != null && m_fishing.NextOf(rod) != null)
+            {
+                foreach (StakeArt art in m_stakes)
+                {
+                    if (art.Stake == m_dragged || art.Stake.Rod != rod || art.Stake.Hooked != null)
+                    {
+                        continue;
+                    }
+
+                    if (shown == m_mergeHints.Count)
+                    {
+                        m_mergeHints.Add(NewRenderer(transform, "MergeHint", m_ring, k_Star, k_RangeOrder));
+                    }
+
+                    SpriteRenderer hint = m_mergeHints[shown++];
+                    hint.gameObject.SetActive(true);
+                    hint.transform.position = ToWorld(art.Stake.Position) + Vector3.up * k_RodSocket;
+                    hint.transform.localScale = Vector3.one * (k_MergeHintSize + Mathf.Round(Mathf.Sin(Time.unscaledTime * 6f)) * Fx.k_Cell * 4f);
+                }
+            }
+
+            for (int i = shown; i < m_mergeHints.Count; i++)
+            {
+                m_mergeHints[i].gameObject.SetActive(false);
+            }
+        }
+
+        // 대상 말뚝의 사거리(설계 45: 말뚝 위쪽 반원). 낚시판 보기에서 끄는 동안은 손가락 밑 말뚝(없으면 제 말뚝)에 그 대의 사거리
         private void SyncRanges()
         {
             List<(StakeInteractable stake, float range)> shown = new List<(StakeInteractable, float)>();
 
-            if (m_fishing.Target is StakeInteractable target && target.Rod != null)
+            if (m_dragged != null && m_dragged.Rod != null)
+            {
+                StakeInteractable hover = m_fishing.StakeUnder(m_dragAt);
+                shown.Add((hover != null && hover.Open ? hover : m_dragged, m_fishing.RangeOf(m_dragged)));
+            }
+            else if (m_fishing.Target is StakeInteractable target && target.Rod != null)
             {
                 shown.Add((target, m_fishing.RangeOf(target)));
             }
@@ -640,6 +710,12 @@ namespace ZooTycoon.World
                 side.sprite = icon;
                 side.color = Color.white;
                 body.localRotation = Quaternion.identity;
+
+                // 낚인 대물은 월척처럼 큰 옆모습으로 튄다
+                if (e.Fish.Boss)
+                {
+                    body.localScale = Vector3.one * k_TrophyScale;
+                }
             }
 
             if (body == null)
@@ -672,6 +748,11 @@ namespace ZooTycoon.World
             {
                 StartCoroutine(Fly(body, body.position, 0f, 0f, null));
                 StartCoroutine(Fx.Burst(transform, m_square, body.position, 4, 0.6f, 1.6f, 9f, 0.35f, 3, k_WaterLight, k_TopOrder));
+
+                if (e.Fish.Boss)
+                {
+                    Splash(body.position, 3);
+                }
             }
 
         }
@@ -727,15 +808,54 @@ namespace ZooTycoon.World
             {
                 m_stageSign.Bounce();
                 StartCoroutine(Fx.Bounce(m_hut));
+                StartCoroutine(Cheer());
             }
         }
 
-        // 설계 49: 대물이 나온다(물때 팻말이 「대물!」로 바뀌며 튀고, 물이 들어오는 쪽에 글이 떠오른다)
+        // 단계가 올랐다: 대가 꽂힌 말뚝이 차례로 튄다(벽을 뚫은 순간을 판 전체로)
+        private IEnumerator Cheer()
+        {
+            foreach (StakeArt art in m_stakes)
+            {
+                if (art.Stake.Rod != null)
+                {
+                    StartCoroutine(Fx.Bounce(art.Post.transform.parent));
+                    yield return new WaitForSeconds(k_CheerStep);
+                }
+            }
+        }
+
+        // 설계 49 그물: 멈추는 순간 그 말뚝이 튀고 사거리 반원이 퍼지며 사라진다(누가 물고기를 세웠는지 보이게)
+        private void Bus_NetCast(Events.NetCast e)
+        {
+            if (e.Stake.Fishing == m_fishing && e.Stake.Rod != null)
+            {
+                StartCoroutine(NetPulse(m_stakes[e.Stake.Index], m_fishing.RangeOf(e.Stake)));
+            }
+        }
+
+        private IEnumerator NetPulse(StakeArt art, float range)
+        {
+            StartCoroutine(Fx.Bounce(art.Post.transform.parent));
+            SpriteRenderer ring = NewRenderer(transform, "NetPulse", m_halfRing, k_WaterLight, k_RangeOrder);
+            ring.transform.position = ToWorld(art.Stake.Position);
+
+            for (float t = 0f; t < k_RippleSeconds; t += Time.deltaTime)
+            {
+                float k = t / k_RippleSeconds;
+                ring.transform.localScale = Vector3.one * range * 2f * (1f - (1f - k) * (1f - k));
+                ring.color = new Color(k_WaterLight.r, k_WaterLight.g, k_WaterLight.b, 1f - k * k);
+                yield return null;
+            }
+
+            Destroy(ring.gameObject);
+        }
+
+        // 설계 49: 대물이 나온다(물이 들어오는 쪽에 글이 떠오른다. 알림은 상단 알약과 곳 이름 띠)
         private void Bus_BossSpawned(Events.BossSpawned e)
         {
             if (e.Fishing == m_fishing)
             {
-                m_waveSign.Bounce();
                 StartCoroutine(Rise(m_tables.Text("fishing_boss"), ToWorld(m_fishing.Layout.PointAt(1.5f)) + Vector3.up * 0.6f));
             }
         }

@@ -13,7 +13,8 @@ namespace ZooTycoon.UI
     // 숫자는 공용 코인 캡슐(Prefabs/UI/CoinPill) 안의 금색 글자.
     // 설계 30: 석상 축복이 걸린 동안 코인 아래 축복 알약(아이콘 · 효과 · 남은 시간, 마지막 10초는 깜빡임). 그동안 쓴 코인 표시는 그 아래로 내려간다.
     // 설계 40 · 41: 별 평가 중에는 화면 위 가운데에 평가 카드 하나(별 · 「★7 평가」 · 남은 시간과 줄어드는 막대 · 조건 칸: 아이콘 + 진행/목표, 채우면 초록 체크 · 실망이 상한에 닿으면 빨강). 왼쪽 알약 줄과 따로다.
-    // 설계 31 · 32: 떠돌이 행상 알약은 늘 보인다(행상이 있으면 「행상 2:59」, 없으면 회색 얼굴 + 시간만 「13:57」, 2026-10-01 사용자 B). 알약은 코인 아래로 위에서부터 쌓인다(축복 → 행상)
+    // 설계 31 · 32: 떠돌이 행상 알약은 늘 보인다(행상이 있으면 「행상 2:59」, 없으면 회색 얼굴 + 시간만 「13:57」, 2026-10-01 사용자 B). 알약은 코인 아래로 위에서부터 쌓인다(축복 → 행상 → 물때)
+    // 설계 49: 낚시터에 있는 동안 물때 알약(「물때 7/10」, 대물 물때에는 「대물!」만, 2026-10-06 사용자)
     public sealed class TopBarView : UIView
     {
         private const float k_CountSeconds = 0.25f;
@@ -48,6 +49,10 @@ namespace ZooTycoon.UI
         [SerializeField] private Image m_merchantIcon;
         [SerializeField] private TMP_Text m_merchantText;
         [SerializeField] private TMP_Text m_merchantTime;
+        [Tooltip("설계 49 물때 알약(행상 알약 아래): 물고기 아이콘 · 「물때」 · 「7/10」")]
+        [SerializeField] private CanvasGroup m_wave;
+        [SerializeField] private TMP_Text m_waveText;
+        [SerializeField] private TMP_Text m_waveValue;
         [Tooltip("설계 41 평가 카드(화면 위 가운데): 별 · 「★7 평가」 · 남은 시간 · 시간 막대 · 조건 칸")]
         [SerializeField] private CanvasGroup m_evaluation;
         [SerializeField] private Image m_evaluationIcon;
@@ -85,6 +90,7 @@ namespace ZooTycoon.UI
             m_spent.gameObject.SetActive(false);
             m_blessing.gameObject.SetActive(false);
             m_merchant.gameObject.SetActive(false);
+            m_wave.gameObject.SetActive(false);
             m_evaluation.gameObject.SetActive(false);
 
             foreach (InfoTile goal in m_goals)
@@ -140,6 +146,34 @@ namespace ZooTycoon.UI
             {
                 StartCoroutine(UiFx.Pulse((RectTransform)m_merchant.transform));
                 SoundManager.Instance.Play(SoundTable.k_MerchantArrive);
+            }
+        }
+
+        // 설계 49: 물때 알약. value가 null이면 값 칸을 숨긴다(대물 물때의 「대물!」), pulse면 톡 튄다
+        public void ShowWave(string text, string value, bool pulse)
+        {
+            m_waveText.text = text;
+            m_waveValue.gameObject.SetActive(value != null);
+            m_waveValue.text = value;
+
+            if (!m_wave.gameObject.activeSelf)
+            {
+                m_wave.gameObject.SetActive(true);
+                Stack();
+            }
+
+            if (pulse)
+            {
+                StartCoroutine(UiFx.Pulse((RectTransform)m_wave.transform));
+            }
+        }
+
+        public void HideWave()
+        {
+            if (m_wave.gameObject.activeSelf)
+            {
+                m_wave.gameObject.SetActive(false);
+                Stack();
             }
         }
 
@@ -208,7 +242,7 @@ namespace ZooTycoon.UI
                 y = Mathf.Min(y, card.anchoredPosition.y - card.rect.height - k_CardGap);
             }
 
-            foreach (CanvasGroup pill in new[] { m_blessing, m_merchant })
+            foreach (CanvasGroup pill in new[] { m_blessing, m_merchant, m_wave })
             {
                 if (!pill.gameObject.activeSelf)
                 {

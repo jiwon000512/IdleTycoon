@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using GameKit.Events;
 using GameKit.Singleton;
@@ -26,6 +27,9 @@ namespace ZooTycoon.World
         private static readonly Vector3 k_RestaurantOrigin = new Vector3(120f, 60f, 0f);
         // 고용한 점원이 굴에서 나오는 모습을 당겨서 보여 주는 시간(초)과 발끝에서 몸 가운데까지(유닛)
         private const float k_HireSpotSeconds = 1.8f;
+        // 설계 49: 대물이 물에 들어올 때 비추는 초 · 물때 시작부터 대물이 들어오기를 기다리는 한도(초, 떼가 다 나온 뒤에 나온다)
+        private const float k_BossSpotSeconds = 1.2f;
+        private const float k_BossWaitSeconds = 60f;
         private const float k_BodyCenter = 0.5f;
 
         [SerializeField] private WorldCameraController m_camera;
@@ -47,6 +51,7 @@ namespace ZooTycoon.World
         private Mall m_mall;
         private IDisposable m_areaChanged;
         private IDisposable m_clerkHired;
+        private IDisposable m_bossSpawned;
 
         public FrameCache Frames { get; } = new FrameCache();
 
@@ -86,6 +91,7 @@ namespace ZooTycoon.World
 
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
+            m_bossSpawned = bus.Subscribe<Events.BossSpawned>(e => StartCoroutine(SpotBoss(e.Fishing)));
             FollowWombat();
         }
 
@@ -172,6 +178,7 @@ namespace ZooTycoon.World
 
             m_areaChanged?.Dispose();
             m_clerkHired?.Dispose();
+            m_bossSpawned?.Dispose();
 
             base.OnDestroy();
         }
@@ -191,6 +198,32 @@ namespace ZooTycoon.World
         private void Bus_AreaChanged(Events.AreaChanged e)
         {
             FollowWombat();
+        }
+
+        // 설계 49(2026-10-06 사용자): 대물이 물에 들어오는 순간 잠깐 그쪽을 비춘다. 웜뱃이 낚시터에 있을 때만, 조이스틱을 움직이면 바로 돌아온다
+        private IEnumerator SpotBoss(FishingArea fishing)
+        {
+            Fish boss = null;
+
+            for (float t = 0f; t < k_BossWaitSeconds && boss == null; t += Time.deltaTime)
+            {
+                yield return null;
+
+                foreach (Fish fish in fishing.Fish)
+                {
+                    boss = fish.Boss ? fish : boss;
+                }
+            }
+
+            if (boss != null && m_mall.Active == fishing)
+            {
+                Vector3 origin = m_views[fishing].Origin;
+                m_camera.Spot(() =>
+                {
+                    System.Numerics.Vector2 at = fishing.Layout.PointAt(boss.S);
+                    return (Vector2)origin + new Vector2(at.X, at.Y);
+                }, k_BossSpotSeconds, () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
+            }
         }
 
         // 웜뱃이 그 점원의 곳(빵집 · 농장)에 있을 때만. 조이스틱을 움직이면 바로 웜뱃에게 돌아온다(조작을 빼앗지 않는다)

@@ -78,6 +78,17 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 설계 49: 그물 계열 대가 사거리 안 물고기를 멈췄다(말뚝이 튀고 사거리에 물결)
+        public readonly struct NetCast
+        {
+            public readonly StakeInteractable Stake;
+
+            public NetCast(StakeInteractable stake)
+            {
+                Stake = stake;
+            }
+        }
+
         // 설계 49: From의 대를 Stake의 같은 종류 대에 합쳤다(From은 비고 Stake는 윗 종류)
         public readonly struct RodMerged
         {

@@ -50,7 +50,7 @@ namespace ZooTycoon.Game
             OfflineView offlineView = ui.Open<OfflineView>();
             WorldManager world = WorldManager.Instance;
 
-            m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables, game.Mall.Plaza.Merchant);
+            m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables, game.Mall.Plaza.Merchant, game.Mall);
             m_hudPresenter = new ControlHudPresenter(m_hudView, game.Mall, game.Bus);
             m_sheetPresenter = new ObjectSheetPresenter(sheetView, game.Mall.Bakery, game.Bus, game.Tables);
             m_editPresenter = new EditModePresenter(editView, game.Mall, game.Bus, game.Tables, world.OriginOf);

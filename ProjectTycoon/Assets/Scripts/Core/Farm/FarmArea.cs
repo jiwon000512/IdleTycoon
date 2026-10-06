@@ -48,6 +48,7 @@ namespace ZooTycoon.Core
         public CropTable NextCrop => m_unlocked.Count < Tables.GetAll<CropTable>().Count ? Tables.GetAll<CropTable>()[m_unlocked.Count] : null;
         public override IReadOnlyList<IPlacedKind> ShopKinds => s_noKinds;
         public override string Id => Floor.Id;
+        protected override string LookArea => k_Id;
 
         protected override BurrowNav WombatNav => Layout.Nav;
         protected override Vector2 Entrance => Layout.HoleFloor;
