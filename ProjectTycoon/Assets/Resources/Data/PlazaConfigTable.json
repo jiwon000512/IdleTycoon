@@ -1,6 +1,6 @@
 {
   "table": "PlazaConfigTable",
-  "version": 7,
+  "version": 8,
   "notes": [
     "설계 11 굴 밖 광장 숫자. id = 광장(지금 main 하나). 손님은 광장 지상 계단으로 온다(arrivalSeconds).",
     "cols·rows: 칸 수(빵집과 같은 칸, 가로 가운데 정렬). visitSecondsMin~Max: 들를 곳에서 머무는 초. visitsMin~Max: 빵집 가기 전 들르는 곳 수.",
@@ -11,9 +11,10 @@
     "version 4 (2026-10-01, 설계 31 유물 수레): relicCartX · relicCartY = 유물 수레 자리(석상 오른쪽, 밑변 가운데). relicItem · relicCost = 뽑을 때 내는 재료와 개수(반짝돌 5). relicSlots = 효과가 나는 칸 수(3). merchantFirst · merchantEvery · merchantStay = 떠돌이 행상이 처음 오기까지(60초) · 오는 간격(오는 때부터 다음 오는 때까지 900초) · 좌판을 여는 초(180), merchantLook = 행상 외형(VisitorTable 역할 merchant). 수레 자리가 좌판 자리다. 값은 시작값.",
     "version 5 (2026-10-01, 설계 32 행상 다듬기): merchantSetupSeconds = 행상이 수레를 좌판 자리에 세우고 펼치는 초 · 접는 초(1). 수레는 세운 동안만 길을 막는다.",
     "version 6 (2026-10-01, 설계 34 수레 없이 행상과 대화): 수레를 버려 relicCartX · relicCartY · merchantSetupSeconds를 지우고 merchantX · merchantY = 행상이 서는 좌판 자리(발 위치, 옛 수레 자리 4.3 · −8.2).",
-    "version 7 (2026-10-05, 설계 44 낚시 디펜스): doors = 뒷벽 문 목록(to = 갈 곳 id, col = 칸 번호 왼쪽부터 0, 문은 칸 가운데). 코드에 있던 빵집 문(계단 왼쪽 칸 1) · 농장 문(계단 오른쪽 칸 2)을 옮겨 오고 낚시터 문(왼쪽 끝 칸 0)을 더했다. 빵집 문은 손님이 드나드므로 꼭 있어야 한다."
+    "version 7 (2026-10-05, 설계 44 낚시 디펜스): doors = 뒷벽 문 목록(to = 갈 곳 id, col = 칸 번호 왼쪽부터 0, 문은 칸 가운데). 코드에 있던 빵집 문(계단 왼쪽 칸 1) · 농장 문(계단 오른쪽 칸 2)을 옮겨 오고 낚시터 문(왼쪽 끝 칸 0)을 더했다. 빵집 문은 손님이 드나드므로 꼭 있어야 한다.",
+    "version 8 (2026-10-06, 설계 47 수조 횟집): doors에 restaurant(오른쪽 끝 칸 3) — 닫힌 동안 문 앞 표식에서 연다. 손님은 연 가게를 번갈아 가서(간격 = arrivalSeconds ÷ 연 가게 수) maxVisitors 10 → 14."
   ],
   "rows": [
-    {"id": "main", "cols": 4, "rows": 6, "arrivalSeconds": 4, "maxVisitors": 10, "visitSecondsMin": 2, "visitSecondsMax": 4.5, "visitsMin": 1, "visitsMax": 2, "browseChance": 0.3, "emoteChance": 0.4, "statueX": 0, "statueY": -8.2, "blessingCooldown": 600, "relicItem": "gem", "relicCost": 5, "relicSlots": 3, "merchantFirst": 60, "merchantEvery": 900, "merchantStay": 180, "merchantLook": "v06", "merchantX": 4.3, "merchantY": -8.2, "doors": [{"to": "bakery", "col": 1}, {"to": "farm", "col": 2}, {"to": "fishing", "col": 0}]}
+    {"id": "main", "cols": 4, "rows": 6, "arrivalSeconds": 4, "maxVisitors": 14, "visitSecondsMin": 2, "visitSecondsMax": 4.5, "visitsMin": 1, "visitsMax": 2, "browseChance": 0.3, "emoteChance": 0.4, "statueX": 0, "statueY": -8.2, "blessingCooldown": 600, "relicItem": "gem", "relicCost": 5, "relicSlots": 3, "merchantFirst": 60, "merchantEvery": 900, "merchantStay": 180, "merchantLook": "v06", "merchantX": 4.3, "merchantY": -8.2, "doors": [{"to": "bakery", "col": 1}, {"to": "farm", "col": 2}, {"to": "fishing", "col": 0}, {"to": "restaurant", "col": 3}]}
   ]
 }

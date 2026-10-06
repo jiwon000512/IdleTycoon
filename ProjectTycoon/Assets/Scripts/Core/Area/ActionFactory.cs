@@ -15,7 +15,7 @@ namespace ZooTycoon.Core
             ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_OpenPlant, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
             ActionTable.k_Talk, ActionTable.k_DigFloor, ActionTable.k_Evaluate,
             ActionTable.k_OpenSummon, ActionTable.k_Summon, ActionTable.k_OpenStake, ActionTable.k_Haul, ActionTable.k_Thump, ActionTable.k_StageUp, ActionTable.k_HutUpgrade,
-            ActionTable.k_DigStream,
+            ActionTable.k_DigStream, ActionTable.k_FillTank, ActionTable.k_ServeDish, ActionTable.k_OpenShop, ActionTable.k_TakeFish, ActionTable.k_PlaceFish,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -50,6 +50,11 @@ namespace ZooTycoon.Core
                 case ActionTable.k_StageUp: return new StageUp(table);
                 case ActionTable.k_HutUpgrade: return new HutUpgrade(table);
                 case ActionTable.k_DigStream: return new DigStream(table);
+                case ActionTable.k_FillTank: return new FillTank(table);
+                case ActionTable.k_ServeDish: return new ServeDish(table);
+                case ActionTable.k_OpenShop: return new OpenShop(table);
+                case ActionTable.k_TakeFish: return new TakeFish(table);
+                case ActionTable.k_PlaceFish: return new PlaceFish(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");
             }
         }
@@ -81,10 +86,10 @@ namespace ZooTycoon.Core
                 return target is PassageInteractable;
             }
 
-            // 설계 40: 가게를 지키는 동안(평가 중)은 넘어가지 않는다
+            // 설계 40: 가게를 지키는 동안(평가 중)은 넘어가지 않는다. 설계 47: 닫힌 가게 문도
             public override bool CanDo(Worker worker, Interactable target)
             {
-                return target is PassageInteractable && target.Area.CanLeave;
+                return target is PassageInteractable passage && passage.IsOpen && target.Area.CanLeave;
             }
 
             public override void Do(Worker worker, Interactable target)

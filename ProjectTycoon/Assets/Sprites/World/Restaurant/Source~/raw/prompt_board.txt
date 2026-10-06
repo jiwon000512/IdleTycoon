@@ -1,0 +1,25 @@
+# 횟집 둥근 도마(2026-10-06 아트방, 설계 47 그림 ②). 시안 A 통나무 그루터기 · B 받침대 위 둥근 도마 · C 돌 받침 도마 중 사용자 선택 A → ../make_board.py
+# 참조 -i 1: 빵집 게임 화면 · -i 2: board_template.png(1536×1024, 웜뱃 한 칸 10px + 상자 54×40칸 빨강 · 최소 높이 26칸 파랑 · 바닥선) · -i 3: 횟집 컨셉 C 화면 · -i 4: Shop/Source~/shop_raw/view_blockout.png
+# 수조 때 Codex가 한 칸을 8~9px로 잘게 그려 커졌던 만큼 상자를 목록(약 60×44칸)보다 작게 잡았다 → 셋 다 62~70 × 40~45칸
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code, do NOT resample or copy the references). Keep the canvas size, the white background and the wombat of image 2 EXACTLY where and how they are: it is the main character at the exact game scale, one art pixel = 10 screen pixels, 42 art pixels wide. Remove the red and blue guides and the grey line.
+Image 1 is the game today (at 4 screen pixels per art pixel): a cozy underground wombat-burrow BAKERY with an earth floor and chunky wooden props. Image 3 is the concept of the next shop, a SASHIMI RESTAURANT burrow: in the middle of the room the wombat chef stands BEHIND a big ROUND CUTTING STATION and slices fish.
+Paint ONE free-standing ROUND CUTTING STATION prop inside the red rectangle (at most 54 art pixels wide and 40 tall, at least as tall as the blue dashed line), standing on the grey ground line: its feet are exactly on that line and NOTHING hangs or steps below it. The wombat will stand right behind it, so its round top is at about the wombat's belly height and the front of it hides the wombat's feet.
+ON THE TOP: one whole fish lying on its side (we see its side profile: tail, fin, eye) and a small kitchen knife next to it. Nothing else on the top.
+CAMERA: orthographic three-quarter top-down like image 1 and like the right block of image 4: parallel projection, the front is parallel to the screen, the round top surface is seen from above as a wide flat ellipse, vertical edges stay vertical, no vanishing point, never seen from below.
+STYLE: chunky pixel art exactly like the wombat and image 1: big square 10-pixel art pixels everywhere (never smaller), no anti-aliasing, no gradients, no dithering, flat soft earthy palette with at most 12 colors, dark brown outline (#342020) one art pixel wide around the prop. One darker tone for shaded faces and one white highlight stroke on top. No floor, no shadow on the ground, no text, no letters, no numbers.
+IMPORTANT SIZE AND PIXELS: every art pixel is a 10 by 10 screen-pixel square on exactly the same grid as the wombat of image 2, never smaller. Keep the drawing as coarse and simple as the wombat: a few big flat shapes, every small detail at least 3 art pixels across, no thin lines thinner than one 10-pixel art pixel. The whole station is only a little wider than the wombat (54 art pixels = 540 screen pixels) and lower than it (40 art pixels = 400 screen pixels): it must fit inside the red rectangle. Do not redraw or resize the wombat.
+DESIGN:
+[a]
+TREE STUMP BLOCK: a thick round tree-stump chopping block with bark on its sides and pale tree rings on its flat top, standing directly on the ground, like the round cutting station of image 3.
+Save the image as board_a.png in the current working directory and reply with only the path.
+[b]
+ROUND BOARD ON A STAND: a thick round wooden cutting board resting on a low sturdy wooden stand with three short legs, a small hook on the stand's front holding a white cloth towel.
+Save the image as board_b.png in the current working directory and reply with only the path.
+[c]
+BOARD ON A STONE PEDESTAL: a thick round wooden cutting board sitting on a squat round pedestal of stacked rough grey-brown stones with a little moss, like it was built inside the burrow.
+Save the image as board_c.png in the current working directory and reply with only the path.
+
+[빈 도마(2026-10-06): -i 1 board_a.png 하나로 지우기 편집 → board_a_empty.png]
+Image 1 is a chunky pixel-art game asset: a round tree-stump cutting board seen from the front and slightly above, with a whole blue-grey fish lying on its top and a cleaver below the fish, next to a wombat. Use your IMAGE GENERATION tool to EDIT image 1 (do NOT write code). Remove ONLY the fish. Fill the area where the fish was with the same flat light-wood top surface and its thin concentric growth-ring lines, continuing the existing rings naturally, with the same colors. Keep everything else exactly the same: same canvas size, same object position and size, same big square pixel grid, same colors, same dark outline, the cleaver exactly as it is, the wombat, the pure white background. No new objects, no text. Save the image as board_empty_1.png in the current working directory and reply with only the path.

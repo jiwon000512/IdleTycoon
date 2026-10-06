@@ -85,6 +85,10 @@ namespace ZooTycoon.World
         private System.Func<bool> m_marked;
         private System.Func<string> m_note;
         private string m_noteShown;
+        // 설계 47: 글자 대신 그림 하나를 담은 말풍선(횟집 손님이 고른 물고기)
+        private System.Func<Sprite> m_iconNote;
+        private Sprite m_iconShown;
+        private SpriteRenderer m_sayIcon;
 
         private Vector3 HeadOffset => new Vector3(0f, m_height, 0f);
         // 2026-09-23: 집은 빵은 visitors.carryAt 자리에 든다. 앞발이면 옆모습에서 보는 쪽으로 내민다
@@ -179,6 +183,12 @@ namespace ZooTycoon.World
             m_note = note;
         }
 
+        // 설계 47: icon이 그림을 주는 동안 글자 말풍선 상자 안에 그 그림. 대사 · 글이 먼저
+        public void IconWhile(System.Func<Sprite> icon)
+        {
+            m_iconNote = icon;
+        }
+
         // 머리 위 코인 + 금액(손님 결제 · 점원 월급)
         public void PopCoin(string amount)
         {
@@ -225,7 +235,14 @@ namespace ZooTycoon.World
                 m_noteShown = note;
             }
 
-            Bubbles.Show(m_bubble, m_bubbleFrames, m_walker.Bubble, m_saying == null && note == null && alpha > 0f);
+            Sprite icon = m_saying == null && note == null && alpha > 0f ? m_iconNote?.Invoke() : null;
+
+            if (icon != m_iconShown)
+            {
+                ShowIcon(icon, note == null && m_saying == null);
+            }
+
+            Bubbles.Show(m_bubble, m_bubbleFrames, m_walker.Bubble, m_saying == null && note == null && icon == null && alpha > 0f);
             m_mark.enabled = m_marked != null && m_marked() && !m_bubble.enabled && m_saying == null && note == null && !(m_carrying && m_carryOnHead) && alpha > 0f;
             m_mark.color = new Color(1f, 1f, 1f, alpha);
             Show(facing, m_walker.Moving && !m_walker.Paused);
@@ -242,6 +259,31 @@ namespace ZooTycoon.World
             }
 
             m_carry.enabled = m_carrying;
+        }
+
+        // 상자는 글 없이 최소 폭(그림이 들어가는 만큼), 그림은 글 자리(상자 가운데)
+        private void ShowIcon(Sprite icon, bool hideBox)
+        {
+            if (m_sayIcon == null)
+            {
+                m_sayIcon = new GameObject("SayIcon").AddComponent<SpriteRenderer>();
+                m_sayIcon.transform.SetParent(m_say.transform, false);
+                m_sayIcon.transform.localPosition = m_sayText.transform.localPosition;
+                m_sayIcon.sortingOrder = m_sayText.sortingOrder;
+            }
+
+            if (icon != null)
+            {
+                Bubbles.ShowSay(m_say, m_sayTail, m_sayText, string.Empty, m_sayPadding);
+            }
+            else if (hideBox)
+            {
+                Bubbles.HideSay(m_say, m_sayTail, m_sayText);
+            }
+
+            m_sayIcon.sprite = icon;
+            m_sayIcon.enabled = icon != null;
+            m_iconShown = icon;
         }
 
         private void Show(Facing facing, bool moving)

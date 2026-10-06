@@ -76,6 +76,8 @@ namespace ZooTycoon.World
         // 나는 빵은 가게의 모든 그림 위에
         private const int k_FlyOrder = 1000;
         // 든 빵 층 순서: 몸(0) 앞 51~, 뒷모습이면 몸 뒤 -10~
+        // 설계 47: 회 접시 · 날 물고기는 앞발 높이로 손에 든다(빵 자리는 얼굴을 가린다, 사용자 2026-10-06)
+        private const float k_PlateHeight = 0f;
         private const int k_CarryFrontOrder = 51;
         private const int k_CarryBackOrder = -10;
         // 걷는 동안 발밑에서 이는 먼지(k_DustGap초마다 알갱이 k_DustCount개가 천천히 떠오른다)
@@ -168,9 +170,18 @@ namespace ZooTycoon.World
             Update();
         }
 
+        // 설계 47: 횟집. 머리 위에 든 접시(빵을 들고 왔으면 빵)
+        public void BindHands(WombatArea area, Transform origin, FrameCache frames)
+        {
+            Bind(area, origin, frames);
+            m_hands = area.Wombat.Worker.Hands;
+            m_hands.Changed += Hands_Changed;
+            ShowCarry();
+        }
+
         private void OnDestroy()
         {
-            if (m_shop != null)
+            if (m_hands != null)
             {
                 m_hands.Changed -= Hands_Changed;
             }
@@ -248,7 +259,8 @@ namespace ZooTycoon.World
             // 든 빵도 몸과 같이 오르내린다(걷기 · 숨쉬기 프레임만, 딴짓은 몸 높이가 그대로)
             int[] bobs = moving ? m_walkBob : m_idleBob;
             float bob = m_playing == frames && !m_animator.Interjecting ? bobs[m_animator.Index % bobs.Length] * k_Cell : 0f;
-            m_carry[0].transform.parent.localPosition = Fx.HandOffset(facing, m_handHeight + bob, m_handReach);
+            bool plate = m_hands?.Order != null;
+            m_carry[0].transform.parent.localPosition = Fx.HandOffset(facing, (plate ? k_PlateHeight : m_handHeight) + bob, m_handReach);
 
             for (int i = 0; i < m_carry.Length; i++)
             {
@@ -396,8 +408,10 @@ namespace ZooTycoon.World
         // 연출 강도(설계 09 7장): 꺼내서 층이 늘면 맨 위 층만 톡
         private void ShowCarry()
         {
-            int shown = Mathf.Min(m_hands.Count, m_carry.Length);
-            Sprite icon = m_hands.Bread != null ? Icon(m_hands.Bread) : null;
+            RestaurantVisitor order = m_hands.Order;
+            int shown = order != null ? 1 : Mathf.Min(m_hands.Count, m_carry.Length);
+            Sprite icon = order != null ? m_frames.Get(order.Cut ? order.Dish.Sprite : order.Restaurant.Tables.Get<ItemTable>(order.Dish.Fish).Icon)[0]
+                : m_hands.Bread != null ? Icon(m_hands.Bread) : null;
 
             for (int i = 0; i < m_carry.Length; i++)
             {

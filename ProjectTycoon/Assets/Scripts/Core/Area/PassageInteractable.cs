@@ -21,6 +21,9 @@ namespace ZooTycoon.Core
 
         // 가는 곳 id(곳의 k_Id)
         public string To { get; }
+        // 설계 47: 닫힌 가게 문(광장이 건다). null이면 늘 열림
+        internal Func<bool> Gate { get; set; }
+        public bool IsOpen => Gate == null || Gate();
 
         public PassageInteractable(InteractableTable table, WombatArea area, Vector2 floor, string to, bool down = false) : base(table, area)
         {

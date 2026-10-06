@@ -12,20 +12,20 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 15)]
-        [TestCase("StringTable", 48)]
+        [TestCase("StringTable", 49)]
         [TestCase("ClerkTable", 3)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 22)]
-        [TestCase("InteractableTable", 21)]
+        [TestCase("ActionTable", 23)]
+        [TestCase("InteractableTable", 22)]
         [TestCase("DecorationTable", 4)]
-        [TestCase("SoundTable", 17)]
-        [TestCase("BgmTable", 1)]
+        [TestCase("SoundTable", 18)]
+        [TestCase("BgmTable", 2)]
         [TestCase("ConfigTable", 6)]
         [TestCase("BakeryConfigTable", 9)]
-        [TestCase("PlazaConfigTable", 7)]
+        [TestCase("PlazaConfigTable", 8)]
         [TestCase("PlazaDecorTable", 1)]
         [TestCase("ItemTable", 8)]
         [TestCase("CropTable", 4)]
@@ -38,6 +38,8 @@ namespace ZooTycoon.Tests
         [TestCase("FishingConfigTable", 4)]
         [TestCase("RodTable", 2)]
         [TestCase("FishTable", 2)]
+        [TestCase("DishTable", 1)]
+        [TestCase("RestaurantConfigTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);

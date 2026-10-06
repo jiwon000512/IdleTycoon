@@ -36,17 +36,20 @@ namespace ZooTycoon.Core
         public bool AtStall { get; private set; }
         public bool IsMerchant => m_stall != null;
         private readonly Vector2? m_stall;
-        // 들어가는 문(손님은 빵집 문, 점원 그림은 그 점원이 사는 곳의 문)
+        // 들어가는 문(손님은 가는 가게의 문, 점원 그림은 그 점원이 사는 곳의 문)
         private readonly Vector2 m_doorFloor;
+        // 설계 47: 가는 가게(빵집 · 횟집)
+        private readonly IShop m_shop;
         private readonly Vector2 m_doorInside;
 
         // inside에서 floor로 톡 나온다(계단·빵집 문)
-        internal PlazaVisitor(int id, VisitorTable look, PlazaArea plaza, Vector2 inside, Vector2 floor, int visits, bool wantsShop, Clerk clerk = null, Vector2? stall = null) : base(id, look, inside, plaza.Tables)
+        internal PlazaVisitor(int id, VisitorTable look, PlazaArea plaza, Vector2 inside, Vector2 floor, int visits, bool wantsShop, Clerk clerk = null, Vector2? stall = null, IShop shop = null) : base(id, look, inside, plaza.Tables)
         {
             Plaza = plaza;
             Clerk = clerk;
             m_stall = stall;
-            WombatArea home = clerk != null ? clerk.Home : (WombatArea)plaza.Bakery;
+            m_shop = shop ?? plaza.Bakery;
+            WombatArea home = clerk != null ? clerk.Home : (WombatArea)m_shop;
             PlazaDoor door = plaza.DoorOf(home);
             m_doorFloor = door.Floor;
             m_doorInside = door.Inside;
@@ -129,7 +132,7 @@ namespace ZooTycoon.Core
                         }
                         else
                         {
-                            Plaza.Bakery.Admit(Look);
+                            m_shop.Admit(Look);
                         }
                     }
 
@@ -209,7 +212,7 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            if (m_wantsShop && Plaza.Bakery.CanAdmit)
+            if (m_wantsShop && m_shop.CanAdmit)
             {
                 m_heading = Goal.Door;
                 Mover.WalkTo(Plaza.Layout.Nav, m_doorFloor, Facing.Up, true);
@@ -250,7 +253,7 @@ namespace ZooTycoon.Core
                     Bubble.Clear();
                     break;
                 case Goal.Door:
-                    if (Clerk != null || Plaza.Bakery.CanAdmit)
+                    if (Clerk != null || m_shop.CanAdmit)
                     {
                         StartHop(VisitorPhase.Exiting, m_doorFloor, m_doorInside);
                     }

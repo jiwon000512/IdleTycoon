@@ -8,6 +8,9 @@ namespace ZooTycoon.Core
         public BreadTable Bread { get; private set; }
         public int Count { get; private set; }
         public int Capacity { get; }
+        // 설계 47: 횟집 주문 하나(그 손님 몫) — 수조에서 꺼낸 날 물고기(Cut 전) 또는 뜬 회 접시(Cut 뒤). 빵과 같이 들지 않는다
+        public RestaurantVisitor Order { get; private set; }
+        public bool Empty => Count == 0 && Order == null;
 
         // 든 것이 바뀌었다. 인자는 들거나 내려놓은 사물(오븐·진열대). 화면이 그 사물과 손 사이에 빵을 날린다
         public event Action<Interactable> Changed;
@@ -20,7 +23,7 @@ namespace ZooTycoon.Core
         // 더 들 수 있는 수. 다른 빵을 들고 있으면 0
         public int SpaceFor(BreadTable bread)
         {
-            return Bread == null || Bread == bread ? Capacity - Count : 0;
+            return Order == null && (Bread == null || Bread == bread) ? Capacity - Count : 0;
         }
 
         public void Add(BreadTable bread, int count, Interactable from)
@@ -40,6 +43,19 @@ namespace ZooTycoon.Core
                 Bread = null;
             }
 
+            OnChanged(to);
+        }
+
+        // 설계 47: 수조에서 물고기를 · 도마에서 뜬 접시를 들고(from) 도마 · 탁자에 놓는다(to)
+        public void HoldOrder(RestaurantVisitor order, Interactable from)
+        {
+            Order = order;
+            OnChanged(from);
+        }
+
+        public void DropOrder(Interactable to)
+        {
+            Order = null;
             OnChanged(to);
         }
 

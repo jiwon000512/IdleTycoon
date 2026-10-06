@@ -23,7 +23,7 @@ namespace ZooTycoon.Core
         public List<AreaSave> Areas = new List<AreaSave>();
     }
 
-    // 곳 하나. 곳마다 쓰는 칸만 채운다(빵집: 칸 · 사물 · 빵 · 평가, 농장: 열림 · 칸 · 밭 · 작물, 광장: 사물 · 행상, 낚시터: Fishing)
+    // 곳 하나. 곳마다 쓰는 칸만 채운다(빵집: 칸 · 사물 · 빵 · 평가, 농장: 열림 · 칸 · 밭 · 작물, 광장: 사물 · 행상, 낚시터: Fishing, 횟집: 열림 · 칸 · 사물)
     public sealed class AreaSave
     {
         public string Id;
@@ -63,7 +63,7 @@ namespace ZooTycoon.Core
         public int Grade;
     }
 
-    // 놓인 사물 하나(놓인 순서). 진열대는 빵 · 재고, 오븐은 빵 · 남은 초 · 다 구운 수 · 마지막 빵
+    // 놓인 사물 하나(놓인 순서). 진열대는 빵 · 재고, 오븐은 빵 · 남은 초 · 다 구운 수 · 마지막 빵, 설계 47 수조는 회 id → 마리 수(없으면 null)
     public sealed class ThingSave
     {
         public string Kind;
@@ -74,6 +74,7 @@ namespace ZooTycoon.Core
         public string LastBread;
         public double Remaining;
         public int Ready;
+        public Dictionary<string, int> Fish;
     }
 
     // 점원 하나. Thing = 그 곳 놓인 사물 순서 번호(농장 작업대는 −1)

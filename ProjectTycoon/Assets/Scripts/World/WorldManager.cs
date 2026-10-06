@@ -22,6 +22,8 @@ namespace ZooTycoon.World
         private static readonly Vector3 k_FloorGap = new Vector3(0f, 60f, 0f);
         // 설계 44: 낚시터는 광장 옆(농장 층이 늘어나는 위쪽과 겹치지 않게)
         private static readonly Vector3 k_FishingOrigin = new Vector3(60f, 60f, 0f);
+        // 설계 47: 횟집은 낚시터 옆
+        private static readonly Vector3 k_RestaurantOrigin = new Vector3(120f, 60f, 0f);
         // 고용한 점원이 굴에서 나오는 모습을 당겨서 보여 주는 시간(초)과 발끝에서 몸 가운데까지(유닛)
         private const float k_HireSpotSeconds = 1.8f;
         private const float k_BodyCenter = 0.5f;
@@ -35,9 +37,12 @@ namespace ZooTycoon.World
         [SerializeField] private FarmView m_farmPrefab;
         [Tooltip("낚시터 프리팹(설계 44). 씬에는 두지 않고 실행 중에 생성한다")]
         [SerializeField] private FishingView m_fishingPrefab;
+        [Tooltip("횟집 프리팹(설계 47). 씬에는 두지 않고 실행 중에 생성한다")]
+        [SerializeField] private RestaurantView m_restaurantPrefab;
 
         private readonly Dictionary<WombatArea, IAreaView> m_views = new Dictionary<WombatArea, IAreaView>();
         private BakeryView m_shopView;
+        private RestaurantView m_restaurantView;
         private readonly List<FarmView> m_farmViews = new List<FarmView>();
         private Mall m_mall;
         private IDisposable m_areaChanged;
@@ -73,6 +78,11 @@ namespace ZooTycoon.World
             FishingView fishingView = Instantiate(m_fishingPrefab, k_FishingOrigin, Quaternion.identity, transform);
             fishingView.Bind(mall.Fishing, bus, Frames, tables);
             m_views[mall.Fishing] = fishingView;
+
+            m_restaurantView = Instantiate(m_restaurantPrefab, k_RestaurantOrigin, Quaternion.identity, transform);
+            m_restaurantView.Bind(mall.Restaurant, bus, Frames, tables);
+            m_restaurantView.Expanded += View_Expanded;
+            m_views[mall.Restaurant] = m_restaurantView;
 
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
@@ -140,6 +150,11 @@ namespace ZooTycoon.World
             foreach (FarmView farmView in m_farmViews)
             {
                 farmView.Expanded -= View_Expanded;
+            }
+
+            if (m_restaurantView != null)
+            {
+                m_restaurantView.Expanded -= View_Expanded;
             }
 
             m_areaChanged?.Dispose();

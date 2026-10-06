@@ -1,0 +1,21 @@
+# 횟집 작은 탁자(2026-10-06 아트방, 설계 47 그림 ③). 시안 A 네모 나무 탁자 · B 둥근 통나무 탁자 · C 생선 상자 탁자 중 사용자 선택 B → ../make_table.py
+# 참조 -i 1: 빵집 게임 화면 · -i 2: table_template.png(웜뱃 한 칸 10px + 상자 26×20칸 빨강 · 최소 높이 14칸 파랑 · 바닥선) · -i 3: 횟집 컨셉 C 화면 · -i 4: Shop/Source~/shop_raw/view_blockout.png
+# 1차(상자 32×25칸)는 칸이 7~8px로 그려져 90~106 × 62~76px, 2차(이 파일들, 상자 26×20칸)도 6.6~8px라 80~92 × 56~70px. 목록(약 72×56)보다 크지만 2차를 썼다(프로그래밍방이 그림에 맞춤)
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code, do NOT resample or copy the references). Keep the canvas size, the white background and the wombat of image 2 EXACTLY where and how they are: it is the main character at the exact game scale, one art pixel = 10 screen pixels, 42 art pixels wide. Remove the red and blue guides and the grey line.
+Image 1 is the game today (at 4 screen pixels per art pixel): a cozy underground wombat-burrow BAKERY with an earth floor and chunky wooden props. Image 3 is the concept of the next shop, a SASHIMI RESTAURANT burrow where animal customers eat sliced raw fish at SMALL TABLES.
+Paint ONE small free-standing TABLE prop inside the red rectangle (at most 26 art pixels wide and 20 tall, at least as tall as the blue dashed line), standing on the grey ground line: its feet are exactly on that line and NOTHING hangs or steps below it. Two customers about as tall as the wombat will stand at its left and right sides and eat from a plate the game puts on top, so the table top is at about their belly height and the top is EMPTY: nothing on it at all. No chairs, no stools.
+CAMERA: orthographic three-quarter top-down like image 1 and like the left table of image 4: parallel projection, the front edge is parallel to the screen, the side faces are not visible, the flat top is seen from above as a wide band, vertical legs stay vertical, no vanishing point, never seen from below.
+STYLE: chunky pixel art exactly like the wombat and image 1: big square 10-pixel art pixels everywhere (never smaller), no anti-aliasing, no gradients, no dithering, flat soft earthy palette with at most 10 colors, dark brown outline (#342020) one art pixel wide around the prop. One darker tone for shaded faces and one white highlight stroke on top. No floor, no shadow on the ground, no text, no letters, no numbers.
+IMPORTANT SIZE AND PIXELS: every art pixel is a 10 by 10 screen-pixel square on exactly the same grid as the wombat of image 2, never smaller. Keep the drawing as coarse and simple as the wombat: a few big flat shapes, no fine detail, no thin lines thinner than one 10-pixel art pixel. The whole table is narrower and lower than the wombat (26 art pixels = 260 screen pixels wide, 20 art pixels = 200 screen pixels tall): it must fit inside the red rectangle. Do not redraw or resize the wombat.
+DESIGN:
+[a]
+SQUARE WOODEN TABLE: a small square table with a thick plank top and four short sturdy legs, like the small tables of image 3.
+Save the image as table_a.png in the current working directory and reply with only the path.
+[b]
+ROUND LOG TABLE: a small round table whose top is a thick slice of log with pale tree rings, standing on one short thick log leg in the middle.
+Save the image as table_b.png in the current working directory and reply with only the path.
+[c]
+FISH CRATE TABLE: an upturned slatted wooden fish crate used as a little table, with a small checked cloth laid flat over its top.
+Save the image as table_c.png in the current working directory and reply with only the path.

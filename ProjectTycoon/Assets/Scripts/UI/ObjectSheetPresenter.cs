@@ -123,6 +123,16 @@ namespace ZooTycoon.UI
                 case FishingHutInteractable hut:
                     m_view.SetHeader(m_tables.Text("sheet_hut_title"), m_tables.Format("sheet_hut_status", hut.Fishing.Stage));
                     break;
+                // 설계 47: 수조 = 담긴 물고기 / 용량 · 도마 = 주문 수 · 닫힌 횟집 문 = 열기
+                case TankInteractable tank:
+                    m_view.SetHeader(m_tables.Text("sheet_tank_title"), m_tables.Format("sheet_tank_status", tank.Stock, tank.Capacity));
+                    break;
+                case CuttingBoardInteractable board:
+                    m_view.SetHeader(m_tables.Text("sheet_board_title"), m_tables.Format("sheet_board_status", board.Orders.Count));
+                    break;
+                case ShopGateInteractable _:
+                    m_view.SetHeader(m_tables.Text("sheet_gate_title"), m_tables.Text("sheet_gate_status"));
+                    break;
                 // 설계 35: 거름은 심을 때 하나씩 저절로 든다
                 case PlotInteractable plot:
                     m_view.SetHeader(m_tables.Text("sheet_plot_title"), m_tables.Format("sheet_plot_status", m_shop.Wallet.Count(plot.Farm.Config.ManureItem)));
@@ -280,6 +290,17 @@ namespace ZooTycoon.UI
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
+                // 설계 47: 빵집 별이 모자라면 값 자리에 「★n 필요」
+                case ActionTable.k_OpenShop:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Text("row_open_shop"),
+                        Effect = m_tables.Text("row_open_shop_effect"),
+                        Cost = option.State == SheetOptionState.Locked
+                            ? m_tables.Format("row_star_needed", ((ShopGateInteractable)m_target).Shop.Config.OpenStar)
+                            : BigNumberFormatter.Format(option.Cost),
+                        State = RowState(option.State),
+                    };
                 // 설계 46 미끼 노점 업그레이드: 이름 Lv · 효과 전후 · 값(최대면 「최대」)
                 case ActionTable.k_HutUpgrade:
                 {
@@ -364,7 +385,7 @@ namespace ZooTycoon.UI
 
             m_view.FlashRow(index);
 
-            if (m_target is DigInteractable || m_target is StairInteractable)
+            if (m_target is DigInteractable || m_target is StairInteractable || m_target is ShopGateInteractable)
             {
                 m_view.Close();
             }

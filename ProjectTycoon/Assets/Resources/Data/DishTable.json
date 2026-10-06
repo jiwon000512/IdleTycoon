@@ -1,0 +1,14 @@
+{
+  "table": "DishTable",
+  "version": 1,
+  "notes": [
+    "설계 47 수조 횟집: 회 한 접시. fish = 쓰는 물고기(ItemTable, 회마다 다름). 수조가 창고에서 이 물고기를 담고, 손님이 수조에 든 마리 수에 비례해 고른다.",
+    "sprite: 접시 그림(Resources/ 기준) — 머리 위 · 탁자 위. price: 다 먹고 탁자에서 내는 값(황금 축복 · 행운 동전 배수). cutSeconds: 도마에서 뜨는 초(업그레이드 배수 1).",
+    "version 1 (2026-10-06, 설계 47): 처음 만듦. 접시 그림은 아트방 B 「작은 나무 판」(Resources/Sprites/Dishes/<id>). 값은 시작값."
+  ],
+  "rows": [
+    { "id": "dish_minnow", "name": "피라미회", "fish": "fish_minnow", "sprite": "Sprites/Dishes/dish_minnow", "price": 30, "cutSeconds": 3 },
+    { "id": "dish_crucian", "name": "붕어회", "fish": "fish_crucian", "sprite": "Sprites/Dishes/dish_crucian", "price": 70, "cutSeconds": 5 },
+    { "id": "dish_catfish", "name": "메기회", "fish": "fish_catfish", "sprite": "Sprites/Dishes/dish_catfish", "price": 150, "cutSeconds": 8 }
+  ]
+}

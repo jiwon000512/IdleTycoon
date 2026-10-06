@@ -1,0 +1,31 @@
+{
+  "table": "RestaurantConfigTable",
+  "version": 1,
+  "notes": [
+    "설계 47 수조 횟집 숫자. 행 하나(restaurant). 좌표는 가게 원점(입구 줄 윗변 가운데) 기준 유닛, y 위. 전부 시작값.",
+    "maxCustomers: 횟집 안 손님 상한. patienceSeconds: 수조 앞에서 물고기 · 빈 탁자 자리를 기다리는 초(다 쓰면 화나서 나감). pickSeconds: 고르는 초. eatSeconds: 접시가 온 뒤 먹는 초.",
+    "tankCapacity: 수조 기본 용량(업그레이드마다 InteractableTable tank effectPerLevel). digBaseCost × digCostGrowth^n: 굴 파기 값(빵집과 같은 틀).",
+    "openStar · openCost: 빵집 별이 openStar 이상이면 광장 문 앞 시트에서 openCost로 연다. start: 새 게임 배치(수조 · 도마 · 탁자 둘).",
+    "version 1 (2026-10-06, 설계 47): 처음 만듦."
+  ],
+  "rows": [
+    {
+      "id": "restaurant",
+      "maxCustomers": 6,
+      "patienceSeconds": 6,
+      "pickSeconds": 0.4,
+      "eatSeconds": 4,
+      "tankCapacity": 6,
+      "digBaseCost": 300,
+      "digCostGrowth": 1.4,
+      "openStar": 5,
+      "openCost": 10000,
+      "start": [
+        { "kind": "tank", "x": 1.8, "y": -3.2 },
+        { "kind": "cutting_board", "x": 0, "y": -5.4 },
+        { "kind": "dining_table", "x": -1.8, "y": -7.4 },
+        { "kind": "dining_table", "x": 1.8, "y": -7.4 }
+      ]
+    }
+  ]
+}

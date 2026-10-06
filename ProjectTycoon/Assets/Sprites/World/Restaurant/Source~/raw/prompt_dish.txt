@@ -1,0 +1,27 @@
+# 횟집 회 접시 셋(2026-10-06 아트방, 설계 47 그림 ④). 시안 A 흰 둥근 접시 · B 작은 나무 판 · C 파란 테 타원 접시 중 사용자 선택 B → ../make_dishes.py
+# 참조 -i 1: 빵집 게임 화면 · -i 2: dish_template.png(웜뱃 한 칸 10px + 크기 기준 크루아상 b02 한 텍셀 5px + 접시 상자 셋 18×12칸) · -i 3: dish_fish_ref.png(물고기 창고 아이콘 셋, 한 텍셀 5px)
+# 크루아상을 크기 기준으로 주니 셋 다 목록(약 40×28px) 근처로 나왔다(B 36~41 × 21~24)
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code, do NOT resample or copy the references). Keep the canvas size, the white background, the wombat and the croissant of image 2 EXACTLY where and how they are: they are real game sprites at the exact game scale (the wombat's art pixels are 10 screen pixels, the croissant's are 5). Remove the red rectangles and the grey line.
+Image 1 is the game today: a cozy underground wombat-burrow BAKERY. The next shop is a SASHIMI RESTAURANT: the wombat slices the fish caught at its fishing spot and serves it on small plates. Image 3 shows those three fish (game sprites): left MINNOW (green-silver), middle CRUCIAN CARP (golden orange), right CATFISH (purple grey, whiskers).
+Paint THREE small PLATES OF SLICED RAW FISH (sashimi), one inside each red rectangle, left to right: minnow, crucian carp, catfish. Each plate rests on the grey ground line and is a little smaller than the croissant. The slices are pale pink-white raw fish flesh, each with a thin skin edge in that fish's color from image 3, so the three plates are told apart by the skin color and by size: minnow 3 small slices, crucian 4 slices, catfish 5 bigger slices. No whole fish, no heads, no chopsticks.
+CAMERA: orthographic three-quarter top-down like image 1: parallel projection, the plate is seen from above and in front as a flat wide shape, no vanishing point, never seen from below.
+STYLE: chunky pixel art exactly like the croissant of image 2: square 5-pixel art pixels, no anti-aliasing, no gradients, no dithering, flat soft palette, dark brown outline (#342020) one art pixel wide around each plate, one white highlight stroke. No shadow on the ground, no text, no letters, no numbers.
+SIZE: each plate fits its red rectangle (180 x 120 screen pixels = 36 x 24 art pixels of 5 pixels). Do not redraw or resize the wombat or the croissant.
+DESIGN:
+[a]
+ROUND WHITE PLATE: a plain round white ceramic plate; the slices are fanned out in a neat row with one small green leaf garnish.
+Save the image as dish_a.png in the current working directory and reply with only the path.
+[b]
+LITTLE WOODEN BOARD: a small rectangular wooden serving board instead of a plate; the slices lie in a row with a tiny dab of green wasabi at one end.
+Save the image as dish_b.png in the current working directory and reply with only the path.
+[c]
+BLUE-RIM OVAL DISH: an oval cream ceramic dish with a simple blue rim; the slices are arranged in an overlapping fan on a bed of white shredded radish.
+Save the image as dish_c.png in the current working directory and reply with only the path.
+
+[1.5배 다시 그리기(2026-10-06 사용자 「2배는 너무 큼 1.5배로」 → 정수 배가 아니라 칸이 깨져 1.5배 칸 수로 다시 그림, 사용자 선택 「새 접시 1」)]
+# 상자 셋에 한꺼번에(5px 칸 · 10px 칸) 시켰더니 Codex가 9 · 13px 칸으로 그려 칸 수가 그대로였다 → 접시 하나씩, 목표 칸 수의 빈 격자를 한 칸 16px로.
+# 참조 -i 1: 지금 접시를 한 칸 16px로 키운 그림(small16, make_dishes 옛 출력), -i 2: dish15_grid_<어종>.png(목표 54×32 · 57×35 · 62×36칸 빈 격자, 빨간 테)
+# 칸 수는 어긋난다(같은 프롬프트로 29~80칸). 어종마다 2~5장 뽑아 크기 순서가 맞는 조합을 골랐다: 피라미 1번 60×30 · 붕어 3번 59×36 · 메기 3번 66×38 → raw/dish15_<어종>.png
+Use your IMAGE GENERATION tool to paint a brand-new image (do NOT write code, do NOT resample, upscale or copy the references). Image 1 is a tiny pixel-art game sprite shown enlarged (every 16 x 16 block is one art pixel): a <MINNOW|CRUCIAN CARP|CATFISH> plate of sashimi, <3 slices with green-silver skin edges|4 slices with golden-orange skin edges|4 bigger slices with purple-grey skin edges>, on a small rectangular wooden serving board with a tiny dab of green wasabi at one end. It is <36|38|41> art pixels wide and too small in the game. Image 2 is an empty pixel grid of exactly <W> x <H> cells (each cell 16 x 16 screen pixels) inside a red frame. Repaint the SAME plate on image 2 at a bigger size: exactly one art pixel per grid cell, the plate filling the red frame (<W> art pixels wide, <H> tall, resting on the frame bottom). Same design, same colors, same outline and lighting as image 1, with a little more detail in the slices (flesh lines, skin edge) and the wood grain because there are more pixels. STYLE: crisp pixel art aligned to the grid, every art pixel one flat-colored 16 x 16 square, no anti-aliasing, no gradients, no dithering, dark brown outline (#342020) one art pixel wide, flat soft palette, orthographic three-quarter top-down view (board seen from above and in front, front edge visible, never from below). Keep the white background; remove the grid lines and the red frame. No shadow, no text. Save the image as <파일> in the current working directory and reply with only the path.

@@ -19,6 +19,7 @@ namespace ZooTycoon.Data
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
             PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id, StairInteractable.k_Id,
             StakeInteractable.k_Id, StreamBankInteractable.k_Id, FishingHutInteractable.k_Id,
+            TankInteractable.k_Id, CuttingBoardInteractable.k_Id, DiningTableInteractable.k_Id, ShopGateInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -62,6 +63,7 @@ namespace ZooTycoon.Data
             ValidateFarmConfig(tables, errors);
             ValidateStars(tables, errors);
             ValidateFishing(tables, errors);
+            ValidateRestaurant(tables, errors);
 
             return errors;
         }
@@ -653,9 +655,9 @@ namespace ZooTycoon.Data
                 if (doors.Any(d => string.IsNullOrEmpty(d.To) || d.Col < 0 || d.Col >= plaza.Cols)
                     || doors.Select(d => d.Col).Distinct().Count() != doors.Length
                     || doors.Select(d => d.To).Distinct().Count() != doors.Length
-                    || doors.All(d => d.To != BakeryArea.k_Id))
+                    || doors.All(d => d.To != BakeryArea.k_Id) || doors.All(d => d.To != RestaurantArea.k_Id))
                 {
-                    errors.Add($"PlazaConfigTable '{plaza.Id}': doors는 칸 안(0 ~ cols−1) · 서로 다른 칸 · 서로 다른 곳이고 bakery 문이 있어야 한다.");
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': doors는 칸 안(0 ~ cols−1) · 서로 다른 칸 · 서로 다른 곳이고 bakery · restaurant 문이 있어야 한다.");
                 }
             }
 
@@ -866,6 +868,55 @@ namespace ZooTycoon.Data
             }
 
             CheckRequired<StarConfigTable>(tables, new[] { BakeryArea.k_Id }, errors);
+        }
+
+        // 설계 47: 횟집 — 회는 창고 물고기 하나씩(서로 다른 물고기), 값 · 뜨는 초 > 0, 접시 그림 있음. 설정은 시간 · 용량 · 문 값, 시작 배치는 횟집 사물만
+        private static void ValidateRestaurant(TableSet tables, List<string> errors)
+        {
+            HashSet<string> items = Ids<ItemTable>(tables);
+            HashSet<string> fish = new HashSet<string>();
+
+            foreach (DishTable dish in tables.GetAll<DishTable>())
+            {
+                CheckId("DishTable", dish.Id, errors);
+
+                if (string.IsNullOrEmpty(dish.Name) || string.IsNullOrEmpty(dish.Sprite) || dish.Price <= 0d || dish.CutSeconds <= 0d)
+                {
+                    errors.Add($"DishTable '{dish.Id}': name · sprite가 있고 price · cutSeconds는 0보다 커야 한다.");
+                }
+
+                if (dish.Fish == null || !items.Contains(dish.Fish) || !fish.Add(dish.Fish))
+                {
+                    errors.Add($"DishTable '{dish.Id}': fish는 ItemTable에 있고 회마다 서로 달라야 한다.");
+                }
+            }
+
+            if (tables.GetAll<DishTable>().Count == 0)
+            {
+                errors.Add("DishTable: 행이 하나도 없다.");
+            }
+
+            string[] kinds = { TankInteractable.k_Id, CuttingBoardInteractable.k_Id, DiningTableInteractable.k_Id };
+
+            foreach (RestaurantConfigTable config in tables.GetAll<RestaurantConfigTable>())
+            {
+                if (config.MaxCustomers < 1 || config.TankCapacity < 1 || config.PatienceSeconds < 0d || config.PickSeconds < 0d || config.EatSeconds < 0d)
+                {
+                    errors.Add($"RestaurantConfigTable '{config.Id}': maxCustomers · tankCapacity는 1 이상, patienceSeconds · pickSeconds · eatSeconds는 0 이상이어야 한다.");
+                }
+
+                if (config.DigBaseCost <= 0d || config.DigCostGrowth < 1d || config.OpenStar < 0 || config.OpenCost < 0d)
+                {
+                    errors.Add($"RestaurantConfigTable '{config.Id}': digBaseCost > 0, digCostGrowth ≥ 1, openStar · openCost ≥ 0이어야 한다.");
+                }
+
+                if (config.Start == null || kinds.Any(kind => config.Start.All(start => start.Kind != kind)) || config.Start.Any(start => !kinds.Contains(start.Kind)))
+                {
+                    errors.Add($"RestaurantConfigTable '{config.Id}': start는 수조 · 도마 · 탁자를 하나 이상씩, 횟집 사물만 둔다.");
+                }
+            }
+
+            CheckRequired<RestaurantConfigTable>(tables, new[] { RestaurantConfigTable.k_Main }, errors);
         }
 
         private static void CheckId(string table, string id, List<string> errors)

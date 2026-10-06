@@ -1,0 +1,24 @@
+# 횟집 회 뜨기 단계(2026-10-06 아트방). 피라미로 시안 A 반 갈라 펼치기 · B 칼집 내기 · C 뼈만 남기기 → 사용자 선택 C → ../make_cut.py
+# 피라미: -i 1 cut_ref_minnow.png(도마 · 피라미 아이콘 · 피라미 접시, 한 텍셀 8px), -i 2 cut_template.png(상자 셋 48×20텍셀) → raw/cut_minnow.png(시안 C)
+# 붕어 · 메기: -i 1 cut_ref_<어종>.png(고른 피라미 세 단계 + 어종 아이콘 + 접시), -i 2 cut_template.png, 두 장씩 뽑아 크기 순서가 맞는 2번을 골랐다 → raw/cut_<어종>.png
+
+[피라미 공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code, do NOT resample, upscale or copy the references). Keep the canvas size and the white background of image 2; remove the red rectangles.
+Image 1 shows real game sprites enlarged 8 times (every 8 x 8 block is one art pixel): a round tree-stump cutting board, a MINNOW fish icon (green back, cream-silver belly, small eye) and a finished plate of minnow sashimi (pink-white slices with a thin green-silver skin edge). In the game the wombat puts the minnow flat on the cutting board top and slices it.
+Paint THREE STAGES of the minnow lying on its side on the board top, seen from the front and slightly above (orthographic three-quarter top-down, flat on the board, never seen from below), one stage inside each red rectangle of image 2, left to right: stage 1 = the WHOLE fish, stage 2 = HALF CUT, stage 3 = SLICED. All three stages use the same footprint and position inside their rectangles (the fish is about 40 art pixels long and about 14 art pixels tall, centered, resting on the rectangle bottom) so the game can swap them in place. Draw only the fish and its pieces, NOT the board.
+STYLE: chunky pixel art exactly like image 1: square art pixels of exactly 8 x 8 screen pixels, no anti-aliasing, no gradients, no dithering, flat soft palette with the same green and cream colors as the minnow icon and the same pink flesh as the sashimi plate, dark brown outline (#342020) one art pixel wide around every piece, one small white highlight. No shadow, no blood, no text, no letters.
+DESIGN:
+[a]
+SPLIT OPEN: stage 1 the whole minnow with its eye; stage 2 the top fillet lifted away so the pink flesh and a thin white backbone show, head and tail still on; stage 3 three neat pink slices with a green-silver skin edge in a row, with the head and the tail set aside at the ends.
+[b]
+SCORED: stage 1 the whole minnow with its eye; stage 2 the same minnow with three diagonal knife cuts across its body showing pink flesh inside the cuts, head and tail on; stage 3 the body cut into three pink slices fanned out and overlapping like on the plate, the head left at one end.
+[c]
+BONES LEFT: stage 1 the whole minnow with its eye; stage 2 the front half already cut into two pink slices while the back half and tail are still whole; stage 3 three pink slices in a row and next to them a cute little fish skeleton (head, spine with ribs, tail) left over.
+
+[붕어 · 메기(printf 틀: 어종 · 아이콘 설명 · 어종 · 색 · 껍질 색 · 어종 · 크기 말 · 길이 · 파일)]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code, do NOT resample, upscale or copy the references). Keep the canvas size and the white background of image 2; remove the red rectangles.
+Image 1 shows real game sprites enlarged 8 times (every 8 x 8 block is one art pixel). TOP ROW: the three chosen cutting stages of a MINNOW lying on a cutting board: stage 1 the whole fish facing LEFT, stage 2 the front half (head side, left) already cut into pink slices while the back half and the tail (right) are still whole, stage 3 pink slices in a row on the left and a cute little fish skeleton (head with eye, spine with ribs, tail) on the right. BOTTOM ROW: the %s fish icon (%s) and its finished sashimi plate.
+Paint the SAME THREE STAGES for the %s, one stage inside each red rectangle of image 2, left to right, in exactly the same style, layout and facing direction as the minnow (head on the LEFT in stages 1 and 3 skeleton, slices on the left), with the %s colors from its icon and the pink flesh with %s skin edges like its sashimi plate. The %s is %s than the minnow: about %d art pixels long. All three stages share the same footprint, centered and resting on the rectangle bottom. Draw only the fish and its pieces, not a board.
+STYLE: chunky pixel art exactly like image 1: square art pixels of exactly 8 x 8 screen pixels, no anti-aliasing, no gradients, no dithering, flat soft palette, dark brown outline (#342020) one art pixel wide around every piece, one small white highlight. No shadow, no blood, no text, no letters.
+붕어: "CRUCIAN CARP" "golden orange, deep round body" "CRUCIAN CARP" "golden orange" "golden-orange" "crucian" "a little bigger and rounder" 58
+메기: "CATFISH" "purple grey with whiskers and a flat wide head" "CATFISH" "purple grey" "purple-grey" "catfish" "clearly bigger and longer, with whiskers on its head" 66

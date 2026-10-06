@@ -1,0 +1,23 @@
+# 광장 횟집 문 장식(2026-10-06 아트방). 시안 A 노렌 차양 · B 등롱 간판 · C 기와 처마 중 사용자 선택 A → ../make_restaurant_door.py
+# 참조 -i 1: fishing_door_ref_plaza.png, -i 2: fishing_door_template.png(낚시터 문과 같은 바탕 · 같은 칸), -i 3: fishing_door_b.png(고른 낚시터 문 시안)
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code). Keep the canvas size, the white background, the wombat and the pale lavender arch ghost of image 2 EXACTLY where and how they are. The wombat is the main character at the exact game scale: one art pixel = 10 screen pixels, 42 art pixels wide. The pale lavender shape is only a placement ghost of the existing stone door arch that the game already draws: keep it flat pale lavender, do not repaint, shade or outline it. Remove the red and blue guide rectangles.
+Image 1 is the game today: a cozy underground wombat-burrow plaza whose back wall has round door arches; the bakery door wears a red-and-cream striped awning over its arch top. Image 3 is the decoration already made for the FISHING SPOT door (a wooden fish signboard). Now a new door at the right end leads to a SASHIMI RESTAURANT (a Korean raw-fish restaurant) inside the burrow, and it needs its own decoration in the same spirit, clearly different from the fish signboard of image 3.
+Paint ONE restaurant DECORATION that sits on top of the arch ghost, inside the red rectangle only (68 art pixels wide at most; it may rise 6 art pixels above the arch top and hang at most 20 art pixels down over the arch top; never cover the lower doorway). It must contain a plain FLAT EMPTY name board area at least as big as the blue rectangle (40 by 13 art pixels), centered over the arch: one flat light wood color with no letters, the game writes the name there.
+CAMERA: orthographic three-quarter top-down like image 1, front face parallel to the screen, vertical edges stay vertical, never seen from below.
+STYLE: chunky pixel art exactly like the wombat and image 1: big square 10-pixel art pixels everywhere (never smaller), no anti-aliasing, no gradients, no dithering, flat soft earthy palette with at most 12 colors, dark brown outline (#342020) one art pixel wide around the decoration. No water, no ground, no shadow, no text, no letters, no numbers.
+IMPORTANT: every art pixel is a 10 by 10 screen-pixel square on the same grid as the wombat of image 2. Keep the drawing as coarse as the wombat. Do not redraw or resize the wombat or the arch ghost.
+DESIGN:
+
+[a]
+NOREN EAVE: a straight wooden plank beam across the arch top that is the name board, with a short deep-indigo cloth noren curtain hanging under it, split into three plain flaps (no letters, no symbols) that end well above the doorway.
+Save the image as door_a.png in the current working directory and reply with only the path.
+
+[b]
+LANTERN SIGN: a wide wooden plank name board on the arch top with two round red paper lanterns (plain, no letters, dark wooden caps) hanging from short cords at its left and right ends.
+Save the image as door_b.png in the current working directory and reply with only the path.
+
+[c]
+TILED EAVE: a small traditional roof eave of dark grey-blue roof tiles with gently upturned corners resting on the arch top, and a flat wooden name board hanging right under the eave in the middle.
+Save the image as door_c.png in the current working directory and reply with only the path.

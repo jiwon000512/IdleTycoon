@@ -645,7 +645,6 @@ MonoBehaviour:
   - {fileID: 21300000, guid: b53a26b567f0bb441af2e6be39ec787a, type: 3}
   - {fileID: 21300000, guid: c65de0d930724aa4cb44df5097cfcdcd, type: 3}
   - {fileID: 21300000, guid: f646bfc18867f6c4eadb0a9180a0b8d9, type: 3}
-  - {fileID: 21300000, guid: 4a07e1de0b4310544b6bb43769cbc15c, type: 3}
   m_bubbleFrames:
   - {fileID: -5436485921487181056, guid: 339592c841ad2774eb40a970558fb81f, type: 3}
   - {fileID: -2142117228, guid: 339592c841ad2774eb40a970558fb81f, type: 3}

@@ -1,0 +1,22 @@
+# 횟집 수조(2026-10-06 아트방, 설계 47 그림 ①). 시안 A 나무 장 수조 · B 횟집 수족관 · C 굴 돌 수조 중 사용자 선택 A → ../make_tank.py
+# 참조 -i 1: 빵집 게임 화면(1080×1920) · -i 2: tank_template.png(1536×1024, 웜뱃 한 칸 10px + 수조 상자 76×56칸 빨강 · 최소 높이 44칸 파랑 · 바닥선) · -i 3: 횟집 컨셉 C 화면 · -i 4: Shop/Source~/shop_raw/view_blockout.png
+# tank_a · tank_b는 1차. 셋 다 한 칸 8~9px로 그려져 최대(152×112px)를 넘었고, 웜뱃 · 상자를 한 칸 9px로 줄인 틀로 2차를 뽑았지만 더 잘게 그려졌다. tank_c는 2차(1차 C는 236×160px라 버림)
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 2 (do NOT write code, do NOT resample or copy the references). Keep the canvas size, the white background and the wombat of image 2 EXACTLY where and how they are: it is the main character at the exact game scale, one art pixel = 10 screen pixels, 42 art pixels wide. Remove the red and blue guides and the grey line.
+Image 1 is the game today (at 4 screen pixels per art pixel): a cozy underground wombat-burrow BAKERY with an earth floor and chunky wooden props. Image 3 is the concept of the next shop, a SASHIMI RESTAURANT burrow where the wombat serves the fish it caught: customers stand in front of a glowing FISH TANK and pick the fish they want.
+Paint ONE free-standing FISH TANK prop inside the red rectangle (at most 76 art pixels wide and 56 tall, at least as tall as the blue dashed line), standing on the grey ground line: its feet are exactly on that line and NOTHING hangs or steps below it. Customers (about as tall as the wombat) stand in front of it and look into the water, so the water window must be big, at their eye level, and EMPTY.
+THE WATER IS EMPTY: no fish, no fish shapes, no shadows of fish in the water (the game adds the fish later as dark oval shadows). Inside the glass only a flat light teal water color, one lighter teal band just under the water surface, a few small bubbles and a low strip of sand/pebbles with two or three short water plants at the bottom.
+CAMERA: orthographic three-quarter top-down like image 1 and like the right block of image 4: parallel projection, the front face is parallel to the screen and the side faces are not visible, the top surface (the water surface seen from above / the lid) is visible as a band above the front face, vertical edges stay vertical, no vanishing point, never seen from below.
+STYLE: chunky pixel art exactly like the wombat and image 1: big square 10-pixel art pixels everywhere (never smaller), no anti-aliasing, no gradients, no dithering, flat soft earthy palette with at most 12 colors, dark brown outline (#342020) one art pixel wide around the prop. One darker tone for shaded faces and one white highlight stroke on the glass. No floor, no shadow on the ground, no text, no letters, no numbers.
+IMPORTANT SIZE AND PIXELS: every art pixel is a 10 by 10 screen-pixel square on exactly the same grid as the wombat of image 2, never smaller. Keep the drawing as coarse and simple as the wombat: a few big flat shapes, every small detail at least 4 art pixels across, no thin lines thinner than one 10-pixel art pixel. The whole tank is less than twice as wide as the wombat (76 art pixels = 760 screen pixels) and about one and a quarter times as tall (56 art pixels = 560 screen pixels): it must fit inside the red rectangle. Do not redraw or resize the wombat.
+DESIGN:
+[a]
+WOODEN TANK: a wide glass tank with a thick warm wooden frame sitting on a low wooden cabinet stand with two small doors, like the glowing tanks of image 3. A small wooden hood on top with a little warm lantern hanging from its front edge.
+Save the image as tank_a.png in the current working directory and reply with only the path.
+[b]
+KOREAN SEAFOOD-RESTAURANT TANK: a wide glass tank with a light grey-blue metal frame on a stand covered with small cream square tiles, a thin black air hose dipping into the water from the top with a stream of bubbles, and a small round fishing net hanging on a hook at one side of the frame.
+Save the image as tank_b.png in the current working directory and reply with only the path.
+[c]
+BURROW STONE TANK: a wide water window set into a chunky block of rough grey-brown stones with a little moss, like a natural pool dug into the burrow, under a small wooden plank eave on top; a short bamboo pipe at one top corner pours a thin stream of water into the tank.
+Save the image as tank_c.png in the current working directory and reply with only the path.

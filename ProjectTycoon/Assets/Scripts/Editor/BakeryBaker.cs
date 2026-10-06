@@ -27,6 +27,7 @@ namespace ZooTycoon.Editor
         const string k_CropDir = "Assets/Resources/Sprites/Farm/";
         const string k_ItemDir = "Assets/Resources/Sprites/Items/";
         const string k_RodIconDir = "Assets/Resources/Sprites/Rods/";
+        const string k_RestaurantDir = "Assets/Sprites/World/Restaurant/";
         // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 줄 셋(칸 밑변 기준, 뒷줄부터. 줄 그림은 104칸 폭 · 익으면 26칸 높이. 밑변은 make_farm_art.py ROW_CELLS 18 · 42 · 66칸 = 이랑 셋의 아래에서 6칸).
         // 농사 타이머 · 다 익음 표시(Farm/farm_timer_XX · Resources/Sprites/Farm/Ready/<작물>, 작물마다는 실행 중 FarmView가 바꾼다)는 칸 윗변 위에 띄워 모든 그림 위에(2026-09-30 사용자: 작물에 가려지고 빵 모양이던 것),
         // 빈 밭 화살표는 칸 가운데 · 캐릭터 층(작물이 없을 때만 보이니 웜뱃이 앞에 온다)
@@ -96,11 +97,12 @@ namespace ZooTycoon.Editor
             BakeCoinPopup();
             VisitorView customer = BakeCustomer();
             BakeShop(shelf, shelfSign, oven, counter, digTag, poop, customer);
-            BakePlaza(customer, poop);
+            BakePlaza(customer, poop, digTag);
             BakeFarm(BakePlot(), digTag, poop, customer);
             BakeFishing(digTag, poop, customer);
+            BakeRestaurant(digTag, poop, customer);
             AssetDatabase.SaveAssets();
-            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza·Plot·Farm·Fishing";
+            return "Bakery: Shelf·ShelfSign·Oven·Counter·DigTag·Poop·SlotMarker·Bakery·Visitor·Plaza·Plot·Farm·Fishing·Restaurant";
         }
 
         static void ImportSprites()
@@ -110,6 +112,10 @@ namespace ZooTycoon.Editor
 
             // 굴 환경 A2: 피벗 = 구멍 밑변 = 띠 밑변(입구 줄 바닥 윗변)
             Import(k_SpriteDir + "arch.png", bottom);
+            // 설계 47: 아트방 수조 A 「나무 장 수조」 · 도마 A 「통나무 그루터기」 · 탁자 B 「둥근 통나무 탁자」(밑변 가운데)
+            Import(k_RestaurantDir + "tank.png", bottom);
+            Import(k_RestaurantDir + "board.png", bottom);
+            Import(k_RestaurantDir + "table.png", bottom);
 
             // 설계 24: 똥(poop_0·1 = 냄새 김 2프레임, Source~/make_poop.py) · 설계 41 평가단 수첩 표식(judge_mark, Source~/make_judge_mark.py)
             foreach (string name in new[] { "shelf", "shelf_sign", "oven", "oven_2", "counter", "wait", "poop_0", "poop_1", "judge_mark" })
@@ -161,6 +167,7 @@ namespace ZooTycoon.Editor
             // 설계 11 광장: 차양·계단은 아래 가운데, 간판은 가운데. 장식은 Resources(DecorationTable 경로), 아래 가운데
             Import(k_PlazaDir + "awning.png", bottom);
             Import(k_PlazaDir + "fishing_door.png", bottom);
+            Import(k_PlazaDir + "restaurant_door.png", bottom);
             Import(k_PlazaDir + "sign.png", center);
             Import(k_PlazaDir + "stairs.png", bottom);
             Import(k_PlazaDir + "statue.png", bottom);
@@ -605,7 +612,7 @@ namespace ZooTycoon.Editor
         }
 
         // 설계 11: 굴 밖 광장. 굴 그림·빵집 문·계단·장식 자리는 실행 중 PlazaView가 Core 배치(PlazaLayout)대로 놓는다
-        static void BakePlaza(VisitorView customer, SpriteAnimator poop)
+        static void BakePlaza(VisitorView customer, SpriteAnimator poop, MarkerView digTag)
         {
             GameObject root = new GameObject("Plaza");
             SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
@@ -630,11 +637,19 @@ namespace ZooTycoon.Editor
             TextMeshPro fishingSign = WorldText(fishingDoor.transform, "SignText", new Vector3(-0.025f, 0.975f, 0f), k_ArchOrder + 2);
             fishingSign.rectTransform.sizeDelta = new Vector2(0.85f, 0.3f);
             fishingSign.color = new Color32(66, 40, 32, 255);
+            // 설계 47: 횟집 문(오른쪽 끝 칸). 아트방 A 「노렌 차양」: 아치 위 나무 들보 이름 판 + 남색 천 세 자락, 이름은 들보 판 가운데에 진갈색(낚시터 문과 같은 방식)
+            GameObject restaurantDoor = Child(root.transform, "RestaurantDoor", Vector3.zero);
+            Renderer(restaurantDoor.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
+            Renderer(restaurantDoor.transform, "Deco", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "restaurant_door.png"), new Vector3(0.0113f, 0.65f, 0f), k_ArchOrder + 1);
+            TextMeshPro restaurantSign = WorldText(restaurantDoor.transform, "SignText", new Vector3(0.0113f, 1.2f, 0f), k_ArchOrder + 2);
+            restaurantSign.rectTransform.sizeDelta = new Vector2(0.85f, 0.3f);
+            restaurantSign.color = new Color32(66, 40, 32, 255);
             List<(string to, Transform root, TextMeshPro sign)> doors = new List<(string, Transform, TextMeshPro)>
             {
                 (BakeryArea.k_Id, door.transform, sign),
                 (FarmArea.k_Id, farmDoor.transform, farmSign),
                 (FishingArea.k_Id, fishingDoor.transform, fishingSign),
+                (RestaurantArea.k_Id, restaurantDoor.transform, restaurantSign),
             };
             SpriteRenderer stairs = Renderer(root.transform, "Stairs", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "stairs.png"), Vector3.zero, k_ArchOrder);
             WombatView wombat = BakeWombat(root.transform, Vector3.zero);
@@ -665,6 +680,7 @@ namespace ZooTycoon.Editor
             // 설계 37: 똥은 빵집과 같은 그림
             Set(view, "m_poopPrefab", poop);
             SetArray(view, "m_poopFrames", Frames("poop", "_0", "_1"));
+            Set(view, "m_tagPrefab", digTag);
             PlazaVisitorSpawner spawner = root.AddComponent<PlazaVisitorSpawner>();
             Set(spawner, "m_prefab", customer);
             Save(root, view, "Plaza");
@@ -807,6 +823,42 @@ namespace ZooTycoon.Editor
             Set(view, "m_clerkPrefab", customer);
             Set(view, "m_wombat", wombat);
             Save(root, view, "Fishing");
+        }
+
+        // 설계 47: 횟집. 굴 그림 · 사물 · 손님은 실행 중 RestaurantView가 Core 배치대로 그린다(수조 · 도마 · 탁자 · 접시는 아트방 그림)
+        static void BakeRestaurant(MarkerView digTag, SpriteAnimator poop, VisitorView customer)
+        {
+            GameObject root = new GameObject("Restaurant");
+            SpriteRenderer backdrop = Renderer(root.transform, "Backdrop", Load("wall_tile"), new Vector3(-k_BackdropHalf, k_BackdropHalf, 0f), k_BackdropOrder);
+            backdrop.drawMode = SpriteDrawMode.Tiled;
+            backdrop.tileMode = SpriteTileMode.Continuous;
+            backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
+            SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
+            SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), new Vector3(0f, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f), k_ArchOrder);
+            WombatView wombat = BakeWombat(root.transform, Vector3.zero);
+            Sprite[] timerFrames = new Sprite[k_TimerFrames];
+
+            for (int i = 0; i < k_TimerFrames; i++)
+            {
+                timerFrames[i] = Load(CounterTimerFrame(i));
+            }
+
+            RestaurantView view = root.AddComponent<RestaurantView>();
+            Set(view, "m_burrow", burrow);
+            SetBurrowTextures(view);
+            Set(view, "m_arch", arch.transform);
+            Set(view, "m_wombat", wombat);
+            Set(view, "m_visitorPrefab", customer);
+            Set(view, "m_digTagPrefab", digTag);
+            Set(view, "m_poopPrefab", poop);
+            SetArray(view, "m_poopFrames", Frames("poop", "_0", "_1"));
+            Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
+            Set(view, "m_tankSprite", AssetDatabase.LoadAssetAtPath<Sprite>(k_RestaurantDir + "tank.png"));
+            Set(view, "m_boardSprite", AssetDatabase.LoadAssetAtPath<Sprite>(k_RestaurantDir + "board.png"));
+            Set(view, "m_tableSprite", AssetDatabase.LoadAssetAtPath<Sprite>(k_RestaurantDir + "table.png"));
+            SetArray(view, "m_timerFrames", timerFrames);
+            SetArray(view, "m_fishSwim", FishSwims.Select(fish => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + fish + ".png")).ToArray());
+            Save(root, view, "Restaurant");
         }
 
         // 설계 39: 농장 층 재료 묶음 — [0] 빵집과 같은 흙(Shop), [1] 붉은 흙(Farm/*_red)

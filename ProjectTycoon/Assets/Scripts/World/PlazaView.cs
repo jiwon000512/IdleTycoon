@@ -51,6 +51,8 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteAnimator m_poopPrefab;
         [SerializeField] private Sprite[] m_poopFrames;
         [SerializeField] private float m_poopFrameRate = 2f;
+        [Tooltip("설계 47: 닫힌 가게 문 앞 값 표식(파기 표식과 같은 조각)")]
+        [SerializeField] private MarkerView m_tagPrefab;
 
         [Serializable]
         private struct DoorArt
@@ -60,7 +62,12 @@ namespace ZooTycoon.World
             public TextMeshPro Sign;
         }
 
+        // 설계 47: 닫힌 문 표식은 문 아래 바닥에서 이만큼 위(아치 앞), 닫힌 동안 아치 · 장식은 어둡게
+        private const float k_GateTagRise = 0.9f;
+        private static readonly Color k_Closed = new Color(0.45f, 0.45f, 0.45f, 1f);
+
         private readonly Dictionary<DecorationData, GameObject> m_decor = new Dictionary<DecorationData, GameObject>();
+        private readonly Dictionary<ShopGateInteractable, MarkerView> m_gateTags = new Dictionary<ShopGateInteractable, MarkerView>();
         private PlazaArea m_plaza;
         private TableSet m_tables;
         private FrameCache m_frames;
@@ -209,6 +216,45 @@ namespace ZooTycoon.World
             m_poopViews.Dispose();
         }
 
+        // 설계 47: 닫힌 가게 문 앞 표식(빵집 별이 모자라면 「★n 필요」, 닿았으면 「열기 값」). 열리면 지우고 아치를 밝힌다
+        private void SyncGateTags()
+        {
+            foreach (ShopGateInteractable gate in m_plaza.Gates)
+            {
+                if (!m_gateTags.TryGetValue(gate, out MarkerView tag))
+                {
+                    tag = Instantiate(m_tagPrefab, transform);
+                    tag.transform.localPosition = new Vector3(gate.Floor.X, gate.Floor.Y + k_GateTagRise, 0f);
+                    m_gateTags[gate] = tag;
+                    Tint(Art(gate.Shop.Id).Root, k_Closed);
+                }
+
+                RestaurantConfigTable config = gate.Shop.Config;
+                tag.Show(gate.Shop.StarLocked ? m_tables.Format("row_star_needed", config.OpenStar)
+                    : m_tables.Format("tag_open_shop", config.OpenCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
+            }
+
+            foreach (ShopGateInteractable gate in new List<ShopGateInteractable>(m_gateTags.Keys))
+            {
+                if (!m_plaza.Gates.Contains(gate))
+                {
+                    Destroy(m_gateTags[gate].gameObject);
+                    m_gateTags.Remove(gate);
+                    Transform door = Art(gate.Shop.Id).Root;
+                    Tint(door, Color.white);
+                    StartCoroutine(Fx.Bounce(door));
+                }
+            }
+        }
+
+        private static void Tint(Transform root, Color color)
+        {
+            foreach (SpriteRenderer renderer in root.GetComponentsInChildren<SpriteRenderer>())
+            {
+                renderer.color = color;
+            }
+        }
+
         // 장식을 Core 목록에 맞춘다: 없는 것은 만들고, 사라진 것은 지우고, 자리는 늘 다시 놓는다
         private void Build()
         {
@@ -273,6 +319,11 @@ namespace ZooTycoon.World
                 StartCoroutine(Fx.Bounce(Art(passage.To).Root));
             }
 
+            if (e.Area == m_plaza && m_plaza.Target is ShopGateInteractable gate && m_gateTags.TryGetValue(gate, out MarkerView tag))
+            {
+                tag.Bounce();
+            }
+
             if (e.Area == m_plaza && m_plaza.Target is StatueInteractable)
             {
                 StartCoroutine(Fx.Bounce(m_statue));
@@ -299,6 +350,8 @@ namespace ZooTycoon.World
             {
                 return;
             }
+
+            SyncGateTags();
 
             if (m_plaza.Statue.Blessing.Active == null)
             {

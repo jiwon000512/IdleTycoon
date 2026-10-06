@@ -10,7 +10,7 @@ namespace ZooTycoon.Core
     // 설계 18: 진열대·오븐·계산대는 자유 배치(밑변 가운데 좌표). 사고 옮기고 보관하는 규칙은 WombatArea.Placement. 굴 파기는 칸 그대로.
     // 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs. 설계 24 · 37 웜뱃 똥은 곳 공용 WombatArea.Poops.cs(손님 땅 둘레만 여기).
     // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기로 광장에 간다(없는 동안 계산이 멈춘다)
-    public sealed partial class BakeryArea : WombatArea
+    public sealed partial class BakeryArea : WombatArea, IShop
     {
         private readonly BakeryConfigTable m_config;
         private readonly ZooState m_state;
@@ -37,6 +37,8 @@ namespace ZooTycoon.Core
         public BreadTable NextBread => m_unlocked.Count < Tables.GetAll<BreadTable>().Count ? Tables.GetAll<BreadTable>()[m_unlocked.Count] : null;
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         public override string Id => k_Id;
+        // 설계 47: 빵집은 처음부터 열려 있다
+        public bool IsOpen => true;
         // 설계 25: 오븐이 재료를 꺼내는 창고
         public ZooState Wallet => m_state;
         // 설계 40: 별 평가(입구 칠판에서 부른다)

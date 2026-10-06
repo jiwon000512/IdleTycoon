@@ -53,6 +53,7 @@ namespace ZooTycoon.Game
             Add("똥 싸기(웜뱃 둘레)", new[] { 1, 3, 5 }.Select(n => Opt(n + "개", () => Poop(n))));
             Add("농장 층", new[] { Opt("지금 층 다 파기", DigFloor), Opt("아래층 열기(무료)", OpenLower) });
             Add("빵집 평가", new[] { Opt("바로 통과(별 +1)", () => PassEvaluation(1)), Opt("별 +5", () => PassEvaluation(5)) });
+            Add("횟집", new[] { Opt("열기(무료, 별이 모자라면 평가 통과)", OpenRestaurant) });
             // 설계 43: 오프라인 정산을 바로(팝업까지) · 저장
             Add("오프라인", new[] { (600d, "10분"), (3600d, "1시간"), (28800d, "8시간") }.Select(t => Opt(t.Item2, () => Offline(t.Item1, t.Item2))));
             Add("저장", new[] { Opt("지금 저장", () => { m_game.Save(); return "저장함"; }), Opt("저장 지우기(다음 플레이 새 게임)", () => { m_game.DeleteSave(); return "저장을 지웠다. 이번 플레이는 닫을 때 저장하지 않는다"; }) });
@@ -168,6 +169,27 @@ namespace ZooTycoon.Game
             }
 
             return "빵집 별 " + State.Stars.Count(BakeryArea.k_Id) + "개";
+        }
+
+        // 설계 47: 빵집 별을 openStar까지 채우고 값만큼 코인을 더해 광장 문 앞 시트로 연다(값 · 연출은 실제와 같다)
+        private string OpenRestaurant()
+        {
+            RestaurantArea restaurant = Mall.Restaurant;
+
+            if (restaurant.IsOpen)
+            {
+                return "횟집은 이미 열려 있다";
+            }
+
+            while (restaurant.StarLocked)
+            {
+                Mall.Bakery.Evaluation.PassNow();
+            }
+
+            State.AddCoins(restaurant.Config.OpenCost);
+            ShopGateInteractable gate = Mall.Plaza.Gates.First(g => g.Shop == restaurant);
+            Mall.Plaza.TryChoose(ActionTable.k_OpenShop, gate, null);
+            return "횟집 열림(빵집 별 " + State.Stars.Count(BakeryArea.k_Id) + "개)";
         }
 
         private string Poop(int count)

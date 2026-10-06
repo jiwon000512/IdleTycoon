@@ -2134,3 +2134,9 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: 7ca5ce5a7d8f6344eb407c4c20c9d5f4, type: 3}
   - Id: plot
     Sprite: {fileID: 21300000, guid: 14b6c43800a462541a581cd3861273a6, type: 3}
+  - Id: tank
+    Sprite: {fileID: 21300000, guid: b4791559d78148c984ca1dd6b0eec825, type: 3}
+  - Id: cutting_board
+    Sprite: {fileID: 21300000, guid: 61a1b61b1cb0469788e4477fe84598f0, type: 3}
+  - Id: dining_table
+    Sprite: {fileID: 21300000, guid: e1f4360e829042f9867e0bca9303253c, type: 3}

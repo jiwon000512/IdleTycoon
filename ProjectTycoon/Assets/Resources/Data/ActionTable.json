@@ -1,6 +1,6 @@
 {
   "table": "ActionTable",
-  "version": 22,
+  "version": 23,
   "notes": [
     "설계 09 v0.4 → 설계 13 v0.5: 웜뱃이 사물에서 하는 행동. 하는 일은 행동 클래스(ActionFactory 안 중첩 클래스, id로 만든다), 이 표는 어떻게 하는지(mode)와 버튼 아이콘. 어느 사물에서 되는지는 InteractableTable.json actions.",
     "mode: auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로 · manual = 상호작용 버튼(지금 할 수 있는 첫 manual 행동) · sheet = 시트의 한 줄(줄을 누르면 산다). take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
@@ -27,7 +27,8 @@
     "version 19 (2026-10-05, 설계 44 낚시 디펜스): 낚시터 버튼 여섯. summon(빈 말뚝에 코인으로 대 소환) · open_stake(잠긴 말뚝 열기) · carry(대 들기 · 놓기 · 맞바꾸기) · merge(같은 대 셋 합치기) · haul(붙잡힌 월척 털썩 · 대물을 감는 말뚝 곁에 앉기) · thump(물가에서 엉덩이 쿵) · choose_rod(낚은 대물 시트에서 특별한 대 하나 고르기). 아이콘은 그림이 올 때까지 지금 아이콘을 빌린다.",
     "version 20 (2026-10-05, 설계 45 물길 파기): dig_stream(manual, 아이콘 Actions/dig) — 낚시터 막다른 끝 앞에서 코인으로 물길 한 칸 더 파기(값은 월드 값 표식).",
     "version 21 (2026-10-05, 아트방 낚시 행동 아이콘 A 「물건 하나」): summon · merge · carry · haul · thump 아이콘을 빌린 것(plant · statue · talk · wake · till)에서 Actions/<같은 이름>으로. 원본 그대로라 18×18이 아니다(버튼은 그림 크기 × 4).",
-    "version 22 (2026-10-05, 설계 46 낚시터 개편): carry · merge · choose_rod 삭제. summon은 시트 칩(대 · 설치물을 골라 산다, 등급 뽑기), 여는 버튼 open_summon(manual, 소환 아이콘). stage_up(sheet) = 미끼 노점의 다음 단계 줄, hut_upgrade(sheet) = 미끼 노점 업그레이드 줄(불빛 · 도르래 · 소용돌이)."
+    "version 22 (2026-10-05, 설계 46 낚시터 개편): carry · merge · choose_rod 삭제. summon은 시트 칩(대 · 설치물을 골라 산다, 등급 뽑기), 여는 버튼 open_summon(manual, 소환 아이콘). stage_up(sheet) = 미끼 노점의 다음 단계 줄, hut_upgrade(sheet) = 미끼 노점 업그레이드 줄(불빛 · 도르래 · 소용돌이).",
+    "version 23 (2026-10-06, 설계 47 수조 횟집): fill_tank(수조 곁에 서면 창고 물고기를 담는다) · serve_dish(그 손님 탁자 곁에서 든 접시를 놓는다) auto, open_shop(닫힌 횟집 문 앞 시트 줄 — 빵집 ★openStar부터 openCost) sheet. 회 뜨기는 행동이 아니라 도마가 자리에서 돌리는 타이머. 같은 날 take_fish(빈손으로 수조 곁에서 손님이 잡아 둔 물고기를 손에) · place_fish(든 물고기를 빈 도마에) auto 추가(사용자 「웜뱃이 직접」)."
   ],
   "rows": [
     {
@@ -169,6 +170,31 @@
       "id": "dig_stream",
       "mode": "manual",
       "icon": "Sprites/Actions/dig"
+    },
+    {
+      "id": "fill_tank",
+      "mode": "auto",
+      "icon": null
+    },
+    {
+      "id": "serve_dish",
+      "mode": "auto",
+      "icon": null
+    },
+    {
+      "id": "open_shop",
+      "mode": "sheet",
+      "icon": null
+    },
+    {
+      "id": "take_fish",
+      "mode": "auto",
+      "icon": null
+    },
+    {
+      "id": "place_fish",
+      "mode": "auto",
+      "icon": null
     }
   ]
 }

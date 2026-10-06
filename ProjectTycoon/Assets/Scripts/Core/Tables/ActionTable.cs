@@ -52,6 +52,13 @@ namespace ZooTycoon.Core
         public const string k_HutUpgrade = "hut_upgrade";
         // 설계 45: 낚시터 막다른 끝 앞에서 물길 한 칸 더 파기
         public const string k_DigStream = "dig_stream";
+        // 설계 47 횟집: 수조 채우기 · 탁자에 접시 놓기(auto) · 광장 문 앞 횟집 열기(시트)
+        public const string k_FillTank = "fill_tank";
+        public const string k_ServeDish = "serve_dish";
+        public const string k_OpenShop = "open_shop";
+        // 설계 47 보강: 수조에서 물고기 꺼내기 · 도마에 놓기(auto)
+        public const string k_TakeFish = "take_fish";
+        public const string k_PlaceFish = "place_fish";
 
         public ActionMode Mode { get; set; }
         // 버튼 아이콘(Resources/ 기준, 확장자 없음). manual만, 나머지는 null

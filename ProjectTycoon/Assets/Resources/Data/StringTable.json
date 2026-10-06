@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 48,
+  "version": 49,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -51,7 +51,8 @@
     "version 45 (2026-10-05, 돌아왔을 때 팝업 A 「잠든 웜뱃」): offline_sales 「판매 +{0}」 → 「판매」 · offline_wages 「월급 -{0}」 → 「월급」(칩의 이름, 값은 따로). 유물 화면 B 「아이콘 소제목」: relic_collection 「모은 유물 {0}/{1}」 → 「모은 유물」, 개수는 relic_count 「{0}/{1}」(끼운 수 · 모은 수), relic_empty(「빈 칸」) 삭제(빈 칸은 「+」).",
     "version 46 (2026-10-05, 폴리싱): clerk_missing 「{0} 모자라요」 — 재료가 없어 못 굽는 오븐 점원의 머리 위 글자 말풍선({0} = 재료 이름).",
     "version 47 (2026-10-05, 사용자 「놓침은 표시하지 않기로 한다」): fishing_missed 삭제(놓침 팻말과 놓친 수를 없앰).",
-    "version 48 (2026-10-05, 설계 46 낚시터 개편): 대물 · 3택 1 · 특별한 대 · 소환 값 표식 문구 삭제(fishing_boss · fishing_boss_coming · fishing_boss_missed · rod_choice_* · rod_pulley · rod_lighthouse · rod_whirlpool · *_desc · tag_summon · inventory_source_fishing_boss), fishing_wave 「{0}단계」(물때 수 없음), 대 사기 · 미끼 노점 시트 문구 추가(sheet_stake_* · sheet_hut_* · row_stage_up*)."
+    "version 48 (2026-10-05, 설계 46 낚시터 개편): 대물 · 3택 1 · 특별한 대 · 소환 값 표식 문구 삭제(fishing_boss · fishing_boss_coming · fishing_boss_missed · rod_choice_* · rod_pulley · rod_lighthouse · rod_whirlpool · *_desc · tag_summon · inventory_source_fishing_boss), fishing_wave 「{0}단계」(물때 수 없음), 대 사기 · 미끼 노점 시트 문구 추가(sheet_stake_* · sheet_hut_* · row_stage_up*).",
+    "version 49 (2026-10-06, 설계 47 수조 횟집): 편집 카드 kind_tank · kind_cutting_board · kind_dining_table, 곳 이름 loc_restaurant · 문 간판 sign_restaurant, 시트(sheet_tank_* · sheet_board_* · sheet_gate_* · row_open_shop*), 닫힌 문 표식 tag_open_shop, 손님 결제 팝업은 coin_popup 그대로. ★5 마일스톤 milestone_next_shop 「다음 가게 문(준비 중)」 → 「횟집 문」."
   ],
   "rows": [
     {
@@ -876,7 +877,7 @@
     },
     {
       "id": "milestone_next_shop",
-      "ko": "다음 가게 문(준비 중)"
+      "ko": "횟집 문"
     },
     {
       "id": "tip_popup",
@@ -1069,6 +1070,62 @@
     {
       "id": "row_stage_up_effect",
       "ko": "물고기가 무거워지고 많아진다"
+    },
+    {
+      "id": "kind_tank",
+      "ko": "수조"
+    },
+    {
+      "id": "kind_cutting_board",
+      "ko": "도마"
+    },
+    {
+      "id": "kind_dining_table",
+      "ko": "탁자"
+    },
+    {
+      "id": "loc_restaurant",
+      "ko": "횟집"
+    },
+    {
+      "id": "sign_restaurant",
+      "ko": "횟집"
+    },
+    {
+      "id": "sheet_tank_title",
+      "ko": "수조"
+    },
+    {
+      "id": "sheet_tank_status",
+      "ko": "물고기 {0} / {1}"
+    },
+    {
+      "id": "sheet_board_title",
+      "ko": "도마"
+    },
+    {
+      "id": "sheet_board_status",
+      "ko": "주문 {0}"
+    },
+    {
+      "id": "sheet_gate_title",
+      "ko": "횟집"
+    },
+    {
+      "id": "sheet_gate_status",
+      "ko": "잡은 물고기를 회로 판다"
+    },
+    {
+      "id": "row_open_shop",
+      "ko": "횟집 열기"
+    },
+    {
+      "id": "row_open_shop_effect",
+      "ko": "광장 손님이 횟집에도 온다"
+    },
+    {
+      "id": "tag_open_shop",
+      "ko": "열기 {0}"
     }
   ]
 }

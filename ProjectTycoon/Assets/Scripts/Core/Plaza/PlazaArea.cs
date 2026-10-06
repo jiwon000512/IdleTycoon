@@ -27,10 +27,17 @@ namespace ZooTycoon.Core
         private readonly float m_questionRange;
         private double m_arrivalElapsed;
         private int m_nextVisitorId;
+        // 설계 47: 손님이 가는 가게(빵집 · 횟집). 연 가게를 번갈아 보낸다. 닫힌 가게 문 앞 표식
+        private readonly List<IShop> m_shops = new List<IShop>();
+        private readonly List<ShopGateInteractable> m_gates = new List<ShopGateInteractable>();
+        private int m_nextShop;
 
         public PlazaLayout Layout { get; }
         public BakeryArea Bakery { get; }
         public IReadOnlyList<PlazaVisitor> Visitors => m_visitors;
+        public IReadOnlyList<IShop> Shops => m_shops;
+        // 닫힌 가게 문 앞 표식(화면이 값 · 별 표식을 띄운다)
+        public IReadOnlyList<ShopGateInteractable> Gates => m_gates;
         public IReadOnlyList<DecorationData> Decor => m_decor;
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         public override string Id => k_Id;
@@ -62,8 +69,9 @@ namespace ZooTycoon.Core
         public MerchantInteractable MerchantThing { get; }
         // 손님이 계단으로 오는 간격(손님 축복 · 풍경이면 짧아진다)
         // 설계 40: 빵집 평가 중에는 손님(맛 평가단)이 rush배로 몰려온다
+        // 설계 47: 가게마다 손님이 따로 온다(간격을 연 가게 수로 나눈다)
         private double ArrivalSeconds => m_config.ArrivalSeconds / Wombat.Worker.Wallet.Scale(BlessingTable.k_Visitors)
-            / (Bakery.Evaluation.Running ? Bakery.Evaluation.Config.Rush : 1d);
+            / (Bakery.Evaluation.Running ? Bakery.Evaluation.Config.Rush : 1d) / Math.Max(1, m_shops.Count(shop => shop.IsOpen));
 
         // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다. 시작 장식은 PlazaDecorTable
         public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, random, wombat, bus)
@@ -71,6 +79,7 @@ namespace ZooTycoon.Core
             m_config = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
             m_random = random;
             Bakery = bakery;
+            m_shops.Add(bakery);
             Layout = new PlazaLayout(tables);
 
             foreach (PlazaDoor door in Layout.Doors)
@@ -86,6 +95,7 @@ namespace ZooTycoon.Core
             m_arrivalElapsed = m_config.ArrivalSeconds;
             m_questionRange = (float)tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
+            bus.Subscribe<Events.RestaurantVisitorLeft>(Bus_RestaurantVisitorLeft);
             bus.Subscribe<Events.ClerkWentOut>(Bus_ClerkWentOut);
             bus.Subscribe<Events.ClerkReturning>(Bus_ClerkReturning);
             bus.Subscribe<Events.ClerkFired>(Bus_ClerkFired);
@@ -157,6 +167,7 @@ namespace ZooTycoon.Core
         // 매 프레임(웜뱃 다음). 순서: 도착 → 손님 → 외출 점원 말풍선 → 행상
         protected override void TickArea(double dt)
         {
+            SyncGates();
             TickArrival(dt);
             TickVisitors(dt);
             TickClerkFigures();
@@ -329,7 +340,7 @@ namespace ZooTycoon.Core
             VisitorTable look = m_looks[RandomIndex(m_looks.Count)];
             int visits = m_config.VisitsMin + RandomIndex(m_config.VisitsMax - m_config.VisitsMin + 1);
             bool wantsShop = m_random.NextDouble() >= m_config.BrowseChance;
-            Spawn(new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, visits, wantsShop));
+            Spawn(new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, visits, wantsShop, null, null, NextShop()));
         }
 
         // 빵집에서 나간 손님은 문에서 톡 나와 0 ~ visitsMax곳 들르고 계단으로. 화나서 나갔으면 곧장
@@ -343,6 +354,63 @@ namespace ZooTycoon.Core
             BakeryVisitor customer = e.Visitor;
             int visits = customer.Angry ? 0 : RandomIndex(m_config.VisitsMax + 1);
             Spawn(new PlazaVisitor(++m_nextVisitorId, customer.Look, this, BakeryDoor.Inside, BakeryDoor.Floor, visits, false));
+        }
+
+        // 설계 47: 광장 문으로 이어진 새 가게. 닫힌 동안 문 통로는 막히고 문 앞에 여는 표식이 선다
+        internal void AddShop(RestaurantArea shop)
+        {
+            m_shops.Add(shop);
+            PlazaDoor door = Layout.DoorTo(shop.Id);
+
+            foreach (Interactable thing in Placed)
+            {
+                if (thing is PassageInteractable passage && passage.To == shop.Id)
+                {
+                    passage.Gate = () => shop.IsOpen;
+                }
+            }
+
+            ShopGateInteractable gate = new ShopGateInteractable(Tables.Get<InteractableTable>(ShopGateInteractable.k_Id), this, door.Floor, shop);
+            m_gates.Add(gate);
+            Placed.Add(gate);
+        }
+
+        // 열린 가게의 문 앞 표식은 뺀다(불러온 저장의 열린 가게도)
+        private void SyncGates()
+        {
+            for (int i = m_gates.Count - 1; i >= 0; i--)
+            {
+                if (m_gates[i].Shop.IsOpen)
+                {
+                    Placed.Remove(m_gates[i]);
+                    m_gates.RemoveAt(i);
+                }
+            }
+        }
+
+        // 연 가게를 번갈아
+        private IShop NextShop()
+        {
+            for (int tried = 0; tried < m_shops.Count; tried++)
+            {
+                IShop shop = m_shops[m_nextShop++ % m_shops.Count];
+
+                if (shop.IsOpen)
+                {
+                    return shop;
+                }
+            }
+
+            return Bakery;
+        }
+
+        // 횟집에서 나간 손님도 문에서 톡 나와 들를 곳을 들르고 계단으로
+        private void Bus_RestaurantVisitorLeft(Events.RestaurantVisitorLeft e)
+        {
+            RestaurantVisitor customer = e.Visitor;
+            PlazaDoor door = Layout.DoorTo(customer.Restaurant.Id);
+            int visits = customer.Angry ? 0 : RandomIndex(m_config.VisitsMax + 1);
+            Spawn(new PlazaVisitor(++m_nextVisitorId, customer.Look, this, door.Inside, door.Floor, visits, false, null, null, customer.Restaurant));
         }
 
         private void Spawn(PlazaVisitor visitor)

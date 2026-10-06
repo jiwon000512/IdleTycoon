@@ -41,6 +41,12 @@ namespace ZooTycoon.Core
                 Add(chars, row.Name);
             }
 
+            // 설계 47: 횟집 회 이름
+            foreach (DishTable row in tables.GetAll<DishTable>())
+            {
+                Add(chars, row.Name);
+            }
+
             // 설계 26: 창고 화면의 재료 이름 · 설명
             foreach (ItemTable row in tables.GetAll<ItemTable>())
             {

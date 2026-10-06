@@ -83,6 +83,9 @@ namespace ZooTycoon.Core
                         t.Remaining = oven.Remaining;
                         t.Ready = oven.Ready;
                         break;
+                    case TankInteractable tank when tank.Stock > 0:
+                        t.Fish = tank.Restaurant.Dishes.Where(dish => tank.CountOf(dish) > 0).ToDictionary(dish => dish.Id, tank.CountOf);
+                        break;
                 }
 
                 save.Things.Add(t);
@@ -134,6 +137,10 @@ namespace ZooTycoon.Core
                     break;
                 case PlazaArea plaza:
                     save.MerchantUntil = plaza.Merchant.UntilNext;
+                    break;
+                case RestaurantArea restaurant:
+                    save.Open = restaurant.IsOpen;
+                    save.Cells = CaptureCells(restaurant.Grid);
                     break;
                 case FishingArea fishing:
                     save.Fishing = new FishingSave
@@ -196,6 +203,14 @@ namespace ZooTycoon.Core
                 case PlazaArea plaza:
                     plaza.Merchant.Restore(save.MerchantUntil);
                     break;
+                case RestaurantArea restaurant:
+                    if (save.Open)
+                    {
+                        restaurant.RestoreOpen();
+                    }
+
+                    DigCells(restaurant.Grid, save.Cells);
+                    break;
                 case FishingArea fishing when save.Fishing != null:
                     FishingSave f = save.Fishing;
                     fishing.Restore(f.Stage, f.Summons, f.Upgrades, f.Dug,
@@ -220,6 +235,16 @@ namespace ZooTycoon.Core
                         break;
                     case OvenInteractable oven:
                         oven.Restore(Find<BreadTable>(tables, t.Bread), Find<BreadTable>(tables, t.LastBread), t.Remaining, t.Ready);
+                        break;
+                    case TankInteractable tank when t.Fish != null:
+                        foreach (KeyValuePair<string, int> pair in t.Fish)
+                        {
+                            if (Find<DishTable>(tables, pair.Key) is DishTable dish)
+                            {
+                                tank.Restore(dish, pair.Value);
+                            }
+                        }
+
                         break;
                 }
             }

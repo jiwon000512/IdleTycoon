@@ -66,6 +66,10 @@ namespace ZooTycoon.Core
         // 낚시터 단계 올림(미끼 노점) · 소용돌이가 맨 앞 물고기를 되돌림
         public const string k_StageUp = "stage_up";
         public const string k_Whirl = "whirl";
+        // 설계 47 횟집: 도마에서 회를 뜨는 동안 칼질마다 · 다 떠서 접시가 손에 · 광장 문 앞에서 처음 엶
+        public const string k_Cut = "cut";
+        public const string k_Dish = "dish";
+        public const string k_ShopOpen = "shop_open";
 
         // 코드가 부르는 효과음 전부(표에 모두 있어야 한다)
         public static readonly string[] Ids =
@@ -121,6 +125,9 @@ namespace ZooTycoon.Core
             k_RodReveal + 3,
             k_StageUp,
             k_Whirl,
+            k_Cut,
+            k_Dish,
+            k_ShopOpen,
         };
 
         // Resources/ 기준, 확장자 없음
