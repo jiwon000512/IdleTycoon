@@ -21,6 +21,7 @@ description: 커밋 묶기 · 표 버전 올리기 · 포트폴리오 숫자 · 
 - `editor-guard.sh`(PreToolUse): 에디터 차례 잠금. unity-editor 스킬 「에디터 차례 잠금」.
 - `fast-gate.sh`(PostToolUse 표시 · Stop 검사): Core · Data · 테스트 .cs를 고친 턴은 끝날 때 빠른 테스트.
 - `day-check.sh`(UserPromptSubmit): 날짜가 바뀐 첫 명령에 아침 정리 · 넘김 남은 것을 알린다(새벽 0~5시는 전날).
+- `artifact-delete-ok.sh`(PreToolUse `Artifact`, 등록은 저장소 밖 `.claude/settings.local.json`): 아티팩트 삭제는 호출마다 앱이 묻는다(일괄 삭제 · 기본값 설정 없음, 2026-10-06 사용자 「한번에 물어보면 안되나」). 지울 목록을 AskUserQuestion으로 한 번만 묻고 승인된 주소를 `.claude/state/artifact-delete-ok.txt`에 한 줄씩 적으면 그 주소의 삭제만 창 없이 지나간다. 다 지우면 파일을 지운다.
 - `Tools/githooks/pre-commit`(`git config core.hooksPath Tools/githooks`): 늘 읽는 문서 12KB 넘으면 막고, 테스트 단언이 빠지면 경고.
 
 ## 커밋 순서

@@ -9,7 +9,7 @@ last=$(cat "$STATE/day-$sid" 2>/dev/null || cat "$STATE/last-day" 2>/dev/null)
 echo "$today" > "$STATE/day-$sid"
 echo "$today" > "$STATE/last-day"
 [ -n "$last" ] && [ "$last" != "$today" ] || exit 0
-echo "날짜가 바뀌었다($last → $today): 이 명령을 하기 전에 workflow.md 아티팩트 절의 아침 정리(어제 「(완료)」 아티팩트 지우기 · 그 크롬 탭 닫기)를 한다."
+echo "날짜가 바뀌었다($last → $today): 이 명령을 하기 전에 workflow.md 아티팩트 절의 아침 정리(어제 「(완료)」 아티팩트 지우기 · 그 크롬 탭 닫기)를 한다. 지울 목록은 AskUserQuestion으로 한 번만 묻고, 승인된 주소를 .claude/state/artifact-delete-ok.txt에 한 줄씩 적은 뒤 지운다(훅이 그 주소만 창 없이 허용, 끝나면 파일 삭제)."
 pending=$(python3 "$STATE/../../Tools/handoff.py" list 2>/dev/null)
 [ -n "$pending" ] && echo "넘김 목록에 남은 것: $pending"
 exit 0
