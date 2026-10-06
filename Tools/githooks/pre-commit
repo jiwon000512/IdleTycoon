@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# 커밋 전 검사(자동화 F). 설치: git config core.hooksPath Tools/githooks
+ROOT="$(git rev-parse --show-toplevel)"
+# 늘 읽는 문서 합계 12KB(workflow.md 문서 절)
+size=$(cat "$ROOT/CLAUDE.md" "$ROOT/.claude/rules/workflow.md" "$ROOT/기획/진행상황.md" | wc -c)
+if [ "$size" -gt 12288 ]; then
+  echo "늘 읽는 문서가 ${size}바이트로 12KB를 넘는다: CLAUDE.md · workflow.md · 진행상황.md를 줄인다" >&2
+  exit 1
+fi
+# 테스트에서 빠진 단언 · 케이스(경고만): 에이전트가 테스트를 맞춰 고친 흔적
+diff=$(git diff --cached -U0 -- 'ProjectTycoon/Assets/Tests/*.cs')
+removed=$(printf '%s\n' "$diff" | grep -cE '^-[^-].*(Assert\.|\[Test)')
+added=$(printf '%s\n' "$diff" | grep -cE '^\+[^+].*(Assert\.|\[Test)')
+if [ "$removed" -gt "$added" ]; then
+  echo "경고: 테스트 단언 · 케이스가 ${removed}줄 빠지고 ${added}줄 들어왔다. 일부러면 커밋 메시지에 까닭을 적는다" >&2
+fi
+exit 0

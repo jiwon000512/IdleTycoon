@@ -18,6 +18,23 @@ description: 이 프로젝트(ProjectTycoon)의 Unity 에디터를 CLI로 다룰
 | 플레이 끝 + 임시 캡처 삭제 | `bash .claude/skills/unity-editor/scripts/stop.sh` |
 | 에디터 열기 / 연결 확인 | `unity projects open ProjectTycoon` / `unity pipeline list` |
 | 명령 목록 | `unity list` |
+| 에디터 잠금 보기 · 기다리기 | `bash .claude/skills/unity-editor/scripts/lock.sh [show \| wait \| take <일> \| free \| force]` |
+| Unity 밖 빠른 테스트(에디터 안 잡음, 10초) | `bash Tools/fast_test.sh [--filter Name~Restaurant]` |
+| 검증 플레이 한 줄 명령(플레이 중) | `bash .claude/skills/unity-editor/scripts/dev.sh status \| cheats \| cheat <줄> <버튼> \| near <사물> \| rect <사물> \| wait '<식>' \| scale <배속>` |
+| 캡처 자르기 · 나란히 | `<Windows Python> .claude/skills/unity-editor/scripts/shots.py crop <in> <out> $(dev.sh rect <사물>)` · `shots.py pair <out> <a> <b>` |
+
+## 에디터 차례 잠금
+
+두 방이 에디터 하나를 나눠 쓴다. 메시지로 「쓴다 / 비었음」을 주고받지 않고 잠금(`.claude/editor.lock`)이 대신한다.
+
+- `play.sh`가 잡고 `stop.sh`가 놓는다. `compile.sh` · `test.sh`는 잡았다 끝나면 놓는다. 다른 방이 잡고 있으면 스크립트가 최대 5분 기다린다.
+- 날 `unity cmd`(eval · run_script · menu 등)는 훅(`.claude/helpers/editor-guard.sh`)이 짧은 잠금을 잡고, 다른 방 것이면 막는다. 읽기만 하는 `editor_status` · `console` 등은 통과.
+- 한 탭 팀(리드 = 프로그래밍방, 팀원 art = 아트방): 팀원 · 서브에이전트의 도구 호출은 `session_id`가 리드와 같고 `agent_type`이 붙어, 훅은 `agent_type`을 방 이름으로 쓴다. 스크립트는 셸의 세션 ID로 잠금을 잡으므로 팀원은 앞에 `ME=<agent_type>`을 붙여 부른다(`ME=art-room bash …/play.sh`). 안 붙이면 훅이 막는다.
+- 누구든 플레이 잠금을 잡고 있으면 `Assets/**/*.cs` 편집도 훅이 막는다. 그동안은 다른 일을 하거나 `lock.sh wait`.
+- 오래 손대지 않은 잠금은 버려진 것으로 본다(cmd 2분 · play 20분, 플레이 잠금인데 에디터가 멈춰 있으면 1분). 굽기처럼 스크립트 밖에서 오래 쓸 때는 `lock.sh take bake` → 끝나면 `free`.
+- 한계: .cs 차단은 Edit · Write만 본다. 셸로 파일을 쓰면 뚫리니 플레이 중에는 셸로도 .cs를 쓰지 않는다.
+- 이 세션이 Core · Data · 테스트 .cs를 고친 턴은 끝날 때 훅(`.claude/helpers/fast-gate.sh`)이 빠른 테스트를 돌리고, 실패면 첫 실패를 돌려줘 계속 고치게 한다(세 번까지). 통과했는데 테스트 수가 줄면 한 번 막는다.
+- 빠른 테스트는 Core · Data 규칙 확인용이다. 폰트 · UI · 통계 대조(`Settle_MatchesSimulation`)는 빠지니 마무리 검증은 `test.sh`로.
 
 ## 명령 문법
 
@@ -35,6 +52,8 @@ description: 이 프로젝트(ProjectTycoon)의 Unity 에디터를 CLI로 다룰
 
 ## 플레이 검증
 
+- `play.sh`는 늘 저장을 끄고(`GameManager.PauseSave`) 돌아왔을 때 · 소식지 팝업을 닫는다. 판정은 상태 값(`dev.sh status` · `wait`)으로 먼저 하고, 캡처는 증거 · 사람용이다.
+
 - 게임 뷰는 가로 1280×720이라 `--source screen` 캡처는 가로로 나오고 멈춘 프레임을 줄 때가 있다. **세로 UI 캡처는 캔버스를 카메라로 돌린 뒤 `--source camera`**로 찍는다(`play.sh`가 `UiCamera.cs`로 해 준다. 팝업을 새로 연 뒤 캔버스가 바뀌면 `UiCamera.Run`을 다시).
 - 버튼은 `onClick.Invoke()`, 눌림은 `ExecuteEvents.Execute(..., pointerDownHandler)`로 흉내 낸다. private 필드는 리플렉션으로.
 - 사용자가 직접 확인할 때는 에디터 전용 치트 창을 알려 준다(플레이 중 `, `Game/CheatConsole`, 치트 추가는 `Add` 한 줄).
@@ -47,6 +66,8 @@ description: 이 프로젝트(ProjectTycoon)의 Unity 에디터를 CLI로 다룰
 
 - **에셋 조작(삭제·임포트·굽기·프리팹 저장)과 `recompile`·`run_tests`는 `playMode=stopped`에서만.** 플레이 중 굽기는 실행 중 값이 프리팹에 저장되고, 플레이 중 재컴파일은 도메인 리로드로 오류가 난다. 사용자가 작업을 요청한 상태면 `editor_stop`으로 끄고 진행한다.
 - 플레이 종료 직후 바로 에셋을 지우면 에디터가 멈춘 적이 있다 → `stopped`를 확인하고 2초 뒤에.
+- 플레이 진입 · 종료를 짧은 간격으로 되풀이하지 않는다(「Reloading Domain」에서 멈추는 Unity 버그 #20062).
+- 타임아웃 난 `unity` 명령은 그대로 다시 보내지 않는다. 효과가 이미 적용됐을 수 있으니 상태부터 본다.
 - `run_tests`는 한 번만 부른다. 같은 명령을 겹쳐 부르면 테스트 러너가 깨진다.
 - 플레이 중에 스크립트를 고치면 다음 `run_script` 때 다시 컴파일돼 도메인이 다시 읽히고 `GameManager.Instance`가 빈다(화면만 남음, 2026-10-05). 스크립트는 플레이를 끈 뒤 고친다. 플레이 중의 「컴파일 0」은 새 코드를 검사한 결과가 아니다.
 - 플레이는 30초마다 `save.json`(persistentDataPath)에 저장한다. 코인 · 단계를 바꾸는 검증 스크립트는 첫 줄에서 `GameManager`의 `m_saveOff`를 리플렉션으로 켠다(2026-10-06 코인 +1천만이 저장에 남아 손으로 되돌림).

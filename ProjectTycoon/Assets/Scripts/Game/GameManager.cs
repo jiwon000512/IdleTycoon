@@ -98,6 +98,12 @@ namespace ZooTycoon.Game
         public void DeleteSave()
         {
             DataManager.Instance.Delete(k_SaveKey);
+            PauseSave();
+        }
+
+        // 이번 플레이는 저장하지 않는다(검증 플레이 · 저장 지우기)
+        public void PauseSave()
+        {
             m_saveOff = true;
         }
 

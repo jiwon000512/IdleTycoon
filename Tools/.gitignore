@@ -1,0 +1,3 @@
+FastTests/bin/
+FastTests/obj/
+!FastTests/FastTests.csproj

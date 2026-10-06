@@ -267,6 +267,26 @@ namespace ZooTycoon.Game
             m_result = option.Run();
             Debug.Log("[치트] " + cheat.Name + " " + option.Label + " → " + m_result);
         }
+
+        // 검증 플레이 도구(Editor DevPlay)가 셸에서 부른다: 줄 이름 · 버튼 글로 실행
+        public string Run(string name, string label)
+        {
+            Cheat cheat = m_cheats.FirstOrDefault(c => c.Name == name);
+            Option option = cheat?.Options.FirstOrDefault(o => o.Label == label);
+
+            if (option == null)
+            {
+                return "없는 치트: " + name + " / " + label;
+            }
+
+            Run(cheat, option);
+            return m_result;
+        }
+
+        public string List()
+        {
+            return string.Join("\n", m_cheats.Select(c => c.Name + ": " + string.Join(" | ", c.Options.Select(o => o.Label))));
+        }
     }
 }
 #endif

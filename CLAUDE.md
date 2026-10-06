@@ -22,7 +22,7 @@
 | 그림 리소스 만들기 | 스킬 `asset-codex` | 그림을 만들 때 |
 | BGM·효과음 만들기 | 스킬 `bgm` | 소리를 만들 때 |
 | 연출·완성도 점검 | 스킬 `polish-review` | 사용자가 부를 때 |
-| 기획서(결정·숫자·범위의 단일 출처) | 아티팩트 「사업가 웜뱃」 https://claude.ai/artifact/TQaPKFEcLafuVm4WNitbGv | 기획을 다룰 때 |
+| 기획서(결정·숫자·범위의 단일 출처) | `기획/기획서.html` → 아티팩트 「사업가 웜뱃」(스킬 `plan-doc`) | 기획을 다룰 때 |
 | 상세 참조 | `기획/코드-규칙.md` · `프로그래밍-규약.md` · `데이터-테이블-규칙.md` | 요약으로 모자랄 때 |
 | 기록 | `기획/포트폴리오.md` · `재미-프로필.md` · `기획/보관/`(폐기 문서) | 필요할 때만 |
 
@@ -56,11 +56,7 @@ Tycoon/
 | 공통 기반 | GameKit UPM 패키지 `com.jiwon.gamekit`(저장소 `C:\project\UnityGameKit`, GitHub jiwon000512/UnityGameKit): MonoSingleton·EventBus·TableSet·UI·Pool·Sound |
 | 데이터 | JSON 단일 원본 + Newtonsoft.Json. ScriptableObject 사용 안 함 |
 | 숫자 | `double` + K/M/B 표기. 시뮬은 매 프레임(`Mall.Tick`) |
-| 저장 | 아직 없음. 계획은 로컬 JSON 1파일, 마지막 저장 시각 UTC |
+| 저장 | 로컬 JSON 1파일 + 오프라인 정산 |
 | 빌드 | 목표 Android IL2CPP ARM64(지금 타깃은 Standalone). 제품명·회사명·패키지 ID는 임시 |
 | 패키지 | `com.unity.pipeline`은 Unity CLI 연결용이라 지우지 않는다. `com.unity.nuget.newtonsoft-json` 3.2.2 |
 | 리소스 생성 | 그림은 Codex CLI, 소리는 로컬 ACE-Step 1.5(`C:\project\ACE-Step-1.5`) |
-
-## 개발 순서
-
-빵집 굴의 메인 루프(굽기 → 진열 → 계산 → 재투자·점원)를 다듬은 뒤 벽 → 오프라인·저장 → 두 번째 가게 순서. 우선순위는 기획서를 따른다.

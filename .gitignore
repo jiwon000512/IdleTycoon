@@ -60,3 +60,7 @@ desktop.ini
 
 # 파이썬 캐시(Source~ 그림 스크립트를 돌리면 생긴다)
 __pycache__/
+
+# 에디터 차례 잠금 · 빠른 테스트 게이트 표시(.claude/helpers)
+.claude/editor.lock/
+.claude/state/
