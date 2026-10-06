@@ -22,7 +22,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 물고기가 물길 막다른 끝에서 빠져나갔다(놓침 팻말 · 물보라). 대물이면 BossResolved도 온다
+        // 물고기가 물길 막다른 끝에서 빠져나갔다(물보라 · 소리)
         public readonly struct FishEscaped
         {
             public readonly FishingArea Fishing;
@@ -35,20 +35,29 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 물때가 시작됐다(팻말 튐 · 대물이면 「대물이 온다!」)
+        // 물때가 시작됐다(팻말 튐)
         public readonly struct WaveStarted
         {
             public readonly FishingArea Fishing;
-            public readonly bool Boss;
 
-            public WaveStarted(FishingArea fishing, bool boss)
+            public WaveStarted(FishingArea fishing)
             {
                 Fishing = fishing;
-                Boss = boss;
             }
         }
 
-        // 빈 말뚝에 대를 소환했다(등급마다 다른 반짝임 · 드묾 · 전설 글)
+        // 설계 46: 미끼 노점에서 단계를 올렸다(팻말 · 곳 팻말 「N단계!」)
+        public readonly struct StageRaised
+        {
+            public readonly FishingArea Fishing;
+
+            public StageRaised(FishingArea fishing)
+            {
+                Fishing = fishing;
+            }
+        }
+
+        // 설계 46: 말뚝에 대 · 설치물을 샀다(등급 뽑기 연출 · 드묾 · 전설 글). 옛 대가 있었으면 사라졌다
         public readonly struct RodSummoned
         {
             public readonly StakeInteractable Stake;
@@ -59,15 +68,17 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 같은 대 셋을 합쳤다: From = 비워진 짝 말뚝들(대가 Into로 날아간다)
-        public readonly struct RodsMerged
+        // 설계 46: 소용돌이(미끼 노점 업그레이드)가 맨 앞 물고기를 From에서 지금 자리로 되돌렸다(물 소용돌이 · 미끄러짐)
+        public readonly struct FishWhirled
         {
-            public readonly StakeInteractable Into;
-            public readonly StakeInteractable[] From;
+            public readonly FishingArea Fishing;
+            public readonly Fish Fish;
+            public readonly float From;
 
-            public RodsMerged(StakeInteractable into, StakeInteractable[] from)
+            public FishWhirled(FishingArea fishing, Fish fish, float from)
             {
-                Into = into;
+                Fishing = fishing;
+                Fish = fish;
                 From = from;
             }
         }
@@ -97,30 +108,6 @@ namespace ZooTycoon.Core
             {
                 Fishing = fishing;
                 At = at;
-            }
-        }
-
-        // 대물이 끝났다(낚았으면 다음 단계, 놓쳤으면 같은 단계 물때 1부터)
-        public readonly struct BossResolved
-        {
-            public readonly FishingArea Fishing;
-            public readonly bool Caught;
-
-            public BossResolved(FishingArea fishing, bool caught)
-            {
-                Fishing = fishing;
-                Caught = caught;
-            }
-        }
-
-        // 대물 뱃속 3택 1이 나왔다(팝업)
-        public readonly struct RodChoiceReady
-        {
-            public readonly FishingArea Fishing;
-
-            public RodChoiceReady(FishingArea fishing)
-            {
-                Fishing = fishing;
             }
         }
     }

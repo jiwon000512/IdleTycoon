@@ -42,14 +42,14 @@ namespace ZooTycoon.Core
         public const string k_Statue = "statue";
         // 설계 34: 광장 행상에게 말 걸기(버튼, 인사 뒤 뽑기 팝업)
         public const string k_Talk = "talk";
-        // 설계 44: 낚시터 말뚝(소환 · 열기 · 들기/놓기 · 합치기 · 털썩)과 물가(엉덩이 쿵)
+        // 설계 44 · 46: 낚시터 말뚝(대 사기 시트 열기 · 대 사기 칩 · 열기 · 월척 털썩)과 물가(엉덩이 쿵), 미끼 노점(단계 올리기 · 업그레이드 줄)
+        public const string k_OpenSummon = "open_summon";
         public const string k_Summon = "summon";
         public const string k_OpenStake = "open_stake";
-        public const string k_Carry = "carry";
-        public const string k_Merge = "merge";
         public const string k_Haul = "haul";
         public const string k_Thump = "thump";
-        public const string k_ChooseRod = "choose_rod";
+        public const string k_StageUp = "stage_up";
+        public const string k_HutUpgrade = "hut_upgrade";
         // 설계 45: 낚시터 막다른 끝 앞에서 물길 한 칸 더 파기
         public const string k_DigStream = "dig_stream";
 

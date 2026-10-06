@@ -6,14 +6,14 @@ namespace ZooTycoon.Core
 {
     // 설계 44: 물길 위 물고기와 대의 감기(디펜스 한 판). 낚시터가 매 프레임 돌리고, 오프라인은 같은 판으로 물때 하나를 따로 돌려 잰다(웜뱃 없이).
     // 대는 사거리 안에서 가장 멀리 내려간 물고기를 감는다. 월척은 처음 감는 대가 붙잡아 멈추고(그 대는 다른 것을 못 감는다), 털썩해야 낚인다.
-    // 미끼는 사거리 안 물고기를 느리게, 쿵은 둘레 물고기를 잠깐 멈추게, 소용돌이 통발은 사거리 안 맨 앞 물고기를 사거리만큼 되돌린다
+    // 미끼는 사거리 안 물고기를 느리게, 쿵은 둘레 물고기를 잠깐 멈추게 한다. 설계 46 미끼 노점 업그레이드: 도르래면 붙잡은 월척을 멈춘 채 감아 올리고,
+    // 소용돌이면 간격마다 물길 맨 앞 물고기를 whirlDistance만큼 되돌린다
     internal sealed class FishingSim
     {
         private readonly FishingArea m_area;
-        private readonly bool m_live;
         private readonly List<Fish> m_fish = new List<Fish>();
         private readonly Dictionary<StakeInteractable, Fish> m_hooks = new Dictionary<StakeInteractable, Fish>();
-        private readonly Dictionary<StakeInteractable, double> m_whirls = new Dictionary<StakeInteractable, double>();
+        private double m_whirlLeft;
         // 말뚝마다 이번 틱에 감은 물고기(화면의 낚싯줄)
         private readonly Dictionary<StakeInteractable, Fish> m_targets = new Dictionary<StakeInteractable, Fish>();
 
@@ -22,12 +22,12 @@ namespace ZooTycoon.Core
         public event Action<Fish, StakeInteractable> Caught;
         public event Action<Fish> Escaped;
         public event Action<StakeInteractable> Hooked;
+        // 소용돌이가 되돌렸다(물고기 · 되돌리기 전 자리)
+        public event Action<Fish, float> Whirled;
 
-        // live: 웜뱃이 앉은 말뚝을 센다(오프라인 판정은 웜뱃 없이)
-        public FishingSim(FishingArea area, bool live)
+        public FishingSim(FishingArea area)
         {
             m_area = area;
-            m_live = live;
         }
 
         public Fish HookOf(StakeInteractable stake)
@@ -50,13 +50,77 @@ namespace ZooTycoon.Core
         public void Tick(double dt)
         {
             MoveFish(dt);
+            TickWhirl(dt);
 
             foreach (StakeInteractable stake in m_area.Stakes)
             {
-                if (stake.Rod != null && !m_hooks.ContainsKey(stake))
+                if (stake.Rod == null)
+                {
+                    continue;
+                }
+
+                if (m_hooks.TryGetValue(stake, out Fish hooked))
+                {
+                    ReelHooked(stake, hooked, dt);
+                }
+                else
                 {
                     TickRod(stake, dt);
                 }
+            }
+        }
+
+        // 도르래: 붙잡은 월척을 멈춘 채 감는다(다 감으면 그 말뚝에서 낚인다)
+        private void ReelHooked(StakeInteractable stake, Fish fish, double dt)
+        {
+            double scale = m_area.TrophyReelScale;
+
+            if (scale <= 0d)
+            {
+                return;
+            }
+
+            fish.Reeled += m_area.ReelOf(stake, fish) * scale * dt;
+
+            if (fish.Reeled >= fish.Weight)
+            {
+                Land(stake);
+            }
+        }
+
+        // 소용돌이: 간격마다 물길 맨 앞(막다른 끝에 가장 가까운) 헤엄치는 물고기를 되돌린다
+        private void TickWhirl(double dt)
+        {
+            double interval = m_area.WhirlInterval;
+
+            if (interval <= 0d)
+            {
+                return;
+            }
+
+            m_whirlLeft = Math.Min(m_whirlLeft, interval) - dt;
+
+            if (m_whirlLeft > 0d)
+            {
+                return;
+            }
+
+            m_whirlLeft = interval;
+            Fish front = null;
+
+            foreach (Fish fish in m_fish)
+            {
+                if (fish.HookedBy == null && (front == null || fish.S > front.S))
+                {
+                    front = fish;
+                }
+            }
+
+            if (front != null)
+            {
+                float from = front.S;
+                front.S = Math.Max(0f, front.S - (float)m_area.Config.WhirlDistance);
+                Whirled?.Invoke(front, from);
             }
         }
 
@@ -142,21 +206,7 @@ namespace ZooTycoon.Core
 
         private void TickRod(StakeInteractable stake, double dt)
         {
-            float range = m_area.RangeOf(stake);
-            Fish target = Frontmost(stake, range);
-
-            if (stake.Rod.Special == RodTable.k_Whirlpool && target != null)
-            {
-                double left = (m_whirls.TryGetValue(stake, out double w) ? w : stake.Rod.Effect) - dt;
-
-                if (left <= 0d && !target.Boss)
-                {
-                    target.S = Math.Max(0f, target.S - range);
-                    left = stake.Rod.Effect;
-                }
-
-                m_whirls[stake] = left;
-            }
+            Fish target = Frontmost(stake, m_area.RangeOf(stake));
 
             if (target == null)
             {
@@ -174,7 +224,7 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            target.Reeled += m_area.ReelOf(stake, target, m_live) * dt;
+            target.Reeled += m_area.ReelOf(stake, target) * dt;
 
             if (target.Reeled >= target.Weight)
             {

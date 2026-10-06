@@ -78,8 +78,6 @@ namespace ZooTycoon.World
         // 든 빵 층 순서: 몸(0) 앞 51~, 뒷모습이면 몸 뒤 -10~
         private const int k_CarryFrontOrder = 51;
         private const int k_CarryBackOrder = -10;
-        // 설계 44 든 낚싯대: 앞 · 뒷모습은 손 자리에서 몸 오른쪽 끝으로(가슴 앞이면 얼굴 · 배를 가린다)
-        private const float k_HeldSide = 0.5f;
         // 걷는 동안 발밑에서 이는 먼지(k_DustGap초마다 알갱이 k_DustCount개가 천천히 떠오른다)
         private static readonly Color k_Dust = new Color32(0xC8, 0xA8, 0x8C, 255);
         private const float k_DustGap = 0.2f;
@@ -100,12 +98,6 @@ namespace ZooTycoon.World
         private int m_shownCarry;
         private int m_lastCount;
         private Coroutine m_saying;
-        // 앉아 있는 동안 도는 한 칸(털썩 시트의 앉음 칸) · 앞 프레임에 앉아 있었나(앉기 시작에 털썩을 한 번)
-        private Sprite[] m_frontSeated;
-        private Sprite[] m_backSeated;
-        private Sprite[] m_sideSeated;
-        private bool m_wasSitting;
-        private SpriteRenderer m_held;
         private float m_blinkIn;
         private float m_fidgetIn;
         private Sprite m_square;
@@ -124,10 +116,6 @@ namespace ZooTycoon.World
             m_bubble.enabled = false;
             Bubbles.HideSay(m_say, m_sayTail, m_sayText);
             m_fidgetIn = m_fidgetEvery.x;
-            // 설계 44: 앉아 있는 동안은 털썩 시트의 앉음 칸
-            m_frontSeated = new[] { m_frontSit[1] };
-            m_backSeated = new[] { m_backSit[1] };
-            m_sideSeated = new[] { m_sideSit[1] };
         }
 
         // 설계 22: 대화 글자 말풍선
@@ -242,31 +230,19 @@ namespace ZooTycoon.World
             }
 
             Sprite[] frames;
-            bool sitting = !moving && m_area.Wombat.Sitting;
 
             switch (facing)
             {
                 case Facing.Up:
-                    frames = moving ? m_backWalk : sitting ? m_backSeated : m_backIdle;
+                    frames = moving ? m_backWalk : m_backIdle;
                     break;
                 case Facing.Down:
-                    frames = moving ? m_frontWalk : sitting ? m_frontSeated : m_frontIdle;
+                    frames = moving ? m_frontWalk : m_frontIdle;
                     break;
                 default:
-                    frames = moving ? m_sideWalk : sitting ? m_sideSeated : m_sideIdle;
+                    frames = moving ? m_sideWalk : m_sideIdle;
                     break;
             }
-
-            // 앉기 시작: 털썩(앉는 중 → 앉음)을 한 번 끼운 뒤 앉음 칸으로
-            if (sitting && !m_wasSitting)
-            {
-                SoundManager.Instance.Play(SoundTable.k_Haul);
-                m_playing = frames;
-                m_animator.Play(frames, m_idleSeconds);
-                m_animator.Interject(Sequence(SitSheet(), k_SitDown, k_ActFrameSeconds), k_ActFrameSeconds, true);
-            }
-
-            m_wasSitting = sitting;
 
             m_renderer.flipX = facing == Facing.Left;
             // 든 빵도 몸과 같이 오르내린다(걷기 · 숨쉬기 프레임만, 딴짓은 몸 높이가 그대로)
@@ -277,14 +253,6 @@ namespace ZooTycoon.World
             for (int i = 0; i < m_carry.Length; i++)
             {
                 m_carry[i].sortingOrder = Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder) + i;
-            }
-
-            if (m_held != null)
-            {
-                bool side = facing == Facing.Left || facing == Facing.Right;
-                m_held.transform.localPosition = side ? Vector3.zero : new Vector3(k_HeldSide, 0f, 0f);
-                m_held.flipX = facing == Facing.Left;
-                m_held.sortingOrder = Fx.CarryOrder(facing, k_CarryFrontOrder, k_CarryBackOrder);
             }
 
             // 같은 프레임 배열이면 다시 시작하지 않는다(숨쉬기가 끊기지 않게)
@@ -364,24 +332,6 @@ namespace ZooTycoon.World
             PlayNow(Sequence(ThumpSheet(), k_ThumpOrder, frameSeconds), frameSeconds);
             StartCoroutine(PlayLater(SoundTable.k_Thump, impact));
             return impact;
-        }
-
-        // 설계 44 든 낚싯대: 돌리지 않고 세운 그대로 손에 쥔다(피벗 = 쥔 자리). null이면 빈손
-        public void Hold(Sprite rod)
-        {
-            if (m_held == null)
-            {
-                if (rod == null)
-                {
-                    return;
-                }
-
-                m_held = new GameObject("Held").AddComponent<SpriteRenderer>();
-                m_held.transform.SetParent(m_carry[0].transform.parent, false);
-            }
-
-            m_held.sprite = rod;
-            m_held.enabled = rod != null;
         }
 
         // 설계 44 월척 털썩: 털썩 앉아(앉는 중 → 앉음) seconds가 다 될 때까지 앉음 칸을 유지한 뒤 일어선다

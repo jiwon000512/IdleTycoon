@@ -300,7 +300,7 @@ namespace ZooTycoon.Core
                 new BtAction<Clerk>(c => c.StartIdle(), (c, dt) => c.TickIdle(dt)));
         }
 
-        // 설계 44: 오두막에서 기다리다 합칠 셋 · 오래 버틴 월척이 있으면 그 말뚝으로 가서 처리하고 돌아와 딴짓 판정
+        // 설계 44 · 46: 오두막에서 기다리다 오래 버틴 월척이 있으면 그 말뚝으로 가서 거들고 돌아와 딴짓 판정
         private static BtNode<Clerk> BuildFishingCycle()
         {
             return new BtSequence<Clerk>(
@@ -509,11 +509,10 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 할 일이 있는 말뚝: 합칠 셋이 모인 말뚝, 없으면 오래 버틴 월척. 없으면 null
+        // 할 일이 있는 말뚝: 오래 버틴 월척. 없으면 null
         private StakeInteractable NextChore()
         {
-            FishingArea fishing = ((FishingHutInteractable)Thing).Fishing;
-            return fishing.MergeableStake() ?? fishing.OverdueTrophy();
+            return ((FishingHutInteractable)Thing).Fishing.OverdueTrophy();
         }
 
         private bool StartChores()
@@ -522,7 +521,7 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 말뚝에 닿으면 다시 보고(웜뱃이 먼저 했을 수 있다) 합치거나 거든다. 다음 할 일이 없으면 끝
+        // 말뚝에 닿으면 다시 보고(웜뱃이 먼저 털썩했을 수 있다) 거든다. 다음 할 일이 없으면 끝
         private BtStatus TickChores()
         {
             if (Moving)
@@ -534,11 +533,7 @@ namespace ZooTycoon.Core
             {
                 FishingArea fishing = m_stake.Fishing;
 
-                if (fishing.MergePartners(m_stake) != null)
-                {
-                    fishing.Merge(m_stake);
-                }
-                else if (m_stake.Hooked != null && m_stake.Hooked.HookedFor >= fishing.Config.TrophyHoldSeconds)
+                if (m_stake.Hooked != null && m_stake.Hooked.HookedFor >= fishing.Config.TrophyHoldSeconds)
                 {
                     fishing.ClerkHaul(m_stake);
                 }

@@ -6,7 +6,7 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 설계 42: 곳이 바뀌면(AreaChanged) 곳 이름 팻말. 게임을 시작할 때도 한 번. 농장은 층마다 「농장 n층」
-    // 낚시 폴리싱: 낚시터에 있으면 같은 팻말로 「대물이 온다!」 · 「n단계!」 · 「대물을 놓쳤다」
+    // 설계 46: 낚시터에서 미끼 노점으로 단계를 올리면 같은 팻말로 「n단계!」
     public sealed class LocationPresenter : IDisposable
     {
         private readonly LocationView m_view;
@@ -22,8 +22,7 @@ namespace ZooTycoon.UI
             m_subscriptions = new[]
             {
                 bus.Subscribe<Events.AreaChanged>(e => Show(e.Active)),
-                bus.Subscribe<Events.WaveStarted>(e => ShowIn(e.Fishing, e.Boss ? m_tables.Text("fishing_boss_coming") : null)),
-                bus.Subscribe<Events.BossResolved>(e => ShowIn(e.Fishing, e.Caught ? m_tables.Format("fishing_stage", e.Fishing.Stage) : m_tables.Text("fishing_boss_missed"))),
+                bus.Subscribe<Events.StageRaised>(e => ShowIn(e.Fishing, m_tables.Format("fishing_stage", e.Fishing.Stage))),
             };
             Show(mall.Active);
         }

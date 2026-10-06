@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ZooTycoon.Core
 {
-    // 설계 44: 낚시터 행동(모두 버튼). 말뚝: 털썩 → 합치기 → 들기/놓기 → 소환 → 열기(actions 순서 = 버튼 우선), 물가: 엉덩이 쿵.
+    // 설계 44 · 46: 낚시터 행동. 말뚝: 털썩 → 대 사기(시트) → 열기(actions 순서 = 버튼 우선), 물가: 엉덩이 쿵, 미끼 노점: 단계 올리기 · 업그레이드 셋(시트 줄).
     // 하는 일은 FishingArea가 갖고, 여기는 사물 종류와 할 수 있나만 본다
     public static partial class ActionFactory
     {
@@ -29,11 +30,14 @@ namespace ZooTycoon.Core
             }
         }
 
-        private sealed class Summon : InteractAction
+        // 설계 46 대 사기 버튼: 열린 말뚝(비었든 꽂혔든, 월척을 붙잡지 않은 동안)에서 대 사기 시트를 연다(화면 몫)
+        private sealed class OpenSummon : InteractAction
         {
-            public Summon(ActionTable table) : base(table)
+            public OpenSummon(ActionTable table) : base(table)
             {
             }
+
+            public override bool OpensSheet => true;
 
             public override bool Accepts(Interactable target)
             {
@@ -44,11 +48,111 @@ namespace ZooTycoon.Core
             {
                 return target is StakeInteractable stake && stake.Fishing.CanSummon(stake);
             }
+        }
 
-            public override void Do(Worker worker, Interactable target)
+        // 설계 46 대 사기(시트 칩): 계열마다 한 칩, 값은 공통. 고르면 사서 꽂는다(등급 뽑기)
+        private sealed class Summon : SheetAction
+        {
+            public Summon(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is StakeInteractable;
+            }
+
+            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
             {
                 StakeInteractable stake = (StakeInteractable)target;
-                stake.Fishing.Summon(stake);
+                FishingArea fishing = stake.Fishing;
+                List<SheetOption> options = new List<SheetOption>();
+
+                foreach (RodTable rod in fishing.ShopRods)
+                {
+                    double cost = fishing.SummonPrice;
+                    options.Add(new SheetOption(rod.Id, fishing.CanSummon(stake) ? SheetOption.Afford(worker, cost) : SheetOptionState.Blocked, cost));
+                }
+
+                return options;
+            }
+
+            public override bool TryChoose(Worker worker, Interactable target, string option)
+            {
+                StakeInteractable stake = (StakeInteractable)target;
+                RodTable rod = stake.Fishing.ShopRods.FirstOrDefault(r => r.Id == option);
+                return rod != null && stake.Fishing.Summon(stake, rod);
+            }
+        }
+
+        // 설계 46 단계 올리기(미끼 노점 시트 줄): 값 = stageCost × stageGrowth^(단계 − 1)
+        private sealed class StageUp : SheetAction
+        {
+            public StageUp(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is FishingHutInteractable;
+            }
+
+            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
+            {
+                FishingArea fishing = ((FishingHutInteractable)target).Fishing;
+                return new[] { new SheetOption(null, SheetOption.Afford(worker, fishing.StagePrice), fishing.StagePrice, fishing.Stage) };
+            }
+
+            public override bool TryChoose(Worker worker, Interactable target, string option)
+            {
+                return ((FishingHutInteractable)target).Fishing.StageUp();
+            }
+        }
+
+        // 설계 46 미끼 노점 업그레이드(시트 줄): 표 순서로 한 줄씩, 단계 · 효과 전후 · 값(최대면 Max)
+        private sealed class HutUpgrade : SheetAction
+        {
+            public HutUpgrade(ActionTable table) : base(table)
+            {
+            }
+
+            public override bool Accepts(Interactable target)
+            {
+                return target is FishingHutInteractable;
+            }
+
+            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
+            {
+                FishingArea fishing = ((FishingHutInteractable)target).Fishing;
+                List<SheetOption> options = new List<SheetOption>();
+
+                foreach (FishingUpgradeData upgrade in fishing.Config.HutUpgrades)
+                {
+                    int level = fishing.LevelOf(upgrade.Id);
+                    double cost = fishing.UpgradePrice(upgrade.Id);
+                    bool maxed = level >= upgrade.MaxLevel;
+                    SheetOptionState state = maxed ? SheetOptionState.Max : SheetOption.Afford(worker, cost);
+                    options.Add(new SheetOption(upgrade.Id, state, cost, level, EffectAt(upgrade, level), EffectAt(upgrade, maxed ? level : level + 1)));
+                }
+
+                return options;
+            }
+
+            public override bool TryChoose(Worker worker, Interactable target, string option)
+            {
+                FishingArea fishing = ((FishingHutInteractable)target).Fishing;
+                return fishing.LevelOf(option) < fishing.Upgrade(option).MaxLevel && fishing.BuyUpgrade(option);
+            }
+
+            // 문구에 넣을 효과 값(단계 0 = 0): 불빛 = 사거리 +%, 도르래 = 월척 감기 배수, 소용돌이 = 1분에 되돌리는 번
+            private static double EffectAt(FishingUpgradeData upgrade, int level)
+            {
+                switch (upgrade.Id)
+                {
+                    case FishingUpgradeData.k_Light: return System.Math.Round(upgrade.EffectPerLevel * level * 100d);
+                    case FishingUpgradeData.k_Whirl: return level > 0 ? System.Math.Round(60d / (upgrade.EffectBase - upgrade.EffectPerLevel * (level - 1))) : 0d;
+                    default: return upgrade.EffectPerLevel * level;
+                }
             }
         }
 
@@ -75,52 +179,6 @@ namespace ZooTycoon.Core
             }
         }
 
-        private sealed class CarryRod : InteractAction
-        {
-            public CarryRod(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is StakeInteractable;
-            }
-
-            public override bool CanDo(Worker worker, Interactable target)
-            {
-                return target is StakeInteractable stake && stake.Fishing.CanCarry(stake);
-            }
-
-            public override void Do(Worker worker, Interactable target)
-            {
-                StakeInteractable stake = (StakeInteractable)target;
-                stake.Fishing.Carry(stake);
-            }
-        }
-
-        private sealed class MergeRods : InteractAction
-        {
-            public MergeRods(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is StakeInteractable;
-            }
-
-            public override bool CanDo(Worker worker, Interactable target)
-            {
-                return target is StakeInteractable stake && stake.Fishing.CanMerge(stake);
-            }
-
-            public override void Do(Worker worker, Interactable target)
-            {
-                StakeInteractable stake = (StakeInteractable)target;
-                stake.Fishing.Merge(stake);
-            }
-        }
-
         private sealed class Haul : InteractAction
         {
             public Haul(ActionTable table) : base(table)
@@ -141,48 +199,6 @@ namespace ZooTycoon.Core
             {
                 StakeInteractable stake = (StakeInteractable)target;
                 stake.Fishing.Haul(stake);
-            }
-        }
-
-        // 낚은 대물 시트: 특별한 대 셋이 줄. 말뚝이 다 찼고 이미 대를 들고 있으면 막힘
-        private sealed class ChooseRod : SheetAction
-        {
-            public ChooseRod(ActionTable table) : base(table)
-            {
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is BossCatchInteractable;
-            }
-
-            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
-            {
-                FishingArea fishing = ((BossCatchInteractable)target).Fishing;
-                SheetOptionState state = fishing.CanChoose ? SheetOptionState.Enabled : SheetOptionState.Blocked;
-                List<SheetOption> options = new List<SheetOption>();
-
-                foreach (RodTable rod in fishing.Choice ?? new RodTable[0])
-                {
-                    options.Add(new SheetOption(rod.Id, state));
-                }
-
-                return options;
-            }
-
-            public override bool TryChoose(Worker worker, Interactable target, string option)
-            {
-                FishingArea fishing = ((BossCatchInteractable)target).Fishing;
-
-                for (int i = 0; fishing.Choice != null && i < fishing.Choice.Count; i++)
-                {
-                    if (fishing.Choice[i].Id == option)
-                    {
-                        return fishing.Choose(i);
-                    }
-                }
-
-                return false;
             }
         }
 

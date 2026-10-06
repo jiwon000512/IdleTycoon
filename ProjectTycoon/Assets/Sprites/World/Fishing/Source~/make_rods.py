@@ -136,5 +136,4 @@ if __name__ == '__main__':
     a, sock, _ = rods['bent']
     xr = int(np.nonzero((a[..., 3] > 0).any(0))[0].max())          # 휜 대 끝 = 맨 오른쪽 열의 가장 아래 칸(아래로 당겨진 끝)
     save('rod_bent', a, sock, (xr, int(np.nonzero(a[:, xr, 3] > 0)[0].max())))
-    for n, (a, sock, tip) in cut(os.path.join(HERE, 'raw', 'rod_specials.png'), ['pulley', 'lighthouse', 'whirlpool']).items():
-        save('rod_' + n, a, sock, tip)
+    # 특별한 대(도르래탑 · 등대 · 통발, raw/rod_specials.png)는 만들지 않는다(2026-10-05 설계 46: 설치물 · 대물 · 대 들기 · 합치기를 없애 이 그림은 만들지 않는다). 효과는 미끼 노점 업그레이드

@@ -64,9 +64,9 @@ namespace ZooTycoon.Core
                 bonuses += harvests * farmConfig.BonusChance * (1d + blessing.Boost(BlessingTable.k_Bonus) * share);
             }
 
-            // 설계 44: 낚시터는 지금 판으로 물때 하나를 시뮬레이션해 잰다(웜뱃 없이, 월척은 점원이 있을 때만, 대물 물때는 놓친 것으로)
+            // 설계 44: 낚시터는 지금 판으로 물때 하나를 시뮬레이션해 잰다(웜뱃 없이, 월척은 점원이 있을 때만)
             FishingArea fishing = mall.Fishing;
-            double perSecond = (fishing.Config.BossEvery - 1d) / fishing.Config.BossEvery / fishing.Config.WaveSeconds;
+            double perSecond = 1d / fishing.Config.WaveSeconds;
 
             foreach (KeyValuePair<string, double> fish in fishing.SimulateWave(fishing.ClerkOf(fishing.Hut) != null))
             {

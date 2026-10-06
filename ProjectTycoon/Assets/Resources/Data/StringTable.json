@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 47,
+  "version": 48,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -50,7 +50,8 @@
     "version 44 (2026-10-05, 낚시 폴리싱): 물때 팻말에 단계(fishing_wave 「{0}단계 · 물때 {1}/{2}」 · fishing_boss 「{0}단계 대물!」), 곳 팻말 fishing_boss_coming · fishing_stage(「{0}단계!」) · fishing_boss_missed, 소환 등급 글 rod_grade_2 · rod_grade_3.",
     "version 45 (2026-10-05, 돌아왔을 때 팝업 A 「잠든 웜뱃」): offline_sales 「판매 +{0}」 → 「판매」 · offline_wages 「월급 -{0}」 → 「월급」(칩의 이름, 값은 따로). 유물 화면 B 「아이콘 소제목」: relic_collection 「모은 유물 {0}/{1}」 → 「모은 유물」, 개수는 relic_count 「{0}/{1}」(끼운 수 · 모은 수), relic_empty(「빈 칸」) 삭제(빈 칸은 「+」).",
     "version 46 (2026-10-05, 폴리싱): clerk_missing 「{0} 모자라요」 — 재료가 없어 못 굽는 오븐 점원의 머리 위 글자 말풍선({0} = 재료 이름).",
-    "version 47 (2026-10-05, 사용자 「놓침은 표시하지 않기로 한다」): fishing_missed 삭제(놓침 팻말과 놓친 수를 없앰)."
+    "version 47 (2026-10-05, 사용자 「놓침은 표시하지 않기로 한다」): fishing_missed 삭제(놓침 팻말과 놓친 수를 없앰).",
+    "version 48 (2026-10-05, 설계 46 낚시터 개편): 대물 · 3택 1 · 특별한 대 · 소환 값 표식 문구 삭제(fishing_boss · fishing_boss_coming · fishing_boss_missed · rod_choice_* · rod_pulley · rod_lighthouse · rod_whirlpool · *_desc · tag_summon · inventory_source_fishing_boss), fishing_wave 「{0}단계」(물때 수 없음), 대 사기 · 미끼 노점 시트 문구 추가(sheet_stake_* · sheet_hut_* · row_stage_up*)."
   ],
   "rows": [
     {
@@ -994,32 +995,16 @@
       "ko": "낚시터 물길에서 낚는다"
     },
     {
-      "id": "inventory_source_fishing_boss",
-      "ko": "낚시터 물때 열 번째에 오는 대물을 낚는다"
-    },
-    {
       "id": "inventory_use_fish",
       "ko": "횟집이 열리면 요리 재료가 된다"
     },
     {
       "id": "fishing_wave",
-      "ko": "{0}단계 · 물때 {1}/{2}"
-    },
-    {
-      "id": "fishing_boss",
-      "ko": "{0}단계 대물!"
+      "ko": "{0}단계"
     },
     {
       "id": "fishing_stage",
       "ko": "{0}단계!"
-    },
-    {
-      "id": "fishing_boss_coming",
-      "ko": "대물이 온다!"
-    },
-    {
-      "id": "fishing_boss_missed",
-      "ko": "대물을 놓쳤다"
     },
     {
       "id": "rod_grade_2",
@@ -1030,24 +1015,8 @@
       "ko": "전설!"
     },
     {
-      "id": "tag_summon",
-      "ko": "소환 {0}"
-    },
-    {
       "id": "tag_open_stake",
       "ko": "열기 {0}"
-    },
-    {
-      "id": "rod_choice_title",
-      "ko": "대물 뱃속에서"
-    },
-    {
-      "id": "rod_choice_hint",
-      "ko": "하나를 고르면 빈 말뚝에 꽂는다"
-    },
-    {
-      "id": "rod_choice_full",
-      "ko": "빈 말뚝을 하나 비우고 고른다"
     },
     {
       "id": "rod_bamboo",
@@ -1070,32 +1039,36 @@
       "ko": "등불대"
     },
     {
-      "id": "rod_pulley",
-      "ko": "도르래탑"
-    },
-    {
-      "id": "rod_lighthouse",
-      "ko": "등대"
-    },
-    {
-      "id": "rod_whirlpool",
-      "ko": "소용돌이 통발"
-    },
-    {
-      "id": "rod_pulley_desc",
-      "ko": "대물을 세 배로 감는다"
-    },
-    {
-      "id": "rod_lighthouse_desc",
-      "ko": "다른 대의 사거리가 넓어진다"
-    },
-    {
-      "id": "rod_whirlpool_desc",
-      "ko": "맨 앞 물고기를 물길 위로 되돌린다"
-    },
-    {
       "id": "clerk_missing",
       "ko": "{0} 모자라요"
+    },
+    {
+      "id": "sheet_stake_title",
+      "ko": "대 사기"
+    },
+    {
+      "id": "sheet_stake_swap_title",
+      "ko": "{0} 바꾸기"
+    },
+    {
+      "id": "sheet_stake_odds",
+      "ko": "전설이 나올 확률 {0}%"
+    },
+    {
+      "id": "sheet_hut_title",
+      "ko": "미끼 노점"
+    },
+    {
+      "id": "sheet_hut_status",
+      "ko": "지금 {0}단계"
+    },
+    {
+      "id": "row_stage_up",
+      "ko": "{0}단계로"
+    },
+    {
+      "id": "row_stage_up_effect",
+      "ko": "물고기가 무거워지고 많아진다"
     }
   ]
 }

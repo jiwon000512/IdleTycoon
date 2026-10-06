@@ -26,6 +26,7 @@ namespace ZooTycoon.Editor
         const string k_FishingDir = "Assets/Sprites/World/Fishing/";
         const string k_CropDir = "Assets/Resources/Sprites/Farm/";
         const string k_ItemDir = "Assets/Resources/Sprites/Items/";
+        const string k_RodIconDir = "Assets/Resources/Sprites/Rods/";
         // 설계 27 밭 칸: 흙판은 굴 그림(-2000) 위 · 아치(-1995) 아래, 작물 줄 셋(칸 밑변 기준, 뒷줄부터. 줄 그림은 104칸 폭 · 익으면 26칸 높이. 밑변은 make_farm_art.py ROW_CELLS 18 · 42 · 66칸 = 이랑 셋의 아래에서 6칸).
         // 농사 타이머 · 다 익음 표시(Farm/farm_timer_XX · Resources/Sprites/Farm/Ready/<작물>, 작물마다는 실행 중 FarmView가 바꾼다)는 칸 윗변 위에 띄워 모든 그림 위에(2026-09-30 사용자: 작물에 가려지고 빵 모양이던 것),
         // 빈 밭 화살표는 칸 가운데 · 캐릭터 층(작물이 없을 때만 보이니 웜뱃이 앞에 온다)
@@ -208,6 +209,12 @@ namespace ZooTycoon.Editor
             {
                 Import(path.Replace('\\', '/'), center);
             }
+
+            // 설계 46 대 사기 시트 칩 아이콘(아트방, 빵 아이콘과 같은 결)
+            foreach (string path in System.IO.Directory.GetFiles(k_RodIconDir, "*.png"))
+            {
+                Import(path.Replace('\\', '/'), center);
+            }
             // 타일: 굴 그림이 픽셀을 읽고, 흙 배경은 Tiled로 깐다(왼쪽 위 피벗)
             Import(k_SpriteDir + "floor_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_SpriteDir + "wall_tile.png", new Vector2(0f, 1f), k_TagPpu, true);
@@ -230,6 +237,11 @@ namespace ZooTycoon.Editor
             Import(k_FishingDir + "stake.png", bottom);
             Import(k_FishingDir + "stake_locked.png", bottom);
             Import(k_FishingDir + "stake_star.png", center);
+            // 설계 46 소용돌이 업그레이드: 되돌리는 물고기 자리의 물 소용돌이 네 칸(아트방)
+            for (int i = 0; i < 4; i++)
+            {
+                Import(k_FishingDir + "whirl_" + i + ".png", center);
+            }
 
             // 낚싯대(아트방 「통통한 대」): 피벗 = 꽂는 자리(그림 맨 아랫줄의 칸, Source~/make_rods.py)
             foreach ((string name, int socket) in RodSockets)
@@ -453,12 +465,12 @@ namespace ZooTycoon.Editor
         static readonly string[] WaterTiles = { "water_tile_0", "water_tile_1", "water_tile_2", "water_tile_3" };
 
         // 물속 물고기 그림(이름 = 재료 id + _swim)
-        static readonly string[] FishSwims = { "fish_minnow_swim", "fish_crucian_swim", "fish_catfish_swim", "fish_boss_swim" };
+        static readonly string[] FishSwims = { "fish_minnow_swim", "fish_crucian_swim", "fish_catfish_swim" };
 
         // 낚싯대 그림 · 꽂는 자리 칸(계열 대는 등급 셋 · 당김 판이 같다). 아트방 설계 45 A 「말뚝에 맞춘 대」
         static IEnumerable<(string Name, int Socket)> RodSockets =>
             new[] { "bamboo", "iron", "bait" }.SelectMany(f => new[] { "_1", "_2", "_3", "_1_pull", "_2_pull", "_3_pull" }.Select(g => ("rod_" + f + g, 7)))
-            .Concat(new[] { ("rod_pulley", 9), ("rod_lighthouse", 8), ("rod_whirlpool", 11), ("rod_bent", 7) });
+            .Concat(new[] { ("rod_bent", 7) });
 
         static MarkerView BakeDigTag()
         {
@@ -784,6 +796,7 @@ namespace ZooTycoon.Editor
             Set(view, "m_stake", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake.png"));
             Set(view, "m_stakeLocked", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_locked.png"));
             Set(view, "m_stakeStar", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_star.png"));
+            SetArray(view, "m_whirl", Enumerable.Range(0, 4).Select(i => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "whirl_" + i + ".png")).ToArray());
             SetArray(view, "m_rods", RodSockets.Select(rod => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + rod.Name + ".png")).ToArray());
             Set(view, "m_arch", arch.transform);
             Set(view, "m_hut", hut.transform);

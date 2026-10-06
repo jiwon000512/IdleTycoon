@@ -1,109 +1,68 @@
 {
   "table": "RodTable",
-  "version": 1,
+  "version": 2,
   "notes": [
-    "설계 44 낚싯대. 계열 대(special null)는 빈 말뚝에서 소환으로 나오고(locked가 아닌 것 중 같은 비중), 같은 계열 · 등급 셋을 합치면 한 등급 위(3등급까지). 특별한 대(special)는 대물 뱃속 3택 1에서만, 합치지 않는다.",
+    "설계 44 · 46 낚싯대. 열린 말뚝의 시트에서 웜뱃이 골라 산다(locked가 아닌 행, 표 순서), 등급은 뽑기(FishingConfigTable gradeWeights). 꽂힌 말뚝에서 다시 사면 옛 대는 사라진다. 예전 설치물(도르래탑 · 등대 · 통발) 효과는 미끼 노점 업그레이드(FishingConfigTable hutUpgrades).",
     "family: 계열(계열 문턱을 센다). reel: 초당 감는 힘(1등급, 등급마다 × FishingConfigTable gradeScale). range: 사거리 반지름(유닛). smallScale · bigScale: 작은 · 큰 물고기에 감는 힘 배수(보통은 1). slow: 사거리 안 물고기 속도 배수(1 = 그대로).",
-    "effect: 특별한 능력의 값. pulley = 대물에 감는 힘 배수, lighthouse = 다른 대 사거리 + 비율, whirlpool = 사거리 안 맨 앞 물고기를 사거리만큼 물길 위로 되돌리는 간격(초).",
-    "net · light는 아직 소환에 나오지 않는다(locked, 뒤로).",
-    "version 1 (2026-10-05, 설계 44): 처음 만듦."
+    "net · light는 아직 시트에 나오지 않는다(locked, 뒤로). icon: 시트 칩 아이콘(Resources/ 기준 경로, locked면 null).",
+    "version 1 (2026-10-05, 설계 44): 처음 만듦.",
+    "version 2 (2026-10-05, 설계 46 낚시터 개편): 소환 · 합치기 · 대물 3택 1 대신 시트에서 골라 산다, icon 칸(아트방 칩 아이콘 Sprites/Rods/<id>). 특별한 대 셋(pulley · lighthouse · whirlpool) 행과 special · effect 칸 삭제(사용자 「낚싯대만 쓰고 나머지는 효과로 오두막에서 업그레이드」)."
   ],
   "rows": [
     {
       "id": "bamboo",
       "family": "bamboo",
-      "special": null,
       "locked": false,
       "reel": 1.2,
       "range": 2.2,
       "smallScale": 1.5,
       "bigScale": 0.6,
       "slow": 1,
-      "effect": 0
+      "icon": "Sprites/Rods/bamboo"
     },
     {
       "id": "iron",
       "family": "iron",
-      "special": null,
       "locked": false,
       "reel": 0.9,
       "range": 2.0,
       "smallScale": 0.6,
       "bigScale": 1.8,
       "slow": 1,
-      "effect": 0
+      "icon": "Sprites/Rods/iron"
     },
     {
       "id": "bait",
       "family": "bait",
-      "special": null,
       "locked": false,
       "reel": 0.5,
       "range": 2.4,
       "smallScale": 1,
       "bigScale": 1,
       "slow": 0.5,
-      "effect": 0
+      "icon": "Sprites/Rods/bait"
     },
     {
       "id": "net",
       "family": "net",
-      "special": null,
       "locked": true,
       "reel": 0.6,
       "range": 2.0,
       "smallScale": 1,
       "bigScale": 1,
       "slow": 1,
-      "effect": 0
+      "icon": null
     },
     {
       "id": "light",
       "family": "light",
-      "special": null,
       "locked": true,
       "reel": 0.6,
       "range": 2.2,
       "smallScale": 1,
       "bigScale": 1,
       "slow": 1,
-      "effect": 0
-    },
-    {
-      "id": "pulley",
-      "family": "iron",
-      "special": "pulley",
-      "locked": false,
-      "reel": 1.5,
-      "range": 2.2,
-      "smallScale": 1,
-      "bigScale": 1.5,
-      "slow": 1,
-      "effect": 3
-    },
-    {
-      "id": "lighthouse",
-      "family": "bamboo",
-      "special": "lighthouse",
-      "locked": false,
-      "reel": 1.0,
-      "range": 2.4,
-      "smallScale": 1,
-      "bigScale": 1,
-      "slow": 1,
-      "effect": 0.2
-    },
-    {
-      "id": "whirlpool",
-      "family": "bait",
-      "special": "whirlpool",
-      "locked": false,
-      "reel": 0.8,
-      "range": 2.2,
-      "smallScale": 1,
-      "bigScale": 1,
-      "slow": 0.8,
-      "effect": 4
+      "icon": null
     }
   ]
 }

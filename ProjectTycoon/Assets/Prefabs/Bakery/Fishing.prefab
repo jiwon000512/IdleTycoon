@@ -669,6 +669,11 @@ MonoBehaviour:
   m_stake: {fileID: 21300000, guid: 7422622990b0bd44e94788e38f2443e2, type: 3}
   m_stakeLocked: {fileID: 21300000, guid: 583ac2df038ffaa4cbc3448b5f401723, type: 3}
   m_stakeStar: {fileID: 21300000, guid: 6cffbae7fd54a8e4e9a05b65200a11d1, type: 3}
+  m_whirl:
+  - {fileID: 21300000, guid: 67df1b5d80b89074890057b90b324d97, type: 3}
+  - {fileID: 21300000, guid: 471db8bf88c913e4496146e9e446415f, type: 3}
+  - {fileID: 21300000, guid: 1c5bd47e59b4084439c755303cf8a237, type: 3}
+  - {fileID: 21300000, guid: a3186e5b5db11ec40a7bab59ee7523c5, type: 3}
   m_rods:
   - {fileID: 21300000, guid: 0c35810b445253a449812916f878ab2d, type: 3}
   - {fileID: 21300000, guid: 4cb058cd7d0546842a8c88a807b46033, type: 3}
@@ -688,9 +693,6 @@ MonoBehaviour:
   - {fileID: 21300000, guid: ee8bd93303814dc4c8d26b7cadb7451f, type: 3}
   - {fileID: 21300000, guid: 77f801e89e6fd10428b9be9945f523b8, type: 3}
   - {fileID: 21300000, guid: b7f59dd81aa8e59478dec16d1f2cc4d9, type: 3}
-  - {fileID: 21300000, guid: ef3d9c7babf1f2f4aaac903d732242aa, type: 3}
-  - {fileID: 21300000, guid: 4e8b55a6bdc2f794da528259d87271c7, type: 3}
-  - {fileID: 21300000, guid: a73a9d100a3f0ac4aa0e056f961d843a, type: 3}
   - {fileID: 21300000, guid: 4c926cd5be801a34aa826ec3ddd11f58, type: 3}
   m_arch: {fileID: 5366539367141159210}
   m_hut: {fileID: 4118149295389777748}

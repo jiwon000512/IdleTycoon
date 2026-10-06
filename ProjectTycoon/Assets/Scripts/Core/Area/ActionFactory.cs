@@ -14,7 +14,7 @@ namespace ZooTycoon.Core
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
             ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_OpenPlant, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
             ActionTable.k_Talk, ActionTable.k_DigFloor, ActionTable.k_Evaluate,
-            ActionTable.k_Summon, ActionTable.k_OpenStake, ActionTable.k_Carry, ActionTable.k_Merge, ActionTable.k_Haul, ActionTable.k_Thump, ActionTable.k_ChooseRod,
+            ActionTable.k_OpenSummon, ActionTable.k_Summon, ActionTable.k_OpenStake, ActionTable.k_Haul, ActionTable.k_Thump, ActionTable.k_StageUp, ActionTable.k_HutUpgrade,
             ActionTable.k_DigStream,
         };
 
@@ -42,13 +42,13 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Talk: return new TalkToMerchant(table);
                 case ActionTable.k_DigFloor: return new DigFloor(table);
                 case ActionTable.k_Evaluate: return new OpenBoard(table);
+                case ActionTable.k_OpenSummon: return new OpenSummon(table);
                 case ActionTable.k_Summon: return new Summon(table);
                 case ActionTable.k_OpenStake: return new OpenStake(table);
-                case ActionTable.k_Carry: return new CarryRod(table);
-                case ActionTable.k_Merge: return new MergeRods(table);
                 case ActionTable.k_Haul: return new Haul(table);
                 case ActionTable.k_Thump: return new Thump(table);
-                case ActionTable.k_ChooseRod: return new ChooseRod(table);
+                case ActionTable.k_StageUp: return new StageUp(table);
+                case ActionTable.k_HutUpgrade: return new HutUpgrade(table);
                 case ActionTable.k_DigStream: return new DigStream(table);
                 default: throw new InvalidOperationException($"행동 '{table.Id}'의 코드가 없다.");
             }

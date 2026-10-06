@@ -4,7 +4,7 @@
 #   원본 그대로 옮긴다(2026-10-05 사용자 「그림 퀄리티에 변형이 생기는 규칙은 다 지운다」, snap_codex raw):
 #   반 칸 그림은 원본 픽셀 하나 = 텍셀 하나(옛 판은 2×2를 한 칸으로 줄이고 12색으로 합쳐 뭉개졌다), 대물은 원본 픽셀 하나 = 한 칸(2텍셀).
 #   시안의 위에서 본 모습(아랫줄)은 아트 규칙(앞쪽 위에서 본 모습)에 어긋나 쓰지 않는다. 물속은 크기만 다른 그림자(make_fish_shadow.py).
-# 출력(PPU 80, 오른쪽을 본다): Resources/Sprites/Items/fish_<minnow|crucian|catfish|boss>.png  옆모습 = 창고 아이콘 겸 둑으로 낚여 튄 모습
+# 출력(PPU 80, 오른쪽을 본다): Resources/Sprites/Items/fish_<minnow|crucian|catfish>.png  옆모습 = 창고 아이콘 겸 둑으로 낚여 튄 모습
 # 사용: python make_fish.py
 import os
 import sys
@@ -42,10 +42,6 @@ if __name__ == '__main__':
     parts = sorted(parts, key=lambda t: t[2])[1:]          # 맨 왼쪽 웜뱃은 뺀다
     mid = np.mean([t[1] for t in parts])
     side = sorted([t for t in parts if t[1] < mid], key=lambda t: t[2])
-    big, _ = snap_codex.snap(os.path.join(RAW, 'fish_style_b.png'), square=True, min_hole=40, raw=True)
-    bp = pieces(big, 8)
-    bmid = big.shape[0] / 2
-    boss_side = max([t for t in bp if t[1] < bmid], key=lambda t: t[2])[0]
     for name, s in zip(['minnow', 'crucian', 'catfish'], side):
         save(os.path.join(ITEMS, 'fish_%s.png' % name), s[0], 1)
-    save(os.path.join(ITEMS, 'fish_boss.png'), boss_side, 2)
+    # 대물 바위잉어(raw/fish_style_b.png)는 만들지 않는다(2026-10-05 설계 46: 설치물 · 대물 · 대 들기 · 합치기를 없애 이 그림은 만들지 않는다)

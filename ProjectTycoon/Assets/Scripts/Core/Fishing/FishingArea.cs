@@ -8,9 +8,10 @@ using GameKit.Tables;
 namespace ZooTycoon.Core
 {
     // 설계 44: 낚시터(낚시 디펜스). 광장 왼쪽 끝 문과 이 곳 구멍이 이어진다. 굴 속 물길(S자)로 물때마다 물고기 떼가 내려오고(FishingSim),
-    // 둑의 말뚝에 꽂은 대가 사거리 안 물고기를 감아 낚는다(창고로). 물때 bossEvery번째는 대물: 낚으면 다음 단계 + 특별한 대 3택 1, 놓치면 같은 단계 물때 1부터.
-    // 대는 빈 말뚝에서 코인으로 소환(계열 무작위 · 등급 비중)하고, 같은 계열 · 등급 셋을 합쳐 올린다. 판의 같은 계열 개수 문턱이 그 계열을 세게 한다.
-    // 웜뱃은 대를 들고 옮기고, 물가에서 엉덩이 쿵, 붙잡힌 월척에 털썩, 대물을 감는 말뚝 곁에 앉는다(ActionFactory.Fishing.cs). 점원 하나가 오두막에서 합치기 · 오래 버틴 월척을 맡는다.
+    // 둑의 말뚝에 꽂은 대가 사거리 안 물고기를 감아 낚는다(창고로). 물때는 waveSeconds마다 떼 하나.
+    // 설계 46: 말뚝 시트에서 웜뱃이 계열을 골라 사고 등급은 뽑기(gradeWeights). 꽂힌 말뚝에서 다시 사면 옛 대는 사라진다.
+    // 미끼 노점(오두막)에서 단계(물고기 무게 · 떼)와 업그레이드 셋(불빛 사거리 · 도르래 월척 감기 · 소용돌이 되돌리기)을 코인으로 올린다. 판의 같은 계열 개수 문턱이 그 계열을 세게 한다.
+    // 웜뱃은 물가에서 엉덩이 쿵, 붙잡힌 월척에 털썩(ActionFactory.Fishing.cs). 점원 하나가 오두막에서 오래 버틴 월척을 거든다.
     // 놓는 사물은 없다(편집 카드 없음). 물고기는 웜뱃이 다른 곳에 있어도 흐른다.
     // 설계 45: 물길은 처음 절반쯤만 파여 있고 끝은 막혀 있다(끝에 닿은 물고기는 빠져나가 놓침). 막다른 끝 앞에서 코인으로 정해진 길을 한 칸씩 더 판다. 대는 말뚝 위쪽만 본다
     public sealed class FishingArea : WombatArea
@@ -24,20 +25,17 @@ namespace ZooTycoon.Core
         // 떼 안에서 나올 차례를 기다리는 물고기(나올 때 · 물고기)
         private readonly List<(double at, Fish fish)> m_queue = new List<(double, Fish)>();
         private readonly Dictionary<string, FishRecord> m_log = new Dictionary<string, FishRecord>();
-        private RodTable[] m_choice;
-        private StakeInteractable m_carryFrom;
-        private StakeInteractable m_sit;
+        // 미끼 노점 업그레이드 id → 단계(없으면 0)
+        private readonly Dictionary<string, int> m_upgrades = new Dictionary<string, int>();
         private double m_clock;
         private double m_waveElapsed;
-        private bool m_bossOut;
 
         public FishingConfigTable Config { get; }
         public FishingLayout Layout { get; }
         public IReadOnlyList<StakeInteractable> Stakes => m_stakes;
         public StreamBankInteractable Bank { get; }
+        // 미끼 노점: 점원 자리이자 웜뱃이 단계를 올리는 곳
         public FishingHutInteractable Hut { get; }
-        // 낚은 대물(뱃속 3택 1이 남은 동안만 사물 목록에)
-        public BossCatchInteractable Catch { get; }
         // 설계 45: 막다른 끝 앞 땅(파기 버튼). 판 횟수 · 다음 파기 값 · 끝까지 팠나
         public StreamEndInteractable StreamEnd { get; }
         public int Dug { get; private set; }
@@ -45,21 +43,25 @@ namespace ZooTycoon.Core
         public bool StreamFull => Layout.Length >= Layout.PlanLength - 1e-3f;
         internal FishingSim Sim { get; }
         public IReadOnlyList<Fish> Fish => Sim.Fish;
-        // 단계(1부터, 대물을 낚을 때마다 +1) · 물때(1 ~ bossEvery, 시작 전 0) · 소환한 수
+        // 단계(1부터, 미끼 노점에서 올린다) · 산 대 수(값이 오른다)
         public int Stage { get; private set; } = 1;
-        public int Wave { get; private set; }
         public int Summons { get; private set; }
-        public bool BossOut => m_bossOut;
         // 엉덩이 쿵을 다시 하기까지 남은 초
         public double ThumpLeft { get; private set; }
-        // 웜뱃이 든 대(없으면 null)와 그 등급
-        public RodTable Carried { get; private set; }
-        public int CarriedGrade { get; private set; }
-        // 웜뱃이 곁에 앉은 말뚝(앉아 있을 때만)
-        public StakeInteractable SitStake => WombatPresent && Wombat.Sitting ? m_sit : null;
-        // 대물 뱃속 3택 1(없으면 null)
-        public IReadOnlyList<RodTable> Choice => m_choice;
         public double SummonPrice => Config.SummonCost * Math.Pow(Config.SummonGrowth, Summons);
+        public double StagePrice => Config.StageCost * Math.Pow(Config.StageGrowth, Stage - 1);
+        public IReadOnlyDictionary<string, int> Upgrades => m_upgrades;
+        // 도르래: 붙잡은 월척을 멈춘 채 감는 힘 배수(0 = 털썩 · 점원만) · 소용돌이: 되돌리는 간격(0 = 없음)
+        public double TrophyReelScale => Upgrade(FishingUpgradeData.k_Pulley).EffectPerLevel * LevelOf(FishingUpgradeData.k_Pulley);
+        public double WhirlInterval
+        {
+            get
+            {
+                FishingUpgradeData whirl = Upgrade(FishingUpgradeData.k_Whirl);
+                int level = LevelOf(whirl.Id);
+                return level > 0 ? whirl.EffectBase - whirl.EffectPerLevel * (level - 1) : 0d;
+            }
+        }
         // 어종 id → 기록(도감 화면은 다음, 기록은 지금부터)
         public IReadOnlyDictionary<string, FishRecord> Log => m_log;
         public override IReadOnlyList<IPlacedKind> ShopKinds => s_noKinds;
@@ -78,14 +80,14 @@ namespace ZooTycoon.Core
         {
             Config = tables.Get<FishingConfigTable>(FishingConfigTable.k_Main);
             Layout = new FishingLayout(tables);
-            Sim = new FishingSim(this, true);
+            Sim = new FishingSim(this);
             Sim.Caught += Sim_Caught;
             Sim.Escaped += Sim_Escaped;
             Sim.Hooked += stake => stake.Refresh();
+            Sim.Whirled += (fish, from) => Bus.Publish(new Events.FishWhirled(this, fish, from));
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
             Bank = new StreamBankInteractable(Row(StreamBankInteractable.k_Id), this);
             Hut = new FishingHutInteractable(Row(FishingHutInteractable.k_Id), this, Layout.HutSpot);
-            Catch = new BossCatchInteractable(Row(BossCatchInteractable.k_Id), this, new Vector2((float)Config.CatchX, (float)Config.CatchY));
             StreamEnd = new StreamEndInteractable(Row(StreamEndInteractable.k_Id), this);
 
             for (int i = 0; i < Config.Stakes.Length; i++)
@@ -112,32 +114,24 @@ namespace ZooTycoon.Core
 
         // ---------- 대 ----------
 
-        // 설계 45: 대는 말뚝 위쪽 반원만 본다(줄이 땅을 가로지르지 않게). 감기 · 미끼 · 대물 곁 앉기가 다 이 규칙
+        // 설계 45: 대는 말뚝 위쪽 반원만 본다(줄이 땅을 가로지르지 않게). 감기 · 미끼 · 소용돌이가 다 이 규칙
         internal bool InReach(StakeInteractable stake, Vector2 p, float range)
         {
             return p.Y >= stake.Position.Y && Vector2.Distance(p, stake.Position) <= range;
         }
 
-        // 사거리: 대 사거리 × (1 + 다른 말뚝 등대의 비율 합)
+        // 사거리: 대 사거리 × (1 + 불빛 업그레이드)
         public float RangeOf(StakeInteractable stake)
         {
-            double boost = m_stakes.Where(s => s != stake && s.Rod != null && s.Rod.Special == RodTable.k_Lighthouse).Sum(s => s.Rod.Effect);
-            return (float)(stake.Rod.Range * (1d + boost));
+            return (float)(stake.Rod.Range * (1d + Upgrade(FishingUpgradeData.k_Light).EffectPerLevel * LevelOf(FishingUpgradeData.k_Light)));
         }
 
-        // 초당 감는 힘: 대 × 등급 × 계열 문턱 × 크기. 대물이면 도르래탑 배수와 (live) 앉은 말뚝 배수
-        internal double ReelOf(StakeInteractable stake, Fish fish, bool live)
+        // 초당 감는 힘: 대 × 등급 × 계열 문턱 × 크기
+        internal double ReelOf(StakeInteractable stake, Fish fish)
         {
             RodTable rod = stake.Rod;
             double reel = rod.Reel * Math.Pow(Config.GradeScale, stake.Grade - 1) * FamilyScale(rod.Family);
             reel *= fish.Big ? rod.BigScale : fish.Size == 0 ? rod.SmallScale : 1d;
-
-            if (fish.Boss)
-            {
-                reel *= rod.Special == RodTable.k_Pulley ? rod.Effect : 1d;
-                reel *= live && SitStake == stake ? Config.SitScale : 1d;
-            }
-
             return reel;
         }
 
@@ -158,24 +152,27 @@ namespace ZooTycoon.Core
             return scale;
         }
 
+        // 설계 46: 시트에 나오는 대(잠긴 계열 빼고, 표 순서)
+        public IEnumerable<RodTable> ShopRods => Tables.GetAll<RodTable>().Where(rod => !rod.Locked);
+
+        // 열린 말뚝이면 비었든 꽂혔든 산다(월척을 붙잡은 동안은 못 바꾼다)
         internal bool CanSummon(StakeInteractable stake)
         {
-            return stake.Open && stake.Rod == null && Carried == null && Wombat.Worker.Wallet.Coins >= SummonPrice;
+            return stake.Open && stake.Hooked == null;
         }
 
-        // 빈 말뚝에 대 하나: 계열은 소환에 나오는 것 중 같은 비중, 등급은 gradeWeights 비중
-        internal void Summon(StakeInteractable stake)
+        // 고른 대를 산다(등급 뽑기). 꽂혀 있던 대는 사라진다
+        internal bool Summon(StakeInteractable stake, RodTable rod)
         {
-            if (!CanSummon(stake) || !Wombat.Worker.Wallet.TrySpendCoins(SummonPrice))
+            if (!CanSummon(stake) || rod.Locked || !Wombat.Worker.Wallet.TrySpendCoins(SummonPrice))
             {
-                return;
+                return false;
             }
 
-            List<RodTable> families = Tables.GetAll<RodTable>().Where(rod => !rod.IsSpecial && !rod.Locked).ToList();
-            RodTable kind = families[Math.Min(families.Count - 1, (int)(Random.NextDouble() * families.Count))];
             Summons++;
-            stake.Put(kind, PickGrade());
+            stake.Put(rod, PickGrade());
             Bus.Publish(new Events.RodSummoned(stake));
+            return true;
         }
 
         private int PickGrade()
@@ -208,115 +205,20 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 같은 계열 · 등급이 셋(mergeCount) 모였나: 누른 말뚝 + 가까운 순 짝들. 특별한 대 · 마지막 등급 · 월척을 붙잡은 대는 안 된다
-        internal bool CanMerge(StakeInteractable stake)
-        {
-            return Carried == null && MergePartners(stake) != null;
-        }
-
-        // 웜뱃 버튼 · 점원 공용(점원은 웜뱃이 대를 들고 있어도 합친다)
-        internal void Merge(StakeInteractable stake)
-        {
-            List<StakeInteractable> partners = MergePartners(stake);
-
-            if (partners == null)
-            {
-                return;
-            }
-
-            foreach (StakeInteractable partner in partners)
-            {
-                partner.Put(null, 0);
-            }
-
-            stake.RaiseGrade();
-            Bus.Publish(new Events.RodsMerged(stake, partners.ToArray()));
-        }
-
-        internal List<StakeInteractable> MergePartners(StakeInteractable stake)
-        {
-            if (stake.Rod == null || stake.Rod.IsSpecial || stake.Grade >= Config.GradeWeights.Length || stake.Hooked != null)
-            {
-                return null;
-            }
-
-            List<StakeInteractable> partners = m_stakes
-                .Where(s => s != stake && s.Rod == stake.Rod && s.Grade == stake.Grade && s.Hooked == null)
-                .OrderBy(s => Vector2.Distance(s.Position, stake.Position))
-                .Take(Config.MergeCount - 1)
-                .ToList();
-            return partners.Count == Config.MergeCount - 1 ? partners : null;
-        }
-
-        // 판에 합칠 수 있는 말뚝이 있으면 하나(점원)
-        internal StakeInteractable MergeableStake()
-        {
-            return m_stakes.FirstOrDefault(s => MergePartners(s) != null);
-        }
-
-        // 들기(든 것 없을 때, 꽂힌 대) · 놓기(빈 말뚝) · 맞바꾸기(꽂힌 말뚝: 든 대를 꽂고, 원래 대는 들었던 말뚝으로, 그 말뚝이 없으면 손에)
-        internal bool CanCarry(StakeInteractable stake)
-        {
-            return stake.Open && stake.Hooked == null && (Carried != null || stake.Rod != null);
-        }
-
-        internal void Carry(StakeInteractable stake)
-        {
-            if (!CanCarry(stake))
-            {
-                return;
-            }
-
-            if (Carried == null)
-            {
-                Carried = stake.Rod;
-                CarriedGrade = stake.Grade;
-                m_carryFrom = stake;
-                stake.Put(null, 0);
-                return;
-            }
-
-            RodTable old = stake.Rod;
-            int oldGrade = stake.Grade;
-            stake.Put(Carried, CarriedGrade);
-            Carried = null;
-
-            if (old == null)
-            {
-                m_carryFrom = null;
-            }
-            else if (m_carryFrom != null && m_carryFrom.Rod == null && m_carryFrom != stake)
-            {
-                m_carryFrom.Put(old, oldGrade);
-                m_carryFrom = null;
-            }
-            else
-            {
-                Carried = old;
-                CarriedGrade = oldGrade;
-                m_carryFrom = stake;
-            }
-        }
-
         // ---------- 웜뱃 동작 ----------
 
-        // 털썩: 붙잡힌 월척이면 바로 낚고, 대물을 감는 말뚝이면 곁에 앉는다
+        // 털썩: 붙잡힌 월척을 바로 낚는다
         internal bool CanHaul(StakeInteractable stake)
         {
-            return stake.Hooked != null || stake.Rod != null && !Wombat.Sitting && BossInRange(stake);
+            return stake.Hooked != null;
         }
 
         internal void Haul(StakeInteractable stake)
         {
-            if (stake.Hooked != null)
+            if (CanHaul(stake))
             {
                 Sim.Land(stake);
                 Wombat.Hold(stake.Position, Config.HaulSeconds);
-            }
-            else if (CanHaul(stake))
-            {
-                m_sit = stake;
-                Wombat.Sit(stake.Position);
             }
         }
 
@@ -330,11 +232,6 @@ namespace ZooTycoon.Core
         internal StakeInteractable OverdueTrophy()
         {
             return m_stakes.FirstOrDefault(s => s.Hooked != null && s.Hooked.HookedFor >= Config.TrophyHoldSeconds);
-        }
-
-        private bool BossInRange(StakeInteractable stake)
-        {
-            return Fish.Any(f => f.Boss && InReach(stake, Layout.PointAt(f.S), RangeOf(stake)));
         }
 
         internal bool CanDigStream => !StreamFull && Wombat.Worker.Wallet.Coins >= DigPrice;
@@ -384,60 +281,44 @@ namespace ZooTycoon.Core
             Bus.Publish(new Events.Thumped(this, at));
         }
 
-        // 빈 말뚝이 있거나 손이 비었나(고를 수 있나)
-        public bool CanChoose => m_choice != null && (Carried == null || m_stakes.Any(s => s.Open && s.Rod == null));
+        internal bool CanStageUp => Wombat.Worker.Wallet.Coins >= StagePrice;
 
-        // 대물 뱃속 3택 1에서 고른다: 빈 열린 말뚝에 꽂고, 없으면 웜뱃이 든다. 말뚝이 다 찼고 이미 대를 들고 있으면 고르지 못한다(false, 3택 1은 남는다)
-        public bool Choose(int index)
+        // 설계 46: 미끼 노점에서 다음 단계(물고기 무게 × weightGrowth · 떼 + schoolPerStage)
+        internal bool StageUp()
         {
-            if (m_choice == null || index < 0 || index >= m_choice.Length)
+            if (!CanStageUp || !Wombat.Worker.Wallet.TrySpendCoins(StagePrice))
             {
                 return false;
             }
 
-            RodTable rod = m_choice[index];
-            StakeInteractable empty = m_stakes.FirstOrDefault(s => s.Open && s.Rod == null);
-
-            if (empty == null && Carried != null)
-            {
-                return false;
-            }
-
-            m_choice = null;
-            SyncThings();
-
-            if (empty != null)
-            {
-                empty.Put(rod, 1);
-            }
-            else
-            {
-                Carried = rod;
-                CarriedGrade = 1;
-                m_carryFrom = null;
-            }
-
+            Stage++;
+            Bus.Publish(new Events.StageRaised(this));
             return true;
         }
 
-        // 웜뱃이 나가면 들던 대는 들었던 말뚝으로(그 말뚝이 찼으면 빈 말뚝, 없으면 계속 든다)
-        protected override void OnWombatLeft()
+        public FishingUpgradeData Upgrade(string id) => Config.HutUpgrades.First(u => u.Id == id);
+
+        public int LevelOf(string id) => m_upgrades.TryGetValue(id, out int level) ? level : 0;
+
+        // 다음 단계 값(최대면 무한)
+        public double UpgradePrice(string id)
         {
-            m_sit = null;
+            FishingUpgradeData upgrade = Upgrade(id);
+            int level = LevelOf(id);
+            return level >= upgrade.MaxLevel ? double.PositiveInfinity : upgrade.BaseCost * Math.Pow(upgrade.CostGrowth, level);
+        }
 
-            if (Carried == null)
+        // 설계 46 미끼 노점 업그레이드 한 단계
+        internal bool BuyUpgrade(string id)
+        {
+            if (!Wombat.Worker.Wallet.TrySpendCoins(UpgradePrice(id)))
             {
-                return;
+                return false;
             }
 
-            StakeInteractable home = m_carryFrom != null && m_carryFrom.Rod == null ? m_carryFrom : m_stakes.FirstOrDefault(s => s.Open && s.Rod == null);
-
-            if (home != null)
-            {
-                home.Put(Carried, CarriedGrade);
-                Carried = null;
-                m_carryFrom = null;
-            }
+            m_upgrades[id] = LevelOf(id) + 1;
+            Bus.Publish(new Events.Upgraded(this, FishingHutInteractable.k_Id));
+            return true;
         }
 
         // ---------- 물때 ----------
@@ -453,15 +334,12 @@ namespace ZooTycoon.Core
                 m_queue.RemoveAt(0);
             }
 
-            if (!m_bossOut)
-            {
-                m_waveElapsed += dt;
+            m_waveElapsed += dt;
 
-                if (m_waveElapsed >= Config.WaveSeconds)
-                {
-                    m_waveElapsed = 0d;
-                    NextWave();
-                }
+            if (m_waveElapsed >= Config.WaveSeconds)
+            {
+                m_waveElapsed = 0d;
+                NextWave();
             }
 
             Sim.Tick(dt);
@@ -469,24 +347,12 @@ namespace ZooTycoon.Core
 
         private void NextWave()
         {
-            Wave = Wave % Config.BossEvery + 1;
-
-            if (Wave == Config.BossEvery)
-            {
-                FishTable boss = Tables.Get<FishTable>(Config.BossFish);
-                FishSizeData size = boss.Sizes[0];
-                Sim.Spawn(new Fish(boss, 0, false, size.Min * StageScale));
-                m_bossOut = true;
-                Bus.Publish(new Events.WaveStarted(this, true));
-                return;
-            }
-
             foreach ((double delay, Fish fish) in MakeSchool(Random))
             {
                 m_queue.Add((m_clock + delay, fish));
             }
 
-            Bus.Publish(new Events.WaveStarted(this, false));
+            Bus.Publish(new Events.WaveStarted(this));
         }
 
         private double StageScale => Math.Pow(Config.WeightGrowth, Stage - 1);
@@ -494,7 +360,7 @@ namespace ZooTycoon.Core
         // 지금 단계의 떼 하나(나올 때까지 초 · 물고기)
         internal List<(double delay, Fish fish)> MakeSchool(IRandom random)
         {
-            List<FishTable> kinds = Tables.GetAll<FishTable>().Where(f => !f.Boss && f.Spawn > 0d).ToList();
+            List<FishTable> kinds = Tables.GetAll<FishTable>().Where(f => f.Spawn > 0d).ToList();
             double total = kinds.Sum(f => f.Spawn);
             int count = Config.SchoolBase + (int)Math.Floor((Stage - 1) * Config.SchoolPerStage);
             List<(double, Fish)> school = new List<(double, Fish)>();
@@ -552,34 +418,11 @@ namespace ZooTycoon.Core
             Wombat.Worker.Wallet.AddItem(fish.Kind.Item, count);
             Record(fish);
             Bus.Publish(new Events.FishCaught(this, fish, count, stake));
-
-            if (fish.Boss)
-            {
-                Stage++;
-                m_choice = Tables.GetAll<RodTable>().Where(rod => rod.IsSpecial).OrderBy(_ => Random.NextDouble()).Take(3).ToArray();
-                EndBoss(true);
-                SyncThings();
-                Bus.Publish(new Events.RodChoiceReady(this));
-            }
         }
 
         private void Sim_Escaped(Fish fish)
         {
             Bus.Publish(new Events.FishEscaped(this, fish));
-
-            if (fish.Boss)
-            {
-                EndBoss(false);
-            }
-        }
-
-        // 대물이 끝나면 다음 틱에 물때 1이 나온다
-        private void EndBoss(bool caught)
-        {
-            m_bossOut = false;
-            Wave = 0;
-            m_waveElapsed = Config.WaveSeconds;
-            Bus.Publish(new Events.BossResolved(this, caught));
         }
 
         private void Record(Fish fish)
@@ -604,7 +447,7 @@ namespace ZooTycoon.Core
             // 미끼 · 소용돌이로 늦어져도 끝나게 넉넉히 기다리는 배수(남은 물고기가 없으면 일찍 끝난다)
             const double k_Slack = 10d;
             Dictionary<string, double> made = new Dictionary<string, double>();
-            FishingSim sim = new FishingSim(this, false);
+            FishingSim sim = new FishingSim(this);
             sim.Caught += (fish, _) => made[fish.Kind.Item] = (made.TryGetValue(fish.Kind.Item, out double n) ? n : 0d) + (fish.Trophy ? Config.TrophyCatch : 1);
             List<(double delay, Fish fish)> school = MakeSchool(new SeededRandom(Stage));
             double slowest = school.Count == 0 ? 0d : school.Min(f => f.fish.Kind.Speed);
@@ -635,13 +478,21 @@ namespace ZooTycoon.Core
 
         // ---------- 저장 ----------
 
-        internal RodTable ChoiceOrNull(int i) => m_choice != null && i < m_choice.Length ? m_choice[i] : null;
-
-        internal void Restore(int stage, int summons, int dug, IEnumerable<(bool open, RodTable rod, int grade)> stakes, RodTable carried, int carriedGrade,
-            IReadOnlyList<RodTable> choice, IReadOnlyDictionary<string, FishRecord> log)
+        internal void Restore(int stage, int summons, IReadOnlyDictionary<string, int> upgrades, int dug, IEnumerable<(bool open, RodTable rod, int grade)> stakes, IReadOnlyDictionary<string, FishRecord> log)
         {
             Stage = Math.Max(1, stage);
             Summons = summons;
+
+            m_upgrades.Clear();
+
+            foreach (FishingUpgradeData upgrade in Config.HutUpgrades)
+            {
+                if (upgrades != null && upgrades.TryGetValue(upgrade.Id, out int level) && level > 0)
+                {
+                    m_upgrades[upgrade.Id] = Math.Min(level, upgrade.MaxLevel);
+                }
+            }
+
             Dug = Math.Max(0, dug);
             ApplyDug();
             int i = 0;
@@ -662,9 +513,6 @@ namespace ZooTycoon.Core
                 i++;
             }
 
-            Carried = carried;
-            CarriedGrade = carried == null ? 0 : Math.Max(1, carriedGrade);
-            m_choice = choice != null && choice.Count > 0 ? choice.ToArray() : null;
             SyncThings();
 
             foreach (KeyValuePair<string, FishRecord> pair in log)
@@ -705,18 +553,12 @@ namespace ZooTycoon.Core
             SyncThings();
         }
 
-        // 사물 목록: 딴짓 점원 → 똥 → 낚은 대물(있을 때) → 말뚝 → 막다른 끝(더 팔 수 있을 때) → 나가기 → 물가(물가는 말뚝 · 통로에 대상을 양보한다). 오두막은 대상이 아니다
+        // 사물 목록: 딴짓 점원 → 똥 → 말뚝 → 막다른 끝(더 팔 수 있을 때) → 미끼 노점 → 나가기 → 물가(물가는 말뚝 · 통로에 대상을 양보한다)
         private void SyncThings()
         {
             Placed.Clear();
             Placed.AddRange(ClerkThings);
             Placed.AddRange(Poops);
-
-            if (m_choice != null)
-            {
-                Placed.Add(Catch);
-            }
-
             Placed.AddRange(m_stakes);
 
             if (!StreamFull)
@@ -724,6 +566,7 @@ namespace ZooTycoon.Core
                 Placed.Add(StreamEnd);
             }
 
+            Placed.Add(Hut);
             Placed.Add(m_exit);
             Placed.Add(Bank);
         }

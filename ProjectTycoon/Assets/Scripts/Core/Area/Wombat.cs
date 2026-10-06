@@ -26,8 +26,6 @@ namespace ZooTycoon.Core
         public double DigSeconds { get; }
         // 굴 파기 · 엉덩이 쿵 · 털썩처럼 짧은 동작 중(그 자리에 선다, 조이스틱 · 시스템 이동 모두 멈춘다)
         public bool Busy => m_busyLeft > 0d;
-        // 설계 44: 대물을 감는 말뚝 곁에 털썩 앉아 있다. 조이스틱을 밀면 일어난다
-        public bool Sitting { get; private set; }
 
         private double m_busyLeft;
 
@@ -64,17 +62,6 @@ namespace ZooTycoon.Core
                 m_busyLeft -= dt;
                 Moving = false;
                 return;
-            }
-
-            if (Sitting)
-            {
-                Sitting = Input == Vector2.Zero;
-                Moving = false;
-
-                if (Sitting)
-                {
-                    return;
-                }
             }
 
             if (WaitingRelease)
@@ -127,7 +114,6 @@ namespace ZooTycoon.Core
             Mover.Place(Mover.Position);
             Moving = false;
             Walked = 0d;
-            Sitting = false;
         }
 
         // 짧은 동작: 하던 이동을 멈추고 at 쪽을 본 채 seconds 동안 그 자리에 선다
@@ -142,14 +128,6 @@ namespace ZooTycoon.Core
         internal void Dig(Vector2 at)
         {
             Hold(at, DigSeconds);
-        }
-
-        // 설계 44: at(말뚝) 쪽을 보고 털썩 앉는다
-        internal void Sit(Vector2 at)
-        {
-            Stop();
-            Mover.Facing = Mover.FacingOf(at - Mover.Position);
-            Sitting = true;
         }
 
         internal void WaitRelease()

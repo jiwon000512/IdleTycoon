@@ -1,6 +1,6 @@
 {
   "table": "ItemTable",
-  "version": 7,
+  "version": 8,
   "notes": [
     "설계 25 밀 농사: 재료. id는 CropTable item · BreadTable ingredients가 가리킨다. 창고(ZooState)가 id로 세고, 사고팔지 않는다(재화는 코인 하나).",
     "icon: Resources/ 기준 경로(확장자 없음). 상단 바 재료 알약 · 굽기 칩 레시피 · 거두기 팝업이 같은 그림을 쓴다. start: 새 게임 창고에 든 개수(시작값).",
@@ -9,7 +9,8 @@
     "version 4 (2026-09-30, 설계 30): 석상이 축복(무료)으로 바뀌어 gem 쓸 곳은 광장 유물 수레(설계 31, 준비 중). use를 inventory_use_relic으로, desc도 고쳤다.",
     "version 5 (2026-10-01, 설계 35 작물 · 밭 시트): strawberry(딸기: 밭 시트에서 해금하는 둘째 작물, 케이크 레시피) 행.",
     "version 6 (2026-10-05, 설계 44 낚시 디펜스): 물고기 넷(fish_minnow 피라미 · fish_crucian 붕어 · fish_catfish 메기 · fish_boss 바위잉어, 대물). 아이콘은 그림이 올 때까지 바구니 그림을 같이 쓴다. 쓰는 곳(횟집)은 다음 단계.",
-    "version 7 (2026-10-05, 아트방 낚시 그림 4 「둥근 귀염」): 물고기 넷 아이콘을 바구니에서 Sprites/Items/fish_<id>(옆모습, 낚여 튀는 그림과 같음)로."
+    "version 7 (2026-10-05, 아트방 낚시 그림 4 「둥근 귀염」): 물고기 넷 아이콘을 바구니에서 Sprites/Items/fish_<id>(옆모습, 낚여 튀는 그림과 같음)로.",
+    "version 8 (2026-10-05, 설계 46): 대물이 없어져 fish_boss(바위잉어) 삭제(창고에 있던 것은 불러올 때 버린다)."
   ],
   "rows": [
     { "id": "wheat", "name": "밀", "desc": "밭에서 자라는 노란 곡식. 빵 반죽의 기본 재료다.", "icon": "Sprites/Items/wheat", "start": 10 },
@@ -18,7 +19,6 @@
     { "id": "gem", "name": "반짝돌", "desc": "밭을 거두다 가끔 나오는 반짝이는 돌. 모아 두면 광장 유물 수레에서 쓴다.", "icon": "Sprites/Items/gem", "start": 0, "source": "inventory_source_harvest", "use": "inventory_use_relic" },
     { "id": "fish_minnow", "name": "피라미", "desc": "낚시터 물길을 떼로 내려오는 작은 물고기. 빠르고 가볍다.", "icon": "Sprites/Items/fish_minnow", "start": 0, "source": "inventory_source_fishing", "use": "inventory_use_fish" },
     { "id": "fish_crucian", "name": "붕어", "desc": "낚시터 물길의 보통 물고기. 떼에 가장 흔하다.", "icon": "Sprites/Items/fish_crucian", "start": 0, "source": "inventory_source_fishing", "use": "inventory_use_fish" },
-    { "id": "fish_catfish", "name": "메기", "desc": "느리지만 묵직한 물고기. 쇠낚싯대로 감는 편이 낫다.", "icon": "Sprites/Items/fish_catfish", "start": 0, "source": "inventory_source_fishing", "use": "inventory_use_fish" },
-    { "id": "fish_boss", "name": "바위잉어", "desc": "물때 열 번마다 내려오는 대물. 낚으면 뱃속에서 특별한 낚싯대가 나온다.", "icon": "Sprites/Items/fish_boss", "start": 0, "source": "inventory_source_fishing_boss", "use": "inventory_use_fish" }
+    { "id": "fish_catfish", "name": "메기", "desc": "느리지만 묵직한 물고기. 쇠낚싯대로 감는 편이 낫다.", "icon": "Sprites/Items/fish_catfish", "start": 0, "source": "inventory_source_fishing", "use": "inventory_use_fish" }
   ]
 }

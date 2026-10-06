@@ -5,7 +5,7 @@ namespace ZooTycoon.Core
     public sealed class Fish
     {
         public FishTable Kind { get; }
-        // 크기 번호(0 작은 · 1 보통 · 2 큰, 대물은 0)
+        // 크기 번호(0 작은 · 1 보통 · 2 큰)
         public int Size { get; }
         public bool Trophy { get; }
         public double Weight { get; }
@@ -16,8 +16,7 @@ namespace ZooTycoon.Core
         public StakeInteractable HookedBy { get; internal set; }
         // 붙잡힌 지 몇 초(점원이 거드는 때를 잰다)
         public double HookedFor { get; internal set; }
-        public bool Boss => Kind.Boss;
-        public bool Big => Boss || Size == 2;
+        public bool Big => Size == 2;
 
         public Fish(FishTable kind, int size, bool trophy, double weight)
         {

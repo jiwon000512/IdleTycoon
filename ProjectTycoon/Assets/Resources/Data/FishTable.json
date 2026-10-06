@@ -1,10 +1,11 @@
 {
   "table": "FishTable",
-  "version": 1,
+  "version": 2,
   "notes": [
     "설계 44 물고기. 떼 물고기는 spawn 비중으로 고르고 sizes[작은 · 보통 · 큰] 중 chance 비중으로 크기를 골라 min~max 무게(× 단계 배수). 무게 = 감아야 할 양. 낚으면 item 재료가 창고로.",
-    "speed: 물길을 따라 헤엄치는 속도(유닛/초). boss: 대물(FishingConfigTable bossFish, 떼에 나오지 않는다, 크기 하나).",
-    "version 1 (2026-10-05, 설계 44): 처음 만듦."
+    "speed: 물길을 따라 헤엄치는 속도(유닛/초).",
+    "version 1 (2026-10-05, 설계 44): 처음 만듦.",
+    "version 2 (2026-10-05, 설계 46): 대물 삭제 — boss_carp 행과 boss 칸."
   ],
   "rows": [
     {
@@ -28,8 +29,7 @@
           "max": 2.4,
           "chance": 0.1
         }
-      ],
-      "boss": false
+      ]
     },
     {
       "id": "crucian",
@@ -52,8 +52,7 @@
           "max": 6.0,
           "chance": 0.1
         }
-      ],
-      "boss": false
+      ]
     },
     {
       "id": "catfish",
@@ -76,22 +75,7 @@
           "max": 12.0,
           "chance": 0.1
         }
-      ],
-      "boss": false
-    },
-    {
-      "id": "boss_carp",
-      "item": "fish_boss",
-      "spawn": 0,
-      "speed": 0.5,
-      "sizes": [
-        {
-          "min": 60,
-          "max": 60,
-          "chance": 1
-        }
-      ],
-      "boss": true
+      ]
     }
   ]
 }

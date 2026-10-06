@@ -30,14 +30,13 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorPaid>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pay)),
                 bus.Subscribe<Events.BakeryVisitorPicked>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pick)),
                 bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
-                // 설계 44: 낚시터(쿵 · 털썩은 웜뱃 동작 칸에 맞춰 WombatView, 대물 · 소환 · 합치기는 지금 소리를 빌린다)
+                // 설계 44 · 46: 낚시터(쿵 · 털썩은 웜뱃 동작 칸에 맞춰 WombatView, 대 사기 · 단계는 지금 소리를 빌린다). 대 사기 소리는 등급 뽑기 별이 다 켜진 때
                 bus.Subscribe<Events.FishCaught>(e => PlayIn(e.Fishing, SoundTable.k_FishCatch)),
                 bus.Subscribe<Events.FishEscaped>(e => PlayIn(e.Fishing, SoundTable.k_FishEscape)),
                 bus.Subscribe<Events.StreamDug>(e => PlayIn(e.Fishing, SoundTable.k_Dig)),
-                bus.Subscribe<Events.BossResolved>(e => PlayIn(e.Fishing, e.Caught ? SoundTable.k_EvalPass : SoundTable.k_EvalFail)),
-                bus.Subscribe<Events.WaveStarted>(e => PlayIn(e.Fishing, e.Boss ? SoundTable.k_EvalStart : null)),
-                bus.Subscribe<Events.RodSummoned>(e => PlayIn(e.Stake.Fishing, e.Stake.Grade >= 3 ? SoundTable.k_StarTier : e.Stake.Grade == 2 ? SoundTable.k_Bonus : SoundTable.k_Put)),
-                bus.Subscribe<Events.RodsMerged>(e => StartCoroutine(PlayLater(FishingView.k_MergeSeconds, e.Into.Fishing, SoundTable.k_Upgrade))),
+                bus.Subscribe<Events.StageRaised>(e => PlayIn(e.Fishing, SoundTable.k_Upgrade)),
+                bus.Subscribe<Events.RodSummoned>(e => StartCoroutine(PlayLater(FishingView.RevealSeconds(e.Stake), e.Stake.Fishing,
+                    e.Stake.Grade >= 3 ? SoundTable.k_StarTier : e.Stake.Grade == 2 ? SoundTable.k_Bonus : SoundTable.k_Put))),
                 bus.Subscribe<Events.Dug>(Bus_Dug),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.Upgraded>(e => PlayIn(e.Area, SoundTable.k_Upgrade)),

@@ -12,14 +12,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 15)]
-        [TestCase("StringTable", 47)]
+        [TestCase("StringTable", 48)]
         [TestCase("ClerkTable", 3)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 21)]
-        [TestCase("InteractableTable", 20)]
+        [TestCase("ActionTable", 22)]
+        [TestCase("InteractableTable", 21)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 16)]
         [TestCase("BgmTable", 1)]
@@ -27,7 +27,7 @@ namespace ZooTycoon.Tests
         [TestCase("BakeryConfigTable", 9)]
         [TestCase("PlazaConfigTable", 7)]
         [TestCase("PlazaDecorTable", 1)]
-        [TestCase("ItemTable", 7)]
+        [TestCase("ItemTable", 8)]
         [TestCase("CropTable", 4)]
         [TestCase("FarmConfigTable", 7)]
         [TestCase("FarmFloorTable", 2)]
@@ -35,9 +35,9 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
-        [TestCase("FishingConfigTable", 3)]
-        [TestCase("RodTable", 1)]
-        [TestCase("FishTable", 1)]
+        [TestCase("FishingConfigTable", 4)]
+        [TestCase("RodTable", 2)]
+        [TestCase("FishTable", 2)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -106,6 +106,26 @@ namespace ZooTycoon.Tests
         {
             TableSet tables = TestTables.Load();
             tables.Get<RodTable>(RodTable.k_Bait).Slow = 1.5d;
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 설계 46: 미끼 노점 업그레이드는 light · pulley · whirl 한 줄씩, 시트에 나오는 대는 칩 아이콘이 있다
+        [Test]
+        public void Validate_WhenHutUpgradeMissing_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            FishingConfigTable config = tables.Get<FishingConfigTable>(FishingConfigTable.k_Main);
+            config.HutUpgrades = config.HutUpgrades.Where(u => u.Id != FishingUpgradeData.k_Whirl).ToArray();
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenShopRodHasNoIcon_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<RodTable>(RodTable.k_Iron).Icon = null;
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }

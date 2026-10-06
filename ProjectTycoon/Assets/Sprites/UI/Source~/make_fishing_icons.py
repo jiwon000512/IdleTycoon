@@ -55,5 +55,7 @@ def icons(path):
 
 if __name__ == '__main__':
     for name, ic in icons(os.path.join(HERE, 'raw', 'fishing_icons_a.png')):
+        if name in ('merge', 'carry'):
+            continue   # 합치기 · 대 들기는 없앰(2026-10-05 설계 46: 설치물 · 대물 · 대 들기 · 합치기를 없애 이 그림은 만들지 않는다)
         Image.fromarray(ic, 'RGBA').save(os.path.join(OUT, name + '.png'))
         print('%s.png %d x %d' % (name, ic.shape[1], ic.shape[0]))

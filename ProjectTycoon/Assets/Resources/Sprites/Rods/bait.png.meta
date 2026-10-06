@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 4e8b55a6bdc2f794da528259d87271c7
+guid: f1180df4fefe6d64c9682f6c3f3053ed
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5353828722724778313
-    second: rod_lighthouse_0
+      213: -2741604302042374173
+    second: bait_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -50,7 +50,7 @@ TextureImporter:
   spriteExtrude: 1
   spriteMeshType: 0
   alignment: 9
-  spritePivot: {x: 0.53333336, y: 0}
+  spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 80
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: rod_lighthouse_0
+      name: bait_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 28
-        height: 88
+        width: 38
+        height: 60
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7bec4b9742163b5b0800000000000000
-      internalID: -5353828722724778313
+      spriteID: 3efd416b96dd3f9d0800000000000000
+      internalID: -2741604302042374173
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      rod_lighthouse_0: -5353828722724778313
+      bait_0: -2741604302042374173
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

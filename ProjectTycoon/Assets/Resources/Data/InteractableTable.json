@@ -1,6 +1,6 @@
 {
   "table": "InteractableTable",
-  "version": 20,
+  "version": 21,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
     "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상. 통로(exit·door)는 바닥선에서 0.25 이상 올라간 띠(코드 PassageInteractable.k_Enter) 안에서 가로 거리만 잰다 — 거리만으로 넘어간다(2026-09-26).",
@@ -24,7 +24,8 @@
     "version 17 (2026-10-02, 설계 39 농장 아래층): stair = 계단 자리(층 맨 아래 줄 밑변 가운데, 층을 다 팠고 아래층이 닫혀 있을 때만). 삽 버튼(open_dig) → 시트 줄 dig_floor로 아래층을 연다. 열린 뒤 아래로 가는 통로는 exit 행을 쓴다(띠 방향만 반대).",
     "version 18 (2026-10-02, 설계 40 별 평가): board = 평가판(빵집 입구 칠판 장식 앞 바닥, StarConfigTable boardX · boardY). 버튼 evaluate가 평가 팝업을 연다. 길을 막지 않고 편집 모드에서 집지 않는다.",
     "version 19 (2026-10-05, 설계 44 낚시 디펜스): stake(둑의 말뚝: 털썩 → 합치기 → 들기/놓기 → 소환 → 열기, 앞이 버튼 우선) · stream_bank(물가 어디든: 엉덩이 쿵, 말뚝 · 통로에 대상을 양보) · fishing_hut(낚시터 점원 오두막, worker 자리) · boss_catch(낚은 대물, 뱃속 3택 1이 남은 동안만: 돋보기로 시트를 열어 고른다). 낚시터 구멍은 exit, 광장 낚시터 문은 door를 같이 쓴다.",
-    "version 20 (2026-10-05, 설계 45 물길 파기): stream_end(낚시터 물길 막다른 끝 바로 앞 땅, 버튼 dig_stream. 끝까지 파면 사물 목록에서 빠진다)."
+    "version 20 (2026-10-05, 설계 45 물길 파기): stream_end(낚시터 물길 막다른 끝 바로 앞 땅, 버튼 dig_stream. 끝까지 파면 사물 목록에서 빠진다).",
+    "version 21 (2026-10-05, 설계 46 낚시터 개편): stake 행동 털썩 → 대 사기(open_summon · summon 시트) → 열기(합치기 · 들기 삭제), fishing_hut에 open · stage_up · hut_upgrade(웜뱃이 단계 · 업그레이드를 올리는 곳), boss_catch 삭제."
   ],
   "rows": [
     {
@@ -254,7 +255,7 @@
     {
       "id": "stake",
       "range": 0.8,
-      "actions": ["haul", "merge", "carry", "summon", "open_stake"],
+      "actions": ["haul", "open_summon", "summon", "open_stake"],
       "upgrade": null
     },
     {
@@ -272,17 +273,11 @@
     {
       "id": "fishing_hut",
       "range": 1.0,
-      "actions": [],
+      "actions": ["open", "stage_up", "hut_upgrade"],
       "upgrade": null,
       "spots": [
         { "dx": 0, "dy": 0, "face": "down", "role": "worker" }
       ]
-    },
-    {
-      "id": "boss_catch",
-      "range": 0.9,
-      "actions": ["open", "choose_rod"],
-      "upgrade": null
     }
   ]
 }

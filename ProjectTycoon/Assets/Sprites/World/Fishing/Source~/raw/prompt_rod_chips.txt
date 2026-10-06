@@ -1,0 +1,13 @@
+# 시트 칩 아이콘 여섯(2026-10-05 설계 46, 에이전트 선택 A 「비스듬한 대 · 설치물」, B 「말뚝에 꽂힌 짧은 대」는 기록). -i 1: rod_chips_template.png(한 칸 9px, 윗줄 굽기 칩 빵 아이콘 셋, 아랫줄 빈 칸 여섯), -i 2: rod_chips_ref.png(지금 대 · 설치물 그림)
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 1 (do NOT write code). Keep the canvas size, the white background and the three bread icons of the top row EXACTLY where and how they are: they are existing item icons of a cozy pixel-art idle game, one art pixel = 9 screen pixels. Remove the six grey frames of the bottom row.
+In the bottom row paint SIX NEW item icons, one in each grey frame position from left to right, each about as big as the bread icons (fitting its 26 by 26 art pixel frame), with exactly the same big 9-pixel art pixels (never smaller), the same chunky pixel style as the bread icons, dark brown outline (#342020) one art pixel wide, flat soft earthy palette with one darker shade and one small highlight, no anti-aliasing, no gradients, no text, no letters, no numbers, no background, no frame.
+Image 2 shows the six real game objects these icons stand for (toy-like fishing rods with a big round reel and a bulb grip, and three special devices). Keep each one's design and colors recognizable:
+1) BAMBOO fishing rod (light yellow-tan segmented bamboo), 2) IRON fishing rod (dark grey iron shaft), 3) BAIT fishing rod (brown wooden shaft with a tiny wooden bait bucket hanging near the reel), 4) PULLEY TOWER (small wooden A-frame with a big pulley wheel on top and rope), 5) LIGHTHOUSE (little red-and-cream striped lighthouse post with a warm lamp), 6) WHIRLPOOL TRAP (woven wicker fish trap with a small teal swirl).
+[a]
+COMPOSITION: each fishing rod is drawn DIAGONALLY across its frame (butt at the bottom left, tip at the top right, the round reel in the middle) so the whole rod fits; the three devices are drawn whole and upright, a bit squatter so they fit.
+Save the image as chips_a.png in the current working directory and reply with only the path.
+[b]
+COMPOSITION: each fishing rod is drawn as a short chunky upright rod standing in a little round wooden stake socket at the bottom (like a rod planted in the ground), curved tip at the top, all of it fitting the frame; the three devices are drawn whole and upright, a bit squatter so they fit.
+Save the image as chips_b.png in the current working directory and reply with only the path.

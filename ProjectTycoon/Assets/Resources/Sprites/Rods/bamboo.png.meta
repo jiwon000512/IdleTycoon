@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 31ec3b774afd65745bef366825776797
+guid: b88b817fcb3b16a43bd04b336a666e43
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3128037068336569924
-    second: carry_0
+      213: 1173672819109715352
+    second: bamboo_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -49,9 +49,9 @@ TextureImporter:
   spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 0
-  alignment: 0
+  alignment: 9
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 25
+  spritePixelsToUnits: 80
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: carry_0
+      name: bamboo_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 22
-        height: 24
+        width: 40
+        height: 60
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cb16b810cdaf694d0800000000000000
-      internalID: -3128037068336569924
+      spriteID: 89dd099e539b94010800000000000000
+      internalID: 1173672819109715352
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      carry_0: -3128037068336569924
+      bamboo_0: 1173672819109715352
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

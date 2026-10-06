@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -78,9 +79,9 @@ namespace ZooTycoon.UI
             {
                 foreach (SheetOption option in action.Options(m_target.Area.Wombat.Worker, m_target))
                 {
-                    if (action.Table.Id == ActionTable.k_Bake || action.Table.Id == ActionTable.k_Plant)
+                    if (action.Table.Id == ActionTable.k_Bake || action.Table.Id == ActionTable.k_Plant || action.Table.Id == ActionTable.k_Summon)
                     {
-                        chips.Add(action.Table.Id == ActionTable.k_Bake ? Chip(option) : CropChip(option));
+                        chips.Add(action.Table.Id == ActionTable.k_Bake ? Chip(option) : action.Table.Id == ActionTable.k_Plant ? CropChip(option) : RodChip(option));
                         m_chips.Add((action.Table.Id, option.Option));
                     }
                     else
@@ -115,9 +116,12 @@ namespace ZooTycoon.UI
                 case StairInteractable stair:
                     m_view.SetHeader(m_tables.Text("sheet_stair_title"), m_tables.Format("sheet_stair_status", stair.Farm.Lower.Number));
                     break;
-                // 설계 44: 낚은 대물 뱃속 3택 1(말뚝이 다 찼고 대를 들고 있으면 하나 비우라고)
-                case BossCatchInteractable boss:
-                    m_view.SetHeader(m_tables.Text("rod_choice_title"), m_tables.Text(boss.Fishing.CanChoose ? "rod_choice_hint" : "rod_choice_full"));
+                // 설계 46: 말뚝 = 대 사기(꽂혀 있으면 바꾸기, 등급 뽑기 비중을 아래 줄에) · 미끼 노점 = 지금 단계
+                case StakeInteractable stake:
+                    m_view.SetHeader(stake.Rod == null ? m_tables.Text("sheet_stake_title") : m_tables.Format("sheet_stake_swap_title", m_tables.Text("rod_" + stake.Rod.Id)), GradeOdds(stake.Fishing));
+                    break;
+                case FishingHutInteractable hut:
+                    m_view.SetHeader(m_tables.Text("sheet_hut_title"), m_tables.Format("sheet_hut_status", hut.Fishing.Stage));
                     break;
                 // 설계 35: 거름은 심을 때 하나씩 저절로 든다
                 case PlotInteractable plot:
@@ -150,6 +154,7 @@ namespace ZooTycoon.UI
                     Label = m_tables.Format("chip_bread", bread.Name),
                     Cost = BigNumberFormatter.Format(option.Cost),
                     CostPoor = option.State == SheetOptionState.Poor,
+                    Locked = true,
                     Enabled = enabled,
                     Ingredients = Recipe(bread),
                 };
@@ -184,6 +189,7 @@ namespace ZooTycoon.UI
                     Label = item.Name,
                     Cost = BigNumberFormatter.Format(option.Cost),
                     CostPoor = option.State == SheetOptionState.Poor,
+                    Locked = true,
                     Enabled = option.State == SheetOptionState.Enabled,
                 };
             }
@@ -200,6 +206,28 @@ namespace ZooTycoon.UI
                 Highlighted = stock == 0,
                 Enabled = option.State == SheetOptionState.Enabled,
             };
+        }
+
+        // 설계 46 대 칩: 대 · 설치물 아이콘 · 이름 · 값(자물쇠 없음). 사면 시트가 닫히고 말뚝에서 등급 뽑기
+        private SheetChip RodChip(SheetOption option)
+        {
+            RodTable rod = m_tables.Get<RodTable>(option.Option);
+
+            return new SheetChip
+            {
+                SpritePath = rod.Icon,
+                Label = m_tables.Text("rod_" + rod.Id),
+                Cost = BigNumberFormatter.Format(option.Cost),
+                CostPoor = option.State == SheetOptionState.Poor,
+                Enabled = option.State == SheetOptionState.Enabled,
+            };
+        }
+
+        // 등급 뽑기에서 전설이 나올 확률(%, 한 글에 정보 하나)
+        private string GradeOdds(FishingArea fishing)
+        {
+            double[] weights = fishing.Config.GradeWeights;
+            return m_tables.Format("sheet_stake_odds", Math.Round(weights[weights.Length - 1] / weights.Sum() * 100d));
         }
 
         private List<ChipIngredient> Recipe(BreadTable bread)
@@ -252,12 +280,26 @@ namespace ZooTycoon.UI
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
-                case ActionTable.k_ChooseRod:
+                // 설계 46 미끼 노점 업그레이드: 이름 Lv · 효과 전후 · 값(최대면 「최대」)
+                case ActionTable.k_HutUpgrade:
+                {
+                    FishingUpgradeData upgrade = ((FishingHutInteractable)m_target).Fishing.Upgrade(option.Option);
+
                     return new SheetRow
                     {
-                        Name = m_tables.Text("rod_" + option.Option),
-                        Effect = m_tables.Text("rod_" + option.Option + "_desc"),
-                        Cost = "",
+                        Name = m_tables.Format("row_upgrade", upgrade.Name, option.Level),
+                        Effect = string.Format(CultureInfo.InvariantCulture, upgrade.EffectFormat, option.Before, option.After),
+                        Cost = Cost(option),
+                        State = RowState(option.State),
+                    };
+                }
+                // 설계 46 단계 올리기: 다음 단계 · 무엇이 바뀌나 · 값
+                case ActionTable.k_StageUp:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Format("row_stage_up", option.Level + 1),
+                        Effect = m_tables.Text("row_stage_up_effect"),
+                        Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
                 default:
@@ -322,7 +364,7 @@ namespace ZooTycoon.UI
 
             m_view.FlashRow(index);
 
-            if (m_target is DigInteractable || m_target is StairInteractable || m_target is BossCatchInteractable)
+            if (m_target is DigInteractable || m_target is StairInteractable)
             {
                 m_view.Close();
             }

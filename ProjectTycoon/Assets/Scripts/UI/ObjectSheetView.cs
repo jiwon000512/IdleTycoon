@@ -25,10 +25,11 @@ namespace ZooTycoon.UI
         // 칩 시안 A(2026-10-01): 오른쪽 위 개수 배지(진열 재고 · 창고 개수, 해금 칩은 null). 0이면 배지가 강조색
         public string Count;
         public bool CountEmpty;
-        // 아래 줄: 시계 + 걸리는 초, 해금 칩은 대신 자물쇠 + 코인 값(Cost, 모자라면 CostPoor)
+        // 아래 줄: 시계 + 걸리는 초, 값 칩은 대신 코인 값(Cost, 모자라면 CostPoor)이고 해금 칩이면 자물쇠(Locked)도
         public string Seconds;
         public string Cost;
         public bool CostPoor;
+        public bool Locked;
         public bool Highlighted;
         public bool Enabled = true;
         // 설계 25: 레시피(칩 왼쪽 위에 재료마다 한 줄)
@@ -207,13 +208,13 @@ namespace ZooTycoon.UI
 
         private static void SetInfo(Transform info, SheetChip chip)
         {
-            bool locked = chip.Cost != null;
-            info.Find("Clock").gameObject.SetActive(!locked);
-            info.Find("Seconds").gameObject.SetActive(!locked);
-            info.Find("Lock").gameObject.SetActive(locked);
-            info.Find("CoinValue").gameObject.SetActive(locked);
+            bool priced = chip.Cost != null;
+            info.Find("Clock").gameObject.SetActive(!priced);
+            info.Find("Seconds").gameObject.SetActive(!priced);
+            info.Find("Lock").gameObject.SetActive(priced && chip.Locked);
+            info.Find("CoinValue").gameObject.SetActive(priced);
 
-            if (locked)
+            if (priced)
             {
                 TMP_Text cost = info.Find("CoinValue/Cost").GetComponent<TMP_Text>();
                 cost.text = chip.Cost;
