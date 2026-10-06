@@ -38,7 +38,7 @@ Tycoon/
    ├─ Scenes/Main.unity     단일 씬(조립 지점만)
    ├─ Scripts/  Core · Data · Game · UI · World · Editor
    ├─ Tests/EditMode/       Core·Data 유닛 테스트
-   ├─ Resources/  Data(JSON 표 19개) · UI(UI 프리팹) · Sprites · Audio · Shaders
+   ├─ Resources/  Data(JSON 표 30개) · UI(UI 프리팹) · Sprites · Audio · Shaders
    ├─ Prefabs/Bakery/       월드 프리팹(메뉴 Bake/Bakery가 굽는다)
    ├─ Sprites/  UI · World  조각 원본과 만드는 스크립트는 각 Source~/
    └─ Audio/Source~/        효과음·BGM 원본 스크립트
