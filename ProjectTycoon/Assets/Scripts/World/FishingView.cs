@@ -11,11 +11,12 @@ using ZooTycoon.Core;
 namespace ZooTycoon.World
 {
     // 설계 52 강가 낚시 화면: 굴 그림(고정 방) · 강(물결 타일을 사각형으로 코드 그림, 둑 띠는 벽 안쪽 바닥 폭만큼 Tiled) · 손에 든 대 · 낚싯줄 · 찌 · 물속 그림자 · 긴장 게이지를
-    // 매 프레임 Core(FishingArea)대로 그린다. 사건: 던짐(찌가 대 끝에서 포물선으로 난다) · 가짜 입질(찌 까딱) · 물었다 · 걸렸다 · 달리기(물보라) · 낚음(물고기가 손으로 튀고 웜뱃이 만세, 이름 · 무게 알약) · 끊김(줄이 튄다)
+    // 매 프레임 Core(FishingArea)대로 그린다. 사건: 던짐(대를 휘두르고 찌가 대 끝에서 포물선으로 난다) · 가짜 입질(찌 까딱 · 고리) · 물었다 · 걸렸다 · 달리기(대 떨림 · 거품) · 낚음(물고기가 돌며 손으로 튀고 웜뱃이 만세, 이름 · 무게 알약) · 끊김(줄이 튀고 대가 튕긴다)
+    // 생동감(2026-10-07 사용자 「밋밋하다」): 새 그림 없이 네모 알갱이(물결 고리 · 거품 · 반짝) · 대 회전 · 줄 색 · 머리 위 말풍선(Core)으로
     public sealed class FishingView : MonoBehaviour, IAreaView
     {
         private const string k_PopupKey = "harvest_popup";
-        // 그림 층: 굴(−2000) 위에 물 · 둑, 그 위에 물속 그림자, 팝업 · 알갱이 · 게이지는 맨 위
+        // 그림 층: 굴(−2000) 위에 물 · 둑, 그 위에 물속 그림자 · 물결 고리, 팝업 · 알갱이 · 게이지는 맨 위
         private const int k_WaterOrder = -1985;
         private const int k_FishOrder = -1980;
         private const int k_TopOrder = 1000;
@@ -44,16 +45,40 @@ namespace ZooTycoon.World
         private const float k_RunWobble = 0.15f;
         private const float k_RunWobbleSpeed = 12f;
         private const float k_NibbleSeconds = 0.18f;
-        // 던지기: 찌가 대 끝에서 물 자리까지 포물선으로 나는 초 · 높이(유닛)
+        // 던지기: 찌가 대 끝에서 물 자리까지 포물선으로 나는 초 · 높이(유닛) · 대를 뒤로 당겼다(도) 앞으로 휘두르는(도) 각
         private const float k_CastSeconds = 0.35f;
         private const float k_CastArc = 0.6f;
+        private const float k_SwingBack = -35f;
+        private const float k_SwingForward = 18f;
+        // 달릴 때 대 떨림(도 · 초당) · 끊길 때 대가 뒤로 튕겼다 돌아오는 각(도) · 초
+        private const float k_ShakeDegrees = 4f;
+        private const float k_ShakeHz = 14f;
+        private const float k_RecoilDegrees = -25f;
+        private const float k_RecoilSeconds = 0.3f;
+        // 떠 있는 찌는 살랑인다(유닛 · 빠르기) · 물결 고리 간격(초) · 고리 반지름(기다림 · 입질 · 물었다 · 떨어짐 · 달림) · 고리 색
+        private const float k_BobAmount = 0.02f;
+        private const float k_BobSpeed = 2.5f;
+        private const float k_RippleEvery = 1.6f;
+        private const float k_RippleIdle = 0.3f;
+        private const float k_RippleNibble = 0.45f;
+        private const float k_RippleBite = 0.8f;
+        private const float k_RippleLand = 0.6f;
+        private const float k_RippleRun = 0.35f;
+        private const float k_RippleSeconds = 0.6f;
+        private static readonly Color k_Ripple = new Color32(0xDD, 0xF1, 0xF5, 210);
+        // 줄다리기: 줄 색은 긴장만큼 붉어진다 · 게이지는 이 비율부터 두근거린다 · 달리는 물고기 뒤 거품 간격(초)
+        private static readonly Color k_LineTense = new Color32(0xE0, 0x5A, 0x4A, 230);
+        private const float k_GaugeAlarm = 0.7f;
+        private const float k_FoamEvery = 0.12f;
         // 물속 그림자는 찌 아래로 · 긴장 게이지(릴 16칸)는 웜뱃 오른쪽 어깨 옆(대 끝 · 줄과 안 겹치게)
         private const float k_ShadowDrop = 0.12f;
         private static readonly Vector3 k_GaugeAt = new Vector3(0.95f, 1.1f, 0f);
-        // 낚은 물고기가 손으로 튀는 초 · 높이 · 만세한 두 앞발 사이 높이(유닛, 아트방 make_cheer.py) · 이름 알약이 떠오르는 초 · 팝업 높이(든 물고기 위)
+        // 낚은 물고기가 손으로 튀는 초 · 높이 · 나는 동안 도는 각(도) · 만세한 두 앞발 사이 높이(유닛, 아트방 make_cheer.py) · 앞발에 닿을 때 금빛 알갱이 · 이름 알약이 떠오르는 초 · 팝업 높이(든 물고기 위)
         private const float k_CatchSeconds = 0.35f;
         private const float k_CatchArc = 0.8f;
+        private const float k_CatchSpin = 540f;
         private const float k_CheerHold = 1.08f;
+        private static readonly Color k_Sparkle = new Color32(0xF2, 0xC1, 0x4E, 255);
         private const float k_RiseSeconds = 0.9f;
         private const float k_PopupHeight = 1.7f;
 
@@ -110,6 +135,10 @@ namespace ZooTycoon.World
         private Rect m_bounds;
         private float m_nibbleLeft;
         private float m_castLeft;
+        private float m_recoilLeft;
+        private float m_cheerLeft;
+        private float m_rippleIn;
+        private float m_foamIn;
         private float m_handScale = 1f;
         private Vector3 m_bobberAt;
 
@@ -210,36 +239,44 @@ namespace ZooTycoon.World
                 return;
             }
 
+            float dt = Time.deltaTime;
             m_water.sprite = m_waterFrames[(int)(Time.time / k_WaterFrameSeconds) % m_waterFrames.Length];
-            m_nibbleLeft = Mathf.Max(0f, m_nibbleLeft - Time.deltaTime);
+            m_nibbleLeft = Mathf.Max(0f, m_nibbleLeft - dt);
+            m_recoilLeft = Mathf.Max(0f, m_recoilLeft - dt);
             FishingPhase phase = m_fishing.Phase;
             bool fishing = phase != FishingPhase.Idle;
-            // 대는 물가가 대상일 때부터 손에 보이고, 낚아 만세하는 동안(Busy)은 내려놓는다
-            SyncRod(fishing || (m_fishing.Target == m_fishing.Water && !m_fishing.Wombat.Busy));
+            bool tug = phase == FishingPhase.Tug;
+            // 던진 직후 찌가 나는 동안(flying): 대는 뒤로 당겼다 앞으로 휘두른다. 달릴 때 떨리고, 끊기면 뒤로 튕겼다 돌아온다
+            bool flying = fishing && m_castLeft > 0f;
+            m_castLeft = flying ? Mathf.Max(0f, m_castLeft - dt) : 0f;
+            float k = flying ? 1f - m_castLeft / k_CastSeconds : 1f;
+            float angle = flying ? Swing(k) : tug && m_fishing.Running ? Mathf.Sin(Time.time * k_ShakeHz * Mathf.PI * 2f) * k_ShakeDegrees : 0f;
+            angle += k_RecoilDegrees * (m_recoilLeft / k_RecoilSeconds);
+            // 대는 물가가 대상일 때부터 손에 보이고, 낚아 만세하는 동안만 내려놓는다(놓침 · 끊김의 잠깐 서기에는 들고 튕긴다)
+            m_cheerLeft = Mathf.Max(0f, m_cheerLeft - dt);
+            SyncRod(fishing || (m_fishing.Target == m_fishing.Water && m_cheerLeft <= 0f), angle);
             m_line.enabled = fishing;
             m_bobberArt.enabled = fishing;
-            m_shadow.enabled = phase == FishingPhase.Tug;
-            m_gauge.enabled = phase == FishingPhase.Tug;
+            m_shadow.enabled = tug;
+            m_gauge.enabled = tug;
 
             if (!fishing)
             {
-                m_castLeft = 0f;
                 return;
             }
 
             Vector3 tip = TipOf();
             Vector3 spot = BobberAt(phase);
-            float castLeft = Mathf.Max(0f, m_castLeft - Time.deltaTime);
 
-            // 던진 직후에는 찌가 대 끝에서 물 자리까지 포물선으로 날아가 떨어진다
-            if (m_castLeft > 0f)
+            if (flying)
             {
-                float k = 1f - castLeft / k_CastSeconds;
                 m_bobberAt = Vector3.Lerp(tip, spot, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * k_CastArc);
 
-                if (castLeft <= 0f)
+                if (m_castLeft <= 0f)
                 {
                     Splash(spot, 1);
+                    Ripple(spot, k_RippleLand);
+                    m_rippleIn = k_RippleEvery;
                 }
             }
             else
@@ -247,21 +284,51 @@ namespace ZooTycoon.World
                 m_bobberAt = spot;
             }
 
-            m_castLeft = castLeft;
-            m_bobberArt.transform.position = m_bobberAt;
+            // 떠 있는 찌는 살랑이고 가끔 작은 물결 고리를 낸다
+            Vector3 shown = m_bobberAt;
+
+            if (!flying && !tug)
+            {
+                shown += Vector3.up * (Mathf.Sin(Time.time * k_BobSpeed) * k_BobAmount);
+                m_rippleIn -= dt;
+
+                if (m_rippleIn <= 0f)
+                {
+                    m_rippleIn = k_RippleEvery;
+                    Ripple(m_bobberAt, k_RippleIdle);
+                }
+            }
+
+            m_bobberArt.transform.position = shown;
             m_bobberArt.sprite = m_bobber[phase != FishingPhase.Waiting || m_nibbleLeft > 0f ? 1 : 0];
-            Vector3 d = m_bobberAt - tip;
+            Vector3 d = shown - tip;
             m_line.transform.position = tip + d / 2f;
             m_line.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
             m_line.transform.localScale = new Vector3(d.magnitude, k_LineWidth, 1f);
+            float tension = tug ? (float)(m_fishing.Tension / m_fishing.Config.Rod.Line) : 0f;
+            m_line.color = Color.Lerp(k_Line, k_LineTense, tension);
 
-            if (phase == FishingPhase.Tug)
+            if (tug)
             {
                 m_shadow.transform.position = m_bobberAt + Vector3.down * k_ShadowDrop;
                 m_shadow.flipX = Mathf.Sin(Time.time * k_RunWobbleSpeed) < 0f;
-                int frame = Mathf.Clamp(Mathf.RoundToInt((float)(m_fishing.Tension / m_fishing.Config.Rod.Line) * (m_reelGauge.Length - 1)), 0, m_reelGauge.Length - 1);
+                int frame = Mathf.Clamp(Mathf.RoundToInt(tension * (m_reelGauge.Length - 1)), 0, m_reelGauge.Length - 1);
                 m_gauge.sprite = m_reelGauge[frame];
                 m_gauge.transform.position = m_wombat.transform.position + k_GaugeAt;
+                // 긴장이 높으면 게이지가 두근거린다
+                m_gauge.transform.localScale = Vector3.one * (tension >= k_GaugeAlarm ? 1f + 0.15f * Mathf.Abs(Mathf.Sin(Time.time * 20f)) : 1f);
+
+                // 달리는 물고기 뒤로 거품
+                if (m_fishing.Running)
+                {
+                    m_foamIn -= dt;
+
+                    if (m_foamIn <= 0f)
+                    {
+                        m_foamIn = k_FoamEvery;
+                        StartCoroutine(Fx.Burst(transform, m_square, m_bobberAt, 2, 0.5f, 0.6f, 3f, 0.35f, 2, k_WaterLight, k_FishOrder + 1));
+                    }
+                }
             }
         }
 
@@ -277,6 +344,14 @@ namespace ZooTycoon.World
 
             m_poopViews?.Dispose();
             m_clerkViews?.Dispose();
+        }
+
+        // 던지기 대 각: 뒤로 당겼다가(0~0.3) 앞으로 휘둘러(0.3~0.6) 제자리로(0.6~1)
+        private static float Swing(float k)
+        {
+            return k < 0.3f ? Mathf.Lerp(0f, k_SwingBack, k / 0.3f)
+                : k < 0.6f ? Mathf.Lerp(k_SwingBack, k_SwingForward, (k - 0.3f) / 0.3f)
+                : Mathf.Lerp(k_SwingForward, 0f, (k - 0.6f) / 0.4f);
         }
 
         // 둑 줄(물가 바로 위 줄)에서 걷는 바닥의 왼쪽 · 오른쪽 끝(유닛, 낚시터 원점 기준). 둑 띠를 벽 안쪽에만 깐다(사용자 2026-10-07 「벽 쪽 경계가 깨진다」)
@@ -317,8 +392,8 @@ namespace ZooTycoon.World
             return ToWorld(m_fishing.Layout.Deep(wombat, k) + side);
         }
 
-        // 손에 든 대(자리는 WombatView.Hand가 맞춘다): 달릴 때 휘고(rod_bent), 감을 때 당김 판. 왼쪽을 보면 뒤집고 뒷모습이면 몸 뒤(든 빵과 같은 규칙)
-        private void SyncRod(bool shown)
+        // 손에 든 대(자리는 WombatView.Hand가 맞춘다): 달릴 때 휘고(rod_bent), 감을 때 당김 판. 왼쪽을 보면 뒤집고(각도도) 뒷모습이면 몸 뒤(든 빵과 같은 규칙)
+        private void SyncRod(bool shown, float angle)
         {
             m_rod.enabled = shown;
 
@@ -329,18 +404,20 @@ namespace ZooTycoon.World
 
             Facing facing = m_fishing.Wombat.Mover.Facing;
             bool tug = m_fishing.Phase == FishingPhase.Tug;
+            bool flip = facing == Facing.Left;
             string name = tug && m_fishing.Running ? "rod_bent" : tug && m_fishing.Wombat.Holding ? "rod_bamboo_1_pull" : "rod_bamboo_1";
             m_rod.sprite = m_rodSprites[name];
-            m_rod.flipX = facing == Facing.Left;
-            m_rod.transform.localPosition = new Vector3(facing == Facing.Left || facing == Facing.Right ? 0f : k_RodGrip.x, k_RodGrip.y, 0f) / m_handScale;
+            m_rod.flipX = flip;
+            m_rod.transform.localPosition = new Vector3(flip || facing == Facing.Right ? 0f : k_RodGrip.x, k_RodGrip.y, 0f) / m_handScale;
+            m_rod.transform.localRotation = Quaternion.Euler(0f, 0f, flip ? -angle : angle);
             m_rod.sortingOrder = Fx.CarryOrder(facing, k_RodFrontOrder, k_RodBackOrder);
         }
 
-        // 줄이 나오는 대 끝(왼쪽을 보면 좌우가 뒤집힌다)
+        // 줄이 나오는 대 끝(왼쪽을 보면 좌우가 뒤집히고, 대가 돌면 같이 돈다. 대의 월드 배율은 1)
         private Vector3 TipOf()
         {
             Vector2 cells = k_RodTips.TryGetValue(m_rod.sprite.name, out Vector2 tip) ? tip : new Vector2(0f, m_rod.sprite.rect.height / 4f);
-            return m_rod.transform.position + new Vector3((m_rod.flipX ? -cells.x : cells.x) * Fx.k_Cell, cells.y * Fx.k_Cell, 0f);
+            return m_rod.transform.TransformPoint(new Vector3((m_rod.flipX ? -cells.x : cells.x) * Fx.k_Cell, cells.y * Fx.k_Cell, 0f));
         }
 
         private Sprite SwimSprite(string fishId)
@@ -364,6 +441,7 @@ namespace ZooTycoon.World
             if (e.Fishing == m_fishing)
             {
                 m_nibbleLeft = k_NibbleSeconds;
+                Ripple(m_bobberAt, k_RippleNibble);
             }
         }
 
@@ -372,6 +450,7 @@ namespace ZooTycoon.World
             if (e.Fishing == m_fishing)
             {
                 Splash(m_bobberAt, 1);
+                Ripple(m_bobberAt, k_RippleBite);
             }
         }
 
@@ -380,6 +459,7 @@ namespace ZooTycoon.World
             if (e.Fishing == m_fishing)
             {
                 Splash(m_bobberAt, 2);
+                Ripple(m_bobberAt, k_RippleBite);
             }
         }
 
@@ -388,10 +468,11 @@ namespace ZooTycoon.World
             if (e.Fishing == m_fishing && e.Running)
             {
                 Splash(m_bobberAt, 1);
+                Ripple(m_bobberAt, k_RippleRun);
             }
         }
 
-        // 낚았다: 큰 물보라, 웜뱃은 대를 내려놓고 만세(Core가 landSeconds 동안 세워 둔다), 물고기 그림이 든 두 앞발 사이로 튀어 올라 그동안 머문다. 「+1」 팝업과 「붕어 1.2kg」 알약
+        // 낚았다: 큰 물보라, 웜뱃은 대를 내려놓고 만세(Core가 landSeconds 동안 세워 둔다), 물고기 그림이 돌며 든 두 앞발 사이로 튀어 올라 금빛 알갱이와 함께 그동안 머문다. 「+1」 팝업과 「붕어 1.2kg」 알약
         private void Bus_FishLanded(Events.FishLanded e)
         {
             if (e.Fishing != m_fishing)
@@ -406,29 +487,34 @@ namespace ZooTycoon.World
             SpriteRenderer body = NewRenderer(transform, "Caught", icon, Color.white, k_TopOrder - 3);
             body.transform.position = from;
             Vector3 wombat = m_wombat.transform.position;
+            Vector3 hold = wombat + Vector3.up * k_CheerHold;
             float seconds = (float)m_fishing.Config.LandSeconds;
             string tag = m_tables.Format("fishing_catch_tag", item.Name, e.Fish.Weight.ToString("0.#", CultureInfo.InvariantCulture));
+            m_cheerLeft = seconds;
             m_wombat.Cheer(seconds);
-            StartCoroutine(Fly(body.transform, wombat + Vector3.up * k_CheerHold, k_CatchArc, () =>
+            StartCoroutine(Fly(body.transform, hold, k_CatchArc, () =>
             {
                 Destroy(body.gameObject, seconds - k_CatchSeconds);
+                StartCoroutine(Fx.Burst(transform, m_square, hold, 8, 0.8f, 1.6f, 4f, 0.45f, 3, k_Sparkle, k_TopOrder));
                 ShowPopup(wombat + Vector3.up * k_PopupHeight, m_tables.Format(k_PopupKey, 1), icon);
                 StartCoroutine(Rise(tag, wombat + Vector3.up * (k_PopupHeight + 0.5f)));
             }));
         }
 
-        // 끊기면 대 끝에서 줄 조각이 튄다
+        // 끊기면 대 끝에서 줄 조각이 튀고 대가 뒤로 튕긴다
         private void Bus_FishingEnded(Events.FishingEnded e)
         {
             if (e.Fishing == m_fishing && e.Reason == FishingEnd.Snapped)
             {
                 StartCoroutine(Fx.Burst(transform, m_square, TipOf(), 8, 1.0f, 2f, 9f, 0.4f, 3, k_Line, k_TopOrder));
                 Splash(m_bobberAt, 1);
+                m_recoilLeft = k_RecoilSeconds;
             }
         }
 
         // ---------- 연출 조각 ----------
 
+        // 포물선으로 날며 한 바퀴 반 돈다
         private IEnumerator Fly(Transform target, Vector3 to, float arc, Action landed)
         {
             Vector3 from = target.position;
@@ -437,10 +523,12 @@ namespace ZooTycoon.World
             {
                 float k = t / k_CatchSeconds;
                 target.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * arc);
+                target.rotation = Quaternion.Euler(0f, 0f, k_CatchSpin * k);
                 yield return null;
             }
 
             target.position = to;
+            target.rotation = Quaternion.identity;
             landed();
         }
 
@@ -469,6 +557,11 @@ namespace ZooTycoon.World
         {
             StartCoroutine(Fx.Burst(transform, m_square, at, 6 * strength, 1.2f * strength, 2.4f, 9f, 0.45f, 4, k_WaterLight, k_TopOrder));
             StartCoroutine(Fx.Burst(transform, m_square, at, 6 * strength, 1.2f * strength, 2.4f, 9f, 0.45f, 4, k_Water, k_TopOrder));
+        }
+
+        private void Ripple(Vector3 at, float radius)
+        {
+            StartCoroutine(Fx.Ripple(transform, m_square, at, radius, k_RippleSeconds, 10, k_Ripple, k_FishOrder + 1));
         }
 
         private Vector3 ToWorld(System.Numerics.Vector2 p)

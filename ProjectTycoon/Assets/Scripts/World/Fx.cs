@@ -50,6 +50,43 @@ namespace ZooTycoon.World
             return Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 4f, 4f), new Vector2(0.5f, 0.5f), 4f);
         }
 
+        // 물결 고리: 네모 알갱이 count개가 at을 가운데로 radius까지 타원(세로는 절반, 위에서 본 물)으로 퍼지며 2칸 → 1칸으로 작아지고 옅어져 사라진다. 칸 격자
+        public static IEnumerator Ripple(Transform parent, Sprite square, Vector3 at, float radius, float seconds, int count, Color color, int order)
+        {
+            Transform holder = new GameObject("Ripple").transform;
+            holder.SetParent(parent, false);
+            SpriteRenderer[] bits = new SpriteRenderer[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                bits[i] = new GameObject("Bit").AddComponent<SpriteRenderer>();
+                bits[i].transform.SetParent(holder, false);
+                bits[i].sprite = square;
+                bits[i].sortingOrder = order;
+            }
+
+            for (float t = 0f; t < seconds; t += Time.deltaTime)
+            {
+                float k = t / seconds;
+                float r = radius * (1f - (1f - k) * (1f - k));
+                float size = Mathf.Ceil(2f * (1f - k)) * k_Cell;
+                Color faded = new Color(color.r, color.g, color.b, color.a * (1f - k));
+
+                for (int i = 0; i < count; i++)
+                {
+                    float angle = Mathf.PI * 2f * i / count;
+                    Vector3 p = at + new Vector3(Mathf.Cos(angle) * r, Mathf.Sin(angle) * r * 0.5f, 0f);
+                    bits[i].transform.position = new Vector3(Mathf.Round(p.x / k_Cell) * k_Cell, Mathf.Round(p.y / k_Cell) * k_Cell, p.z);
+                    bits[i].transform.localScale = new Vector3(size, size, 1f);
+                    bits[i].color = faded;
+                }
+
+                yield return null;
+            }
+
+            Object.Destroy(holder.gameObject);
+        }
+
         // 네모 알갱이 count개가 at에서 좌우(spread)·위(lift)로 튀어 gravity로 떨어지며 cells칸 → 1칸으로 작아지다 사라진다. 칸 격자에 맞춰 움직인다
         // ponytail: 알갱이마다 GameObject를 만든다. 동시에 수백 개가 되면 PoolManager로
         public static IEnumerator Burst(Transform parent, Sprite square, Vector3 at, int count, float spread, float lift, float gravity, float seconds, int cells, Color color, int order)

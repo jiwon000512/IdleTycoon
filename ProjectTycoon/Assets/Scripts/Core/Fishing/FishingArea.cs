@@ -165,6 +165,8 @@ namespace ZooTycoon.Core
             {
                 Phase = FishingPhase.Bite;
                 m_phaseLeft += Config.BiteWindow;
+                // 물었다: 웜뱃 머리 위 「!」(낚아챌 틈을 알린다)
+                Wombat.Bubble.Show(BubbleTable.k_Alert);
                 Bus.Publish(new Events.Bitten(this));
             }
         }
@@ -249,8 +251,14 @@ namespace ZooTycoon.Core
         private void End(FishingEnd reason)
         {
             Clear();
-            // 거둔 즉시 걸을 수 있게(직전 틱의 Hold를 푼다). 놓침 · 끊김은 잠깐 선다
+            // 거둔 즉시 걸을 수 있게(직전 틱의 Hold를 푼다). 놓침 · 끊김은 잠깐 서서 「!!」
             Wombat.Hold(Facing(), reason == FishingEnd.Retrieved ? 0d : k_EndHoldSeconds);
+
+            if (reason != FishingEnd.Retrieved)
+            {
+                Wombat.Bubble.Show(BubbleTable.k_Angry);
+            }
+
             Bus.Publish(new Events.FishingEnded(this, reason));
         }
 
