@@ -87,5 +87,94 @@ namespace ZooTycoon.Core
                 Reason = reason;
             }
         }
+
+        // 설계 53: 바위를 뚫어 구간 땅이 열렸다(강바닥은 마름)
+        public readonly struct StretchOpened
+        {
+            public readonly FishingArea Fishing;
+            public readonly int Stretch;
+
+            public StretchOpened(FishingArea fishing, int stretch)
+            {
+                Fishing = fishing;
+                Stretch = stretch;
+            }
+        }
+
+        // 설계 53: 댐 잔해 한 조각을 끌어냈다(코인은 이미 지갑에). 남은 조각은 Dam.PiecesLeft
+        public readonly struct DebrisPulled
+        {
+            public readonly FishingArea Fishing;
+            public readonly DamInteractable Dam;
+            public readonly double Coins;
+
+            public DebrisPulled(FishingArea fishing, DamInteractable dam, double coins)
+            {
+                Fishing = fishing;
+                Dam = dam;
+                Coins = coins;
+            }
+        }
+
+        // 설계 53: 댐이 무너져 그 구간에 물이 찼다(새 물고기)
+        public readonly struct DamBroken
+        {
+            public readonly FishingArea Fishing;
+            public readonly int Stretch;
+
+            public DamBroken(FishingArea fishing, int stretch)
+            {
+                Fishing = fishing;
+                Stretch = stretch;
+            }
+        }
+
+        // 설계 53: 좌대를 놓았다
+        public readonly struct SeatPlaced
+        {
+            public readonly FishingArea Fishing;
+            public readonly SeatInteractable Seat;
+
+            public SeatPlaced(FishingArea fishing, SeatInteractable seat)
+            {
+                Fishing = fishing;
+                Seat = seat;
+            }
+        }
+
+        // 설계 53: 좌대 손님이 구멍에서 나왔다 · 한 마리 낚았다(값은 이미 지갑에) · 구멍으로 나갔다
+        public readonly struct FishingVisitorArrived
+        {
+            public readonly FishingVisitor Visitor;
+
+            public FishingVisitorArrived(FishingVisitor visitor)
+            {
+                Visitor = visitor;
+            }
+        }
+
+        public readonly struct FishingVisitorCaught
+        {
+            public readonly FishingVisitor Visitor;
+            public readonly FishTable Kind;
+            public readonly double Coins;
+
+            public FishingVisitorCaught(FishingVisitor visitor, FishTable kind, double coins)
+            {
+                Visitor = visitor;
+                Kind = kind;
+                Coins = coins;
+            }
+        }
+
+        public readonly struct FishingVisitorLeft
+        {
+            public readonly FishingVisitor Visitor;
+
+            public FishingVisitorLeft(FishingVisitor visitor)
+            {
+                Visitor = visitor;
+            }
+        }
     }
 }

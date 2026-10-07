@@ -243,6 +243,22 @@ namespace ZooTycoon.Editor
                 Import(k_FishingDir + tile + ".png", new Vector2(0f, 1f), k_TagPpu, true);
             }
             Import(k_FishingDir + "stream_face.png", new Vector2(0f, 1f), k_TagPpu, true);
+
+            // 설계 53 넓히기(아트방, 오면 임포트): 마른 강바닥 타일(물 타일처럼 픽셀을 읽는다) · 끝 바위 · 좌대(발끝) · 댐 단계(발끝) · 끌려 나오는 잔해(가운데)
+            if (System.IO.File.Exists(k_FishingDir + "dry_bed.png"))
+            {
+                Import(k_FishingDir + "dry_bed.png", new Vector2(0f, 1f), k_TagPpu, true);
+            }
+
+            foreach (string name in new[] { "rock_wall", "seat", "dam_1", "dam_2", "dam_3" }.Where(name => System.IO.File.Exists(k_FishingDir + name + ".png")))
+            {
+                Import(k_FishingDir + name + ".png", bottom);
+            }
+
+            foreach (string path in System.IO.Directory.GetFiles(k_FishingDir, "debris_*.png"))
+            {
+                Import(path.Replace('\\', '/'), center);
+            }
             foreach (string fish in FishSwims)
             {
                 Import(k_FishingDir + fish + ".png", center);
@@ -828,6 +844,11 @@ namespace ZooTycoon.Editor
             SetBurrowTextures(view);
             SetArray(view, "m_waterTiles", WaterTiles.Select(tile => AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + tile + ".png")).ToArray());
             Set(view, "m_streamFace", AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + "stream_face.png"));
+            Set(view, "m_dryBed", AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + "dry_bed.png"));
+            Set(view, "m_rockWall", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "rock_wall.png"));
+            Set(view, "m_seat", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "seat.png"));
+            SetArray(view, "m_dams", new[] { "dam_1", "dam_2", "dam_3" }.Select(name => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + name + ".png")).Where(sprite => sprite != null).ToArray());
+            SetArray(view, "m_debris", System.IO.Directory.GetFiles(k_FishingDir, "debris_*.png").OrderBy(path => path).Select(path => AssetDatabase.LoadAssetAtPath<Sprite>(path.Replace('\\', '/'))).ToArray());
             SetArray(view, "m_fishSwim", FishSwims.Select(fish => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + fish + ".png")).ToArray());
             SetArray(view, "m_bobber", new[] { AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "bobber_0.png"), AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "bobber_1.png") });
             SetArray(view, "m_reelGauge", Enumerable.Range(0, k_ReelFrames).Select(i => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + ReelFrame(i) + ".png")).ToArray());

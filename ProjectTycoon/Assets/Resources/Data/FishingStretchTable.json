@@ -1,0 +1,40 @@
+{
+  "table": "FishingStretchTable",
+  "version": 1,
+  "notes": [
+    "설계 53 낚시터 넓히기: 낚시터 구간. 구간 = 굴 칸 FishingConfigTable stretchCols열(한 화면 폭) × rows줄. index 0이 처음 낚시터(구멍 · 둑 소품이 있는 곳), 음수는 왼쪽(상류) · 양수는 오른쪽(하류). 전부 시작값이며 플레이로 튠한다.",
+    "열기: 안쪽 구간이 열려 있으면 경계 둑 끝 바위를 rockCost 코인으로 뚫어 그 구간 땅이 열린다(강바닥은 마름). 안쪽 구간에 물이 차 있으면 경계 물속 잔해 댐 조각 damPieces개를 줄다리기로 끌어내 다 빼면 물이 찬다. index 0은 처음부터 열림 · 물 참(rockCost · damPieces 0).",
+    "fish: 물이 찬 이 구간에서 던지면 무는 물고기(FishTable id)와 chance 비중. 좌대 손님이 낚는 물고기(보이기만)도 여기서.",
+    "seats: 좌대 자리(구간 가운데에서 dx, 둑 선 위 FishingConfigTable seatBack)와 놓는 값. 물이 찬 구간에만 생긴다. 놓은 좌대마다 광장 손님 한 명이 앉아 낚는다. pay: 그 손님이 한 마리 낚을 때마다 내는 코인(석상 값 축복 곱).",
+    "version 1 (2026-10-07, 설계 53): 처음 낚시터 + 하류 1(바위 2,500 · 댐 3 · 붕어 · 메기) + 상류 1(바위 15,000 · 댐 5 · 메기). 사용자 「양쪽으로 이어지게 · 지금 + 새 구간 둘」."
+  ],
+  "rows": [
+    {
+      "id": "home",
+      "index": 0,
+      "rockCost": 0,
+      "damPieces": 0,
+      "fish": [{ "id": "crucian", "chance": 3 }, { "id": "minnow", "chance": 5 }],
+      "seats": [{ "dx": -4.6, "cost": 500 }, { "dx": 4.6, "cost": 1000 }],
+      "pay": 15
+    },
+    {
+      "id": "down1",
+      "index": 1,
+      "rockCost": 2500,
+      "damPieces": 3,
+      "fish": [{ "id": "crucian", "chance": 3 }, { "id": "catfish", "chance": 2 }],
+      "seats": [{ "dx": -3.4, "cost": 2000 }, { "dx": 3.4, "cost": 4000 }],
+      "pay": 25
+    },
+    {
+      "id": "up1",
+      "index": -1,
+      "rockCost": 15000,
+      "damPieces": 5,
+      "fish": [{ "id": "catfish", "chance": 1 }],
+      "seats": [{ "dx": -3.4, "cost": 8000 }, { "dx": 3.4, "cost": 16000 }],
+      "pay": 40
+    }
+  ]
+}

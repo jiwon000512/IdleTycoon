@@ -6,7 +6,8 @@ namespace ZooTycoon.World
 {
     // 설계 52 · 아트방 「흙 도랑」 재료 그대로(Fishing/Source~/make_stream.py 머리말이 원본): 강물을 굴 그림처럼 칸마다 칠한다(한 칸 = 1픽셀, 굴 그림과 같은 원점 · 크기).
     // 물 = 물 사각형 안(방 안 · 윗벽 띠 아래만). 물 칸: 위가 물 밖에서 k_FaceRows줄은 흙 면(stream_face, 둑의 벽), 그다음 한 줄은 거품, 나머지는 물 타일(water_tile), 좌우가 물 밖 2칸 안은 짙은 물.
-    // 물 밖 둑 고리(4방향 거리): 1 · 4 = 선, 2 · 3 = 턱(아트방 둑 띠가 오면 둑은 그리지 않는다). 그 밖은 투명
+    // 물 밖 둑 고리(4방향 거리): 1 · 4 = 선, 2 · 3 = 턱(아트방 둑 띠가 오면 둑은 그리지 않는다). 그 밖은 투명.
+    // 설계 53: 열렸지만 댐 뒤라 마른 강바닥(layout.DryBeds)도 같은 흙 면 아래 마른 바닥 타일(dry_bed, 없으면 흙 면을 어둡게 반복)로 칠한다
     public static class WaterPainter
     {
         public const int k_FaceRows = 14;
@@ -16,29 +17,34 @@ namespace ZooTycoon.World
         private static readonly Color32 k_Line = new Color32(52, 32, 32, 255);
         private static readonly Color32 k_Lip = new Color32(168, 120, 96, 255);
 
-        public static Sprite Paint(BurrowShape.Result shape, FishingLayout layout, Texture2D waterTile, Texture2D streamFace, bool bank)
+        public static Sprite Paint(BurrowShape.Result shape, FishingLayout layout, Texture2D waterTile, Texture2D streamFace, Texture2D dryTile, bool bank)
         {
             int w = shape.Width;
             int h = shape.Height;
             float ppu = BurrowShape.k_PixelsPerUnit;
             int top = BurrowShape.k_EntranceFloorTop - shape.OriginY;
             bool[,] water = new bool[w, h];
-            NavRect rect = layout.Water;
-            int x0 = (int)Math.Round(rect.XMin * ppu) - shape.OriginX;
-            int x1 = (int)Math.Round(rect.XMax * ppu) - shape.OriginX;
-            int y0 = (int)Math.Round(-rect.YMax * ppu) - shape.OriginY;
-            int y1 = (int)Math.Round(-rect.YMin * ppu) - shape.OriginY;
+            bool[,] dry = new bool[w, h];
+            Fill(water, shape, layout.Water, top);
 
-            for (int y = Math.Max(y0, top); y < Math.Min(y1, h); y++)
+            foreach (NavRect bed in layout.DryBeds)
             {
-                for (int x = Math.Max(x0, 0); x < Math.Min(x1, w); x++)
+                Fill(dry, shape, bed, top);
+            }
+
+            bool[,] river = new bool[w, h];
+
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
                 {
-                    water[x, y] = shape.Mask[x, y];
+                    river[x, y] = water[x, y] || dry[x, y];
                 }
             }
 
             Color32[] tile = waterTile.GetPixels32();
             Color32[] face = streamFace.GetPixels32();
+            Color32[] dryPixels = dryTile != null ? dryTile.GetPixels32() : null;
             int tileSize = waterTile.width;
             int[,] up = new int[w, h];
             Color32[] pixels = new Color32[w * h];
@@ -47,7 +53,7 @@ namespace ZooTycoon.World
             {
                 for (int x = 0; x < w; x++)
                 {
-                    if (!water[x, y])
+                    if (!river[x, y])
                     {
                         continue;
                     }
@@ -58,6 +64,12 @@ namespace ZooTycoon.World
                     if (up[x, y] <= k_FaceRows)
                     {
                         color = face[(streamFace.height - up[x, y]) * streamFace.width + Mod(shape.OriginX + x, streamFace.width)];
+                    }
+                    else if (dry[x, y])
+                    {
+                        color = dryTile != null
+                            ? dryPixels[(dryTile.height - 1 - Mod(shape.OriginY + y, dryTile.height)) * dryTile.width + Mod(shape.OriginX + x, dryTile.width)]
+                            : Darken(face[Mod(up[x, y], streamFace.height) * streamFace.width + Mod(shape.OriginX + x, streamFace.width)]);
                     }
                     else if (up[x, y] == k_FaceRows + 1)
                     {
@@ -76,7 +88,7 @@ namespace ZooTycoon.World
 
             if (bank)
             {
-                PaintBank(water, shape, top, pixels);
+                PaintBank(river, shape, top, pixels);
             }
 
             Texture2D texture = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
@@ -143,6 +155,32 @@ namespace ZooTycoon.World
 
                 current = grown;
             }
+        }
+
+        // 사각형 안 · 굴 안 · 윗벽 띠 아래 칸
+        private static void Fill(bool[,] into, BurrowShape.Result shape, NavRect rect, int top)
+        {
+            float ppu = BurrowShape.k_PixelsPerUnit;
+            int w = into.GetLength(0);
+            int h = into.GetLength(1);
+            int x0 = (int)Math.Round(rect.XMin * ppu) - shape.OriginX;
+            int x1 = (int)Math.Round(rect.XMax * ppu) - shape.OriginX;
+            int y0 = (int)Math.Round(-rect.YMax * ppu) - shape.OriginY;
+            int y1 = (int)Math.Round(-rect.YMin * ppu) - shape.OriginY;
+
+            for (int y = Math.Max(y0, top); y < Math.Min(y1, h); y++)
+            {
+                for (int x = Math.Max(x0, 0); x < Math.Min(x1, w); x++)
+                {
+                    into[x, y] = shape.Mask[x, y];
+                }
+            }
+        }
+
+        // 마른 바닥 대신 쓰는 흙 면(조금 어둡게)
+        private static Color32 Darken(Color32 c)
+        {
+            return new Color32((byte)(c.r * 0.72f), (byte)(c.g * 0.72f), (byte)(c.b * 0.72f), c.a);
         }
 
         private static int Mod(int value, int period)

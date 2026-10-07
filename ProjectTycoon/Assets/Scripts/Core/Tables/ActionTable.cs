@@ -32,6 +32,10 @@ namespace ZooTycoon.Core
         public const string k_Cast = "cast";
         public const string k_Strike = "strike";
         public const string k_Reel = "reel";
+        // 설계 53 낚시터 넓히기: 바위 뚫기(시트) · 댐 잔해 끌어내기(버튼) · 좌대 놓기(시트)
+        public const string k_BreakRock = "break_rock";
+        public const string k_PullDebris = "pull_debris";
+        public const string k_PlaceSeat = "place_seat";
         // 설계 22: 딴짓 중인 점원 깨우기
         public const string k_Wake = "wake";
         // 설계 24: 똥 치우기

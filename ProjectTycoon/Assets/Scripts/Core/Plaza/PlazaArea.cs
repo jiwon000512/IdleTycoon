@@ -96,6 +96,7 @@ namespace ZooTycoon.Core
             m_questionRange = (float)tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
             bus.Subscribe<Events.RestaurantVisitorLeft>(Bus_RestaurantVisitorLeft);
+            bus.Subscribe<Events.FishingVisitorLeft>(Bus_FishingVisitorLeft);
             bus.Subscribe<Events.ClerkWentOut>(Bus_ClerkWentOut);
             bus.Subscribe<Events.ClerkReturning>(Bus_ClerkReturning);
             bus.Subscribe<Events.ClerkFired>(Bus_ClerkFired);
@@ -356,10 +357,16 @@ namespace ZooTycoon.Core
             Spawn(new PlazaVisitor(++m_nextVisitorId, customer.Look, this, BakeryDoor.Inside, BakeryDoor.Floor, visits, false));
         }
 
+        // 설계 53: 문이 늘 열린 곳도 손님을 받는 가게가 된다(낚시터는 좌대를 놓으면 IsOpen). 연 가게를 번갈아 손님을 보낸다
+        internal void AddVisited(IShop shop)
+        {
+            m_shops.Add(shop);
+        }
+
         // 설계 47: 광장 문으로 이어진 새 가게. 닫힌 동안 문 통로는 막히고 문 앞에 여는 표식이 선다
         internal void AddShop(RestaurantArea shop)
         {
-            m_shops.Add(shop);
+            AddVisited(shop);
             PlazaDoor door = Layout.DoorTo(shop.Id);
 
             foreach (Interactable thing in Placed)
@@ -404,13 +411,22 @@ namespace ZooTycoon.Core
             return Bakery;
         }
 
-        // 횟집에서 나간 손님도 문에서 톡 나와 들를 곳을 들르고 계단으로
+        // 횟집 · 낚시터에서 나간 손님도 문에서 톡 나와 들를 곳을 들르고 계단으로
         private void Bus_RestaurantVisitorLeft(Events.RestaurantVisitorLeft e)
         {
-            RestaurantVisitor customer = e.Visitor;
-            PlazaDoor door = Layout.DoorTo(customer.Restaurant.Id);
-            int visits = customer.Angry ? 0 : RandomIndex(m_config.VisitsMax + 1);
-            Spawn(new PlazaVisitor(++m_nextVisitorId, customer.Look, this, door.Inside, door.Floor, visits, false, null, null, customer.Restaurant));
+            ReturnFrom(e.Visitor.Restaurant, e.Visitor.Look, e.Visitor.Angry);
+        }
+
+        private void Bus_FishingVisitorLeft(Events.FishingVisitorLeft e)
+        {
+            ReturnFrom(e.Visitor.Fishing, e.Visitor.Look, e.Visitor.Angry);
+        }
+
+        private void ReturnFrom(IShop shop, VisitorTable look, bool angry)
+        {
+            PlazaDoor door = Layout.DoorTo(shop.Id);
+            int visits = angry ? 0 : RandomIndex(m_config.VisitsMax + 1);
+            Spawn(new PlazaVisitor(++m_nextVisitorId, look, this, door.Inside, door.Floor, visits, false, null, null, shop));
         }
 
         private void Spawn(PlazaVisitor visitor)

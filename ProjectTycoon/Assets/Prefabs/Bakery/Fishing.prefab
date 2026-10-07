@@ -649,6 +649,16 @@ MonoBehaviour:
   - {fileID: 21300000, guid: fa1bec6dd48dde847aea90f50407f66c, type: 3}
   - {fileID: 21300000, guid: bbf35618d30b8cb4282975bdfe64d383, type: 3}
   - {fileID: 21300000, guid: df0231f378a3d9b49b8de41999f77505, type: 3}
+  m_dryBed: {fileID: 2800000, guid: 20e4e77e1e536f44189a3585e82685e2, type: 3}
+  m_rockWall: {fileID: 21300000, guid: c1b22801c52b9094e9075aad83e119ff, type: 3}
+  m_dams:
+  - {fileID: 21300000, guid: b62a0ca90dfd2ba40a4bd1689bceecee, type: 3}
+  - {fileID: 21300000, guid: 52fed168336d4ef4592704d11a7a2665, type: 3}
+  - {fileID: 21300000, guid: ef7055b0a54d42144b4c470626dc308c, type: 3}
+  m_seat: {fileID: 21300000, guid: 4bb6aff7fd1dddd4d84ec7ed8e8bc43c, type: 3}
+  m_debris:
+  - {fileID: 21300000, guid: da92847c32a804e4282422fc120fec41, type: 3}
+  - {fileID: 21300000, guid: 3030b7f2792a5744e917393aa54682f9, type: 3}
   m_fishSwim:
   - {fileID: 21300000, guid: b53a26b567f0bb441af2e6be39ec787a, type: 3}
   - {fileID: 21300000, guid: c65de0d930724aa4cb44df5097cfcdcd, type: 3}

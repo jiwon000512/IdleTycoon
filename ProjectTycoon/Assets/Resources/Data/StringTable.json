@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 53,
+  "version": 54,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -56,7 +56,8 @@
     "version 50 (2026-10-06, 설계 49 물때 디펜스): 종류 이름 · 설명(rod_<id> · rod_<id>_desc 열둘, rod_light 삭제) · rod_merged · fishing_wave_count · fishing_boss · fishing_boss_missed · fishing_unlock · edit_fishing_hint 추가, 단계 사기 문구(row_stage_up · row_stage_up_effect) 삭제.",
     "version 51 (2026-10-06, 낚시 연출 개선 · 사용자 결정): 물때는 노점 위 팻말 대신 상단 알약(fishing_wave_count 삭제, wave_pill 「물때」 · wave_pill_count 「{0}/{1}」 추가).",
     "version 52 (2026-10-06, 설계 50 대물 소식): 대물 이름 · 소식지 제목 · 한 줄(boss_<id> · boss_<id>_title · boss_<id>_line 셋) · fishing_news_next 「다음 단계로」 · fishing_news_yield 「이제 한 마리에 재료 {0}개」(다음 단계의 재료 배수) 추가.",
-    "version 53 (2026-10-07, 설계 52 우물 낚시 1회차): fishing_catch_tag 「{0} {1}kg」(낚은 물고기 알약) · fishing_snapped · fishing_missed(곳 이름 띠) 추가. 디펜스 문구(물때 · 말뚝 시트 · 종류 · 대물)는 그림 · 소식지와 함께 다음 회차에 정리한다."
+    "version 53 (2026-10-07, 설계 52 우물 낚시 1회차): fishing_catch_tag 「{0} {1}kg」(낚은 물고기 알약) · fishing_snapped · fishing_missed(곳 이름 띠) 추가. 디펜스 문구(물때 · 말뚝 시트 · 종류 · 대물)는 그림 · 소식지와 함께 다음 회차에 정리한다.",
+    "version 54 (2026-10-07): 설계 53 낚시터 넓히기 — 바위 · 좌대 시트 머리 · 줄 · 값 표식(sheet_rock_* · row_break_rock* · tag_rock · sheet_seat_* · row_place_seat* · tag_seat), 남은 잔해 · 물이 찼다 알약(fishing_debris_left · fishing_flooded)."
   ],
   "rows": [
     {
@@ -1282,6 +1283,54 @@
     {
       "id": "fishing_missed",
       "ko": "놓쳤다…"
+    },
+    {
+      "id": "sheet_rock_title",
+      "ko": "바위벽"
+    },
+    {
+      "id": "sheet_rock_status",
+      "ko": "뚫으면 새 물가가 열린다"
+    },
+    {
+      "id": "row_break_rock",
+      "ko": "바위 뚫기"
+    },
+    {
+      "id": "row_break_rock_effect",
+      "ko": "댐을 허물면 새 물고기"
+    },
+    {
+      "id": "tag_rock",
+      "ko": "뚫기 {0}"
+    },
+    {
+      "id": "sheet_seat_title",
+      "ko": "좌대"
+    },
+    {
+      "id": "sheet_seat_status",
+      "ko": "손님이 와서 낚는다"
+    },
+    {
+      "id": "row_place_seat",
+      "ko": "좌대 놓기"
+    },
+    {
+      "id": "row_place_seat_effect",
+      "ko": "손님 한 마리에 {0}코인"
+    },
+    {
+      "id": "tag_seat",
+      "ko": "좌대 {0}"
+    },
+    {
+      "id": "fishing_debris_left",
+      "ko": "남은 잔해 {0}"
+    },
+    {
+      "id": "fishing_flooded",
+      "ko": "물이 찼다! {0}"
     }
   ]
 }

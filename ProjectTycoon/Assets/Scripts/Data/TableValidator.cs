@@ -935,8 +935,10 @@ namespace ZooTycoon.Data
         }
 
         // 코드가 Id로 부르는 행이 모두 있어야 한다
-        // 설계 52 강가 낚시: 방 칸 2 이상 · 물은 사각형(x0 < x1 · y0 < y1), 입질 시간 0 < min ≤ max · 가짜 입질 ≥ 0 · 틈 > 0, 어종은 FishTable에 · 무게 > 0,
-        // 줄다리기 숫자(거리 · 달리기 · 쉼 · 긴장 오름 > 0, 되찾기 · 긴장 내림 ≥ 0), 낚싯대 감기 · 줄 힘 > 0, 털썩 초 > 0. 물고기 재료는 ItemTable에, 크기는 min ≤ max
+        // 설계 52 강가 낚시: 구간 칸 2 이상 · 물은 y0 < y1, 입질 시간 0 < min ≤ max · 가짜 입질 ≥ 0 · 틈 > 0,
+        // 줄다리기 숫자(거리 · 달리기 · 쉼 · 긴장 오름 > 0, 되찾기 · 긴장 내림 ≥ 0), 낚싯대 감기 · 줄 힘 > 0, 만세 초 > 0. 물고기 재료는 ItemTable에, 크기는 min ≤ max.
+        // 설계 53: 잔해 무게 · 쉼 > 0 · 코인 ≥ 0, 좌대 손님 초 0 < min ≤ max · 간격 > 0. 구간 표는 index 0 행이 있고 index는 겹치지 않으며 빈틈없이 이어지고(−1, 0, 1 …),
+        // 0이 아닌 구간은 바위 값 ≥ 0 · 댐 조각 ≥ 1, 물고기는 FishTable에 있고 chance > 0이 하나 이상, 좌대 값 ≥ 0 · 손님 값 ≥ 0
         private static void ValidateFishing(TableSet tables, List<string> errors)
         {
             CheckRequired<FishingConfigTable>(tables, new[] { FishingConfigTable.k_Main }, errors);
@@ -944,9 +946,9 @@ namespace ZooTycoon.Data
 
             foreach (FishingConfigTable config in tables.GetAll<FishingConfigTable>())
             {
-                if (config.Cols < 2 || config.Rows < 2 || config.Water == null || config.Water.X0 >= config.Water.X1 || config.Water.Y0 >= config.Water.Y1)
+                if (config.StretchCols < 2 || config.StretchCols % 2 != 0 || config.Rows < 2 || config.Water == null || config.Water.Y0 >= config.Water.Y1)
                 {
-                    errors.Add($"FishingConfigTable '{config.Id}': cols · rows는 2 이상, water는 x0 < x1 · y0 < y1인 사각형이어야 한다.");
+                    errors.Add($"FishingConfigTable '{config.Id}': stretchCols는 2 이상 짝수(구간 가운데가 칸 경계), rows는 2 이상, water는 y0 < y1이어야 한다.");
                 }
 
                 if (config.BiteWaitMin <= 0d || config.BiteWaitMax < config.BiteWaitMin || config.NibbleMax < 0 || config.BiteWindow <= 0d)
@@ -954,9 +956,10 @@ namespace ZooTycoon.Data
                     errors.Add($"FishingConfigTable '{config.Id}': biteWaitMin > 0, biteWaitMax ≥ biteWaitMin, nibbleMax ≥ 0, biteWindow > 0이어야 한다.");
                 }
 
-                if (!tables.GetAll<FishTable>().Any(fish => fish.Id == config.Fish) || config.Weight <= 0d)
+                if (config.DebrisWeight <= 0d || config.DebrisRestSeconds <= 0d || config.DebrisCoins < 0d || config.SeatBack < 0d
+                    || config.CustomerSecondsMin <= 0d || config.CustomerSecondsMax < config.CustomerSecondsMin || config.CustomerCatchEvery <= 0d)
                 {
-                    errors.Add($"FishingConfigTable '{config.Id}': fish는 FishTable에 있고 weight > 0이어야 한다.");
+                    errors.Add($"FishingConfigTable '{config.Id}': debrisWeight · debrisRestSeconds > 0, debrisCoins · seatBack ≥ 0, customerSecondsMin > 0, customerSecondsMax ≥ min, customerCatchEvery > 0이어야 한다.");
                 }
 
                 if (config.DistancePerKg <= 0d || config.RunSeconds <= 0d || config.RestSeconds <= 0d || config.RunPull < 0d || config.TensionRise <= 0d || config.TensionFall < 0d)
@@ -972,6 +975,32 @@ namespace ZooTycoon.Data
                 if (config.Decor == null || config.Decor.Any(decor => string.IsNullOrEmpty(decor.Sprite)))
                 {
                     errors.Add($"FishingConfigTable '{config.Id}': decor는 sprite 이름이 있어야 한다.");
+                }
+            }
+
+            HashSet<string> fishIds = Ids<FishTable>(tables);
+            List<int> indices = tables.GetAll<FishingStretchTable>().Select(stretch => stretch.Index).OrderBy(index => index).ToList();
+
+            if (!indices.Contains(0) || indices.Distinct().Count() != indices.Count || indices.Count > 0 && indices[indices.Count - 1] - indices[0] != indices.Count - 1)
+            {
+                errors.Add("FishingStretchTable: index 0 행이 있고, index는 겹치지 않고 빈틈없이 이어져야 한다.");
+            }
+
+            foreach (FishingStretchTable stretch in tables.GetAll<FishingStretchTable>())
+            {
+                if (stretch.Index != 0 && (stretch.RockCost < 0d || stretch.DamPieces < 1))
+                {
+                    errors.Add($"FishingStretchTable '{stretch.Id}': 0이 아닌 구간은 rockCost ≥ 0, damPieces ≥ 1이어야 한다.");
+                }
+
+                if (stretch.Fish == null || !stretch.Fish.Any(fish => fish.Chance > 0d) || stretch.Fish.Any(fish => !fishIds.Contains(fish.Id ?? "") || fish.Chance < 0d))
+                {
+                    errors.Add($"FishingStretchTable '{stretch.Id}': fish는 FishTable에 있고 chance ≥ 0, chance > 0인 물고기가 하나 이상 있어야 한다.");
+                }
+
+                if (stretch.Seats == null || stretch.Seats.Any(seat => seat.Cost < 0d) || stretch.Pay < 0d)
+                {
+                    errors.Add($"FishingStretchTable '{stretch.Id}': seats의 cost · pay는 0 이상이어야 한다.");
                 }
             }
 

@@ -129,6 +129,13 @@ namespace ZooTycoon.UI
                 case ShopGateInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_gate_title"), m_tables.Text("sheet_gate_status"));
                     break;
+                // 설계 53: 낚시터 끝 바위 · 좌대 자리
+                case RockInteractable _:
+                    m_view.SetHeader(m_tables.Text("sheet_rock_title"), m_tables.Text("sheet_rock_status"));
+                    break;
+                case SeatInteractable _:
+                    m_view.SetHeader(m_tables.Text("sheet_seat_title"), m_tables.Text("sheet_seat_status"));
+                    break;
                 // 설계 35: 거름은 심을 때 하나씩 저절로 든다
                 case PlotInteractable plot:
                     m_view.SetHeader(m_tables.Text("sheet_plot_title"), m_tables.Format("sheet_plot_status", m_shop.Wallet.Count(plot.Farm.Config.ManureItem)));
@@ -261,6 +268,22 @@ namespace ZooTycoon.UI
                     {
                         Name = m_tables.Text("row_dig_floor"),
                         Effect = m_tables.Format("row_dig_floor_effect", ((StairInteractable)m_target).Farm.Lower.Number),
+                        Cost = BigNumberFormatter.Format(option.Cost),
+                        State = RowState(option.State),
+                    };
+                case ActionTable.k_BreakRock:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Text("row_break_rock"),
+                        Effect = m_tables.Text("row_break_rock_effect"),
+                        Cost = BigNumberFormatter.Format(option.Cost),
+                        State = RowState(option.State),
+                    };
+                case ActionTable.k_PlaceSeat:
+                    return new SheetRow
+                    {
+                        Name = m_tables.Text("row_place_seat"),
+                        Effect = m_tables.Format("row_place_seat_effect", ((SeatInteractable)m_target).Stretch.Pay.ToString("0", CultureInfo.InvariantCulture)),
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };

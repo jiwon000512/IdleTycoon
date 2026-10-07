@@ -43,13 +43,15 @@ def template(path):
     big.save(path)
 
 
-def groups_of(mask, min_cells=8):
-    """8방향 덩어리를 테두리(1칸 여유)가 겹치는 것끼리 묶는다 → 칸 수 많은 순"""
-    gs = [g for g in blobs(mask, diag=True) if len(g) >= min_cells]
+def groups_of(mask, min_cells=8, big=None):
+    """8방향 덩어리를 테두리(1칸 여유)가 겹치는 것끼리 묶는다 → 칸 수 많은 순. big을 주면 그보다 큰 덩어리는 서로 묶지 않는다(나란히 선 바위벽 · 좌대, make_wide)"""
+    gs = sorted([g for g in blobs(mask, diag=True) if len(g) >= min_cells], key=len, reverse=True)
     box = lambda g: (min(y for y, _ in g) - 1, min(x for _, x in g) - 1, max(y for y, _ in g) + 1, max(x for _, x in g) + 1)
     merged = []
     while gs:
         keep, gs = [gs.pop(0)], gs
+        if big:
+            seeds, gs = [g for g in gs if len(g) >= big], [g for g in gs if len(g) < big]
         changed = True
         while changed:
             changed = False
@@ -59,6 +61,8 @@ def groups_of(mask, min_cells=8):
                 if b[2] >= y0 and b[0] <= y1 and b[3] >= x0 and b[1] <= x1:
                     keep.append(g); gs.remove(g); changed = True
         merged.append([c for g in keep for c in g])
+        if big:
+            gs = seeds + gs
     return sorted(merged, key=len, reverse=True)
 
 

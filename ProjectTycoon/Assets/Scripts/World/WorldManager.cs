@@ -28,6 +28,8 @@ namespace ZooTycoon.World
         // 고용한 점원이 굴에서 나오는 모습을 당겨서 보여 주는 시간(초)과 발끝에서 몸 가운데까지(유닛)
         private const float k_HireSpotSeconds = 1.8f;
         private const float k_BodyCenter = 0.5f;
+        // 설계 53: 물이 차오르는 구간을 비추는 시간(초)
+        private const float k_FloodSpotSeconds = 1.6f;
 
         [SerializeField] private WorldCameraController m_camera;
         [Tooltip("빵집 프리팹(설계 08 v0.5). 씬에는 두지 않고 실행 중에 원점에 생성한다")]
@@ -44,11 +46,13 @@ namespace ZooTycoon.World
         private readonly Dictionary<WombatArea, IAreaView> m_views = new Dictionary<WombatArea, IAreaView>();
         private BakeryView m_shopView;
         private RestaurantView m_restaurantView;
+        private FishingView m_fishingView;
         private readonly List<FarmView> m_farmViews = new List<FarmView>();
         private Mall m_mall;
         private IDisposable m_areaChanged;
         private IDisposable m_clerkHired;
         private IDisposable m_cast;
+        private IDisposable m_damBroken;
 
         public FrameCache Frames { get; } = new FrameCache();
 
@@ -77,9 +81,10 @@ namespace ZooTycoon.World
                 m_views[mall.Farms[i]] = farmView;
             }
 
-            FishingView fishingView = Instantiate(m_fishingPrefab, k_FishingOrigin, Quaternion.identity, transform);
-            fishingView.Bind(mall.Fishing, bus, Frames, tables);
-            m_views[mall.Fishing] = fishingView;
+            m_fishingView = Instantiate(m_fishingPrefab, k_FishingOrigin, Quaternion.identity, transform);
+            m_fishingView.Bind(mall.Fishing, bus, Frames, tables);
+            m_fishingView.Expanded += View_Expanded;
+            m_views[mall.Fishing] = m_fishingView;
 
             m_restaurantView = Instantiate(m_restaurantPrefab, k_RestaurantOrigin, Quaternion.identity, transform);
             m_restaurantView.Bind(mall.Restaurant, bus, Frames, tables);
@@ -89,6 +94,7 @@ namespace ZooTycoon.World
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
             m_cast = bus.Subscribe<Events.CastThrown>(Bus_CastThrown);
+            m_damBroken = bus.Subscribe<Events.DamBroken>(Bus_DamBroken);
             FollowWombat();
         }
 
@@ -160,9 +166,15 @@ namespace ZooTycoon.World
                 m_restaurantView.Expanded -= View_Expanded;
             }
 
+            if (m_fishingView != null)
+            {
+                m_fishingView.Expanded -= View_Expanded;
+            }
+
             m_areaChanged?.Dispose();
             m_clerkHired?.Dispose();
             m_cast?.Dispose();
+            m_damBroken?.Dispose();
 
             base.OnDestroy();
         }
@@ -196,6 +208,18 @@ namespace ZooTycoon.World
             Vector3 origin = m_views[clerk.Home].Origin;
             m_camera.Spot(() => (Vector2)origin + new Vector2(clerk.Position.X, clerk.Position.Y) + Vector2.up * k_BodyCenter, k_HireSpotSeconds,
                 () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
+        }
+
+        // 설계 53: 댐이 무너지면 물이 차오르는 구간을 잠깐 비춘다(배율 그대로, 조이스틱을 움직이면 바로 돌아온다)
+        private void Bus_DamBroken(Events.DamBroken e)
+        {
+            if (m_mall.Active != e.Fishing)
+            {
+                return;
+            }
+
+            Vector3 at = m_fishingView.Origin + new Vector3(e.Fishing.Layout.CenterOf(e.Stretch), e.Fishing.Layout.BankY - 2f, 0f);
+            m_camera.Spot(() => at, k_FloodSpotSeconds, () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero, 1f);
         }
 
         // 설계 52: 던지면 줄이 끝날 때까지 웜뱃과 찌의 가운데를 비춘다(배율 그대로, 사용자 2026-10-07 「당길 때 물고기 자리가 화면 밖」)

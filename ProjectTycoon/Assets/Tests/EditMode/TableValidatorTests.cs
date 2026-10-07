@@ -12,14 +12,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 53)]
+        [TestCase("StringTable", 54)]
         [TestCase("ClerkTable", 4)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 25)]
-        [TestCase("InteractableTable", 24)]
+        [TestCase("ActionTable", 26)]
+        [TestCase("InteractableTable", 25)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 19)]
         [TestCase("BgmTable", 2)]
@@ -35,8 +35,9 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
-        [TestCase("FishingConfigTable", 8)]
+        [TestCase("FishingConfigTable", 9)]
         [TestCase("FishTable", 2)]
+        [TestCase("FishingStretchTable", 1)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -103,7 +104,7 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 52 강가 낚시: 물은 사각형 · 입질 시간은 min ≤ max · 어종은 FishTable에 · 줄 힘 · 긴장 오름 > 0
+        // 설계 52 강가 낚시: 물은 y0 < y1 · 입질 시간은 min ≤ max · 줄 힘 · 긴장 오름 > 0. 설계 53: 잔해 무게 > 0 · 손님 초 min ≤ max
         [Test]
         public void Validate_WhenWellConfigBroken_ReportsError()
         {
@@ -111,15 +112,37 @@ namespace ZooTycoon.Tests
             {
                 c => c.Water.Y1 = c.Water.Y0,
                 c => c.BiteWaitMax = c.BiteWaitMin - 1d,
-                c => c.Fish = "no_such_fish",
                 c => c.Rod.Line = 0d,
                 c => c.TensionRise = 0d,
+                c => c.DebrisWeight = 0d,
+                c => c.StretchCols = 3,
+                c => c.CustomerSecondsMax = c.CustomerSecondsMin - 1d,
             };
 
             foreach (System.Action<FishingConfigTable> broken in breaks)
             {
                 TableSet tables = TestTables.Load();
                 broken(tables.Get<FishingConfigTable>(FishingConfigTable.k_Main));
+                Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+            }
+        }
+
+        // 설계 53 구간 표: index 0이 있고 이어짐 · 물고기는 FishTable에 · 0이 아닌 구간은 댐 조각 ≥ 1
+        [Test]
+        public void Validate_WhenStretchBroken_ReportsError()
+        {
+            System.Action<TableSet>[] breaks =
+            {
+                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 0).Index = 5,
+                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).Index = 3,
+                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).Fish[0].Id = "no_such_fish",
+                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).DamPieces = 0,
+            };
+
+            foreach (System.Action<TableSet> broken in breaks)
+            {
+                TableSet tables = TestTables.Load();
+                broken(tables);
                 Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
             }
         }

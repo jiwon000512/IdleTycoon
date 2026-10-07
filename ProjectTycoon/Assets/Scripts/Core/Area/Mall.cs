@@ -43,6 +43,7 @@ namespace ZooTycoon.Core
 
             Fishing = fishing ?? new FishingArea(bakery.Tables, new SeededRandom(0), bakery.Wombat, bus);
             m_areas.Add(Fishing);
+            plaza.AddVisited(Fishing);
             Restaurant = restaurant ?? new RestaurantArea(bakery.Wallet, bakery.Tables, new SeededRandom(1), bakery.Wombat, bus);
             m_areas.Add(Restaurant);
             plaza.AddShop(Restaurant);

@@ -56,6 +56,14 @@ namespace ZooTycoon.Game
             Add("횟집", new[] { Opt("열기(무료, 별이 모자라면 평가 통과)", OpenRestaurant) });
             // 설계 52: 던진 줄을 지금 물게 한다(입질을 안 기다리고 줄다리기 시험)
             Add("낚시터", new[] { Opt("지금 물게", BiteNow) });
+            // 설계 53 넓히기
+            Add("낚시터 넓히기", new[]
+            {
+                Opt("바위 뚫기(무료)", () => Mall.Fishing.OpenNextFree() ? "다음 구간 땅이 열렸다" : "뚫을 바위가 없다"),
+                Opt("댐 허물기", () => Mall.Fishing.BreakDamNow() ? "물이 찼다" : "허물 댐이 없다"),
+                Opt("좌대 놓기(무료)", () => Mall.Fishing.PlaceSeatFree() ? "좌대를 놓았다" : "놓을 좌대 자리가 없다"),
+                Opt("손님 부르기", CallFishingCustomer),
+            });
             // 설계 43: 오프라인 정산을 바로(팝업까지) · 저장
             Add("오프라인", new[] { (600d, "10분"), (3600d, "1시간"), (28800d, "8시간") }.Select(t => Opt(t.Item2, () => Offline(t.Item1, t.Item2))));
             Add("저장", new[] { Opt("지금 저장", () => { m_game.Save(); return "저장함"; }), Opt("저장 지우기(다음 플레이 새 게임)", () => { m_game.DeleteSave(); return "저장을 지웠다. 이번 플레이는 닫을 때 저장하지 않는다"; }) });
@@ -171,6 +179,17 @@ namespace ZooTycoon.Game
             }
 
             return "빵집 별 " + State.Stars.Count(BakeryArea.k_Id) + "개";
+        }
+
+        private string CallFishingCustomer()
+        {
+            if (!Mall.Fishing.CanAdmit)
+            {
+                return "빈 좌대가 없다(좌대를 먼저 놓는다)";
+            }
+
+            Mall.Fishing.Admit(m_game.Tables.GetAll<VisitorTable>().First(look => look.Role == VisitorRole.Customer));
+            return "손님이 낚시터로 왔다";
         }
 
         private string BiteNow()
