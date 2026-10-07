@@ -1,0 +1,23 @@
+# 손맛 낚시 행동 아이콘 셋(2026-10-07 아트방): 던지기 cast · 낚아채기 strike · 감기 reel. 시안 A 물건 하나 · B 찌와 줄 · C 웜뱃 앞발 중 사용자 선택 A → ../make_fishing_icons.py
+# 참조 -i 1: cast_icons_template.png(fishing_icons_template.png의 아랫줄 틀을 셋만 남긴 것. 1536×1024, 한 칸 12px, 윗줄 지금 행동 아이콘 dig · plant · wake · talk · clean 18×18칸)
+# 프롬프트를 쓸 때는 물이 「우물」이었고 나중에 강가로 바뀌었다. 아이콘은 대 · 찌 · 릴만 그려 물 모양과 상관없다.
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 1 (do NOT write code). Keep the canvas size, the white background and the five icons of the top row EXACTLY where and how they are: they are the existing action-button icons of a cozy underground wombat-burrow idle game, each 18 by 18 art pixels, one art pixel = 12 screen pixels. Remove the three grey frames of the bottom row.
+In the bottom row paint THREE NEW action icons, one inside each grey frame position, from left to right, each exactly the same size as the top-row icons (18 by 18 art pixels, filling the frame like they do), with exactly the same big 12-pixel art pixels (never smaller), the same chunky pixel style, the same dark brown outline (#342020) one art pixel wide, the same flat soft earthy palette with one darker shade and one highlight, no anti-aliasing, no gradients, no dithering, no text, no letters, no numbers, no background, no frame, no circle behind the icon. Leave the right part of the bottom row empty.
+The new icons are for the FISHING WELL, where the wombat stands at a round well and fishes by hand with a toy-like fishing rod (big round wooden reel, bulb grip, red-and-white bobber on a teal line): CAST = throw the line into the well, STRIKE = yank the rod the moment the bobber dips, REEL = wind the reel to pull the fish in.
+[a]
+1) CAST: a fishing rod swung forward with the line flying out in an arc and the red-and-white bobber at its end.
+2) STRIKE: a red-and-white bobber being yanked straight up out of the water with a small splash ring below it and two short motion lines above.
+3) REEL: a big round wooden reel seen from the side with its crank handle and the teal line wound around it.
+Save the image as icons_a.png in the current working directory and reply with only the path.
+[b]
+1) CAST: the red-and-white bobber flying through the air with a long curved teal line trailing behind it.
+2) STRIKE: the bobber dipping under the water surface, tilted, with a ring of ripples around it.
+3) REEL: the round wooden reel with a curved arrow going around it to show winding.
+Save the image as icons_b.png in the current working directory and reply with only the path.
+[c]
+1) CAST: a wombat paw holding the rod handle and swinging it forward, with the bobber flying ahead.
+2) STRIKE: a wombat paw gripping the rod handle and jerking it up, with two short motion lines.
+3) REEL: a wombat paw turning the crank of the round wooden reel.
+Save the image as icons_c.png in the current working directory and reply with only the path.

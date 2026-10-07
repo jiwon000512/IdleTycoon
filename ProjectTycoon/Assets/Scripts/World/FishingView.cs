@@ -1,101 +1,61 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
-using GameKit.Audio;
 using GameKit.Events;
 using GameKit.Tables;
 using ZooTycoon.Core;
 
 namespace ZooTycoon.World
 {
-    // 설계 44: 낚시터 화면. 굴 그림은 광장처럼 고정 방(BurrowPainter), 구멍 아치(광장으로)는 첫 줄 가운데.
-    // 물길은 아트방 「흙 도랑」을 굴 그림처럼 칸마다 칠한다(StreamPainter). 설계 45: 판 데까지만 물이고 끝은 둑으로 막힌다. 파면 다시 칠하고, 막다른 끝 앞 땅에 파기 값.
-    // 말뚝은 아트방 「나무 말뚝」(발끝 피벗), 대는 「통통한 대」(피벗 = 꽂는 자리)를 말뚝 윗면 구멍에 꽂는다(말뚝 앞, 밑동 밧줄 깃이 구멍을 덮는다). 대는 돌리지도 뒤집지도 않고, 감는 동안 끄덕인다.
-    // 물고기는 아트방 「둥근 귀염」 위에서 본 모습(오른쪽을 봄, 월척은 2배), 낚이면 옆모습(창고 아이콘)으로 튄다. 물고기 · 말뚝은 매 프레임 Core에서 읽어 맞춘다.
-    // 단계 팻말과 값 표식(열기 · 파기 · 단계 올리기)은 값 표식 알약(MarkerView, 1배), 붙잡힌 월척 위는 「!」 말풍선. 낚으면 재료 팝업, 쿵 · 털썩 · 파기는 웜뱃 동작.
-    // 낚시 폴리싱: 감는 대 끝에서 물고기까지 낚싯줄, 물고기는 물길 방향으로 눕고 살랑인다(90도 단위). 낚으면 대 끝으로 튀어 오르고, 놓치면 막다른 끝에서 사라진다.
-    // 설계 46 · 49 대 사기: 단 뽑기 — 말뚝이 단 수만큼 튄 뒤(k_RevealStep마다) 대가 꽂히며 단만큼 반짝임(드묾 · 전설 글). 별 그림은 없다(대 그림과 이름이 종류)
-    // 설계 49: 물때 n/10은 상단 알약(TopBarView, 노점 위 팻말은 입구에서 안 보였다). 대물은 fish_boss_swim. 합치기는 끈 대가 날아와 꽂히고 새 종류 이름이 뜬다.
-    // 낚시판 보기(SetEditing): 말뚝마다 이름표(종류 · 「대 사기」 · 「열기 n」, 절반 배율이라 2배) · 끄는 대는 손가락을 따라간다(DragRod)
+    // 설계 52 강가 낚시 화면: 굴 그림(고정 방) · 강(물결 타일을 사각형으로 코드 그림, 둑 띠는 벽 안쪽 바닥 폭만큼 Tiled) · 손에 든 대 · 낚싯줄 · 찌 · 물속 그림자 · 긴장 게이지를
+    // 매 프레임 Core(FishingArea)대로 그린다. 사건: 던짐(찌가 대 끝에서 포물선으로 난다) · 가짜 입질(찌 까딱) · 물었다 · 걸렸다 · 달리기(물보라) · 낚음(물고기가 손으로 튀고 웜뱃이 만세, 이름 · 무게 알약) · 끊김(줄이 튄다)
     public sealed class FishingView : MonoBehaviour, IAreaView
     {
-        // 설계 46 단 뽑기: 말뚝이 한 번 튀는 간격(대는 다 튄 뒤 꽂힌다, 소리도 그때)
-        public const float k_RevealStep = 0.15f;
         private const string k_PopupKey = "harvest_popup";
-        // 그림 층: 굴(−2000) 위에 물, 그 위에 물고기 · 사거리 원, 팝업 · 알갱이는 맨 위
+        // 그림 층: 굴(−2000) 위에 물 · 둑, 그 위에 물속 그림자, 팝업 · 알갱이 · 게이지는 맨 위
         private const int k_WaterOrder = -1985;
         private const int k_FishOrder = -1980;
-        private const int k_RangeOrder = -1975;
         private const int k_TopOrder = 1000;
-        // 「!」 말풍선은 값 알약(k_TopOrder · 글 +1) 위: 같은 순서면 알약과 섞여 그려진다
-        private const int k_AlertOrder = k_TopOrder + 2;
-        private static readonly Color k_Water = new Color32(0x3E, 0x7F, 0x95, 255);
-        private static readonly Color k_WaterLight = new Color32(0xDD, 0xF1, 0xF5, 255);
-        private static readonly Color k_Dirt = new Color32(0x8A, 0x5A, 0x36, 255);
-        private static readonly Color k_DirtDark = new Color32(0x5C, 0x3A, 0x26, 255);
-        private static readonly Color k_Star = new Color32(0xF2, 0xC1, 0x4E, 255);
-        private static readonly Color k_Range = new Color32(0xF6, 0xE3, 0xCC, 70);
-        // 대 끝(줄이 나오는 점): 꽂는 자리에서 칸(1/40유닛), 계열 안에서는 같다(_pull = 당김 판). 단마다 다르면 그 그림 이름으로 따로 적는다(큰그물대)
-        // 아트방 설계 45 A 「말뚝에 맞춘 대」 · 설계 49 그물 계열 A 「뜰채」, Source~/make_rods.py가 다시 출력한다
+        // 손에 든 대: 웜뱃 앞발 자리(WombatView.Hand = 든 빵 가운데 0.35)에서 앞발 높이(0.21)로 내린 자리. 앞 · 뒷모습은 오른쪽 앞발(3칸)에 쥐어 대가 얼굴을 가로지르지 않게. 몸 앞 · 뒤 순서는 든 빵과 같은 규칙
+        private static readonly Vector3 k_RodGrip = new Vector3(0.075f, -0.14f, 0f);
+        private const int k_RodFrontOrder = 52;
+        private const int k_RodBackOrder = -11;
+        // 줄 · 찌는 몸과 대 위에(사용자 2026-10-07 「줄이 몸에 가려짐」)
+        private const int k_LineOrder = k_RodFrontOrder + 1;
+        // 대 끝(줄이 나오는 점): 피벗(손이 쥐는 점)에서 칸(1/40유닛), 아트방 make_rods.py
         private static readonly Dictionary<string, Vector2> k_RodTips = new Dictionary<string, Vector2>
         {
-            { "rod_bamboo", new Vector2(13f, 38f) },
-            { "rod_bamboo_pull", new Vector2(15f, 38f) },
-            { "rod_iron", new Vector2(12f, 38f) },
-            { "rod_iron_pull", new Vector2(14f, 38f) },
-            { "rod_bait", new Vector2(12f, 38f) },
-            { "rod_bait_pull", new Vector2(14f, 38f) },
-            { "rod_net", new Vector2(13f, 38f) },
-            { "rod_net_pull", new Vector2(15f, 38f) },
-            { "rod_net_3", new Vector2(11f, 39f) },
-            { "rod_net_3_pull", new Vector2(13f, 39f) },
-            { "rod_bent", new Vector2(12f, 28f) },
+            { "rod_bamboo_1", new Vector2(15f, 36f) },
+            { "rod_bamboo_1_pull", new Vector2(17f, 35f) },
+            { "rod_bent", new Vector2(28f, 21f) },
         };
-        // 월척 물고기 배율(정수 배라 칸 격자 그대로) · 가로 물길에서 물고기를 흙 면 아래 물 가운데로 내리는 거리
-        private const float k_TrophyScale = 2f;
-        // 설계 49: 대물 그림 이름 · 낚시판 보기 이름표(배율 · 말뚝 발끝 아래) · 끄는 대 배율
-        private const string k_BossSwim = "fish_boss_swim";
-        private const float k_BoardTagScale = 2f;
-        private const float k_BoardTagDrop = 0.45f;
-        private const float k_DragScale = 2f;
-        // 연출 개선(2026-10-06): 대물 감기 게이지 배율 · 끄는 동안 합칠 수 있는 말뚝의 금빛 고리 지름(유닛) · 단계가 오를 때 말뚝이 차례로 튀는 간격(초)
-        private const float k_BossGaugeScale = 2f;
-        private const float k_MergeHintSize = 1.7f;
-        private const float k_CheerStep = 0.06f;
-        private const float k_WaterDrop = StreamPainter.k_FaceRows / BurrowShape.k_PixelsPerUnit / 2f;
-        // 감는 동안 곧은 판 ↔ 당김 판을 번갈아 쓰는 한 번의 초
-        private const float k_PullSeconds = 0.5f;
-        // 말뚝 윗면 구멍(대를 꽂는 자리): 발끝에서 위로(17칸, 아트방 make_stakes.py) · 대 높이(38칸)
-        private const float k_RodSocket = 0.425f;
-        private const float k_RodHeight = 0.95f;
-        private const float k_PopupHeight = 1.2f;
-        private const float k_TagRise = 1.3f;
-        // 쿵: 물결 고리가 쿵 반지름까지 퍼지는 초 · 멈춘 물고기 머리 위 별(높이 · 도는 반지름 · 빠르기)
-        private const float k_RippleSeconds = 0.45f;
-        private const float k_DizzyLift = 0.25f;
-        private const float k_DizzyRadius = 0.15f;
-        private const float k_DizzySpeed = 7f;
-        // 설계 46 소용돌이: 물 소용돌이가 되돌린 물고기를 따라가는 초 · 한 칸 초(아트방 제안)
-        private const float k_WhirlSeconds = 0.6f;
-        private const float k_WhirlFrameSeconds = 0.08f;
-        // 물결 한 칸 초(아트방 「고인 물」 수정)
-        private const float k_WaterFrameSeconds = 0.35f;
-        // 낚싯줄 굵기 · 낚은 물고기가 대 끝까지 튀는 초 · 높이 · 살랑임(칸) · 글 알약이 떠오르는 초
         private const float k_LineWidth = 0.025f;
-        // 단계 팻말: 미끼 노점 기준점에서 지붕 바로 위(노점 그림 1.86유닛, 아트방 시안 A 2026-10-06)
-        private const float k_StageSignLift = 2f;
-        // 찌 · 낚싯줄 끝 = 머리: 몸 가운데에서 헤엄치는 쪽으로 몸 길이의 이만큼(사용자 2026-10-06 「찌가 머리 쪽에」)
-        private const float k_HeadAt = 0.4f;
+        private static readonly Color k_Line = new Color32(0xF6, 0xE3, 0xCC, 200);
+        private static readonly Color k_Water = new Color32(0x3E, 0x7F, 0x95, 255);
+        private static readonly Color k_WaterLight = new Color32(0xDD, 0xF1, 0xF5, 255);
+        private const float k_WaterFrameSeconds = 0.35f;
+        // 찌: 기다릴 때는 물가에서 가운데 쪽으로 반지름의 이만큼 · 줄다리기는 남은 거리 비율로 먼 쪽(k_TugFar)에서 물가(k_TugNear)로 · 달릴 때 옆으로 흔들리는 폭(유닛) · 빠르기 · 가짜 입질 까딱 초
+        private const float k_BobberIn = 0.45f;
+        private const float k_TugNear = 0.12f;
+        private const float k_TugFar = 0.6f;
+        private const float k_RunWobble = 0.15f;
+        private const float k_RunWobbleSpeed = 12f;
+        private const float k_NibbleSeconds = 0.18f;
+        // 던지기: 찌가 대 끝에서 물 자리까지 포물선으로 나는 초 · 높이(유닛)
+        private const float k_CastSeconds = 0.35f;
+        private const float k_CastArc = 0.6f;
+        // 물속 그림자는 찌 아래로 · 긴장 게이지(릴 16칸)는 웜뱃 오른쪽 어깨 옆(대 끝 · 줄과 안 겹치게)
+        private const float k_ShadowDrop = 0.12f;
+        private static readonly Vector3 k_GaugeAt = new Vector3(0.95f, 1.1f, 0f);
+        // 낚은 물고기가 손으로 튀는 초 · 높이 · 만세한 두 앞발 사이 높이(유닛, 아트방 make_cheer.py) · 이름 알약이 떠오르는 초 · 팝업 높이(든 물고기 위)
         private const float k_CatchSeconds = 0.35f;
         private const float k_CatchArc = 0.8f;
-        // 설계 50: 드러난 대물이 멈춰 있는 높이(감은 대 끝 위)
-        private const float k_BossLift = 1f;
-        private const float k_WobbleCells = 2f;
+        private const float k_CheerHold = 1.08f;
         private const float k_RiseSeconds = 0.9f;
-        private static readonly Color k_Line = new Color32(0xF6, 0xE3, 0xCC, 200);
+        private const float k_PopupHeight = 1.7f;
 
         [Tooltip("굴 그림(실행 중 생성)")]
         [SerializeField] private SpriteRenderer m_burrow;
@@ -103,31 +63,24 @@ namespace ZooTycoon.World
         [SerializeField] private Texture2D m_floorTile;
         [SerializeField] private Texture2D m_wallTile;
         [SerializeField] private Texture2D m_wallFace;
-        [Tooltip("설계 44: 물길 재료(아트방 「흙 도랑」, 굴 재료처럼 픽셀을 읽는다). 물 타일은 물결 네 칸(water_tile_0~3)을 k_WaterFrameSeconds마다 돈다")]
+        [Tooltip("물결 네 칸(water_tile_0~3, k_WaterFrameSeconds마다 돈다) · 물 안쪽 윗면 흙 면(stream_face)")]
         [SerializeField] private Texture2D[] m_waterTiles;
         [SerializeField] private Texture2D m_streamFace;
-        [Tooltip("설계 44: 물속 물고기(아트방 「둥근 귀염」 <재료 id>_swim, 오른쪽을 봄, 가운데 피벗)")]
+        [Tooltip("둑 띠(아트방 bank, 피벗 아래 가운데, 둑 선을 따라 벽 안쪽 바닥 폭만큼 Tiled). 없으면 코드가 둑을 그린다")]
+        [SerializeField] private Sprite m_bank;
+        [Tooltip("둑 · 물 소품(아트방 bank_<이름> · water_<이름>, 발끝 피벗). 자리는 FishingConfigTable decor")]
+        [SerializeField] private Sprite[] m_props;
+        [Tooltip("물속 물고기(<재료 id>_swim, 오른쪽을 봄, 가운데 피벗)")]
         [SerializeField] private Sprite[] m_fishSwim;
-        [Tooltip("설계 22 이모지 말풍선 시트(BubbleTable alert 칸 = 붙잡힌 월척 위 「!」)")]
-        [SerializeField] private Sprite[] m_bubbleFrames;
-        [Tooltip("설계 44: 말뚝 · 잠긴 말뚝(아트방 「나무 말뚝」, 발끝 피벗)")]
-        [SerializeField] private Sprite m_stake;
-        [SerializeField] private Sprite m_stakeLocked;
-        [Tooltip("쿵 · 그물에 멈춘 물고기 머리 위를 도는 별(아트방 7×7칸, 가운데 피벗)")]
-        [SerializeField] private Sprite m_stakeStar;
-        [Tooltip("설계 46 소용돌이(미끼 노점 업그레이드)가 물고기를 되돌릴 때 그 자리의 물 소용돌이 네 칸(아트방, 가운데 피벗)")]
-        [SerializeField] private Sprite[] m_whirl;
-        [Tooltip("감기 게이지(아트방 B 「릴」 16칸, [0] = 0% · [15] = 100%, 피벗 = 릴 가운데)")]
+        [Tooltip("긴장 게이지(아트방 B 「릴」 16칸, [0] = 0% · [15] = 100%, 피벗 = 릴 가운데)")]
         [SerializeField] private Sprite[] m_reelGauge;
-        [Tooltip("낚싯줄 찌(아트방 A 「동글 찌」 [0] 떠 있음 · [1] 까딱 잠김, 피벗 = 맨 위 가운데 = 줄 끝)")]
+        [Tooltip("찌(아트방 A 「동글 찌」 [0] 떠 있음 · [1] 까딱 잠김, 피벗 = 맨 위 가운데 = 줄 끝)")]
         [SerializeField] private Sprite[] m_bobber;
-        [Tooltip("설계 44 · 49: 낚싯대(아트방 「통통한 대」 rod_<계열>_<단> · 월척을 붙잡은 rod_bent, 피벗 = 꽂는 자리)")]
+        [Tooltip("낚싯대(rod_bamboo_1 · _pull · rod_bent, 피벗 = 손이 쥐는 점)")]
         [SerializeField] private Sprite[] m_rods;
-        [Tooltip("구멍 아치(나가기 대상이면 튄다)")]
+        [Tooltip("구멍 아치")]
         [SerializeField] private Transform m_arch;
-        [Tooltip("점원 오두막(아트방 B 「미끼 노점」, 발끝 피벗, 점원 자리 바로 뒤)")]
-        [SerializeField] private Transform m_hut;
-        [Tooltip("값 표식 · 팻말(빵집 파기 표식과 같은 프리팹)")]
+        [Tooltip("이름 · 무게 알약(빵집 파기 표식과 같은 프리팹)")]
         [SerializeField] private MarkerView m_tagPrefab;
         [Tooltip("낚은 물고기 팝업(코인 팝업 프리팹에 재료 아이콘을 얹는다)")]
         [SerializeField] private CoinPopup m_popupPrefab;
@@ -135,14 +88,11 @@ namespace ZooTycoon.World
         [SerializeField] private SpriteAnimator m_poopPrefab;
         [SerializeField] private Sprite[] m_poopFrames;
         [SerializeField] private float m_poopFrameRate = 2f;
-        [Tooltip("낚시 점원 그림(손님 · 빵집 점원과 같은 프리팹)")]
+        [Tooltip("점원 그림(2회차 알바, 지금은 자리가 없다)")]
         [SerializeField] private VisitorView m_clerkPrefab;
         [SerializeField] private WombatView m_wombat;
 
-        private readonly Dictionary<Fish, FishArt> m_fish = new Dictionary<Fish, FishArt>();
-        private readonly List<StakeArt> m_stakes = new List<StakeArt>();
-        private readonly List<SpriteRenderer> m_ranges = new List<SpriteRenderer>();
-        private readonly List<SpriteRenderer> m_mergeHints = new List<SpriteRenderer>();
+        private readonly Dictionary<string, Sprite> m_rodSprites = new Dictionary<string, Sprite>();
         private FishingArea m_fishing;
         private FrameCache m_frames;
         private TableSet m_tables;
@@ -150,52 +100,23 @@ namespace ZooTycoon.World
         private ClerkViews m_clerkViews;
         private IDisposable[] m_subscriptions;
         private Sprite m_square;
-        private Sprite m_halfRing;
-        private Sprite m_ring;
-        private SpriteRenderer m_stream;
-        // ponytail: 물결 칸마다 물길 전체를 한 장씩(568×588 넷 ≈ 5MB). 물길이 더 커지면 물 칸만 따로 그리는 층으로
-        private Sprite[] m_streamFrames = new Sprite[0];
-        private MarkerView m_stageSign;
-        private MarkerView m_priceTag;
-        private MarkerView m_digTag;
-        private BubbleTable m_alert;
-        private readonly Dictionary<string, Sprite> m_rodSprites = new Dictionary<string, Sprite>();
-        // 단 뽑기 · 합치기 연출 중인 말뚝(그동안 대는 숨긴다)
-        private readonly HashSet<StakeInteractable> m_revealing = new HashSet<StakeInteractable>();
+        private SpriteRenderer m_water;
+        private Sprite[] m_waterFrames = new Sprite[0];
+        private SpriteRenderer m_rod;
+        private SpriteRenderer m_line;
+        private SpriteRenderer m_bobberArt;
+        private SpriteRenderer m_shadow;
+        private SpriteRenderer m_gauge;
         private Rect m_bounds;
-        // 설계 49 낚시판 보기: 켜져 있나 · 끄는 대의 말뚝과 손가락 자리(곳 좌표)
-        private bool m_board;
-        private StakeInteractable m_dragged;
-        private System.Numerics.Vector2 m_dragAt;
-
-        // 물고기 하나: 몸 · 감기 게이지 · 머리 자리(찌 · 줄 끝)
-        private sealed class FishArt
-        {
-            public SpriteRenderer Body;
-            public SpriteRenderer Gauge;
-            public SpriteRenderer Dizzy;
-            public float Length;
-            public float Phase;
-            public Vector3 Head;
-        }
-
-        // 말뚝 하나: 몸(기둥 + 대) · 낚시판 보기 이름표 · 「!」 말풍선 · 낚싯줄과 찌(감는 물고기마다 하나씩 늘린다)
-        private sealed class StakeArt
-        {
-            public StakeInteractable Stake;
-            public Transform Holder;
-            public Transform Body;
-            public SortingGroup Group;
-            public SpriteRenderer Post;
-            public SpriteRenderer Rod;
-            public MarkerView Tag;
-            public SpriteRenderer Alert;
-            public readonly List<SpriteRenderer> Lines = new List<SpriteRenderer>();
-            public readonly List<SpriteRenderer> Bobbers = new List<SpriteRenderer>();
-        }
+        private float m_nibbleLeft;
+        private float m_castLeft;
+        private float m_handScale = 1f;
+        private Vector3 m_bobberAt;
 
         public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombat.transform;
+        // 던진 동안 카메라가 비추는 점: 웜뱃과 찌의 가운데(깊은 물의 찌 · 물고기가 화면 아래 조작 밑에 숨지 않게, 사용자 2026-10-07)
+        public Vector3 Focus => (m_wombat.transform.position + m_bobberAt) / 2f;
         public Rect Bounds => new Rect(transform.position.x + m_bounds.x, transform.position.y + m_bounds.y, m_bounds.width, m_bounds.height);
 
         public void Bind(FishingArea fishing, EventBus bus, FrameCache frames, TableSet tables)
@@ -204,9 +125,6 @@ namespace ZooTycoon.World
             m_frames = frames;
             m_tables = tables;
             m_square = Fx.NewSquare();
-            m_halfRing = NewHalfRing();
-            m_ring = NewRing();
-            m_alert = tables.Get<BubbleTable>("alert");
             m_poopViews = new PoopViews(this, fishing, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, ToWorld);
             m_clerkViews = new ClerkViews(this, fishing, bus, m_clerkPrefab, tables, frames, transform, null);
 
@@ -217,53 +135,60 @@ namespace ZooTycoon.World
             float height = shape.Height / BurrowShape.k_PixelsPerUnit;
             m_bounds = new Rect(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit - height, width, height);
             m_arch.localPosition = new Vector3(fishing.Layout.HoleFloor.X, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f);
-            m_hut.localPosition = new Vector3(fishing.Layout.HutSpot.X, fishing.Layout.HutSpot.Y + 0.3f, 0f);
 
-            BuildStream();
-            BuildStakes();
-            // 단계 팻말 「물고기 N단계」: 단계를 올리는 미끼 노점 지붕 위(2026-10-06 사용자, 입구 아치 위에서는 뭔지 몰랐다)
-            m_stageSign = NewTag(ToWorld(fishing.Layout.HutSpot + new System.Numerics.Vector2(0f, k_StageSignLift)));
-            m_priceTag = NewTag(Vector3.zero);
-            m_priceTag.gameObject.SetActive(false);
-            m_digTag = NewTag(Vector3.zero);
+            // ponytail: 물결 칸마다 방 전체를 한 장씩. 방이 더 커지면 물 칸만 따로 그리는 층으로
+            m_water = NewRenderer(transform, "Water", null, Color.white, k_WaterOrder);
+            m_water.transform.localPosition = m_burrow.transform.localPosition;
+            m_waterFrames = m_waterTiles.Select(tile => WaterPainter.Paint(shape, fishing.Layout, tile, m_streamFace, m_bank == null)).ToArray();
+            m_water.sprite = m_waterFrames[0];
+
+            if (m_bank != null)
+            {
+                NavRect water = fishing.Layout.Water;
+                (float left, float right) = FloorSpan(shape, water.YMax);
+                SpriteRenderer bank = NewRenderer(transform, "Bank", m_bank, Color.white, k_WaterOrder + 1);
+                bank.drawMode = SpriteDrawMode.Tiled;
+                bank.size = new Vector2(right - left, m_bank.bounds.size.y);
+                bank.transform.localPosition = new Vector3((left + right) / 2f, water.YMax, 0f);
+            }
+
+            foreach (FishingDecorData decor in fishing.Config.Decor)
+            {
+                Sprite prop = m_props.FirstOrDefault(sprite => sprite.name == decor.Sprite);
+
+                if (prop != null)
+                {
+                    SpriteRenderer art = NewRenderer(transform, decor.Sprite, prop, Color.white, 0);
+                    art.spriteSortPoint = SpriteSortPoint.Pivot;
+                    art.transform.localPosition = new Vector3((float)decor.X, (float)decor.Y, 0f);
+                }
+            }
+
+            m_shadow = NewRenderer(transform, "Shadow", SwimSprite(fishing.Config.Fish), Color.white, k_FishOrder);
+            m_line = NewRenderer(transform, "Line", m_square, k_Line, k_LineOrder);
+            m_bobberArt = NewRenderer(transform, "Bobber", m_bobber[0], Color.white, k_LineOrder + 1);
+            m_gauge = NewRenderer(transform, "Gauge", m_reelGauge[0], Color.white, k_TopOrder);
             m_rods.ToList().ForEach(sprite => m_rodSprites[sprite.name] = sprite);
             m_wombat.Bind(fishing, transform, frames);
+            m_rod = NewRenderer(m_wombat.Hand, "Rod", m_rodSprites["rod_bamboo_1"], Color.white, k_RodFrontOrder);
+            // 든 빵 부모는 빵 크기(BakeryBaker k_CarryScale 0.6)라 대는 1배로 되돌린다(자리 · 대 끝 칸도 그 배율로 나눈다)
+            m_handScale = m_wombat.Hand.localScale.x;
+            m_rod.transform.localScale = Vector3.one / m_handScale;
 
             m_subscriptions = new[]
             {
-                bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged),
-                bus.Subscribe<Events.FishCaught>(Bus_FishCaught),
-                bus.Subscribe<Events.FishEscaped>(Bus_FishEscaped),
-                bus.Subscribe<Events.BossLanded>(Bus_BossLanded),
-                bus.Subscribe<Events.RodSummoned>(Bus_RodSummoned),
-                bus.Subscribe<Events.RodMerged>(Bus_RodMerged),
-                bus.Subscribe<Events.NetCast>(Bus_NetCast),
-                bus.Subscribe<Events.StageRaised>(Bus_StageRaised),
-                bus.Subscribe<Events.BossSpawned>(Bus_BossSpawned),
-                bus.Subscribe<Events.BossEscaped>(Bus_BossEscaped),
-                bus.Subscribe<Events.FishWhirled>(Bus_FishWhirled),
-                bus.Subscribe<Events.Thumped>(Bus_Thumped),
-                bus.Subscribe<Events.StreamDug>(Bus_StreamDug),
+                bus.Subscribe<Events.CastThrown>(Bus_CastThrown),
+                bus.Subscribe<Events.Nibbled>(Bus_Nibbled),
+                bus.Subscribe<Events.Bitten>(Bus_Bitten),
+                bus.Subscribe<Events.Hooked>(Bus_Hooked),
+                bus.Subscribe<Events.RunChanged>(Bus_RunChanged),
+                bus.Subscribe<Events.FishLanded>(Bus_FishLanded),
+                bus.Subscribe<Events.FishingEnded>(Bus_FishingEnded),
             };
         }
 
-        // 설계 49: 낚시터의 편집 모드 = 낚시판 보기(말뚝 이름표)
         public void SetEditing(bool editing)
         {
-            m_board = editing;
-            DropRod();
-        }
-
-        // 끄는 대를 손가락(곳 좌표)에 붙인다 · 놓으면 제 말뚝으로(옮겨졌으면 Core가 바꾼 대로)
-        public void DragRod(StakeInteractable stake, System.Numerics.Vector2 at)
-        {
-            m_dragged = stake;
-            m_dragAt = at;
-        }
-
-        public void DropRod()
-        {
-            m_dragged = null;
         }
 
         public void SetHeld(IPlaced held)
@@ -285,732 +210,241 @@ namespace ZooTycoon.World
                 return;
             }
 
-            m_stream.sprite = m_streamFrames[(int)(Time.time / k_WaterFrameSeconds) % m_streamFrames.Length];
-            SyncFish();
-            SyncStakes();
-            SyncRanges();
-            SyncMergeHints();
-            SyncPriceTag();
-            m_stageSign.Show(m_tables.Format("fishing_wave", m_fishing.Stage));
-            // 파기 값은 웜뱃이 막다른 끝 앞 땅을 대상으로 할 때만(빵집 · 농장 파기와 같이, 2026-10-05 사용자 「늘 떠 있는 건 별로」)
-            bool digTarget = !m_fishing.StreamFull && m_fishing.Target == m_fishing.StreamEnd;
-            m_digTag.gameObject.SetActive(digTarget);
+            m_water.sprite = m_waterFrames[(int)(Time.time / k_WaterFrameSeconds) % m_waterFrames.Length];
+            m_nibbleLeft = Mathf.Max(0f, m_nibbleLeft - Time.deltaTime);
+            FishingPhase phase = m_fishing.Phase;
+            bool fishing = phase != FishingPhase.Idle;
+            // 대는 물가가 대상일 때부터 손에 보이고, 낚아 만세하는 동안(Busy)은 내려놓는다
+            SyncRod(fishing || (m_fishing.Target == m_fishing.Water && !m_fishing.Wombat.Busy));
+            m_line.enabled = fishing;
+            m_bobberArt.enabled = fishing;
+            m_shadow.enabled = phase == FishingPhase.Tug;
+            m_gauge.enabled = phase == FishingPhase.Tug;
 
-            if (digTarget)
+            if (!fishing)
             {
-                m_digTag.transform.position = ToWorld(m_fishing.StreamEnd.Position);
-                m_digTag.Show(m_tables.Format("tag_dig", BigNumberText(m_fishing.DigPrice)));
+                m_castLeft = 0f;
+                return;
             }
-        }
 
-        // 「!」 말풍선 지금 칸(BubbleTable alert 칸 · 프레임)
-        private Sprite AlertFrame()
-        {
-            int frame = m_alert.Frame + (m_alert.Frames > 1 ? (int)(Time.time / m_alert.FrameSeconds) % m_alert.Frames : 0);
-            return m_bubbleFrames[Mathf.Clamp(frame, 0, m_bubbleFrames.Length - 1)];
+            Vector3 tip = TipOf();
+            Vector3 spot = BobberAt(phase);
+            float castLeft = Mathf.Max(0f, m_castLeft - Time.deltaTime);
+
+            // 던진 직후에는 찌가 대 끝에서 물 자리까지 포물선으로 날아가 떨어진다
+            if (m_castLeft > 0f)
+            {
+                float k = 1f - castLeft / k_CastSeconds;
+                m_bobberAt = Vector3.Lerp(tip, spot, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * k_CastArc);
+
+                if (castLeft <= 0f)
+                {
+                    Splash(spot, 1);
+                }
+            }
+            else
+            {
+                m_bobberAt = spot;
+            }
+
+            m_castLeft = castLeft;
+            m_bobberArt.transform.position = m_bobberAt;
+            m_bobberArt.sprite = m_bobber[phase != FishingPhase.Waiting || m_nibbleLeft > 0f ? 1 : 0];
+            Vector3 d = m_bobberAt - tip;
+            m_line.transform.position = tip + d / 2f;
+            m_line.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+            m_line.transform.localScale = new Vector3(d.magnitude, k_LineWidth, 1f);
+
+            if (phase == FishingPhase.Tug)
+            {
+                m_shadow.transform.position = m_bobberAt + Vector3.down * k_ShadowDrop;
+                m_shadow.flipX = Mathf.Sin(Time.time * k_RunWobbleSpeed) < 0f;
+                int frame = Mathf.Clamp(Mathf.RoundToInt((float)(m_fishing.Tension / m_fishing.Config.Rod.Line) * (m_reelGauge.Length - 1)), 0, m_reelGauge.Length - 1);
+                m_gauge.sprite = m_reelGauge[frame];
+                m_gauge.transform.position = m_wombat.transform.position + k_GaugeAt;
+            }
         }
 
         private void OnDestroy()
         {
-            if (m_subscriptions == null)
+            if (m_subscriptions != null)
+            {
+                foreach (IDisposable subscription in m_subscriptions)
+                {
+                    subscription.Dispose();
+                }
+            }
+
+            m_poopViews?.Dispose();
+            m_clerkViews?.Dispose();
+        }
+
+        // 둑 줄(물가 바로 위 줄)에서 걷는 바닥의 왼쪽 · 오른쪽 끝(유닛, 낚시터 원점 기준). 둑 띠를 벽 안쪽에만 깐다(사용자 2026-10-07 「벽 쪽 경계가 깨진다」)
+        private static (float left, float right) FloorSpan(BurrowShape.Result shape, float y)
+        {
+            int row = (int)Math.Round(-y * BurrowShape.k_PixelsPerUnit) - shape.OriginY - 1;
+            int min = shape.Width;
+            int max = -1;
+
+            for (int x = 0; x < shape.Width; x++)
+            {
+                if (shape.IsFloor(x, row))
+                {
+                    min = Math.Min(min, x);
+                    max = Math.Max(max, x);
+                }
+            }
+
+            return ((shape.OriginX + min) / BurrowShape.k_PixelsPerUnit, (shape.OriginX + max + 1) / BurrowShape.k_PixelsPerUnit);
+        }
+
+        // 찌 자리: 웜뱃 쪽 물가에서 물 안쪽으로. 기다림 · 입질은 깊이의 k_BobberIn, 줄다리기는 남은 거리 비율만큼 먼 쪽(달릴 때는 옆으로 흔들린다)
+        private Vector3 BobberAt(FishingPhase phase)
+        {
+            System.Numerics.Vector2 wombat = m_fishing.Wombat.Mover.Position;
+            float k = k_BobberIn;
+            float wobble = 0f;
+
+            if (phase == FishingPhase.Tug)
+            {
+                float ratio = m_fishing.DistanceStart > 0d ? (float)(m_fishing.Distance / m_fishing.DistanceStart) : 0f;
+                k = Mathf.Lerp(k_TugNear, k_TugFar, ratio);
+                wobble = m_fishing.Running ? Mathf.Sin(Time.time * k_RunWobbleSpeed) * k_RunWobble : 0f;
+            }
+
+            System.Numerics.Vector2 inward = m_fishing.Layout.Inward(m_fishing.Layout.Shore(wombat));
+            System.Numerics.Vector2 side = new System.Numerics.Vector2(-inward.Y, inward.X) * wobble;
+            return ToWorld(m_fishing.Layout.Deep(wombat, k) + side);
+        }
+
+        // 손에 든 대(자리는 WombatView.Hand가 맞춘다): 달릴 때 휘고(rod_bent), 감을 때 당김 판. 왼쪽을 보면 뒤집고 뒷모습이면 몸 뒤(든 빵과 같은 규칙)
+        private void SyncRod(bool shown)
+        {
+            m_rod.enabled = shown;
+
+            if (!shown)
             {
                 return;
             }
 
-            foreach (IDisposable subscription in m_subscriptions)
-            {
-                subscription.Dispose();
-            }
-
-            m_poopViews.Dispose();
-            m_clerkViews.Dispose();
+            Facing facing = m_fishing.Wombat.Mover.Facing;
+            bool tug = m_fishing.Phase == FishingPhase.Tug;
+            string name = tug && m_fishing.Running ? "rod_bent" : tug && m_fishing.Wombat.Holding ? "rod_bamboo_1_pull" : "rod_bamboo_1";
+            m_rod.sprite = m_rodSprites[name];
+            m_rod.flipX = facing == Facing.Left;
+            m_rod.transform.localPosition = new Vector3(facing == Facing.Left || facing == Facing.Right ? 0f : k_RodGrip.x, k_RodGrip.y, 0f) / m_handScale;
+            m_rod.sortingOrder = Fx.CarryOrder(facing, k_RodFrontOrder, k_RodBackOrder);
         }
 
-        // ---------- 물길 · 물고기 ----------
-
-        // 물길(굴 그림과 같은 원점 · 크기). 판 데까지만 칠한다
-        private void BuildStream()
+        // 줄이 나오는 대 끝(왼쪽을 보면 좌우가 뒤집힌다)
+        private Vector3 TipOf()
         {
-            m_stream = NewRenderer(transform, "Stream", null, Color.white, k_WaterOrder);
-            m_stream.transform.localPosition = m_burrow.transform.localPosition;
-            PaintStream();
+            Vector2 cells = k_RodTips.TryGetValue(m_rod.sprite.name, out Vector2 tip) ? tip : new Vector2(0f, m_rod.sprite.rect.height / 4f);
+            return m_rod.transform.position + new Vector3((m_rod.flipX ? -cells.x : cells.x) * Fx.k_Cell, cells.y * Fx.k_Cell, 0f);
         }
 
-        // 물길을 다시 칠한다(앞 그림의 텍스처는 버린다)
-        private void PaintStream()
+        private Sprite SwimSprite(string fishId)
         {
-            foreach (Sprite frame in m_streamFrames)
-            {
-                Destroy(frame.texture);
-                Destroy(frame);
-            }
-
-            m_streamFrames = m_waterTiles.Select(tile => StreamPainter.Paint(m_fishing.Layout.Shape, m_fishing.Layout, tile, m_streamFace)).ToArray();
-            m_stream.sprite = m_streamFrames[0];
-        }
-
-        private void SyncFish()
-        {
-            foreach (Fish fish in m_fishing.Fish)
-            {
-                if (!m_fish.TryGetValue(fish, out FishArt art))
-                {
-                    art = NewFish(fish);
-                    m_fish[fish] = art;
-                }
-
-                // 물길 방향으로 눕고(90도 단위라 칸 격자 그대로) 옆으로 살랑인다. 쿵에 멈추면 깜빡이고, 붙잡힌 월척은 몸부림친다
-                System.Numerics.Vector2 dir = m_fishing.Layout.PointAt(fish.S + 0.05f) - m_fishing.Layout.PointAt(fish.S - 0.05f);
-                bool vertical = Math.Abs(dir.Y) > Math.Abs(dir.X);
-                bool stunned = fish.StunLeft > 0d && fish.HookedBy == null;
-                float wobble = fish.HookedBy != null ? Mathf.Sin(Time.time * 30f) : stunned ? 0f : Mathf.Sin(Time.time * 5f + art.Phase);
-                Vector3 at = ToWorld(m_fishing.Layout.PointAt(fish.S)) + (vertical ? Vector3.right : Vector3.up) * (Mathf.Round(wobble * k_WobbleCells) * Fx.k_Cell)
-                    + (vertical ? Vector3.zero : Vector3.down * k_WaterDrop);
-                art.Body.transform.position = at;
-                art.Body.transform.localRotation = Quaternion.Euler(0f, 0f, vertical ? (dir.Y < 0f ? -90f : 90f) : 0f);
-                art.Body.flipX = !vertical && dir.X < 0f;
-                art.Head = at + new Vector3(dir.X, dir.Y, 0f).normalized * (art.Length * k_HeadAt);
-                art.Dizzy.enabled = stunned;
-
-                // 쿵에 멈춘 동안 별 하나가 머리 위를 돈다(그림자에 색을 곱하면 거의 안 보였다)
-                if (stunned)
-                {
-                    float angle = Time.time * k_DizzySpeed + art.Phase;
-                    art.Dizzy.transform.position = at + new Vector3(Mathf.Cos(angle) * k_DizzyRadius, k_DizzyLift + Mathf.Sin(angle) * k_DizzyRadius * 0.4f, 0f);
-                }
-                bool reeling = fish.Reeled > 0d;
-                art.Gauge.gameObject.SetActive(reeling);
-
-                if (reeling)
-                {
-                    float progress = Mathf.Clamp01((float)(fish.Reeled / fish.Weight));
-                    art.Gauge.transform.position = at + new Vector3(0f, 0.35f + art.Length * 0.2f, 0f);
-                    art.Gauge.sprite = m_reelGauge[Mathf.RoundToInt(progress * (m_reelGauge.Length - 1))];
-                }
-            }
-
-            foreach (Fish gone in m_fish.Keys.Where(f => !m_fishing.Fish.Contains(f)).ToList())
-            {
-                Destroy(TakeFish(gone).gameObject);
-            }
-        }
-
-        // 물고기 그림을 목록에서 떼어 몸만 돌려준다(감기 게이지는 지운다). 없으면 null
-        private Transform TakeFish(Fish fish)
-        {
-            if (!m_fish.Remove(fish, out FishArt art))
-            {
-                return null;
-            }
-
-            Destroy(art.Gauge.gameObject);
-            Destroy(art.Dizzy.gameObject);
-            return art.Body.transform;
-        }
-
-        // 물속 모습은 <재료 id>_swim. 월척은 2배, 대물은 제 그림(fish_boss_swim)
-        private FishArt NewFish(Fish fish)
-        {
-            Sprite sprite = m_fishSwim.FirstOrDefault(s => s.name == (fish.Boss ? k_BossSwim : fish.Kind.Item + "_swim")) ?? m_fishSwim[0];
-            SpriteRenderer body = NewRenderer(transform, "Fish", sprite, Color.white, k_FishOrder);
-            body.transform.localScale = Vector3.one * (fish.Trophy ? k_TrophyScale : 1f);
-            float length = sprite.bounds.size.x * body.transform.localScale.x;
-            SpriteRenderer gauge = NewRenderer(transform, "Gauge", m_reelGauge[0], Color.white, k_TopOrder - 1);
-            gauge.gameObject.SetActive(false);
-
-            // 대물: 감기 게이지를 2배로, 물이 들어오는 쪽에서 큰 물보라와 함께 나타난다
-            if (fish.Boss)
-            {
-                gauge.transform.localScale = Vector3.one * k_BossGaugeScale;
-                Splash(ToWorld(m_fishing.Layout.PointAt(0.6f)), 3);
-            }
-
-            SpriteRenderer dizzy = NewRenderer(transform, "Dizzy", m_stakeStar, Color.white, k_FishOrder + 1);
-            dizzy.enabled = false;
-            return new FishArt { Body = body, Gauge = gauge, Dizzy = dizzy, Length = length, Phase = UnityEngine.Random.value * Mathf.PI * 2f };
-        }
-
-        // ---------- 말뚝 · 대 ----------
-
-        private void BuildStakes()
-        {
-            foreach (StakeInteractable stake in m_fishing.Stakes)
-            {
-                Transform holder = new GameObject("Stake" + stake.Index).transform;
-                holder.SetParent(transform, false);
-                holder.localPosition = new Vector3(stake.Position.X, stake.Position.Y, 0f);
-                // 기둥 + 대는 SortingGroup(발끝)으로 묶어 대를 기둥 앞에: 대 밑동의 밧줄 깃이 윗면 구멍을 덮어 꽂힌 모습이 된다
-                Transform body = new GameObject("Body", typeof(SortingGroup)).transform;
-                body.SetParent(holder, false);
-                SpriteRenderer post = NewRenderer(body, "Post", m_stake, Color.white, 0);
-                SpriteRenderer rod = NewRenderer(body, "Rod", null, Color.white, 1);
-                MarkerView tag = NewTag(ToWorld(stake.Position) + Vector3.down * k_BoardTagDrop);
-                tag.transform.localScale = Vector3.one * k_BoardTagScale;
-                tag.gameObject.SetActive(false);
-                SpriteRenderer alert = NewRenderer(holder, "Alert", null, Color.white, k_AlertOrder);
-                alert.transform.localPosition = Vector3.up * k_TagRise;
-                m_stakes.Add(new StakeArt { Stake = stake, Holder = holder, Body = body, Group = body.GetComponent<SortingGroup>(), Post = post, Rod = rod, Tag = tag, Alert = alert });
-            }
-        }
-
-        private void SyncStakes()
-        {
-            // 두 대가 한 물고기를 감으면 찌는 하나만
-            HashSet<Fish> bobbed = new HashSet<Fish>();
-
-            foreach (StakeArt art in m_stakes)
-            {
-                StakeInteractable stake = art.Stake;
-                art.Post.sprite = stake.Open ? m_stake : m_stakeLocked;
-                bool dragged = stake == m_dragged && stake.Rod != null;
-                art.Rod.gameObject.SetActive(stake.Rod != null && !m_revealing.Contains(stake));
-                // 끄는 동안만 다른 말뚝 위로(대를 옮겨 말뚝이 비어도 되돌아오게 대가 있든 없든 매번 맞춘다)
-                art.Group.sortingOrder = dragged ? k_TopOrder : 0;
-
-                if (stake.Rod != null)
-                {
-                    SyncRod(art);
-                }
-
-                SyncLines(art, art.Rod.gameObject.activeSelf && !dragged && k_RodTips.ContainsKey(TipKey(art.Rod.sprite)), bobbed);
-
-                // 낚시판 보기: 말뚝마다 이름표(잠긴 말뚝 = 여는 값 · 빈 말뚝 = 대 사기 · 꽂힌 말뚝 = 종류 이름)
-                art.Tag.gameObject.SetActive(m_board);
-
-                if (m_board)
-                {
-                    art.Tag.Show(!stake.Open ? m_tables.Format("tag_open_stake", BigNumberText(stake.Cost))
-                        : stake.Rod == null ? m_tables.Text("sheet_stake_title") : m_tables.Text("rod_" + stake.Rod.Id), true);
-                    // 좌우 끝 말뚝의 이름표가 방 밖으로 잘리지 않게 안쪽으로 민다
-                    float half = art.Tag.Width * k_BoardTagScale / 2f + Fx.k_Cell * 4f;
-                    Vector3 at = ToWorld(stake.Position) + Vector3.down * k_BoardTagDrop;
-                    art.Tag.transform.position = new Vector3(Mathf.Clamp(at.x, Bounds.xMin + half, Bounds.xMax - half), at.y, at.z);
-                }
-
-                art.Alert.enabled = stake.Hooked != null;
-                art.Alert.sprite = AlertFrame();
-            }
-        }
-
-        // 대는 그림 그대로(돌리지도 뒤집지도 않는다). 감는 동안 곧은 판 ↔ 당김 판을 번갈아 쓰고, 월척을 붙잡으면 휜 대로 바꿔 말뚝째 한 칸씩 떤다(대 밑동 테가 말뚝 테에서 어긋나지 않게)
-        // 낚싯줄 · 찌: 감는 물고기마다 하나(쌍줄대는 둘, 회오리대는 사거리 안 모두). 찌는 물고기 위 · 줄 아래이고, 두 대가 한 물고기를 감으면 하나만
-        private void SyncLines(StakeArt art, bool shown, HashSet<Fish> bobbed)
-        {
-            IReadOnlyList<Fish> targets = art.Stake.Targets;
-            int used = 0;
-
-            for (int i = 0; shown && i < targets.Count; i++)
-            {
-                if (!m_fish.TryGetValue(targets[i], out FishArt reeled))
-                {
-                    continue;
-                }
-
-                if (used == art.Lines.Count)
-                {
-                    art.Lines.Add(NewRenderer(art.Holder, "Line", m_square, k_Line, 1));
-                    art.Bobbers.Add(NewRenderer(art.Holder, "Bobber", m_bobber[0], Color.white, k_FishOrder + 2));
-                }
-
-                Vector3 tip = TipOf(art.Rod);
-                Vector3 d = reeled.Head - tip;
-                SpriteRenderer line = art.Lines[used];
-                line.enabled = true;
-                line.transform.position = tip + d / 2f;
-                line.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
-                line.transform.localScale = new Vector3(d.magnitude, k_LineWidth, 1f);
-                SpriteRenderer bobber = art.Bobbers[used];
-                bobber.enabled = bobbed.Add(targets[i]);
-                bobber.transform.position = reeled.Head;
-                bobber.sprite = m_bobber[Pulling(art) ? 1 : 0];
-                used++;
-            }
-
-            for (int i = used; i < art.Lines.Count; i++)
-            {
-                art.Lines[i].enabled = false;
-                art.Bobbers[i].enabled = false;
-            }
-        }
-
-        // 낚시판 보기에서 끄는 대는 손가락 밑(대 가운데)에 2배로, 다른 말뚝 위로 그려진다
-        private void SyncRod(StakeArt art)
-        {
-            bool hooked = art.Stake.Hooked != null;
-            bool dragged = art.Stake == m_dragged;
-            art.Rod.sprite = hooked ? m_rodSprites["rod_bent"] : RodSprite(art.Stake.Rod, !dragged && Pulling(art));
-            art.Rod.transform.localScale = Vector3.one * (dragged ? k_DragScale : 1f);
-
-            if (dragged)
-            {
-                art.Rod.transform.position = ToWorld(m_dragAt) + Vector3.down * (k_RodHeight * k_DragScale / 2f);
-            }
-            else
-            {
-                art.Rod.transform.localPosition = new Vector3(0f, k_RodSocket, 0f);
-            }
-
-            art.Body.localPosition = new Vector3(hooked ? Mathf.Round(Mathf.Sin(Time.time * 30f)) * Fx.k_Cell : 0f, 0f, 0f);
-        }
-
-        // 감는 동안 당김 박자(대 당김 판 · 찌 잠김이 같이 쓴다). 월척을 붙잡은 동안은 당기지 않는다
-        private static bool Pulling(StakeArt art)
-        {
-            return art.Stake.Hooked == null && art.Stake.Reeling != null && Mathf.Repeat(Time.time + art.Stake.Index * 0.17f, k_PullSeconds) < k_PullSeconds / 2f;
-        }
-
-        // 대는 rod_<계열>_<단>(3단까지, 당김 판은 _pull). 그림이 아직 없는 계열은 대나무대
-        private Sprite RodSprite(RodTable rod, bool pull = false)
-        {
-            int shown = Mathf.Clamp(rod.Tier, 1, 3);
-            string name = "rod_" + rod.Family + "_" + shown;
-            string family = m_rodSprites.ContainsKey(name) ? name : "rod_bamboo_" + shown;
-            return pull && m_rodSprites.TryGetValue(family + "_pull", out Sprite pulled) ? pulled : m_rodSprites[family];
-        }
-
-        // 단 숫자를 뺀 이름: rod_bamboo_2 → rod_bamboo, rod_iron_3_pull → rod_iron_pull
-        private static string TipKey(Sprite sprite)
-        {
-            return string.Join("_", sprite.name.Split('_').Where(part => !int.TryParse(part, out _)));
-        }
-
-        // 줄이 나오는 점. 대 끝이 없으면 그림 가운데
-        private static Vector3 TipOf(SpriteRenderer rod)
-        {
-            Vector2 cells = k_RodTips.TryGetValue(rod.sprite.name, out Vector2 tip) || k_RodTips.TryGetValue(TipKey(rod.sprite), out tip) ? tip : new Vector2(0f, rod.sprite.rect.height / 4f);
-            return rod.transform.position + (Vector3)cells * Fx.k_Cell;
-        }
-
-        // 대상 위 값: 잠긴 말뚝이면 열기, 미끼 노점이면 다음 단계 값(대 값은 시트 칩에). 열거나 올리면 바로 바뀐다
-        private void SyncPriceTag()
-        {
-            Interactable target = m_fishing.WombatPresent ? m_fishing.Target : null;
-            (string price, Vector3 at) = target is StakeInteractable stake && !stake.Open ? (m_tables.Format("tag_open_stake", BigNumberText(stake.Cost)), ToWorld(stake.Position))
-                : ((string)null, Vector3.zero);
-
-            if (price == null)
-            {
-                m_priceTag.gameObject.SetActive(false);
-                return;
-            }
-
-            m_priceTag.transform.position = at + Vector3.up * k_TagRise;
-            m_priceTag.Show(price);
-        }
-
-        // 낚시판 보기에서 대를 끄는 동안 합칠 수 있는 말뚝(같은 종류이고 윗 종류가 있다)에 금빛 고리가 숨쉰다
-        private void SyncMergeHints()
-        {
-            RodTable rod = m_dragged?.Rod;
-            int shown = 0;
-
-            if (rod != null && m_fishing.NextOf(rod) != null)
-            {
-                foreach (StakeArt art in m_stakes)
-                {
-                    if (art.Stake == m_dragged || art.Stake.Rod != rod || art.Stake.Hooked != null)
-                    {
-                        continue;
-                    }
-
-                    if (shown == m_mergeHints.Count)
-                    {
-                        m_mergeHints.Add(NewRenderer(transform, "MergeHint", m_ring, k_Star, k_RangeOrder));
-                    }
-
-                    SpriteRenderer hint = m_mergeHints[shown++];
-                    hint.gameObject.SetActive(true);
-                    hint.transform.position = ToWorld(art.Stake.Position) + Vector3.up * k_RodSocket;
-                    hint.transform.localScale = Vector3.one * (k_MergeHintSize + Mathf.Round(Mathf.Sin(Time.unscaledTime * 6f)) * Fx.k_Cell * 4f);
-                }
-            }
-
-            for (int i = shown; i < m_mergeHints.Count; i++)
-            {
-                m_mergeHints[i].gameObject.SetActive(false);
-            }
-        }
-
-        // 대상 말뚝의 사거리(설계 45: 말뚝 위쪽 반원). 낚시판 보기에서 끄는 동안은 손가락 밑 말뚝(없으면 제 말뚝)에 그 대의 사거리
-        private void SyncRanges()
-        {
-            List<(StakeInteractable stake, float range)> shown = new List<(StakeInteractable, float)>();
-
-            if (m_dragged != null && m_dragged.Rod != null)
-            {
-                StakeInteractable hover = m_fishing.StakeUnder(m_dragAt);
-                shown.Add((hover != null && hover.Open ? hover : m_dragged, m_fishing.RangeOf(m_dragged)));
-            }
-            else if (m_fishing.Target is StakeInteractable target && target.Rod != null)
-            {
-                shown.Add((target, m_fishing.RangeOf(target)));
-            }
-
-            while (m_ranges.Count < shown.Count)
-            {
-                m_ranges.Add(NewRenderer(transform, "Range", m_halfRing, k_Range, k_RangeOrder));
-            }
-
-            for (int i = 0; i < m_ranges.Count; i++)
-            {
-                m_ranges[i].gameObject.SetActive(i < shown.Count);
-
-                if (i < shown.Count)
-                {
-                    m_ranges[i].transform.position = ToWorld(shown[i].stake.Position);
-                    m_ranges[i].transform.localScale = Vector3.one * shown[i].range * 2f;
-                }
-            }
+            string name = m_tables.Get<FishTable>(fishId).Item + "_swim";
+            return m_fishSwim.FirstOrDefault(sprite => sprite.name == name) ?? m_fishSwim[0];
         }
 
         // ---------- 사건 ----------
 
-        // 대상이 된 말뚝 · 미끼 노점 · 아치가 튄다(값 표식은 SyncPriceTag)
-        private void Bus_TargetChanged(Events.TargetChanged e)
+        private void Bus_CastThrown(Events.CastThrown e)
         {
-            if (e.Area != m_fishing)
+            if (e.Fishing == m_fishing)
             {
-                return;
-            }
-
-            if (m_fishing.Target is StakeInteractable stake)
-            {
-                StartCoroutine(Fx.Bounce(m_stakes[stake.Index].Post.transform.parent));
-            }
-            else if (m_fishing.Target is FishingHutInteractable)
-            {
-                StartCoroutine(Fx.Bounce(m_hut));
-            }
-            else if (m_fishing.Target is StreamEndInteractable)
-            {
-                m_digTag.Bounce();
-            }
-            else if (m_fishing.Target is PassageInteractable)
-            {
-                StartCoroutine(Fx.Bounce(m_arch));
+                m_castLeft = k_CastSeconds;
             }
         }
 
-        // 낚았다: 물보라 알갱이, 물고기가 옆모습(창고 아이콘)으로 바뀌어 대 끝으로 튀어 오르고 닿으면 재료 팝업(감은 말뚝 위).
-        // 웜뱃이 털썩한 월척이면 웜뱃이 끌어올리는 동작
-        private void Bus_FishCaught(Events.FishCaught e)
+        private void Bus_Nibbled(Events.Nibbled e)
+        {
+            if (e.Fishing == m_fishing)
+            {
+                m_nibbleLeft = k_NibbleSeconds;
+            }
+        }
+
+        private void Bus_Bitten(Events.Bitten e)
+        {
+            if (e.Fishing == m_fishing)
+            {
+                Splash(m_bobberAt, 1);
+            }
+        }
+
+        private void Bus_Hooked(Events.Hooked e)
+        {
+            if (e.Fishing == m_fishing)
+            {
+                Splash(m_bobberAt, 2);
+            }
+        }
+
+        private void Bus_RunChanged(Events.RunChanged e)
+        {
+            if (e.Fishing == m_fishing && e.Running)
+            {
+                Splash(m_bobberAt, 1);
+            }
+        }
+
+        // 낚았다: 큰 물보라, 웜뱃은 대를 내려놓고 만세(Core가 landSeconds 동안 세워 둔다), 물고기 그림이 든 두 앞발 사이로 튀어 올라 그동안 머문다. 「+1」 팝업과 「붕어 1.2kg」 알약
+        private void Bus_FishLanded(Events.FishLanded e)
         {
             if (e.Fishing != m_fishing)
             {
                 return;
             }
 
-            Transform body = TakeFish(e.Fish);
-            Vector3 at = body != null ? body.position : ToWorld(e.Stake.Position);
-            Splash(at, 1);
-            string amount = m_tables.Format(k_PopupKey, e.Count);
-            Sprite icon = m_frames.Get(m_tables.Get<ItemTable>(e.Fish.Kind.Item).Icon)[0];
-            Vector3 popupAt = ToWorld(e.Stake.Position) + Vector3.up * k_PopupHeight;
-
-            if (body != null)
-            {
-                SpriteRenderer side = body.GetComponent<SpriteRenderer>();
-                side.sprite = icon;
-                side.color = Color.white;
-                body.localRotation = Quaternion.identity;
-            }
-
-            if (body == null)
-            {
-                ShowPopup(popupAt, amount, icon);
-            }
-            else
-            {
-                StartCoroutine(Fly(body, TipOf(m_stakes[e.Stake.Index].Rod), k_CatchArc, 1f, () => ShowPopup(popupAt, amount, icon)));
-            }
-
-            // 점원이 건진 월척은 웜뱃이 다른 일(쿵 · 파기)로 바빠도 끌어올리지 않는다
-            if (e.Fish.Trophy && m_fishing.WombatPresent && m_fishing.Wombat.Busy && m_fishing.Target == e.Stake)
-            {
-                m_wombat.Haul((float)m_fishing.Config.HaulSeconds);
-            }
-        }
-
-        // 설계 50: 대물이 낚였다. 큰 물보라와 함께 그림자가 그 대물의 모습으로 드러나 감은 대 끝 위로 솟고, 이름이 떠오른 채 멈춰 있다가 사라진다.
-        // 낚인 때부터 bossShowSeconds 뒤에 낚시 소식(UI)이 뜬다
-        private void Bus_BossLanded(Events.BossLanded e)
-        {
-            if (e.Fishing != m_fishing)
-            {
-                return;
-            }
-
-            Transform body = TakeFish(e.Fish);
-
-            if (body != null)
-            {
-                StartCoroutine(ShowBoss(body, e.Boss, TipOf(m_stakes[e.Stake.Index].Rod) + Vector3.up * k_BossLift));
-            }
-        }
-
-        private IEnumerator ShowBoss(Transform body, BossTable boss, Vector3 to)
-        {
-            Vector3 from = body.position;
+            Vector3 from = m_bobberAt;
             Splash(from, 3);
-            SpriteRenderer side = body.GetComponent<SpriteRenderer>();
-            side.sprite = m_frames.Get(boss.Sprite)[0];
-            side.color = Color.white;
-            side.flipX = false;
-            side.sortingOrder = k_TopOrder - 3;
-            body.localRotation = Quaternion.identity;
-            body.localScale = Vector3.one;
-
-            for (float t = 0f; t < k_CatchSeconds; t += Time.deltaTime)
+            ItemTable item = m_tables.Get<ItemTable>(e.Fish.Kind.Item);
+            Sprite icon = m_frames.Get(item.Icon)[0];
+            SpriteRenderer body = NewRenderer(transform, "Caught", icon, Color.white, k_TopOrder - 3);
+            body.transform.position = from;
+            Vector3 wombat = m_wombat.transform.position;
+            float seconds = (float)m_fishing.Config.LandSeconds;
+            string tag = m_tables.Format("fishing_catch_tag", item.Name, e.Fish.Weight.ToString("0.#", CultureInfo.InvariantCulture));
+            m_wombat.Cheer(seconds);
+            StartCoroutine(Fly(body.transform, wombat + Vector3.up * k_CheerHold, k_CatchArc, () =>
             {
-                float k = t / k_CatchSeconds;
-                body.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * k_CatchArc);
-                yield return null;
-            }
-
-            body.position = to;
-            StartCoroutine(Fx.Bounce(body));
-            StartCoroutine(Fx.Burst(transform, m_square, to, 16, 1.8f, 2.4f, 9f, 0.6f, 4, k_Star, k_TopOrder));
-            StartCoroutine(Rise(m_tables.Text("boss_" + boss.Id), to + Vector3.up * (side.sprite.bounds.extents.y + 0.3f)));
-            yield return new WaitForSeconds((float)m_fishing.Config.BossShowSeconds - k_CatchSeconds);
-            Destroy(body.gameObject);
+                Destroy(body.gameObject, seconds - k_CatchSeconds);
+                ShowPopup(wombat + Vector3.up * k_PopupHeight, m_tables.Format(k_PopupKey, 1), icon);
+                StartCoroutine(Rise(tag, wombat + Vector3.up * (k_PopupHeight + 0.5f)));
+            }));
         }
 
-        // 놓쳤다: 물고기가 막다른 끝 둑 틈으로 작아지며 빠져나간다(작은 물보라 · 소리). 놓친 수는 띄우지 않는다(2026-10-05 사용자)
-        private void Bus_FishEscaped(Events.FishEscaped e)
+        // 끊기면 대 끝에서 줄 조각이 튄다
+        private void Bus_FishingEnded(Events.FishingEnded e)
         {
-            if (e.Fishing != m_fishing)
+            if (e.Fishing == m_fishing && e.Reason == FishingEnd.Snapped)
             {
-                return;
-            }
-
-            Transform body = TakeFish(e.Fish);
-
-            if (body != null)
-            {
-                StartCoroutine(Fly(body, body.position, 0f, 0f, null));
-                StartCoroutine(Fx.Burst(transform, m_square, body.position, 4, 0.6f, 1.6f, 9f, 0.35f, 3, k_WaterLight, k_TopOrder));
-
-                if (e.Fish.Boss)
-                {
-                    Splash(body.position, 3);
-                }
-            }
-
-        }
-
-        // 설계 45: 물길을 팠다. 웜뱃이 퍼 던지는 때에 새 물을 칠하고 흙덩이가 튄다
-        private void Bus_StreamDug(Events.StreamDug e)
-        {
-            if (e.Fishing != m_fishing)
-            {
-                return;
-            }
-
-            Vector3 at = ToWorld(m_fishing.Layout.PointAt((e.From + e.To) / 2f));
-            StartCoroutine(AfterDigThrow(m_fishing.WombatPresent ? m_wombat.Dig() : 0f, at));
-        }
-
-        private IEnumerator AfterDigThrow(float seconds, Vector3 at)
-        {
-            yield return new WaitForSeconds(seconds);
-            PaintStream();
-            StartCoroutine(Fx.Burst(transform, m_square, at, 10, 1.4f, 2.6f, 9f, 0.5f, 4, k_Dirt, k_TopOrder));
-            StartCoroutine(Fx.Burst(transform, m_square, at, 8, 1.4f, 2.6f, 9f, 0.5f, 4, k_DirtDark, k_TopOrder));
-            Splash(at, 1);
-        }
-
-        // 설계 46 소용돌이: 되돌린 물고기 자리에 물 소용돌이가 돌고(k_WhirlFrameSeconds마다 한 칸) 물보라가 튄다
-        private void Bus_FishWhirled(Events.FishWhirled e)
-        {
-            if (e.Fishing == m_fishing && m_whirl.Length > 0)
-            {
-                StartCoroutine(Whirl(ToWorld(m_fishing.Layout.PointAt(e.From)), ToWorld(m_fishing.Layout.PointAt(e.Fish.S))));
+                StartCoroutine(Fx.Burst(transform, m_square, TipOf(), 8, 1.0f, 2f, 9f, 0.4f, 3, k_Line, k_TopOrder));
+                Splash(m_bobberAt, 1);
             }
         }
 
-        private IEnumerator Whirl(Vector3 from, Vector3 to)
-        {
-            SpriteRenderer swirl = NewRenderer(transform, "Whirl", m_whirl[0], Color.white, k_FishOrder + 1);
-            Splash(from, 1);
+        // ---------- 연출 조각 ----------
 
-            for (float t = 0f; t < k_WhirlSeconds; t += Time.deltaTime)
-            {
-                swirl.sprite = m_whirl[(int)(t / k_WhirlFrameSeconds) % m_whirl.Length];
-                swirl.transform.position = Vector3.Lerp(from, to, t / k_WhirlSeconds) + Vector3.down * k_WaterDrop;
-                yield return null;
-            }
-
-            Destroy(swirl.gameObject);
-        }
-
-        private void Bus_StageRaised(Events.StageRaised e)
-        {
-            if (e.Fishing == m_fishing)
-            {
-                m_stageSign.Bounce();
-                StartCoroutine(Fx.Bounce(m_hut));
-                StartCoroutine(Cheer());
-            }
-        }
-
-        // 단계가 올랐다: 대가 꽂힌 말뚝이 차례로 튄다(벽을 뚫은 순간을 판 전체로)
-        private IEnumerator Cheer()
-        {
-            foreach (StakeArt art in m_stakes)
-            {
-                if (art.Stake.Rod != null)
-                {
-                    StartCoroutine(Fx.Bounce(art.Post.transform.parent));
-                    yield return new WaitForSeconds(k_CheerStep);
-                }
-            }
-        }
-
-        // 설계 49 그물: 멈추는 순간 그 말뚝이 튀고 사거리 반원이 퍼지며 사라진다(누가 물고기를 세웠는지 보이게)
-        private void Bus_NetCast(Events.NetCast e)
-        {
-            if (e.Stake.Fishing == m_fishing && e.Stake.Rod != null)
-            {
-                StartCoroutine(NetPulse(m_stakes[e.Stake.Index], m_fishing.RangeOf(e.Stake)));
-            }
-        }
-
-        private IEnumerator NetPulse(StakeArt art, float range)
-        {
-            StartCoroutine(Fx.Bounce(art.Post.transform.parent));
-            SpriteRenderer ring = NewRenderer(transform, "NetPulse", m_halfRing, k_WaterLight, k_RangeOrder);
-            ring.transform.position = ToWorld(art.Stake.Position);
-
-            for (float t = 0f; t < k_RippleSeconds; t += Time.deltaTime)
-            {
-                float k = t / k_RippleSeconds;
-                ring.transform.localScale = Vector3.one * range * 2f * (1f - (1f - k) * (1f - k));
-                ring.color = new Color(k_WaterLight.r, k_WaterLight.g, k_WaterLight.b, 1f - k * k);
-                yield return null;
-            }
-
-            Destroy(ring.gameObject);
-        }
-
-        // 설계 49: 대물이 나온다(물이 들어오는 쪽에 글이 떠오른다. 알림은 상단 알약과 곳 이름 띠)
-        private void Bus_BossSpawned(Events.BossSpawned e)
-        {
-            if (e.Fishing == m_fishing)
-            {
-                StartCoroutine(Rise(m_tables.Text("fishing_boss"), ToWorld(m_fishing.Layout.PointAt(1.5f)) + Vector3.up * 0.6f));
-            }
-        }
-
-        // 대물이 막다른 끝으로 빠져나갔다(물고기 놓침 연출 위에 글)
-        private void Bus_BossEscaped(Events.BossEscaped e)
-        {
-            if (e.Fishing == m_fishing)
-            {
-                StartCoroutine(Rise(m_tables.Text("fishing_boss_missed"), ToWorld(m_fishing.Layout.PointAt(m_fishing.Layout.Length)) + Vector3.up * 0.6f));
-            }
-        }
-
-        // 단 뽑기가 끝나기까지 초
-        public static float RevealSeconds(StakeInteractable stake)
-        {
-            return stake.Rod == null ? 0f : k_RevealStep * stake.Rod.Tier;
-        }
-
-        // 설계 46 · 49 대 사기: 옛 대는 사라지고, 말뚝이 단 수만큼 튄 뒤(단 뽑기) 대가 꽂히고 단만큼 반짝임. 둘째 · 셋째 종류면 드묾 · 전설 글이 떠오른다
-        private void Bus_RodSummoned(Events.RodSummoned e)
-        {
-            if (e.Stake.Fishing == m_fishing)
-            {
-                StartCoroutine(Reveal(m_stakes[e.Stake.Index]));
-            }
-        }
-
-        private IEnumerator Reveal(StakeArt art)
-        {
-            StakeInteractable stake = art.Stake;
-            int tier = stake.Rod.Tier;
-            m_revealing.Add(stake);
-
-            for (int i = 0; i < tier; i++)
-            {
-                StartCoroutine(Fx.Bounce(art.Post.transform.parent));
-                SoundManager.Instance.Play(SoundTable.k_RodStar);
-                yield return new WaitForSeconds(k_RevealStep);
-            }
-
-            m_revealing.Remove(stake);
-            Shine(art, tier, tier > 1 ? m_tables.Text("rod_grade_" + Math.Min(tier, 3)) : null);
-        }
-
-        // 설계 49 합치기: 끈 쪽 말뚝에서 대가 날아와 꽂히고(그동안 새 대는 숨긴다) 단만큼 반짝이며 새 종류 이름이 떠오른다
-        private void Bus_RodMerged(Events.RodMerged e)
-        {
-            if (e.Stake.Fishing == m_fishing)
-            {
-                StartCoroutine(Merge(m_stakes[e.Stake.Index], m_stakes[e.From.Index]));
-            }
-        }
-
-        private IEnumerator Merge(StakeArt art, StakeArt from)
-        {
-            RodTable merged = art.Stake.Rod;
-            m_revealing.Add(art.Stake);
-            SpriteRenderer flying = NewRenderer(transform, "Merging", RodSprite(merged), Color.white, k_TopOrder - 3);
-            flying.transform.position = ToWorld(from.Stake.Position) + Vector3.up * k_RodSocket;
-            yield return Fly(flying.transform, ToWorld(art.Stake.Position) + Vector3.up * k_RodSocket, k_CatchArc, 1f, null);
-            m_revealing.Remove(art.Stake);
-            Shine(art, merged.Tier, m_tables.Format("rod_merged", m_tables.Text("rod_" + merged.Id)));
-        }
-
-        // 대가 꽂혔다: 말뚝이 튀고 단만큼 알갱이, 글이 있으면 떠오른다
-        private void Shine(StakeArt art, int tier, string text)
-        {
-            Vector3 at = ToWorld(art.Stake.Position);
-            StartCoroutine(Fx.Bounce(art.Post.transform.parent));
-            StartCoroutine(Fx.Burst(transform, m_square, at + Vector3.up * (k_RodSocket + k_RodHeight / 2f), 4 + 6 * tier, 0.6f * tier, 2f, 9f, 0.3f + 0.15f * tier, 3, tier > 1 ? k_Star : k_WaterLight,
-                k_TopOrder));
-
-            if (text != null)
-            {
-                StartCoroutine(Rise(text, at + Vector3.up * k_TagRise));
-            }
-        }
-
-        private void Bus_Thumped(Events.Thumped e)
-        {
-            if (e.Fishing != m_fishing)
-            {
-                return;
-            }
-
-            float impact = m_wombat.Thump((float)m_fishing.Config.ThumpSeconds);
-            StartCoroutine(Ripple(impact, ToWorld(e.At), (float)m_fishing.Config.ThumpRadius, ToWorld(m_fishing.Layout.NearestOnStream(e.At))));
-        }
-
-        // target이 to까지 k_CatchSeconds 동안 포물선(arc 높이)으로 날며 배율이 endScale배가 된 뒤 사라진다
-        private IEnumerator Fly(Transform target, Vector3 to, float arc, float endScale, Action landed)
+        private IEnumerator Fly(Transform target, Vector3 to, float arc, Action landed)
         {
             Vector3 from = target.position;
-            Vector3 scale = target.localScale;
-
-            if (target.TryGetComponent(out SpriteRenderer body))
-            {
-                body.sortingOrder = k_TopOrder - 3;
-            }
 
             for (float t = 0f; t < k_CatchSeconds; t += Time.deltaTime)
             {
                 float k = t / k_CatchSeconds;
                 target.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * arc);
-                target.localScale = scale * Mathf.Lerp(1f, endScale, k);
                 yield return null;
             }
 
-            Destroy(target.gameObject);
-            landed?.Invoke();
+            target.position = to;
+            landed();
         }
 
-        // 잠깐 떠올라 사라지는 글 알약(드묾 · 전설)
+        // 잠깐 떠올라 사라지는 글 알약
         private IEnumerator Rise(string text, Vector3 at)
         {
             MarkerView tag = NewTag(at);
@@ -1031,32 +465,11 @@ namespace ZooTycoon.World
             Instantiate(m_popupPrefab, at, Quaternion.identity, transform).Show(amount, icon);
         }
 
-        // 쿵: 쿵 칸(impact초 뒤)에 물보라와 함께 웜뱃 자리에서 고리가 쿵 반지름까지 퍼지며 사라진다(멈추는 범위를 보인다)
-        private IEnumerator Ripple(float impact, Vector3 at, float radius, Vector3 splashAt)
-        {
-            yield return new WaitForSeconds(impact);
-            Splash(splashAt, 2);
-            SpriteRenderer ring = NewRenderer(transform, "Ripple", m_ring, k_WaterLight, k_RangeOrder);
-            ring.transform.position = at;
-
-            for (float t = 0f; t < k_RippleSeconds; t += Time.deltaTime)
-            {
-                float k = t / k_RippleSeconds;
-                ring.transform.localScale = Vector3.one * radius * 2f * (1f - (1f - k) * (1f - k));
-                ring.color = new Color(k_WaterLight.r, k_WaterLight.g, k_WaterLight.b, 1f - k * k);
-                yield return null;
-            }
-
-            Destroy(ring.gameObject);
-        }
-
         private void Splash(Vector3 at, int strength)
         {
             StartCoroutine(Fx.Burst(transform, m_square, at, 6 * strength, 1.2f * strength, 2.4f, 9f, 0.45f, 4, k_WaterLight, k_TopOrder));
             StartCoroutine(Fx.Burst(transform, m_square, at, 6 * strength, 1.2f * strength, 2.4f, 9f, 0.45f, 4, k_Water, k_TopOrder));
         }
-
-        // ---------- 조각 ----------
 
         private Vector3 ToWorld(System.Numerics.Vector2 p)
         {
@@ -1089,60 +502,6 @@ namespace ZooTycoon.World
             renderer.color = color;
             renderer.sortingOrder = order;
             return renderer;
-        }
-
-        private static string BigNumberText(double value)
-        {
-            return value.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        // 설계 45: 사거리 반원 고리(한 변 1유닛, 가운데 피벗, 위쪽만). 대는 말뚝 위쪽만 본다
-        // 쿵 물결 고리: 테두리만(가운데는 비움)
-        private static Sprite NewRing()
-        {
-            const int k_Size = 128;
-            const float k_Inner = 0.9f;
-            Texture2D texture = new Texture2D(k_Size, k_Size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-            Color32[] pixels = new Color32[k_Size * k_Size];
-
-            for (int y = 0; y < k_Size; y++)
-            {
-                for (int x = 0; x < k_Size; x++)
-                {
-                    float dx = (x + 0.5f) / k_Size * 2f - 1f;
-                    float dy = (y + 0.5f) / k_Size * 2f - 1f;
-                    float d = dx * dx + dy * dy;
-                    pixels[y * k_Size + x] = d <= 1f && d >= k_Inner * k_Inner ? new Color32(255, 255, 255, 255) : new Color32(0, 0, 0, 0);
-                }
-            }
-
-            texture.SetPixels32(pixels);
-            texture.Apply(false, true);
-            return Sprite.Create(texture, new Rect(0f, 0f, k_Size, k_Size), new Vector2(0.5f, 0.5f), k_Size);
-        }
-
-        private static Sprite NewHalfRing()
-        {
-            const int k_Size = 128;
-            const float k_Inner = 0.94f;
-            Texture2D texture = new Texture2D(k_Size, k_Size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-            Color32[] pixels = new Color32[k_Size * k_Size];
-
-            for (int y = 0; y < k_Size; y++)
-            {
-                for (int x = 0; x < k_Size; x++)
-                {
-                    float dx = (x + 0.5f) / k_Size * 2f - 1f;
-                    float dy = (y + 0.5f) / k_Size * 2f - 1f;
-                    float d = dx * dx + dy * dy;
-                    bool edge = d >= k_Inner * k_Inner || y == k_Size / 2;
-                    pixels[y * k_Size + x] = d <= 1f && dy >= 0f ? new Color32(255, 255, 255, (byte)(edge ? 255 : 90)) : new Color32(0, 0, 0, 0);
-                }
-            }
-
-            texture.SetPixels32(pixels);
-            texture.Apply(false, true);
-            return Sprite.Create(texture, new Rect(0f, 0f, k_Size, k_Size), new Vector2(0.5f, 0.5f), k_Size);
         }
     }
 }

@@ -1,146 +1,155 @@
-# 낚싯대(2026-10-05). 1차 C 「통통한 대」(raw/rod_style_*)는 사용자 「대가 너무 큼 · 말뚝과 조화가 안 됨 · 가만히 서 있음」(설계 45)으로 다시:
-#   다시 시안 raw/rod_redo_style_a~c 중 사용자 선택 A 「말뚝에 맞춘 대」(대 밑동의 밧줄 깃이 말뚝 구멍에 앉음), 꽂는 자리에서 대 끝까지 약 0.9유닛.
-# 원본 raw/rod_rods.png(대나무 · 쇠 · 미끼 · 월척에 휜 대) · rod_specials.png(도르래탑 · 등대 · 소용돌이 통발):
-#   웜뱃과 실제 말뚝을 한 칸 10px로 그려 넣은 바탕(raw/rod_template_*.png) 위에 그리게 해서, 원본 격자 그대로 옮기면 실제 칸 크기가 된다.
-#   1. 원본 그대로 칸으로(snap_codex raw: 색 합치기 · 외곽선 바꾸기 없음, 2026-10-05 사용자 「그림 퀄리티에 변형이 생기는 규칙은 다 지운다」). 크기 기준 웜뱃(맨 왼쪽 덩어리)은 뺀다
-#   2. 말뚝: 발끝(맨 아랫줄)에서 17칸 위(꽂는 자리)보다 아래, 말뚝 가운데 ±9칸을 지운다
-#   3. 8방향으로 이어진 덩어리로 나누고 떨어진 조각은 가까운 덩어리에, 밑동이 가까운 말뚝 순서로 이름을 붙인다
-#   4. 등급: 채도 낮은 색(릴 · 띠 · 쇠)을 밝기 그대로 2등급 은(SILVER) · 3등급 금(GOLD) 띠 위로 옮긴다(단계로 뭉치지 않게 이어서), 3등급은 대 끝 아래 금방울(3×4칸)
-#   5. 당김 판: 꽂는 자리 위 줄을 끝으로 갈수록 오른쪽으로 0~2칸 밀어(제곱) 살짝 휜 판(감는 동안 곧은 판과 번갈아)
-# 출력(한 칸 2px · PPU 80): ../rod_<bamboo|iron|bait>_<1|2|3>.png · _pull.png 판 · ../rod_bent.png(월척) · ../rod_<pulley|lighthouse|whirlpool>.png
-# 그물 계열(2026-10-06 설계 49 물때 디펜스, 별 대신 종류): raw/rod_net_a.png(사용자 선택 A 「뜰채」, 프롬프트 raw/prompt_rod_net.txt, 바탕 raw/rod_net_template.png)의
-#   세 대가 종류 셋이다(그물대 · 투망대 · 큰그물대). 1~3과 5만 한다(색 바꾸기 · 금방울 없음) → ../rod_net_<1|2|3>.png · _pull.png
-#   꽂는 자리(피벗) · 대 끝(줄이 나오는 점)을 그림 왼쪽 아래 기준 칸으로 출력한다.
-#   대 밑동에는 원본의 말뚝 윗면 테와 밧줄 깃이 남아 있어, 게임은 대를 말뚝 앞에 그려 깃이 구멍에 꽂힌 모습이 된다. 사용: python make_rods.py
+# -*- coding: utf-8 -*-
+# 손에 드는 낚싯대(2026-10-07 아트방). 설계 52 손맛 낚시: 웜뱃이 앞발에 대를 들고 강에 던진다(FishingView가 손 자리에 그리고, 왼쪽을 보면 flipX).
+#   옛 대(2026-10-05, 말뚝에 꽂는 대: 밑동 말뚝 테 · 밧줄 깃 · 릴, Codex 원본 raw/rod_*.png)는 손에 들면 손잡이가 손에 안 오고 밑동이 잘려 버렸다. 그림은 raw에 남기고 스크립트는 새로 썼다.
+#   가는 막대는 아트 규칙대로 Codex 대신 칸 무늬로 그린다: 대 축을 호 길이로 따라가며 칸 가운데가 축에서 w 안이면 대, w + 1 안이면 외곽선.
+#   디자인: 가늘고 긴 대나무 대(마디 몇 개), 밑동 8칸은 짙은 끈 감기(2칸 줄무늬), 진갈색 외곽선 1칸, 파스텔 평면(왼쪽 위 밝은 면 · 오른쪽 아래 한 톤 어두운 면).
+#   오른쪽 위로 기운 대각선(수평에서 65~70°), 밑동에서 끝까지 40~48칸. 릴 · 말뚝 테 없음 — 앞 · 옆 어디서 봐도 같은 막대.
+#   피벗 = 손이 쥐는 점 = 밑동에서 위로 5칸(GRIP_UP), 축 위. 세 장(곧음 · 당김 · 휨) 모두 밑동~손잡이는 같고 그 위만 휜다.
+#   시안 셋(기울기 · 굵기 · 손잡이): A 68° · 2→1칸 가늘어지는 대 · 끈 감기 / B 65° · 1칸 가는 대 · 두꺼운 끈 손잡이 / C 70° · 2칸 굵은 대 · 코르크 손잡이. 아트방 선택 PICK.
+# 출력(한 칸 2px · PPU 80): ../rod_bamboo_1.png(곧음) · ../rod_bamboo_1_pull.png(감을 때 살짝 휨) · ../rod_bent.png(물고기가 달릴 때 크게 휘어 끝이 물 쪽으로)
+#   장마다 피벗 칸(그림 왼쪽 아래 기준 x, y)과 대 끝(줄이 나오는 점, 피벗 기준 x, y 칸)을 찍는다 → BakeryBaker.RodGrips · FishingView.k_RodTips
+# 사용: python make_rods.py [미리보기 폴더]   미리보기 폴더를 주면 세 시안 × 세 장을 6배로 나란히(피벗 빨간 점)
+import math
 import os
 import sys
 import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, '..', '..', 'Source~'))
-sys.path.insert(0, os.path.join(HERE, '..', '..', 'Shop', 'Source~'))
-import snap_codex  # noqa: E402
-from make_dig import blobs  # noqa: E402
-
-SILVER = [(240, 244, 248), (196, 206, 216), (146, 158, 172), (98, 108, 124)]
-GOLD = [(252, 234, 150), (240, 196, 76), (206, 150, 44), (150, 100, 34)]
 LINE = (52, 32, 32)
-SOCKET_UP = 17
+BAMBOO = {'hi': (232, 212, 160), 'mid': (206, 180, 122), 'lo': (166, 138, 88), 'node': (128, 98, 60)}
+CORD = ((92, 60, 46), (144, 104, 74))         # 끈 감기 두 색(2칸 줄무늬)
+CORK = ((214, 172, 124), (176, 132, 92))      # 코르크 손잡이 두 색
+GRIP_UP = 5
+BEND = {'': 0.0, '_pull': 10.0, 'bent': 88.0}  # 끝까지 도는 각(°): 곧음 · 당김 · 휨. 손잡이 위에서 끝으로 갈수록(1.6제곱) 돈다
+VARIANTS = {
+    'a': dict(angle=68, length=44, w0=1.0, w1=0.5, grip=8, grip_w=1.0, nodes=(15, 25, 35), cord=CORD, label='A 가늘어지는 대 · 끈 손잡이 68°'),
+    'b': dict(angle=65, length=46, w0=0.5, w1=0.5, grip=8, grip_w=1.0, nodes=(14, 23, 32, 41), cord=CORD, label='B 가는 대 · 두꺼운 끈 손잡이 65°'),
+    'c': dict(angle=70, length=42, w0=1.0, w1=1.0, grip=8, grip_w=1.0, nodes=(13, 20, 27, 34), cord=CORK, label='C 굵은 대 · 코르크 손잡이 70°'),
+}
+PICK = 'a'
 
 
-def cut(path, names):
-    """{이름: (칸 배열, 꽂는 자리 (x, y 위에서), 대 끝 (x, y 위에서))}"""
-    cells, _ = snap_codex.snap(path, square=True, min_hole=40, raw=True)
-    op = cells[..., 3] > 0
-    # 크기 기준으로 그려 넣은 웜뱃(맨 왼쪽 열에 닿는 덩어리)은 뺀다
-    for gr in blobs(op, diag=True):
-        if min(x for _, x in gr) == 0 and len(gr) > 400:
-            for y, x in gr:
-                cells[y, x] = 0
-    op = cells[..., 3] > 0
-    foot = np.nonzero(op.any(1))[0].max()
-    sock = foot - SOCKET_UP
-    xs = np.nonzero(op[foot - 14])[0]
-    runs, s = [], xs[0]
-    for i in range(1, len(xs)):
-        if xs[i] - xs[i - 1] > 1:
-            runs.append((s, xs[i - 1])); s = xs[i]
-    runs.append((s, xs[-1]))
-    # 꽂는 자리 = 말뚝 폭의 가운데 금(짝수 폭이면 가운데 두 칸 사이 = 오른쪽 칸 왼쪽 변). 게임 말뚝 피벗(아래 가운데)과 맞아야 대 밑동 테가 말뚝 테에 겹친다
-    centers = sorted((a + b + 1) // 2 for a, b in sorted(runs, key=lambda r: r[1] - r[0], reverse=True)[:len(names)])
-    clean = cells.copy()
-    for c in centers:
-        clean[sock + 1:, max(c - 9, 0):c + 10] = 0
-    groups = sorted(blobs(clean[..., 3] > 0, diag=True), key=len, reverse=True)
-    main, rest = groups[:len(names)], groups[len(names):]
-    for gr in rest:
-        best = min(range(len(main)), key=lambda i: min(abs(gr[0][0] - a) + abs(gr[0][1] - b) for a, b in main[i][::3]))
-        main[best] = main[best] + gr
-    owner = {}
-    for gr in main:
-        yb = max(y for y, _ in gr)
-        xb = np.mean([x for y, x in gr if y >= yb - 1])
-        owner[min(range(len(centers)), key=lambda i: abs(centers[i] - xb))] = gr
+def axis(v, bend_deg):
+    """대 축을 호 길이 0.05칸마다: (점 (x, y), 호 길이 s, 방향 단위 벡터). 밑동 = (0, 0), y는 위가 +"""
+    th = math.radians(v['angle'])
+    L, s0 = v['length'], v['grip']
+    pts, ss, dirs = [], [], []
+    x = y = 0.0
+    ds = 0.05
+    s = 0.0
+    while s <= L + 1e-9:
+        t = max(s - s0, 0.0) / (L - s0)
+        phi = th - math.radians(bend_deg) * t ** 1.6
+        d = (math.cos(phi), math.sin(phi))
+        pts.append((x, y)); ss.append(s); dirs.append(d)
+        x += d[0] * ds; y += d[1] * ds; s += ds
+    return np.array(pts), np.array(ss), np.array(dirs)
+
+
+def width(v, s):
+    if s <= v['grip']:
+        return v['grip_w']
+    t = (s - v['grip']) / (v['length'] - v['grip'])
+    return v['w0'] + (v['w1'] - v['w0']) * t
+
+
+def draw(v, bend_deg):
+    """(칸 배열 RGBA, 피벗 칸 (x, y 아래 기준), 대 끝 칸 (x, y 아래 기준))"""
+    pts, ss, dirs = axis(v, bend_deg)
+    m = 3.0
+    x0, y0 = pts[:, 0].min() - m, pts[:, 1].min() - m
+    W = int(math.ceil(pts[:, 0].max() + m - x0)); H = int(math.ceil(pts[:, 1].max() + m - y0))
+    cy, cx = np.mgrid[0:H, 0:W]
+    cen = np.stack([cx + 0.5 + x0, cy + 0.5 + y0], -1).reshape(-1, 2)          # 칸 가운데(축 좌표, y 위가 +)
+    d2 = ((cen[:, None, :] - pts[None, :, :]) ** 2).sum(-1)
+    i = d2.argmin(1)
+    d = np.sqrt(d2[np.arange(len(cen)), i])
+    s = ss[i]
+    rel = cen - pts[i]
+    side = dirs[i][:, 0] * rel[:, 1] - dirs[i][:, 1] * rel[:, 0]                # +: 진행 방향 왼쪽(왼쪽 위 = 빛 받는 면)
+    w = np.array([width(v, q) for q in s])
+    fill = d <= w + 1e-6
+    line = ~fill & (d <= w + 1.0)
+    img = np.zeros((H * W, 4), np.uint8)
+    img[line] = LINE + (255,)
+    for k in np.nonzero(fill)[0]:
+        q = s[k]
+        if q <= v['grip']:
+            c = v['cord'][int(q // 2) % 2]
+        elif any(abs(q - n) <= 0.5 for n in v['nodes']):
+            c = BAMBOO['node']
+        elif w[k] < 0.9:
+            c = BAMBOO['mid']
+        elif side[k] < 0:
+            c = BAMBOO['lo']
+        elif v['grip'] + 2 <= q <= v['grip'] + 7:
+            c = BAMBOO['hi']                                                    # 손잡이 위 빛 한 획
+        else:
+            c = BAMBOO['mid']
+        img[k] = c + (255,)
+    img = img.reshape(H, W, 4)[::-1]                                             # 그림 좌표(위가 0)
+    def cell(p):
+        return int(math.floor(p[0] - x0)), int(math.floor(p[1] - y0))
+    pivot = cell(pts[np.abs(ss - GRIP_UP).argmin()])
+    tip = cell(pts[-1])
+    # 여백 자르기
+    ys, xs = np.nonzero(img[..., 3])
+    t, b, l, r = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+    img = img[t:b, l:r]
+    hh = img.shape[0]
+    fix = lambda c: (c[0] - l, c[1] - (H - b))                                   # 아래 기준 y는 아래 여백만 뺀다
+    return img, fix(pivot), fix(tip)
+
+
+def save(a, path):
+    Image.fromarray(np.repeat(np.repeat(a, 2, 0), 2, 1), 'RGBA').save(path)
+
+
+def make(k):
+    v = VARIANTS[k]
     out = {}
-    for i, c in enumerate(centers):
-        gr = owner[i]
-        ys = [y for y, _ in gr]; xs2 = [x for _, x in gr]
-        crop = np.zeros((max(ys) - min(ys) + 1, max(xs2) - min(xs2) + 1, 4), np.uint8)
-        for y, x in gr:
-            crop[y - min(ys), x - min(xs2)] = clean[y, x]
-        top = np.nonzero(crop[0, :, 3] > 0)[0]
-        out[names[i]] = (crop, (c - min(xs2), sock - min(ys)), (int(top.max()), 0))
+    for suffix, bend in BEND.items():
+        name = 'rod_bent' if suffix == 'bent' else 'rod_bamboo_1' + suffix
+        out[name] = draw(v, bend)
     return out
 
 
-def recolor(a, ramp):
-    """채도 낮은 색(외곽선 · 흰 빛 제외)을 밝기 그대로 ramp(밝음 → 어두움) 띠 위로: 가장 밝은 색 = ramp[0], 가장 어두운 색 = ramp[-1], 사이는 이어서"""
-    a = a.copy()
-    op = a[..., 3] > 0
-    cols = {tuple(int(v) for v in c) for c in a[op][:, :3]}
-    grey = [c for c in cols if 70 <= max(c) < 245 and (max(c) - min(c)) / max(c) < 0.3]
-    if not grey:
-        return a
-    lum = {c: sum(c) for c in grey}
-    hi, lo = max(lum.values()), min(lum.values())
-    R = np.array(ramp, float)
-    for c in grey:
-        t = (hi - lum[c]) / max(hi - lo, 1) * (len(ramp) - 1)
-        i = min(int(t), len(ramp) - 2)
-        a[op & (a[..., :3] == c).all(-1), :3] = np.round(R[i] + (R[i + 1] - R[i]) * (t - i)).astype(np.uint8)
-    return a
+def report(name, a, pivot, tip):
+    print('%-18s %2d×%2d칸  피벗(왼쪽 아래 기준) %2d, %2d  대 끝(피벗 기준) %+3d, %+3d' % (name, a.shape[1], a.shape[0], pivot[0], pivot[1], tip[0] - pivot[0], tip[1] - pivot[1]))
 
 
-def pull(a, sock):
-    """꽂는 자리 위 줄을 끝으로 갈수록 오른쪽으로 0~2칸(제곱)"""
-    h, w = a.shape[:2]
-    out = np.zeros((h, w + 2, 4), np.uint8)
-    top = 0
-    for y in range(h):
-        up = sock[1] - y
-        t = max(up, 0) / max(sock[1] - top, 1)
-        dx = int(round(2 * t * t))
-        out[y, dx:dx + w] = np.where(a[y, :, 3:4] > 0, a[y], out[y, dx:dx + w])
-    return out
-
-
-def bell(a, tip):
-    tx = tip[0]
-    pad = np.zeros((a.shape[0] + 6, a.shape[1] + 2, 4), np.uint8)
-    pad[:a.shape[0], :a.shape[1]] = a
-    pad[1, tx] = LINE + (255,)
-    for dy, row in enumerate(['.A.', 'AYA', 'AYA', 'AAA', '.Y.']):
-        for dx, ch in enumerate(row):
-            if ch != '.':
-                pad[2 + dy, tx - 1 + dx] = (LINE if ch == 'A' else GOLD[1]) + (255,)
-    ys, xs = np.nonzero(pad[..., 3] > 0)
-    return pad[:ys.max() + 1, :xs.max() + 1]
-
-
-def save(name, a, sock, tip):
-    Image.fromarray(np.repeat(np.repeat(a, 2, 0), 2, 1), 'RGBA').save(os.path.join(HERE, '..', name + '.png'))
-    h = a.shape[0]
-    print('%-18s %2d×%2d칸  꽂는 자리(왼쪽 아래 기준) %4.1f, %4.1f  대 끝 %4.1f, %4.1f' % (name, a.shape[1], h, sock[0], h - 1 - sock[1], tip[0], h - 1 - tip[1]))
+def preview(folder):
+    os.makedirs(folder, exist_ok=True)
+    S = 6
+    for k in VARIANTS:
+        rods = make(k)
+        W = sum(a.shape[1] + 4 for a, _, _ in rods.values())
+        H = max(a.shape[0] for a, _, _ in rods.values()) + 4
+        canvas = Image.new('RGBA', (W * S, H * S), (120, 160, 200, 255))
+        x = 2
+        for name, (a, pivot, tip) in rods.items():
+            im = Image.fromarray(a, 'RGBA').resize((a.shape[1] * S, a.shape[0] * S), Image.NEAREST)
+            y = H - 2 - a.shape[0]
+            canvas.alpha_composite(im, (x * S, y * S))
+            px, py = (x + pivot[0]) * S, (y + a.shape[0] - 1 - pivot[1]) * S
+            tx, ty = (x + tip[0]) * S, (y + a.shape[0] - 1 - tip[1]) * S
+            arr = np.asarray(canvas).copy()
+            arr[py + 1:py + S - 1, px + 1:px + S - 1] = (220, 40, 40, 255)
+            arr[ty + 1:ty + S - 1, tx + 1:tx + S - 1] = (40, 200, 60, 255)
+            canvas = Image.fromarray(arr, 'RGBA')
+            save(a, os.path.join(folder, '%s_%s.png' % (k, name)))
+            x += a.shape[1] + 4
+        canvas.save(os.path.join(folder, 'rods_%s.png' % k))
+        print(k, VARIANTS[k]['label'])
+        for name, (a, pivot, tip) in rods.items():
+            report(name, a, pivot, tip)
 
 
 if __name__ == '__main__':
-    rods = cut(os.path.join(HERE, 'raw', 'rod_rods.png'), ['bamboo', 'iron', 'bait', 'bent'])
-    for n in ['bamboo', 'iron', 'bait']:
-        a, sock, tip = rods[n]
-        for g, img in ((1, a), (2, recolor(a, SILVER)), (3, bell(recolor(a, GOLD), tip))):
-            dy = img.shape[0] - a.shape[0]
-            s2, t2 = (sock[0], sock[1] + dy), (tip[0], tip[1] + dy)
-            save('rod_%s_%d' % (n, g), img, s2, t2)
-            p = pull(img, s2)
-            tp = np.nonzero(p[0, :, 3] > 0)[0]
-            save('rod_%s_%d_pull' % (n, g), p, s2, (int(tp.max()), 0))
-    a, sock, _ = rods['bent']
-    xr = int(np.nonzero((a[..., 3] > 0).any(0))[0].max())          # 휜 대 끝 = 맨 오른쪽 열의 가장 아래 칸(아래로 당겨진 끝)
-    save('rod_bent', a, sock, (xr, int(np.nonzero(a[:, xr, 3] > 0)[0].max())))
-    # 그물 계열: 한 장의 세 대가 종류 셋(그물대 · 투망대 · 큰그물대), 원본 그대로
-    for n, (a, sock, tip) in cut(os.path.join(HERE, 'raw', 'rod_net_a.png'), ['net_1', 'net_2', 'net_3']).items():
-        save('rod_' + n, a, sock, tip)
-        p = pull(a, sock)
-        save('rod_' + n + '_pull', p, sock, (int(np.nonzero(p[0, :, 3] > 0)[0].max()), 0))
-    # 특별한 대(도르래탑 · 등대 · 통발, raw/rod_specials.png)는 만들지 않는다(2026-10-05 설계 46: 설치물 · 대물 · 대 들기 · 합치기를 없애 이 그림은 만들지 않는다). 효과는 미끼 노점 업그레이드
+    if len(sys.argv) > 1:
+        preview(sys.argv[1])
+    else:
+        for name, (a, pivot, tip) in make(PICK).items():
+            save(a, os.path.join(HERE, '..', name + '.png'))
+            report(name, a, pivot, tip)

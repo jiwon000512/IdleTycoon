@@ -189,7 +189,7 @@ namespace ZooTycoon.Tests
         public void ClosedFloor_HasNoClerkSlot_UntilOpened()
         {
             Assert.That(Second.ClerkSlots, Is.Empty);
-            Assert.That(m_mall.Areas.Where(area => area.ClerkSlots.Any()), Is.EqualTo(new WombatArea[] { m_mall.Bakery, First, m_mall.Fishing }));
+            Assert.That(m_mall.Areas.Where(area => area.ClerkSlots.Any()), Is.EqualTo(new WombatArea[] { m_mall.Bakery, First }));
 
             OpenSecond();
             Assert.That(Second.ClerkSlots, Is.EqualTo(new Interactable[] { Second.Barn }));

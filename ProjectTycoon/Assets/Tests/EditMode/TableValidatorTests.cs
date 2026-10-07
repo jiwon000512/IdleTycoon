@@ -12,14 +12,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 52)]
-        [TestCase("ClerkTable", 3)]
+        [TestCase("StringTable", 53)]
+        [TestCase("ClerkTable", 4)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 24)]
-        [TestCase("InteractableTable", 23)]
+        [TestCase("ActionTable", 25)]
+        [TestCase("InteractableTable", 24)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 19)]
         [TestCase("BgmTable", 2)]
@@ -35,9 +35,7 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
-        [TestCase("FishingConfigTable", 7)]
-        [TestCase("RodTable", 3)]
-        [TestCase("BossTable", 1)]
+        [TestCase("FishingConfigTable", 8)]
         [TestCase("FishTable", 2)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
@@ -94,36 +92,6 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 44: 낚시터 물길은 축 정렬 · 낚싯대 slow는 1 이하 · 물고기 재료는 ItemTable에
-        [Test]
-        public void Validate_WhenFishingStreamDiagonal_ReportsError()
-        {
-            TableSet tables = TestTables.Load();
-            tables.Get<FishingConfigTable>(FishingConfigTable.k_Main).Stream[1].Y += 1d;
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenRodSlowAboveOne_ReportsError()
-        {
-            TableSet tables = TestTables.Load();
-            tables.Get<RodTable>(RodTable.k_Bait).Slow = 1.5d;
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
-        // 설계 46: 미끼 노점 업그레이드는 light · whirl 한 줄씩, 시트에 나오는 대는 칩 아이콘이 있다
-        [Test]
-        public void Validate_WhenHutUpgradeMissing_ReportsError()
-        {
-            TableSet tables = TestTables.Load();
-            FishingConfigTable config = tables.Get<FishingConfigTable>(FishingConfigTable.k_Main);
-            config.HutUpgrades = config.HutUpgrades.Where(u => u.Id != FishingUpgradeData.k_Whirl).ToArray();
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
         // 곳마다 다른 점원: area는 clerk 행에만 · 곳 종류 id만, area 없는 기본 clerk 행이 하나는 있어야 한다
         [TestCase("market")]
         [TestCase("farm")]
@@ -135,110 +103,25 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 49: 대물 어종은 FishTable에 · 계열 안에서 단이 겹치지 않는다 · 주기 멈춤은 간격과 길이가 같이 있다
+        // 설계 52 강가 낚시: 물은 사각형 · 입질 시간은 min ≤ max · 어종은 FishTable에 · 줄 힘 · 긴장 오름 > 0
         [Test]
-        public void Validate_WhenBossFishMissing_ReportsError()
+        public void Validate_WhenWellConfigBroken_ReportsError()
         {
-            TableSet tables = TestTables.Load();
-            tables.Get<FishingConfigTable>(FishingConfigTable.k_Main).Boss.Fish = "no_such_fish";
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
-        // 설계 50: 반짝돌 재료는 ItemTable에 · 대물은 하나 이상 · 재료와 개수는 짝 · 배수는 양수
-        [Test]
-        public void Validate_WhenGemItemMissing_ReportsError()
-        {
-            TableSet tables = TestTables.Load();
-            tables.Get<FishingConfigTable>(FishingConfigTable.k_Main).GemItem = "no_such_item";
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenBossRowOrShowSecondsBroken_ReportsError()
-        {
-            System.Action<TableSet>[] breaks =
+            System.Action<FishingConfigTable>[] breaks =
             {
-                t => t.GetAll<BossTable>()[0].Sprite = "",
-                t => t.GetAll<BossTable>()[0].WeightScale = 0d,
-                t => t.GetAll<BossTable>()[0].Gems = -1,
-                t => t.Get<FishingConfigTable>(FishingConfigTable.k_Main).BossShowSeconds = 0d,
+                c => c.Water.Y1 = c.Water.Y0,
+                c => c.BiteWaitMax = c.BiteWaitMin - 1d,
+                c => c.Fish = "no_such_fish",
+                c => c.Rod.Line = 0d,
+                c => c.TensionRise = 0d,
             };
 
-            foreach (System.Action<TableSet> broken in breaks)
+            foreach (System.Action<FishingConfigTable> broken in breaks)
             {
                 TableSet tables = TestTables.Load();
-                broken(tables);
+                broken(tables.Get<FishingConfigTable>(FishingConfigTable.k_Main));
                 Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
             }
-        }
-
-        // 대물 문구(이름 · 소식지 제목 · 한 줄)가 빠지면 소식지가 못 뜬다
-        [TestCase("boss_rock_carp")]
-        [TestCase("boss_king_catfish_title")]
-        [TestCase("boss_gold_koi_line")]
-        public void Validate_WhenBossTextMissing_ReportsError(string key)
-        {
-            Assert.That(TableValidator.Validate(TestTables.LoadWithout("StringTable", key)), Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenBossTableEmpty_ReportsError()
-        {
-            Assert.That(TableValidator.Validate(TestTables.Load("BossTable", rows => rows.Clear())), Is.Not.Empty);
-        }
-
-        [TestCase("no_such_item", 10, 1d)]
-        [TestCase(null, 10, 1d)]
-        [TestCase("fish_crucian", 0, 1d)]
-        [TestCase("fish_crucian", 10, 0d)]
-        public void Validate_WhenBossRewardOrScaleBroken_ReportsError(string item, int count, double speedScale)
-        {
-            TableSet tables = TestTables.Load();
-            BossTable boss = tables.GetAll<BossTable>()[0];
-            boss.Item = item;
-            boss.Count = count;
-            boss.SpeedScale = speedScale;
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenRodTierDuplicatedInFamily_ReportsError()
-        {
-            TableSet tables = TestTables.Load();
-            tables.Get<RodTable>("iron_3").Tier = 2;
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenRodStunHasNoLength_ReportsError()
-        {
-            TableSet tables = TestTables.Load();
-            tables.Get<RodTable>(RodTable.k_Net).Stun = 0d;
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenRodStunCoversItsWholeInterval_ReportsError()
-        {
-            TableSet tables = TestTables.Load();
-            RodTable net = tables.Get<RodTable>(RodTable.k_Net);
-            net.Stun = net.StunEvery;
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
-        }
-
-        [Test]
-        public void Validate_WhenShopRodHasNoIcon_ReportsError()
-        {
-            TableSet tables = TestTables.Load();
-            tables.Get<RodTable>(RodTable.k_Iron).Icon = null;
-
-            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
         [Test]

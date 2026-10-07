@@ -27,9 +27,6 @@ namespace ZooTycoon.World
         private static readonly Vector3 k_RestaurantOrigin = new Vector3(120f, 60f, 0f);
         // 고용한 점원이 굴에서 나오는 모습을 당겨서 보여 주는 시간(초)과 발끝에서 몸 가운데까지(유닛)
         private const float k_HireSpotSeconds = 1.8f;
-        // 설계 49: 대물이 물에 들어올 때 비추는 초 · 물때 시작부터 대물이 들어오기를 기다리는 한도(초, 떼가 다 나온 뒤에 나온다)
-        private const float k_BossSpotSeconds = 1.2f;
-        private const float k_BossWaitSeconds = 60f;
         private const float k_BodyCenter = 0.5f;
 
         [SerializeField] private WorldCameraController m_camera;
@@ -51,8 +48,7 @@ namespace ZooTycoon.World
         private Mall m_mall;
         private IDisposable m_areaChanged;
         private IDisposable m_clerkHired;
-        private IDisposable m_bossSpawned;
-        private IDisposable m_bossLanded;
+        private IDisposable m_cast;
 
         public FrameCache Frames { get; } = new FrameCache();
 
@@ -92,8 +88,7 @@ namespace ZooTycoon.World
 
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
-            m_bossSpawned = bus.Subscribe<Events.BossSpawned>(e => StartCoroutine(SpotBoss(e.Fishing)));
-            m_bossLanded = bus.Subscribe<Events.BossLanded>(Bus_BossLanded);
+            m_cast = bus.Subscribe<Events.CastThrown>(Bus_CastThrown);
             FollowWombat();
         }
 
@@ -108,8 +103,6 @@ namespace ZooTycoon.World
         public void SetEditing(bool editing)
         {
             m_camera.SetFollowing(!editing);
-            // 설계 49: 낚시터의 편집 모드는 낚시판 보기(낚시터 전체를 한 화면에)
-            m_camera.SetWide(editing && m_mall.Active is FishingArea);
 
             foreach (IAreaView view in m_views.Values)
             {
@@ -129,17 +122,6 @@ namespace ZooTycoon.World
             {
                 view.SetHeld(held);
             }
-        }
-
-        // 설계 49 낚시판 보기: 끄는 대를 손가락(곳 좌표)에 붙인다 · 놓았다
-        public void DragRod(StakeInteractable stake, System.Numerics.Vector2 at)
-        {
-            ((FishingView)m_views[stake.Fishing]).DragRod(stake, at);
-        }
-
-        public void DropRod()
-        {
-            ((FishingView)m_views[m_mall.Fishing]).DropRod();
         }
 
         public void Pan(System.Numerics.Vector2 delta)
@@ -180,8 +162,7 @@ namespace ZooTycoon.World
 
             m_areaChanged?.Dispose();
             m_clerkHired?.Dispose();
-            m_bossSpawned?.Dispose();
-            m_bossLanded?.Dispose();
+            m_cast?.Dispose();
 
             base.OnDestroy();
         }
@@ -203,42 +184,6 @@ namespace ZooTycoon.World
             FollowWombat();
         }
 
-        // 설계 50: 대물이 낚여 드러나 있는 동안 그 말뚝을 비춘다(웜뱃이 낚시터에 있을 때만, 조이스틱을 움직이면 바로 돌아온다. 낚시판 보기에서는 이미 다 보인다)
-        private void Bus_BossLanded(Events.BossLanded e)
-        {
-            if (m_mall.Active == e.Fishing)
-            {
-                Vector2 at = (Vector2)m_views[e.Fishing].Origin + new Vector2(e.Stake.Position.X, e.Stake.Position.Y);
-                m_camera.Spot(() => at, (float)e.Fishing.Config.BossShowSeconds, () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
-            }
-        }
-
-        // 설계 49(2026-10-06 사용자): 대물이 물에 들어오는 순간 잠깐 그쪽을 비춘다. 웜뱃이 낚시터에 있을 때만, 조이스틱을 움직이면 바로 돌아온다
-        private IEnumerator SpotBoss(FishingArea fishing)
-        {
-            Fish boss = null;
-
-            for (float t = 0f; t < k_BossWaitSeconds && boss == null; t += Time.deltaTime)
-            {
-                yield return null;
-
-                foreach (Fish fish in fishing.Fish)
-                {
-                    boss = fish.Boss ? fish : boss;
-                }
-            }
-
-            if (boss != null && m_mall.Active == fishing)
-            {
-                Vector3 origin = m_views[fishing].Origin;
-                m_camera.Spot(() =>
-                {
-                    System.Numerics.Vector2 at = fishing.Layout.PointAt(boss.S);
-                    return (Vector2)origin + new Vector2(at.X, at.Y);
-                }, k_BossSpotSeconds, () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
-            }
-        }
-
         // 웜뱃이 그 점원의 곳(빵집 · 농장)에 있을 때만. 조이스틱을 움직이면 바로 웜뱃에게 돌아온다(조작을 빼앗지 않는다)
         private void Bus_ClerkHired(Events.ClerkHired e)
         {
@@ -251,6 +196,15 @@ namespace ZooTycoon.World
             Vector3 origin = m_views[clerk.Home].Origin;
             m_camera.Spot(() => (Vector2)origin + new Vector2(clerk.Position.X, clerk.Position.Y) + Vector2.up * k_BodyCenter, k_HireSpotSeconds,
                 () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
+        }
+
+        // 설계 52: 던지면 줄이 끝날 때까지 웜뱃과 찌의 가운데를 비춘다(배율 그대로, 사용자 2026-10-07 「당길 때 물고기 자리가 화면 밖」)
+        private void Bus_CastThrown(Events.CastThrown e)
+        {
+            if (m_mall.Active == e.Fishing && m_views[e.Fishing] is FishingView view)
+            {
+                m_camera.Spot(() => view.Focus, float.PositiveInfinity, () => e.Fishing.Phase == FishingPhase.Idle, 1f);
+            }
         }
     }
 }

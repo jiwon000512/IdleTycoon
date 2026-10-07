@@ -18,7 +18,6 @@ namespace ZooTycoon.Game
         private InventoryPresenter m_inventoryPresenter;
         private StatuePresenter m_statuePresenter;
         private EvaluationPresenter m_evaluationPresenter;
-        private FishingNewsPresenter m_fishingNewsPresenter;
         private RelicCartPresenter m_relicPresenter;
         private RelicPresenter m_relicsPresenter;
         private LocationPresenter m_locationPresenter;
@@ -44,8 +43,6 @@ namespace ZooTycoon.Game
             StatueView statueView = ui.Open<StatueView>();
             // 설계 40: 평가 팝업 · 소식지
             EvaluationView evaluationView = ui.Open<EvaluationView>();
-            // 설계 50: 낚시 소식(대물을 낚은 결과)
-            FishingNewsView fishingNewsView = ui.Open<FishingNewsView>();
             RelicCartView relicView = ui.Open<RelicCartView>();
             // 뽑기 결과는 뽑기 메인 위에 뜬다(설계 36)
             RelicDrawResultView relicResultView = ui.Open<RelicDrawResultView>();
@@ -61,7 +58,6 @@ namespace ZooTycoon.Game
             m_inventoryPresenter = new InventoryPresenter(inventoryView, game.State, game.Bus, game.Tables);
             m_statuePresenter = new StatuePresenter(statueView, game.State, game.Bus, game.Tables);
             m_evaluationPresenter = new EvaluationPresenter(evaluationView, game.State, game.Bus, game.Tables);
-            m_fishingNewsPresenter = new FishingNewsPresenter(fishingNewsView, game.Mall, game.Bus, game.Tables);
             m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
             m_locationPresenter = new LocationPresenter(locationView, game.Mall, game.Bus, game.Tables);
             m_offlinePresenter = new OfflinePresenter(offlineView, game.Bus, game.Tables);
@@ -73,8 +69,6 @@ namespace ZooTycoon.Game
             m_editPresenter.GhostHidden += world.HideGhost;
             m_editPresenter.Panned += world.Pan;
             m_editPresenter.HeldChanged += world.SetHeld;
-            m_editPresenter.RodDragged += world.DragRod;
-            m_editPresenter.RodDropped += world.DropRod;
 
             world.Initialize(game.Tables, game.Mall, game.Bus);
             game.PublishPendingOffline();
@@ -104,7 +98,6 @@ namespace ZooTycoon.Game
             m_inventoryPresenter?.Dispose();
             m_statuePresenter?.Dispose();
             m_evaluationPresenter?.Dispose();
-            m_fishingNewsPresenter?.Dispose();
             m_relicPresenter?.Dispose();
             m_relicsPresenter?.Dispose();
             m_locationPresenter?.Dispose();

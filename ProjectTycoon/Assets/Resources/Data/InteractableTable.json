@@ -1,6 +1,6 @@
 {
   "table": "InteractableTable",
-  "version": 23,
+  "version": 24,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
     "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상. 통로(exit·door)는 바닥선에서 0.25 이상 올라간 띠(코드 PassageInteractable.k_Enter) 안에서 가로 거리만 잰다 — 거리만으로 넘어간다(2026-09-26).",
@@ -27,7 +27,8 @@
     "version 20 (2026-10-05, 설계 45 물길 파기): stream_end(낚시터 물길 막다른 끝 바로 앞 땅, 버튼 dig_stream. 끝까지 파면 사물 목록에서 빠진다).",
     "version 21 (2026-10-05, 설계 46 낚시터 개편): stake 행동 털썩 → 대 사기(open_summon · summon 시트) → 열기(합치기 · 들기 삭제), fishing_hut에 open · stage_up · hut_upgrade(웜뱃이 단계 · 업그레이드를 올리는 곳), boss_catch 삭제.",
     "version 22 (2026-10-06, 설계 47 수조 횟집): tank(수조, 채우기 auto · 용량 업그레이드, 앞에 손님 자리) · cutting_board(둥근 도마, 뒤 worker 자리 · 뜨기 속도 업그레이드) · dining_table(작은 탁자, 좌우 customer 자리 = 앉는 자리 · 접시 놓기 auto) · shop_gate(닫힌 가게 문 앞, 돋보기 → 횟집 열기 시트). 값은 시작값. 같은 날 tank에 take_fish, cutting_board에 place_fish(웜뱃이 수조에서 물고기를 꺼내 도마에 놓는다).",
-    "version 23 (2026-10-06, 설계 49 물때 디펜스): fishing_hut에서 stage_up 삭제(행동 open · hut_upgrade)."
+    "version 23 (2026-10-06, 설계 49 물때 디펜스): fishing_hut에서 stage_up 삭제(행동 open · hut_upgrade).",
+    "version 24 (2026-10-07, 설계 52 우물 낚시 1회차): 디펜스 사물 넷(stake · stream_end · stream_bank · fishing_hut) 삭제, water(강: 물 전체가 사물 하나, 물가 0.9 안에서 던지기 · 낚아채기 · 감기) 추가. 점원 자리는 2회차(알바)에."
   ],
   "rows": [
     {
@@ -255,33 +256,6 @@
       "upgrade": null
     },
     {
-      "id": "stake",
-      "range": 0.8,
-      "actions": ["haul", "open_summon", "summon", "open_stake"],
-      "upgrade": null
-    },
-    {
-      "id": "stream_end",
-      "range": 1.0,
-      "actions": ["dig_stream"],
-      "upgrade": null
-    },
-    {
-      "id": "stream_bank",
-      "range": 0.9,
-      "actions": ["thump"],
-      "upgrade": null
-    },
-    {
-      "id": "fishing_hut",
-      "range": 1.0,
-      "actions": ["open", "hut_upgrade"],
-      "upgrade": null,
-      "spots": [
-        { "dx": 0, "dy": 0, "face": "down", "role": "worker" }
-      ]
-    },
-    {
       "id": "tank",
       "range": 1.2,
       "actions": ["take_fish", "fill_tank", "open", "upgrade"],
@@ -324,6 +298,12 @@
       "id": "shop_gate",
       "range": 1.0,
       "actions": ["open", "open_shop"],
+      "upgrade": null
+    },
+    {
+      "id": "water",
+      "range": 0.9,
+      "actions": ["cast", "strike", "reel"],
       "upgrade": null
     }
   ]

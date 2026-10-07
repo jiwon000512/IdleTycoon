@@ -46,13 +46,8 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_frontDig;
         [SerializeField] private Sprite[] m_backDig;
         [SerializeField] private Sprite[] m_sideDig;
-        [Tooltip("설계 44 아트방 A 「통통 폴짝 · 곰인형」: 엉덩이 쿵 3칸(웅크림 · 폴짝 · 쿵) · 털썩 앉기 2칸(앉는 중 · 앉음), 방향마다 시트 한 장(Source~/make_thump.py)")]
-        [SerializeField] private Sprite[] m_frontThump;
-        [SerializeField] private Sprite[] m_backThump;
-        [SerializeField] private Sprite[] m_sideThump;
-        [SerializeField] private Sprite[] m_frontSit;
-        [SerializeField] private Sprite[] m_backSit;
-        [SerializeField] private Sprite[] m_sideSit;
+        [Tooltip("낚은 물고기 「만세」(아트방, 앞모습 시트 한 장: [0] 두 앞발 든 채 서기 · [1] 살짝 뜀, Source~/make_cheer.py). 낚시터에서는 늘 물 쪽(앞)을 본다")]
+        [SerializeField] private Sprite[] m_frontCheer;
         [SerializeField] private int m_digThrowFrame = 8;
         [Tooltip("든 빵 층(아래부터). 보이는 층 수의 상한")]
         [SerializeField] private SpriteRenderer[] m_carry;
@@ -104,9 +99,8 @@ namespace ZooTycoon.World
         private float m_fidgetIn;
         private Sprite m_square;
         private float m_dustTimer;
-        // 설계 44 쿵 · 털썩 칸 순서(아트방): 쿵 = 웅크림 둘 · 폴짝 셋 · 쿵 셋, 털썩 = 앉는 중 둘 · 앉음. 한 칸 0.0625초(쿵 0.5초 ÷ 8)
-        private static readonly int[] k_ThumpOrder = { 0, 0, 1, 1, 1, 2, 2, 2 };
-        private static readonly int[] k_SitDown = { 0, 0, 1 };
+        // 만세 칸 순서: 뜀 둘 → 든 채 서기(seconds까지). 한 칸 0.0625초
+        private static readonly int[] k_CheerOrder = { 1, 1, 0 };
         private const float k_ActFrameSeconds = 0.0625f;
         // 발소리(2026-09-30 사용자 요청): 걷기 프레임 가운데 몸이 내려앉는 칸(m_walkBob −1)에 한 번씩
         private static readonly int[] k_StepFrames = { 1, 5 };
@@ -123,6 +117,8 @@ namespace ZooTycoon.World
         // 설계 22: 대화 글자 말풍선
         // 이 곳에 웜뱃이 있나(곳에 매인 소리는 이때만)
         public bool Present => m_area != null && m_area.WombatPresent;
+        // 앞발 자리(든 빵 층의 부모: 보는 쪽 · 손 높이 · 숨쉬기 오르내림을 매 프레임 맞춘다). 낚싯대처럼 손에 드는 그림은 이 아래에 둔다
+        public Transform Hand => m_carry[0].transform.parent;
 
         public void Say(string text, float seconds)
         {
@@ -336,27 +332,11 @@ namespace ZooTycoon.World
             return m_digThrowFrame * frameSeconds;
         }
 
-        // 설계 44 엉덩이 쿵: 웅크림 · 폴짝 · 쿵을 seconds 동안 바로(아트방 순서 k_ThumpOrder). 소리는 쿵 칸(2)이 처음 나올 때. 그때까지 초를 돌려준다(물결 고리)
-        public float Thump(float seconds)
+        // 낚은 물고기 만세(사용자 2026-10-07): 살짝 뛰었다가 두 앞발을 든 채 seconds까지 선다. 물고기 그림은 FishingView가 앞발 사이에 올린다
+        public void Cheer(float seconds)
         {
-            float frameSeconds = seconds / k_ThumpOrder.Length;
-            float impact = frameSeconds * System.Array.IndexOf(k_ThumpOrder, 2);
-            PlayNow(Sequence(ThumpSheet(), k_ThumpOrder, frameSeconds), frameSeconds);
-            StartCoroutine(PlayLater(SoundTable.k_Thump, impact));
-            return impact;
-        }
-
-        // 설계 44 월척 털썩: 털썩 앉아(앉는 중 → 앉음) seconds가 다 될 때까지 앉음 칸을 유지한 뒤 일어선다
-        public void Haul(float seconds)
-        {
-            PlayNow(Sequence(SitSheet(), k_SitDown, seconds), k_ActFrameSeconds);
+            PlayNow(Sequence(m_frontCheer, k_CheerOrder, seconds), k_ActFrameSeconds);
             SoundManager.Instance.Play(SoundTable.k_Haul);
-        }
-
-        private static IEnumerator PlayLater(string id, float seconds)
-        {
-            yield return new WaitForSeconds(seconds);
-            SoundManager.Instance.Play(id);
         }
 
         // order대로 고른 칸. seconds가 order보다 길면 마지막 칸을 이어 붙인다(한 칸 k_ActFrameSeconds)
@@ -371,18 +351,6 @@ namespace ZooTycoon.World
             }
 
             return frames;
-        }
-
-        private Sprite[] ThumpSheet()
-        {
-            Facing facing = m_area.Wombat.Mover.Facing;
-            return facing == Facing.Down ? m_frontThump : facing == Facing.Up ? m_backThump : m_sideThump;
-        }
-
-        private Sprite[] SitSheet()
-        {
-            Facing facing = m_area.Wombat.Mover.Facing;
-            return facing == Facing.Down ? m_frontSit : facing == Facing.Up ? m_backSit : m_sideSit;
         }
 
         private Sprite[] DigSheet()

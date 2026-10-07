@@ -143,16 +143,7 @@ namespace ZooTycoon.Core
                     save.Cells = CaptureCells(restaurant.Grid);
                     break;
                 case FishingArea fishing:
-                    save.Fishing = new FishingSave
-                    {
-                        Stage = fishing.Stage,
-                        Summons = fishing.Summons,
-                        Upgrades = new Dictionary<string, int>(fishing.Upgrades),
-                        Dug = fishing.Dug,
-                        Stakes = fishing.Stakes.Select(stake => new StakeSave { Open = stake.Open, Rod = stake.Rod?.Id }).ToList(),
-                        Landed = fishing.Landed?.Id,
-                        Log = new Dictionary<string, FishRecord>(fishing.Log),
-                    };
+                    save.Fishing = new FishingSave { Log = new Dictionary<string, FishRecord>(fishing.Log) };
                     break;
             }
 
@@ -213,11 +204,7 @@ namespace ZooTycoon.Core
                     DigCells(restaurant.Grid, save.Cells);
                     break;
                 case FishingArea fishing when save.Fishing != null:
-                    FishingSave f = save.Fishing;
-                    fishing.Restore(f.Stage, f.Summons, f.Upgrades, f.Dug,
-                        f.Stakes.Select(s => (s.Open, Find<RodTable>(tables, s.Rod), s.Grade)),
-                        f.Log.Where(pair => Find<FishTable>(tables, pair.Key) != null).ToDictionary(pair => pair.Key, pair => pair.Value),
-                        Find<BossTable>(tables, f.Landed));
+                    fishing.Restore(save.Fishing.Log.Where(pair => Find<FishTable>(tables, pair.Key) != null).ToDictionary(pair => pair.Key, pair => pair.Value));
                     break;
             }
 

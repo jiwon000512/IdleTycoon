@@ -1,0 +1,25 @@
+# 둑 · 물 소품 넷(2026-10-07 아트방, 설계 52 「낚시 맵이 휑함」): make_decor.py template이 만든 바탕(raw/decor_template.png, 한 칸 10px: 흰 바탕 + 둑 띠 A + 흙 면 + 평면 물 + 웜뱃 52칸 + 빨간 발끝 표시 넷) 위에 Codex가 그린다.
+# -i 1: decor_template.png. 위 두 표시는 둑(소품이 흰 바탕 위에 서게), 아래 두 표시는 물 위(물 색 위에서 보이는지 그 자리에서 본다).
+# 시안 a 둥글고 귀여운 / b 자연스럽고 풍성한 / c 굵고 장난감 같은. 소품마다 아트방이 골랐다(make_decor.py PICK). 결과 raw/decor_<a|b|c>.png
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 1 (do NOT write code, do NOT resample or copy anything). Keep the canvas size, the white background, the wombat, the riverbank strip, the dirt face and the flat teal water of image 1 EXACTLY where and how they are: one art pixel = 10 screen pixels, the wombat is 52 art pixels wide. Remove the four short red lines. Use the same big 10-pixel art pixels everywhere, never smaller pixels.
+This is a cozy underground wombat-burrow idle game. The wombat stands on a riverbank and fishes in the teal water below. Paint FOUR small props, one at each red line. The two UPPER red lines are on the bank: each prop's feet rest exactly on its red line and the prop rises upward over the white area, nothing is drawn below the line. The two LOWER red lines are in the water: each prop floats on or rises out of the water with its lowest pixel exactly on its red line, and a thin pale ripple ring where it meets the water is welcome.
+[a]
+1) upper-left: a clump of tall slender reeds with brown cattail heads, about 16 art pixels wide and 36 tall, soft green stalks.
+2) upper-right: a small wooden bait bucket with a rope handle arched over it and two dark bands, about 14 art pixels wide and 16 tall.
+3) lower-left: a smooth rounded grey boulder rising out of the water, about 20 art pixels wide and 14 tall above the water, with a pale ripple ring around its base, about 24 art pixels wide overall.
+4) lower-right: three round green lily pads floating together, one with a small pink lotus flower, about 28 art pixels wide and 12 tall.
+[b]
+1) upper-left: a bushy clump of reeds and tall grass with two cattails, about 18 art pixels wide and 34 tall, two shades of green.
+2) upper-right: a wooden bucket seen slightly from above with a fish tail poking out of the top and a rope handle, about 14 art pixels wide and 16 tall.
+3) lower-left: a craggy rock with a patch of moss rising out of the water, about 18 art pixels wide and 16 tall, with a pale ripple ring, about 24 art pixels wide overall.
+4) lower-right: two big notched lily pads side by side, one with a closed pink bud, about 26 art pixels wide and 10 tall.
+[c]
+1) upper-left: a few thick bamboo-like reeds with fat brown heads, about 14 art pixels wide and 36 tall.
+2) upper-right: a chunky wooden bucket with a coil of rope resting beside it, about 16 art pixels wide and 14 tall.
+3) lower-left: two grey rocks of different size side by side rising from the water inside one pale ripple ring, about 24 art pixels wide and 14 tall overall.
+4) lower-right: a cluster of three small lily pads with one white flower, about 28 art pixels wide and 12 tall.
+[공통 끝]
+STYLE: chunky pixel art exactly like the wombat and the bank: no anti-aliasing, no gradients, no dithering, flat soft pastel palette with low saturation, dark brown outline (#342020) one art pixel wide around each prop, one darker shade and a small white highlight. Orthographic three-quarter top-down view like the wombat: seen a little from above so round tops show, never from below, vertical edges stay vertical. No ground shadow, no text, no letters, no numbers. Props must not touch the wombat or each other.
+Save the image as decor_<k>.png in the current working directory and reply with only the path.

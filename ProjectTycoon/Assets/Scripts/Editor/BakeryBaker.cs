@@ -141,10 +141,10 @@ namespace ZooTycoon.Editor
                 VisitorSheetImporter.Import(k_SpriteDir + "wombat_" + side + "_fidget.png", true);
                 // 굴 파기 「웅크려 퍼 던지기」 12칸, 칸 폭 120px(Source~/make_dig.py)
                 VisitorSheetImporter.Import(k_SpriteDir + "wombat_" + side + "_dig.png", true, 120);
-                // 설계 44 엉덩이 쿵 3칸(칸 폭 156px) · 털썩 앉기 2칸(100px), 아트방 A(Source~/make_thump.py)
-                VisitorSheetImporter.Import(k_SpriteDir + "wombat_" + side + "_thump.png", true, 156);
-                VisitorSheetImporter.Import(k_SpriteDir + "wombat_" + side + "_sit.png", true, 100);
             }
+
+            // 낚은 물고기 「만세」 2칸(칸 폭 120px, 앞모습만, Source~/make_cheer.py)
+            VisitorSheetImporter.Import(k_SpriteDir + "wombat_front_cheer.png", true, 120);
 
             for (int i = 0; i < k_TimerFrames; i++)
             {
@@ -269,13 +269,20 @@ namespace ZooTycoon.Editor
             Import(k_FishingDir + "bobber_0.png", new Vector2(0.5f, 1f));
             Import(k_FishingDir + "bobber_1.png", new Vector2(0.5f, 1f));
 
-            // 낚싯대(아트방 「통통한 대」): 피벗 = 꽂는 자리(그림 맨 아랫줄의 칸, Source~/make_rods.py)
-            foreach ((string name, int socket) in RodSockets)
+            // 설계 52: 둑 띠(bank, 둑 선을 따라 Tiled) · 둑 · 물 소품(bank_* · water_*, 아트방, 피벗 아래 가운데 · 발끝)
+            foreach (string decor in DecorFiles())
+            {
+                Import(decor, bottom);
+            }
+
+            // 손에 드는 낚싯대(아트방, Source~/make_rods.py): 피벗 = 손이 쥐는 점(그림 왼쪽 아래 기준 칸, 그 칸 가운데를 대 축이 지난다)
+            foreach ((string name, int x, int y) in RodGrips)
             {
                 string path = k_FishingDir + name + ".png";
                 byte[] png = System.IO.File.ReadAllBytes(path);
                 int width = png[16] << 24 | png[17] << 16 | png[18] << 8 | png[19];
-                Import(path, new Vector2(socket * 2f / width, 0f));
+                int height = png[20] << 24 | png[21] << 16 | png[22] << 8 | png[23];
+                Import(path, new Vector2((x + 0.5f) * 2f / width, (y + 0.5f) * 2f / height));
             }
             Import(k_FarmDir + "wall_tile_red.png", new Vector2(0f, 1f), k_TagPpu, true);
             Import(k_FarmDir + "wall_face_red.png", new Vector2(0f, 1f), k_TagPpu, true);
@@ -459,9 +466,9 @@ namespace ZooTycoon.Editor
                 SetArray(mover, "m_" + side + "Walk", Frames("wombat_" + side, WalkSuffixes));
                 SetArray(mover, "m_" + side + "Fidget", LoadFrames("wombat_" + side + "_fidget"));
                 SetArray(mover, "m_" + side + "Dig", LoadFrames("wombat_" + side + "_dig"));
-                SetArray(mover, "m_" + side + "Thump", LoadFrames("wombat_" + side + "_thump"));
-                SetArray(mover, "m_" + side + "Sit", LoadFrames("wombat_" + side + "_sit"));
             }
+
+            SetArray(mover, "m_frontCheer", LoadFrames("wombat_front_cheer"));
 
             SetArray(mover, "m_frontBlink", Frames("wombat_front", BlinkSuffixes));
             SetArray(mover, "m_sideBlink", Frames("wombat_side", BlinkSuffixes));
@@ -493,10 +500,8 @@ namespace ZooTycoon.Editor
         // 물속 물고기 그림(이름 = 재료 id + _swim). 설계 49 대물은 fish_boss_swim(설계 46에서 지운 아트방 그림을 되살림)
         static readonly string[] FishSwims = { "fish_minnow_swim", "fish_crucian_swim", "fish_catfish_swim", "fish_boss_swim" };
 
-        // 낚싯대 그림 · 꽂는 자리 칸(계열 대는 단 셋 · 당김 판이 같다). 아트방 설계 45 A 「말뚝에 맞춘 대」 · 설계 49 그물 계열 A 「뜰채」
-        static IEnumerable<(string Name, int Socket)> RodSockets =>
-            new[] { "bamboo", "iron", "bait", "net" }.SelectMany(f => new[] { "_1", "_2", "_3", "_1_pull", "_2_pull", "_3_pull" }.Select(g => ("rod_" + f + g, 7)))
-            .Concat(new[] { ("rod_bent", 7) });
+        // 손에 드는 낚싯대(곧음 · 감을 때 살짝 휨 · 달릴 때 크게 휨) · 손이 쥐는 점 칸(그림 왼쪽 아래 기준, 아트방 make_rods.py가 출력)
+        static readonly (string Name, int X, int Y)[] RodGrips = { ("rod_bamboo_1", 3, 6), ("rod_bamboo_1_pull", 3, 6), ("rod_bent", 3, 6) };
 
         static MarkerView BakeDigTag()
         {
@@ -806,8 +811,7 @@ namespace ZooTycoon.Editor
             Save(root, view, "Farm");
         }
 
-        // 설계 44: 낚시터. 굴 그림(고정 방) · 물길 · 말뚝 · 대 · 물고기는 실행 중 FishingView가 Core 배치대로 그린다(그림이 올 때까지 코드 그림).
-        // 오두막은 그림이 올 때까지 농장 작업대
+        // 설계 52 강가 낚시: 굴 그림(고정 방) · 강(물결 타일을 사각형으로, 아트방 둑 띠 bank가 오면 둑 선에) · 손에 든 대 · 찌 · 줄은 실행 중 FishingView가 Core대로 그린다
         static void BakeFishing(MarkerView digTag, SpriteAnimator poop, VisitorView customer)
         {
             GameObject root = new GameObject("Fishing");
@@ -817,8 +821,6 @@ namespace ZooTycoon.Editor
             backdrop.size = new Vector2(k_BackdropHalf * 2f, k_BackdropHalf * 2f);
             SpriteRenderer burrow = Renderer(root.transform, "Burrow", null, Vector3.zero, k_BurrowOrder);
             SpriteRenderer arch = Renderer(root.transform, "Arch", Load("arch"), Vector3.zero, k_ArchOrder);
-            SpriteRenderer hut = Renderer(root.transform, "Hut", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "fishing_hut.png"), Vector3.zero, 0);
-            hut.spriteSortPoint = SpriteSortPoint.Pivot;
             WombatView wombat = BakeWombat(root.transform, Vector3.zero);
 
             FishingView view = root.AddComponent<FishingView>();
@@ -827,16 +829,12 @@ namespace ZooTycoon.Editor
             SetArray(view, "m_waterTiles", WaterTiles.Select(tile => AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + tile + ".png")).ToArray());
             Set(view, "m_streamFace", AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + "stream_face.png"));
             SetArray(view, "m_fishSwim", FishSwims.Select(fish => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + fish + ".png")).ToArray());
-            SetArray(view, "m_bubbleFrames", LoadFrames("bubble_sheet"));
-            Set(view, "m_stake", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake.png"));
-            Set(view, "m_stakeLocked", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_locked.png"));
-            Set(view, "m_stakeStar", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "stake_star.png"));
-            SetArray(view, "m_whirl", Enumerable.Range(0, 4).Select(i => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "whirl_" + i + ".png")).ToArray());
             SetArray(view, "m_bobber", new[] { AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "bobber_0.png"), AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "bobber_1.png") });
             SetArray(view, "m_reelGauge", Enumerable.Range(0, k_ReelFrames).Select(i => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + ReelFrame(i) + ".png")).ToArray());
-            SetArray(view, "m_rods", RodSockets.Select(rod => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + rod.Name + ".png")).ToArray());
+            SetArray(view, "m_rods", RodGrips.Select(rod => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + rod.Name + ".png")).ToArray());
             Set(view, "m_arch", arch.transform);
-            Set(view, "m_hut", hut.transform);
+            Set(view, "m_bank", AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + "bank.png"));
+            SetArray(view, "m_props", DecorFiles().Where(path => !path.EndsWith("/bank.png")).Select(path => AssetDatabase.LoadAssetAtPath<Sprite>(path)).ToArray());
             Set(view, "m_tagPrefab", digTag);
             Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             Set(view, "m_poopPrefab", poop);
@@ -984,6 +982,13 @@ namespace ZooTycoon.Editor
         static string CounterTimerFrame(int i)
         {
             return "counter_timer_c_" + i.ToString("00");
+        }
+
+        // 둑 띠(bank.png) · 둑 소품(bank_<이름>.png) · 물 소품(water_<이름>.png, 물결 타일 water_tile_*은 굴 재료라 뺀다)
+        static string[] DecorFiles()
+        {
+            return System.IO.Directory.GetFiles(k_FishingDir, "bank*.png").Concat(System.IO.Directory.GetFiles(k_FishingDir, "water_*.png"))
+                .Select(path => path.Replace('\\', '/')).Where(path => !path.Contains("/water_tile_")).OrderBy(path => path).ToArray();
         }
 
         static string ReelFrame(int i)

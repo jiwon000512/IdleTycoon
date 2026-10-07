@@ -4,6 +4,9 @@
 #   원본 그대로 옮긴다(snap_codex raw 격자, 칸 가운데 중앙값 그대로, 색 합치기 없음). 그림이 칸 밖으로 조금 나와(흙먼지 · 고리)
 #   덩어리마다 가운데가 가장 가까운 칸에 붙여 자른다 → 16~22칸. 버튼 안에서는 그림 크기 × 4로 둔다(줄이지 않음).
 # 출력: Resources/Sprites/Actions/<summon|merge|carry|haul|thump>.png(원본 픽셀 하나 = UI 1px) → 메뉴 ZooTycoon/Bake/Import UI Sprites
+# 손맛 낚시 행동 아이콘 셋(2026-10-07 아트방, 낚시를 「강에 직접 던지는 손맛 낚시」로 바꾸며. 사용자 선택 A 「물건 하나」, 프롬프트 raw/cast_icons_prompt.txt):
+#   던지기 cast = 휘두르는 대 + 날아가는 찌 · 낚아채기 strike = 튀어 오르는 찌 + 물보라 · 감기 reel = 옆에서 본 릴.
+#   바탕 raw/cast_icons_template.png(위 바탕의 아랫줄 틀을 셋만 남긴 것)에 그리게 한 raw/cast_icons_a.png(B 「찌와 줄」 · C 「웜뱃 앞발」은 기록). 옮기는 법은 같다 → 16~23칸.
 # 사용: python make_fishing_icons.py
 import os
 import sys
@@ -26,7 +29,7 @@ def slot(i):
     return X0 + i * (N * P + GAP)
 
 
-def icons(path):
+def icons(path, names=NAMES):
     _, (px, phx, py, phy) = snap_codex.snap(path, cell=P, square=True, min_hole=40, raw=True)
     a = np.asarray(Image.open(path).convert('RGB')).astype(float)
     h, w = a.shape[:2]
@@ -40,12 +43,12 @@ def icons(path):
             c[jj, k, :3] = col
             frame = col.max() - col.min() < 12 and col.min() > 170       # 회색 틀 자국
             c[jj, k, 3] = 0 if (col.min() > 238 or frame) else 255
-    centers = [(slot(i) + N * P / 2 - (xs[0] + px / 2)) / px for i in range(5)]
-    groups = [[] for _ in range(5)]
+    centers = [(slot(i) + N * P / 2 - (xs[0] + px / 2)) / px for i in range(len(names))]
+    groups = [[] for _ in names]
     for gr in blobs(c[..., 3] > 0, diag=True):
         if len(gr) >= 2:
             groups[int(np.argmin([abs(np.mean([x for _, x in gr]) - m) for m in centers]))] += gr
-    for name, gr in zip(NAMES, groups):
+    for name, gr in zip(names, groups):
         gy = [y for y, _ in gr]; gx = [x for _, x in gr]
         ic = np.zeros((max(gy) - min(gy) + 1, max(gx) - min(gx) + 1, 4), np.uint8)
         for y, x in gr:
@@ -57,5 +60,8 @@ if __name__ == '__main__':
     for name, ic in icons(os.path.join(HERE, 'raw', 'fishing_icons_a.png')):
         if name in ('merge', 'carry'):
             continue   # 합치기 · 대 들기는 없앰(2026-10-05 설계 46: 설치물 · 대물 · 대 들기 · 합치기를 없애 이 그림은 만들지 않는다)
+        Image.fromarray(ic, 'RGBA').save(os.path.join(OUT, name + '.png'))
+        print('%s.png %d x %d' % (name, ic.shape[1], ic.shape[0]))
+    for name, ic in icons(os.path.join(HERE, 'raw', 'cast_icons_a.png'), ['cast', 'strike', 'reel']):
         Image.fromarray(ic, 'RGBA').save(os.path.join(OUT, name + '.png'))
         print('%s.png %d x %d' % (name, ic.shape[1], ic.shape[0]))

@@ -74,13 +74,6 @@ namespace ZooTycoon.Core
                 }
             }
 
-            // 설계 46: 미끼 노점 업그레이드 이름 · 효과 문구
-            foreach (FishingUpgradeData upgrade in tables.Get<FishingConfigTable>(FishingConfigTable.k_Main).HutUpgrades)
-            {
-                Add(chars, upgrade.Name);
-                Add(chars, upgrade.EffectFormat);
-            }
-
             return string.Concat(chars);
         }
 

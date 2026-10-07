@@ -29,11 +29,17 @@ namespace ZooTycoon.UI
 
         public event Action<System.Numerics.Vector2> JoystickMoved;
         public event Action InteractClicked;
+        // 설계 52 우물 낚시: 누르고 있는 동안(줄다리기 감기)을 위해 누름 · 뗌도 알린다
+        public event Action InteractPressed;
+        public event Action InteractReleased;
 
         private void Awake()
         {
             m_interactButton.onClick.AddListener(InteractButton_Clicked);
             m_joystick.Moved += Joystick_Moved;
+            PointerRelay relay = m_interactButton.gameObject.AddComponent<PointerRelay>();
+            relay.PointerDown += _ => InteractPressed?.Invoke();
+            relay.PointerUp += _ => InteractReleased?.Invoke();
         }
 
         // 설계 18 편집 모드: 조이스틱·상호작용 버튼을 숨긴다

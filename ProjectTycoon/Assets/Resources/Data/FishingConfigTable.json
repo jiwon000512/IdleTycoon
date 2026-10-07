@@ -1,146 +1,51 @@
 {
   "table": "FishingConfigTable",
-  "version": 7,
+  "version": 8,
   "notes": [
-    "설계 44 낚시 디펜스 숫자. id = 낚시터(지금 main 하나). 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위. 전부 시작값이며 플레이로 튠한다.",
-    "cols · rows: 방 칸 수(광장처럼 고정 방). stream: 끝까지 팠을 때의 물길 꺾은선(축 정렬, 첫 점 = 물고기가 나오는 곳(벽 밖에서 들어온다), 끝 점 = 다 판 막다른 끝) · streamWidth: 폭(판 데는 걸을 수 없다).",
-    "dugStart: 처음 판 물길 길이(유닛, 첫 점부터). digStep: 막다른 끝 앞에서 한 번 파면 늘어나는 길이. digCost × digGrowth^판 횟수 = 파기 값. 막다른 끝에 닿은 물고기는 빠져나간다(놓침).",
-    "stakes: 말뚝 자리(x · y · cost, cost 0은 처음부터 열림). hutX · hutY: 미끼 노점 자리(점원 자리 · 단계 올리기).",
-    "waveSeconds: 떼가 나오는 간격(초). spawnGap: 떼 안 물고기 간격(초). 떼 마릿수 = schoolBase + (단계 − 1) × schoolPerStage(내림). 무게 × weightGrowth^(단계 − 1).",
-    "trophyChance: 떼 물고기가 월척일 확률 · trophyWeightScale: 무게 배수 · trophyCatch: 낚으면 재료 개수 · haulSeconds: 털썩 동작 동안 웜뱃이 서는 초.",
-    "summonCost × summonGrowth^산 대 수 = 대 값(계열이 다 같다). tierWeights: 살 때 나오는 종류의 단 비중[첫, 둘째, 셋째](RodTable tier).",
-    "설계 49 · 50 물때: wavesPerStage번째 물때 떼 끝에 대물(boss: fish 물속 어종(그림자 · 기준 속도) · weight 기준 무게(× weightGrowth^(단계 − 1))). 어느 대물인지 · 무게와 속도 배수 · 보상은 BossTable(단계 순서). 대물이 낚이면 보상을 받고 낚시 소식(결과 화면)을 확인해야 단계 +1, 빠져나가면 그대로, 둘 다 물때는 1부터. 대물이 떠 있는 동안 다음 떼는 오지 않고, 확인을 기다리는 동안은 보통 떼만 온다(물때 수를 세지 않는다).",
-    "gemItem: 대물이 주는 반짝돌 재료(ItemTable id). bossShowSeconds: 낚인 대물이 드러나 멈춰 있는 초(그 뒤에 낚시 소식이 뜬다).",
-    "yieldEvery: 한 마리 재료 = 1 + ⌊(단계 − 1) ÷ yieldEvery⌋(월척 · 대물 개수에도 곱한다).",
-    "hutUpgrades: 미끼 노점 업그레이드(예전 설치물 효과). 값 = baseCost × costGrowth^단계, 최대 maxLevel. light = 모든 대 사거리 +effectPerLevel/단계 · whirl = effectBase − effectPerLevel × (단계 − 1)초마다 물길 맨 앞 물고기를 whirlDistance만큼 되돌린다. effectFormat {0} 지금 · {1} 다음(불빛 %, 소용돌이 1분에 몇 번).",
-    "familySteps · familyScales: 판의 같은 계열 개수가 familySteps[i] 이상이면 그 계열 감는 힘 × familyScales[i](큰 문턱 하나만).",
-    "thumpRadius · thumpStun · thumpCooldown · thumpSeconds: 엉덩이 쿵 반지름 · 멈추는 초 · 쉬는 초 · 웜뱃이 제자리에 서는 초.",
-    "version 1 (2026-10-05, 설계 44): 처음 만듦.",
-    "version 2 (2026-10-05, 설계 45 물길 파기): 바닥 구멍 대신 막다른 끝, 물길 끝 점 (−3.0, −10.0) → (−4.6, −10.0)(끝까지 36.4), dugStart 17.2 · digStep 1.6 · digCost 150 · digGrowth 1.3. 대가 말뚝 위쪽 반원만 보게 되어 rows 5 → 6, 셋째 물길 아래 말뚝 둘(1500 · 3000). 낚은 대물 자리 catchX −2.6 → 2.2(물때 팻말과 겹쳐서, 구멍 오른쪽).",
-    "version 3 (2026-10-05, 아트방 낚시 오두막 B 「미끼 노점」): hutX 4.0 → 4.1(폭 2.2인 오두막이 낚은 대물과 안 겹치게).",
-    "version 4 (2026-10-05, 설계 46 낚시터 개편): 대물 · 합치기 · 대물 곁 앉기 삭제(bossEvery · bossFish · catchX · catchY · mergeCount · sitScale), 대는 시트에서 골라 산다, 단계는 미끼 노점에서 산다(stageCost 500 · stageGrowth 1.8), 설치물 효과는 미끼 노점 업그레이드 셋(hutUpgrades · whirlDistance).",
-    "version 5 (2026-10-06, 월척 건지기 · 사용자 결정): 점원은 대가 붙잡은 월척을 바로 건진다(trophyHoldSeconds 삭제). 도르래 업그레이드 삭제(hutUpgrades는 light · whirl 둘, 점원이 바로 건지면 헛것이 되어서).",
-    "version 6 (2026-10-06, 설계 49 물때 디펜스): 단계는 사지 않고 대물을 낚아 올린다(stageCost · stageGrowth 삭제, wavesPerStage · boss · yieldEvery 추가). 별 대신 종류라 gradeScale 삭제(감는 힘은 RodTable 종류마다), gradeWeights → tierWeights.",
-    "version 7 (2026-10-06, 설계 50 대물 소식): boss에서 speedScale · catch 삭제(대물마다 다른 값은 BossTable로), gemItem · bossShowSeconds 추가."
+    "설계 52 강가 낚시 숫자. id = 낚시터(지금 main 하나). 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위. 전부 시작값이며 플레이로 튠한다.",
+    "cols · rows: 방 칸 수(광장처럼 고정 방). water: 강(물 사각형 x0 · y0 · x1 · y1, 방 밖은 잘린다). 물은 걸을 수 없고 웜뱃은 둑에서 물 쪽을 보고 던진다.",
+    "biteWaitMin~Max: 던진 뒤 물기까지 초(난수). nibbleMax: 그 전 가짜 입질 최대 횟수. biteWindow: 물고 나서 낚아챌 수 있는 초(넘기면 놓침).",
+    "fish · weight: 1회차는 어종 하나(FishTable id) · 무게(kg) 고정. 어종 뽑기는 2회차.",
+    "줄다리기: 거리 = weight × distancePerKg(0이 되면 낚음). 물고기는 restSeconds 쉬고 runSeconds 달리기를 되풀이한다. 쉴 때 버튼을 누르고 있으면 rod.reel/초만큼 거리가 줄고, 달릴 때 누르고 있으면 tensionRise/초만큼 긴장이 올라 rod.line에 닿으면 끊긴다. 놓으면 긴장이 tensionFall/초로 내리고 달리는 동안은 runPull/초만큼 거리가 되돌아간다(처음 거리까지).",
+    "landSeconds: 낚은 뒤 웜뱃이 물고기를 들고 만세하는 초.",
+    "decor: 둑 · 물 소품(아트방 Sprites/World/Fishing/bank_<이름> · water_<이름>, 발끝 피벗)의 그림 이름과 발끝 자리. 길을 막지 않는 장식. 둑 띠 bank.png는 둑 선을 따라 코드가 벽 안쪽 폭만큼 반복한다.",
+    "2026-10-07 사용자 「맵이 휑하다 · 물 범위를 늘려라」: 둑 선을 y −8.6에서 −6.4로 올려 물을 7.6유닛(방 높이의 ⅔ 가까이)으로, 소품을 둑 · 물에 더 놓았다.",
+    "version 1~7 (2026-10-05~06, 설계 44~50): 낚시 디펜스(물길 · 말뚝 · 물때 · 대물 · 노점 업그레이드). git 517b7e3까지의 모습.",
+    "version 8 (2026-10-07, 설계 52 우물 낚시 1회차, 사용자 「디펜스식은 손맛 · 재고가 없다」): 디펜스 칸을 모두 지우고 강(물 사각형) · 입질 · 줄다리기 · 낚싯대 칸으로 바꿨다. 처음 우물(원)로 만들었다가 같은 날 사용자 「우물이 아니라 강가 느낌으로」로 강이 됐다."
   ],
   "rows": [
     {
       "id": "main",
       "cols": 4,
       "rows": 6,
-      "stream": [
-        {
-          "x": 7.0,
-          "y": -3.6
-        },
-        {
-          "x": -4.6,
-          "y": -3.6
-        },
-        {
-          "x": -4.6,
-          "y": -6.8
-        },
-        {
-          "x": 4.6,
-          "y": -6.8
-        },
-        {
-          "x": 4.6,
-          "y": -10.0
-        },
-        {
-          "x": -4.6,
-          "y": -10.0
-        }
-      ],
-      "streamWidth": 1.4,
-      "dugStart": 17.2,
-      "digStep": 1.6,
-      "digCost": 150,
-      "digGrowth": 1.3,
-      "stakes": [
-        {
-          "x": -3.0,
-          "y": -5.2,
-          "cost": 0
-        },
-        {
-          "x": 2.0,
-          "y": -5.2,
-          "cost": 0
-        },
-        {
-          "x": -1.0,
-          "y": -8.4,
-          "cost": 0
-        },
-        {
-          "x": 3.0,
-          "y": -8.4,
-          "cost": 0
-        },
-        {
-          "x": 6.0,
-          "y": -8.4,
-          "cost": 800
-        },
-        {
-          "x": -5.9,
-          "y": -5.2,
-          "cost": 2000
-        },
-        {
-          "x": -2.6,
-          "y": -11.6,
-          "cost": 1500
-        },
-        {
-          "x": 1.8,
-          "y": -11.6,
-          "cost": 3000
-        }
-      ],
-      "hutX": 4.1,
-      "hutY": -2.2,
-      "waveSeconds": 30,
-      "spawnGap": 0.9,
-      "schoolBase": 6,
-      "schoolPerStage": 1,
-      "weightGrowth": 1.3,
-      "trophyChance": 0.05,
-      "trophyWeightScale": 3,
-      "trophyCatch": 3,
-      "haulSeconds": 1.0,
-      "summonCost": 60,
-      "summonGrowth": 1.15,
-      "tierWeights": [
-        80,
-        18,
-        2
-      ],
-      "wavesPerStage": 10,
-      "boss": { "fish": "catfish", "weight": 16 },
-      "gemItem": "gem",
-      "bossShowSeconds": 1.5,
-      "yieldEvery": 3,
-      "hutUpgrades": [
-        { "id": "light", "name": "불빛", "baseCost": 800, "costGrowth": 2.2, "maxLevel": 5, "effectBase": 0, "effectPerLevel": 0.1, "effectFormat": "사거리 +{0}% → +{1}%" },
-        { "id": "whirl", "name": "소용돌이", "baseCost": 1500, "costGrowth": 2.2, "maxLevel": 5, "effectBase": 12, "effectPerLevel": 2, "effectFormat": "1분에 {0}번 → {1}번 되돌림" }
-      ],
-      "whirlDistance": 2.2,
-      "familySteps": [
-        2,
-        4
-      ],
-      "familyScales": [
-        1.3,
-        1.8
-      ],
-      "thumpRadius": 1.8,
-      "thumpStun": 2,
-      "thumpCooldown": 15,
-      "thumpSeconds": 0.5
+      "water": { "x0": -7.0, "y0": -14.0, "x1": 7.0, "y1": -6.4 },
+      "biteWaitMin": 2.0,
+      "biteWaitMax": 6.0,
+      "nibbleMax": 2,
+      "biteWindow": 0.6,
+      "fish": "crucian",
+      "weight": 1.2,
+      "distancePerKg": 0.8,
+      "runSeconds": 1.2,
+      "restSeconds": 2.0,
+      "runPull": 0.15,
+      "tensionRise": 0.9,
+      "tensionFall": 0.6,
+      "rod": { "reel": 0.3, "line": 1.0 },
+      "landSeconds": 1.0,
+      "decor": [
+        { "sprite": "bank_reeds", "x": -5.7, "y": -6.15 },
+        { "sprite": "bank_rock", "x": -4.6, "y": -6.15 },
+        { "sprite": "bank_pebbles", "x": -1.9, "y": -6.15 },
+        { "sprite": "bank_bucket", "x": 1.4, "y": -6.15 },
+        { "sprite": "bank_driftwood", "x": 2.9, "y": -6.15 },
+        { "sprite": "bank_reeds", "x": 4.5, "y": -6.15 },
+        { "sprite": "bank_pebbles", "x": 5.6, "y": -6.15 },
+        { "sprite": "water_lily", "x": -5.4, "y": -8.3 },
+        { "sprite": "water_rock", "x": -2.4, "y": -12.6 },
+        { "sprite": "water_lily", "x": 3.4, "y": -12.2 },
+        { "sprite": "water_rock", "x": 5.9, "y": -11.4 }
+      ]
     }
   ]
 }

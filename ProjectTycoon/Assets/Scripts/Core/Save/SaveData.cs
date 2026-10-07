@@ -43,27 +43,11 @@ namespace ZooTycoon.Core
         public FishingSave Fishing;
     }
 
-    // 설계 44 · 46 · 49: 낚시터. 말뚝(열림 · 대 종류, 말뚝 순서) · 단계 · 산 대 수 · 미끼 노점 업그레이드 단계 · 어종 기록(예전 저장의 든 대 · 3택 1 칸은 읽지 않는다).
-    // 떠 있는 물고기 · 붙잡은 월척 · 물때 진행은 저장하지 않는다(다시 열면 물때 1부터)
+
+    // 설계 52 우물 낚시: 낚시터는 어종 기록만(걸린 물고기 · 던진 줄은 저장하지 않는다). 옛 저장의 단계 · 말뚝 · 업그레이드 칸은 읽지 않는다
     public sealed class FishingSave
     {
-        public int Stage;
-        public int Summons;
-        public Dictionary<string, int> Upgrades = new Dictionary<string, int>();
-        // 설계 45: 물길 판 횟수(없으면 0 = 처음 길이)
-        public int Dug;
-        public List<StakeSave> Stakes = new List<StakeSave>();
-        // 설계 50: 낚였고 낚시 소식의 확인을 기다리는 대물(BossTable id, 없으면 null)
-        public string Landed;
         public Dictionary<string, FishRecord> Log = new Dictionary<string, FishRecord>();
-    }
-
-    public sealed class StakeSave
-    {
-        public bool Open;
-        public string Rod;
-        // 옛 저장(설계 46)의 별 등급: 읽을 때만 쓴다(2 이상이면 그 계열의 그 단 종류로). 새 저장은 0
-        public int Grade;
     }
 
     // 놓인 사물 하나(놓인 순서). 진열대는 빵 · 재고, 오븐은 빵 · 남은 초 · 다 구운 수 · 마지막 빵, 설계 47 수조는 회 id → 마리 수(없으면 null)

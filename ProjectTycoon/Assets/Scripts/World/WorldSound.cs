@@ -30,17 +30,14 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorPaid>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pay)),
                 bus.Subscribe<Events.BakeryVisitorPicked>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pick)),
                 bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
-                // 설계 44 · 46: 낚시터(쿵 · 털썩은 웜뱃 동작 칸에 맞춰 WombatView). 대 사기 소리는 등급 뽑기 별이 다 켜진 때 등급별(별마다 소리는 FishingView)
-                // 설계 49: 대물을 낚으면 큰 첨벙 + 단계 올림 종이 한 소리(보통 낚음 · 단계 올림 소리와 겹치지 않게 그것만)
-                bus.Subscribe<Events.FishCaught>(e => PlayIn(e.Fishing, SoundTable.k_FishCatch)),
-                bus.Subscribe<Events.BossLanded>(e => PlayIn(e.Fishing, SoundTable.k_BossCaught)),
-                bus.Subscribe<Events.FishEscaped>(e => PlayIn(e.Fishing, SoundTable.k_FishEscape)),
-                bus.Subscribe<Events.StreamDug>(e => PlayIn(e.Fishing, SoundTable.k_Dig)),
-                bus.Subscribe<Events.FishWhirled>(e => PlayIn(e.Fishing, SoundTable.k_Whirl)),
-                // 설계 49(아트방): 대물 등장 「두둥」 · 합치기 「물방울 둘이 하나로」(날아간 대가 꽂히는 때에 퐁당이 맞게 바로)
-                bus.Subscribe<Events.BossSpawned>(e => PlayIn(e.Fishing, SoundTable.k_BossAppear)),
-                bus.Subscribe<Events.RodMerged>(e => PlayIn(e.Stake.Fishing, SoundTable.k_RodMerge)),
                 // 설계 47: 횟집(칼질 cut은 RestaurantView, 다 떠서 손에 dish, 문 열기 shop_open — 아트방. 담기 · 놓기 put, 꺼내기 pick, 값 pay는 빵집 소리)
+                // 설계 52 우물 낚시(소리는 그림이 올 때까지 빌린다, 털썩은 WombatView): 던지기 put · 가짜 입질 draw_tap_0 · 물었다 rod_star · 달리기 whirl · 낚음 fish_catch · 끊김 · 놓침 fish_escape
+                bus.Subscribe<Events.CastThrown>(e => PlayIn(e.Fishing, SoundTable.k_Put)),
+                bus.Subscribe<Events.Nibbled>(e => PlayIn(e.Fishing, SoundTable.k_DrawTap0)),
+                bus.Subscribe<Events.Bitten>(e => PlayIn(e.Fishing, SoundTable.k_RodStar)),
+                bus.Subscribe<Events.RunChanged>(e => { if (e.Running) { PlayIn(e.Fishing, SoundTable.k_Whirl); } }),
+                bus.Subscribe<Events.FishLanded>(e => PlayIn(e.Fishing, SoundTable.k_FishCatch)),
+                bus.Subscribe<Events.FishingEnded>(e => { if (e.Reason != FishingEnd.Retrieved) { PlayIn(e.Fishing, SoundTable.k_FishEscape); } }),
                 bus.Subscribe<Events.TankFilled>(e => PlayIn(e.Tank.Area, SoundTable.k_Put)),
                 bus.Subscribe<Events.FishTaken>(e => PlayIn(e.Tank.Area, SoundTable.k_Pick)),
                 bus.Subscribe<Events.FishPlaced>(e => PlayIn(e.Board.Area, SoundTable.k_Put)),
@@ -48,8 +45,6 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.DishServed>(e => PlayIn(e.Table.Area, SoundTable.k_Put)),
                 bus.Subscribe<Events.RestaurantVisitorPaid>(e => PlayIn(e.Visitor.Restaurant, SoundTable.k_Pay)),
                 bus.Subscribe<Events.ShopOpened>(_ => Play(SoundTable.k_ShopOpen)),
-                bus.Subscribe<Events.RodSummoned>(e => StartCoroutine(PlayLater(FishingView.RevealSeconds(e.Stake), e.Stake.Fishing,
-                    SoundTable.k_RodReveal + Math.Min(e.Stake.Rod.Tier, 3)))),
                 bus.Subscribe<Events.Dug>(Bus_Dug),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.Upgraded>(e => PlayIn(e.Area, SoundTable.k_Upgrade)),
@@ -140,10 +135,6 @@ namespace ZooTycoon.World
                 }
 
                 m_plots[plot] = plot.IsEmpty;
-            }
-            else if (e.Thing is StakeInteractable stake)
-            {
-                PlayIn(stake.Area, SoundTable.k_Place);
             }
             else if (e.Thing is ShelfInteractable shelf)
             {

@@ -26,6 +26,8 @@ namespace ZooTycoon.Core
         public double DigSeconds { get; }
         // 굴 파기 · 엉덩이 쿵 · 털썩처럼 짧은 동작 중(그 자리에 선다, 조이스틱 · 시스템 이동 모두 멈춘다)
         public bool Busy => m_busyLeft > 0d;
+        // 설계 52 우물 낚시: 상호작용 버튼을 누르고 있나(줄다리기의 감기). 화면이 누름 · 뗌을 넣는다
+        public bool Holding { get; private set; }
 
         private double m_busyLeft;
 
@@ -42,6 +44,11 @@ namespace ZooTycoon.Core
         {
             float length = input.Length();
             Input = length > 1f ? input / length : input;
+        }
+
+        public void SetHolding(bool holding)
+        {
+            Holding = holding;
         }
 
         // 설계 19: 시스템 이동 — 길을 따라 target까지 걷고 arrive 쪽을 본다(계산대 자리 붙기, 미션 가이드). 조이스틱을 건드리면 그 자리에서 그만둔다

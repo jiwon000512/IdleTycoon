@@ -1,156 +1,74 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 44: 낚시터 배치의 단일 출처. 광장처럼 고정 방(BurrowShape.Room)이고, 물길(축 정렬 꺾은선 + 폭)은 걸을 수 없는 막힌 사각형이다.
-    // 물고기는 물길 길이 s(첫 점 0 → 끝 Length)를 따라 헤엄친다. 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위.
-    // 설계 45: 표의 꺾은선은 끝까지 팠을 때의 길(Plan)이고, 물은 판 길이(Length)까지만이다. 판 끝은 막혀 있다. SetDug가 물길 · 막힌 사각형 · 길찾기를 다시 만든다
+    // 설계 52: 낚시터 배치의 단일 출처. 광장처럼 고정 방(BurrowShape.Room)이고, 방 아래쪽을 가로지르는 강(Water 사각형, 사용자 「우물이 아니라 강가 느낌으로」)은 걸을 수 없다.
+    // 웜뱃은 둑(물가) 위에서 물 쪽을 보고 던진다. 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위
     public sealed class FishingLayout
     {
-        private readonly Vector2[] m_plan;
-        private readonly float[] m_planStarts;
-        private Vector2[] m_points;
-        private float[] m_starts;
-
         public BurrowShape.Result Shape { get; }
-        public BurrowNav Nav { get; private set; }
+        public BurrowNav Nav { get; }
         // 광장으로 가는 구멍(첫 줄 가운데, 빵집 · 농장 구멍과 같은 자리)
         public Vector2 HoleFloor => new Vector2(0f, -2.2f);
-        // 판 데까지의 꺾은선(끝 점 = 막다른 끝)
-        public IReadOnlyList<Vector2> Stream => m_points;
-        public float StreamWidth { get; }
-        public float Length { get; private set; }
-        public float PlanLength { get; }
-        // 물길 선분마다 폭을 더한 사각형(막힌 땅 · 물 그림)
-        public IReadOnlyList<NavRect> StreamRects { get; private set; }
-        public Vector2 HutSpot { get; }
+        // 물 사각형(방 밖으로 나간 부분은 방 그림에 잘린다)
+        public NavRect Water { get; }
 
         public FishingLayout(TableSet tables)
         {
             FishingConfigTable config = tables.Get<FishingConfigTable>(FishingConfigTable.k_Main);
             Shape = BurrowShape.Room(tables, config.Cols, config.Rows);
-            StreamWidth = (float)config.StreamWidth;
-            m_plan = config.Stream.Select(p => new Vector2((float)p.X, (float)p.Y)).ToArray();
-            m_planStarts = Starts(m_plan);
-            PlanLength = m_planStarts[m_planStarts.Length - 1];
-            HutSpot = new Vector2((float)config.HutX, (float)config.HutY);
-            SetDug((float)config.DugStart);
+            Water = new NavRect((float)config.Water.X0, (float)config.Water.Y0, (float)config.Water.X1, (float)config.Water.Y1);
+            Nav = new BurrowNav(Shape, new[] { Water });
         }
 
-        // 판 길이를 정한다(정해진 길 끝까지)
-        public void SetDug(float length)
+        // p에서 가장 가까운 물가(물 사각형 둘레의 점). 물 안이면 가장 가까운 변으로
+        public Vector2 Shore(Vector2 p)
         {
-            Length = Math.Clamp(length, 0f, PlanLength);
-            List<Vector2> points = new List<Vector2> { m_plan[0] };
+            float x = Math.Clamp(p.X, Water.XMin, Water.XMax);
+            float y = Math.Clamp(p.Y, Water.YMin, Water.YMax);
 
-            for (int i = 1; i < m_plan.Length && m_planStarts[i - 1] < Length; i++)
+            if (x != p.X || y != p.Y)
             {
-                points.Add(m_planStarts[i] <= Length ? m_plan[i] : PlanPointAt(Length));
+                return new Vector2(x, y);
             }
 
-            m_points = points.ToArray();
-            m_starts = Starts(m_points);
-            List<NavRect> rects = new List<NavRect>();
-            float half = StreamWidth / 2f;
+            float left = p.X - Water.XMin;
+            float right = Water.XMax - p.X;
+            float bottom = p.Y - Water.YMin;
+            float top = Water.YMax - p.Y;
+            float nearest = Math.Min(Math.Min(left, right), Math.Min(bottom, top));
+            return nearest == top ? new Vector2(p.X, Water.YMax) : nearest == bottom ? new Vector2(p.X, Water.YMin) : nearest == left ? new Vector2(Water.XMin, p.Y) : new Vector2(Water.XMax, p.Y);
+        }
 
-            for (int i = 1; i < m_points.Length; i++)
+        // 물가 점에서 물 안쪽으로 향하는 단위 벡터(그 변의 안쪽 법선)
+        public Vector2 Inward(Vector2 shore)
+        {
+            if (shore.Y >= Water.YMax)
             {
-                Vector2 a = m_points[i - 1];
-                Vector2 b = m_points[i];
-                rects.Add(new NavRect(Math.Min(a.X, b.X) - half, Math.Min(a.Y, b.Y) - half, Math.Max(a.X, b.X) + half, Math.Max(a.Y, b.Y) + half));
+                return new Vector2(0f, -1f);
             }
 
-            StreamRects = rects;
-            Nav = new BurrowNav(Shape, rects);
-        }
-
-        // 물길 길이 s의 자리(0 = 첫 점, Length = 막다른 끝)
-        public Vector2 PointAt(float s)
-        {
-            return At(m_points, m_starts, Math.Clamp(s, 0f, Length));
-        }
-
-        // 정해진 길(끝까지 판 물길) 위 s의 자리
-        public Vector2 PlanPointAt(float s)
-        {
-            return At(m_plan, m_planStarts, Math.Clamp(s, 0f, PlanLength));
-        }
-
-        private static Vector2 At(Vector2[] points, float[] starts, float s)
-        {
-            for (int i = 1; i < points.Length; i++)
+            if (shore.Y <= Water.YMin)
             {
-                if (s <= starts[i])
-                {
-                    float segment = starts[i] - starts[i - 1];
-                    return Vector2.Lerp(points[i - 1], points[i], segment <= 0f ? 0f : (s - starts[i - 1]) / segment);
-                }
+                return new Vector2(0f, 1f);
             }
 
-            return points[points.Length - 1];
+            return shore.X <= Water.XMin ? new Vector2(1f, 0f) : new Vector2(-1f, 0f);
         }
 
-        private static float[] Starts(Vector2[] points)
+        // 그 물가에서 건너편까지 거리
+        public float Depth(Vector2 shore)
         {
-            float[] starts = new float[points.Length];
-
-            for (int i = 1; i < points.Length; i++)
-            {
-                starts[i] = starts[i - 1] + Vector2.Distance(points[i - 1], points[i]);
-            }
-
-            return starts;
+            return Inward(shore).X == 0f ? Water.YMax - Water.YMin : Water.XMax - Water.XMin;
         }
 
-        // 물길 가운데 선까지 거리
-        public float DistanceToStream(Vector2 p)
+        // p에서 본 물가에서 물 안쪽으로 k(0 = 물가, 1 = 건너편)만큼 들어간 점
+        public Vector2 Deep(Vector2 p, float k)
         {
-            float best = float.MaxValue;
-
-            for (int i = 1; i < m_points.Length; i++)
-            {
-                best = Math.Min(best, DistanceToSegment(p, m_points[i - 1], m_points[i]));
-            }
-
-            return best;
-        }
-
-        // 가운데 선에서 p에 가장 가까운 점
-        public Vector2 NearestOnStream(Vector2 p)
-        {
-            float best = float.MaxValue;
-            Vector2 found = m_points[0];
-
-            for (int i = 1; i < m_points.Length; i++)
-            {
-                Vector2 q = Closest(p, m_points[i - 1], m_points[i]);
-                float d = Vector2.Distance(p, q);
-
-                if (d < best)
-                {
-                    best = d;
-                    found = q;
-                }
-            }
-
-            return found;
-        }
-
-        private static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
-        {
-            return Vector2.Distance(p, Closest(p, a, b));
-        }
-
-        private static Vector2 Closest(Vector2 p, Vector2 a, Vector2 b)
-        {
-            Vector2 ab = b - a;
-            float lengthSquared = ab.LengthSquared();
-            float t = lengthSquared <= 0f ? 0f : Math.Clamp(Vector2.Dot(p - a, ab) / lengthSquared, 0f, 1f);
-            return a + ab * t;
+            Vector2 shore = Shore(p);
+            return shore + Inward(shore) * (Depth(shore) * k);
         }
     }
 }

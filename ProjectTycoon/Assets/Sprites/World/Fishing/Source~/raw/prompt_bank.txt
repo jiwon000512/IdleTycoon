@@ -1,0 +1,23 @@
+# 강가 둑 소품(2026-10-07 아트방, 낚시를 「굴 속 강에 직접 던지는 손맛 낚시」로 바꾸며): 둑 띠는 make_bank.py가 칸 무늬로 그리고, 소품 셋만 Codex가 그린다.
+# -i 1: bank_<a|b|c>_template.png(make_bank.py strips가 만든 바탕, 한 칸 10px: 흰 바탕 + 둑 띠 + 흙 면 + 물, 왼쪽에 웜뱃 52칸, 빨간 발끝 표시 셋 = 띠 윗변 아래 3칸).
+#   소품이 흰 바탕 위에 서게 해 바탕과 다른 칸만 떼면 소품이 된다(띠 위에 서게 하면 같은 갈색 칸이 빠진다). Codex가 띠 위에 자갈 · 풀을 덧그려 두어, 표시마다 가장 큰 덩어리와 그에 닿는 덩어리만 남긴다.
+# 시안 A 조약돌 둑(bank_a_props.png, 사용자 선택) · B 풀 · 갈대 둑(bank_b_props.png) · C 나무 말뚝 둑(bank_c_props.png). C는 Codex가 바탕의 말뚝 울타리까지 고쳐 그렸지만 띠는 스크립트 것을 쓴다.
+
+[공통]
+Use your IMAGE GENERATION tool to paint on top of image 1 (do NOT write code, do NOT resample or copy anything). Keep the canvas size, the white background, the wombat, the riverbank strip, the dirt face and the teal water of image 1 EXACTLY where and how they are: one art pixel = 10 screen pixels, the wombat is 52 art pixels wide. Remove the three short red lines. Use the same big 10-pixel art pixels everywhere, never smaller pixels.
+This is a cozy underground wombat-burrow idle game. The wombat stands on a riverbank and fishes in the water below. Paint THREE small riverside props standing on the bank, one at each red line, from left to right: each prop's feet rest exactly on its red line, the prop rises upward from there over the white area, and nothing is drawn below the red line.
+[a]
+1) a big rounded grey boulder, about 20 art pixels wide and 14 tall, with a lighter top and a darker underside.
+2) a small heap of smooth pebbles in grey and beige, about 14 art pixels wide and 7 tall.
+3) a piece of pale weathered driftwood lying on its side, about 22 art pixels wide and 8 tall, with a short broken branch.
+[b]
+1) a clump of tall green reeds with brown cattail heads, about 16 art pixels wide and 30 tall.
+2) a round leafy green bush, about 18 art pixels wide and 12 tall, with a few lighter leaf highlights.
+3) a cut tree stump with growth rings on its top face, about 16 art pixels wide and 12 tall.
+[c]
+1) a short wooden mooring post with a coil of tan rope wrapped around it, about 12 art pixels wide and 22 tall.
+2) a wooden barrel with two dark metal bands, about 16 art pixels wide and 20 tall.
+3) a small wooden crate with a cross of planks on its front, about 16 art pixels wide and 14 tall.
+[공통 끝]
+STYLE: chunky pixel art exactly like the wombat and the bank: no anti-aliasing, no gradients, no dithering, flat soft earthy palette, dark brown outline (#342020) one art pixel wide around each prop, one darker shade and a small white highlight. No ground shadow, no text, no letters, no numbers. Props must not touch the wombat or each other.
+Save the image as props_<a|b|c>.png in the current working directory and reply with only the path.

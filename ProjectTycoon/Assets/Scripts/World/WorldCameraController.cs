@@ -33,6 +33,7 @@ namespace ZooTycoon.World
         private Func<Vector2> m_spot;
         private Func<bool> m_spotCancel;
         private float m_spotLeft;
+        private float m_spotZoomNow = 1f;
         private bool m_wide;
 
         private void Awake()
@@ -41,14 +42,15 @@ namespace ZooTycoon.World
             m_size = m_camera.orthographicSize;
         }
 
-        // seconds 동안 at을 당겨서 따라간다. cancel이 참이 되면 그만둔다. 편집 모드에서는 하지 않는다
-        public void Spot(Func<Vector2> at, float seconds, Func<bool> cancel)
+        // seconds 동안 at을 당겨서(zoom 배, 0이면 기본 당김) 따라간다. cancel이 참이 되면 그만둔다. 편집 모드에서는 하지 않는다
+        public void Spot(Func<Vector2> at, float seconds, Func<bool> cancel, float zoom = 0f)
         {
             if (m_following)
             {
                 m_spot = at;
                 m_spotCancel = cancel;
                 m_spotLeft = seconds;
+                m_spotZoomNow = zoom > 0f ? zoom : m_spotZoom;
             }
         }
 
@@ -92,7 +94,7 @@ namespace ZooTycoon.World
         {
             m_spotLeft = m_spotLeft > 0f && !m_spotCancel() ? m_spotLeft - Time.unscaledDeltaTime : 0f;
             bool spot = m_spotLeft > 0f;
-            m_camera.orthographicSize = Mathf.SmoothDamp(m_camera.orthographicSize, spot ? m_size / m_spotZoom : m_wide ? m_size * k_WideZoom : m_size, ref m_sizeVelocity, m_spotSeconds, Mathf.Infinity,
+            m_camera.orthographicSize = Mathf.SmoothDamp(m_camera.orthographicSize, spot ? m_size / m_spotZoomNow : m_wide ? m_size * k_WideZoom : m_size, ref m_sizeVelocity, m_spotSeconds, Mathf.Infinity,
                 Time.unscaledDeltaTime);
 
             if (m_wide)

@@ -14,8 +14,7 @@ namespace ZooTycoon.Core
             ActionTable.k_TakeOut, ActionTable.k_Fill, ActionTable.k_Serve, ActionTable.k_Bake,  ActionTable.k_Dig,
             ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_OpenPlant, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
             ActionTable.k_Talk, ActionTable.k_DigFloor, ActionTable.k_Evaluate,
-            ActionTable.k_OpenSummon, ActionTable.k_Summon, ActionTable.k_OpenStake, ActionTable.k_Haul, ActionTable.k_Thump, ActionTable.k_HutUpgrade,
-            ActionTable.k_DigStream, ActionTable.k_FillTank, ActionTable.k_ServeDish, ActionTable.k_OpenShop, ActionTable.k_TakeFish, ActionTable.k_PlaceFish,
+            ActionTable.k_Cast, ActionTable.k_Strike, ActionTable.k_Reel, ActionTable.k_FillTank, ActionTable.k_ServeDish, ActionTable.k_OpenShop, ActionTable.k_TakeFish, ActionTable.k_PlaceFish,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -42,13 +41,9 @@ namespace ZooTycoon.Core
                 case ActionTable.k_Talk: return new TalkToMerchant(table);
                 case ActionTable.k_DigFloor: return new DigFloor(table);
                 case ActionTable.k_Evaluate: return new OpenBoard(table);
-                case ActionTable.k_OpenSummon: return new OpenSummon(table);
-                case ActionTable.k_Summon: return new Summon(table);
-                case ActionTable.k_OpenStake: return new OpenStake(table);
-                case ActionTable.k_Haul: return new Haul(table);
-                case ActionTable.k_Thump: return new Thump(table);
-                case ActionTable.k_HutUpgrade: return new HutUpgrade(table);
-                case ActionTable.k_DigStream: return new DigStream(table);
+                case ActionTable.k_Cast: return new Cast(table);
+                case ActionTable.k_Strike: return new Strike(table);
+                case ActionTable.k_Reel: return new Reel(table);
                 case ActionTable.k_FillTank: return new FillTank(table);
                 case ActionTable.k_ServeDish: return new ServeDish(table);
                 case ActionTable.k_OpenShop: return new OpenShop(table);

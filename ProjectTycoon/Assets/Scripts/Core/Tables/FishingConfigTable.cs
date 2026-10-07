@@ -2,7 +2,7 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 44 · 데이터-테이블-규칙 8.28: 낚시터 숫자(FishingConfigTable.json 행, id main). 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위
+    // 설계 52 우물 낚시 · 데이터-테이블-규칙 8.28: 낚시터(굴 속 강가) 숫자(FishingConfigTable.json 행, id main). 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class FishingConfigTable : Table<string>
     {
@@ -11,89 +11,49 @@ namespace ZooTycoon.Core
         // 방 칸 수(광장처럼 파지 않는 고정 방)
         public int Cols { get; set; }
         public int Rows { get; set; }
-        // 물길: 축 정렬 선분을 잇는 점(첫 점 = 물고기가 나오는 곳, 끝 점 = 끝까지 팠을 때의 막다른 끝)과 폭. 판 데는 걸을 수 없다
-        public FishingPointData[] Stream { get; set; }
-        public double StreamWidth { get; set; }
-        // 설계 45: 처음 판 길이 · 한 번 파면 늘어나는 길이(유닛) · 처음 파기 값 · 팔 때마다 값 배수
-        public double DugStart { get; set; }
-        public double DigStep { get; set; }
-        public double DigCost { get; set; }
-        public double DigGrowth { get; set; }
-        // 말뚝 자리(값 0 = 처음부터 열림)
-        public FishingStakeData[] Stakes { get; set; }
-        // 미끼 노점(점원이 서는 바닥, 웜뱃이 단계를 올리는 곳)
-        public double HutX { get; set; }
-        public double HutY { get; set; }
-        // 물때: 떼가 나오는 간격 · 떼 안 물고기 간격(초) · 떼 마릿수(기본 + 단계마다) · 단계마다 무게 배수
-        public double WaveSeconds { get; set; }
-        public double SpawnGap { get; set; }
-        public int SchoolBase { get; set; }
-        public double SchoolPerStage { get; set; }
-        public double WeightGrowth { get; set; }
-        // 월척: 떼 물고기 하나가 월척일 확률 · 무게 배수 · 낚으면 재료 개수 · 털썩 동작 초
-        public double TrophyChance { get; set; }
-        public double TrophyWeightScale { get; set; }
-        public int TrophyCatch { get; set; }
-        public double HaulSeconds { get; set; }
-        // 설계 46 · 49 대 사기: 처음 값 · 살 때마다 값 배수 · 나오는 종류의 단 비중[첫, 둘째, 셋째](뽑기)
-        public double SummonCost { get; set; }
-        public double SummonGrowth { get; set; }
-        public double[] TierWeights { get; set; }
-        // 설계 49 물때: 한 단계의 물때 수(마지막이 대물) · 대물 · 한 마리 재료가 +1 되는 단계 간격
-        public int WavesPerStage { get; set; }
-        public FishingBossData Boss { get; set; }
-        public int YieldEvery { get; set; }
-        // 설계 50: 대물이 주는 반짝돌 재료(ItemTable id) · 낚인 대물이 드러나 멈춰 있는 초(그 뒤에 낚시 소식)
-        public string GemItem { get; set; }
-        public double BossShowSeconds { get; set; }
-        // 설계 46 미끼 노점 업그레이드(불빛 · 소용돌이, 예전 설치물 효과) · 소용돌이가 맨 앞 물고기를 되돌리는 거리(유닛)
-        public FishingUpgradeData[] HutUpgrades { get; set; }
-        public double WhirlDistance { get; set; }
-        // 계열 문턱: 판의 같은 계열 개수가 familySteps[i] 이상이면 그 계열 감는 힘 × familyScales[i]
-        public int[] FamilySteps { get; set; }
-        public double[] FamilyScales { get; set; }
-        // 엉덩이 쿵: 반지름 · 멈추는 초 · 쉬는 초 · 웜뱃이 제자리에 서는 초
-        public double ThumpRadius { get; set; }
-        public double ThumpStun { get; set; }
-        public double ThumpCooldown { get; set; }
-        public double ThumpSeconds { get; set; }
-    }
-
-    // 설계 46 미끼 노점 업그레이드 한 줄. 값 = baseCost × costGrowth^단계, 단계 0 = 없음 · 최대 maxLevel. 효과는 코드가 id로 읽는다:
-    // light = 모든 대 사거리 × (1 + effectPerLevel × 단계) · whirl = 되돌리는 간격 effectBase − effectPerLevel × (단계 − 1)초
-    public sealed class FishingUpgradeData
-    {
-        public const string k_Light = "light";
-        public const string k_Whirl = "whirl";
-
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public double BaseCost { get; set; }
-        public double CostGrowth { get; set; }
-        public int MaxLevel { get; set; }
-        public double EffectBase { get; set; }
-        public double EffectPerLevel { get; set; }
-        // 효과 전후 문구({0} 지금 {1} 다음, 숫자는 효과 값)
-        public string EffectFormat { get; set; }
-    }
-
-    // 설계 49 · 50 대물 공통: 물속 어종(FishTable id: 그림자 · 기준 속도) · 기준 무게(× weightGrowth^(단계 − 1)). 대물마다 다른 값은 BossTable
-    public sealed class FishingBossData
-    {
+        // 강(물 사각형, 유닛): 방 아래쪽을 가로지른다. 물은 걸을 수 없고 웜뱃은 둑에서 물 쪽을 보고 던진다
+        public FishingWaterData Water { get; set; }
+        // 입질: 던진 뒤 물기까지 초(사이에서 난수) · 그 전 가짜 입질 최대 횟수 · 물고 나서 낚아챌 수 있는 초
+        public double BiteWaitMin { get; set; }
+        public double BiteWaitMax { get; set; }
+        public int NibbleMax { get; set; }
+        public double BiteWindow { get; set; }
+        // 1회차: 어종 하나(FishTable id) · 무게(kg) 고정. 어종 뽑기는 2회차
         public string Fish { get; set; }
         public double Weight { get; set; }
+        // 줄다리기: 거리 = 무게 × distancePerKg(0이 되면 낚음) · 달리기 초 · 쉼 초 · 달릴 때 놓으면 물고기가 되찾는 거리/초 · 달릴 때 감으면 오르는 긴장/초 · 놓으면 내리는 긴장/초
+        public double DistancePerKg { get; set; }
+        public double RunSeconds { get; set; }
+        public double RestSeconds { get; set; }
+        public double RunPull { get; set; }
+        public double TensionRise { get; set; }
+        public double TensionFall { get; set; }
+        // 낚싯대(1회차는 하나): 쉴 때 감는 거리/초 · 줄 힘(긴장이 이 값에 닿으면 끊김)
+        public FishingRodData Rod { get; set; }
+        // 낚은 뒤 웜뱃이 털썩 앉아 있는 초
+        public double LandSeconds { get; set; }
+        // 둑 소품(아트방 bank_<이름>, 발끝 피벗): 그림 이름과 발끝 자리. 길을 막지 않는 장식
+        public FishingDecorData[] Decor { get; set; } = new FishingDecorData[0];
     }
 
-    public sealed class FishingPointData
+    public sealed class FishingDecorData
     {
+        public string Sprite { get; set; }
         public double X { get; set; }
         public double Y { get; set; }
     }
 
-    public sealed class FishingStakeData
+    public sealed class FishingWaterData
     {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Cost { get; set; }
+        public double X0 { get; set; }
+        public double Y0 { get; set; }
+        public double X1 { get; set; }
+        public double Y1 { get; set; }
+    }
+
+    public sealed class FishingRodData
+    {
+        public double Reel { get; set; }
+        public double Line { get; set; }
     }
 }

@@ -28,6 +28,10 @@ namespace ZooTycoon.Core
         public const string k_DigFloor = "dig_floor";
         // 설계 40: 평가판 앞 버튼(평가 팝업)
         public const string k_Evaluate = "evaluate";
+        // 설계 52 우물 낚시: 던지기 · 낚아채기 · 감기(우물 사물)
+        public const string k_Cast = "cast";
+        public const string k_Strike = "strike";
+        public const string k_Reel = "reel";
         // 설계 22: 딴짓 중인 점원 깨우기
         public const string k_Wake = "wake";
         // 설계 24: 똥 치우기
@@ -43,14 +47,7 @@ namespace ZooTycoon.Core
         // 설계 34: 광장 행상에게 말 걸기(버튼, 인사 뒤 뽑기 팝업)
         public const string k_Talk = "talk";
         // 설계 44 · 46: 낚시터 말뚝(대 사기 시트 열기 · 대 사기 칩 · 열기 · 월척 털썩)과 물가(엉덩이 쿵), 미끼 노점(업그레이드 줄)
-        public const string k_OpenSummon = "open_summon";
-        public const string k_Summon = "summon";
-        public const string k_OpenStake = "open_stake";
-        public const string k_Haul = "haul";
-        public const string k_Thump = "thump";
-        public const string k_HutUpgrade = "hut_upgrade";
         // 설계 45: 낚시터 막다른 끝 앞에서 물길 한 칸 더 파기
-        public const string k_DigStream = "dig_stream";
         // 설계 47 횟집: 수조 채우기 · 탁자에 접시 놓기(auto) · 광장 문 앞 횟집 열기(시트)
         public const string k_FillTank = "fill_tank";
         public const string k_ServeDish = "serve_dish";
