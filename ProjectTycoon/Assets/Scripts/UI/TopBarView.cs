@@ -23,8 +23,8 @@ namespace ZooTycoon.UI
         private const double k_BlinkSeconds = 10d;
         private const float k_BlinkSpeed = 4f;
         private const float k_BlinkMin = 0.45f;
-        // 평가 카드 밑과 왼쪽 알약 사이
-        private const float k_CardGap = 8f;
+        // 왼쪽 알약끼리 · 평가 카드 밑과 첫 알약 사이(코인 알약과 첫 알약 사이와 같다)
+        private const float k_Gap = 8f;
         // 행상이 없을 때 얼굴 아이콘 색
         private static readonly Color k_AwayFace = new Color(0.45f, 0.45f, 0.45f);
         // 설계 41 조건 칸 하나: 아이콘(아이콘 목록 id 또는 Resources 경로) · 값(진행/목표) · 상태. 매 프레임 읽는다
@@ -239,7 +239,7 @@ namespace ZooTycoon.UI
             {
                 RectTransform card = (RectTransform)m_evaluation.transform;
                 LayoutRebuilder.ForceRebuildLayoutImmediate(card);
-                y = Mathf.Min(y, card.anchoredPosition.y - card.rect.height - k_CardGap);
+                y = Mathf.Min(y, card.anchoredPosition.y - card.rect.height - k_Gap);
             }
 
             foreach (CanvasGroup pill in new[] { m_blessing, m_merchant, m_wave })
@@ -251,7 +251,7 @@ namespace ZooTycoon.UI
 
                 RectTransform rect = (RectTransform)pill.transform;
                 rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
-                y -= rect.sizeDelta.y;
+                y -= rect.sizeDelta.y + k_Gap;
             }
 
             ((RectTransform)m_spent.transform).anchoredPosition = new Vector2(m_spentRest.x, Mathf.Min(m_spentRest.y, y));
