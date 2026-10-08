@@ -77,6 +77,7 @@ namespace ZooTycoon.World
         private float m_height;
         private float m_handRatio;
         private float m_shadowAlpha;
+        private Vector3 m_shadowAt;
         private bool m_carrying;
         private bool m_flying;
         private Facing m_facing = Facing.Down;
@@ -103,6 +104,7 @@ namespace ZooTycoon.World
             m_walker = walker;
             m_origin = origin;
             m_shadowAlpha = m_shadowRenderer.color.a;
+            m_shadowAt = m_shadowRenderer.transform.localPosition;
             m_frontIdle = frames.Get(look.IdleSheet ?? look.Sprite);
             m_frontMove = frames.Get(look.MoveSheet ?? look.Sprite);
             m_backIdle = look.BackIdleSheet != null ? frames.Get(look.BackIdleSheet) : m_frontIdle;
@@ -199,7 +201,7 @@ namespace ZooTycoon.World
         private void Update()
         {
             System.Numerics.Vector2 p = m_walker.Position + m_walker.Sidestep;
-            Vector3 position = m_origin.position + new Vector3(p.X, p.Y, 0f);
+            Vector3 position = m_origin.position + new Vector3(p.X, p.Y + m_walker.Lift, 0f);
             float alpha = 1f;
             VisitorPhase phase = m_walker.Phase;
 
@@ -212,6 +214,8 @@ namespace ZooTycoon.World
             }
 
             transform.position = position;
+            // 올라앉은(Lift) 동안 그림자는 땅에 남는다
+            m_shadowRenderer.transform.localPosition = m_shadowAt + Vector3.down * (m_walker.Lift / m_modelRoot.localScale.y);
             SetAlpha(alpha);
             Facing facing = m_walker.Facing;
             string note = m_saying == null && alpha > 0f ? m_note?.Invoke() : null;

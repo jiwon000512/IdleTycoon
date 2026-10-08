@@ -464,17 +464,32 @@ namespace ZooTycoon.Tests
             });
             m_bus.Subscribe<Events.FishingVisitorLeft>(e => left |= e.Visitor == visitor);
 
+            bool stoodBehind = false;
+            float maxLift = 0f;
+
             for (double t = 0d; t < 20d && !visitor.Seated; t += k_Dt)
             {
                 m_mall.Tick(k_Dt);
+                stoodBehind |= !visitor.OnSeat && Vector2.Distance(visitor.Position, seat.Behind) < 0.05f;
+                maxLift = Math.Max(maxLift, visitor.Lift);
             }
 
             Assert.That(visitor.Seated, Is.True, "좌대에 앉았다");
-            Assert.That(Vector2.Distance(visitor.Position, seat.Position), Is.LessThan(0.3f));
+            Assert.That(stoodBehind, Is.True, "좌대 뒤에 섰다가");
+            Assert.That(maxLift, Is.GreaterThan(SeatInteractable.k_Top), "깡충 뛰어");
+            Assert.That(visitor.OnSeat, Is.True);
+            Assert.That(visitor.Position, Is.EqualTo(seat.Position), "발끝은 좌대 자리");
+            Assert.That(visitor.Lift, Is.EqualTo(SeatInteractable.k_Top).Within(1e-4f), "윗판 높이에 앉았다");
 
             for (double t = 0d; t < Config.CustomerSecondsMax + 20d && !left; t += k_Dt)
             {
                 m_mall.Tick(k_Dt);
+
+                if (visitor.Phase == VisitorPhase.Leaving && visitor.Moving)
+                {
+                    Assert.That(visitor.OnSeat, Is.False, "깡충 내려와서 걷는다");
+                    Assert.That(visitor.Lift, Is.EqualTo(0f).Within(1e-4f));
+                }
             }
 
             Assert.That(left, Is.True, "다 낚고 나갔다");

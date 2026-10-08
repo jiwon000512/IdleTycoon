@@ -35,7 +35,7 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
-        [TestCase("FishingConfigTable", 9)]
+        [TestCase("FishingConfigTable", 10)]
         [TestCase("FishTable", 2)]
         [TestCase("FishingStretchTable", 1)]
         [TestCase("DishTable", 1)]

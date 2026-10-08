@@ -25,7 +25,7 @@ from make_dig import blobs  # noqa: E402
 import snap_codex  # noqa: E402
 
 SHEETS = {   # 이름: (칸 폭, 칸 높이, 둑 선 줄, 둑 위 표시 x, 물 위 표시 x, 물 표시 y)
-    'bank': dict(cw=170, ch=150, bank_row=90, bank_x=(62, 106, 132, 156), water_x=(), water_y=0, cuts=(84, 86, 88),   # 바위벽 · 좌대가 붙어 그려져 83~89열을 비운다(바위벽은 비교용이라 오른쪽 가장자리가 잘려도 된다)   # 위를 넓게: 바위벽 64칸이 서야 Codex가 줄이지 않는다(1차 120칸 바탕에서 33×36으로 나옴)
+    'bank': dict(cw=170, ch=150, bank_row=90, bank_x=(62, 106, 132, 156), water_x=(), water_y=0, cuts={'c': (84, 86, 88)},   # c만 바위벽 · 좌대가 붙어 그려져 83~89열을 비운다(바위벽은 비교용). a · b는 좌대가 86 · 88열부터라 자르면 왼쪽이 날아간다(2026-10-07 사용자 「의자 이미지가 깨져 있다」)   # 위를 넓게: 바위벽 64칸이 서야 Codex가 줄이지 않는다(1차 120칸 바탕에서 33×36으로 나옴)
                  names=['rock_wall', 'seat', 'debris_log', 'debris_pot']),
     'water': dict(cw=210, ch=130, bank_row=58, bank_x=(), water_x=(45, 110, 165), water_y=124,
                   names=['dam_3', 'dam_2', 'dam_1']),
@@ -101,7 +101,7 @@ def prompt(k, kind):
     return COMMON + body + STYLE % ('%s_%s' % (k, kind))
 
 
-def extract(raw_path, bank_names, water_names, cuts=(), zone=None):
+def extract(raw_path, bank_names, water_names, cuts=(), zone=None, min_cells=12):
     """make_decor.extract와 같다: 원본 격자 그대로 칸으로 → 바탕(흰 · 물 · 둑 띠 줄) 지움 → 둑 위(웜뱃 뺌) · 물 위 덩어리를 왼쪽부터.
     cuts: 둑 위에서 비우는 열(붙어 그려진 두 물건을 가른다, 둑 시트의 바위벽 · 좌대 사이 84열). zone: 이 열 왼쪽은 웜뱃 자리로 지운다(바위벽 시트, 웜뱃과 바위가 닿는다)"""
     cells, _ = snap_codex.snap(raw_path, square=True, min_hole=40, raw=True)
@@ -109,7 +109,7 @@ def extract(raw_path, bank_names, water_names, cuts=(), zone=None):
     water = (np.abs(rgb - mb.LIGHT).max(-1) <= 28) & (cells[..., 3] > 0)
     wtop = int(np.nonzero(water.mean(1) > 0.5)[0].min())
     sandish = (np.abs(rgb - mb.SAND).max(-1) <= 30) | (np.abs(rgb - mb.SAND_DARK).max(-1) <= 30)
-    stop = int(np.nonzero(sandish[:wtop].mean(1) > 0.4)[0].min())
+    stop = int(np.nonzero(sandish[:wtop].mean(1) > 0.65)[0].min())        # 모래 띠 = 거의 꽉 찬 줄(0.4이면 밝은 나무 윗판 + 웜뱃 줄이 잡혀 좌대가 잘렸다, make_seat)
     keep = cells[..., 3] > 0
     keep[stop:wtop] = False
     keep[wtop:] &= ~water[wtop:]
@@ -126,7 +126,7 @@ def extract(raw_path, bank_names, water_names, cuts=(), zone=None):
         else:
             for y, x in max((g for g in blobs(above) if min(x for _, x in g) < 40), key=len):   # 웜뱃 = 왼쪽에 닿는 가장 큰 덩어리(바위벽이 더 클 수 있다)
                 above[y, x] = False
-        gs = groups_of(above, 12, big=120)[:len(bank_names)]                                   # 큰 덩어리끼리는 안 묶는다(바위벽 옆 좌대)
+        gs = groups_of(above, min_cells, big=120)[:len(bank_names)]                            # 큰 덩어리끼리는 안 묶는다(바위벽 옆 좌대). min_cells: 둑 조약돌 조각은 안 묶는다(좌대 시트는 24)
         assert len(gs) == len(bank_names), '둑 위 덩어리 %d' % len(gs)
         gs.sort(key=lambda g: np.mean([x for _, x in g]))
         out += [(n, crop(cells, g, stop - 1)) for n, g in zip(bank_names, gs)]
@@ -195,7 +195,7 @@ if __name__ == '__main__':
                 if not os.path.exists(raw):
                     continue
                 try:
-                    for name, ic in extract(raw, s['names'] if kind != 'water' else [], s['names'] if kind == 'water' else [], s.get('cuts', ()), s.get('zone', {}).get(k, 51) if 'zone' in s else None):
+                    for name, ic in extract(raw, s['names'] if kind != 'water' else [], s['names'] if kind == 'water' else [], s.get('cuts', {}).get(k, ()), s.get('zone', {}).get(k, 51) if 'zone' in s else None):
                         if kind == 'bank' and name == 'rock_wall':
                             name = 'rock_wall_bank'                                            # 둑 시트의 작은 바위벽은 비교용으로만
                         mb.save(ic, os.path.join(od, name + '.png'))
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         Image.fromarray(dry_bed(PICK['dry_bed']), 'RGBA').save(os.path.join(HERE, '..', 'dry_bed.png')); done.add('dry_bed')
         for kind, s in SHEETS.items():
             for k in sorted({PICK[n] for n in s['names']}):
-                for name, ic in extract(os.path.join(HERE, 'raw', 'wide_%s_%s.png' % (k, kind)), s['names'] if kind != 'water' else [], s['names'] if kind == 'water' else [], s.get('cuts', ()), s.get('zone', {}).get(k, 51) if 'zone' in s else None):
+                for name, ic in extract(os.path.join(HERE, 'raw', 'wide_%s_%s.png' % (k, kind)), s['names'] if kind != 'water' else [], s['names'] if kind == 'water' else [], s.get('cuts', {}).get(k, ()), s.get('zone', {}).get(k, 51) if 'zone' in s else None):
                     if kind == 'bank' and name == 'rock_wall':
                         continue                                  # 바위벽은 rock 시트에서
                     if PICK[name] == k:

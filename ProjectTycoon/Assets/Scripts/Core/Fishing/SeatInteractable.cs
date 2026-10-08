@@ -6,6 +6,9 @@ namespace ZooTycoon.Core
     public sealed class SeatInteractable : Interactable
     {
         public const string k_Id = "seat";
+        // 손님이 앉는 윗판 높이(seat 그림의 앉는 면) · 깡충 뛰기 전에 서는 좌대 뒤 거리
+        public const float k_Top = 0.425f;
+        private const float k_Behind = 0.35f;
 
         public FishingArea Fishing { get; }
         public FishingStretchTable Stretch { get; }
@@ -13,6 +16,8 @@ namespace ZooTycoon.Core
         public FishingSeatData Row => Stretch.Seats[Index];
         // 손님이 앉는 발끝
         public Vector2 Position { get; }
+        // 손님이 걸어와 서는 좌대 바로 뒤(여기서 깡충 뛰어 앉고, 다 낚으면 여기로 내려온다)
+        public Vector2 Behind => Position + new Vector2(0f, k_Behind);
         public bool Placed { get; internal set; }
 
         internal SeatInteractable(InteractableTable table, FishingArea fishing, FishingStretchTable stretch, int index) : base(table, fishing)

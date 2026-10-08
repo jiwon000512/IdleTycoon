@@ -51,6 +51,8 @@ namespace ZooTycoon.Core
         public Vector2 Position => Mover.Position;
         // 비켜 걷기: 가까운 손님과 겹치지 않게 옆으로 비킨 만큼. 길·자리는 그대로이고 화면만 Position에 더한다(광장은 0)
         public Vector2 Sidestep { get; internal set; }
+        // 화면만 발끝 위로 올린 높이(좌대에 앉음 · 오르내리는 깡충). 길 · 자리는 발끝 그대로
+        public float Lift { get; protected set; }
         public Facing Facing => Mover.Facing;
         public bool Moving => Mover.Moving;
         public bool Hopping => Phase == VisitorPhase.Entering || Phase == VisitorPhase.Exiting;

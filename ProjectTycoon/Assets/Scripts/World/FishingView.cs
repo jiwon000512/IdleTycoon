@@ -665,6 +665,8 @@ namespace ZooTycoon.World
                 }
 
                 art.color = new Color(1f, 1f, 1f, seat.Placed ? 1f : k_GhostAlpha);
+                // 손님이 올라앉은 좌대는 손님 뒤에(둘 다 발끝 정렬이라 같은 자리면 좌대가 손님을 덮는다, 사용자 2026-10-07)
+                art.sortingOrder = m_fishing.Visitors.Any(visitor => visitor.Seat == seat && visitor.OnSeat) ? -1 : 0;
             }
 
             // 놓지 않은 좌대가 대상이면 그 자리에 값 표식
