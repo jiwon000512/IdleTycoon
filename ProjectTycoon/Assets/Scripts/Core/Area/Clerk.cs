@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace ZooTycoon.Core
@@ -860,6 +861,8 @@ namespace ZooTycoon.Core
             return nav.IsWalkable(stand) || !nav.TryNearestFree(stand, _ => false, k_StandSearch, out Vector2 free) ? stand : free;
         }
 
+        // 제 빵 진열대가 이미 있으면 빈 진열대는 진열대가 없는 다른 점원의 빵에 비켜 준다
+        // (2026-10-09: 늘 구운 빵을 들고 기다리는 빠른 빵이 빈 진열대를 먼저 잡아, 케이크 점원이 끝까지 못 놓던 것)
         private ShelfInteractable ShelfFor(BreadTable bread)
         {
             if (bread == null)
@@ -867,9 +870,10 @@ namespace ZooTycoon.Core
                 return null;
             }
 
+            BakeryArea bakery = ((OvenInteractable)Thing).Bakery;
             ShelfInteractable empty = null;
 
-            foreach (ShelfInteractable shelf in ((OvenInteractable)Thing).Bakery.Shelves)
+            foreach (ShelfInteractable shelf in bakery.Shelves)
             {
                 if (shelf.HasRoomFor(bread))
                 {
@@ -882,7 +886,9 @@ namespace ZooTycoon.Core
                 }
             }
 
-            return empty;
+            bool shelved = bakery.Shelves.Any(shelf => shelf.Bread == bread);
+            bool othersWait = bakery.Ovens.Select(bakery.ClerkOf).Any(clerk => clerk != null && clerk.Product != bread.Id && bakery.Shelves.All(shelf => shelf.Bread?.Id != clerk.Product));
+            return shelved && othersWait ? null : empty;
         }
     }
 }

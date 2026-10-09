@@ -19,7 +19,7 @@ namespace ZooTycoon.Core
     // 설계 43 D1: 오프라인 정산 = 공식 근사(한 번에 계산). 웜뱃이 하던 일은 멈추고 점원 자리만 돈다.
     // 점원 한 바퀴 = 일 + 딴짓 몫(확률 (100 − 일머리)/100 × 평균 딴짓 초). 빵집은 손님 · 계산 · 진열 공급 중 좁은 곳으로 팔고,
     // 재료가 모자라면 바닥난 때부터 농장이 거두는 만큼만 굽는다. 월급은 판 돈 안에서만(D3), 상한은 offlineMaxSeconds(D2).
-    // ponytail: 손님이 고르는 빵과 구운 빵의 어긋남 · 오프라인 거름 · 행상 방문 · 평가는 셈하지 않는다. 시뮬과 크게 벌어지면 OfflineTests 대조부터
+    // ponytail: 빈 진열대 앞에서 기다리다 지쳐 나가는 손님 · 오프라인 거름 · 행상 방문 · 평가는 셈하지 않는다. 시뮬과 크게 벌어지면 OfflineTests 대조부터
     public static class Offline
     {
         public static OfflineReport Settle(ZooState state, Mall mall, TableSet tables, double seconds)
@@ -95,22 +95,21 @@ namespace ZooTycoon.Core
             }
 
             double cap = Math.Min(demand, checkout);
-            double baked = supply.Values.Sum();
-            double rate = Math.Min(cap, baked);
+            // 빵마다 1초에 파는 개수: 손님은 빵을 비중으로 고르고 모자라면 다른 빵을 산다(2026-10-09 밸런스방: 굽는 몫대로 나누면 빵이 여럿일 때 30~40% 적게 셌다)
+            Dictionary<BreadTable, double> sells = Split(cap, supply);
 
-            // 재료: 쓰는 속도가 거두는 속도보다 빠른 재료는 바닥나는 때(firstOut)부터 거두는 만큼만(slow배) 굽는다
+            // 재료: 쓰는 속도가 거두는 속도보다 빠른 재료는 바닥나는 때(firstOut)부터 거두는 만큼만(gain/use배) 굽는다 → 재료마다 구울 수 있는 초
             Dictionary<string, double> used = new Dictionary<string, double>();
 
-            foreach (KeyValuePair<BreadTable, double> pair in supply)
+            foreach (KeyValuePair<BreadTable, double> pair in sells)
             {
                 foreach (IngredientData ingredient in pair.Key.Ingredients)
                 {
-                    Add(used, ingredient.Item, rate * pair.Value / baked / pair.Key.BatchSize * ingredient.Count);
+                    Add(used, ingredient.Item, pair.Value / pair.Key.BatchSize * ingredient.Count);
                 }
             }
 
-            double firstOut = t;
-            double slow = 1d;
+            Dictionary<string, double> lasts = new Dictionary<string, double>();
 
             foreach (KeyValuePair<string, double> pair in used)
             {
@@ -118,17 +117,21 @@ namespace ZooTycoon.Core
 
                 if (pair.Value > gain)
                 {
-                    firstOut = Math.Min(firstOut, state.Count(pair.Key) / (pair.Value - gain));
-                    slow = Math.Min(slow, gain / pair.Value);
+                    double firstOut = Math.Min(t, state.Count(pair.Key) / (pair.Value - gain));
+                    lasts[pair.Key] = firstOut + gain / pair.Value * (t - firstOut);
                 }
             }
 
-            double bakingSeconds = firstOut + slow * (t - firstOut);
+            // 빵은 제 재료 중 가장 먼저 바닥나는 것까지만 굽는다(2026-10-08 밸런스방: 딸기가 0이면 케이크 오븐뿐 아니라 식빵 오븐까지 0이던 것)
+            Dictionary<BreadTable, double> baking = sells.Keys.ToDictionary(bread => bread, bread => bread.Ingredients.Select(i => lasts.TryGetValue(i.Item, out double s) ? s : t).DefaultIfEmpty(t).Min());
+            // 재료가 떨어지는 빵은 구울 수 있는 만큼(평균), 아닌 빵은 오븐만큼 안에서 다시 나눈다: 떨어진 빵을 찾던 손님이 다른 빵을 산다
+            sells = Split(cap, supply.ToDictionary(pair => pair.Key, pair => baking[pair.Key] < t ? sells[pair.Key] * baking[pair.Key] / t : pair.Value));
+            double madeCount = sells.Values.Sum() * t;
             int stock = bakery.Shelves.Sum(shelf => shelf.Stock);
             double stockValue = bakery.Shelves.Sum(shelf => shelf.Bread == null ? 0d : shelf.Bread.Price * shelf.Stock);
-            double sold = Math.Min(cap * t, stock + rate * bakingSeconds);
+            double sold = Math.Min(cap * t, stock + madeCount);
             int fromStock = (int)Math.Min(stock, Math.Floor(sold));
-            double madePrice = baked > 0d ? supply.Sum(pair => pair.Key.Price * pair.Value) / baked : 0d;
+            double madePrice = madeCount > 0d ? sells.Sum(pair => pair.Key.Price * pair.Value) * t / madeCount : 0d;
             double value = (stock > 0 ? fromStock * stockValue / stock : 0d) + (sold - fromStock) * madePrice;
 
             // 값 배수 · 주판(N번째마다 ×2) · 팁 기대값
@@ -148,7 +151,7 @@ namespace ZooTycoon.Core
             foreach (string item in made.Keys.Union(used.Keys).ToList())
             {
                 double gain = made.TryGetValue(item, out double g) ? g * t : 0d;
-                double use = used.TryGetValue(item, out double u) ? u * bakingSeconds : 0d;
+                double use = sells.Sum(pair => pair.Value * t / pair.Key.BatchSize * pair.Key.Ingredients.Where(i => i.Item == item).Sum(i => i.Count));
                 AddItem(state, report, item, (int)Math.Max(-state.Count(item), Math.Round(gain - use)));
             }
 
@@ -188,6 +191,30 @@ namespace ZooTycoon.Core
             seconds = alarm > 0d ? Math.Min(seconds, alarm) : seconds;
             double chatShare = clerk.Home.Clerks.Count > 1 ? config.ChatChance : 0d;
             return chance * ((1d - chatShare) * seconds + chatShare * chat);
+        }
+
+        // 손님 몫(1초에 total명)을 빵 비중대로 나누되 빵마다 caps(1초에 개수)를 넘지 않게. 넘친 손님은 남은 빵을 비중대로 고른다
+        private static Dictionary<BreadTable, double> Split(double total, Dictionary<BreadTable, double> caps)
+        {
+            Dictionary<BreadTable, double> sells = new Dictionary<BreadTable, double>(caps);
+            List<BreadTable> open = caps.Keys.ToList();
+
+            while (open.Count > 0)
+            {
+                double weights = open.Sum(bread => (double)bread.Weight);
+                double left = total - caps.Keys.Except(open).Sum(bread => sells[bread]);
+                BreadTable full = open.FirstOrDefault(bread => caps[bread] <= left * bread.Weight / weights);
+
+                if (full == null)
+                {
+                    open.ForEach(bread => sells[bread] = left * bread.Weight / weights);
+                    break;
+                }
+
+                open.Remove(full);
+            }
+
+            return sells;
         }
 
         private static void Add(Dictionary<string, double> rates, string item, double rate)

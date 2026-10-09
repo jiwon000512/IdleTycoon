@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
 using GameKit.Events;
@@ -247,6 +248,28 @@ namespace ZooTycoon.Tests
             shelf.TryPick();
             shelf.TryPick();
             Assert.That(RunUntil(shop, () => shelf.Stock == shelf.Capacity, 20d), Is.True);
+        }
+
+        // 2026-10-09: 빠른 빵 점원이 빈 진열대를 먼저 잡아 다른 빵 점원이 끝까지 못 놓던 것 — 제 빵 진열대가 있으면 진열대 없는 빵에 비켜 준다
+        [Test]
+        public void OvenClerk_LeavesEmptyShelfToBreadWithoutShelf()
+        {
+            BakeryArea shop = Create();
+            m_state.AddCoins(100000d);
+            Assert.That(shop.TryBuy(OvenInteractable.k_Id, shop.Layout.OvenBase(new Cell(-1, 3))), Is.True);
+            shop.Grid.Dig(shop.Grid.Frontier().First());
+            Assert.That(shop.TryFindSpot(ShelfInteractable.k_Id, new Vector2(0f, -3f), out Vector2 spot), Is.True);
+            Assert.That(shop.TryBuy(ShelfInteractable.k_Id, spot), Is.True);
+            ShelfInteractable full = shop.Shelves[0];
+            ShelfInteractable empty = shop.Shelves[1];
+            full.Put(Bread("b01"), full.Capacity);
+            Assert.That(shop.TryChoose(ActionTable.k_Bake, shop.Ovens[1], "b02"), Is.True);
+            Clerk bread = Hire(shop, shop.Ovens[0]);
+            Hire(shop, shop.Ovens[1]);
+
+            Assert.That(RunUntil(shop, () => bread.Worker.Hands.Count > 0), Is.True);
+            Assert.That(RunUntil(shop, () => empty.Bread != null), Is.True);
+            Assert.That(empty.Bread, Is.EqualTo(Bread("b02")), "식빵 점원이 빈 진열대를 잡았다");
         }
 
         // 2026-09-26 사용자: 아직 구운 적 없는 오븐의 점원은 해금된 첫 빵을 굽는다.
