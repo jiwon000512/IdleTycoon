@@ -52,7 +52,10 @@ namespace ZooTycoon.Core
             public override void Do(Worker worker, Interactable target)
             {
                 ShelfInteractable shelf = (ShelfInteractable)target;
-                worker.Hands.Remove(shelf.Put(worker.Hands.Bread, worker.Hands.Count), shelf);
+                BreadTable bread = worker.Hands.Bread;
+                int placed = shelf.Put(bread, worker.Hands.Count);
+                worker.Hands.Remove(placed, shelf);
+                shelf.Area.Bus.Publish(new Events.Stocked(shelf, bread, placed));
             }
         }
 

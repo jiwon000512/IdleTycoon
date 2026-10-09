@@ -15,6 +15,7 @@ namespace ZooTycoon.UI
     // 설계 40 · 41: 별 평가 중에는 화면 위 가운데에 평가 카드 하나(별 · 「★7 평가」 · 남은 시간과 줄어드는 막대 · 조건 칸: 아이콘 + 진행/목표, 채우면 초록 체크 · 실망이 상한에 닿으면 빨강). 왼쪽 알약 줄과 따로다.
     // 설계 31 · 32: 떠돌이 행상 알약은 늘 보인다(행상이 있으면 「행상 2:59」, 없으면 회색 얼굴 + 시간만 「13:57」, 2026-10-01 사용자 B). 알약은 코인 아래로 위에서부터 쌓인다(축복 → 행상 → 물때)
     // 설계 49: 낚시터에 있는 동안 물때 알약(「물때 7/10」, 대물 물때에는 「대물!」만, 2026-10-06 사용자)
+    // 설계 54: 할 일 알약은 위 가운데(아이콘 · 글 · 진행 · 가기/받기 칩). 위 가운데는 「지금 목표」 자리라 평가 카드가 뜨면 알약은 숨는다(2026-10-08 사용자)
     public sealed class TopBarView : UIView
     {
         private const float k_CountSeconds = 0.25f;
@@ -66,6 +67,18 @@ namespace ZooTycoon.UI
         [SerializeField] private InfoTile[] m_goals;
         [Tooltip("이름으로 찾는 조건 아이콘(말풍선 ♥ · !!). 빵은 Resources 경로")]
         [SerializeField] private List<InfoTile.IconRef> m_icons = new List<InfoTile.IconRef>();
+        [Tooltip("설계 54 할 일 알약(위 가운데): 알약 전체가 버튼")]
+        [SerializeField] private CanvasGroup m_quest;
+        [SerializeField] private Button m_questButton;
+        [SerializeField] private Image m_questIcon;
+        [SerializeField] private TMP_Text m_questText;
+        [SerializeField] private TMP_Text m_questValue;
+        [Tooltip("다 하면 진행 대신 체크")]
+        [SerializeField] private GameObject m_questCheck;
+        [Tooltip("가기/받기 칩(주 버튼 조각). 받기면 코인 · 보상 값이 앞에 붙는다")]
+        [SerializeField] private GameObject m_questCoin;
+        [SerializeField] private TMP_Text m_questReward;
+        [SerializeField] private TMP_Text m_questLabel;
 
         private Func<double, string> m_format;
         private double m_from;
@@ -83,7 +96,13 @@ namespace ZooTycoon.UI
         private IReadOnlyList<GoalData> m_goalData;
         private float m_pillTop;
 
+        private bool m_questShown;
+        private bool m_questDone;
+
         public bool SpentVisible => m_spentLeft > 0f;
+
+        // 설계 54: 할 일 알약을 눌렀다
+        public event Action QuestClicked;
 
         private void Awake()
         {
@@ -92,6 +111,8 @@ namespace ZooTycoon.UI
             m_merchant.gameObject.SetActive(false);
             m_wave.gameObject.SetActive(false);
             m_evaluation.gameObject.SetActive(false);
+            m_quest.gameObject.SetActive(false);
+            m_questButton.onClick.AddListener(() => QuestClicked?.Invoke());
 
             foreach (InfoTile goal in m_goals)
             {
@@ -200,6 +221,7 @@ namespace ZooTycoon.UI
 
             RefreshEvaluation();
             Stack();
+            RefreshQuest();
             StartCoroutine(UiFx.Pulse((RectTransform)m_evaluation.transform));
         }
 
@@ -208,6 +230,44 @@ namespace ZooTycoon.UI
             m_evaluationLeft = null;
             m_evaluation.gameObject.SetActive(false);
             Stack();
+            RefreshQuest();
+        }
+
+        // 설계 54: 할 일 알약. done이면 진행 대신 체크와 「[코인] reward 받기」(reward가 null이면 코인 없이), 막 다 됐으면 한 번 톡
+        public void ShowQuest(Sprite icon, string text, string value, bool done, string reward, string label)
+        {
+            m_questIcon.sprite = icon;
+            m_questIcon.enabled = icon != null;
+            m_questText.text = text;
+            m_questValue.text = value;
+            m_questValue.gameObject.SetActive(!done);
+            m_questCheck.SetActive(done);
+            m_questCoin.SetActive(done && reward != null);
+            m_questReward.gameObject.SetActive(done && reward != null);
+            m_questReward.text = reward;
+            m_questLabel.text = label;
+            bool pulse = done && !m_questDone && m_questShown;
+            m_questShown = true;
+            m_questDone = done;
+            RefreshQuest();
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)m_quest.transform);
+
+            if (pulse && m_quest.gameObject.activeInHierarchy)
+            {
+                StartCoroutine(UiFx.Pulse((RectTransform)m_quest.transform));
+            }
+        }
+
+        public void HideQuest()
+        {
+            m_questShown = false;
+            RefreshQuest();
+        }
+
+        // 위 가운데는 평가 카드가 먼저다
+        private void RefreshQuest()
+        {
+            m_quest.gameObject.SetActive(m_questShown && !m_evaluation.gameObject.activeSelf);
         }
 
         private void RefreshEvaluation()

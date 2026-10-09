@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using GameKit.UI;
 using ZooTycoon.Core;
@@ -22,7 +23,15 @@ namespace ZooTycoon.Game
         private RelicPresenter m_relicsPresenter;
         private LocationPresenter m_locationPresenter;
         private OfflinePresenter m_offlinePresenter;
+        private QuestPresenter m_questPresenter;
+        private MissionPresenter m_missionPresenter;
         private ControlHudView m_hudView;
+        private EditModeView m_editView;
+        private ClerkPopupView m_clerkView;
+        private InventoryView m_inventoryView;
+        private RelicView m_relicsView;
+        private MissionView m_missionView;
+        private IDisposable m_menuPointed;
 
         private void Awake()
         {
@@ -36,6 +45,8 @@ namespace ZooTycoon.Game
             LocationView locationView = ui.Open<LocationView>();
             // 유물 버튼은 메뉴 버튼 줄이라 팝업들보다 아래에 깐다
             RelicView relicsView = ui.Open<RelicView>();
+            // 설계 54: 오늘의 일 버튼도 메뉴 줄(유물 아래)
+            m_missionView = ui.Open<MissionView>();
             ObjectSheetView sheetView = ui.Open<ObjectSheetView>();
             EditModeView editView = ui.Open<EditModeView>();
             ClerkPopupView clerkView = ui.Open<ClerkPopupView>();
@@ -62,6 +73,13 @@ namespace ZooTycoon.Game
             m_locationPresenter = new LocationPresenter(locationView, game.Mall, game.Bus, game.Tables);
             m_offlinePresenter = new OfflinePresenter(offlineView, game.Bus, game.Tables);
             m_relicPresenter = new RelicCartPresenter(relicView, relicResultView, game.State, game.Bus, game.Tables, m_relicsPresenter.Open);
+            m_questPresenter = new QuestPresenter(topBarView, game.Mall.Quests, game.Bus, game.Tables);
+            m_missionPresenter = new MissionPresenter(m_missionView, game.Mall.Missions, game.Bus, game.Tables);
+            m_editView = editView;
+            m_clerkView = clerkView;
+            m_inventoryView = inventoryView;
+            m_relicsView = relicsView;
+            m_menuPointed = game.Bus.Subscribe<Events.MenuPointed>(Bus_MenuPointed);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.EditingChanged += Edit_EditingChanged;
@@ -102,6 +120,9 @@ namespace ZooTycoon.Game
             m_relicsPresenter?.Dispose();
             m_locationPresenter?.Dispose();
             m_offlinePresenter?.Dispose();
+            m_questPresenter?.Dispose();
+            m_missionPresenter?.Dispose();
+            m_menuPointed?.Dispose();
         }
 
         private void Hud_SheetRequested(Interactable target)
@@ -118,7 +139,31 @@ namespace ZooTycoon.Game
             m_evaluationPresenter.SetEditing(editing);
             m_relicPresenter.SetEditing(editing);
             m_relicsPresenter.SetEditing(editing);
+            m_missionPresenter.SetEditing(editing);
             WorldManager.Instance.SetEditing(editing);
+        }
+
+        // 설계 54: 할 일 알약의 「가기」가 메뉴를 가리킨다 — 그 메뉴 버튼이 톡톡
+        private void Bus_MenuPointed(Events.MenuPointed e)
+        {
+            switch (e.Menu)
+            {
+                case QuestTable.k_MenuEdit:
+                    m_editView.PointButton();
+                    break;
+                case QuestTable.k_MenuClerk:
+                    m_clerkView.PointButton();
+                    break;
+                case QuestTable.k_MenuStorage:
+                    m_inventoryView.PointButton();
+                    break;
+                case QuestTable.k_MenuRelic:
+                    m_relicsView.PointButton();
+                    break;
+                case QuestTable.k_MenuMission:
+                    m_missionView.PointButton();
+                    break;
+            }
         }
     }
 }

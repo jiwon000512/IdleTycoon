@@ -12,7 +12,7 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 54)]
+        [TestCase("StringTable", 55)]
         [TestCase("ClerkTable", 4)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
@@ -23,7 +23,7 @@ namespace ZooTycoon.Tests
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 19)]
         [TestCase("BgmTable", 2)]
-        [TestCase("ConfigTable", 6)]
+        [TestCase("ConfigTable", 7)]
         [TestCase("BakeryConfigTable", 9)]
         [TestCase("PlazaConfigTable", 8)]
         [TestCase("PlazaDecorTable", 1)]
@@ -40,6 +40,9 @@ namespace ZooTycoon.Tests
         [TestCase("FishingStretchTable", 1)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
+        [TestCase("QuestTable", 1)]
+        [TestCase("MissionTable", 1)]
+        [TestCase("MissionChestTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
         {
             TableFile<object> file = TestTables.LoadFile(table);
@@ -137,6 +140,32 @@ namespace ZooTycoon.Tests
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).Index = 3,
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).Fish[0].Id = "no_such_fish",
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).DamPieces = 0,
+            };
+
+            foreach (System.Action<TableSet> broken in breaks)
+            {
+                TableSet tables = TestTables.Load();
+                broken(tables);
+                Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+            }
+        }
+
+        // 설계 54: 퀘스트 · 오늘의 일 · 상자 표
+        [Test]
+        public void Validate_WhenGoalTablesBroken_ReportsError()
+        {
+            System.Action<TableSet>[] breaks =
+            {
+                t => t.Get<QuestTable>("q01").Kind = "no_such_kind",
+                t => t.Get<QuestTable>("q02").Chapter = 0,
+                t => t.Get<QuestTable>("q01").Area = "no_such_area",
+                t => t.Get<QuestTable>("q09").Area = BakeryArea.k_Id,
+                t => t.Get<QuestTable>("q01").Text = "no_such_text",
+                t => t.Get<MissionTable>("m_sell").Kind = GoalCounter.k_Star,
+                t => t.Get<MissionTable>("m_sell").Needs = "sell:",
+                t => t.Get<MissionChestTable>("c2_1").Points = 10,
+                t => t.Get<MissionChestTable>("c1_3").Chest = 2,
+                t => t.Get<ConfigTable>(ConfigTable.k_MissionResetHour).Value = 24d,
             };
 
             foreach (System.Action<TableSet> broken in breaks)

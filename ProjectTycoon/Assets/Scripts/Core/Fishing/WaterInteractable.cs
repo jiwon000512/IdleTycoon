@@ -21,5 +21,10 @@ namespace ZooTycoon.Core
         {
             return Rect.DistanceTo(p);
         }
+
+        public override Vector2? GuidePoint(Vector2 from)
+        {
+            return new Vector2(System.Math.Clamp(from.X, Rect.XMin, Rect.XMax), Rect.YMax + 0.2f);
+        }
     }
 }

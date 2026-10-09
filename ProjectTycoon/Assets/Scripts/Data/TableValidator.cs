@@ -35,7 +35,9 @@ namespace ZooTycoon.Data
             ConfigTable.k_WalkSpeed, ConfigTable.k_WombatSpeed, ConfigTable.k_HopSeconds, ConfigTable.k_CarryCapacity, ConfigTable.k_WombatDigSeconds, ConfigTable.k_PlaceCell,
             ConfigTable.k_PoopEvery, ConfigTable.k_PoopChance, ConfigTable.k_PoopMax, ConfigTable.k_PoopGap, ConfigTable.k_PoopAvoidRadius,
             ConfigTable.k_AutosaveSeconds, ConfigTable.k_OfflineMaxSeconds, ConfigTable.k_OfflineMinSeconds, ConfigTable.k_OfflineTripSeconds,
+            ConfigTable.k_MissionsPerDay, ConfigTable.k_MissionResetHour, ConfigTable.k_MissionSameAreaMax,
         };
+        private static readonly string[] k_Menus = { QuestTable.k_MenuEdit, QuestTable.k_MenuClerk, QuestTable.k_MenuStorage, QuestTable.k_MenuRelic, QuestTable.k_MenuMission };
 
         public static IReadOnlyList<string> Validate(TableSet tables)
         {
@@ -64,6 +66,7 @@ namespace ZooTycoon.Data
             ValidateStars(tables, errors);
             ValidateFishing(tables, errors);
             ValidateRestaurant(tables, errors);
+            ValidateGoals(tables, errors);
 
             return errors;
         }
@@ -565,9 +568,16 @@ namespace ZooTycoon.Data
         {
             foreach (ConfigTable row in tables.GetAll<ConfigTable>())
             {
-                if (row.Id == ConfigTable.k_StartCoins ? row.Value < 0d : row.Value <= 0d)
+                if (row.Id == ConfigTable.k_StartCoins || row.Id == ConfigTable.k_MissionResetHour ? row.Value < 0d : row.Value <= 0d)
                 {
-                    errors.Add($"ConfigTable '{row.Id}': value가 너무 작다(startCoins는 0 이상, 나머지는 0보다 커야 한다).");
+                    errors.Add($"ConfigTable '{row.Id}': value가 너무 작다(startCoins · missionResetHour는 0 이상, 나머지는 0보다 커야 한다).");
+                }
+
+                // 설계 54: 오늘의 일 개수 · 같은 곳 상한은 정수, 새로 나오는 시는 0~23 정수
+                if ((row.Id == ConfigTable.k_MissionsPerDay || row.Id == ConfigTable.k_MissionSameAreaMax || row.Id == ConfigTable.k_MissionResetHour) && row.Value != System.Math.Floor(row.Value)
+                    || row.Id == ConfigTable.k_MissionResetHour && row.Value > 23d)
+                {
+                    errors.Add($"ConfigTable '{row.Id}': missionsPerDay · missionSameAreaMax는 정수, missionResetHour는 0~23 정수여야 한다.");
                 }
 
                 if ((row.Id == ConfigTable.k_CarryCapacity || row.Id == ConfigTable.k_PoopMax) && row.Value != System.Math.Floor(row.Value))
@@ -1023,6 +1033,113 @@ namespace ZooTycoon.Data
                 if (!have.Contains(id))
                 {
                     errors.Add($"{typeof(T).Name}: '{id}' 행이 없다.");
+                }
+            }
+        }
+
+        // 설계 54 · 데이터-테이블-규칙 8.35~8.37: 퀘스트 사슬 · 오늘의 일 후보 · 상자
+        private static void ValidateGoals(TableSet tables, List<string> errors)
+        {
+            HashSet<string> texts = Ids<StringTable>(tables);
+            HashSet<string> items = Ids<ItemTable>(tables);
+            HashSet<string> things = Ids<InteractableTable>(tables);
+            HashSet<string> areas = Ids<FarmFloorTable>(tables);
+            areas.UnionWith(new[] { BakeryArea.k_Id, PlazaArea.k_Id, FishingArea.k_Id, RestaurantArea.k_Id });
+
+            IReadOnlyList<QuestTable> steps = tables.GetAll<QuestTable>();
+            int chapter = 1;
+
+            if (steps.Count == 0)
+            {
+                errors.Add("QuestTable: 행이 하나 이상 있어야 한다.");
+            }
+
+            foreach (QuestTable step in steps)
+            {
+                if (step.Chapter < chapter)
+                {
+                    errors.Add($"QuestTable '{step.Id}': chapter는 1부터이고 행 순서대로 줄어들지 않아야 한다.");
+                }
+
+                chapter = System.Math.Max(chapter, step.Chapter);
+
+                if (!GoalCounter.IsKnown(step.Kind) || step.Count < 1 || !texts.Contains(step.Text))
+                {
+                    errors.Add($"QuestTable '{step.Id}': kind는 GoalCounter가 아는 것, count ≥ 1, text는 StringTable에 있어야 한다.");
+                }
+
+                bool menu = step.Menu != null;
+
+                if (menu && (step.Area != null || step.Thing != null || !k_Menus.Contains(step.Menu)) || step.Area != null && !areas.Contains(step.Area) || step.Thing != null && !things.Contains(step.Thing))
+                {
+                    errors.Add($"QuestTable '{step.Id}': area는 곳 id, thing은 InteractableTable id, menu는 메뉴 id이고 area · thing과 함께 쓰지 않는다.");
+                }
+
+                if (step.Coins < 0d || step.Item != null && (!items.Contains(step.Item) || step.ItemCount < 1))
+                {
+                    errors.Add($"QuestTable '{step.Id}': coins ≥ 0, item은 ItemTable에 있고 itemCount ≥ 1이어야 한다.");
+                }
+            }
+
+            IReadOnlyList<MissionTable> missions = tables.GetAll<MissionTable>();
+
+            if (missions.Count == 0)
+            {
+                errors.Add("MissionTable: 행이 하나 이상 있어야 한다.");
+            }
+
+            foreach (MissionTable mission in missions)
+            {
+                if (!GoalCounter.IsKnown(mission.Kind) || GoalCounter.IsState(mission.Kind) || mission.Count < 1 || mission.Points < 1 || mission.Weight < 0d)
+                {
+                    errors.Add($"MissionTable '{mission.Id}': kind는 사건 종류, count · points ≥ 1, weight ≥ 0이어야 한다.");
+                }
+
+                string needs = mission.Needs?.Split(':')[0];
+
+                if (mission.Area != null && !areas.Contains(mission.Area) || needs != null && !GoalCounter.IsState(needs) || !texts.Contains(mission.Text))
+                {
+                    errors.Add($"MissionTable '{mission.Id}': area는 곳 id, needs는 「상태 종류:대상」, text는 StringTable에 있어야 한다.");
+                }
+            }
+
+            IReadOnlyList<MissionChestTable> chests = tables.GetAll<MissionChestTable>();
+
+            if (chests.Count == 0)
+            {
+                errors.Add("MissionChestTable: 행이 하나 이상 있어야 한다.");
+                return;
+            }
+
+            List<int> numbers = chests.Select(c => c.Chest).Distinct().OrderBy(c => c).ToList();
+
+            foreach (IGrouping<int, MissionChestTable> group in chests.GroupBy(c => c.Chapter))
+            {
+                if (!group.Select(c => c.Chest).OrderBy(c => c).SequenceEqual(Enumerable.Range(1, numbers.Count)))
+                {
+                    errors.Add($"MissionChestTable: 장 {group.Key}에 상자 1 ~ {numbers.Count}가 빠짐없이 하나씩 있어야 한다.");
+                }
+            }
+
+            int last = 0;
+
+            foreach (int number in numbers)
+            {
+                List<int> points = chests.Where(c => c.Chest == number).Select(c => c.Points).Distinct().ToList();
+
+                if (points.Count != 1 || points[0] <= last)
+                {
+                    errors.Add($"MissionChestTable: 상자 {number}의 points는 장마다 같고 앞 상자보다 커야 한다.");
+                }
+
+                last = points.Max();
+            }
+
+            foreach (MissionChestTable chest in chests)
+            {
+                if (chest.Chapter < 1 || chest.Minutes < 0d || chest.CoinsPerMinute < 0d || chest.Item != null && (!items.Contains(chest.Item) || chest.ItemCount < 1))
+                {
+                    errors.Add($"MissionChestTable '{chest.Id}': chapter ≥ 1, minutes · coinsPerMinute ≥ 0, item은 ItemTable에 있고 itemCount ≥ 1이어야 한다.");
                 }
             }
         }

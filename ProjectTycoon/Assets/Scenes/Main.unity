@@ -154,6 +154,8 @@ MonoBehaviour:
   m_farmPrefab: {fileID: 4671188732164137163, guid: 72a732a754efea640bbbe48eb7239172, type: 3}
   m_fishingPrefab: {fileID: 3873145725155982701, guid: 6aadf9ff5fb53934bb6e1873b890a66b, type: 3}
   m_restaurantPrefab: {fileID: 2516844345006098849, guid: 68bcd054885d673428c1888baa85e878, type: 3}
+  m_guideArrow: {fileID: 21300000, guid: 442d722d63d5c8444b2969bf5959f9d4, type: 3}
+  m_guideTag: {fileID: 21300000, guid: ace65e2887c85424b8f5162411667241, type: 3}
 --- !u!4 &19269923
 Transform:
   m_ObjectHideFlags: 0

@@ -1,0 +1,222 @@
+{
+  "table": "MissionChestTable",
+  "version": 1,
+  "notes": [
+    "설계 54 오늘의 일 상자 = chest(1부터) × chapter(퀘스트 장). 하루 점수가 points에 닿으면 연다(chest마다 points는 장과 상관없이 같다). 코인 = minutes(분어치) × coinsPerMinute(그 장의 1분 수입), item · itemCount는 덤 재료(없으면 null · 0).",
+    "사슬이 끝났으면 마지막 장, 표에 그 장이 없으면 그 아래 가장 가까운 장. 기준은 밸런스방 「접속 1분어치 순수입」(2026-10-08 사용자 「퀘스트 사슬 장마다」).",
+    "version 1 (2026-10-08, 설계 54): 상자 셋(20 · 60 · 100점, 5 · 10 · 15분어치) × 장 일곱. coinsPerMinute는 임시값(100 · 150 · 200 · 300 · 350 · 450 · 500).",
+    "2026-10-09 밸런스방 시안 B 보통(사용자 선택): 상자 3 · 6 · 12분어치 × 장 1분 값(1~5장 80 · 6장 190 · 7장 300; 7장은 첫날 횟집 벽 10,000 앞 셋째 상자가 그 40%를 넘지 않게). points 그대로."
+  ],
+  "rows": [
+    {
+      "id": "c1_1",
+      "chest": 1,
+      "chapter": 1,
+      "points": 20,
+      "minutes": 3,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c2_1",
+      "chest": 2,
+      "chapter": 1,
+      "points": 60,
+      "minutes": 6,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c3_1",
+      "chest": 3,
+      "chapter": 1,
+      "points": 100,
+      "minutes": 12,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c1_2",
+      "chest": 1,
+      "chapter": 2,
+      "points": 20,
+      "minutes": 3,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c2_2",
+      "chest": 2,
+      "chapter": 2,
+      "points": 60,
+      "minutes": 6,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c3_2",
+      "chest": 3,
+      "chapter": 2,
+      "points": 100,
+      "minutes": 12,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c1_3",
+      "chest": 1,
+      "chapter": 3,
+      "points": 20,
+      "minutes": 3,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c2_3",
+      "chest": 2,
+      "chapter": 3,
+      "points": 60,
+      "minutes": 6,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c3_3",
+      "chest": 3,
+      "chapter": 3,
+      "points": 100,
+      "minutes": 12,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c1_4",
+      "chest": 1,
+      "chapter": 4,
+      "points": 20,
+      "minutes": 3,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c2_4",
+      "chest": 2,
+      "chapter": 4,
+      "points": 60,
+      "minutes": 6,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c3_4",
+      "chest": 3,
+      "chapter": 4,
+      "points": 100,
+      "minutes": 12,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c1_5",
+      "chest": 1,
+      "chapter": 5,
+      "points": 20,
+      "minutes": 3,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c2_5",
+      "chest": 2,
+      "chapter": 5,
+      "points": 60,
+      "minutes": 6,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c3_5",
+      "chest": 3,
+      "chapter": 5,
+      "points": 100,
+      "minutes": 12,
+      "coinsPerMinute": 80,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c1_6",
+      "chest": 1,
+      "chapter": 6,
+      "points": 20,
+      "minutes": 3,
+      "coinsPerMinute": 190,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c2_6",
+      "chest": 2,
+      "chapter": 6,
+      "points": 60,
+      "minutes": 6,
+      "coinsPerMinute": 190,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c3_6",
+      "chest": 3,
+      "chapter": 6,
+      "points": 100,
+      "minutes": 12,
+      "coinsPerMinute": 190,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c1_7",
+      "chest": 1,
+      "chapter": 7,
+      "points": 20,
+      "minutes": 3,
+      "coinsPerMinute": 300,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c2_7",
+      "chest": 2,
+      "chapter": 7,
+      "points": 60,
+      "minutes": 6,
+      "coinsPerMinute": 300,
+      "item": null,
+      "itemCount": 0
+    },
+    {
+      "id": "c3_7",
+      "chest": 3,
+      "chapter": 7,
+      "points": 100,
+      "minutes": 12,
+      "coinsPerMinute": 300,
+      "item": null,
+      "itemCount": 0
+    }
+  ]
+}

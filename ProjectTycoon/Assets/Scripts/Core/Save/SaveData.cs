@@ -21,6 +21,27 @@ namespace ZooTycoon.Core
         public double UntilPayday;
         // 빵집 · 광장 · 농장 층마다 하나(곳 id)
         public List<AreaSave> Areas = new List<AreaSave>();
+        // 설계 54: 퀘스트 걸음(id, 사슬이 끝났으면 null · 행 번호) · 사건 종류 진행, 오늘의 일. 없으면(옛 저장) 사슬 처음부터 · 다음 틱에 새로 뽑는다
+        public string QuestId;
+        public int QuestIndex;
+        public int QuestProgress;
+        public MissionsSave Missions;
+    }
+
+    // 설계 54: 오늘의 일 — 하루(yyyy-MM-dd) · 미션(표 id · 진행 · 받음) · 하루 점수 · 연 상자
+    public sealed class MissionsSave
+    {
+        public string Day;
+        public List<MissionSave> List = new List<MissionSave>();
+        public int Points;
+        public List<int> Opened = new List<int>();
+    }
+
+    public sealed class MissionSave
+    {
+        public string Id;
+        public int Progress;
+        public bool Claimed;
     }
 
     // 곳 하나. 곳마다 쓰는 칸만 채운다(빵집: 칸 · 사물 · 빵 · 평가, 농장: 열림 · 칸 · 밭 · 작물, 광장: 사물 · 행상, 낚시터: Fishing, 횟집: 열림 · 칸 · 사물)

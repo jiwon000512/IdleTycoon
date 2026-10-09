@@ -24,6 +24,11 @@ namespace ZooTycoon.Core
             return m_cells.DistanceToCell(Cell, p);
         }
 
+        public override Vector2? GuidePoint(Vector2 from)
+        {
+            return ClosestPoint(from);
+        }
+
         // 칸 사각형에서 p에 가장 가까운 점(웜뱃이 파는 쪽을 본다)
         public Vector2 ClosestPoint(Vector2 p)
         {

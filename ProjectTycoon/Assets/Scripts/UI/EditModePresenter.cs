@@ -93,6 +93,8 @@ namespace ZooTycoon.UI
 
             if (editing)
             {
+                // 설계 54: 「가기」로 걷던 웜뱃이 편집 중에 문을 지나 곳이 바뀌지 않게(2026-10-09 리뷰)
+                m_mall.Guide.Stop();
                 RefreshCards();
             }
 

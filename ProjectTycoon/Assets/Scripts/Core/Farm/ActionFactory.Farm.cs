@@ -149,6 +149,7 @@ namespace ZooTycoon.Core
             private static void Sow(Worker worker, PlotInteractable plot, CropTable crop)
             {
                 plot.Plant(crop, worker.Wallet.TrySpendItem(plot.Farm.Config.ManureItem, 1));
+                plot.Area.Bus.Publish(new Events.Planted(plot, crop));
             }
         }
 

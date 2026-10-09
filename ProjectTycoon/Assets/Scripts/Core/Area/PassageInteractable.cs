@@ -39,6 +39,12 @@ namespace ZooTycoon.Core
             return inBand ? Math.Abs(p.X - m_floor.X) : float.MaxValue;
         }
 
+        // 설계 54: 길잡이가 지나갈 때 서는 점 = 띠 안쪽(닿으면 넘어간다)
+        public override Vector2? GuidePoint(Vector2 from)
+        {
+            return m_floor + new Vector2(0f, m_down ? -k_Enter - 0.1f : k_Enter + 0.1f);
+        }
+
         public void Pass()
         {
             Area.Bus.Publish(new Events.Passed(Area, To));

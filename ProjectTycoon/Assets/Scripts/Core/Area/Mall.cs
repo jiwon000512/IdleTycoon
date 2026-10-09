@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using GameKit.Events;
 
@@ -23,11 +24,16 @@ namespace ZooTycoon.Core
         public RestaurantArea Restaurant { get; }
         public IReadOnlyList<WombatArea> Areas => m_areas;
         public Payroll Payroll { get; }
+        // 설계 54: 퀘스트 사슬 · 오늘의 일 · 「가기」 길잡이
+        public QuestLog Quests { get; }
+        public DailyBoard Missions { get; }
+        public Guide Guide { get; }
         // 웜뱃이 있는 곳
         public WombatArea Active { get; private set; }
 
-        // 웜뱃은 빵집에서 시작한다. fishing · restaurant 없이 부르면(빵집 · 농장만 보는 테스트) 씨앗 고정 난수로 만든다(다른 곳의 난수 순서를 건드리지 않게)
-        public Mall(BakeryArea bakery, PlazaArea plaza, FarmArea farm, EventBus bus, FishingArea fishing = null, RestaurantArea restaurant = null)
+        // 웜뱃은 빵집에서 시작한다. fishing · restaurant 없이 부르면(빵집 · 농장만 보는 테스트) 씨앗 고정 난수로 만든다(다른 곳의 난수 순서를 건드리지 않게).
+        // clock은 오늘의 일 하루를 가르는 시계(없으면 기기 시각)
+        public Mall(BakeryArea bakery, PlazaArea plaza, FarmArea farm, EventBus bus, FishingArea fishing = null, RestaurantArea restaurant = null, Func<DateTime> clock = null)
         {
             Bakery = bakery;
             Plaza = plaza;
@@ -53,6 +59,9 @@ namespace ZooTycoon.Core
             Active = bakery;
             Payroll = new Payroll(m_areas, bakery.ClerkConfig, Wombat.Worker.Wallet, bus);
             bus.Subscribe<Events.Passed>(Bus_Passed);
+            Guide = new Guide(this, bus);
+            Quests = new QuestLog(this, bakery.Tables, bus, Guide);
+            Missions = new DailyBoard(this, bakery.Tables, bus, clock ?? (() => DateTime.Now), () => Quests.Chapter);
         }
 
         // 웜뱃이 어디 있든 곳은 다 돈다
@@ -66,6 +75,9 @@ namespace ZooTycoon.Core
             }
 
             Wombat.Worker.Wallet.Blessing.Tick(dt);
+            Guide.Tick();
+            Quests.Tick();
+            Missions.Tick();
         }
 
         private void Bus_Passed(Events.Passed e)

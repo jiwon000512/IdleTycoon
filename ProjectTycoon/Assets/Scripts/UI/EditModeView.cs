@@ -81,6 +81,12 @@ namespace ZooTycoon.UI
         }
 
         // 패널은 공용 등장·퇴장(UiFx)
+        // 설계 54: 할 일 알약의 「가기」가 이 메뉴 버튼을 가리킨다(세 번 톡톡)
+        public void PointButton()
+        {
+            StartCoroutine(UiFx.Point((RectTransform)m_editButton.transform));
+        }
+
         public void SetEditing(bool editing)
         {
             if (editing != m_panel.activeSelf)

@@ -1,6 +1,6 @@
 {
   "table": "ConfigTable",
-  "version": 6,
+  "version": 7,
   "notes": [
     "게임 전체에 하나뿐인 값. id = 값 이름, value = 숫자. 전부 시작값이며 프로토타입에서 튠한다.",
     "startCoins: 새 게임 코인. carryCapacity: 웜뱃이 앞발에 드는 빵 수(웜뱃의 값이라 빵집 설정이 아니라 여기).",
@@ -11,7 +11,8 @@
     "version 3 (2026-09-26, 설계 18 자유 배치): placeCell = 배치 격자 한 변(유닛). 사물 밑변 가운데를 여기에 맞춘다(걷는 땅 격자 0.2와 같게 시작, 바꿀 수 있음).",
     "version 4 (2026-10-01, 설계 37 어디서나 똥): 웜뱃 똥 숫자를 BakeryConfigTable에서 옮겨 옴(웜뱃의 값, 빵집 · 광장 · 농장 공용). poopEvery(웜뱃이 이만큼 걸을 때마다 한 번 굴린다, 유닛) · poopChance(그때 등 뒤에 똥을 떨굴 확률, 0~1) · poopMax(곳마다 바닥에 이만큼 있으면 더 싸지 않는다, 정수) · poopGap(다른 똥에서 이만큼 안이면 건너뛴다) · poopAvoidRadius(손님이 걸어 들어가지 않는 똥 둘레, 막힘의 세기). 치운 똥이 되는 재료는 FarmConfigTable manureItem.",
     "version 5 (2026-10-04, 설계 43 저장 · 오프라인): autosaveSeconds(이만큼마다 저장, 초) · offlineMaxSeconds(오프라인 정산 상한, 8시간 = 28800) · offlineMinSeconds(이보다 짧게 비웠으면 팝업 없이 시간만 흐른다) · offlineTripSeconds(오프라인 공식에서 점원 한 바퀴의 걷는 몫, 초: 오븐 → 진열대 → 오븐 · 밭 돌기). 시뮬 대조 테스트로 맞춘다.",
-    "version 6 (2026-10-05, 사용자 「파는 도중에 움직여짐」 · 「파는 애니메이션이 좀 느리다」): wombatDigSeconds = 굴을 판 웜뱃이 그 자리에 서 있는 시간(초). 웜뱃 파기 동작(12칸)이 이 시간에 맞춰 돌고 흙덩이는 던지는 칸에 튄다(0.96초 → 0.72초)."
+    "version 6 (2026-10-05, 사용자 「파는 도중에 움직여짐」 · 「파는 애니메이션이 좀 느리다」): wombatDigSeconds = 굴을 판 웜뱃이 그 자리에 서 있는 시간(초). 웜뱃 파기 동작(12칸)이 이 시간에 맞춰 돌고 흙덩이는 던지는 칸에 튄다(0.96초 → 0.72초).",
+    "version 7 (2026-10-08, 설계 54): 오늘의 일 missionsPerDay = 하루 개수 · missionResetHour = 새로 나오는 시(기기 시각 0~23) · missionSameAreaMax = 같은 곳 미션 상한."
   ],
   "rows": [
     {"id": "startCoins", "value": 350},
@@ -32,6 +33,9 @@
     {"id": "autosaveSeconds", "value": 30},
     {"id": "offlineMaxSeconds", "value": 28800},
     {"id": "offlineMinSeconds", "value": 60},
-    {"id": "offlineTripSeconds", "value": 3}
+    {"id": "offlineTripSeconds", "value": 3},
+    {"id": "missionsPerDay", "value": 5},
+    {"id": "missionResetHour", "value": 5},
+    {"id": "missionSameAreaMax", "value": 2}
   ]
 }

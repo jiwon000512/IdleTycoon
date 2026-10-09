@@ -28,11 +28,14 @@ namespace ZooTycoon.UI
             return truncated.ToString("0.#", CultureInfo.InvariantCulture) + k_Units[unitIndex];
         }
 
-        // 남은 초 → 「4:12」(분:초, 초는 올림)
+        // 남은 초 → 「4:12」(분:초, 초는 올림). 한 시간 넘으면 「4:30:44」
         public static string Clock(double seconds)
         {
             int total = (int)Math.Ceiling(Math.Max(0d, seconds));
-            return (total / 60).ToString(CultureInfo.InvariantCulture) + ":" + (total % 60).ToString("00", CultureInfo.InvariantCulture);
+            string rest = (total % 60).ToString("00", CultureInfo.InvariantCulture);
+            return total < 3600
+                ? (total / 60).ToString(CultureInfo.InvariantCulture) + ":" + rest
+                : (total / 3600).ToString(CultureInfo.InvariantCulture) + ":" + (total / 60 % 60).ToString("00", CultureInfo.InvariantCulture) + ":" + rest;
         }
     }
 }

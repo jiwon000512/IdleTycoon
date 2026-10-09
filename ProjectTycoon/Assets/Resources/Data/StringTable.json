@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 54,
+  "version": 55,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -57,7 +57,8 @@
     "version 51 (2026-10-06, 낚시 연출 개선 · 사용자 결정): 물때는 노점 위 팻말 대신 상단 알약(fishing_wave_count 삭제, wave_pill 「물때」 · wave_pill_count 「{0}/{1}」 추가).",
     "version 52 (2026-10-06, 설계 50 대물 소식): 대물 이름 · 소식지 제목 · 한 줄(boss_<id> · boss_<id>_title · boss_<id>_line 셋) · fishing_news_next 「다음 단계로」 · fishing_news_yield 「이제 한 마리에 재료 {0}개」(다음 단계의 재료 배수) 추가.",
     "version 53 (2026-10-07, 설계 52 우물 낚시 1회차): fishing_catch_tag 「{0} {1}kg」(낚은 물고기 알약) · fishing_snapped · fishing_missed(곳 이름 띠) 추가. 디펜스 문구(물때 · 말뚝 시트 · 종류 · 대물)는 그림 · 소식지와 함께 다음 회차에 정리한다.",
-    "version 54 (2026-10-07): 설계 53 낚시터 넓히기 — 바위 · 좌대 시트 머리 · 줄 · 값 표식(sheet_rock_* · row_break_rock* · tag_rock · sheet_seat_* · row_place_seat* · tag_seat), 남은 잔해 · 물이 찼다 알약(fishing_debris_left · fishing_flooded)."
+    "version 54 (2026-10-07): 설계 53 낚시터 넓히기 — 바위 · 좌대 시트 머리 · 줄 · 값 표식(sheet_rock_* · row_break_rock* · tag_rock · sheet_seat_* · row_place_seat* · tag_seat), 남은 잔해 · 물이 찼다 알약(fishing_debris_left · fishing_flooded).",
+    "version 55 (2026-10-08, 설계 54 가이드 · 퀘스트 · 일일 미션): 퀘스트 걸음 25 · 오늘의 일 후보 12 문구(quest_q01~ · mission_*), 할 일 알약 「가기」 · 「받기」 · 진행 「{0}/{1}」, 오늘의 일 판(제목 · 받기 · 열기 · 점수 · 새 일까지)."
   ],
   "rows": [
     {
@@ -1331,6 +1332,190 @@
     {
       "id": "fishing_flooded",
       "ko": "물이 찼다! {0}"
+    },
+    {
+      "id": "quest_q01",
+      "ko": "식빵 굽기"
+    },
+    {
+      "id": "quest_q02",
+      "ko": "진열대 채우기"
+    },
+    {
+      "id": "quest_q03",
+      "ko": "손님 계산하기"
+    },
+    {
+      "id": "quest_q04",
+      "ko": "농장 가기"
+    },
+    {
+      "id": "quest_q05",
+      "ko": "밀 심기"
+    },
+    {
+      "id": "quest_q06",
+      "ko": "밀 거두기"
+    },
+    {
+      "id": "quest_q07",
+      "ko": "농장 굴 파기"
+    },
+    {
+      "id": "quest_q08",
+      "ko": "밭 갈기"
+    },
+    {
+      "id": "quest_q09",
+      "ko": "오븐 더 놓기"
+    },
+    {
+      "id": "quest_q10",
+      "ko": "점원 뽑기"
+    },
+    {
+      "id": "quest_q11",
+      "ko": "별 평가 받기"
+    },
+    {
+      "id": "quest_q12",
+      "ko": "석상에 빌기"
+    },
+    {
+      "id": "quest_q13",
+      "ko": "유물 뽑기"
+    },
+    {
+      "id": "quest_q14",
+      "ko": "똥 치우기"
+    },
+    {
+      "id": "quest_q15",
+      "ko": "크루아상 열기"
+    },
+    {
+      "id": "quest_q16",
+      "ko": "딸기 열기"
+    },
+    {
+      "id": "quest_q17",
+      "ko": "케이크 열기"
+    },
+    {
+      "id": "quest_q18",
+      "ko": "낚시터 가기"
+    },
+    {
+      "id": "quest_q19",
+      "ko": "물고기 낚기"
+    },
+    {
+      "id": "quest_q20",
+      "ko": "바위 뚫기"
+    },
+    {
+      "id": "quest_q21",
+      "ko": "댐 허물기"
+    },
+    {
+      "id": "quest_q22",
+      "ko": "좌대 놓기"
+    },
+    {
+      "id": "quest_q23",
+      "ko": "빵집 별 모으기"
+    },
+    {
+      "id": "quest_q24",
+      "ko": "횟집 열기"
+    },
+    {
+      "id": "quest_q25",
+      "ko": "회 내기"
+    },
+    {
+      "id": "mission_sell",
+      "ko": "빵 팔기"
+    },
+    {
+      "id": "mission_bake",
+      "ko": "빵 굽기"
+    },
+    {
+      "id": "mission_evaluate",
+      "ko": "별 평가 부르기"
+    },
+    {
+      "id": "mission_wheat",
+      "ko": "밀 거두기"
+    },
+    {
+      "id": "mission_strawberry",
+      "ko": "딸기 거두기"
+    },
+    {
+      "id": "mission_plant",
+      "ko": "밭에 심기"
+    },
+    {
+      "id": "mission_bless",
+      "ko": "석상에 빌기"
+    },
+    {
+      "id": "mission_draw",
+      "ko": "유물 뽑기"
+    },
+    {
+      "id": "mission_catch",
+      "ko": "물고기 낚기"
+    },
+    {
+      "id": "mission_serve",
+      "ko": "회 내기"
+    },
+    {
+      "id": "mission_clean",
+      "ko": "똥 치우기"
+    },
+    {
+      "id": "mission_wake",
+      "ko": "점원 깨우기"
+    },
+    {
+      "id": "quest_go",
+      "ko": "가기"
+    },
+    {
+      "id": "quest_claim",
+      "ko": "받기"
+    },
+    {
+      "id": "mission_title",
+      "ko": "오늘의 일"
+    },
+    {
+      "id": "mission_claim",
+      "ko": "받기"
+    },
+    {
+      "id": "mission_open",
+      "ko": "열기"
+    },
+    {
+      "id": "mission_points",
+      "ko": "+{0}"
+    },
+    {
+      "id": "mission_reset",
+      "ko": "새 일까지 {0}"
+    },
+    {
+      "id": "mission_empty",
+      "ko": "오늘은 할 일이 없다"
+    },
+    {
+      "id": "quest_count",
+      "ko": "{0}/{1}"
     }
   ]
 }

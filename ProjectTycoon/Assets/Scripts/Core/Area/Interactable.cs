@@ -33,6 +33,12 @@ namespace ZooTycoon.Core
         {
         }
 
+        // 설계 54: 길잡이(「가기」)가 웜뱃을 데려갈 기준점(from = 웜뱃 자리). 그 둘레 가장 가까운 걷는 점에 선다. 놓는 사물은 일하는 · 손님 자리를 쓰니 여기는 그 밖의 사물만, null이면 데려가지 않는다
+        public virtual Vector2? GuidePoint(Vector2 from)
+        {
+            return null;
+        }
+
         // v0.6: 그 업그레이드 단계가 이 사물에서 무슨 값인가. 기본은 배수 1 + 효과(굽기·계산 속도), 진열대는 용량
         public virtual double UpgradeValue(int level)
         {

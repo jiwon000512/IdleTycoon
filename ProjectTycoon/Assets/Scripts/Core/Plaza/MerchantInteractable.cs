@@ -11,6 +11,7 @@ namespace ZooTycoon.Core
 
         private readonly IRandom m_random;
         private readonly DialogueTable m_hello;
+        private readonly Vector2 m_stall;
 
         public Relics Relics => Area.Wombat.Worker.Wallet.Relics;
         public RelicMerchant Merchant { get; }
@@ -21,11 +22,19 @@ namespace ZooTycoon.Core
             m_random = random;
             Merchant = merchant;
             m_hello = plaza.Tables.Get<DialogueTable>(DialogueTable.k_MerchantHello);
+            PlazaConfigTable config = plaza.Tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
+            m_stall = new Vector2((float)config.MerchantX, (float)config.MerchantY);
         }
 
         public override float DistanceTo(Vector2 p)
         {
             return IsOpen ? Vector2.Distance(p, Merchant.Figure.Position) : float.MaxValue;
+        }
+
+        // 행상이 없으면 좌판 자리(올 곳)로 데려간다(2026-10-09 리뷰: 화살표가 웜뱃 머리 위에 떴다)
+        public override Vector2? GuidePoint(Vector2 from)
+        {
+            return IsOpen ? Merchant.Figure.Position : m_stall;
         }
 
         // 행상이 웜뱃 쪽을 보고 인사 한 줄을 고른다

@@ -32,6 +32,10 @@ namespace ZooTycoon.Core
         public const string k_OfflineMaxSeconds = "offlineMaxSeconds";
         public const string k_OfflineMinSeconds = "offlineMinSeconds";
         public const string k_OfflineTripSeconds = "offlineTripSeconds";
+        // 설계 54: 오늘의 일 — 하루 개수 · 새로 나오는 시(기기 시각) · 같은 곳 상한
+        public const string k_MissionsPerDay = "missionsPerDay";
+        public const string k_MissionResetHour = "missionResetHour";
+        public const string k_MissionSameAreaMax = "missionSameAreaMax";
 
         public double Value { get; set; }
     }

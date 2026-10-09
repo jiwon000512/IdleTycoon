@@ -83,5 +83,33 @@ namespace ZooTycoon.Core
                 Visitor = visitor;
             }
         }
+
+        // 설계 54: 오븐이 빵을 굽기 시작했다(웜뱃 · 점원, 재료는 이미 빠졌다)
+        public readonly struct BakeStarted
+        {
+            public readonly OvenInteractable Oven;
+            public readonly BreadTable Bread;
+
+            public BakeStarted(OvenInteractable oven, BreadTable bread)
+            {
+                Oven = oven;
+                Bread = bread;
+            }
+        }
+
+        // 설계 54: 진열대에 빵 Count개를 채웠다(웜뱃 · 점원의 채우기, 불러오기는 아님)
+        public readonly struct Stocked
+        {
+            public readonly ShelfInteractable Shelf;
+            public readonly BreadTable Bread;
+            public readonly int Count;
+
+            public Stocked(ShelfInteractable shelf, BreadTable bread, int count)
+            {
+                Shelf = shelf;
+                Bread = bread;
+                Count = count;
+            }
+        }
     }
 }

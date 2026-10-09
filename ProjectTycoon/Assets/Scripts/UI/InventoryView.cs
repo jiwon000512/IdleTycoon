@@ -137,6 +137,12 @@ namespace ZooTycoon.UI
             }
         }
 
+        // 설계 54: 할 일 알약의 「가기」가 이 메뉴 버튼을 가리킨다(세 번 톡톡)
+        public void PointButton()
+        {
+            StartCoroutine(UiFx.Point((RectTransform)m_openButton.transform));
+        }
+
         public void SetButtonVisible(bool visible)
         {
             m_openButton.gameObject.SetActive(visible);

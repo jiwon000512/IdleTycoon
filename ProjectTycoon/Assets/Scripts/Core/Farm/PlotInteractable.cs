@@ -44,6 +44,11 @@ namespace ZooTycoon.Core
             return Farm.Layout.Cells.DistanceToCell(Cell, p);
         }
 
+        public override Vector2? GuidePoint(Vector2 from)
+        {
+            return Position;
+        }
+
         // 발이 밭 몸통(칸 둘레 여백 FarmConfigTable fieldInset 안쪽)에 있나. 거두기는 여기서만(여백은 걷는 길, 2026-09-30 안 A)
         public bool IsUnderfoot(Vector2 p)
         {

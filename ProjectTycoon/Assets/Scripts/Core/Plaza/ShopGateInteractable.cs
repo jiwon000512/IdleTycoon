@@ -23,5 +23,10 @@ namespace ZooTycoon.Core
         {
             return Vector2.Distance(p, m_floor);
         }
+
+        public override Vector2? GuidePoint(Vector2 from)
+        {
+            return m_floor;
+        }
     }
 }

@@ -51,10 +51,10 @@ namespace ZooTycoon.Core
             Holding = holding;
         }
 
-        // 설계 19: 시스템 이동 — 길을 따라 target까지 걷고 arrive 쪽을 본다(계산대 자리 붙기, 미션 가이드). 조이스틱을 건드리면 그 자리에서 그만둔다
-        public void Guide(BurrowNav nav, Vector2 target, Facing arrive)
+        // 설계 19: 시스템 이동 — 길을 따라 target까지 걷고 arrive 쪽을 본다(계산대 자리 붙기, 설계 54 길잡이). 조이스틱을 건드리면 그 자리에서 그만둔다. 길이 없으면 false
+        public bool Guide(BurrowNav nav, Vector2 target, Facing arrive)
         {
-            Mover.WalkTo(nav, target, arrive);
+            return Mover.WalkTo(nav, target, arrive);
         }
 
         // 설계 09 3장 · 설계 11: 조이스틱 방향으로 걷고, 막히면 X만·Y만 시도해 벽을 따라 미끄러진다.

@@ -40,6 +40,19 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 설계 54: 밭에 심었다(웜뱃 · 점원의 심기, 불러오기는 아님)
+        public readonly struct Planted
+        {
+            public readonly PlotInteractable Plot;
+            public readonly CropTable Crop;
+
+            public Planted(PlotInteractable plot, CropTable crop)
+            {
+                Plot = plot;
+                Crop = crop;
+            }
+        }
+
         // 설계 28: 거둘 때 덤(bonusItem)이 나왔다(팝업 · 반짝 알갱이 · 소리)
         public readonly struct BonusFound
         {

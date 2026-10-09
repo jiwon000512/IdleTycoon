@@ -24,6 +24,11 @@ namespace ZooTycoon.Core
             return Vector2.Distance(p, Position);
         }
 
+        public override Vector2? GuidePoint(Vector2 from)
+        {
+            return Position;
+        }
+
         public void MoveTo(Vector2 position)
         {
             throw new InvalidOperationException("농장 작업대는 옮기지 않는다.");

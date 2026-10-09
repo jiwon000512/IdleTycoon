@@ -64,6 +64,17 @@ namespace ZooTycoon.Game
                 Opt("좌대 놓기(무료)", () => Mall.Fishing.PlaceSeatFree() ? "좌대를 놓았다" : "놓을 좌대 자리가 없다"),
                 Opt("손님 부르기", CallFishingCustomer),
             });
+            // 설계 54: 퀘스트 · 오늘의 일
+            Add("퀘스트", new[]
+            {
+                Opt("다음 걸음(보상 없이)", () => { Mall.Quests.Skip(); return Mall.Quests.Current?.Id ?? "사슬 끝"; }),
+                Opt("다섯 걸음 앞으로", () => { for (int i = 0; i < 5; i++) Mall.Quests.Skip(); return Mall.Quests.Current?.Id ?? "사슬 끝"; }),
+            });
+            Add("오늘의 일", new[]
+            {
+                Opt("다 하기", () => { Mall.Missions.CompleteAll(); return "오늘의 일을 다 했다"; }),
+                Opt("하루 넘기기", () => { m_game.ShiftClock(TimeSpan.FromDays(1)); return "내일로"; }),
+            });
             // 설계 43: 오프라인 정산을 바로(팝업까지) · 저장
             Add("오프라인", new[] { (600d, "10분"), (3600d, "1시간"), (28800d, "8시간") }.Select(t => Opt(t.Item2, () => Offline(t.Item1, t.Item2))));
             Add("저장", new[] { Opt("지금 저장", () => { m_game.Save(); return "저장함"; }), Opt("저장 지우기(다음 플레이 새 게임)", () => { m_game.DeleteSave(); return "저장을 지웠다. 이번 플레이는 닫을 때 저장하지 않는다"; }) });

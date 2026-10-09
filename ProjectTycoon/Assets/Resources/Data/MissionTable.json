@@ -1,0 +1,156 @@
+{
+  "table": "MissionTable",
+  "version": 1,
+  "notes": [
+    "설계 54 오늘의 일 후보. 하루마다(ConfigTable missionResetHour 시, 기기 시각) 할 수 있는 행만 weight 비중으로 missionsPerDay개, 같은 area는 missionSameAreaMax개까지 뽑는다(그날의 씨앗이라 같은 날은 같다).",
+    "kind · param · count: QuestTable과 같은 할 일 종류(사건 종류만 쓴다). points: 다 하고 받으면 하루 점수. area: 이 곳이 열렸을 때만(null이면 어디서나 · 같은 곳 상한을 세지 않음). needs: 「종류:대상」 상태가 1 이상일 때만(대상이 비면 아무것이나, 예 hire: = 점원이 하나라도). 유물을 다 모았으면 draw는 안 나온다.",
+    "version 1 (2026-10-08, 설계 54): 후보 열둘(밸런스방 하루 행동 표에서). count · weight는 임시값.",
+    "2026-10-09 밸런스방: count는 둘째 날부터 10분 접속 하위 20%가 닿고 첫날 60분 접속으로도 닿는 양(빵 팔기 70 · 굽기 30 · 밀 200 · 심기 50 · 똥 2, 나머지 그대로). points · weight 그대로."
+  ],
+  "rows": [
+    {
+      "id": "m_sell",
+      "kind": "sell",
+      "param": null,
+      "count": 70,
+      "points": 20,
+      "weight": 3,
+      "area": "bakery",
+      "needs": null,
+      "icon": "Sprites/Blessings/price",
+      "text": "mission_sell"
+    },
+    {
+      "id": "m_bake",
+      "kind": "bake",
+      "param": null,
+      "count": 30,
+      "points": 20,
+      "weight": 2,
+      "area": "bakery",
+      "needs": null,
+      "icon": "Sprites/Shop/Breads/b01",
+      "text": "mission_bake"
+    },
+    {
+      "id": "m_evaluate",
+      "kind": "evaluate",
+      "param": null,
+      "count": 1,
+      "points": 20,
+      "weight": 2,
+      "area": "bakery",
+      "needs": null,
+      "icon": "Sprites/Actions/evaluate",
+      "text": "mission_evaluate"
+    },
+    {
+      "id": "m_wheat",
+      "kind": "harvest",
+      "param": "wheat",
+      "count": 200,
+      "points": 20,
+      "weight": 3,
+      "area": "farm",
+      "needs": null,
+      "icon": "Sprites/Items/wheat",
+      "text": "mission_wheat"
+    },
+    {
+      "id": "m_strawberry",
+      "kind": "harvest",
+      "param": "strawberry",
+      "count": 10,
+      "points": 20,
+      "weight": 2,
+      "area": "farm",
+      "needs": "unlock:strawberry",
+      "icon": "Sprites/Items/strawberry",
+      "text": "mission_strawberry"
+    },
+    {
+      "id": "m_plant",
+      "kind": "plant",
+      "param": null,
+      "count": 50,
+      "points": 20,
+      "weight": 1,
+      "area": "farm",
+      "needs": null,
+      "icon": "Sprites/Actions/plant",
+      "text": "mission_plant"
+    },
+    {
+      "id": "m_bless",
+      "kind": "bless",
+      "param": null,
+      "count": 1,
+      "points": 20,
+      "weight": 2,
+      "area": "plaza",
+      "needs": null,
+      "icon": "Sprites/Actions/statue",
+      "text": "mission_bless"
+    },
+    {
+      "id": "m_draw",
+      "kind": "draw",
+      "param": null,
+      "count": 1,
+      "points": 20,
+      "weight": 1,
+      "area": "plaza",
+      "needs": null,
+      "icon": "Sprites/Items/gem",
+      "text": "mission_draw"
+    },
+    {
+      "id": "m_catch",
+      "kind": "catch",
+      "param": null,
+      "count": 5,
+      "points": 20,
+      "weight": 3,
+      "area": "fishing",
+      "needs": null,
+      "icon": "Sprites/Items/fish_crucian",
+      "text": "mission_catch"
+    },
+    {
+      "id": "m_serve",
+      "kind": "serve",
+      "param": null,
+      "count": 5,
+      "points": 20,
+      "weight": 2,
+      "area": "restaurant",
+      "needs": null,
+      "icon": "Sprites/Dishes/dish_crucian",
+      "text": "mission_serve"
+    },
+    {
+      "id": "m_clean",
+      "kind": "clean",
+      "param": null,
+      "count": 2,
+      "points": 20,
+      "weight": 2,
+      "area": null,
+      "needs": null,
+      "icon": "Sprites/Actions/clean",
+      "text": "mission_clean"
+    },
+    {
+      "id": "m_wake",
+      "kind": "wake",
+      "param": null,
+      "count": 5,
+      "points": 20,
+      "weight": 2,
+      "area": null,
+      "needs": "hire:",
+      "icon": "Sprites/Actions/wake",
+      "text": "mission_wake"
+    }
+  ]
+}

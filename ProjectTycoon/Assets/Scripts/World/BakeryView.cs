@@ -61,6 +61,9 @@ namespace ZooTycoon.World
         private IDisposable[] m_subscriptions;
 
         // 굴을 팠다(카메라 경계가 넓어진다)
+        // 설계 54: 길잡이 보상 「+N」도 같은 획득 팝업을 쓴다
+        public CoinPopup PopupPrefab => m_popupPrefab;
+
         public event Action Expanded;
 
         private BakeryLayout Layout => m_shop.Layout;

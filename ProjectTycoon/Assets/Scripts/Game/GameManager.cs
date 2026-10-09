@@ -24,6 +24,8 @@ namespace ZooTycoon.Game
         private OfflineReport m_pending;
         // 치트 「저장 지우기」 뒤에는 닫을 때 다시 쓰지 않는다
         private bool m_saveOff;
+        // 설계 54 치트: 오늘의 일 시계를 앞으로 민 만큼(하루 넘기기)
+        private TimeSpan m_clockShift;
 
         public TableSet Tables { get; private set; }
         // 설계 16: 도메인 사건 버스. 게임 상태와 같이 만들고 Core에는 생성자로 넘긴다
@@ -107,6 +109,12 @@ namespace ZooTycoon.Game
             m_saveOff = true;
         }
 
+        // 치트: 오늘의 일 시계를 by만큼 앞으로(다음 틱에 하루가 바뀌었으면 새로 뽑는다)
+        public void ShiftClock(TimeSpan by)
+        {
+            m_clockShift += by;
+        }
+
         // 손님 동선 설계 v0.2: 가게 시뮬은 매 프레임(손님 행동 트리·조이스틱 웜뱃이 멈칫하지 않게). 설계 11: 빵집과 광장을 함께
         private void Update()
         {
@@ -157,7 +165,7 @@ namespace ZooTycoon.Game
             Wombat wombat = new Wombat(Tables, State);
             BakeryArea bakery = new BakeryArea(State, Tables, random, wombat, Bus);
             Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), new FarmArea(Tables, random, wombat, Bus), Bus, new FishingArea(Tables, random, wombat, Bus),
-                new RestaurantArea(State, Tables, random, wombat, Bus));
+                new RestaurantArea(State, Tables, random, wombat, Bus), () => DateTime.Now + m_clockShift);
         }
 
         // 깨진 파일 · 덮다가 실패(표가 바뀌어 맞지 않음)면 새 게임으로 시작하고 파일은 .bad로 남긴다(30초 뒤 덮어써 잃지 않게)

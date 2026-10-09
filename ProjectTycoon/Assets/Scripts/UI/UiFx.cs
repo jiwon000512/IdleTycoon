@@ -65,6 +65,16 @@ namespace ZooTycoon.UI
             body.localScale = Vector3.one;
         }
 
+        // 설계 54: 할 일 알약의 「가기」가 메뉴 버튼을 가리킨다 — 세 번 톡톡
+        public static IEnumerator Point(RectTransform body)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                yield return Pulse(body);
+                yield return new WaitForSecondsRealtime(0.08f);
+            }
+        }
+
         public static IEnumerator Vanish(CanvasGroup group, GameObject hide)
         {
             float from = group.alpha;

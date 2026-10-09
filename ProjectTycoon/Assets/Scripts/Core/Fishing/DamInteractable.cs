@@ -32,5 +32,10 @@ namespace ZooTycoon.Core
             float bank = Fishing.Layout.BankY;
             return new NavRect(Position.X - k_HalfWidth, Position.Y, Position.X + k_HalfWidth, bank).DistanceTo(p);
         }
+
+        public override Vector2? GuidePoint(Vector2 from)
+        {
+            return new Vector2(Position.X, Fishing.Layout.BankY + 0.2f);
+        }
     }
 }

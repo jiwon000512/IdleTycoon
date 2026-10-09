@@ -16,5 +16,14 @@ namespace ZooTycoon.Tests
         {
             Assert.That(BigNumberFormatter.Format(value), Is.EqualTo(expected));
         }
+
+        [TestCase(0d, "0:00")]
+        [TestCase(251.2d, "4:12")]
+        [TestCase(3599d, "59:59")]
+        [TestCase(16244d, "4:30:44")]
+        public void Clock_OverAnHour_ShowsHours(double seconds, string expected)
+        {
+            Assert.That(BigNumberFormatter.Clock(seconds), Is.EqualTo(expected));
+        }
     }
 }

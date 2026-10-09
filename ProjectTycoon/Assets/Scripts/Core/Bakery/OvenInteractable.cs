@@ -50,6 +50,7 @@ namespace ZooTycoon.Core
             LastBread = bread;
             Remaining = bread.BakeSeconds;
             OnChanged();
+            Area.Bus.Publish(new Events.BakeStarted(this, bread));
             return true;
         }
 

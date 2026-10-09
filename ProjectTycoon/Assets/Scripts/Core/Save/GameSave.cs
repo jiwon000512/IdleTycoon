@@ -25,6 +25,16 @@ namespace ZooTycoon.Core
                 RelicSales = state.Relics.Sales,
                 Stars = new Dictionary<string, int>(state.Stars.Counts),
                 UntilPayday = mall.Payroll.UntilPayday,
+                QuestId = mall.Quests.Current?.Id,
+                QuestIndex = mall.Quests.Index,
+                QuestProgress = mall.Quests.Progress,
+                Missions = mall.Missions.Day == null ? null : new MissionsSave
+                {
+                    Day = mall.Missions.Day,
+                    List = mall.Missions.Missions.Select(m => new MissionSave { Id = m.Row.Id, Progress = m.Progress, Claimed = m.Claimed }).ToList(),
+                    Points = mall.Missions.Points,
+                    Opened = mall.Missions.Opened.ToList(),
+                },
             };
 
             foreach (WombatArea area in mall.Areas)
@@ -55,6 +65,12 @@ namespace ZooTycoon.Core
             }
 
             mall.Bakery.PlaceWombatHome();
+            mall.Quests.Restore(data.QuestId, data.QuestIndex, data.QuestProgress);
+
+            if (data.Missions != null)
+            {
+                mall.Missions.Restore(data.Missions.Day, data.Missions.List.Select(m => (m.Id, m.Progress, m.Claimed)), data.Missions.Points, data.Missions.Opened);
+            }
         }
 
         private static AreaSave CaptureArea(WombatArea area)
