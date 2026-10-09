@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 밸런스 측정: Unity 밖에서 진짜 Core(엔진 없음)를 돌려 곳마다 속도를 잰다. FastTests처럼 원본은 Assets에 두고 링크만 한다.
+       사용법과 명령은 Program.cs 맨 위 -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+    <UnityProject>$(MSBuildThisFileDirectory)..\..\ProjectTycoon</UnityProject>
+    <GameKit>$(MSBuildThisFileDirectory)..\..\..\UnityGameKit</GameKit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(UnityProject)\Assets\Scripts\Core\**\*.cs" />
+    <Compile Include="$(GameKit)\Runtime\Core\**\*.cs" />
+    <Compile Include="*.cs" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>UnityProject</_Parameter1>
+      <_Parameter2>$(UnityProject)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>
