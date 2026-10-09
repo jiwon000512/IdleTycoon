@@ -92,11 +92,11 @@ namespace ZooTycoon.UI
 
             if (here)
             {
-                m_view.ShowMerchant(m_tables.Text("merchant_pill"), () => merchant.OpenLeft, arrived);
+                m_view.ShowMerchant(true, () => merchant.OpenLeft, arrived);
             }
             else
             {
-                m_view.ShowMerchant(null, () => merchant.UntilNext, false);
+                m_view.ShowMerchant(false, () => merchant.UntilNext, false);
             }
         }
 

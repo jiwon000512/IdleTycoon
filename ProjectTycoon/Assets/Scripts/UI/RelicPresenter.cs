@@ -24,7 +24,6 @@ namespace ZooTycoon.UI
             m_view = view;
             m_state = state;
             m_tables = tables;
-            m_view.OpenClicked += Open;
             m_view.CloseRequested += View_CloseRequested;
             m_view.InfoClicked += View_InfoClicked;
             m_view.SlotClicked += View_SlotClicked;
@@ -35,7 +34,6 @@ namespace ZooTycoon.UI
 
         public void Dispose()
         {
-            m_view.OpenClicked -= Open;
             m_view.CloseRequested -= View_CloseRequested;
             m_view.InfoClicked -= View_InfoClicked;
             m_view.SlotClicked -= View_SlotClicked;
@@ -52,8 +50,6 @@ namespace ZooTycoon.UI
 
         public void SetEditing(bool editing)
         {
-            m_view.SetButtonVisible(!editing);
-
             if (editing)
             {
                 m_view.Close();

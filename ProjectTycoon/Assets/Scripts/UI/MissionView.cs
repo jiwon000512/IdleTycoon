@@ -104,6 +104,8 @@ namespace ZooTycoon.UI
         public event Action<int> ChestClicked;
 
         public bool IsOpen => m_root.activeSelf;
+        // 설계 55: 오른쪽 메뉴 줄의 오늘의 일 단추
+        public RectTransform MenuButton => (RectTransform)m_openButton.transform;
 
         private void Awake()
         {

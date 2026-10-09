@@ -51,6 +51,7 @@ namespace ZooTycoon.UI
         private const int k_UseRowsVisible = 3;
 
         [SerializeField] private Button m_openButton;
+        [SerializeField] private BagTabs m_bagTabs;
         [SerializeField] private GameObject m_root;
         [Tooltip("등장 · 퇴장: 팝업 전체가 나타나고 패널이 올라온다(UiFx)")]
         [SerializeField] private CanvasGroup m_rootGroup;
@@ -88,6 +89,8 @@ namespace ZooTycoon.UI
         private Vector2 m_panelRest;
         private Vector2 m_infoRest;
         private Coroutine m_fx;
+        // 닫히는 0.1초 동안도 켜져 있다. 그사이 다시 열면 닫기를 멈추고 다시 띄운다(가방 탭, 2026-10-09 리뷰)
+        private bool m_closing;
         private Coroutine m_infoFx;
         // 프리팹의 아이콘 상자 한 변(칸 · 정보 · 획득처 줄 · 사용처 줄)
         private float m_slotIconBox;
@@ -102,6 +105,9 @@ namespace ZooTycoon.UI
 
         public bool IsOpen => m_root.activeSelf;
         public bool IsInfoOpen => m_info.activeSelf;
+        // 설계 55: 여는 단추 = 가방 단추(오른쪽 메뉴 줄) · 머리의 가방 탭
+        public RectTransform MenuButton => (RectTransform)m_openButton.transform;
+        public BagTabs BagTabs => m_bagTabs;
 
         private void Awake()
         {
@@ -159,11 +165,12 @@ namespace ZooTycoon.UI
 
         public void Open()
         {
-            if (m_root.activeSelf)
+            if (m_root.activeSelf && !m_closing)
             {
                 return;
             }
 
+            m_closing = false;
             m_info.SetActive(false);
             m_root.SetActive(true);
             Run(ref m_fx, UiFx.Appear(m_rootGroup, m_panel, m_panelRest, 0f));
@@ -172,11 +179,12 @@ namespace ZooTycoon.UI
 
         public void Close()
         {
-            if (!m_root.activeSelf)
+            if (!m_root.activeSelf || m_closing)
             {
                 return;
             }
 
+            m_closing = true;
             Run(ref m_fx, UiFx.Vanish(m_rootGroup, m_root));
             SoundManager.Instance.Play(SoundTable.k_UiClose);
         }

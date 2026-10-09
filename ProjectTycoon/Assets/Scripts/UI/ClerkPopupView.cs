@@ -158,6 +158,9 @@ namespace ZooTycoon.UI
 
         public bool IsVisible => m_open;
 
+        // 설계 55: 오른쪽 메뉴 줄의 점원 단추
+        public RectTransform MenuButton => (RectTransform)m_openButton.transform;
+
         private void Awake()
         {
             m_openButton.onClick.AddListener(() => OpenClicked?.Invoke());

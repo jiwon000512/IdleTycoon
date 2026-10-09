@@ -14,7 +14,8 @@ namespace ZooTycoon.UI
     // 끼운 유물 칸 셋(아이콘 · 별 · 효과) + 모은 유물 격자(못 모은 칸은 그림자) + 고른 유물 정보 줄(끼우기/빼기) + 안내. 규칙은 Core Relics · RelicPresenter
     public sealed class RelicView : UIView
     {
-        [SerializeField] private Button m_openButton;
+        [Tooltip("설계 55: 가방 탭(여는 단추는 창고 화면의 가방 단추 하나)")]
+        [SerializeField] private BagTabs m_bagTabs;
         [SerializeField] private GameObject m_root;
         [SerializeField] private CanvasGroup m_rootGroup;
         [SerializeField] private RectTransform m_panel;
@@ -40,19 +41,20 @@ namespace ZooTycoon.UI
 
         private Vector2 m_panelRest;
         private Coroutine m_fx;
+        // 닫히는 0.1초 동안도 켜져 있다. 그사이 다시 열면 닫기를 멈추고 다시 띄운다(가방 탭, 2026-10-09 리뷰)
+        private bool m_closing;
         private Color m_effectColor;
 
-        public event Action OpenClicked;
         public event Action CloseRequested;
         public event Action InfoClicked;
         public event Action<int> SlotClicked;
         public event Action<int> CellClicked;
 
         public bool IsOpen => m_root.activeSelf;
+        public BagTabs BagTabs => m_bagTabs;
 
         private void Awake()
         {
-            m_openButton.onClick.AddListener(() => OpenClicked?.Invoke());
             m_dim.onClick.AddListener(() => CloseRequested?.Invoke());
             m_closeButton.onClick.AddListener(() => CloseRequested?.Invoke());
             m_infoButton.onClick.AddListener(() => InfoClicked?.Invoke());
@@ -61,17 +63,6 @@ namespace ZooTycoon.UI
             m_panelRest = m_panel.anchoredPosition;
             m_effectColor = m_slots[0].Effect.color;
             m_root.SetActive(false);
-        }
-
-        // 설계 54: 할 일 알약의 「가기」가 이 메뉴 버튼을 가리킨다(세 번 톡톡)
-        public void PointButton()
-        {
-            StartCoroutine(UiFx.Point((RectTransform)m_openButton.transform));
-        }
-
-        public void SetButtonVisible(bool visible)
-        {
-            m_openButton.gameObject.SetActive(visible);
         }
 
         public void SetLabels(string title, string slots, string collection)
@@ -83,11 +74,12 @@ namespace ZooTycoon.UI
 
         public void Open()
         {
-            if (m_root.activeSelf)
+            if (m_root.activeSelf && !m_closing)
             {
                 return;
             }
 
+            m_closing = false;
             m_root.SetActive(true);
             Run(UiFx.Appear(m_rootGroup, m_panel, m_panelRest, 0f));
             SoundManager.Instance.Play(SoundTable.k_UiOpen);
@@ -95,10 +87,12 @@ namespace ZooTycoon.UI
 
         public void Close()
         {
-            if (!m_root.activeSelf)
+            if (!m_root.activeSelf || m_closing)
             {
                 return;
             }
+
+            m_closing = true;
 
             Run(UiFx.Vanish(m_rootGroup, m_root));
             SoundManager.Instance.Play(SoundTable.k_UiClose);

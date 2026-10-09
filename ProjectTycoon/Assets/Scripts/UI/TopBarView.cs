@@ -45,11 +45,11 @@ namespace ZooTycoon.UI
         [SerializeField] private Image m_blessingIcon;
         [SerializeField] private TMP_Text m_blessingText;
         [SerializeField] private TMP_Text m_blessingTime;
-        [Tooltip("설계 31 · 32 행상 알약(축복 알약 아래)")]
+        [Tooltip("설계 55 행상(오른쪽 메뉴 줄): 얼굴 단추 · 아래 남은 시간 · 와 있으면 「!」. 누르지 않는다(2026-10-09 사용자)")]
         [SerializeField] private CanvasGroup m_merchant;
         [SerializeField] private Image m_merchantIcon;
-        [SerializeField] private TMP_Text m_merchantText;
         [SerializeField] private TMP_Text m_merchantTime;
+        [SerializeField] private GameObject m_merchantBadge;
         [Tooltip("설계 49 물때 알약(행상 알약 아래): 물고기 아이콘 · 「물때」 · 「7/10」")]
         [SerializeField] private CanvasGroup m_wave;
         [SerializeField] private TMP_Text m_waveText;
@@ -100,6 +100,8 @@ namespace ZooTycoon.UI
         private bool m_questDone;
 
         public bool SpentVisible => m_spentLeft > 0f;
+        // 설계 55: 오른쪽 메뉴 줄의 행상 칸
+        public RectTransform MerchantRail => (RectTransform)m_merchant.transform;
 
         // 설계 54: 할 일 알약을 눌렀다
         public event Action QuestClicked;
@@ -152,16 +154,14 @@ namespace ZooTycoon.UI
             SoundManager.Instance.Play(SoundTable.k_BlessingEnd);
         }
 
-        // 설계 31 · 32: remaining = 알약 시간(떠날 때까지 · 다음에 올 때까지). text가 null이면 행상이 없다(회색 얼굴 + 시간만), arrived면 톡 튀며 소리
-        public void ShowMerchant(string text, Func<double> remaining, bool arrived)
+        // 설계 31 · 32 · 55: remaining = 남은 시간(떠날 때까지 · 다음에 올 때까지). 없으면 회색 얼굴, 와 있으면 「!」, arrived면 톡 튀며 소리
+        public void ShowMerchant(bool present, Func<double> remaining, bool arrived)
         {
-            m_merchantText.gameObject.SetActive(text != null);
-            m_merchantText.text = text;
-            m_merchantIcon.color = text == null ? k_AwayFace : Color.white;
+            m_merchantBadge.SetActive(present);
+            m_merchantIcon.color = present ? Color.white : k_AwayFace;
             m_merchantLeft = remaining;
             m_merchantTime.text = BigNumberFormatter.Clock(remaining());
             m_merchant.gameObject.SetActive(true);
-            Stack();
 
             if (arrived)
             {
@@ -302,7 +302,7 @@ namespace ZooTycoon.UI
                 y = Mathf.Min(y, card.anchoredPosition.y - card.rect.height - k_Gap);
             }
 
-            foreach (CanvasGroup pill in new[] { m_blessing, m_merchant, m_wave })
+            foreach (CanvasGroup pill in new[] { m_blessing, m_wave })
             {
                 if (!pill.gameObject.activeSelf)
                 {

@@ -28,7 +28,6 @@ namespace ZooTycoon.UI
             m_view = view;
             m_state = state;
             m_tables = tables;
-            m_view.OpenClicked += View_OpenClicked;
             m_view.CloseRequested += View_CloseRequested;
             m_view.SlotClicked += View_SlotClicked;
             m_view.InfoCloseRequested += View_InfoCloseRequested;
@@ -40,7 +39,6 @@ namespace ZooTycoon.UI
 
         public void Dispose()
         {
-            m_view.OpenClicked -= View_OpenClicked;
             m_view.CloseRequested -= View_CloseRequested;
             m_view.SlotClicked -= View_SlotClicked;
             m_view.InfoCloseRequested -= View_InfoCloseRequested;
@@ -131,7 +129,8 @@ namespace ZooTycoon.UI
             m_view.ShowInfo(item.Icon, item.Name, m_tables.Format("inventory_have", m_state.Count(item.Id)), item.Desc, sources, uses);
         }
 
-        private void View_OpenClicked()
+        // 설계 55: 가방의 재료 탭으로 연다(BagPresenter)
+        public void Open()
         {
             m_shown = null;
             RefreshSlots();
