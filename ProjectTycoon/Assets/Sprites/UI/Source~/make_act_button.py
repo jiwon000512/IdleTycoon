@@ -3,6 +3,7 @@
 # 1 px = 1 UI px(PPU 25). 버튼 44: 조이스틱 받침과 같은 흙 테 + 크림 판. 아이콘 18: 버튼 행동(ActionTable.json manual)만 — 열기·파기·들어가기·나가기(꺼내기는 2026-09-23 auto로 바뀌어 아이콘 삭제).
 # 비활성은 코드 틴트(버튼 × 0.65, 아이콘 40%)라 따로 그리지 않는다. 칠한 뒤 바깥 1칸 진갈색 외곽선.
 # 2026-10-01 사용자: 상호작용 버튼 btn_act는 B 「돌 테」, 오른쪽 메뉴 버튼 · 팝업은 새 조각 btn_menu C 「볼록 단추」(옛 흙 테 + 크림 판은 버림).
+# 2026-10-09 사용자(설계 55 메뉴 줄 104px): btn_menu는 26칸 「둥근 네모」 시안 C로 다시 그림(44칸 볼록 단추를 줄여 쓰면 흐렸다).
 # 사용: make_act_button.py (이 폴더에서) → ../btn_act.png · ../btn_menu.png, Resources/Sprites/Actions/<id>.png → 메뉴 ZooTycoon/Bake/Import UI Sprites → Bake/UI
 import os
 import random
@@ -63,18 +64,28 @@ def button():
 
 
 def menu_button():
-    # 메뉴 버튼(오른쪽 버튼 줄 · 팝업, 2026-10-01 사용자 C 「볼록 단추」): 캐러멜 테가 아래로 두께를 보인다.
-    #   두께 때문에 원을 아래로 내렸던 시안은 맨 아랫줄에 외곽선 자리가 없어(사용자 「아랫쪽 검은 선」) 전체를 1칸 올렸다
-    a = np.zeros((44, 44, 4), np.uint8)
-    paint(a, disc(44, 20.5, 0, 0.5), CARAMEL_DD)
-    paint(a, disc(44, 19.5, 0, -1.5), CARAMEL)
-    paint(a, disc(44, 19.5, 0, -1.5) & ~disc(44, 19.5, 1, -0.5), CARAMEL_L)
-    paint(a, disc(44, 19.5, 0, -1.5) & ~disc(44, 19.5, -1, -2.5), CARAMEL_D)
-    paint(a, disc(44, 15.5, 0, -1.5) & ~disc(44, 14.5, 0, -1.5), CARAMEL_D)
-    b = np.zeros_like(a)
-    face(b, 14.2, 0, -1.5)
-    m = b[..., 3] > 0
-    a[m] = b[m]
+    # 메뉴 버튼(오른쪽 메뉴 줄 · 편집, 2026-10-09 사용자 시안 C 「둥근 네모」): 26칸 · 한 칸 4px = 104px.
+    #   모서리 6칸 둥근 네모 캐러멜 테 + 아래 두께(진한 캐러멜) + 왼쪽 위 밝은 · 오른쪽 아래 어두운 테두리 + 크림 판 20×19칸(아이콘 18칸 = 72px).
+    #   판은 가운데보다 반 칸 위(아래 두께만큼). 버린 시안: A 볼록 단추 작은 판 · B 납작 단추
+    n = 26
+    y, x = np.mgrid[0:n, 0:n] - (n - 1) / 2
+
+    def rbox(hw, hh, r, dx=0, dy=0):
+        # 가운데에서 반폭 hw · 반높이 hh, 모서리 반지름 r인 둥근 네모
+        qx = np.clip(np.abs(x - dx) - (hw - r), 0, None)
+        qy = np.clip(np.abs(y - dy) - (hh - r), 0, None)
+        return qx ** 2 + qy ** 2 <= (r + 0.3) ** 2
+
+    a = np.zeros((n, n, 4), np.uint8)
+    top = lambda dx, dy: rbox(11.9, 11.4, 6, dx, -0.5 + dy)
+    pan = lambda dx, dy: rbox(9.9, 9.4, 4.5, dx, -0.5 + dy)
+    paint(a, rbox(11.9, 11.9, 6, 0, 0.5) & (y > -12.5), CARAMEL_DD)
+    paint(a, top(0, 0), CARAMEL)
+    paint(a, top(0, 0) & ~top(1, 1), CARAMEL_L)
+    paint(a, top(0, 0) & ~top(-1, -1), CARAMEL_D)
+    paint(a, pan(0, 0), LIGHT)
+    paint(a, pan(0, 0) & ~pan(-1, -1), TAN)
+    paint(a, pan(0, 0) & ~pan(1, 1) & (x + y < -6), CREAM)
     return outline(a)
 
 

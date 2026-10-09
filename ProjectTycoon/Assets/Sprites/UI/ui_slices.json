@@ -325,13 +325,13 @@
   "border": null
  },
  "btn_menu": {
-  "w": 44,
-  "h": 44,
+  "w": 26,
+  "h": 26,
   "border": null
  },
  "icon_merchant": {
-  "w": 24,
-  "h": 24,
+  "w": 18,
+  "h": 18,
   "border": null
  },
  "draw_stone": {
@@ -498,5 +498,30 @@
    9,
    30
   ]
+ },
+ "quest_card": {
+  "w": 16,
+  "h": 16,
+  "border": [
+   6,
+   6,
+   6,
+   6
+  ]
+ },
+ "quest_stamp": {
+  "w": 30,
+  "h": 30,
+  "border": null
+ },
+ "icon_bag": {
+  "w": 18,
+  "h": 18,
+  "border": null
+ },
+ "icon_merchant_away": {
+  "w": 18,
+  "h": 18,
+  "border": null
  }
 }

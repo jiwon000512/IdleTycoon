@@ -1,26 +1,47 @@
-# 설계 32 행상 너구리 얼굴 아이콘(2026-10-01 사용자 선택 A 「얼굴만」): 상단 「다음 행상」 알약(48px = 2배) · 유물 팝업 제목(72px = 3배).
-#   24×24px(한 칸 1px, 축복 아이콘과 같은 칸). 색은 너구리 정지 그림(World/Shop/tanuki_front.png)의 것. 도형 + 바깥 1칸 외곽선(창고 아이콘과 같은 방식).
-#   버린 시안: B 얼굴 + 노란 목수건 · C 돌 메달 안 얼굴.
-# 출력 ../icon_merchant.png, 임포트는 ui_slices.json + 메뉴 Import UI Sprites. 실행: Windows Python(Pillow · numpy) make_icon_merchant.py
+# 설계 32 · 55 행상 너구리 얼굴 아이콘. 18×18px(한 칸 1px = UI 4px, 메뉴 줄 단추 안 72px로 다른 아이콘과 같은 칸).
+#   2026-10-01 사용자 선택 A 「얼굴만」(24칸, 버린 시안: B 얼굴 + 노란 목수건 · C 돌 메달 안 얼굴)을 2026-10-09 사용자 선택(설계 55)으로 18칸에 옮김:
+#   24칸 그림을 칸 가운데 표본으로 15×15칸에 줄인 뒤 눈 · 코 · 입 · 귀 속을 좌우 같게 손질, 색은 너구리 정지 그림(World/Shop/tanuki_front.png)의 것 그대로.
+#   없을 때(행상이 오기 전)는 icon_merchant_away: 색을 빼고(밝기만) 크림 쪽으로 30% 밝힌 회색 그림(코드 틴트 0.45는 검은 짐승처럼 보였다).
+# 출력 ../icon_merchant.png · ../icon_merchant_away.png + ui_slices.json 항목. 실행: Windows Python(Pillow · numpy) make_icon_merchant.py → 메뉴 Import UI Sprites
+import json
 import os
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-N = 24
+OUT = os.path.join(HERE, '..')
 INK = (52, 32, 32)
-FUR, FUR_D, FUR_L = (179, 138, 115), (152, 105, 84), (208, 170, 145)
-MASK, EAR_IN = (98, 67, 59), (227, 152, 139)
-CREAM, PINK = (240, 228, 210), (227, 152, 139)
-YEL, YEL_D = (237, 192, 106), (208, 153, 99)
-WHITE = (255, 255, 255)
+# b 짙은 털 · d 털 · e 머리 위 하이라이트 · c 분홍(귀 속 · 볼) · f 눈 탈 · g 눈 빛 · k 눈 · 코 · 입 · h 크림 주둥이
+PAL = {'b': (152, 105, 84), 'd': (179, 138, 115), 'e': (208, 170, 145), 'c': (227, 152, 139),
+       'f': (98, 67, 59), 'g': (255, 255, 255), 'k': INK, 'h': (240, 228, 210)}
+ROWS = [
+    "..bb.......bb..",
+    ".bcbb.....bbcb.",
+    ".bccdddddddccb.",
+    ".bddeedddddddb.",
+    ".ddddddddddddd.",
+    ".ddddddddddddd.",
+    "ddffffdddffffdd",
+    "dffgfffdfffgffd",
+    "dffkffhhhffkffd",
+    "dddfhhkkkhhfddd",
+    ".dcchhhkhhhccd.",
+    ".bbdhhkhkhhdbb.",
+    ".bbbhhhhhhhbbb.",
+    "..bbbbhhhbbbb..",
+    "....bbbbbbb....",
+]
 
 
-def c(col):
-    return col + (255,)
-
-
-def outline(a):
+def face():
+    a = np.zeros((18, 18, 4), np.uint8)
+    for y, row in enumerate(ROWS):
+        for x, ch in enumerate(row):
+            if ch != '.':
+                a[y + 1, x + 1] = PAL[ch] + (255,)
+    # 가운데로(위아래 · 좌우 빈 줄을 고르게) 뒤 바깥 1칸 외곽선
+    ys, xs = np.nonzero(a[..., 3])
+    a = np.roll(a, ((18 - (ys.max() + 1 + ys.min())) // 2, (18 - (xs.max() + 1 + xs.min())) // 2), (0, 1))
     f = a[..., 3] > 0
     g = f.copy()
     g[1:] |= f[:-1]; g[:-1] |= f[1:]; g[:, 1:] |= f[:, :-1]; g[:, :-1] |= f[:, 1:]
@@ -28,31 +49,22 @@ def outline(a):
     return a
 
 
-def face(d, ox=0, oy=0, s=1.0):
-    # 정면 너구리 얼굴: 둥근 머리 · 귀 둘(분홍 속) · 눈 탈 · 크림 주둥이 · 검은 코 · 분홍 볼
-    def r(x0, y0, x1, y1):
-        return [ox + round(x0 * s), oy + round(y0 * s), ox + round(x1 * s), oy + round(y1 * s)]
-    d.ellipse(r(1, 1, 7, 7), fill=c(FUR_D)); d.ellipse(r(13, 1, 19, 7), fill=c(FUR_D))
-    d.ellipse(r(3, 3, 5, 5), fill=c(EAR_IN)); d.ellipse(r(15, 3, 17, 5), fill=c(EAR_IN))
-    d.ellipse(r(0, 3, 20, 19), fill=c(FUR))
-    d.ellipse(r(1, 13, 19, 19), fill=c(FUR_D)); d.ellipse(r(1, 3, 19, 17), fill=c(FUR))
-    d.line([r(5, 5, 7, 5)[0:2], r(5, 5, 7, 5)[2:4]], fill=c(FUR_L))           # 머리 위 하이라이트
-    d.ellipse(r(2, 8, 9, 13), fill=c(MASK)); d.ellipse(r(11, 8, 18, 13), fill=c(MASK))   # 눈 탈
-    d.ellipse(r(6, 11, 14, 18), fill=c(CREAM))                                  # 주둥이
-    d.rectangle(r(5, 10, 5, 11), fill=c(INK)); d.rectangle(r(14, 10, 14, 11), fill=c(INK))   # 눈
-    d.point([tuple(r(5, 10, 5, 10)[0:2]), tuple(r(14, 10, 14, 10)[0:2])], fill=c(WHITE))
-    d.rectangle(r(9, 12, 11, 13), fill=c(INK))                                  # 코
-    d.point([tuple(r(10, 14, 10, 14)[0:2])], fill=c(INK))
-    d.point([tuple(r(9, 15, 9, 15)[0:2]), tuple(r(11, 15, 11, 15)[0:2])], fill=c(INK))   # 입
-    d.rectangle(r(3, 14, 4, 14), fill=c(PINK)); d.rectangle(r(16, 14, 17, 14), fill=c(PINK))  # 볼
-
-
-def plain():
-    im = Image.new('RGBA', (N, N)); d = ImageDraw.Draw(im)
-    face(d, 2, 2)
-    return outline(np.asarray(im).copy())
+def away(a):
+    b = a.copy()
+    body = (b[..., 3] > 0) & ~(b[..., :3] == INK).all(2)
+    lum = b[..., 0] * 0.299 + b[..., 1] * 0.587 + b[..., 2] * 0.114
+    grey = lum * 0.7 + 240 * 0.3
+    for i in range(3):
+        b[..., i] = np.where(body, np.clip(grey, 0, 255), b[..., i])
+    return b.astype(np.uint8)
 
 
 if __name__ == '__main__':
-    Image.fromarray(plain()).save(os.path.join(HERE, '..', 'icon_merchant.png'))
-    print('icon_merchant')
+    a = face()
+    Image.fromarray(a).save(os.path.join(OUT, 'icon_merchant.png'))
+    Image.fromarray(away(a)).save(os.path.join(OUT, 'icon_merchant_away.png'))
+    slices = json.load(open(os.path.join(OUT, 'ui_slices.json'), encoding='utf-8'))
+    slices['icon_merchant'] = {'w': 18, 'h': 18, 'border': None}
+    slices['icon_merchant_away'] = {'w': 18, 'h': 18, 'border': None}
+    json.dump(slices, open(os.path.join(OUT, 'ui_slices.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    print('icon_merchant · icon_merchant_away 18x18')
