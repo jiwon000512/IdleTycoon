@@ -1,0 +1,10 @@
+Use your IMAGE GENERATION tool to paint a brand-new image, do NOT write code, do NOT resample, crop or copy the reference file.
+Pixel-art UI ICONS for a cozy mobile idle game where a wombat runs a bakery in an underground burrow. The top row of the attached sheet shows existing menu icons of the game (a tanuki merchant face, a relic, a storage crate, a backpack), enlarged so that one art pixel = 16 screen pixels: match their big square art pixels exactly, their 1-art-pixel dark brown outline (#342020), their soft warm palette and their single small white highlight.
+Below are three empty grey squares, each exactly 18 x 18 art pixels. Paint one MAILBOX icon in each square (it opens the player's letters from the aunt wombat and the village hall), left to right:
+A: a chubby round-topped red post box (soft brick red #C8584A), a dark mail slot, a white letter peeking out of the slot.
+B: a cream envelope seen from the front with a red heart wax seal, slightly tilted, two tiny motion lines as if it just arrived.
+C: a small wooden mailbox on a short post (warm brown wood), its little red flag raised, a letter corner sticking out of the open lid.
+Each icon fills most of its 18 x 18 square with a 1 art pixel margin, drawn with art pixels exactly as large as the reference pixels (no finer detail), front view slightly from above. 4 to 8 colors per icon, no anti-aliasing, no gradients, no dithering. Pure white background; do NOT draw the grey square borders; no text, no letters of the alphabet.
+Save the image as mail_abc.png in the current working directory and reply with only the path.
+
+참조 -i: raw/mail_template.png(위 메뉴 아이콘 넷 한 칸 16px, 아래 18×18칸 빈 틀 셋). Codex CLI, model_reasoning_effort=low. 2026-10-12 사용자 선택: B(하트 봉투).

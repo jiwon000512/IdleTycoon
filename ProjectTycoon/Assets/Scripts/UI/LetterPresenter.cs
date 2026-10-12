@@ -12,9 +12,9 @@ namespace ZooTycoon.UI
     public sealed class LetterPresenter : IDisposable
     {
         private const float k_OpenDelay = 0.4f;
-        // 도장 그림(Sprites/Letters/<from>)이 없으면 쓰는 임시 그림
+        // 도장 그림 Sprites/Letters/<from>. 점원 편지는 빈 테(stamp_ring) 위에 그 점원 대기 첫 칸
         private const string k_StampDir = "Sprites/Letters/";
-        private const string k_StampFallback = "Sprites/Quests/draw";
+        private const string k_StampRing = "stamp_ring";
 
         private readonly FishingNewsView m_view;
         private readonly TopBarView m_topBar;
@@ -120,12 +120,12 @@ namespace ZooTycoon.UI
                 gifts.Add(m_tables.Format("letter_gift_item", m_tables.Get<ItemTable>(row.Item).Name, row.ItemCount));
             }
 
-            string stamp = UnityEngine.Resources.Load<UnityEngine.Sprite>(k_StampDir + row.From) != null ? k_StampDir + row.From : k_StampFallback;
             m_view.Show(new FishingNewsView.Data
             {
                 Masthead = m_tables.Text("letter_masthead"),
                 Title = clerk != null ? clerk.Name : m_tables.Text("sender_" + row.From),
-                Picture = stamp,
+                Picture = k_StampDir + (clerk != null ? k_StampRing : row.From),
+                Overlay = clerk?.Look.IdleSheet ?? clerk?.Look.Sprite,
                 Line = string.Join("\n", row.Lines.Select(id => clerk != null ? m_tables.Format(id, clerk.Name, m_tables.Text("kind_" + clerk.Thing.Table.Id)) : m_tables.Text(id))),
                 BoxLabel = string.Empty,
                 Rewards = new List<InfoTile.Data>(),

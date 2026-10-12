@@ -23,6 +23,8 @@ namespace ZooTycoon.UI
             public string Title;
             // 대물 그림(Resources 경로)
             public string Picture;
+            // 설계 59 ⓒ: 그림 위에 얹는 시트(점원 편지 = 빈 도장 테 + 점원 대기 첫 칸). 없으면 null
+            public string Overlay;
             public string Line;
             public string BoxLabel;
             public IReadOnlyList<InfoTile.Data> Rewards;
@@ -38,6 +40,7 @@ namespace ZooTycoon.UI
         [SerializeField] private TextMeshProUGUI m_masthead;
         [SerializeField] private TextMeshProUGUI m_title;
         [SerializeField] private Image m_picture;
+        [SerializeField] private Image m_overlay;
         [SerializeField] private TextMeshProUGUI m_line;
         [SerializeField] private TextMeshProUGUI m_boxLabel;
         [SerializeField] private RectTransform m_rewards;
@@ -94,12 +97,23 @@ namespace ZooTycoon.UI
             m_title.text = page.Title;
             m_picture.sprite = Resources.Load<Sprite>(page.Picture);
             m_picture.rectTransform.sizeDelta = m_picture.sprite.rect.size * k_PictureScale;
+            Sprite overlay = page.Overlay == null ? null : FirstFrame(page.Overlay);
+            m_overlay.gameObject.SetActive(overlay != null);
+            m_overlay.sprite = overlay;
+            m_overlay.rectTransform.sizeDelta = overlay == null ? Vector2.zero : overlay.rect.size * k_PictureScale;
             m_line.text = page.Line;
             m_boxLabel.text = page.BoxLabel;
             InfoTile.Fill(m_rewards, page.Rewards, Array.Empty<InfoTile.IconRef>());
             m_extra.text = page.Extra ?? string.Empty;
             m_extra.gameObject.SetActive(!string.IsNullOrEmpty(page.Extra));
             m_buttonLabel.text = page.Button;
+        }
+
+        // 시트의 첫 칸(슬라이스 이름 <시트>_0). 시트가 아니면 그 그림 한 장
+        private static Sprite FirstFrame(string path)
+        {
+            Sprite[] frames = Resources.LoadAll<Sprite>(path);
+            return Array.Find(frames, frame => frame.name.EndsWith("_0")) ?? frames[0];
         }
 
         private IEnumerator OpenAfter(float delay)

@@ -563,5 +563,10 @@
   "w": 14,
   "h": 14,
   "border": null
+ },
+ "icon_mail": {
+  "w": 23,
+  "h": 21,
+  "border": null
  }
 }
