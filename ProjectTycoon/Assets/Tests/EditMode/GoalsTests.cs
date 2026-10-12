@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using GameKit.Tables;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using ZooTycoon.Core;
@@ -147,6 +148,26 @@ namespace ZooTycoon.Tests
 
             Assert.That(mall.Guide.Walking, Is.False, "도착");
             Assert.That(game.Bakery.Target, Is.SameAs(game.Bakery.Ovens[0]));
+        }
+
+        // 2026-10-12 사용자: 「가기」는 점원 없는 사물 먼저(가까운 점원 계산대로 데려가 계산을 못 하던 것)
+        [Test]
+        public void Guide_PrefersThingWithoutClerk()
+        {
+            TableSet tables = TestTables.Load();
+            TestTables.LiftStarCaps(tables);
+            TestGame game = new TestGame(tables);
+            JumpTo(game, "q03");
+            BakeryArea shop = game.Bakery;
+            game.State.AddCoins(100000d);
+            Assert.That(shop.TryBuy(CounterInteractable.k_Id, new Vector2(2.3f, -5.6f)), Is.True);
+            Candidate candidate = shop.Candidates[0];
+            Assert.That(shop.TryHire(candidate, shop.Counter, shop.WageFor(candidate, shop.Counter)), Is.True);
+            Assert.That(shop.Counter.DistanceTo(game.Mall.Wombat.Mover.Position), Is.LessThan(shop.Counters[1].DistanceTo(game.Mall.Wombat.Mover.Position)));
+
+            Assert.That(game.Mall.Quests.Go(), Is.True);
+
+            Assert.That(game.Mall.Guide.Pointed, Is.SameAs(shop.Counters[1]));
         }
 
         // 2026-10-09 리뷰: 「횟집 열기」는 광장의 닫힌 횟집 문 앞까지 걸어간다(전에는 설 점이 없어 광장 입구에서 멈췄다)

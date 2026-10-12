@@ -54,7 +54,8 @@ namespace ZooTycoon.Core
         // 웜뱃이 자리에 붙어 있다
         public bool WombatAtSpot => Vector2.Distance(Area.Wombat.Mover.Position, WorkerSpot) <= k_AtSpot;
 
-        // 줄 머리가 머리 자리에 선 뒤에만 계산이 흐른다. 점원(설계 21)이 있으면 점원이 자리에 붙어 일할 때, 없으면 웜뱃이 자리에 붙어 있을 때
+        // 줄 머리가 머리 자리에 선 뒤에만 계산이 흐른다. 점원(설계 21)이 자리에 붙어 일하면 점원이,
+        // 아니면(점원 없음 · 딴짓 · 외출) 웜뱃이 자리에 붙어 있을 때(2026-10-12 사용자: 「가기」로 왔는데 점원이 있어 계산을 못 했다)
         public override void Tick(double dt)
         {
             if (!HeadWaiting || !m_serveAuto)
@@ -64,14 +65,7 @@ namespace ZooTycoon.Core
 
             Clerk clerk = Bakery.ClerkOf(this);
 
-            if (clerk != null)
-            {
-                if (!clerk.Working)
-                {
-                    return;
-                }
-            }
-            else
+            if (clerk == null || !clerk.Working)
             {
                 if (!Area.IsInRange(this))
                 {

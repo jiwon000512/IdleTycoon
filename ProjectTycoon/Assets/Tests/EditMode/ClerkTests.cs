@@ -333,6 +333,27 @@ namespace ZooTycoon.Tests
             Assert.That(clerk.Working, Is.False);
         }
 
+        // 2026-10-12 사용자: 점원이 딴짓하는 동안 웜뱃이 계산대 자리에 서면 웜뱃이 계산한다(「가기」로 왔는데 점원이 있어 계산을 못 하던 것)
+        [Test]
+        public void Wombat_CoversStaffedCounter_WhileClerkIdles()
+        {
+            BakeryArea shop = Create(new ConstantRandom(0d));
+            ClerkConfigTable config = m_tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
+            config.IdleSecondsMin = 100d;
+            config.IdleSecondsMax = 100d;
+            shop.Shelves[0].Put(Bread("b01"), 4);
+            Clerk clerk = Hire(shop, shop.Counter);
+            shop.Admit(m_customer);
+            Assert.That(RunUntil(shop, () => clerk.Idling), Is.True);
+            int served = shop.Counter.Served;
+
+            shop.Wombat.Mover.Place(shop.Counter.WorkerSpot);
+            shop.Admit(m_customer);
+
+            Assert.That(RunUntil(shop, () => shop.Counter.Served > served), Is.True);
+            Assert.That(clerk.Idling, Is.True, "점원은 아직 딴짓");
+        }
+
         // 설계 31 알람 시계: 딴짓이 길어도(100초) 시계 값(초)을 넘기면 저절로 끝난다
         [Test]
         public void AlarmClock_CapsIdleSeconds()

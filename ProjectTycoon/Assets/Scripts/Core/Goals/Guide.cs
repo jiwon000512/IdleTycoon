@@ -133,11 +133,12 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 그 곳의 그 종류 중 걸음에 알맞은 것(빈 밭 등), 웜뱃에서 가까운 것
+        // 그 곳의 그 종류 중 걸음에 알맞은 것(빈 밭 등), 점원 없는 것 먼저(웜뱃이 일할 수 있게, 2026-10-12 사용자), 웜뱃에서 가까운 것
         private Interactable Pick(WombatArea area)
         {
             return area.Things.Where(thing => thing.Table.Id == m_thing && GoalCounter.Suits(m_kind, m_param, thing))
-                .OrderBy(thing => thing.DistanceTo(m_mall.Wombat.Mover.Position)).FirstOrDefault();
+                .OrderBy(thing => area.ClerkOf(thing) != null)
+                .ThenBy(thing => thing.DistanceTo(m_mall.Wombat.Mover.Position)).FirstOrDefault();
         }
 
         // 지금 곳에서 to까지 지나갈 통로들(같은 곳이면 빈 목록). 열린 문으로 못 가면 닫힌 문까지 넣어 찾고, 못 가면 null
