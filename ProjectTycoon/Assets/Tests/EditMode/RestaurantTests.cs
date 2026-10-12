@@ -81,7 +81,7 @@ namespace ZooTycoon.Tests
             return done();
         }
 
-        private ShopGateInteractable Gate => m_plaza.Gates.Single();
+        private ShopGateInteractable Gate => m_plaza.Gates.Single(gate => gate.Shop == (IGated)m_restaurant);
 
         private PassageInteractable Door => m_plaza.Things.OfType<PassageInteractable>().Single(p => p.To == RestaurantArea.k_Id);
 
@@ -144,7 +144,7 @@ namespace ZooTycoon.Tests
             Assert.That(m_restaurant.IsOpen, Is.True);
             Assert.That(opened, Is.EqualTo(1));
             Assert.That(coins - m_state.Coins, Is.EqualTo(m_restaurant.Config.OpenCost).Within(1e-6), "문 값(평가 보상은 반짝돌이라 코인과 따로)");
-            Assert.That(m_plaza.Gates, Is.Empty, "열리면 문 앞 표식이 빠진다");
+            Assert.That(m_plaza.Gates.Any(gate => gate.Shop == (IGated)m_restaurant), Is.False, "열리면 문 앞 표식이 빠진다");
             Assert.That(Door.IsOpen, Is.True);
         }
 
@@ -276,7 +276,7 @@ namespace ZooTycoon.Tests
             Run(k_Dt);
 
             Assert.That(m_restaurant.IsOpen, Is.True);
-            Assert.That(m_plaza.Gates, Is.Empty, "열린 저장이면 문 앞 표식이 없다");
+            Assert.That(m_plaza.Gates.Any(gate => gate.Shop == (IGated)m_restaurant), Is.False, "열린 저장이면 문 앞 표식이 없다");
             Assert.That(m_restaurant.Dishes.ToDictionary(dish => dish.Id, Tank.CountOf), Is.EqualTo(fish));
         }
 

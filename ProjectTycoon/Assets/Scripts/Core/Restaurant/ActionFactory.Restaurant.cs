@@ -125,14 +125,14 @@ namespace ZooTycoon.Core
 
             public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
             {
-                RestaurantArea shop = ((ShopGateInteractable)target).Shop;
-                double cost = shop.Config.OpenCost;
-                return new[] { new SheetOption(null, shop.StarLocked ? SheetOptionState.Locked : SheetOption.Afford(worker, cost), cost) };
+                IGated shop = ((ShopGateInteractable)target).Shop;
+                double cost = shop.GateCost;
+                return new[] { new SheetOption(null, shop.GateLocked ? SheetOptionState.Locked : SheetOption.Afford(worker, cost), cost) };
             }
 
             public override bool TryChoose(Worker worker, Interactable target, string option)
             {
-                return ((ShopGateInteractable)target).Shop.TryOpen(worker);
+                return ((ShopGateInteractable)target).Shop.TryOpenGate(worker);
             }
         }
     }

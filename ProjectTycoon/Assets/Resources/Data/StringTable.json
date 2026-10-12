@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 59,
+  "version": 60,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -62,7 +62,8 @@
     "version 56 (2026-10-09, 설계 55 할 일 카드): 카드 자체가 버튼이라 quest_go · quest_claim(「가기」 · 「받기」 칩) 삭제, 안내 중 글 quest_guiding · 다 함 글과 도장 글 quest_done 추가.",
     "version 57 (2026-10-12): 설계 55 할 일 카드 다시 짜기(A3-나): 안내 중 글 quest_guiding 삭제(빛줄기만 남음)",
     "version 58 (2026-10-12): 설계 56 행동 단추 값 표시: 갈기 값 표식 문구 tag_till 삭제(값은 단추에)",
-    "version 59 (2026-10-12): 설계 57 레드닷: 점원 단추 「모자람」 글 clerk_badge_short 삭제(점 안에 수)"
+    "version 59 (2026-10-12): 설계 57 레드닷: 점원 단추 「모자람」 글 clerk_badge_short 삭제(점 안에 수)",
+    "version 60 (2026-10-12): 설계 58 층계 웅덩이 낚시터: quest_q18 · q20 · q21 글 바꿈, quest_q26 · 젖은 벽 시트(sheet_wet_wall_* · row_wet_wall*) · 둑 칸 시트(sheet_bank_*) · fishing_find 추가, row_break_rock_effect · sheet_rock_status · sheet_gate 문구 손질"
   ],
   "rows": [
     {
@@ -1287,7 +1288,7 @@
     },
     {
       "id": "sheet_rock_status",
-      "ko": "뚫으면 새 물가가 열린다"
+      "ko": "뚫으면 위 웅덩이"
     },
     {
       "id": "row_break_rock",
@@ -1295,7 +1296,7 @@
     },
     {
       "id": "row_break_rock_effect",
-      "ko": "댐을 허물면 새 물고기"
+      "ko": "위 웅덩이가 열린다"
     },
     {
       "id": "tag_rock",
@@ -1399,7 +1400,7 @@
     },
     {
       "id": "quest_q18",
-      "ko": "낚시터 가기"
+      "ko": "젖은 벽 파기"
     },
     {
       "id": "quest_q19",
@@ -1407,11 +1408,11 @@
     },
     {
       "id": "quest_q20",
-      "ko": "바위 뚫기"
+      "ko": "댐 허물기"
     },
     {
       "id": "quest_q21",
-      "ko": "댐 허물기"
+      "ko": "바위 뚫기"
     },
     {
       "id": "quest_q22",
@@ -1428,6 +1429,38 @@
     {
       "id": "quest_q25",
       "ko": "회 내기"
+    },
+    {
+      "id": "quest_q26",
+      "ko": "물 넓히기"
+    },
+    {
+      "id": "sheet_wet_wall_title",
+      "ko": "젖은 벽"
+    },
+    {
+      "id": "sheet_wet_wall_status",
+      "ko": "뒤에 물이 있다"
+    },
+    {
+      "id": "row_wet_wall",
+      "ko": "젖은 벽 파기"
+    },
+    {
+      "id": "row_wet_wall_effect",
+      "ko": "굴 속 웅덩이가 열린다"
+    },
+    {
+      "id": "sheet_bank_title",
+      "ko": "물 넓히기"
+    },
+    {
+      "id": "sheet_bank_status",
+      "ko": "물 폭 {0}칸"
+    },
+    {
+      "id": "fishing_find",
+      "ko": "{0} 발견!"
     },
     {
       "id": "mission_sell",

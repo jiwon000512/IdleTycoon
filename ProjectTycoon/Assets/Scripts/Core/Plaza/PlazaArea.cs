@@ -363,21 +363,20 @@ namespace ZooTycoon.Core
             m_shops.Add(shop);
         }
 
-        // 설계 47: 광장 문으로 이어진 새 가게. 닫힌 동안 문 통로는 막히고 문 앞에 여는 표식이 선다
-        internal void AddShop(RestaurantArea shop)
+        // 설계 47 · 설계 58: 광장 문이 닫힌 채 시작하는 곳(횟집 · 낚시터). 닫힌 동안 문 통로는 막히고 문 앞에 여는 사물(gateId 행: shop_gate · wet_wall)이 선다
+        internal void AddGate(IGated shop, string gateId)
         {
-            AddVisited(shop);
             PlazaDoor door = Layout.DoorTo(shop.Id);
 
             foreach (Interactable thing in Placed)
             {
                 if (thing is PassageInteractable passage && passage.To == shop.Id)
                 {
-                    passage.Gate = () => shop.IsOpen;
+                    passage.Gate = () => shop.GateOpen;
                 }
             }
 
-            ShopGateInteractable gate = new ShopGateInteractable(Tables.Get<InteractableTable>(ShopGateInteractable.k_Id), this, door.Floor, shop);
+            ShopGateInteractable gate = new ShopGateInteractable(Tables.Get<InteractableTable>(gateId), this, door.Floor, shop);
             m_gates.Add(gate);
             Placed.Add(gate);
         }
@@ -387,7 +386,7 @@ namespace ZooTycoon.Core
         {
             for (int i = m_gates.Count - 1; i >= 0; i--)
             {
-                if (m_gates[i].Shop.IsOpen)
+                if (m_gates[i].Shop.GateOpen)
                 {
                     Placed.Remove(m_gates[i]);
                     m_gates.RemoveAt(i);

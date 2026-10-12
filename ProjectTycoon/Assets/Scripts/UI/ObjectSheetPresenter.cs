@@ -116,6 +116,10 @@ namespace ZooTycoon.UI
                 case CounterInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", ((CounterInteractable)m_target).Queue.Count));
                     break;
+                // 설계 58: 낚시터 둑 칸은 물 넓히기(지금 물 폭)
+                case DigInteractable dig when dig.Table.Id == DigInteractable.k_Bank:
+                    m_view.SetHeader(m_tables.Text("sheet_bank_title"), m_tables.Format("sheet_bank_status", dig.Grid.Cells.Count));
+                    break;
                 case DigInteractable dig:
                     m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", dig.Grid.Cells.Count));
                     break;
@@ -129,6 +133,9 @@ namespace ZooTycoon.UI
                     break;
                 case CuttingBoardInteractable board:
                     m_view.SetHeader(m_tables.Text("sheet_board_title"), m_tables.Format("sheet_board_status", board.Orders.Count));
+                    break;
+                case ShopGateInteractable gate when gate.Table.Id == ShopGateInteractable.k_WetWall:
+                    m_view.SetHeader(m_tables.Text("sheet_wet_wall_title"), m_tables.Text("sheet_wet_wall_status"));
                     break;
                 case ShopGateInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_gate_title"), m_tables.Text("sheet_gate_status"));
@@ -291,14 +298,16 @@ namespace ZooTycoon.UI
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
-                // 설계 47: 빵집 별이 모자라면 값 자리에 「★n 필요」
+                // 설계 47: 빵집 별이 모자라면 값 자리에 「★n 필요」. 설계 58: 젖은 벽은 같은 줄에 다른 글
                 case ActionTable.k_OpenShop:
+                    ShopGateInteractable gate = (ShopGateInteractable)m_target;
+                    string row = gate.Table.Id == ShopGateInteractable.k_WetWall ? "row_wet_wall" : "row_open_shop";
                     return new SheetRow
                     {
-                        Name = m_tables.Text("row_open_shop"),
-                        Effect = m_tables.Text("row_open_shop_effect"),
+                        Name = m_tables.Text(row),
+                        Effect = m_tables.Text(row + "_effect"),
                         Cost = option.State == SheetOptionState.Locked
-                            ? m_tables.Format("row_star_needed", ((ShopGateInteractable)m_target).Shop.Config.OpenStar)
+                            ? m_tables.Format("row_star_needed", gate.Shop.GateStar)
                             : BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };

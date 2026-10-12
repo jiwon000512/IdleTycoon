@@ -15,6 +15,8 @@ namespace ZooTycoon.Core
 
         // 바닥선에서 이만큼 위(벽 쪽)로 올라가야 통로 앞 띠. 바닥선~벽은 약 0.48
         private const float k_Enter = 0.25f;
+        // 띠 두께(설계 58: 구멍 위에 다른 층이 열려도 그 바닥은 띠 밖)
+        private const float k_Band = 1.2f;
 
         private readonly Vector2 m_floor;
         private readonly bool m_down;
@@ -35,7 +37,8 @@ namespace ZooTycoon.Core
         // 띠 안이면 가로 거리, 띠 밖이면 닿지 않는다
         public override float DistanceTo(Vector2 p)
         {
-            bool inBand = m_down ? p.Y <= m_floor.Y - k_Enter : p.Y >= m_floor.Y + k_Enter;
+            float rise = m_down ? m_floor.Y - p.Y : p.Y - m_floor.Y;
+            bool inBand = rise >= k_Enter && rise <= k_Enter + k_Band;
             return inBand ? Math.Abs(p.X - m_floor.X) : float.MaxValue;
         }
 

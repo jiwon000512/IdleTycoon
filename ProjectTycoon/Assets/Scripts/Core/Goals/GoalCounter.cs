@@ -95,9 +95,10 @@ namespace ZooTycoon.Core
                 case k_Open:
                     FishingStretchTable rock = Stretch(param, mall);
                     return (rock != null ? mall.Fishing.Opened.Contains(rock.Index) : IsAreaOpen(param, mall)) ? 1 : 0;
+                // 설계 58: 댐을 허물면 그 층이 열린다(물이 따로 차지 않는다)
                 case k_Fill:
                     FishingStretchTable dam = Stretch(param, mall);
-                    return dam != null && mall.Fishing.Flooded.Contains(dam.Index) ? 1 : 0;
+                    return dam != null && mall.Fishing.Opened.Contains(dam.Index) ? 1 : 0;
                 case k_Seat:
                     return mall.Fishing.Seats.Count(seat => seat.Placed);
                 default:
@@ -105,7 +106,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 웜뱃이 그 곳에 들어갈 수 있나(농장 아래층 · 횟집은 열어야)
+        // 웜뱃이 그 곳에 들어갈 수 있나(농장 아래층 · 횟집 · 낚시터는 열어야)
         public static bool IsAreaOpen(string area, Mall mall)
         {
             switch (mall.Areas.FirstOrDefault(a => a.Id == area))
@@ -114,8 +115,8 @@ namespace ZooTycoon.Core
                     return false;
                 case FarmArea farm:
                     return farm.IsOpen;
-                case RestaurantArea restaurant:
-                    return restaurant.IsOpen;
+                case IGated gated:
+                    return gated.GateOpen;
                 default:
                     return true;
             }

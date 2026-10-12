@@ -1,6 +1,6 @@
 {
   "table": "QuestTable",
-  "version": 2,
+  "version": 3,
   "notes": [
     "설계 54 퀘스트 사슬 한 걸음. 행 순서 = 사슬 순서, chapter = 장(1 빵집 · 2 농장 · 3 가게 키우기 · 4 광장 · 5 새 맛 · 6 낚시 · 7 횟집, 오늘의 일 상자 단계).",
     "kind · param · count: 무엇을 세나(GoalCounter. 사건 종류 bake · stock · sell · till · plant · harvest · dig · clean · wake · bless · draw · evaluate · catch · serve는 걸음이 시작된 뒤부터, 상태 종류 visit · place · hire · unlock · star · open · fill · seat은 지금 상태). param이 null이면 아무것이나.",
@@ -9,7 +9,8 @@
     "version 1 (2026-10-08, 설계 54): 기획 1회차 초안 25걸음(농장 장은 새 게임 밭이 이미 갈려 있어 심기 · 거두기 → 굴 파기 → 갈기 순서, 빵집 굴 넓히기는 뺐다). coins는 임시값(장마다 50 · 100 · 150 · 300 · 500 · 1,000 · 2,000) — 밸런스방 시안을 고르면 바뀐다.",
     "2026-10-09 사용자(밸런스방 권장): 「빵집 별 5」(q23)를 광장 장 끝(새 맛 앞)으로, 「좌대 놓기」(q22)를 「바위 뚫기」 앞으로 옮겼다 — 새 맛을 연 뒤에는 평가에 크루아상 · 케이크가 나와 웜뱃 혼자로는 별 5를 못 땄다. id는 그대로 두고 행 순서만 바꿨다.",
     "2026-10-09 밸런스방 시안 B 보통(사용자 선택): coins = 그 장 접속 1분 순수입(1~5장 80 · 6장 190 · 7장 190) × 2분, 튜토리얼 열 걸음(q01~q10)은 20(처음에 코인이 많으면 점원을 일찍 들여 첫 행상을 놓침), 1,000 이상 값 바로 앞 걸음(q15 · q16 · q22 · q21)은 그 값의 20%. 덤: q11 반짝돌 2(평가 통과 3과 합쳐 첫 행상에 뽑기) · q24 붕어 5(첫 회를 바로). 측정 Tools/Balance quest 100판(d54.py · d54gen.py).",
-    "version 2 (2026-10-12): 할 일 카드 그림을 행동 그림 「물건 하나」로(아트방, 설계 55 3단계): icon을 Sprites/Quests/<행동> 16장으로"
+    "version 2 (2026-10-12): 할 일 카드 그림을 행동 그림 「물건 하나」로(아트방, 설계 55 3단계): icon을 Sprites/Quests/<행동> 16장으로",
+    "version 3 (2026-10-12): 설계 58 층계 웅덩이 낚시터: q18 낚시터 가기 → 젖은 벽 파기(open fishing, 광장 wet_wall), 새 q26 물 넓히기(dig, 낚시터 bank) q19 뒤에, q20 댐 허물기(fill down1) · q21 바위 뚫기(open up1) 순서로."
   ],
   "rows": [
     {
@@ -285,13 +286,13 @@
     {
       "id": "q18",
       "chapter": 6,
-      "kind": "visit",
+      "kind": "open",
       "param": "fishing",
       "count": 1,
-      "icon": "Sprites/Quests/go",
+      "icon": "Sprites/Quests/unlock",
       "text": "quest_q18",
-      "area": "fishing",
-      "thing": null,
+      "area": "plaza",
+      "thing": "wet_wall",
       "menu": null,
       "coins": 400,
       "item": null,
@@ -313,6 +314,21 @@
       "itemCount": 0
     },
     {
+      "id": "q26",
+      "chapter": 6,
+      "kind": "dig",
+      "param": null,
+      "count": 1,
+      "icon": "Sprites/Quests/dig",
+      "text": "quest_q26",
+      "area": "fishing",
+      "thing": "bank",
+      "menu": null,
+      "coins": 300,
+      "item": null,
+      "itemCount": 0
+    },
+    {
       "id": "q22",
       "chapter": 6,
       "kind": "seat",
@@ -330,13 +346,13 @@
     {
       "id": "q20",
       "chapter": 6,
-      "kind": "open",
+      "kind": "fill",
       "param": "down1",
       "count": 1,
       "icon": "Sprites/Quests/dig",
       "text": "quest_q20",
       "area": "fishing",
-      "thing": "rock",
+      "thing": "dam",
       "menu": null,
       "coins": 400,
       "item": null,
@@ -345,13 +361,13 @@
     {
       "id": "q21",
       "chapter": 6,
-      "kind": "fill",
-      "param": "down1",
+      "kind": "open",
+      "param": "up1",
       "count": 1,
       "icon": "Sprites/Quests/dig",
       "text": "quest_q21",
       "area": "fishing",
-      "thing": "dam",
+      "thing": "rock",
       "menu": null,
       "coins": 2000,
       "item": null,

@@ -956,9 +956,9 @@ namespace ZooTycoon.Data
 
             foreach (FishingConfigTable config in tables.GetAll<FishingConfigTable>())
             {
-                if (config.StretchCols < 2 || config.StretchCols % 2 != 0 || config.Rows < 2 || config.Water == null || config.Water.Y0 >= config.Water.Y1)
+                if (config.WaterRows < 1 || config.WallCost < 0d)
                 {
-                    errors.Add($"FishingConfigTable '{config.Id}': stretchCols는 2 이상 짝수(구간 가운데가 칸 경계), rows는 2 이상, water는 y0 < y1이어야 한다.");
+                    errors.Add($"FishingConfigTable '{config.Id}': waterRows ≥ 1, wallCost ≥ 0이어야 한다.");
                 }
 
                 if (config.BiteWaitMin <= 0d || config.BiteWaitMax < config.BiteWaitMin || config.NibbleMax < 0 || config.BiteWindow <= 0d)
@@ -998,9 +998,15 @@ namespace ZooTycoon.Data
 
             foreach (FishingStretchTable stretch in tables.GetAll<FishingStretchTable>())
             {
-                if (stretch.Index != 0 && (stretch.RockCost < 0d || stretch.DamPieces < 1))
+                // 설계 58: 위 층(음수)은 바위만, 아래 층(양수)은 댐만
+                if (stretch.Index < 0 && (stretch.RockCost <= 0d || stretch.DamPieces != 0) || stretch.Index > 0 && (stretch.DamPieces < 1 || stretch.RockCost != 0d))
                 {
-                    errors.Add($"FishingStretchTable '{stretch.Id}': 0이 아닌 구간은 rockCost ≥ 0, damPieces ≥ 1이어야 한다.");
+                    errors.Add($"FishingStretchTable '{stretch.Id}': 위 층은 rockCost > 0 · damPieces 0, 아래 층은 damPieces ≥ 1 · rockCost 0이어야 한다.");
+                }
+
+                if (stretch.StartCols < 1 || stretch.MaxCols < stretch.StartCols || stretch.CellCost < 0d || stretch.CellCostGrowth < 1d)
+                {
+                    errors.Add($"FishingStretchTable '{stretch.Id}': 1 ≤ startCols ≤ maxCols, cellCost ≥ 0, cellCostGrowth ≥ 1이어야 한다.");
                 }
 
                 if (stretch.Fish == null || !stretch.Fish.Any(fish => fish.Chance > 0d) || stretch.Fish.Any(fish => !fishIds.Contains(fish.Id ?? "") || fish.Chance < 0d))
@@ -1012,6 +1018,25 @@ namespace ZooTycoon.Data
                 {
                     errors.Add($"FishingStretchTable '{stretch.Id}': seats의 cost · pay는 0 이상이어야 한다.");
                 }
+            }
+
+            HashSet<string> stretchIds = Ids<FishingStretchTable>(tables);
+            double chances = 0d;
+
+            foreach (FishingFindTable find in tables.GetAll<FishingFindTable>())
+            {
+                chances += find.Chance;
+
+                if (find.Chance < 0d || find.Item != null && (!items.Contains(find.Item) || find.Count < 1) || find.Item == null && find.CoinShare < 0d
+                    || find.Stretch != null && !stretchIds.Contains(find.Stretch))
+                {
+                    errors.Add($"FishingFindTable '{find.Id}': chance ≥ 0, item은 ItemTable에 있고 count ≥ 1(없으면 coinShare ≥ 0), stretch는 층 id거나 null이어야 한다.");
+                }
+            }
+
+            if (chances > 1d + 1e-9)
+            {
+                errors.Add("FishingFindTable: chance 합은 1 이하여야 한다.");
             }
 
             foreach (FishTable fish in tables.GetAll<FishTable>())

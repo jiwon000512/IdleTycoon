@@ -25,7 +25,8 @@ namespace ZooTycoon.Core
 
             public override void Do(Worker worker, Interactable target)
             {
-                ((WaterInteractable)target).Fishing.Cast();
+                WaterInteractable water = (WaterInteractable)target;
+                water.Fishing.Cast(water);
             }
         }
 

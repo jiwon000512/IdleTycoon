@@ -59,8 +59,10 @@ namespace ZooTycoon.Game
             // 설계 53 넓히기
             Add("낚시터 넓히기", new[]
             {
-                Opt("바위 뚫기(무료)", () => Mall.Fishing.OpenNextFree() ? "다음 구간 땅이 열렸다" : "뚫을 바위가 없다"),
-                Opt("댐 허물기", () => Mall.Fishing.BreakDamNow() ? "물이 찼다" : "허물 댐이 없다"),
+                Opt("젖은 벽 열기(무료)", () => Mall.Fishing.OpenGateFree() ? "낚시터 문이 열렸다" : "이미 열려 있다"),
+                Opt("물 넓히기(무료)", () => Mall.Fishing.WidenFree() ? "물이 한 열 넓어졌다" : "더 넓힐 수 없다"),
+                Opt("바위 뚫기(무료)", () => Mall.Fishing.OpenNextFree() ? "위 층이 열렸다" : "뚫을 바위가 없다"),
+                Opt("댐 허물기", () => Mall.Fishing.BreakDamNow() ? "아래 층이 열렸다" : "허물 댐이 없다"),
                 Opt("좌대 놓기(무료)", () => Mall.Fishing.PlaceSeatFree() ? "좌대를 놓았다" : "놓을 좌대 자리가 없다"),
                 Opt("손님 부르기", CallFishingCustomer),
             });
@@ -226,7 +228,7 @@ namespace ZooTycoon.Game
             }
 
             State.AddCoins(restaurant.Config.OpenCost);
-            ShopGateInteractable gate = Mall.Plaza.Gates.First(g => g.Shop == restaurant);
+            ShopGateInteractable gate = Mall.Plaza.Gates.First(g => g.Shop == (IGated)restaurant);
             Mall.Plaza.TryChoose(ActionTable.k_OpenShop, gate, null);
             return "횟집 열림(빵집 별 " + State.Stars.Count(BakeryArea.k_Id) + "개)";
         }

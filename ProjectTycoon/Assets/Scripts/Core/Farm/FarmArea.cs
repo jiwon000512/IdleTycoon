@@ -77,7 +77,7 @@ namespace ZooTycoon.Core
             m_unlocked = upper != null ? upper.m_unlocked : new List<CropTable> { tables.GetAll<CropTable>()[0] };
             Grid = new BurrowGrid(BurrowGrid.Columns(k_StartCols, Floor.StartRows), Floor.DigBaseCost, Floor.DigCostGrowth,
                 new CellBounds(Floor.FloorCols, Floor.FloorRows), bus);
-            m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells, this);
+            m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells.CellRect, this);
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, upper != null ? upper.Id : PlazaArea.k_Id);
             m_stair = new StairInteractable(Row(StairInteractable.k_Id), this);
             Barn = new BarnInteractable(Row(BarnInteractable.k_Id), this, new Vector2((float)Config.BarnX, (float)Config.BarnY));

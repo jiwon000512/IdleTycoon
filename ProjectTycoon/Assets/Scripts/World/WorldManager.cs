@@ -213,7 +213,7 @@ namespace ZooTycoon.World
                 () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
         }
 
-        // 설계 53: 댐이 무너지면 물이 차오르는 구간을 잠깐 비춘다(배율 그대로, 조이스틱을 움직이면 바로 돌아온다)
+        // 설계 53 → 58: 댐이 무너지면 열린 아래 층 물을 잠깐 비춘다(배율 그대로, 조이스틱을 움직이면 바로 돌아온다)
         private void Bus_DamBroken(Events.DamBroken e)
         {
             if (m_mall.Active != e.Fishing)
@@ -221,7 +221,8 @@ namespace ZooTycoon.World
                 return;
             }
 
-            Vector3 at = m_fishingView.Origin + new Vector3(e.Fishing.Layout.CenterOf(e.Stretch), e.Fishing.Layout.BankY - 2f, 0f);
+            NavRect water = e.Fishing.Layout.WaterOf(e.Stretch);
+            Vector3 at = m_fishingView.Origin + new Vector3((water.XMin + water.XMax) * 0.5f, (water.YMin + water.YMax) * 0.5f, 0f);
             m_camera.Spot(() => at, k_FloodSpotSeconds, () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero, 1f);
         }
 

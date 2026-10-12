@@ -9,7 +9,7 @@ namespace ZooTycoon.Core
     // 설계 47: 횟집. 사물(수조 · 도마 · 탁자 · 나가기 · 파기)을 조립하고 사물 사이(창고 → 수조 → 손님 → 도마 → 웜뱃 손 → 탁자)를 잇는다.
     // 배치 · 파기 · 똥은 빵집과 같은 공용 규칙. 문은 빵집 별 openStar부터 광장 문 앞에서 openCost로 연다(닫힌 동안 손님이 오지 않고 웜뱃도 못 들어간다).
     // 손님 목록 · 서는 자리 · 탁자 자리는 RestaurantArea.Visitors.cs
-    public sealed partial class RestaurantArea : WombatArea, IShop
+    public sealed partial class RestaurantArea : WombatArea, IShop, IGated
     {
         public const string k_Id = "restaurant";
 
@@ -31,6 +31,11 @@ namespace ZooTycoon.Core
         public bool IsOpen { get; private set; }
         // 빵집 별이 모자라 아직 열 수 없다(문 앞 「★n 필요」)
         public bool StarLocked => Wallet.Stars.Count(BakeryArea.k_Id) < Config.OpenStar;
+        // IGated: 광장 문 앞 시트에서 연다
+        public bool GateOpen => IsOpen;
+        public double GateCost => Config.OpenCost;
+        public int GateStar => Config.OpenStar;
+        public bool GateLocked => StarLocked;
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         public override string Id => k_Id;
 
@@ -71,7 +76,7 @@ namespace ZooTycoon.Core
             Grid = new BurrowGrid(BurrowGrid.Columns(2, 4), Config.DigBaseCost, Config.DigCostGrowth, CellBounds.None, bus);
             bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new RestaurantLayout(tables);
-            m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells, this);
+            m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells.CellRect, this);
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
 
             foreach (string id in new[] { TankInteractable.k_Id, CuttingBoardInteractable.k_Id, DiningTableInteractable.k_Id })
@@ -88,7 +93,7 @@ namespace ZooTycoon.Core
         }
 
         // 광장 문 앞 시트: 빵집 별이 닿았으면 값을 치르고 연다
-        internal bool TryOpen(Worker worker)
+        public bool TryOpenGate(Worker worker)
         {
             if (IsOpen || StarLocked || !worker.Wallet.TrySpendCoins(Config.OpenCost))
             {

@@ -13,7 +13,8 @@ namespace ZooTycoon.World
     // 설계 52 강가 낚시 화면: 굴 그림(고정 방) · 강(물결 타일을 사각형으로 코드 그림, 둑 띠는 벽 안쪽 바닥 폭만큼 Tiled) · 손에 든 대 · 낚싯줄 · 찌 · 물속 그림자 · 긴장 게이지를
     // 매 프레임 Core(FishingArea)대로 그린다. 사건: 던짐(대를 휘두르고 찌가 대 끝에서 포물선으로 난다) · 가짜 입질(찌 까딱 · 고리) · 물었다 · 걸렸다 · 달리기(대 떨림 · 거품) · 낚음(물고기가 돌며 손으로 튀고 웜뱃이 만세, 이름 · 무게 알약) · 끊김(줄이 튀고 대가 튕긴다)
     // 생동감(2026-10-07 사용자 「밋밋하다」): 새 그림 없이 네모 알갱이(물결 고리 · 거품 · 반짝) · 대 회전 · 줄 색 · 머리 위 말풍선(Core)으로.
-    // 설계 53 넓히기: 구간이 열리거나 물이 차면 굴 · 물 · 둑을 다시 칠하고(Expanded로 카메라 경계도), 끝 바위(값 표식) · 물속 댐(남은 조각만큼) · 좌대 · 좌대 손님(대 · 줄 · 찌)을 매 프레임 Core대로 맞춘다
+    // 설계 53 → 설계 58 층계 웅덩이: 층이 열리거나 물이 넓어지면 굴 · 물 · 둑 띠 · 폭포 띠를 다시 칠하고(Expanded로 카메라 경계도), 바위(값 표식) · 댐(남은 조각만큼) · 좌대 · 좌대 손님(대 · 줄 · 찌)을 매 프레임 Core대로 맞춘다.
+    // 폭포 띠 · 바위벽 · 댐은 아트방 그림이 오기 전까지 지금 그림(흙빛 띠 · rock_wall · dam_n)으로
     public sealed class FishingView : MonoBehaviour, IAreaView
     {
         private const string k_PopupKey = "harvest_popup";
@@ -43,6 +44,8 @@ namespace ZooTycoon.World
         private const float k_BobberIn = 0.45f;
         private const float k_TugNear = 0.12f;
         private const float k_TugFar = 0.6f;
+        // 찌가 목표 자리로 끌려가는 빠르기(유닛/초). 물면 기다림 자리에서 먼 쪽으로 한 프레임에 뛰던 것(2026-10-12 사용자 「물 때 순간이동」) — 이제 물고기가 끌고 가듯 미끄러진다
+        private const float k_BobberDrag = 4f;
         private const float k_RunWobble = 0.15f;
         private const float k_RunWobbleSpeed = 12f;
         private const float k_NibbleSeconds = 0.18f;
@@ -110,8 +113,6 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite m_bank;
         [Tooltip("둑 · 물 소품(아트방 bank_<이름> · water_<이름>, 발끝 피벗). 자리는 FishingConfigTable decor")]
         [SerializeField] private Sprite[] m_props;
-        [Tooltip("설계 53: 마른 강바닥 타일(아트방 dry_bed, 물 타일처럼 픽셀을 읽어 반복). 없으면 흙 면을 어둡게")]
-        [SerializeField] private Texture2D m_dryBed;
         [Tooltip("설계 53: 끝 바위벽(rock_wall, 발끝 피벗, 오른쪽 경계 기준 · 왼쪽은 뒤집기) · 댐 단계(dam_1~3, [0] = 조각 하나) · 좌대(seat) · 끌려 나오는 잔해(debris_*). 없으면 둑 소품을 빌린다")]
         [SerializeField] private Sprite m_rockWall;
         [SerializeField] private Sprite[] m_dams;
@@ -163,8 +164,9 @@ namespace ZooTycoon.World
         private float m_foamIn;
         private float m_handScale = 1f;
         private Vector3 m_bobberAt;
-        // 설계 53: 다시 칠하는 둑 띠 · 끝 바위(그림 + 값 표식) · 댐 · 좌대 · 좌대 손님 그림
-        private SpriteRenderer m_bankArt;
+        // 설계 58: 층마다 둑 띠(물 윗선) · 폭포 띠(아래 층이 열린 층의 물 아랫부분) · 바위(그림 + 값 표식) · 댐 · 좌대 · 좌대 손님 그림
+        private readonly Dictionary<int, SpriteRenderer> m_bankArts = new Dictionary<int, SpriteRenderer>();
+        private readonly Dictionary<int, SpriteRenderer> m_cliffArts = new Dictionary<int, SpriteRenderer>();
         private readonly Dictionary<RockInteractable, (SpriteRenderer art, MarkerView tag)> m_rocks = new Dictionary<RockInteractable, (SpriteRenderer, MarkerView)>();
         private readonly Dictionary<DamInteractable, SpriteRenderer> m_damArts = new Dictionary<DamInteractable, SpriteRenderer>();
         private readonly Dictionary<SeatInteractable, SpriteRenderer> m_seatArts = new Dictionary<SeatInteractable, SpriteRenderer>();
@@ -198,15 +200,9 @@ namespace ZooTycoon.World
             m_poopViews = new PoopViews(this, fishing, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, ToWorld);
             m_clerkViews = new ClerkViews(this, fishing, bus, m_clerkPrefab, tables, frames, transform, null);
 
-            m_arch.localPosition = new Vector3(fishing.Layout.HoleFloor.X, -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit, 0f);
+            // 구멍 아치는 집 층 둑 줄 윗벽(아치 밑변 = 둑 바닥 윗변)
+            m_arch.localPosition = new Vector3(fishing.Layout.HoleFloor.X, fishing.Layout.BankTopOf(0), 0f);
             m_water = NewRenderer(transform, "Water", null, Color.white, k_WaterOrder);
-
-            if (m_bank != null)
-            {
-                m_bankArt = NewRenderer(transform, "Bank", m_bank, Color.white, k_WaterOrder + 1);
-                m_bankArt.drawMode = SpriteDrawMode.Tiled;
-            }
-
             Repaint();
 
             foreach (FishingDecorData decor in fishing.Config.Decor)
@@ -217,7 +213,8 @@ namespace ZooTycoon.World
                 {
                     SpriteRenderer art = NewRenderer(transform, decor.Sprite, prop, Color.white, 0);
                     art.spriteSortPoint = SpriteSortPoint.Pivot;
-                    art.transform.localPosition = new Vector3((float)decor.X, (float)decor.Y, 0f);
+                    // 소품 y는 집 층 물 윗선 기준
+                    art.transform.localPosition = new Vector3(fishing.Layout.CenterX + (float)decor.X, fishing.Layout.BankY + (float)decor.Y, 0f);
                 }
             }
 
@@ -245,6 +242,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.DebrisPulled>(Bus_DebrisPulled),
                 bus.Subscribe<Events.DamBroken>(Bus_DamBroken),
                 bus.Subscribe<Events.SeatPlaced>(Bus_SeatPlaced),
+                bus.Subscribe<Events.WaterWidened>(Bus_WaterWidened),
                 bus.Subscribe<Events.FishingVisitorArrived>(Bus_VisitorArrived),
                 bus.Subscribe<Events.FishingVisitorCaught>(Bus_VisitorCaught),
                 bus.Subscribe<Events.FishingVisitorLeft>(Bus_VisitorLeft),
@@ -289,7 +287,7 @@ namespace ZooTycoon.World
             angle += k_RecoilDegrees * (m_recoilLeft / k_RecoilSeconds);
             // 대는 물가(설계 53 댐 포함)가 대상일 때부터 손에 보이고, 낚아 만세하는 동안만 내려놓는다(놓침 · 끊김의 잠깐 서기에는 들고 튕긴다)
             m_cheerLeft = Mathf.Max(0f, m_cheerLeft - dt);
-            SyncRod(fishing || ((m_fishing.Target == m_fishing.Water || m_fishing.Target is DamInteractable) && m_cheerLeft <= 0f), angle);
+            SyncRod(fishing || ((m_fishing.Target is WaterInteractable || m_fishing.Target is DamInteractable) && m_cheerLeft <= 0f), angle);
             SyncWorld();
             m_line.enabled = fishing;
             m_bobberArt.enabled = fishing;
@@ -317,7 +315,7 @@ namespace ZooTycoon.World
             }
             else
             {
-                m_bobberAt = spot;
+                m_bobberAt = Vector3.MoveTowards(m_bobberAt, spot, k_BobberDrag * dt);
             }
 
             // 떠 있는 찌는 살랑이고 가끔 작은 물결 고리를 낸다
@@ -388,25 +386,6 @@ namespace ZooTycoon.World
             return k < 0.3f ? Mathf.Lerp(0f, k_SwingBack, k / 0.3f)
                 : k < 0.6f ? Mathf.Lerp(k_SwingBack, k_SwingForward, (k - 0.3f) / 0.3f)
                 : Mathf.Lerp(k_SwingForward, 0f, (k - 0.6f) / 0.4f);
-        }
-
-        // 둑 줄(물가 바로 위 줄)에서 걷는 바닥의 왼쪽 · 오른쪽 끝(유닛, 낚시터 원점 기준). 둑 띠를 벽 안쪽에만 깐다(사용자 2026-10-07 「벽 쪽 경계가 깨진다」)
-        private static (float left, float right) FloorSpan(BurrowShape.Result shape, float y)
-        {
-            int row = (int)Math.Round(-y * BurrowShape.k_PixelsPerUnit) - shape.OriginY - 1;
-            int min = shape.Width;
-            int max = -1;
-
-            for (int x = 0; x < shape.Width; x++)
-            {
-                if (shape.IsFloor(x, row))
-                {
-                    min = Math.Min(min, x);
-                    max = Math.Max(max, x);
-                }
-            }
-
-            return ((shape.OriginX + min) / BurrowShape.k_PixelsPerUnit, (shape.OriginX + max + 1) / BurrowShape.k_PixelsPerUnit);
         }
 
         // 찌 자리: 웜뱃 쪽 물가에서 물 안쪽으로. 기다림 · 입질은 깊이의 k_BobberIn, 줄다리기는 남은 거리 비율만큼 먼 쪽(달릴 때는 옆으로 흔들린다).
@@ -565,36 +544,59 @@ namespace ZooTycoon.World
             StartCoroutine(Rise(text, m_wombat.transform.position + Vector3.up * (k_PopupHeight + 0.5f)));
         }
 
-        // ---------- 설계 53 넓히기 ----------
+        // ---------- 설계 58 층계 웅덩이 ----------
 
-        // 굴 · 물 · 마른 강바닥 · 둑 띠를 지금 배치대로 다시 칠한다(옛 그림은 버린다)
+        // 굴 · 물 · 층마다 둑 띠 · 폭포 띠를 지금 배치대로 다시 칠한다(옛 그림은 버린다). 카메라 경계는 열린 층이 차지하는 네모
         private void Repaint()
         {
-            BurrowShape.Result shape = m_fishing.Layout.Shape;
+            FishingLayout layout = m_fishing.Layout;
+            BurrowShape.Result shape = layout.Shape;
             Sprite oldBurrow = m_burrow.sprite;
             m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
             m_burrow.transform.localPosition = new Vector3(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit, 0f);
-            float width = shape.Width / BurrowShape.k_PixelsPerUnit;
-            float height = shape.Height / BurrowShape.k_PixelsPerUnit;
-            m_bounds = new Rect(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit - height, width, height);
+            m_bounds = new Rect(layout.Bounds.XMin, layout.Bounds.YMin, layout.Bounds.XMax - layout.Bounds.XMin, layout.Bounds.YMax - layout.Bounds.YMin);
             DestroySprite(oldBurrow);
 
-            // ponytail: 물결 칸마다 굴 전체를 한 장씩. 구간이 더 많아지면 물 칸만 따로 그리는 층으로
+            // ponytail: 물결 칸마다 굴 전체를 한 장씩. 아트방 물 칸 타일이 오면 칸 단위 그림으로
             foreach (Sprite frame in m_waterFrames)
             {
                 DestroySprite(frame);
             }
 
             m_water.transform.localPosition = m_burrow.transform.localPosition;
-            m_waterFrames = m_waterTiles.Select(tile => WaterPainter.Paint(shape, m_fishing.Layout, tile, m_streamFace, m_dryBed, m_bank == null)).ToArray();
+            m_waterFrames = m_waterTiles.Select(tile => WaterPainter.Paint(shape, layout.Waters.Values, tile, m_streamFace, m_bank == null)).ToArray();
             m_water.sprite = m_waterFrames[0];
 
-            if (m_bankArt != null)
+            foreach (KeyValuePair<int, NavRect> pair in layout.Waters)
             {
-                float bank = m_fishing.Layout.BankY;
-                (float left, float right) = FloorSpan(shape, bank);
-                m_bankArt.size = new Vector2(right - left, m_bank.bounds.size.y);
-                m_bankArt.transform.localPosition = new Vector3((left + right) / 2f, bank, 0f);
+                NavRect water = pair.Value;
+                float center = (water.XMin + water.XMax) / 2f;
+
+                if (m_bank != null)
+                {
+                    if (!m_bankArts.TryGetValue(pair.Key, out SpriteRenderer bank))
+                    {
+                        bank = NewRenderer(transform, "Bank", m_bank, Color.white, k_WaterOrder + 1);
+                        bank.drawMode = SpriteDrawMode.Tiled;
+                        m_bankArts[pair.Key] = bank;
+                    }
+
+                    bank.size = new Vector2(water.XMax - water.XMin, m_bank.bounds.size.y);
+                    bank.transform.localPosition = new Vector3(center, water.YMax, 0f);
+                }
+
+                // 아래 층이 열린 층: 물 아랫부분이 폭포 띠(지금은 흙빛 띠, 그림은 아트방)
+                bool cliff = m_fishing.Opened.Contains(pair.Key + 1);
+
+                if (!m_cliffArts.TryGetValue(pair.Key, out SpriteRenderer art))
+                {
+                    art = NewRenderer(transform, "Cliff", m_square, k_DirtDark, k_WaterOrder + 1);
+                    m_cliffArts[pair.Key] = art;
+                }
+
+                art.enabled = cliff;
+                art.transform.localScale = new Vector3(water.XMax - water.XMin, FishingLayout.k_Cliff, 1f);
+                art.transform.localPosition = new Vector3(center, water.YMin - FishingLayout.k_Cliff / 2f, 0f);
             }
         }
 
@@ -618,13 +620,15 @@ namespace ZooTycoon.World
                 {
                     SpriteRenderer art = NewRenderer(transform, "Rock", m_rockWall != null ? m_rockWall : Prop("bank_rock"), Color.white, 0);
                     art.spriteSortPoint = SpriteSortPoint.Pivot;
-                    art.flipX = rock.Side < 0;
-                    art.transform.localPosition = new Vector3(rock.Position.X, rock.Position.Y, 0f);
                     art.transform.localScale = Vector3.one * (m_rockWall != null ? 1f : k_RockFallbackScale);
-                    MarkerView tag = NewTag(ToWorld(rock.Position) + Vector3.up * k_RockTagRise);
+                    MarkerView tag = NewTag(Vector3.zero);
                     tag.Show(m_tables.Format("tag_rock", rock.Stretch.RockCost.ToString("0", CultureInfo.InvariantCulture)));
                     m_rocks[rock] = (art, tag);
                 }
+
+                // 물이 넓어지면 바위 · 댐 자리가 따라 옮긴다
+                m_rocks[rock].art.transform.localPosition = new Vector3(rock.Position.X, rock.Position.Y, 0f);
+                m_rocks[rock].tag.transform.position = ToWorld(rock.Position) + Vector3.up * k_RockTagRise;
             }
 
             foreach (RockInteractable gone in m_rocks.Keys.Where(rock => !m_fishing.Things.Contains(rock)).ToList())
@@ -639,9 +643,10 @@ namespace ZooTycoon.World
                 if (!m_damArts.TryGetValue(dam, out SpriteRenderer art))
                 {
                     art = NewRenderer(transform, "Dam", null, Color.white, k_DamOrder);
-                    art.transform.localPosition = new Vector3(dam.Position.X, dam.Position.Y, 0f);
                     m_damArts[dam] = art;
                 }
+
+                art.transform.localPosition = new Vector3(dam.Position.X, dam.Position.Y, 0f);
 
                 bool drawn = m_dams != null && m_dams.Length > 0;
                 art.sprite = drawn ? m_dams[Mathf.Clamp(dam.PiecesLeft, 1, m_dams.Length) - 1] : Prop("bank_driftwood");
@@ -703,7 +708,7 @@ namespace ZooTycoon.World
 
             Vector2 cells = k_RodTips["rod_bamboo_1"];
             Vector3 tip = art.Rod.transform.TransformPoint(new Vector3(cells.x * Fx.k_Cell, cells.y * Fx.k_Cell, 0f));
-            Vector3 bobber = ToWorld(new System.Numerics.Vector2(visitor.Seat.Position.X + 0.4f, m_fishing.Layout.BankY - k_CustomerBobberDrop))
+            Vector3 bobber = ToWorld(new System.Numerics.Vector2(visitor.Seat.Position.X + 0.4f, m_fishing.Layout.WaterTopOf(visitor.Seat.Stretch.Index) - k_CustomerBobberDrop))
                 + Vector3.up * (Mathf.Sin(Time.time * k_BobSpeed + visitor.Id) * k_BobAmount);
             art.Bobber.transform.position = bobber;
             Vector3 d = bobber - tip;
@@ -717,7 +722,7 @@ namespace ZooTycoon.World
             return m_props.FirstOrDefault(sprite => sprite.name == name) ?? m_props[0];
         }
 
-        // 바위를 뚫었다: 웜뱃은 퍼 던지기, 흙덩이가 튀고 굴 · 물을 다시 칠한다
+        // 바위를 뚫었다: 웜뱃은 퍼 던지기, 바위 자리에서 흙덩이가 튀고 굴 · 물을 다시 칠한다. 새 물고기 이름 알약
         private void Bus_StretchOpened(Events.StretchOpened e)
         {
             if (e.Fishing != m_fishing)
@@ -725,11 +730,66 @@ namespace ZooTycoon.World
                 return;
             }
 
-            float edge = m_fishing.Layout.InnerEdge(e.Stretch);
-            Vector3 at = ToWorld(new System.Numerics.Vector2(edge, m_fishing.Layout.BankY + 1f));
+            FishingLayout layout = m_fishing.Layout;
+            NavRect below = layout.WaterOf(e.Stretch + 1);
+            Vector3 at = ToWorld(new System.Numerics.Vector2(below.XMin - layout.ColumnWidth * 0.5f, layout.BankTopOf(e.Stretch + 1) - 0.4f));
             StartCoroutine(ClodsLater(m_wombat.Dig(), at));
             Repaint();
             Expanded?.Invoke();
+            StartCoroutine(Rise(m_tables.Format("fishing_flooded", FishNames(e.Stretch)), ToWorld(new System.Numerics.Vector2(layout.CenterOf(e.Stretch), layout.WaterTopOf(e.Stretch) + 1.5f))));
+        }
+
+        private string FishNames(int stretch)
+        {
+            return string.Join(" · ", m_fishing.StretchOf(stretch).Fish.Select(fish => m_tables.Get<ItemTable>(m_tables.Get<FishTable>(fish.Id).Item).Name));
+        }
+
+        // 둑 칸을 파 물이 한 열 넓어졌다: 굴 · 물을 다시 칠하고 새 열을 따라 물결 · 물보라. 물속 발견은 그 열 위에 팝업(재료 아이콘 또는 코인)과 「발견!」 알약
+        private void Bus_WaterWidened(Events.WaterWidened e)
+        {
+            if (e.Fishing != m_fishing)
+            {
+                return;
+            }
+
+            Repaint();
+            Expanded?.Invoke();
+            NavRect column = m_fishing.Layout.ColumnRect(e.Stretch, new Cell(e.Col, 1));
+            float x = (column.XMin + column.XMax) / 2f;
+            StartCoroutine(FillColumn(x, column.YMax - 0.6f, column.YMin + 0.6f));
+
+            if (e.Find == null)
+            {
+                return;
+            }
+
+            Vector3 top = ToWorld(new System.Numerics.Vector2(x, column.YMax));
+            string name;
+
+            if (e.Find.Item != null)
+            {
+                ItemTable item = m_tables.Get<ItemTable>(e.Find.Item);
+                ShowPopup(top + Vector3.up * 0.6f, m_tables.Format(k_PopupKey, e.Find.Count), m_frames.Get(item.Icon)[0]);
+                name = item.Name;
+            }
+            else
+            {
+                ShowPopup(top + Vector3.up * 0.6f, m_tables.Format("coin_popup", e.Coins.ToString("0", CultureInfo.InvariantCulture)), null);
+                name = m_tables.Format("coin_popup", e.Coins.ToString("0", CultureInfo.InvariantCulture));
+            }
+
+            StartCoroutine(Rise(m_tables.Format("fishing_find", name), top + Vector3.up * 1.1f));
+        }
+
+        private IEnumerator FillColumn(float x, float fromY, float toY)
+        {
+            for (float t = 0f; t < k_FloodSeconds; t += 0.1f)
+            {
+                float y = Mathf.Lerp(fromY, toY, t / k_FloodSeconds);
+                Splash(ToWorld(new System.Numerics.Vector2(x, y)), 1);
+                Ripple(ToWorld(new System.Numerics.Vector2(x, y)), k_RippleBite);
+                yield return new WaitForSeconds(0.1f);
+            }
         }
 
         private IEnumerator ClodsLater(float seconds, Vector3 at)
@@ -767,7 +827,7 @@ namespace ZooTycoon.World
             }));
         }
 
-        // 댐이 무너졌다: 굴 · 물을 다시 칠하고, 경계에서 먼 쪽으로 물보라가 줄지어 튄다(물이 쏟아져 차오름). 새 물고기 이름 알약
+        // 댐이 무너졌다: 굴 · 물을 다시 칠하고, 열린 아래 층 물에 왼쪽에서 오른쪽으로 물보라가 줄지어 튄다(물이 쏟아져 차오름). 새 물고기 이름 알약
         private void Bus_DamBroken(Events.DamBroken e)
         {
             if (e.Fishing != m_fishing)
@@ -778,22 +838,18 @@ namespace ZooTycoon.World
             Repaint();
             Expanded?.Invoke();
             StartCoroutine(Flood(e.Stretch));
-            FishingStretchTable stretch = m_tables.GetAll<FishingStretchTable>().First(row => row.Index == e.Stretch);
-            string names = string.Join(" · ", stretch.Fish.Select(fish => m_tables.Get<ItemTable>(m_tables.Get<FishTable>(fish.Id).Item).Name));
-            Vector3 center = ToWorld(new System.Numerics.Vector2(m_fishing.Layout.CenterOf(e.Stretch), m_fishing.Layout.BankY + 1.5f));
-            StartCoroutine(Rise(m_tables.Format("fishing_flooded", names), center));
+            Vector3 center = ToWorld(new System.Numerics.Vector2(m_fishing.Layout.CenterOf(e.Stretch), m_fishing.Layout.WaterTopOf(e.Stretch) + 1.5f));
+            StartCoroutine(Rise(m_tables.Format("fishing_flooded", FishNames(e.Stretch)), center));
         }
 
         private IEnumerator Flood(int stretch)
         {
-            FishingLayout layout = m_fishing.Layout;
-            float from = layout.InnerEdge(stretch);
-            float to = stretch > 0 ? layout.RightOf(stretch) : layout.LeftOf(stretch);
-            float y = layout.BankY - 1.2f;
+            NavRect water = m_fishing.Layout.WaterOf(stretch);
+            float y = water.YMax - 1.2f;
 
             for (float t = 0f; t < k_FloodSeconds; t += 0.1f)
             {
-                float x = Mathf.Lerp(from, to, t / k_FloodSeconds);
+                float x = Mathf.Lerp(water.XMin, water.XMax, t / k_FloodSeconds);
                 Splash(ToWorld(new System.Numerics.Vector2(x, y)), 1);
                 Ripple(ToWorld(new System.Numerics.Vector2(x, y - 1.5f)), k_RippleBite);
                 yield return new WaitForSeconds(0.1f);

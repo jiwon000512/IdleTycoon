@@ -229,9 +229,8 @@ namespace ZooTycoon.World
                     Tint(Art(gate.Shop.Id).Root, k_Closed);
                 }
 
-                RestaurantConfigTable config = gate.Shop.Config;
-                tag.Show(gate.Shop.StarLocked ? m_tables.Format("row_star_needed", config.OpenStar)
-                    : m_tables.Format("tag_open_shop", config.OpenCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
+                tag.Show(gate.Shop.GateLocked ? m_tables.Format("row_star_needed", gate.Shop.GateStar)
+                    : m_tables.Format("tag_open_shop", gate.Shop.GateCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
             }
 
             foreach (ShopGateInteractable gate in new List<ShopGateInteractable>(m_gateTags.Keys))

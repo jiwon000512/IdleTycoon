@@ -12,14 +12,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 59)]
+        [TestCase("StringTable", 60)]
         [TestCase("ClerkTable", 4)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 5)]
         [TestCase("BreadTable", 4)]
         [TestCase("ActionTable", 26)]
-        [TestCase("InteractableTable", 25)]
+        [TestCase("InteractableTable", 26)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 19)]
         [TestCase("BgmTable", 2)]
@@ -35,12 +35,13 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
-        [TestCase("FishingConfigTable", 10)]
+        [TestCase("FishingConfigTable", 11)]
         [TestCase("FishTable", 2)]
-        [TestCase("FishingStretchTable", 1)]
+        [TestCase("FishingStretchTable", 2)]
+        [TestCase("FishingFindTable", 1)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
-        [TestCase("QuestTable", 2)]
+        [TestCase("QuestTable", 3)]
         [TestCase("MissionTable", 1)]
         [TestCase("MissionChestTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)
@@ -107,18 +108,18 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 52 강가 낚시: 물은 y0 < y1 · 입질 시간은 min ≤ max · 줄 힘 · 긴장 오름 > 0. 설계 53: 잔해 무게 > 0 · 손님 초 min ≤ max
+        // 설계 52 강가 낚시: 입질 시간은 min ≤ max · 줄 힘 · 긴장 오름 > 0. 설계 53: 잔해 무게 > 0 · 손님 초 min ≤ max. 설계 58: 물 줄 ≥ 1 · 젖은 벽 값 ≥ 0
         [Test]
         public void Validate_WhenWellConfigBroken_ReportsError()
         {
             System.Action<FishingConfigTable>[] breaks =
             {
-                c => c.Water.Y1 = c.Water.Y0,
+                c => c.WaterRows = 0,
                 c => c.BiteWaitMax = c.BiteWaitMin - 1d,
                 c => c.Rod.Line = 0d,
                 c => c.TensionRise = 0d,
                 c => c.DebrisWeight = 0d,
-                c => c.StretchCols = 3,
+                c => c.WallCost = -1d,
                 c => c.CustomerSecondsMax = c.CustomerSecondsMin - 1d,
             };
 
@@ -130,7 +131,7 @@ namespace ZooTycoon.Tests
             }
         }
 
-        // 설계 53 구간 표: index 0이 있고 이어짐 · 물고기는 FishTable에 · 0이 아닌 구간은 댐 조각 ≥ 1
+        // 설계 53 → 58 층 표: index 0이 있고 이어짐 · 물고기는 FishTable에 · 아래 층은 댐 조각 ≥ 1 · 위 층은 바위 값 > 0 · 물 열 수 · 성장. 발견 표: 재료 · chance 합 · 층 id
         [Test]
         public void Validate_WhenStretchBroken_ReportsError()
         {
@@ -140,6 +141,12 @@ namespace ZooTycoon.Tests
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).Index = 3,
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).Fish[0].Id = "no_such_fish",
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).DamPieces = 0,
+                t => t.GetAll<FishingStretchTable>().First(s => s.Index == -1).RockCost = 0d,
+                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 0).MaxCols = 1,
+                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 0).CellCostGrowth = 0.5,
+                t => t.Get<FishingFindTable>("gem").Item = "no_such_item",
+                t => t.Get<FishingFindTable>("coins").Chance = 0.9,
+                t => t.Get<FishingFindTable>("gem").Stretch = "no_such_stretch",
             };
 
             foreach (System.Action<TableSet> broken in breaks)

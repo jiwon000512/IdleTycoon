@@ -86,7 +86,7 @@ namespace ZooTycoon.Core
             Grid = new BurrowGrid(BurrowGrid.Columns(2, 4), m_config.DigBaseCost, m_config.DigCostGrowth, CellBounds.None, bus);
             bus.Subscribe<Events.Dug>(Bus_Dug);
             Layout = new BakeryLayout(tables);
-            m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells, this);
+            m_digs = new DigSet(Row(DigInteractable.k_Id), Grid, Layout.Cells.CellRect, this);
             m_exit = new PassageInteractable(Row(PassageInteractable.k_Exit), this, Layout.HoleFloor, PlazaArea.k_Id);
             Evaluation = new Evaluation(this, state.Stars, bus);
             m_board = new BoardInteractable(Row(BoardInteractable.k_Id), this, Evaluation);

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 
@@ -8,7 +9,7 @@ namespace ZooTycoon.Core
     {
         private readonly InteractableTable m_row;
         private readonly BurrowGrid m_grid;
-        private readonly CellMetrics m_cells;
+        private readonly Func<Cell, NavRect> m_rect;
         private readonly WombatArea m_area;
         private readonly Dictionary<Cell, DigInteractable> m_digs = new Dictionary<Cell, DigInteractable>();
         private readonly List<DigInteractable> m_things = new List<DigInteractable>();
@@ -16,11 +17,12 @@ namespace ZooTycoon.Core
         // 프론티어 순서. 곳이 사물 목록 끝에 붙인다
         public IReadOnlyList<DigInteractable> Things => m_things;
 
-        public DigSet(InteractableTable row, BurrowGrid grid, CellMetrics cells, WombatArea area)
+        // rect = 칸 네모(빵집 · 농장은 CellMetrics.CellRect, 낚시터 둑 칸은 그 층 물 한 열)
+        public DigSet(InteractableTable row, BurrowGrid grid, Func<Cell, NavRect> rect, WombatArea area)
         {
             m_row = row;
             m_grid = grid;
-            m_cells = cells;
+            m_rect = rect;
             m_area = area;
         }
 
@@ -42,7 +44,7 @@ namespace ZooTycoon.Core
             {
                 if (!m_digs.TryGetValue(cell, out DigInteractable dig))
                 {
-                    dig = new DigInteractable(m_row, cell, m_grid, m_cells, m_area);
+                    dig = new DigInteractable(m_row, cell, m_grid, m_rect, m_area);
                     m_digs[cell] = dig;
                 }
 

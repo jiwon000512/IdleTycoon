@@ -189,12 +189,12 @@ namespace ZooTycoon.Tests
             Assert.That(mall.Guide.Toward, Is.Null);
         }
 
-        // 2026-10-09 리뷰: 「바위 뚫기」(down1)는 그 구간의 바위로 데려간다(같은 거리의 반대쪽 바위가 아니라)
+        // 2026-10-09 리뷰 · 설계 58: 「바위 뚫기」(up1)는 그 걸음 층의 바위로 데려간다
         [Test]
         public void Guide_RockStep_PointsTheStepsStretch()
         {
             TestGame game = new TestGame();
-            JumpTo(game, "q20");
+            JumpTo(game, "q21");
             Mall mall = game.Mall;
             QuestTable step = mall.Quests.Current;
             game.Bus.Publish(new Events.Passed(mall.Active, FishingArea.k_Id));
