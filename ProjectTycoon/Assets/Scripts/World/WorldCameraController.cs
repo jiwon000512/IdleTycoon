@@ -4,7 +4,8 @@ using UnityEngine;
 namespace ZooTycoon.World
 {
     // 설계 09: 직교 카메라가 웜뱃을 부드럽게 따라가고, 가게 경계(판 칸 + 둘레 흙 한 칸) 밖을 비추지 않게 가둔다.
-    // 오른쪽 메뉴 버튼 줄이 덮는 폭은 빼고 본다: 웜뱃은 남은 폭의 가운데, 경계도 오른쪽으로 그 폭만큼 더 간다
+    // 오른쪽 메뉴 버튼 줄이 덮는 폭은 빼고 본다: 웜뱃은 남은 폭의 가운데, 경계도 오른쪽으로 그 폭만큼 더 간다.
+    // 위쪽 카드 띠(할 일 · 평가 카드)가 덮는 높이만큼 경계 위로도 더 간다(2026-10-12 사용자: 위쪽 벽 칠판 · 길잡이 화살표가 카드 밑에 깔렸다)
     // 설계 18: 편집 모드에서는 따라가지 않고 빈 곳 드래그로 팬(같은 경계 안)
     // 비추기(Spot): 잠깐 다른 곳을 당겨서 보여 주고 웜뱃에게 돌아온다(점원이 굴에서 나올 때). 조작하면 바로 돌아온다
     // 설계 49 넓게 보기(Wide): 낚시판 보기 동안 절반 배율로 물러나 경계 가운데에 선다(낚시터 전체가 한 화면)
@@ -22,6 +23,8 @@ namespace ZooTycoon.World
         [SerializeField] private float m_spotSeconds = 0.25f;
         [Tooltip("오른쪽 메뉴 버튼 줄이 덮는 화면 폭 비율. 카메라가 경계 오른쪽으로 그만큼 더 가서 오른쪽 끝 사물이 버튼 밑에서 나온다")]
         [SerializeField] private float m_rightInset = 0.13f;
+        [Tooltip("위쪽 카드 띠(할 일 · 평가 카드)가 덮는 화면 높이 비율. 카메라가 경계 위로 그만큼 더 가서 위쪽 벽 사물이 카드 밑에서 나온다")]
+        [SerializeField] private float m_topInset = 0.09f;
 
         private Camera m_camera;
         private Transform m_target;
@@ -129,7 +132,7 @@ namespace ZooTycoon.World
             float hh = m_camera.orthographicSize;
             float hw = hh * m_camera.aspect;
             return new Vector2(ClampAxis(focus.x, m_bounds.xMin + hw, m_bounds.xMax - hw + 2f * hw * m_rightInset),
-                ClampAxis(focus.y, m_bounds.yMin + hh, m_bounds.yMax - hh));
+                ClampAxis(focus.y, m_bounds.yMin + hh, m_bounds.yMax - hh + 2f * hh * m_topInset));
         }
 
         // 경계가 화면보다 좁으면 가운데

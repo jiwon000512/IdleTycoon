@@ -523,5 +523,35 @@
   "w": 18,
   "h": 18,
   "border": null
+ },
+ "quest_reward": {
+  "w": 16,
+  "h": 14,
+  "border": [
+   6,
+   0,
+   6,
+   0
+  ]
+ },
+ "quest_reward_on": {
+  "w": 16,
+  "h": 14,
+  "border": [
+   6,
+   0,
+   6,
+   0
+  ]
+ },
+ "quest_pip": {
+  "w": 5,
+  "h": 5,
+  "border": null
+ },
+ "quest_pip_on": {
+  "w": 5,
+  "h": 5,
+  "border": null
  }
 }

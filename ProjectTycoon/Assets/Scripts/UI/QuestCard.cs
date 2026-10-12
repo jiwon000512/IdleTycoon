@@ -6,20 +6,35 @@ using UnityEngine.UI;
 
 namespace ZooTycoon.UI
 {
-    // 설계 55: 할 일 카드(위 가운데). 카드 자체가 버튼 — 진행 중이면 누르면 가기(오른쪽 금빛 화살표), 다 하면 누르면 받기(✓ 완료 · 오른쪽 보상 · 「!」).
-    // 안내 중(길잡이가 켜진 동안): 화살표가 땅 화살표와 같은 박자로 톡톡 + 테두리 위 금빛 빛줄기 + 초록 「안내 중」(2026-10-09 사용자 가-1 + 가-2).
-    // 받기: 완료 도장이 쾅 찍히는 순간 코인 여섯 개가 도장 자리에서 튀어나와 코인 알약으로 날아가고, 카드가 흐려진 뒤 다음 할 일이 떠오른다
+    // 설계 55: 할 일 카드(위 가운데). 카드 자체가 버튼 — 진행 중이면 누르면 가기, 다 하면 누르면 받기.
+    // 그림 칸 · 이름, 아랫줄에 진행 점(여러 번 세는 걸음만) · 보상 캡슐(늘 보임: 진행 중 크림, 다 하면 금빛 + 그림 칸 체크 + 「!」)
+    // (2026-10-12 사용자 A3-나 + 캡슐 A 「금빛 알약」). 새 할 일이 뜨면 카드가 톡 튀고 테두리 빛줄기가 한 바퀴, 안내 중(길잡이가 켜진 동안)은 빛줄기가 계속 돈다.
+    // 받기: 완료 도장이 카드 한가운데에 쾅 찍히는 순간 코인 여섯 개가 도장 자리에서 튀어나와 코인 알약으로 날아가고, 카드가 흐려진 뒤 다음 할 일이 떠오른다
     // (2026-10-09 사용자 받-2 + 받-1, 시간표는 아트방). 위 가운데는 평가 카드가 먼저다
     [RequireComponent(typeof(CanvasGroup))]
     public sealed class QuestCard : MonoBehaviour
     {
-        // 움직임은 4px(UI 한 칸) 단위. 아이콘은 원본 2배. 폭은 2칸 단위(가운데 기준이라 양 끝이 칸에 맞는다)
+        // 한 걸음의 모습(QuestPresenter가 채운다). Coins · Extra가 null이면 그 칸을 숨긴다
+        public sealed class Data
+        {
+            public Sprite Icon;
+            public string Text;
+            public int Have;
+            public int Count;
+            // 진행 점보다 많이 세는 걸음만 점 대신 글(「2/10」)로
+            public string Progress;
+            public bool Done;
+            public string Coins;
+            public Sprite ExtraIcon;
+            public string Extra;
+        }
+
+        // 움직임은 4px(UI 한 칸) 단위. 폭은 2칸 단위(가운데 기준이라 양 끝이 칸에 맞는다). UI 조각 · 아이콘의 PPU(한 텍셀 4px)
         private const float k_Px = 4f;
-        private const float k_IconScale = 2f;
+        private const float k_UiIconPpu = 25f;
         private const float k_WidthStep = 8f;
-        // 화살표 톡톡: 폭(2칸) · 박자(GuideView 땅 화살표와 같다)
-        private const float k_Tap = 8f;
-        private const float k_TapSpeed = 6f;
+        // 캡슐 안 덤 그림이 이보다 크면 반으로(캡슐 높이 56 안에)
+        private const float k_ExtraMaxHeight = 48f;
         // 빛줄기: 한 바퀴 초 · 틀 가장자리에서 주황 띠까지 · 점 크기(유닛, 틀 quest_card 한 칸)
         private const float k_SweepSeconds = 1.6f;
         private const float k_SweepInset = 4f;
@@ -46,30 +61,37 @@ namespace ZooTycoon.UI
         private const float k_SpreadTo = 340f;
         private const float k_Kick = 0.12f;
         private const float k_KickSeconds = 0.18f;
+        // 캡슐 글자: 진행 중(보조) · 다 함(글자)
+        private static readonly Color k_InkOff = new Color32(0x5C, 0x4C, 0x42, 0xFF);
+        private static readonly Color k_InkOn = new Color32(0x2E, 0x23, 0x20, 0xFF);
 
         [SerializeField] private Button m_button;
         [SerializeField] private Image m_icon;
         [SerializeField] private TMP_Text m_text;
+        [Tooltip("진행 점 줄과 점(왼쪽부터 찬 점). 점보다 많이 세는 걸음은 점 대신 m_value 글")]
+        [SerializeField] private GameObject m_pipRow;
+        [SerializeField] private Image[] m_pips;
+        [SerializeField] private Sprite m_pipOff;
+        [SerializeField] private Sprite m_pipOn;
         [SerializeField] private TMP_Text m_value;
-        [Tooltip("안내 중일 때 진행 옆 초록 글")]
-        [SerializeField] private TMP_Text m_guiding;
+        [Tooltip("다 하면 그림 칸 오른쪽 아래 체크")]
         [SerializeField] private GameObject m_check;
-        [SerializeField] private TMP_Text m_done;
-        [Tooltip("진행 중 오른쪽 가기 칸. 톡톡은 그 안의 화살표")]
-        [SerializeField] private GameObject m_go;
-        [SerializeField] private RectTransform m_arrow;
-        [Tooltip("다 하면 오른쪽: 코인 위 · 값 아래. 도장이 찍히면 투명하게(자리는 남겨 카드 폭이 그대로)")]
+        [Tooltip("보상 캡슐(늘 보임). 도장이 찍히면 투명하게(자리는 남겨 카드 폭이 그대로)")]
         [SerializeField] private CanvasGroup m_reward;
+        [SerializeField] private Image m_rewardFrame;
+        [SerializeField] private Sprite m_rewardOff;
+        [SerializeField] private Sprite m_rewardOn;
         [SerializeField] private Image m_rewardCoin;
         [SerializeField] private TMP_Text m_rewardValue;
+        [Tooltip("덤(반짝돌 · 물고기) 그림과 수. 그림 크기는 LayoutElement로")]
+        [SerializeField] private Image m_extraIcon;
+        [SerializeField] private TMP_Text m_extraValue;
         [SerializeField] private GameObject m_badge;
         [Tooltip("테두리 빛줄기(자식 점, 머리부터)")]
         [SerializeField] private RectTransform m_sweep;
-        [Tooltip("완료 도장(동그라미 테 quest_stamp + 글)")]
+        [Tooltip("완료 도장(동그라미 테 quest_stamp + 글), 카드 한가운데")]
         [SerializeField] private CanvasGroup m_stamp;
         [SerializeField] private TMP_Text m_stampText;
-        [Tooltip("도장 자리: 보상 칸 가운데에서 비키는 만큼(동그라미 테가 카드 띠 안에 들게, 아트방)")]
-        [SerializeField] private Vector2 m_stampShift;
         [Tooltip("코인이 날아갈 곳(코인 알약의 코인)과 닿을 때 톡 튀는 알약")]
         [SerializeField] private RectTransform m_coinTarget;
         [SerializeField] private RectTransform m_coinPill;
@@ -80,6 +102,9 @@ namespace ZooTycoon.UI
         private bool m_shown;
         private bool m_isDone;
         private bool m_tracking;
+        private string m_lastText;
+        // 새 할 일 빛줄기 한 바퀴가 끝나는 때(unscaledTime). 바퀴 머리도 이때를 기준으로 돈다
+        private float m_lapEnd = float.NegativeInfinity;
         private Coroutine m_rewarding;
         // 받는 연출이 뒤집히기 전까지 Show · Hide를 미룬다(마지막 것 하나)
         private bool m_holding;
@@ -104,9 +129,12 @@ namespace ZooTycoon.UI
             m_stamp.gameObject.SetActive(false);
         }
 
-        // 스스로 꺼질 때(평가 카드 · 사슬 끝)만 미룬 표시를 마저 바꾼다. 부모째 꺼질 때(씬 정리)는 정리만(꺼지는 중에 SetActive를 부르지 않게)
+        // 스스로 꺼질 때(평가 카드 · 사슬 끝)만 미룬 표시를 마저 바꾼다. 부모째 꺼질 때(씬 정리)는 정리만(꺼지는 중에 SetActive를 부르지 않게).
+        // 톡(UiFx.Pulse)이 도중에 멈춰도 크기는 제자리로
         private void OnDisable()
         {
+            Rect.localScale = Vector3.one;
+
             if (m_rewarding != null)
             {
                 Finish(!gameObject.activeSelf);
@@ -115,56 +143,99 @@ namespace ZooTycoon.UI
 
         private void Update()
         {
-            if (m_guiding.gameObject.activeSelf)
+            if (!m_sweep.gameObject.activeSelf)
             {
-                m_arrow.anchoredPosition = new Vector2(Snap(-Mathf.Sin(Time.time * k_TapSpeed) * k_Tap), 0f);
-                PoseSweep(Mathf.Repeat(Time.unscaledTime / k_SweepSeconds, 1f));
+                return;
             }
+
+            // 새 할 일 한 바퀴가 끝났고 안내 중도 아니면 끈다
+            if (!m_tracking && Time.unscaledTime >= m_lapEnd)
+            {
+                Track();
+                return;
+            }
+
+            PoseSweep(Phase());
         }
 
-        // 「안내 중」 · 「완료」(도장 글도)
-        public void SetLabels(string guiding, string done)
+        // 도장 글(「완료」)
+        public void SetStampText(string done)
         {
-            m_guiding.text = guiding;
-            m_done.text = done;
             m_stampText.text = done;
         }
 
-        // 다 하면 진행 대신 ✓ 완료 · 보상(reward가 null이면 코인 칸 없이) · 「!」, 막 다 됐으면 한 번 톡
-        public void Show(Sprite icon, string text, string value, bool done, string reward)
+        // 다 하면 그림 칸 체크 · 캡슐 금빛 · 「!」. 새 할 일이면 톡 + 빛줄기 한 바퀴, 막 다 됐으면 톡
+        public void Show(Data data)
         {
             if (m_holding)
             {
-                m_pending = () => Show(icon, text, value, done, reward);
+                m_pending = () => Show(data);
                 return;
             }
 
             m_hidden = false;
             Refresh();
-            m_icon.sprite = icon;
-            m_icon.enabled = icon != null;
+            m_icon.sprite = data.Icon;
+            m_icon.enabled = data.Icon != null;
 
-            // 원본 2배, 칸을 넘치면 1배(긴 낚싯대 · 접시, 2026-10-09 리뷰)
-            if (icon != null)
+            // 한 칸이 4px가 되게: UI 아이콘(PPU 25)은 4배, 월드 그림(PPU 80)은 2배. 칸을 넘치면 반씩(긴 낚싯대 · 회 접시, 2026-10-12 아트방 시안의 그림 칸 맞춤)
+            if (data.Icon != null)
             {
                 Vector2 slot = ((RectTransform)m_icon.transform.parent).rect.size;
-                Vector2 size = icon.rect.size * k_IconScale;
-                m_icon.rectTransform.sizeDelta = size.x <= slot.x && size.y <= slot.y ? size : icon.rect.size;
+                float scale = data.Icon.pixelsPerUnit <= k_UiIconPpu ? 4f : 2f;
+
+                while (scale > 1f && (data.Icon.rect.width * scale > slot.x || data.Icon.rect.height * scale > slot.y))
+                {
+                    scale /= 2f;
+                }
+
+                m_icon.rectTransform.sizeDelta = data.Icon.rect.size * scale;
             }
 
-            m_text.text = text;
-            m_value.text = value;
-            m_value.gameObject.SetActive(!done);
-            m_check.SetActive(done);
-            m_done.gameObject.SetActive(done);
-            m_go.SetActive(!done);
-            m_reward.gameObject.SetActive(done && reward != null);
+            m_text.text = data.Text;
+            m_pipRow.SetActive(data.Count >= 2 && data.Count <= m_pips.Length);
+
+            for (int i = 0; i < m_pips.Length; i++)
+            {
+                m_pips[i].gameObject.SetActive(i < data.Count);
+                m_pips[i].sprite = data.Done || i < data.Have ? m_pipOn : m_pipOff;
+            }
+
+            m_value.gameObject.SetActive(data.Count > m_pips.Length);
+            m_value.text = data.Progress;
+            m_check.SetActive(data.Done);
+            m_reward.gameObject.SetActive(data.Coins != null || data.Extra != null);
             m_reward.alpha = 1f;
-            m_rewardValue.text = reward;
-            m_badge.SetActive(done);
-            bool pulse = done && !m_isDone && m_shown;
+            m_rewardFrame.sprite = data.Done ? m_rewardOn : m_rewardOff;
+            m_rewardCoin.gameObject.SetActive(data.Coins != null);
+            m_rewardValue.gameObject.SetActive(data.Coins != null);
+            m_rewardValue.text = data.Coins;
+            m_rewardValue.color = data.Done ? k_InkOn : k_InkOff;
+            m_extraIcon.gameObject.SetActive(data.Extra != null);
+            m_extraValue.gameObject.SetActive(data.Extra != null);
+            m_extraValue.text = data.Extra;
+            m_extraValue.color = m_rewardValue.color;
+            SnapWidth(m_value);
+            SnapWidth(m_rewardValue);
+            SnapWidth(m_extraValue);
+
+            if (data.ExtraIcon != null)
+            {
+                Vector2 size = data.ExtraIcon.rect.size;
+                size = size.y > k_ExtraMaxHeight ? size / 2f : size;
+                m_extraIcon.sprite = data.ExtraIcon;
+                LayoutElement element = m_extraIcon.GetComponent<LayoutElement>();
+                element.preferredWidth = size.x;
+                element.preferredHeight = size.y;
+            }
+
+            m_badge.SetActive(data.Done);
+            bool fresh = data.Text != m_lastText;
+            bool pulse = fresh || data.Done && !m_isDone && m_shown;
+            m_lapEnd = fresh ? Time.unscaledTime + k_SweepSeconds : m_lapEnd;
+            m_lastText = data.Text;
             m_shown = true;
-            m_isDone = done;
+            m_isDone = data.Done;
             Track();
 
             if (pulse && isActiveAndEnabled)
@@ -192,7 +263,7 @@ namespace ZooTycoon.UI
             Refresh();
         }
 
-        // 길잡이가 켜진 동안(다 한 카드는 안내하지 않는다)
+        // 길잡이가 켜진 동안
         public void SetTracking(bool tracking)
         {
             m_tracking = tracking;
@@ -208,7 +279,7 @@ namespace ZooTycoon.UI
             }
         }
 
-        // 꺼지는 중(OnDisable)에 다시 부르지 않게 바뀔 때만
+        // 꺼지는 중(OnDisable)에 다시 부르지 않게 바뀔 때만. 켤 때는 폭을 다시 맞춘다(꺼진 동안 바뀐 걸음은 폭을 못 잰다, 2026-10-12 리뷰)
         private void Refresh()
         {
             bool on = !m_hidden && !m_blocked;
@@ -216,26 +287,41 @@ namespace ZooTycoon.UI
             if (gameObject.activeSelf != on)
             {
                 gameObject.SetActive(on);
+
+                if (on)
+                {
+                    Track();
+                }
             }
         }
 
+        // 빛줄기: 안내 중이거나 새 할 일 한 바퀴 동안(다 한 카드는 안내하지 않는다)
         private void Track()
         {
-            bool on = m_tracking && !m_isDone;
-            m_guiding.gameObject.SetActive(on);
+            bool on = !m_isDone && (m_tracking || Time.unscaledTime < m_lapEnd);
             m_sweep.gameObject.SetActive(on);
-            m_arrow.anchoredPosition = Vector2.zero;
             Fit();
 
             if (on)
             {
-                PoseSweep(Mathf.Repeat(Time.unscaledTime / k_SweepSeconds, 1f));
+                PoseSweep(Phase());
             }
         }
 
-        // 폭: 내용(최소 폭은 프리팹 LayoutElement)을 2칸 단위로 올림
+        // 바퀴 머리: 새 할 일 한 바퀴는 위 왼쪽에서 떠나 거기서 끝난다
+        private float Phase()
+        {
+            return Mathf.Repeat((Time.unscaledTime - m_lapEnd) / k_SweepSeconds, 1f);
+        }
+
+        // 폭: 내용을 2칸 단위로 올림(최소 폭 없음). 꺼져 있으면 잴 수 없어(0이 나온다) 켤 때(Refresh) 맞춘다
         private void Fit()
         {
+            if (!gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
             LayoutRebuilder.ForceRebuildLayoutImmediate(Rect);
             Rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Mathf.Ceil(LayoutUtility.GetPreferredWidth(Rect) / k_WidthStep) * k_WidthStep);
             LayoutRebuilder.ForceRebuildLayoutImmediate(Rect);
@@ -313,9 +399,6 @@ namespace ZooTycoon.UI
         {
             m_holding = true;
             GetComponent<CanvasGroup>().blocksRaycasts = false;
-            RectTransform stampRect = (RectTransform)m_stamp.transform;
-            stampRect.position = m_reward.transform.position;
-            stampRect.anchoredPosition += m_stampShift;
             RectTransform space = (RectTransform)Rect.parent;
             m_coins = new RectTransform[k_Coins];
 
@@ -325,7 +408,7 @@ namespace ZooTycoon.UI
                 coin.sprite = m_rewardCoin.sprite;
                 coin.raycastTarget = false;
                 coin.rectTransform.SetParent(space, false);
-                coin.rectTransform.sizeDelta = m_rewardCoin.rectTransform.sizeDelta;
+                coin.rectTransform.sizeDelta = m_rewardCoin.sprite.rect.size;
                 coin.gameObject.SetActive(false);
                 m_coins[i] = coin.rectTransform;
             }
@@ -350,7 +433,7 @@ namespace ZooTycoon.UI
             Finish(true);
         }
 
-        // t초의 모습: 도장(커졌다 쾅) · 카드 눌림 · 나는 코인 · 코인 알약 톡 · 흐려짐 · 다음 카드 떠오름. 쾅부터 「!」와 보상 칸을 도장이 대신한다
+        // t초의 모습: 도장(커졌다 쾅) · 카드 눌림 · 나는 코인 · 코인 알약 톡 · 흐려짐 · 다음 카드 떠오름. 쾅부터 「!」와 보상 캡슐을 도장이 대신한다
         private void Pose(float t)
         {
             int stamp = Mathf.Clamp(Mathf.FloorToInt((t - k_StampAt) / k_Beat), 0, k_StampScale.Length - 1);
@@ -439,6 +522,12 @@ namespace ZooTycoon.UI
         private static float Snap(float v)
         {
             return Mathf.Round(v / k_Px) * k_Px;
+        }
+
+        // 글 폭을 한 칸 단위로 올린다(뒤에 오는 그림 · 캡슐 끝이 픽셀 사이에 걸리지 않게)
+        private static void SnapWidth(TMP_Text text)
+        {
+            text.GetComponent<LayoutElement>().preferredWidth = Mathf.Ceil(text.preferredWidth / k_Px) * k_Px;
         }
     }
 }
