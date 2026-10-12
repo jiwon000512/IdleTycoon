@@ -57,12 +57,16 @@ namespace ZooTycoon.UI
             }
         }
 
+        // 설계 57: 어느 사물의 시트를 열었는지(행상 좌판을 열면 상단바가 행상 레드닷을 끈다)
+        public event Action<Interactable> Shown;
+
         public void Show(Interactable target)
         {
             m_target = target;
             m_remote = target.Area.Target != target;
             Refresh();
             m_view.Open();
+            Shown?.Invoke(target);
         }
 
         public void Hide()

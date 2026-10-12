@@ -90,6 +90,7 @@ namespace ZooTycoon.Game
             m_menuPointed = game.Bus.Subscribe<Events.MenuPointed>(Bus_MenuPointed);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;
+            m_sheetPresenter.Shown += Sheet_Shown;
             m_editPresenter.EditingChanged += Edit_EditingChanged;
             m_editPresenter.GhostChanged += world.ShowGhost;
             m_editPresenter.GhostHidden += world.HideGhost;
@@ -118,7 +119,11 @@ namespace ZooTycoon.Game
 
             m_topBarPresenter?.Dispose();
             m_hudPresenter?.Dispose();
-            m_sheetPresenter?.Dispose();
+            if (m_sheetPresenter != null)
+            {
+                m_sheetPresenter.Shown -= Sheet_Shown;
+                m_sheetPresenter.Dispose();
+            }
             m_editPresenter?.Dispose();
             m_clerkPresenter?.Dispose();
             m_inventoryPresenter?.Dispose();
@@ -137,6 +142,15 @@ namespace ZooTycoon.Game
         private void Hud_SheetRequested(Interactable target)
         {
             m_sheetPresenter.Show(target);
+        }
+
+        // 설계 57: 행상 좌판 시트를 열면 상단바의 행상 레드닷을 끈다
+        private void Sheet_Shown(Interactable target)
+        {
+            if (target is MerchantInteractable)
+            {
+                m_topBarPresenter.MerchantSeen();
+            }
         }
 
         private void Edit_EditingChanged(bool editing)

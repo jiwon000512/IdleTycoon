@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # 길잡이 화살표(설계 54, 2026-10-09 사용자 선택 A 금빛 세모). AI 없이 칸 무늬(한 칸 = 2px, PPU 80)로 그린다.
-# 아래를 가리키는 세모 19×21칸(38×42px = 높이 0.525유닛), 코인 팔레트, 진갈색 외곽선 1칸. 옆선 2:1 · 위 두 귀 둥글게 · 위 흰 한 획 · 왼쪽 밝은 선 · 오른쪽 그늘.
+# 아래를 가리키는 세모 13×15칸(26×30px = 높이 0.375유닛, 2026-10-12 줄임), 코인 팔레트, 진갈색 외곽선 1칸. 옆선 2:1 · 위 두 귀 둥글게 · 위 흰 한 획 · 왼쪽 밝은 선 · 오른쪽 그늘.
 # 폭이 홀수라 끝 칸 가운데 = 그림 가운데 → 피벗 아래 가운데(0.5, 0) = 화살 끝. GuideView가 90도 단위로만 돌린다.
 # 버린 시안: B 주황 물방울 핀 · C 크림 겹쉐브론(2026-10-08 비교).
 # 사용: python make_guide_arrow.py → ../guide_arrow.png
@@ -11,29 +11,24 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 INK = (52, 32, 32)
 GOLD = {'h': (255, 244, 200), 'l': (248, 216, 120), 'm': (232, 176, 72), 's': (192, 128, 56)}
-ROWS = [
-    '..###############..',
-    '.#lhhhhhlllllllll#.',
-    '#llmmmmmmmmmmmmmms#',
-    '#lmmmmmmmmmmmmmmss#',
-    '.#lmmmmmmmmmmmmss#.',
-    '.#lmmmmmmmmmmmmss#.',
-    '..#lmmmmmmmmmmss#..',
-    '..#lmmmmmmmmmmss#..',
-    '...#lmmmmmmmmss#...',
-    '...#lmmmmmmmmss#...',
-    '....#lmmmmmmss#....',
-    '....#lmmmmmmss#....',
-    '.....#lmmmmss#.....',
-    '.....#lmmmmss#.....',
-    '......#lmmss#......',
-    '......#lmmss#......',
-    '.......#lms#.......',
-    '.......#lms#.......',
-    '........#s#........',
-    '........#s#........',
-    '.........#.........',
-]
+def rows(w):
+    # 폭 w칸(홀수) 세모: 맨 위 귀 두 칸 깎기 · 흰 한 획(안쪽 폭의 1/3) · 왼쪽 밝은 선 · 오른쪽 그늘 2칸 · 두 줄마다 한 칸씩 좁아짐(옆선 2:1) · 끝 한 칸
+    out = ['..' + '#' * (w - 4) + '..']
+    inner = w - 4
+    h = max(1, round(inner * 5 / 15))
+    out.append('.#l' + 'h' * h + 'l' * (inner - 1 - h) + '#.')
+    out.append('#ll' + 'm' * (w - 5) + 's#')
+    out.append('#l' + 'm' * (w - 5) + 'ss#')
+    for k in range(1, (w - 3) // 2 + 1):
+        n = w - 2 * k - 2
+        body = 's' if n == 1 else 'lms' if n == 3 else 'l' + 'm' * (n - 3) + 'ss'
+        out += ['.' * k + '#' + body + '#' + '.' * k] * 2
+    out.append('.' * ((w - 1) // 2) + '#' + '.' * ((w - 1) // 2))
+    return out
+
+
+# 폭 19칸(2026-10-09, 38×42px)은 rows(19)와 같다. 2026-10-12 사용자 「좀 줄이자」 → 시안 A 13칸(26×30px, 69%). 버린 시안: B 15칸 · C 11칸
+ROWS = rows(13)
 
 
 def grid(rows, pal):

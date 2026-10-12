@@ -55,8 +55,8 @@ namespace ZooTycoon.Core
         }
         // 새 하루까지 남은 초
         public double SecondsLeft => (StartOf(m_clock()).AddDays(1) - m_clock()).TotalSeconds;
-        // 받을 것이 있나(메뉴 버튼 점)
-        public bool HasReward => m_missions.Any(m => m.IsDone && !m.Claimed) || Chests.Any(c => Points >= c.Points && !m_opened.Contains(c.Chest));
+        // 받을 미션 수(메뉴 단추 레드닷, 설계 57). 상자는 세지 않는다(미션을 받으러 들어가면 보이고, 세면 점이 거의 늘 켜졌다 — 2026-10-12 사용자)
+        public int ClaimableCount => m_missions.Count(m => m.IsDone && !m.Claimed);
 
         public DailyBoard(Mall mall, TableSet tables, EventBus bus, Func<DateTime> clock, Func<int> chapter)
         {

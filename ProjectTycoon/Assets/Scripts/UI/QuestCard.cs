@@ -88,7 +88,8 @@ namespace ZooTycoon.UI
         [Tooltip("덤(반짝돌 · 물고기) 그림과 수. 그림 크기는 LayoutElement로")]
         [SerializeField] private Image m_extraIcon;
         [SerializeField] private TMP_Text m_extraValue;
-        [SerializeField] private GameObject m_badge;
+        [Tooltip("다 하면 오른쪽 위 레드닷(설계 57)")]
+        [SerializeField] private RedDot m_badge;
         [Tooltip("테두리 빛줄기(자식 점, 머리부터)")]
         [SerializeField] private RectTransform m_sweep;
         [Tooltip("완료 도장(동그라미 테 quest_stamp + 글), 카드 한가운데")]
@@ -231,7 +232,7 @@ namespace ZooTycoon.UI
                 element.preferredHeight = size.y;
             }
 
-            m_badge.SetActive(data.Done);
+            m_badge.Set(data.Done);
             bool fresh = data.Text != m_lastText;
             bool pulse = fresh || data.Done && !m_isDone && m_shown;
             m_lapEnd = fresh ? Time.unscaledTime + k_SweepSeconds : m_lapEnd;
@@ -445,7 +446,7 @@ namespace ZooTycoon.UI
 
             if (t < k_Turn)
             {
-                m_badge.SetActive(t < k_Land);
+                m_badge.Set(t < k_Land);
                 m_reward.alpha = t < k_Land ? 1f : 0f;
             }
 

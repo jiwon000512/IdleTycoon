@@ -86,6 +86,12 @@ namespace ZooTycoon.UI
             ShowMerchant(e.Merchant, e.Merchant.Phase == MerchantPhase.Coming);
         }
 
+        // 설계 57: 좌판 시트를 열었다 — 행상 레드닷을 끈다
+        public void MerchantSeen()
+        {
+            m_view.SetMerchantSeen();
+        }
+
         private void ShowMerchant(RelicMerchant merchant, bool arrived)
         {
             bool here = merchant.Phase == MerchantPhase.Coming || merchant.IsOpen;

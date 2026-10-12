@@ -19,8 +19,8 @@ namespace ZooTycoon.World
         private const float k_FootSnap = 0.05f;
         private const float k_Bob = 0.1f;
         private const float k_BobSpeed = 6f;
-        // 화살표 배율: 월드 한 텍셀 2px를 1px로(2026-10-12 사용자 「노란 화살표 크기를 좀 줄이자」, 곳 이름표는 지움). 정수 배라 반만 가능 — 중간 크기는 아트방이 새로 그린다
-        private const float k_ArrowScale = 0.5f;
+        // 화살표 배율: 1(월드 한 텍셀 2px). 「좀 줄이자」(2026-10-12 사용자)는 그림을 작게 다시 그려 맞췄다(아트방 A 13칸 = 26×30px, 전엔 19칸). 곳 이름표는 지움
+        private const float k_ArrowScale = 1f;
         private const float k_PopupHeight = 1.3f;
         private const int k_Order = 70;
         // 화살표가 머무는 화면 안쪽(화면 비율): 위는 HUD 알약 줄, 오른쪽은 메뉴 버튼 줄을 비킨다

@@ -68,7 +68,7 @@ namespace ZooTycoon.UI
             List<MissionView.ChestData> chests = m_chests.Select(c => new MissionView.ChestData((float)c.Points / max, BigNumberFormatter.Format(Math.Round(c.Coins)),
                 c.Points.ToString(), m_board.Points >= c.Points, m_board.Opened.Contains(c.Chest))).ToList();
             m_view.Show(rows, chests, (float)m_board.Points / max, m_board.Points.ToString());
-            m_view.SetBadge(m_board.HasReward);
+            m_view.SetBadge(m_board.ClaimableCount > 0);
         }
 
         private void View_OpenClicked()

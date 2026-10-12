@@ -553,5 +553,15 @@
   "w": 5,
   "h": 5,
   "border": null
+ },
+ "red_dot": {
+  "w": 7,
+  "h": 7,
+  "border": null
+ },
+ "red_dot_count": {
+  "w": 14,
+  "h": 14,
+  "border": null
  }
 }

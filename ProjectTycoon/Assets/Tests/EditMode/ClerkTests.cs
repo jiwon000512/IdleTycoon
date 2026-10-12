@@ -354,6 +354,29 @@ namespace ZooTycoon.Tests
             Assert.That(clerk.Idling, Is.True, "점원은 아직 딴짓");
         }
 
+        // 2026-10-12 사용자: 손님은 계산해 줄 사람이 있는 계산대로(점원이 붙은 먼 계산대 > 아무도 없는 가까운 계산대). 웜뱃이 빈 계산대 자리에 서면 그것도 후보
+        [Test]
+        public void Visitor_QueuesAtServedCounter_NotTheEmptyNearOne()
+        {
+            BakeryArea shop = Create(new ConstantRandom(0d));
+            TestTables.LiftStarCaps(m_tables);
+            m_state.AddCoins(100000d);
+            Assert.That(shop.TryBuy(CounterInteractable.k_Id, new Vector2(2.3f, -5.6f)), Is.True);
+            CounterInteractable near = shop.Counter;
+            CounterInteractable far = shop.Counters[1];
+            Vector2 from = near.Position;
+            Assert.That(near.DistanceTo(from), Is.LessThan(far.DistanceTo(from)));
+            shop.Wombat.Mover.Place(shop.Layout.HoleFloor);
+
+            Assert.That(shop.ShortestQueue(from), Is.SameAs(near), "아무도 없으면 가까운 것");
+
+            Hire(shop, far);
+            Assert.That(shop.ShortestQueue(from), Is.SameAs(far), "점원이 붙은 계산대 먼저");
+
+            shop.Wombat.Mover.Place(near.WorkerSpot);
+            Assert.That(shop.ShortestQueue(from), Is.SameAs(near), "웜뱃이 선 가까운 계산대도 후보라 가까운 것");
+        }
+
         // 설계 31 알람 시계: 딴짓이 길어도(100초) 시계 값(초)을 넘기면 저절로 끝난다
         [Test]
         public void AlarmClock_CapsIdleSeconds()

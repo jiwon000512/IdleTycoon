@@ -43,14 +43,9 @@ namespace ZooTycoon.UI
         private const float k_HopHeight = 24f;
         private const float k_BlinkSeconds = 0.07f;
 
-        // 점원 버튼 배지: 딴짓 수는 주황, 월급 모자람은 빨강(팔레트 「부족」)
-        private static readonly Color k_BadgeIdling = new Color32(0xD8, 0x78, 0x48, 255);
-        private static readonly Color k_BadgeShort = new Color32(0xA6, 0x4B, 0x3C, 255);
-
         [SerializeField] private Button m_openButton;
-        [Tooltip("점원 버튼 오른쪽 위 배지")]
-        [SerializeField] private Image m_buttonBadge;
-        [SerializeField] private TextMeshProUGUI m_buttonBadgeText;
+        [Tooltip("설계 57: 손봐야 할 점원 수 레드닷(단추 오른쪽 위)")]
+        [SerializeField] private RedDot m_buttonBadge;
         [SerializeField] private GameObject m_root;
         [Tooltip("등장·퇴장: 팝업 전체가 나타나고 패널이 올라온다(UiFx)")]
         [SerializeField] private CanvasGroup m_rootGroup;
@@ -138,6 +133,8 @@ namespace ZooTycoon.UI
         private float m_rowGap;
         private bool m_open;
         private bool m_askOpen;
+        // 마지막으로 그린 목록(모드 · 탭 · 줄 수). 바뀔 때만 스크롤을 맨 위로
+        private string m_listKey;
         private Coroutine m_rootFx;
         private Coroutine m_askFx;
         private Coroutine m_toastFx;
@@ -194,7 +191,7 @@ namespace ZooTycoon.UI
             m_paydayFillSprite = m_paydayFillImage.sprite;
             m_root.SetActive(false);
             m_toast.SetActive(false);
-            m_buttonBadge.gameObject.SetActive(false);
+            m_buttonBadge.Set(false);
         }
 
         private void Update()
@@ -202,12 +199,10 @@ namespace ZooTycoon.UI
             Ticked?.Invoke(Time.deltaTime);
         }
 
-        // text가 null이면 숨긴다. alert = 월급 모자람(빨강), 아니면 딴짓 수(주황)
-        public void SetButtonBadge(string text, bool alert)
+        // 설계 57 레드닷: 손봐야 할 점원 수(딴짓 · 월급 모자람). 0이면 숨김
+        public void SetButtonBadge(int count)
         {
-            m_buttonBadge.gameObject.SetActive(text != null);
-            m_buttonBadge.color = alert ? k_BadgeShort : k_BadgeIdling;
-            m_buttonBadgeText.text = text ?? string.Empty;
+            m_buttonBadge.Set(count);
         }
 
         // 자리 목록의 줄 하나가 옅어진다(해고). 이어 오는 ShowList의 내용은 옅어진 뒤에 그려진다
@@ -234,6 +229,9 @@ namespace ZooTycoon.UI
             {
                 return;
             }
+
+            // 새로 열면 목록은 맨 위부터
+            m_listKey = null;
 
             m_open = true;
             SoundManager.Instance.Play(SoundTable.k_UiOpen);
@@ -328,16 +326,22 @@ namespace ZooTycoon.UI
                 views[i].Show(rows[i], Load(rows[i].IconPath), Load(rows[i].ProductIcon));
             }
 
-            SetListHeight(rows.Count);
+            SetListHeight(rows.Count, (candidates ? "c" : "s" + tab) + "/" + rows.Count);
         }
 
-        // 줄 창은 k_VisibleRows줄까지 보이고 그 아래는 스크롤. 바닥(요약 줄 또는 후보 목록의 버튼)은 프리팹 높이 그대로
-        private void SetListHeight(int rows)
+        // 줄 창은 k_VisibleRows줄까지 보이고 그 아래는 스크롤. 바닥(요약 줄 또는 후보 목록의 버튼)은 프리팹 높이 그대로.
+        // 스크롤은 목록이 다른 것(모드 · 탭 · 줄 수)으로 바뀔 때만 맨 위로 — 점원 상태가 바뀌어 같은 목록을 다시 그릴 때 위로 튀던 것(2026-10-12 사용자)
+        private void SetListHeight(int rows, string key)
         {
             int shown = Mathf.Clamp(rows, 1, k_VisibleRows);
             float list = shown * m_rowHeight + (shown - 1) * m_rowGap;
             m_panel.sizeDelta = new Vector2(m_panel.sizeDelta.x, m_chrome + list + m_viewportBottom);
-            m_rows.anchoredPosition = Vector2.zero;
+
+            if (key != m_listKey)
+            {
+                m_listKey = key;
+                m_rows.anchoredPosition = Vector2.zero;
+            }
         }
 
         // 월급날 게이지. label이 null이면 숨긴다(점원이 없다 · 후보 목록). 모자라면(low) 채움이 빨강

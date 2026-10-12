@@ -524,23 +524,16 @@ namespace ZooTycoon.UI
             }
         }
 
-        // 월급 모자람이 딴짓 수보다 먼저다(해고는 되돌릴 수 없다)
+        // 설계 57 레드닷: 손봐야 할 점원 수 — 월급이 모자라면 점원 전부(해고는 되돌릴 수 없다), 아니면 딴짓 · 외출 중인 수
         private void RefreshBadge()
         {
             int badge = 0;
 
-            if (m_mall.Payroll.Short)
+            foreach (Clerk clerk in m_mall.Payroll.Clerks)
             {
-                badge = -1;
-            }
-            else
-            {
-                foreach (Clerk clerk in m_mall.Payroll.Clerks)
+                if (m_mall.Payroll.Short || clerk.Idling || clerk.Away)
                 {
-                    if (clerk.Idling || clerk.Away)
-                    {
-                        badge++;
-                    }
+                    badge++;
                 }
             }
 
@@ -550,7 +543,7 @@ namespace ZooTycoon.UI
             }
 
             m_badge = badge;
-            m_view.SetButtonBadge(badge == 0 ? null : badge < 0 ? m_tables.Text("clerk_badge_short") : badge.ToString(), badge < 0);
+            m_view.SetButtonBadge(badge);
         }
 
         // 결과가 나온 순간(탭 또는 시간 초과) 후보 말풍선을 결과로 바꾼다

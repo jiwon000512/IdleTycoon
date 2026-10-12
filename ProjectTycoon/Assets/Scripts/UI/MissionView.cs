@@ -77,8 +77,8 @@ namespace ZooTycoon.UI
         }
 
         [SerializeField] private Button m_openButton;
-        [Tooltip("받을 것이 있으면(다 한 미션 · 열 수 있는 상자) 버튼 오른쪽 위 배지")]
-        [SerializeField] private GameObject m_badge;
+        [Tooltip("받을 미션이 있으면 단추 오른쪽 위 레드닷(설계 57)")]
+        [SerializeField] private RedDot m_badge;
         [SerializeField] private GameObject m_root;
         [SerializeField] private CanvasGroup m_rootGroup;
         [SerializeField] private RectTransform m_panel;
@@ -127,7 +127,7 @@ namespace ZooTycoon.UI
 
             m_panelRest = m_panel.anchoredPosition;
             m_root.SetActive(false);
-            m_badge.SetActive(false);
+            m_badge.Set(false);
         }
 
         private void Update()
@@ -152,7 +152,7 @@ namespace ZooTycoon.UI
 
         public void SetBadge(bool on)
         {
-            m_badge.SetActive(on);
+            m_badge.Set(on);
         }
 
         // 설계 54: 할 일 알약의 「가기」가 이 메뉴 버튼을 가리킨다(세 번 톡톡)

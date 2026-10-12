@@ -45,7 +45,8 @@ namespace ZooTycoon.Core
         public IReadOnlyList<PlotInteractable> Plots => m_plots;
         // 설계 35: 밭 시트에 칩이 뜨는 작물(CropTable 행 순서, 시작은 첫 행)과 다음 해금 작물(다 열었으면 null)
         public IReadOnlyList<CropTable> UnlockedCrops => m_unlocked;
-        public CropTable NextCrop => m_unlocked.Count < Tables.GetAll<CropTable>().Count ? Tables.GetAll<CropTable>()[m_unlocked.Count] : null;
+        // 다음에 열 작물: 표 순서로 아직 안 연 첫 행(연 순서가 표와 달라도, 빵과 같은 규칙)
+        public CropTable NextCrop => Tables.GetAll<CropTable>().FirstOrDefault(crop => !m_unlocked.Contains(crop));
         public override IReadOnlyList<IPlacedKind> ShopKinds => s_noKinds;
         public override string Id => Floor.Id;
         protected override string LookArea => k_Id;

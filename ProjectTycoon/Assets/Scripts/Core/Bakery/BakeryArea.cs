@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using GameKit.Events;
 using GameKit.Tables;
@@ -34,7 +35,8 @@ namespace ZooTycoon.Core
         public IReadOnlyList<CounterInteractable> Counters => m_counters;
         // 첫 계산대(웜뱃이 시작하는 곳)
         public CounterInteractable Counter => m_counters[0];
-        public BreadTable NextBread => m_unlocked.Count < Tables.GetAll<BreadTable>().Count ? Tables.GetAll<BreadTable>()[m_unlocked.Count] : null;
+        // 다음에 열 빵: 표 순서로 아직 안 연 첫 행(연 순서가 표와 달라도 — 2026-10-12 사용자: 연 빵 칩에 자물쇠가 남았다)
+        public BreadTable NextBread => Tables.GetAll<BreadTable>().FirstOrDefault(bread => !m_unlocked.Contains(bread));
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         public override string Id => k_Id;
         // 설계 47: 빵집은 처음부터 열려 있다
@@ -159,16 +161,22 @@ namespace ZooTycoon.Core
         }
 
         // 설계 18: 가장 짧은 줄, 같으면 가까운 계산대
+        // 손님이 설 계산대: 계산해 줄 사람이 있는 것(점원이 붙었거나 웜뱃이 자리에 선 것) 먼저, 그중 줄이 짧은 것, 같으면 가까운 것.
+        // 아무도 없으면 전부 중에서(2026-10-12 사용자: 옆에 점원 계산대가 있는데 빈 계산대에서 영영 기다렸다)
         public CounterInteractable ShortestQueue(Vector2 from)
         {
             CounterInteractable best = null;
+            bool bestServed = false;
 
             foreach (CounterInteractable counter in m_counters)
             {
-                if (best == null || counter.Queue.Count < best.Queue.Count
-                    || counter.Queue.Count == best.Queue.Count && counter.DistanceTo(from) < best.DistanceTo(from))
+                bool served = ClerkOf(counter) != null || counter.WombatAtSpot;
+
+                if (best == null || served && !bestServed || served == bestServed && (counter.Queue.Count < best.Queue.Count
+                    || counter.Queue.Count == best.Queue.Count && counter.DistanceTo(from) < best.DistanceTo(from)))
                 {
                     best = counter;
+                    bestServed = served;
                 }
             }
 

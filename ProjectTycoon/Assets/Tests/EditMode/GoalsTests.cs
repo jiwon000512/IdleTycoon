@@ -278,9 +278,11 @@ namespace ZooTycoon.Tests
             Assert.That(board.TryClaim(0), Is.False, "아직 안 했다");
 
             game.Bus.Publish(new Events.PoopsCleaned(game.Bakery, "manure", 1));
-            Assert.That(board.HasReward, Is.True);
+            Assert.That(board.ClaimableCount, Is.EqualTo(1));
             Assert.That(board.TryClaim(0), Is.True);
             Assert.That(board.TryClaim(0), Is.False, "한 번만");
+            // 설계 57: 상자를 열 수 있어도 레드닷은 받을 미션이 있을 때만
+            Assert.That(board.ClaimableCount, Is.EqualTo(0));
             Assert.That(board.Points, Is.EqualTo(game.Tables.Get<MissionTable>("m_clean").Points));
 
             double coins = game.State.Coins;

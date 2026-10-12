@@ -52,7 +52,8 @@ namespace ZooTycoon.UI
         [Tooltip("행상이 없을 때 얼굴(색을 뺀 회색 그림, 2026-10-09 사용자). 있을 때 얼굴은 m_merchantIcon의 그림")]
         [SerializeField] private Sprite m_merchantAway;
         [SerializeField] private TMP_Text m_merchantTime;
-        [SerializeField] private GameObject m_merchantBadge;
+        [Tooltip("설계 57: 와 있고 아직 좌판을 안 열었으면 레드닷")]
+        [SerializeField] private RedDot m_merchantBadge;
         [Tooltip("설계 49 물때 알약(행상 알약 아래): 물고기 아이콘 · 「물때」 · 「7/10」")]
         [SerializeField] private CanvasGroup m_wave;
         [SerializeField] private TMP_Text m_waveText;
@@ -140,10 +141,10 @@ namespace ZooTycoon.UI
             SoundManager.Instance.Play(SoundTable.k_BlessingEnd);
         }
 
-        // 설계 31 · 32 · 55: remaining = 남은 시간(떠날 때까지 · 다음에 올 때까지). 없으면 회색 얼굴, 와 있으면 「!」, arrived면 톡 튀며 소리
+        // 설계 31 · 32 · 55: remaining = 남은 시간(떠날 때까지 · 다음에 올 때까지). 없으면 회색 얼굴, 와 있으면 레드닷(좌판을 열면 꺼짐, 설계 57), arrived면 톡 튀며 소리
         public void ShowMerchant(bool present, Func<double> remaining, bool arrived)
         {
-            m_merchantBadge.SetActive(present);
+            m_merchantBadge.Set(present);
             m_merchantIcon.sprite = present ? m_merchantHere : m_merchantAway;
             m_merchantLeft = remaining;
             m_merchantTime.text = BigNumberFormatter.Clock(remaining());
@@ -155,6 +156,12 @@ namespace ZooTycoon.UI
                 StartCoroutine(UiFx.Pulse((RectTransform)m_merchant.transform));
                 SoundManager.Instance.Play(SoundTable.k_MerchantArrive);
             }
+        }
+
+        // 설계 57: 좌판을 열어 봤다 — 떠날 때까지 레드닷을 끈다(다시 오면 ShowMerchant가 켠다)
+        public void SetMerchantSeen()
+        {
+            m_merchantBadge.Set(false);
         }
 
         // 설계 49: 물때 알약. value가 null이면 값 칸을 숨긴다(대물 물때의 「대물!」), pulse면 톡 튄다
