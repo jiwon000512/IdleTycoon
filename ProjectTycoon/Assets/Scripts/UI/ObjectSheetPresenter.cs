@@ -116,9 +116,9 @@ namespace ZooTycoon.UI
                 case CounterInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", ((CounterInteractable)m_target).Queue.Count));
                     break;
-                // 설계 58: 낚시터 둑 칸은 물 넓히기(지금 물 폭)
-                case DigInteractable dig when dig.Table.Id == DigInteractable.k_Bank:
-                    m_view.SetHeader(m_tables.Text("sheet_bank_title"), m_tables.Format("sheet_bank_status", dig.Grid.Cells.Count));
+                // 설계 60: 비버 = 물 폭 · 아래 댐 조각
+                case BeaverInteractable beaver:
+                    m_view.SetHeader(m_tables.Text("sheet_beaver_title"), m_tables.Format("sheet_beaver_status", beaver.Cols, beaver.Stretch.MaxCols, beaver.Dam?.PiecesLeft ?? 0));
                     break;
                 case DigInteractable dig:
                     m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", dig.Grid.Cells.Count));
@@ -294,6 +294,21 @@ namespace ZooTycoon.UI
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
+                // 설계 60: 비버 먹이 줄 둘. 값은 물고기 이름 + 수(줄 것이 없으면 비움)
+                case ActionTable.k_FeedWiden:
+                case ActionTable.k_FeedDam:
+                {
+                    BeaverInteractable beaver = (BeaverInteractable)m_target;
+                    FishingFeedData feed = actionId == ActionTable.k_FeedWiden ? beaver.NextWiden : beaver.NextDamFeed;
+                    string key = actionId == ActionTable.k_FeedWiden ? "row_feed_widen" : "row_feed_dam";
+                    return new SheetRow
+                    {
+                        Name = m_tables.Text(key),
+                        Effect = m_tables.Text(key + (feed != null ? "_effect" : actionId == ActionTable.k_FeedDam && beaver.Dam == null ? "_none" : "_done")),
+                        Cost = feed == null ? string.Empty : m_tables.Format("tag_open_item", m_tables.Get<ItemTable>(feed.Item).Name, feed.Count),
+                        State = RowState(option.State),
+                    };
+                }
                 case ActionTable.k_PlaceSeat:
                     return new SheetRow
                     {

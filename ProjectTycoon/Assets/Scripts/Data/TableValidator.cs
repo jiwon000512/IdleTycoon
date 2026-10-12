@@ -18,7 +18,7 @@ namespace ZooTycoon.Data
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
             PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id, StairInteractable.k_Id,
-            WaterInteractable.k_Id,
+            WaterInteractable.k_Id, RockInteractable.k_Id, DamInteractable.k_Id, SeatInteractable.k_Id, BeaverInteractable.k_Id, ShopGateInteractable.k_WetWall,
             TankInteractable.k_Id, CuttingBoardInteractable.k_Id, DiningTableInteractable.k_Id, ShopGateInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
@@ -1026,9 +1026,16 @@ namespace ZooTycoon.Data
                     errors.Add($"FishingStretchTable '{stretch.Id}': 위 층은 rockCost > 0 · damPieces 0, 아래 층은 damPieces ≥ 1 · rockCost 0이어야 한다.");
                 }
 
-                if (stretch.StartCols < 1 || stretch.MaxCols < stretch.StartCols || stretch.CellCost < 0d || stretch.CellCostGrowth < 1d)
+                if (stretch.StartCols < 1 || stretch.MaxCols < stretch.StartCols)
                 {
-                    errors.Add($"FishingStretchTable '{stretch.Id}': 1 ≤ startCols ≤ maxCols, cellCost ≥ 0, cellCostGrowth ≥ 1이어야 한다.");
+                    errors.Add($"FishingStretchTable '{stretch.Id}': 1 ≤ startCols ≤ maxCols이어야 한다.");
+                }
+
+                // 설계 60: 먹이는 한 열마다 · 댐 조각마다 하나씩, 재료는 ItemTable에 있고 count ≥ 1
+                if (stretch.Feeds == null || stretch.Feeds.Length != stretch.MaxCols - stretch.StartCols || stretch.DamFeeds == null || stretch.DamFeeds.Length != stretch.DamPieces
+                    || stretch.Feeds.Concat(stretch.DamFeeds).Any(feed => feed == null || !items.Contains(feed.Item ?? "") || feed.Count < 1))
+                {
+                    errors.Add($"FishingStretchTable '{stretch.Id}': feeds는 maxCols − startCols개, damFeeds는 damPieces개이고 item은 ItemTable에 있고 count ≥ 1이어야 한다.");
                 }
 
                 if (stretch.Fish == null || !stretch.Fish.Any(fish => fish.Chance > 0d) || stretch.Fish.Any(fish => !fishIds.Contains(fish.Id ?? "") || fish.Chance < 0d))
@@ -1049,10 +1056,10 @@ namespace ZooTycoon.Data
             {
                 chances += find.Chance;
 
-                if (find.Chance < 0d || find.Item != null && (!items.Contains(find.Item) || find.Count < 1) || find.Item == null && find.CoinShare < 0d
+                if (find.Chance < 0d || find.Item != null && (!items.Contains(find.Item) || find.Count < 1) || find.Item == null && find.Coins <= 0d
                     || find.Stretch != null && !stretchIds.Contains(find.Stretch))
                 {
-                    errors.Add($"FishingFindTable '{find.Id}': chance ≥ 0, item은 ItemTable에 있고 count ≥ 1(없으면 coinShare ≥ 0), stretch는 층 id거나 null이어야 한다.");
+                    errors.Add($"FishingFindTable '{find.Id}': chance ≥ 0, item은 ItemTable에 있고 count ≥ 1(없으면 coins > 0), stretch는 층 id거나 null이어야 한다.");
                 }
             }
 

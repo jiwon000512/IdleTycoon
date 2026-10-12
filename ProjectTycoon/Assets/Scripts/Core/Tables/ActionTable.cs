@@ -36,6 +36,9 @@ namespace ZooTycoon.Core
         public const string k_BreakRock = "break_rock";
         public const string k_PullDebris = "pull_debris";
         public const string k_PlaceSeat = "place_seat";
+        // 설계 60: 비버에게 먹이 — 둑 갉기(물 넓히기) · 댐 헐기(시트 줄)
+        public const string k_FeedWiden = "feed_widen";
+        public const string k_FeedDam = "feed_dam";
         // 설계 22: 딴짓 중인 점원 깨우기
         public const string k_Wake = "wake";
         // 설계 24: 똥 치우기

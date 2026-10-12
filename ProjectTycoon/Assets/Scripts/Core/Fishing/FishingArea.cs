@@ -12,8 +12,8 @@ namespace ZooTycoon.Core
     // 달릴 때 누르고 있으면 긴장이 올라 줄 힘에 닿으면 끊긴다(놓으면 긴장이 내리고 물고기가 줄을 조금 되찾는다). 거리 0이면 낚아 재료 하나가 창고로.
     // 기다림 · 입질 중에 조이스틱을 움직이면 줄을 거둔다(줄다리기 중에는 무시).
     // 설계 58 층계 웅덩이(사용자 2026-10-12 「작은 칸에서 시작해 넓히고 꾸미는 식」): 광장 젖은 벽(IGated)을 파고 들어오는 굴 속 웅덩이. 층(FishingStretchTable)은 세로로 쌓이고
-    // 집 층만 처음 열려 물 startCols열로 시작한다. 물 옆 둑 칸(bank, 굴 파기와 같은 시트)을 파면 물이 한 열 넓어지고 확률로 물속 발견(FishingFindTable).
-    // 위 층은 바위를 코인으로 뚫어, 아래 층은 물속 통나무 댐 잔해를 줄다리기로 한 조각씩 끌어내 다 빼면 열린다(열린 층은 제 시작 크기의 물). 좌대를 놓으면 낚시터는 광장 손님을 받는 가게가 된다(IShop)
+    // 집 층만 처음 열려 물 startCols열로 시작한다. 설계 60: 층마다 비버가 있어 물고기를 주면 둑을 갉아 물이 한 열 넓어지고 확률로 물속 발견(FishingFindTable).
+    // 위 층은 바위를 코인으로 뚫어, 아래 층은 물을 다 넓힌 뒤 비버에게 먹이를 줘 비버 댐 조각을 다 헐면 열린다(열린 층은 제 시작 크기의 물). 잔해 끌어내기는 코인만. 좌대를 놓으면 낚시터는 광장 손님을 받는 가게가 된다(IShop)
     public sealed class FishingArea : WombatArea, IShop, IGated
     {
         public const string k_Id = "fishing";
@@ -32,10 +32,10 @@ namespace ZooTycoon.Core
         private readonly List<double> m_nibbles = new List<double>();
         private readonly Dictionary<int, FishingStretchTable> m_stretches = new Dictionary<int, FishingStretchTable>();
         private readonly HashSet<int> m_opened = new HashSet<int>();
-        // 열린 층의 물 격자(칸 (col, 1) = 물 한 열) · 물 사물 · 팔 수 있는 둑 칸
+        // 열린 층의 물 격자(칸 (col, 1) = 물 한 열) · 물 사물 · 비버(설계 60, 먹이로 물을 넓히고 댐을 헌다)
         private readonly Dictionary<int, BurrowGrid> m_waters = new Dictionary<int, BurrowGrid>();
         private readonly Dictionary<int, WaterInteractable> m_waterThings = new Dictionary<int, WaterInteractable>();
-        private readonly Dictionary<int, DigSet> m_banks = new Dictionary<int, DigSet>();
+        private readonly Dictionary<int, BeaverInteractable> m_beavers = new Dictionary<int, BeaverInteractable>();
         // 댐에서 뺀 조각(닫힌 층 → 수, 열리면 지운다)
         private readonly Dictionary<int, int> m_pulled = new Dictionary<int, int>();
         private readonly List<SeatInteractable> m_seats = new List<SeatInteractable>();
@@ -367,21 +367,14 @@ namespace ZooTycoon.Core
             Bus.Publish(new Events.FishLanded(this, fish));
         }
 
-        // 설계 53: 잔해 한 조각을 끌어냈다(코인 조금). 마지막 조각이면 댐이 무너져 아래 층이 열린다
+        // 설계 53: 잔해 한 조각을 끌어냈다(코인 조금). 설계 60: 댐 조각은 줄지 않는다(비버가 헌다)
         private void LandDebris()
         {
             DamInteractable dam = Debris;
-            int stretch = dam.Stretch.Index;
-            m_pulled[stretch] = PulledFrom(stretch) + 1;
             Wombat.Worker.Wallet.AddCoins(Config.DebrisCoins);
             Clear();
             Wombat.Hold(dam.Position, k_DebrisHoldSeconds);
             Bus.Publish(new Events.DebrisPulled(this, dam, Config.DebrisCoins));
-
-            if (dam.PiecesLeft <= 0)
-            {
-                Flood(stretch);
-            }
         }
 
         private void Flood(int stretch)
@@ -489,16 +482,16 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 층을 연다: 시작 크기의 물 격자 · 물 사물 · 팔 수 있는 둑 칸 · 좌대 자리
+        // 층을 연다: 시작 크기의 물 격자 · 물 사물 · 비버 · 좌대 자리
         private void Open(int index)
         {
             FishingStretchTable row = m_stretches[index];
             m_opened.Add(index);
             m_pulled.Remove(index);
-            BurrowGrid grid = new BurrowGrid(BurrowGrid.Columns(row.StartCols, 2).Where(cell => cell.Row == 1), row.CellCost, row.CellCostGrowth, new CellBounds(row.MaxCols, 2), Bus);
+            BurrowGrid grid = new BurrowGrid(BurrowGrid.Columns(row.StartCols, 2).Where(cell => cell.Row == 1), 0d, 1d, new CellBounds(row.MaxCols, 2), Bus);
             m_waters[index] = grid;
             m_waterThings[index] = new WaterInteractable(Row(WaterInteractable.k_Id), this, index);
-            m_banks[index] = new DigSet(Row(DigInteractable.k_Bank), grid, cell => Layout.ColumnRect(index, cell), this);
+            m_beavers[index] = new BeaverInteractable(Row(BeaverInteractable.k_Id), this, row);
 
             for (int i = 0; i < row.Seats.Length; i++)
             {
@@ -508,7 +501,49 @@ namespace ZooTycoon.Core
             Rebuild();
         }
 
-        // 둑 칸을 팠다(ActionFactory.Dig가 값을 치르고 격자에 판다): 물이 한 열 넓어지고 물속 발견을 굴린다
+        // 설계 60: 비버에게 먹이를 준다. dam이 아니면 둑 한 칸을 갉아(격자에 판다 → Bus_Dug) 물이 넓어지고, dam이면 아래 층 댐 조각을 하나 헐어 0이 되면 아래 층이 열린다
+        internal bool TryFeed(Worker worker, BeaverInteractable beaver, bool dam)
+        {
+            FishingFeedData feed = dam ? beaver.NextDamFeed : beaver.NextWiden;
+
+            if (feed == null || !worker.Wallet.TrySpendItem(feed.Item, feed.Count))
+            {
+                return false;
+            }
+
+            if (!dam)
+            {
+                m_waters[beaver.Index].Dig(NextBankCell(beaver.Index));
+                Bus.Publish(new Events.BeaverFed(this, beaver, null, 0));
+                return true;
+            }
+
+            DamInteractable below = beaver.Dam;
+            int stretch = below.Stretch.Index;
+            m_pulled[stretch] = PulledFrom(stretch) + 1;
+            Bus.Publish(new Events.BeaverFed(this, beaver, below, below.PiecesLeft));
+
+            if (below.PiecesLeft <= 0)
+            {
+                Flood(stretch);
+            }
+
+            return true;
+        }
+
+        // 바로 아래 닫힌 층의 댐(없으면 null)
+        internal DamInteractable DamBelow(int index)
+        {
+            return m_dams.TryGetValue(index + 1, out DamInteractable dam) && Closed(index + 1) ? dam : null;
+        }
+
+        // 다음에 갉을 둑 칸: 물이 가운데에 머물게 양옆을 번갈아(가운데에 가까운 열부터, 같으면 왼쪽)
+        private Cell NextBankCell(int index)
+        {
+            return m_waters[index].Frontier().OrderBy(cell => Math.Abs(cell.Col)).ThenBy(cell => cell.Col).First();
+        }
+
+        // 물 격자에 한 열이 더해졌다(비버 먹이 · 치트): 물이 한 열 넓어지고 물속 발견을 굴린다
         private void Bus_Dug(Events.Dug e)
         {
             int index = m_waters.FirstOrDefault(pair => pair.Value == e.Grid).Key;
@@ -520,7 +555,6 @@ namespace ZooTycoon.Core
 
             Rebuild();
             FishingStretchTable row = m_stretches[index];
-            double paid = row.CellCost * Math.Pow(row.CellCostGrowth, grid.Cells.Count - 1 - row.StartCols);
             double roll = Random.NextDouble();
             FishingFindTable find = null;
             double coins = 0d;
@@ -542,7 +576,7 @@ namespace ZooTycoon.Core
             }
             else if (find != null)
             {
-                coins = Math.Round(paid * find.CoinShare);
+                coins = find.Coins;
                 Wombat.Worker.Wallet.AddCoins(coins);
             }
 
@@ -834,8 +868,7 @@ namespace ZooTycoon.Core
 
             foreach (int index in m_opened)
             {
-                m_banks[index].Sync();
-                Placed.AddRange(m_banks[index].Things);
+                Placed.Add(m_beavers[index]);
             }
 
             Placed.AddRange(m_seats.Where(seat => !seat.Placed));

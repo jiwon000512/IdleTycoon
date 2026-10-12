@@ -2,8 +2,8 @@ using System.Numerics;
 
 namespace ZooTycoon.Core
 {
-    // 설계 53 → 설계 58: 닫힌 아래 층(Stretch) 앞의 통나무 댐. 집 쪽 이웃 층 물 바닥 가운데에 서고, 그 위 둑에서 대상이 되면 「끌어내기」 버튼으로 잔해 한 조각을 낚아(줄다리기) 끌어낸다.
-    // 조각을 다 빼면 아래 층이 열린다. 물 사물보다 먼저 대상이 된다
+    // 설계 53 → 설계 58 → 설계 60: 닫힌 아래 층(Stretch) 앞의 비버 댐. 집 쪽 이웃 층 물 바닥 가운데에 서고, 그 위 둑에서 대상이 되면 「끌어내기」 버튼으로 잔해를 낚아(줄다리기, 코인만) 끌어낸다.
+    // 조각은 비버에게 먹이를 줄 때마다 하나씩 헐리고 다 헐리면 아래 층이 열린다. 물 사물보다 먼저 대상이 된다
     public sealed class DamInteractable : Interactable
     {
         public const string k_Id = "dam";

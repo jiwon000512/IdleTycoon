@@ -12,14 +12,14 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 63)]
+        [TestCase("StringTable", 64)]
         [TestCase("ClerkTable", 4)]
         [TestCase("ClerkConfigTable", 8)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 7)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 26)]
-        [TestCase("InteractableTable", 26)]
+        [TestCase("ActionTable", 27)]
+        [TestCase("InteractableTable", 27)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 19)]
         [TestCase("BgmTable", 2)]
@@ -37,11 +37,11 @@ namespace ZooTycoon.Tests
         [TestCase("RelicTable", 2)]
         [TestCase("FishingConfigTable", 11)]
         [TestCase("FishTable", 2)]
-        [TestCase("FishingStretchTable", 2)]
-        [TestCase("FishingFindTable", 1)]
+        [TestCase("FishingStretchTable", 3)]
+        [TestCase("FishingFindTable", 2)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
-        [TestCase("QuestTable", 5)]
+        [TestCase("QuestTable", 6)]
         [TestCase("LetterTable", 3)]
         [TestCase("TraitTable", 1)]
         [TestCase("MissionTable", 1)]
@@ -145,7 +145,7 @@ namespace ZooTycoon.Tests
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).DamPieces = 0,
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == -1).RockCost = 0d,
                 t => t.GetAll<FishingStretchTable>().First(s => s.Index == 0).MaxCols = 1,
-                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 0).CellCostGrowth = 0.5,
+                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 0).Feeds = new FishingFeedData[0],
                 t => t.Get<FishingFindTable>("gem").Item = "no_such_item",
                 t => t.Get<FishingFindTable>("coins").Chance = 0.9,
                 t => t.Get<FishingFindTable>("gem").Stretch = "no_such_stretch",
@@ -514,7 +514,7 @@ namespace ZooTycoon.Tests
             TableSet cheerSulk = TestTables.Load();
             cheerSulk.Get<ClerkConfigTable>(ClerkConfigTable.k_Main).RequestSulk = 0.5d;
             TableSet noRequestLetter = TestTables.Load();
-            noRequestLetter.Get<LetterTable>(ClerkRequests.k_Upgrade).When = "start:q27";
+            noRequestLetter.Get<LetterTable>(ClerkRequests.k_Upgrade).Id = "r_other";
             TableSet noSender = TestTables.Load();
             noSender.Get<LetterTable>("l01").From = "clerk";
 
@@ -523,6 +523,29 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(cheerSulk), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noRequestLetter), Is.Not.Empty);
             Assert.That(TableValidator.Validate(noSender), Is.Not.Empty);
+        }
+
+        // 설계 60 · 8.34 · 8.38: 먹이는 한 열마다(개수) · 재료가 표에 · count ≥ 1, 댐 먹이는 조각 수만큼, 발견 코인 ≥ 0
+        [Test]
+        public void Validate_WhenBeaverFeedDataInvalid_ReportsError()
+        {
+            TableSet shortFeeds = TestTables.Load();
+            shortFeeds.GetAll<FishingStretchTable>().First(s => s.Index == 0).Feeds = new[] { new FishingFeedData { Item = "fish_crucian", Count = 1 } };
+            TableSet noItem = TestTables.Load();
+            noItem.GetAll<FishingStretchTable>().First(s => s.Index == 0).Feeds[0].Item = "no_such_fish";
+            TableSet zeroCount = TestTables.Load();
+            zeroCount.GetAll<FishingStretchTable>().First(s => s.Index == 1).DamFeeds[0].Count = 0;
+            TableSet damShort = TestTables.Load();
+            damShort.GetAll<FishingStretchTable>().First(s => s.Index == 1).DamFeeds = new FishingFeedData[0];
+            TableSet minusCoins = TestTables.Load();
+            minusCoins.Get<FishingFindTable>("coins").Coins = -1d;
+
+            Assert.That(TableValidator.Validate(TestTables.Load()), Is.Empty);
+            Assert.That(TableValidator.Validate(shortFeeds), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noItem), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(zeroCount), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(damShort), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(minusCoins), Is.Not.Empty);
         }
     }
 }

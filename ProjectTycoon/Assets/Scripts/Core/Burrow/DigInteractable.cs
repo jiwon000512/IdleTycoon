@@ -4,11 +4,9 @@ using System.Numerics;
 namespace ZooTycoon.Core
 {
     // 굴 격자 설계 v0.5 · 설계 13 → 설계 27: 팔 수 있는 흙 칸(빵집·농장 공용). 거리는 칸 네모까지, 시트에서 판다(ActionFactory.Dig가 Grid에 값을 치른다).
-    // 설계 58: 낚시터 물 옆 둑 칸(bank)도 같은 사물 — 칸 네모만 다르다(그 층 물 한 열)
     public sealed class DigInteractable : Interactable
     {
         public const string k_Id = "dig";
-        public const string k_Bank = "bank";
 
         private readonly Func<Cell, NavRect> m_rect;
 

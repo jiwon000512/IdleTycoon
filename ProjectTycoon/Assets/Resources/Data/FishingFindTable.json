@@ -1,12 +1,13 @@
 {
   "table": "FishingFindTable",
-  "version": 1,
+  "version": 2,
   "notes": [
-    "설계 58 물속 발견: 둑 칸을 파 물을 넓힐 때 나오는 것. 행 순서대로 chance를 더해 가며 난수 하나로 하나만 고른다(chance 합이 1 미만이면 나머지는 빈손). item이 있으면 재료 count개, 없으면 코인(그 칸 값 × coinShare). stretch는 층 id(null이면 모든 층). 전부 시작값(값은 밸런스방).",
-    "version 1 (2026-10-12, 설계 58): 코인(값의 반, 25%) · 반짝돌 1(12%). 유물 조각 · 어종 알은 다음 회차."
+    "설계 58 물속 발견: 둑 칸을 파 물을 넓힐 때 나오는 것. 행 순서대로 chance를 더해 가며 난수 하나로 하나만 고른다(chance 합이 1 미만이면 나머지는 빈손). item이 있으면 재료 count개, 없으면 코인 coins(고정). stretch는 층 id(null이면 모든 층). 전부 시작값(값은 밸런스방).",
+    "version 1 (2026-10-12, 설계 58): 코인(값의 반, 25%) · 반짝돌 1(12%). 유물 조각 · 어종 알은 다음 회차.",
+    "version 2 (2026-10-12): 설계 60 비버 댐 낚시터: coinShare → coins(둑 칸 값이 없어져 고정 코인 200)"
   ],
   "rows": [
-    { "id": "coins", "item": null, "count": 0, "coinShare": 0.5, "chance": 0.25, "stretch": null },
-    { "id": "gem", "item": "gem", "count": 1, "coinShare": 0, "chance": 0.12, "stretch": null }
+    { "id": "coins", "item": null, "count": 0, "coins": 200, "chance": 0.25, "stretch": null },
+    { "id": "gem", "item": "gem", "count": 1, "coins": 0, "chance": 0.12, "stretch": null }
   ]
 }

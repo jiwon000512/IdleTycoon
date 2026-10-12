@@ -1,6 +1,6 @@
 {
   "table": "QuestTable",
-  "version": 5,
+  "version": 6,
   "notes": [
     "설계 54 퀘스트 사슬 한 걸음. 행 순서 = 사슬 순서, chapter = 장(1 빵집 · 2 농장 · 3 가게 키우기 · 4 광장 · 5 새 맛 · 6 낚시 · 7 횟집, 오늘의 일 상자 단계).",
     "kind · param · count: 무엇을 세나(GoalCounter. 사건 종류 bake · stock · sell · till · plant · harvest · dig · clean · wake · bless · draw · evaluate · catch · serve는 걸음이 시작된 뒤부터, 상태 종류 visit · place · hire · unlock · star · open · fill · seat은 지금 상태). param이 null이면 아무것이나.",
@@ -12,7 +12,8 @@
     "version 2 (2026-10-12): 할 일 카드 그림을 행동 그림 「물건 하나」로(아트방, 설계 55 3단계): icon을 Sprites/Quests/<행동> 16장으로",
     "version 3 (2026-10-12): 설계 58 층계 웅덩이 낚시터: q18 낚시터 가기 → 젖은 벽 파기(open fishing, 광장 wet_wall), 새 q26 물 넓히기(dig, 낚시터 bank) q19 뒤에, q20 댐 허물기(fill down1) · q21 바위 뚫기(open up1) 순서로.",
     "version 4 (2026-10-12): 설계 59 대화로 이어지는 시작 흐름(사용자 「작은 광장 → 농사 → 빵집 → 넓히기 → 낚시 → 횟집」): 장 순서 1 광장 · 농장 → 2 빵집(열기부터) → 3 넓히기 → 4 광장 → 5 새 맛 → 6 낚시 → 7 횟집. 새 걸음 q27 편지 읽기(kind letter · menu mail) · q28 빵집 열기(open bakery · 광장 shop_gate). q06 밀 거두기 5(빵집 문 값).",
-    "version 5 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기"
+    "version 5 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기",
+    "version 6 (2026-10-12): 설계 60 비버 댐 낚시터: q26 · q20의 thing bank · dam → beaver(세기 종류 dig · fill은 그대로)"
   ],
   "rows": [
     {
@@ -409,7 +410,7 @@
       "icon": "Sprites/Quests/dig",
       "text": "quest_q26",
       "area": "fishing",
-      "thing": "bank",
+      "thing": "beaver",
       "menu": null,
       "coins": 300,
       "item": null,
@@ -441,7 +442,7 @@
       "icon": "Sprites/Quests/dig",
       "text": "quest_q20",
       "area": "fishing",
-      "thing": "dam",
+      "thing": "beaver",
       "menu": null,
       "coins": 400,
       "item": null,

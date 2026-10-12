@@ -117,6 +117,8 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite m_rockWall;
         [SerializeField] private Sprite[] m_dams;
         [SerializeField] private Sprite m_seat;
+        [Tooltip("설계 60: 비버(beaver, 발끝 피벗, 왼쪽을 봄). 없으면 둑 바위를 빌린다")]
+        [SerializeField] private Sprite m_beaver;
         [SerializeField] private Sprite[] m_debris;
         [Tooltip("설계 58 아트방 fall(A 물 커튼): 층 사이 폭포 띠 네 장(32×40, 가로 반복). 없으면 흙빛 띠")]
         [SerializeField] private Sprite[] m_falls;
@@ -175,6 +177,7 @@ namespace ZooTycoon.World
         private readonly Dictionary<RockInteractable, (SpriteRenderer art, MarkerView tag)> m_rocks = new Dictionary<RockInteractable, (SpriteRenderer, MarkerView)>();
         private readonly Dictionary<DamInteractable, SpriteRenderer> m_damArts = new Dictionary<DamInteractable, SpriteRenderer>();
         private readonly Dictionary<SeatInteractable, SpriteRenderer> m_seatArts = new Dictionary<SeatInteractable, SpriteRenderer>();
+        private readonly Dictionary<BeaverInteractable, SpriteRenderer> m_beaverArts = new Dictionary<BeaverInteractable, SpriteRenderer>();
         private readonly Dictionary<FishingVisitor, CustomerArt> m_customers = new Dictionary<FishingVisitor, CustomerArt>();
         private MarkerView m_seatTag;
 
@@ -246,6 +249,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.StretchOpened>(Bus_StretchOpened),
                 bus.Subscribe<Events.DebrisPulled>(Bus_DebrisPulled),
                 bus.Subscribe<Events.DamBroken>(Bus_DamBroken),
+                bus.Subscribe<Events.BeaverFed>(Bus_BeaverFed),
                 bus.Subscribe<Events.SeatPlaced>(Bus_SeatPlaced),
                 bus.Subscribe<Events.WaterWidened>(Bus_WaterWidened),
                 bus.Subscribe<Events.FishingVisitorArrived>(Bus_VisitorArrived),
@@ -699,6 +703,19 @@ namespace ZooTycoon.World
                 m_damArts.Remove(gone);
             }
 
+            // 설계 60: 층마다 비버(물 오른쪽 둑, 물이 넓어지면 따라간다)
+            foreach (BeaverInteractable beaver in m_fishing.Things.OfType<BeaverInteractable>())
+            {
+                if (!m_beaverArts.TryGetValue(beaver, out SpriteRenderer art))
+                {
+                    art = NewRenderer(transform, "Beaver", m_beaver != null ? m_beaver : Prop("bank_rock"), Color.white, 0);
+                    art.spriteSortPoint = SpriteSortPoint.Pivot;
+                    m_beaverArts[beaver] = art;
+                }
+
+                art.transform.localPosition = new Vector3(beaver.Position.X, beaver.Position.Y, 0f);
+            }
+
             foreach (SeatInteractable seat in m_fishing.Seats)
             {
                 if (!m_seatArts.TryGetValue(seat, out SpriteRenderer art))
@@ -784,7 +801,7 @@ namespace ZooTycoon.World
             return string.Join(" · ", m_fishing.StretchOf(stretch).Fish.Select(fish => m_tables.Get<ItemTable>(m_tables.Get<FishTable>(fish.Id).Item).Name));
         }
 
-        // 둑 칸을 파 물이 한 열 넓어졌다: 굴 · 물을 다시 칠하고 새 열을 따라 물결 · 물보라. 물속 발견은 그 열 위에 팝업(재료 아이콘 또는 코인)과 「발견!」 알약
+        // 비버가 둑을 갉아 물이 한 열 넓어졌다: 굴 · 물을 다시 칠하고 새 열을 따라 물결 · 물보라. 물속 발견은 그 열 위에 팝업(재료 아이콘 또는 코인)과 「발견!」 알약
         private void Bus_WaterWidened(Events.WaterWidened e)
         {
             if (e.Fishing != m_fishing)
@@ -865,6 +882,23 @@ namespace ZooTycoon.World
                     StartCoroutine(Rise(m_tables.Format("fishing_debris_left", left), wombat + Vector3.up * (k_PopupHeight + 0.5f)));
                 }
             }));
+        }
+
+        // 설계 60: 비버에게 먹이를 줬다. 비버 자리에 물보라 · 댐 헐기면 댐에 물보라 + 「남은 조각 n」(마지막은 DamBroken이 알린다)
+        private void Bus_BeaverFed(Events.BeaverFed e)
+        {
+            if (e.Fishing != m_fishing)
+            {
+                return;
+            }
+
+            Splash(ToWorld(e.Beaver.Position), 1);
+
+            if (e.Dam != null && e.PiecesLeft > 0)
+            {
+                Splash(ToWorld(e.Dam.Position), 2);
+                StartCoroutine(Rise(m_tables.Format("fishing_debris_left", e.PiecesLeft), ToWorld(e.Dam.Position) + Vector3.up * (k_PopupHeight + 0.5f)));
+            }
         }
 
         // 댐이 무너졌다: 굴 · 물을 다시 칠하고, 열린 아래 층 물에 왼쪽에서 오른쪽으로 물보라가 줄지어 튄다(물이 쏟아져 차오름). 새 물고기 이름 알약

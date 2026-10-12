@@ -10,7 +10,7 @@ namespace ZooTycoon.Tests
 {
     // 설계 52 검증: 강가 낚시 한 판. 둑에 서서 버튼(TryInteract)으로 던지고 · 낚아채고, 버튼 누름(SetHolding)으로 감는 실제 길로 다룬다.
     // 낚시터 난수는 늘 0.3(구간 0 물고기 = 붕어 · 크기 = 작은 · 무게 = 1.5 + 0.3 × 1.0, 물기까지 = min + 0.3 × (max − min), 가짜 입질 0번).
-    // 설계 53 → 설계 58 검증: 층계 웅덩이 — 집 층 물 3열로 시작 · 둑 칸을 파면 물이 한 열(값이 성장 · 물속 발견) · 바위 뚫기(위 층) · 댐 잔해 끌어내기(아래 층) · 층별 물고기 · 좌대 손님 · 젖은 벽 · 저장
+    // 설계 53 → 설계 58 → 설계 60 검증: 층계 웅덩이 — 집 층 물 3열로 시작 · 비버에게 물고기를 주면 물이 한 열(물속 발견) · 다 넓히면 댐 헐기(아래 층) · 바위 뚫기(위 층) · 잔해는 코인만 · 층별 물고기 · 좌대 손님 · 젖은 벽 · 저장
     public sealed class FishingTests
     {
         private const double k_Dt = 0.05;
@@ -324,19 +324,15 @@ namespace ZooTycoon.Tests
 
         private float ColumnWidth => m_fishing.Layout.ColumnWidth;
 
-        // 그 열(물 옆 둑 칸) 한가운데 서면 그 칸이 대상 · 버튼은 시트 열기 · 값은 단추에
-        private DigInteractable AtBank(int stretch, int col)
+        // 설계 60: 비버 앞에 서면 비버가 대상 · 버튼은 시트 열기
+        private BeaverInteractable AtBeaver(int stretch)
         {
-            NavRect rect = m_fishing.Layout.ColumnRect(stretch, new Cell(col, 1));
-            m_mall.Wombat.Mover.Place(new Vector2((rect.XMin + rect.XMax) * 0.5f, (rect.YMin + rect.YMax) * 0.5f));
+            BeaverInteractable beaver = m_fishing.Things.OfType<BeaverInteractable>().Single(b => b.Index == stretch);
+            m_mall.Wombat.Mover.Place(beaver.Position + new Vector2(0f, -0.3f));
             Run(k_Dt);
-            DigInteractable bank = m_fishing.Target as DigInteractable;
-            Assert.That(bank, Is.Not.Null, "둑 칸이 대상");
-            Assert.That(bank.Table.Id, Is.EqualTo(DigInteractable.k_Bank));
-            Assert.That(bank.Cell.Col, Is.EqualTo(col));
-            Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_OpenDig), "버튼은 시트 열기");
-            Assert.That(m_fishing.TargetCost, Is.EqualTo(bank.Grid.DigCost), "값은 단추에");
-            return bank;
+            Assert.That(m_fishing.Target, Is.SameAs(beaver), "비버가 대상");
+            Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_Open), "버튼은 시트 열기");
+            return beaver;
         }
 
         // 바위 앞에 서서 바위 시트의 뚫기 줄을 고른다
@@ -351,7 +347,7 @@ namespace ZooTycoon.Tests
             Run(m_mall.Wombat.DigSeconds + k_Dt);
         }
 
-        // 집 층: 물 startCols열 × waterRows줄, 물은 못 걷고 둑은 걷는다. 물 양옆 둑 칸 둘이 팔 수 있다
+        // 집 층: 물 startCols열 × waterRows줄, 물은 못 걷고 둑은 걷는다. 물 오른쪽 둑에 비버
         [Test]
         public void Home_StartsSmall_WaterIsNotWalkable()
         {
@@ -366,68 +362,90 @@ namespace ZooTycoon.Tests
             Assert.That(layout.Nav.IsWalkable(new Vector2(layout.CenterX, water.YMax - 1f)), Is.False, "물은 못 걷는다");
             Assert.That((water.XMin + water.XMax) * 0.5f, Is.EqualTo(layout.CenterX).Within(1e-4f), "물은 가운데");
             Assert.That(layout.Nav.IsWalkable(new Vector2(water.XMin - ColumnWidth * 0.5f, water.YMax - 1f)), Is.True, "물 옆 둑 칸");
-            Assert.That(m_fishing.Things.OfType<DigInteractable>().Select(bank => bank.Cell.Col), Is.EquivalentTo(new[] { -2, 2 }), "양옆 둑 칸");
+            BeaverInteractable beaver = m_fishing.Things.OfType<BeaverInteractable>().Single();
+            Assert.That(beaver.Index, Is.EqualTo(0), "집 층 비버");
+            Assert.That(beaver.Position.X, Is.GreaterThan(water.XMax), "물 오른쪽");
+            Assert.That(layout.Nav.IsWalkable(beaver.Position), Is.True, "둑 위");
+            Assert.That(beaver.NextWiden.Count, Is.EqualTo(Stretch(0).Feeds[0].Count));
+            Assert.That(beaver.NextDamFeed, Is.Null, "다 넓히기 전엔 댐 헐기 없음");
             Assert.That(m_fishing.Things.OfType<RockInteractable>().Single().Stretch.Index, Is.EqualTo(-1), "위 층 바위");
             Assert.That(m_fishing.Things.OfType<DamInteractable>().Single().Stretch.Index, Is.EqualTo(1), "아래 층 댐");
             Assert.That(layout.Nav.IsWalkable(layout.HoleFloor), Is.True, "구멍 앞");
         }
 
-        // 둑 칸을 파면(굴 파기 시트) 물이 한 열 넓어지고 값이 성장한다. 난수 0.3이면 물속 발견은 반짝돌(코인 25% 다음 12%)
+        // 설계 60: 비버에게 물고기를 주면(시트 줄) 물고기가 빠지고 물이 한 열 넓어진다(가운데에 가까운 왼쪽부터). 난수 0.3이면 물속 발견은 반짝돌(코인 25% 다음 12%). 다음 먹이는 표의 다음 칸
         [Test]
-        public void DigBank_WidensWaterByOneColumn_CostGrows_AndFinds()
+        public void Feed_WidensWaterByOneColumn_SpendsFish_AndFinds()
         {
             Create();
             Events.WaterWidened? widened = null;
             m_bus.Subscribe<Events.WaterWidened>(e => widened = e);
-            DigInteractable bank = AtBank(0, 2);
-            double cost = Stretch(0).CellCost;
-            Assert.That(bank.Grid.DigCost, Is.EqualTo(cost).Within(1e-9));
+            BeaverInteractable beaver = AtBeaver(0);
+            FishingFeedData feed = Stretch(0).Feeds[0];
+            int fish = m_state.Count(feed.Item);
             double coins = m_state.Coins;
             int gems = m_state.Count("gem");
-            Assert.That(m_fishing.TryChoose(ActionTable.k_Dig, bank, null), Is.True, "파기");
-            Assert.That(m_state.Coins, Is.EqualTo(coins - cost), "값");
+            float right = beaver.Position.X;
+            Assert.That(m_fishing.SheetActions(beaver).Select(a => a.Table.Id), Is.EquivalentTo(new[] { ActionTable.k_FeedWiden, ActionTable.k_FeedDam }));
+            Assert.That(m_fishing.TryChoose(ActionTable.k_FeedWiden, beaver, null), Is.True, "먹이");
+            Assert.That(m_state.Count(feed.Item), Is.EqualTo(fish - feed.Count), "물고기가 빠진다");
+            Assert.That(m_state.Coins, Is.EqualTo(coins), "코인은 그대로");
             Assert.That(m_fishing.Waters[0].Cells.Count, Is.EqualTo(Stretch(0).StartCols + 1));
-            Assert.That(m_fishing.Water.Rect.XMax, Is.EqualTo(3 * ColumnWidth).Within(1e-4f), "오른쪽으로 한 열");
-            Assert.That(m_fishing.Waters[0].DigCost, Is.EqualTo(cost * Stretch(0).CellCostGrowth).Within(1e-9), "다음 값은 성장");
-            Assert.That(m_fishing.Layout.Nav.IsWalkable(m_mall.Wombat.Mover.Position), Is.True, "판 칸에 서 있던 웜뱃은 비켜 선다");
-            Assert.That(widened?.Col, Is.EqualTo(2));
+            Assert.That(m_fishing.Water.Rect.XMin, Is.EqualTo(-2 * ColumnWidth).Within(1e-4f), "왼쪽으로 한 열");
+            Assert.That(beaver.NextWiden, Is.SameAs(Stretch(0).Feeds[1]), "다음 먹이");
+            Assert.That(beaver.Position.X, Is.EqualTo(right).Within(1e-4f), "물이 왼쪽으로 늘면 비버는 그대로");
+            Assert.That(m_fishing.Layout.Nav.IsWalkable(m_mall.Wombat.Mover.Position), Is.True);
+            Assert.That(widened?.Col, Is.EqualTo(-2));
             Assert.That(widened?.Find?.Id, Is.EqualTo("gem"));
             Assert.That(m_state.Count("gem"), Is.EqualTo(gems + 1), "반짝돌 하나");
-            Assert.That(m_fishing.Things.OfType<DigInteractable>().Select(b => b.Cell.Col), Is.EquivalentTo(new[] { -2, 3 }), "다음 둑 칸");
+
+            Assert.That(m_fishing.TryChoose(ActionTable.k_FeedWiden, beaver, null), Is.True);
+            Assert.That(m_fishing.Water.Rect.XMax, Is.EqualTo(3 * ColumnWidth).Within(1e-4f), "다음은 오른쪽");
+            Assert.That(beaver.Position.X, Is.EqualTo(right + ColumnWidth).Within(1e-4f), "비버가 따라간다");
         }
 
-        // 발견 확률이 1이면 늘 나온다(코인은 그 칸 값의 coinShare)
+        // 물고기가 모자라면 못 준다(Poor). 발견 확률이 1이면 늘 나온다(코인은 표의 고정값)
         [Test]
-        public void DigBank_FindCoins_WhenChanceIsCertain()
+        public void Feed_NeedsFish_FindCoinsWhenChanceIsCertain()
         {
             Create();
             m_tables.Get<FishingFindTable>("coins").Chance = 1d;
             m_tables.Get<FishingFindTable>("gem").Chance = 0d;
             Events.WaterWidened? widened = null;
             m_bus.Subscribe<Events.WaterWidened>(e => widened = e);
-            DigInteractable bank = AtBank(0, -2);
-            double cost = bank.Grid.DigCost;
+            BeaverInteractable beaver = AtBeaver(0);
+            FishingFeedData feed = Stretch(0).Feeds[0];
+            m_state.TrySpendItem(feed.Item, m_state.Count(feed.Item) - feed.Count + 1);
+            Assert.That(m_fishing.SheetActions(beaver).Single(a => a.Table.Id == ActionTable.k_FeedWiden).Options(m_mall.Wombat.Worker, beaver)[0].State, Is.EqualTo(SheetOptionState.Lacking));
+            Assert.That(m_fishing.TryChoose(ActionTable.k_FeedWiden, beaver, null), Is.False, "물고기가 모자라다");
+            m_state.AddItem(feed.Item, 1);
             double coins = m_state.Coins;
-            Assert.That(m_fishing.TryChoose(ActionTable.k_Dig, bank, null), Is.True);
-            double found = Math.Round(cost * m_tables.Get<FishingFindTable>("coins").CoinShare);
+            Assert.That(m_fishing.TryChoose(ActionTable.k_FeedWiden, beaver, null), Is.True);
+            double found = m_tables.Get<FishingFindTable>("coins").Coins;
+            Assert.That(found, Is.GreaterThan(0d), "표에 코인 값이 있다");
             Assert.That(widened?.Coins, Is.EqualTo(found));
-            Assert.That(m_state.Coins, Is.EqualTo(coins - cost + found));
+            Assert.That(m_state.Coins, Is.EqualTo(coins + found));
         }
 
-        // 물은 maxCols까지만: 다 넓히면 팔 둑 칸이 없다
+        // 물은 maxCols까지만: 다 넓히면 둑 갉기 줄이 닫히고(먹이 없음) 댐 헐기가 열린다
         [Test]
-        public void DigBank_StopsAtMaxCols()
+        public void Feed_StopsAtMaxCols_ThenDamFeedOpens()
         {
             Create();
+            BeaverInteractable beaver = m_fishing.Things.OfType<BeaverInteractable>().Single();
 
             for (int i = Stretch(0).StartCols; i < Stretch(0).MaxCols; i++)
             {
+                Assert.That(beaver.NextDamFeed, Is.Null, "넓히는 동안은 댐 헐기 없음");
                 Assert.That(m_fishing.WidenFree(), Is.True);
             }
 
             Assert.That(m_fishing.Waters[0].Cells.Count, Is.EqualTo(Stretch(0).MaxCols));
-            Assert.That(m_fishing.Things.OfType<DigInteractable>(), Is.Empty, "더 팔 둑 칸이 없다");
+            Assert.That(beaver.CanWiden, Is.False);
+            Assert.That(beaver.NextWiden, Is.Null);
+            Assert.That(m_fishing.TryChoose(ActionTable.k_FeedWiden, beaver, null), Is.False, "더 넓힐 둑이 없다");
             Assert.That(m_fishing.WidenFree(), Is.False);
+            Assert.That(beaver.NextDamFeed, Is.SameAs(Stretch(1).DamFeeds[0]), "댐 헐기 먹이");
         }
 
         // 바위를 뚫으면 위 층이 제 시작 크기의 물로 열리고, 위 층 물 아랫부분은 폭포(던지는 네모에서 뺀다)
@@ -452,40 +470,55 @@ namespace ZooTycoon.Tests
             Assert.That(m_fishing.Seats.Count(s => s.Stretch.Index == -1), Is.EqualTo(Stretch(-1).Seats.Length), "위 층 좌대 자리");
         }
 
-        // 댐 위 둑에서 끌어내기 버튼 → 잔해와 줄다리기(누르고 있으면 감김) → 조각을 다 빼면 아래 층이 열린다
+        // 설계 60: 물을 다 넓힌 뒤 비버에게 댐 먹이를 조각 수만큼 주면 댐이 무너져 아래 층이 열린다. 낚싯대로 잔해를 끌어내도 조각은 줄지 않는다(코인만)
         [Test]
-        public void Dam_PullingEveryPiece_OpensTheLowerTerrace()
+        public void Dam_FeedingEveryPiece_OpensTheLowerTerrace_PullingDebrisKeepsPieces()
         {
             Create();
             int broken = 0;
             int pulled = 0;
             m_bus.Subscribe<Events.DamBroken>(_ => broken++);
             m_bus.Subscribe<Events.DebrisPulled>(_ => pulled++);
+            DamInteractable dam = m_fishing.Things.OfType<DamInteractable>().Single();
             m_mall.Wombat.Mover.Place(new Vector2(m_fishing.Layout.CenterX, m_fishing.Layout.BankY + 0.4f));
             double coins = m_state.Coins;
+            Run(0.5);
+            Assert.That(m_fishing.Target, Is.InstanceOf<DamInteractable>(), "댐이 물보다 먼저 대상");
+            Press(ActionTable.k_PullDebris);
+            Assert.That(m_fishing.Debris, Is.Not.Null, "잔해에 줄을 걸었다");
+            Tug(true);
+            Assert.That(pulled, Is.EqualTo(1), "잔해 한 조각");
+            Assert.That(m_state.Coins, Is.EqualTo(coins + Config.DebrisCoins), "잔해는 코인");
+            Assert.That(dam.PiecesLeft, Is.EqualTo(Stretch(1).DamPieces), "잔해로는 댐 조각이 줄지 않는다");
+
+            while (m_fishing.WidenFree())
+            {
+            }
+
+            BeaverInteractable beaver = AtBeaver(0);
 
             for (int i = 0; i < Stretch(1).DamPieces; i++)
             {
-                Run(0.5);
-                Assert.That(m_fishing.Target, Is.InstanceOf<DamInteractable>(), "댐이 물보다 먼저 대상");
-                Press(ActionTable.k_PullDebris);
-                Assert.That(m_fishing.Debris, Is.Not.Null, "잔해에 줄을 걸었다");
-                Run(k_Dt);
-                Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_Reel), "잔해 줄다리기 동안 버튼은 감기");
-                Tug(true);
-                Assert.That(pulled, Is.EqualTo(i + 1), "한 조각");
+                FishingFeedData feed = Stretch(1).DamFeeds[i];
+                Assert.That(beaver.NextDamFeed, Is.SameAs(feed));
+                int fish = m_state.Count(feed.Item);
+                Assert.That(m_fishing.TryChoose(ActionTable.k_FeedDam, beaver, null), Is.True, "댐 먹이");
+                Assert.That(m_state.Count(feed.Item), Is.EqualTo(fish - feed.Count));
+                Assert.That(broken, Is.EqualTo(i == Stretch(1).DamPieces - 1 ? 1 : 0));
             }
 
             Assert.That(broken, Is.EqualTo(1), "댐이 무너졌다");
             Assert.That(m_fishing.Opened, Is.EquivalentTo(new[] { 0, 1 }));
             Assert.That(m_fishing.Waters[1].Cells.Count, Is.EqualTo(Stretch(1).StartCols));
-            Assert.That(m_state.Coins, Is.EqualTo(coins + Stretch(1).DamPieces * Config.DebrisCoins), "조각마다 코인");
             Assert.That(m_fishing.Things.OfType<DamInteractable>(), Is.Empty);
+            Assert.That(beaver.Dam, Is.Null);
+            Assert.That(beaver.NextDamFeed, Is.Null, "더 헐 댐이 없다");
+            Assert.That(m_fishing.TryChoose(ActionTable.k_FeedDam, beaver, null), Is.False);
+            Assert.That(m_fishing.Things.OfType<BeaverInteractable>().Select(b => b.Index), Is.EquivalentTo(new[] { 0, 1 }), "아래 층에도 비버");
             FishingLayout layout = m_fishing.Layout;
             Assert.That(layout.WaterOf(0).YMin, Is.EqualTo(layout.WaterBottomOf(0) + FishingLayout.k_Cliff).Within(1e-4f), "집 층 물 아래는 폭포");
             Assert.That(layout.Nav.IsWalkable(new Vector2(layout.CenterX, layout.WaterTopOf(1) + 0.6f)), Is.True, "아래 층 둑");
             Assert.That(m_fishing.Seats.Count(s => s.Stretch.Index == 1), Is.EqualTo(Stretch(1).Seats.Length), "아래 층 좌대 자리");
-            Assert.That(m_state.Count(k_Item), Is.EqualTo(TestTables.k_PlentyItems), "잔해는 재료가 아니다");
         }
 
         // 잔해에 줄을 건 채 조이스틱을 움직이면 줄을 놓고 바로 걷는다(조각은 그대로)
@@ -635,15 +668,16 @@ namespace ZooTycoon.Tests
         {
             Create();
             Assert.That(m_fishing.OpenGateFree(), Is.True);
-            Assert.That(m_fishing.OpenNextFree(), Is.True, "위 층");
-            Assert.That(m_fishing.WidenFree(), Is.True, "집 층 물 한 열");
-            m_mall.Wombat.Mover.Place(new Vector2(m_fishing.Layout.CenterX, m_fishing.Layout.BankY + 0.4f));
-            Run(0.5);
-            Press(ActionTable.k_PullDebris);
-            Tug(true);
+            while (m_fishing.WidenFree())
+            {
+            }
+
+            Assert.That(m_fishing.OpenNextFree(), Is.True, "위 층(집 층을 다 넓힌 뒤라 위 층은 시작 크기)");
+
+            BeaverInteractable beaver = AtBeaver(0);
+            Assert.That(m_fishing.TryChoose(ActionTable.k_FeedDam, beaver, null), Is.True, "댐 한 조각");
             Assert.That(m_fishing.PulledFrom(1), Is.EqualTo(1));
             Assert.That(m_fishing.PlaceSeatFree(), Is.True);
-            double cost = m_fishing.Waters[0].DigCost;
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(GameSave.Capture(m_state, m_mall));
             Create();
             int widened = 0;
@@ -652,8 +686,8 @@ namespace ZooTycoon.Tests
             Run(k_Dt);
             Assert.That(m_fishing.GateOpen, Is.True);
             Assert.That(m_fishing.Opened, Is.EquivalentTo(new[] { -1, 0 }));
-            Assert.That(m_fishing.Waters[0].Cells.Count, Is.EqualTo(Stretch(0).StartCols + 1));
-            Assert.That(m_fishing.Waters[0].DigCost, Is.EqualTo(cost).Within(1e-9), "값 성장도 이어진다");
+            Assert.That(m_fishing.Waters[0].Cells.Count, Is.EqualTo(Stretch(0).MaxCols));
+            Assert.That(m_fishing.Things.OfType<BeaverInteractable>().Single(b => b.Index == 0).NextDamFeed, Is.SameAs(Stretch(1).DamFeeds[1]), "댐 먹이 차례도 이어진다");
             Assert.That(m_fishing.Waters[-1].Cells.Count, Is.EqualTo(Stretch(-1).StartCols));
             Assert.That(widened, Is.EqualTo(0), "되살릴 때는 발견 · 사건이 없다");
             Assert.That(m_fishing.PulledFrom(1), Is.EqualTo(1));

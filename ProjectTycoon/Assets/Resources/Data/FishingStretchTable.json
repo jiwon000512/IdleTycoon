@@ -1,6 +1,6 @@
 {
   "table": "FishingStretchTable",
-  "version": 2,
+  "version": 3,
   "notes": [
 
     "설계 58 층계 웅덩이 낚시터: 낚시터 층. 층은 세로로 쌓인 웅덩이 하나(둑 줄 + 물 줄 FishingConfigTable waterRows). index 0이 집 층(구멍 · 둑 소품), 음수는 위(상류, 바위벽 뒤) · 양수는 아래(하류, 통나무 댐 뒤). 전부 시작값이며 플레이로 튠한다(값은 밸런스방).",
@@ -9,7 +9,8 @@
     "fish: 이 층에서 던지면 무는 물고기(FishTable id)와 chance 비중. 좌대 손님이 낚는 물고기(보이기만)도 여기서.",
     "seats: 좌대 자리(층 가운데에서 dx, 물 윗선에서 FishingConfigTable seatBack 위 둑 줄)와 놓는 값. dx는 시작 물 폭 안에 둔다(손님 찌가 물에 뜬다). 놓은 좌대마다 광장 손님 한 명이 앉아 낚는다. pay: 그 손님이 한 마리 낚을 때마다 내는 코인(석상 값 축복 곱).",
     "version 1 (2026-10-07, 설계 53): 처음 낚시터 + 하류 1(바위 2,500 · 댐 3 · 붕어 · 메기) + 상류 1(바위 15,000 · 댐 5 · 메기). 사용자 「양쪽으로 이어지게 · 지금 + 새 구간 둘」.",
-    "version 2 (2026-10-12): 설계 58 층계 웅덩이 낚시터(사용자 「작은 칸에서 시작해 넓히고 꾸미는 식」): 가로 구간 → 세로 층. startCols · maxCols · cellCost · cellCostGrowth 추가, 위 층은 바위만(damPieces 0) · 아래 층은 댐만(rockCost 0)."
+    "version 2 (2026-10-12): 설계 58 층계 웅덩이 낚시터(사용자 「작은 칸에서 시작해 넓히고 꾸미는 식」): 가로 구간 → 세로 층. startCols · maxCols · cellCost · cellCostGrowth 추가, 위 층은 바위만(damPieces 0) · 아래 층은 댐만(rockCost 0).",
+    "version 3 (2026-10-12): 설계 60 비버 댐 낚시터(사용자 「비버한테 물고기를 주면 늘릴 수 있게」): cellCost · cellCostGrowth 삭제 → feeds(한 열마다 비버 먹이 {item, count}, maxCols − startCols개) · damFeeds(아래 층 댐 조각마다 먹이, damPieces개). damPieces 3 → 5(그림 C 비버 댐 다섯 단계). 잔해 끌어내기는 코인만. 값은 임시(밸런스방)"
   ],
   "rows": [
     {
@@ -19,8 +20,8 @@
       "damPieces": 0,
       "startCols": 3,
       "maxCols": 7,
-      "cellCost": 400,
-      "cellCostGrowth": 1.6,
+      "feeds": [{ "item": "fish_crucian", "count": 2 }, { "item": "fish_crucian", "count": 3 }, { "item": "fish_crucian", "count": 4 }, { "item": "fish_crucian", "count": 5 }],
+      "damFeeds": [],
       "fish": [{ "id": "crucian", "chance": 3 }, { "id": "minnow", "chance": 5 }],
       "seats": [{ "dx": -1.7, "cost": 500 }, { "dx": 1.7, "cost": 1000 }],
       "pay": 15
@@ -29,11 +30,11 @@
       "id": "down1",
       "index": 1,
       "rockCost": 0,
-      "damPieces": 3,
+      "damPieces": 5,
       "startCols": 3,
       "maxCols": 7,
-      "cellCost": 1500,
-      "cellCostGrowth": 1.6,
+      "feeds": [{ "item": "fish_catfish", "count": 1 }, { "item": "fish_catfish", "count": 2 }, { "item": "fish_catfish", "count": 2 }, { "item": "fish_catfish", "count": 3 }],
+      "damFeeds": [{ "item": "fish_crucian", "count": 5 }, { "item": "fish_crucian", "count": 5 }, { "item": "fish_catfish", "count": 1 }, { "item": "fish_catfish", "count": 1 }, { "item": "fish_catfish", "count": 2 }],
       "fish": [{ "id": "crucian", "chance": 3 }, { "id": "catfish", "chance": 2 }],
       "seats": [{ "dx": -1.7, "cost": 2000 }, { "dx": 1.7, "cost": 4000 }],
       "pay": 25
@@ -45,8 +46,8 @@
       "damPieces": 0,
       "startCols": 3,
       "maxCols": 7,
-      "cellCost": 4000,
-      "cellCostGrowth": 1.6,
+      "feeds": [{ "item": "fish_catfish", "count": 2 }, { "item": "fish_catfish", "count": 3 }, { "item": "fish_catfish", "count": 4 }, { "item": "fish_catfish", "count": 5 }],
+      "damFeeds": [],
       "fish": [{ "id": "catfish", "chance": 1 }],
       "seats": [{ "dx": -1.7, "cost": 8000 }, { "dx": 1.7, "cost": 16000 }],
       "pay": 40

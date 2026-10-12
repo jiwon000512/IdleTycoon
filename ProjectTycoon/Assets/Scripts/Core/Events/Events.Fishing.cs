@@ -102,6 +102,22 @@ namespace ZooTycoon.Core
         }
 
         // 설계 53: 댐 잔해 한 조각을 끌어냈다(코인은 이미 지갑에). 남은 조각은 Dam.PiecesLeft
+        public readonly struct BeaverFed
+        {
+            public readonly FishingArea Fishing;
+            public readonly BeaverInteractable Beaver;
+            public readonly DamInteractable Dam;
+            public readonly int PiecesLeft;
+
+            public BeaverFed(FishingArea fishing, BeaverInteractable beaver, DamInteractable dam, int piecesLeft)
+            {
+                Fishing = fishing;
+                Beaver = beaver;
+                Dam = dam;
+                PiecesLeft = piecesLeft;
+            }
+        }
+
         public readonly struct DebrisPulled
         {
             public readonly FishingArea Fishing;

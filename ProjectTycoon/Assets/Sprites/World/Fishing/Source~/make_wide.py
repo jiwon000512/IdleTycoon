@@ -206,6 +206,9 @@ if __name__ == '__main__':
         done = set()
         Image.fromarray(dry_bed(PICK['dry_bed']), 'RGBA').save(os.path.join(HERE, '..', 'dry_bed.png')); done.add('dry_bed')
         for kind, s in SHEETS.items():
+            if kind == 'water':
+                done.update(s['names'])        # 2026-10-12 댐은 make_beaver_dam.py(사용자 시안 C 비버 댐, dam_1~5)가 만든다
+                continue
             for k in sorted({PICK[n] for n in s['names']}):
                 for name, ic in extract(os.path.join(HERE, 'raw', 'wide_%s_%s.png' % (k, kind)), s['names'] if kind != 'water' else [], s['names'] if kind == 'water' else [], s.get('cuts', {}).get(k, ()), s.get('zone', {}).get(k, 51) if 'zone' in s else None):
                     if kind == 'bank' and name == 'rock_wall':
