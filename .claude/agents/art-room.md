@@ -18,7 +18,7 @@ model: inherit
 
 Unity 에디터
 - 리드와 에디터 하나를 나눠 쓴다. 잠금이 차례를 정한다(스킬 `unity-editor` 「에디터 차례 잠금」).
-- 에디터 스크립트는 앞에 `ME=art-room`을 붙여 부른다(예: `ME=art-room bash .claude/skills/unity-editor/scripts/play.sh`). 안 붙이면 훅이 막는다. 날 `unity cmd`는 훅이 이 이름으로 잠금을 잡는다.
+- 에디터 스크립트는 앞에 `ME=art`(띄울 때 받은 이름)를 붙여 부른다(예: `ME=art bash .claude/skills/unity-editor/scripts/play.sh`). 안 붙이면 훅이 막고 맞는 이름을 알려 준다. 날 `unity cmd`는 훅이 이 이름으로 잠금을 잡는다.
 - 팀원은 백그라운드 명령을 못 쓴다. Codex 시안 여러 장은 한 명령 안에서 `&` + `wait`, 잠금 · 생성 기다림은 앞에서 최대 10분씩 기다린다.
 
 사용자에게 보이는 글은 진행 알림까지 모두 한국어로 쓴다.

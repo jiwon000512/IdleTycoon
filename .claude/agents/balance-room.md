@@ -27,7 +27,7 @@ model: inherit
 - AskUserQuestion을 쓸 수 없으면 보기와 권장안을 리드에게 보내 대신 묻게 한다.
 
 Unity 에디터
-- 측정은 헤드리스로 하고 에디터는 되도록 쓰지 않는다. 플레이로 봐야 하면 잠금 차례를 지키고(스킬 `unity-editor`) 스크립트 앞에 `ME=balance-room`을 붙인다(배속은 `dev.sh scale`, 치트는 `dev.sh cheat`).
+- 측정은 헤드리스로 하고 에디터는 되도록 쓰지 않는다. 플레이로 봐야 하면 잠금 차례를 지키고(스킬 `unity-editor`) 스크립트 앞에 `ME=balance`(띄울 때 받은 이름)를 붙인다(배속은 `dev.sh scale`, 치트는 `dev.sh cheat`).
 - 팀원은 백그라운드 명령을 못 쓴다.
 
 사용자에게 보이는 글은 진행 알림까지 모두 한국어로 쓴다.

@@ -29,7 +29,7 @@ description: 이 프로젝트(ProjectTycoon)의 Unity 에디터를 CLI로 다룰
 
 - `play.sh`가 잡고 `stop.sh`가 놓는다. `compile.sh` · `test.sh`는 잡았다 끝나면 놓는다. 다른 방이 잡고 있으면 스크립트가 최대 5분 기다린다.
 - 날 `unity cmd`(eval · run_script · menu 등)는 훅(`.claude/helpers/editor-guard.sh`)이 짧은 잠금을 잡고, 다른 방 것이면 막는다. 읽기만 하는 `editor_status` · `console` 등은 통과.
-- 한 탭 팀(리드 = 프로그래밍방, 팀원 art = 아트방): 팀원 · 서브에이전트의 도구 호출은 `session_id`가 리드와 같고 `agent_type`이 붙어, 훅은 `agent_type`을 방 이름으로 쓴다. 스크립트는 셸의 세션 ID로 잠금을 잡으므로 팀원은 앞에 `ME=<agent_type>`을 붙여 부른다(`ME=art-room bash …/play.sh`). 안 붙이면 훅이 막는다.
+- 한 탭 팀(리드 = 프로그래밍방, 팀원 art = 아트방): 팀원 · 서브에이전트의 도구 호출은 `session_id`가 리드와 같고 `agent_type`이 붙어, 훅은 `agent_type`을 방 이름으로 쓴다. 스크립트는 셸의 세션 ID로 잠금을 잡으므로 팀원은 앞에 `ME=<agent_type>`을 붙여 부른다. agent_type은 띄울 때 준 이름이다(`ME=art bash …/play.sh`, 2026-10-12 확인). 안 붙이면 훅이 막고 맞는 이름을 알려 준다.
 - 누구든 플레이 잠금을 잡고 있으면 `Assets/**/*.cs` 편집도 훅이 막는다. 그동안은 다른 일을 하거나 `lock.sh wait`.
 - 오래 손대지 않은 잠금은 버려진 것으로 본다(cmd 2분 · play 20분, 플레이 잠금인데 에디터가 멈춰 있으면 1분). 굽기처럼 스크립트 밖에서 오래 쓸 때는 `lock.sh take bake` → 끝나면 `free`.
 - 한계: .cs 차단은 Edit · Write만 본다. 셸로 파일을 쓰면 뚫리니 플레이 중에는 셸로도 .cs를 쓰지 않는다.
