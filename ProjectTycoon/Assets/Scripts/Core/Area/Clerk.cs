@@ -151,10 +151,11 @@ namespace ZooTycoon.Core
             return ZooTycoon.Core.Trait.Boost(Trait, effect);
         }
 
-        // 설계 59 ⓒ 부탁을 들어줬다: 일머리가 오른다(100까지)
+        // 설계 59 ⓒ 부탁을 들어줬다: 일머리가 오르고(100까지) 기분이 풀린다
         internal void Grow(int skill)
         {
             Skill = Math.Min(100, Skill + skill);
+            Mood = 1d;
         }
 
         // 부탁을 넘겼다: 딴짓이 는다

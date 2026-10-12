@@ -85,9 +85,13 @@ namespace ZooTycoon.Tests
                 game.Mall.Tick(1d);
             }
 
-            // 넘긴 뒤 다음 월급날에 다시 부탁할 수 있다(새 부탁은 시간이 가득)
-            Assert.That(game.Mall.Requests.Of(counter)?.Left ?? Config(game).RequestSeconds, Is.EqualTo(Config(game).RequestSeconds).Within(3d));
             Assert.That(counter.Skill, Is.EqualTo(50));
+            // 넘긴 뒤 다음 월급날에 다시 부탁한다(새 부탁은 시간이 가득). 앞 편지는 빠지고 새 편지 한 통
+            Paydays(game, 1);
+            Assert.That(game.Mall.Requests.Of(counter), Is.Not.Null, "다시 부탁");
+            Assert.That(game.Mall.Requests.Of(counter).Left, Is.GreaterThan(0d).And.LessThanOrEqualTo(Config(game).RequestSeconds));
+            Assert.That(game.Mall.Mailbox.Letters.Count(letter => letter.Clerk == counter), Is.EqualTo(1), "같은 점원의 옛 부탁 편지는 빠진다");
+            Assert.That(game.Mall.Mailbox.Unread.Count(letter => letter.Clerk == counter), Is.EqualTo(1));
             Assert.That(counter.Mood, Is.EqualTo(Config(game).RequestSulk), "넘기면 딴짓 ×");
         }
 

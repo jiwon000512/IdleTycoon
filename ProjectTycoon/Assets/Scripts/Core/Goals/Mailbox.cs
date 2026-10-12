@@ -78,9 +78,11 @@ namespace ZooTycoon.Core
             return true;
         }
 
-        // 점원 편지를 넣는다
+        // 점원 편지를 넣는다. 같은 점원의 같은 편지(앞선 부탁)는 뺀다(리뷰: 저장 키가 같아 불러올 때 하나만 남았다. 우편함도 끝없이 늘지 않는다)
         internal void Post(LetterTable row, Clerk clerk)
         {
+            m_letters.RemoveAll(letter => letter.Row == row && letter.Clerk == clerk);
+            m_read.RemoveWhere(letter => letter.Row == row && letter.Clerk == clerk);
             Add(new Letter(row, clerk));
         }
 
