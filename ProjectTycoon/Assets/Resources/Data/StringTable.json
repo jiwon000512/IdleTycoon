@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 61,
+  "version": 62,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -64,7 +64,8 @@
     "version 58 (2026-10-12): 설계 56 행동 단추 값 표시: 갈기 값 표식 문구 tag_till 삭제(값은 단추에)",
     "version 59 (2026-10-12): 설계 57 레드닷: 점원 단추 「모자람」 글 clerk_badge_short 삭제(점 안에 수)",
     "version 60 (2026-10-12): 설계 58 층계 웅덩이 낚시터: quest_q18 · q20 · q21 글 바꿈, quest_q26 · 젖은 벽 시트(sheet_wet_wall_* · row_wet_wall*) · 둑 칸 시트(sheet_bank_*) · fishing_find 추가, row_break_rock_effect · sheet_rock_status · sheet_gate 문구 손질",
-    "version 61 (2026-10-12): 설계 59 대화로 이어지는 시작 흐름: 편지(sender_* · letter_*) · 손님 소문(say_rumor_*) · 빵집 문 시트(row_open_bakery* · sheet_bakery_gate_*) · tag_open_item · letter_* 카드 글 · quest_q27 · q28"
+    "version 61 (2026-10-12): 설계 59 대화로 이어지는 시작 흐름: 편지(sender_* · letter_*) · 손님 소문(say_rumor_*) · 빵집 문 시트(row_open_bakery* · sheet_bakery_gate_*) · tag_open_item · letter_* 카드 글 · quest_q27 · q28",
+    "version 62 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기"
   ],
   "rows": [
     {
@@ -1369,7 +1370,7 @@
     },
     {
       "id": "quest_q10",
-      "ko": "점원 뽑기"
+      "ko": "오븐 점원 뽑기"
     },
     {
       "id": "quest_q11",
@@ -1602,6 +1603,74 @@
     {
       "id": "letter_gift_item",
       "ko": "{0} {1}개"
+    },
+    {
+      "id": "quest_q31",
+      "ko": "계산 점원 뽑기"
+    },
+    {
+      "id": "quest_q30",
+      "ko": "농장 점원 뽑기"
+    },
+    {
+      "id": "sender_agency",
+      "ko": "일자리 알선소"
+    },
+    {
+      "id": "letter_l09_1",
+      "ko": "빵집 줄이 길다고 들었습니다. 계산을 맡길 일손을 소개합니다."
+    },
+    {
+      "id": "letter_l09_2",
+      "ko": "점원 단추에서 후보를 보세요. 월급은 협상할 수 있어요."
+    },
+    {
+      "id": "letter_l10_1",
+      "ko": "밭이 넷이면 혼자 돌보기 벅찹니다. 농장 일손을 소개합니다."
+    },
+    {
+      "id": "letter_l11_1",
+      "ko": "오븐이 둘이군요. 굽는 손도 둘이면 좋지요. 오븐 일손을 소개합니다."
+    },
+    {
+      "id": "say_rumor_q31_1",
+      "ko": "줄이 너무 길어…"
+    },
+    {
+      "id": "say_rumor_q31_2",
+      "ko": "계산 기다리다 지치겠다"
+    },
+    {
+      "id": "trait_speed",
+      "ko": "손이 빠름"
+    },
+    {
+      "id": "trait_speed_desc",
+      "ko": "맡은 오븐 · 계산대가 1.3배 빠르다"
+    },
+    {
+      "id": "trait_charm",
+      "ko": "싹싹함"
+    },
+    {
+      "id": "trait_charm_desc",
+      "ko": "계산한 손님이 팁을 더 자주 준다"
+    },
+    {
+      "id": "trait_diligent",
+      "ko": "부지런함"
+    },
+    {
+      "id": "trait_diligent_desc",
+      "ko": "딴짓을 반만 한다"
+    },
+    {
+      "id": "trait_frugal",
+      "ko": "알뜰함"
+    },
+    {
+      "id": "trait_frugal_desc",
+      "ko": "월급을 20% 싸게 시작한다"
     },
     {
       "id": "mission_sell",

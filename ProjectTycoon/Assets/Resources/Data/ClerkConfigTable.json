@@ -1,6 +1,6 @@
 {
   "table": "ClerkConfigTable",
-  "version": 6,
+  "version": 7,
   "notes": [
     "설계 21 점원(2026-09-26): 월급·후보·일머리·협상 숫자 한 행(id main). 전부 시작값.",
     "wagePeriodSeconds: 월급 주기(초). 주기마다 점원마다 지갑에서 빼고, 모자라면 그 점원만 해고. 고용 즉시 첫 월급.",
@@ -12,7 +12,8 @@
     "version 3 (2026-09-26, 사용자 피드백): 딴짓 시간은 일머리에 따라 = (idleSecondsMin + (idleSecondsMax − idleSecondsMin) × (100 − 일머리)/100) × 0.75~1.25 (일머리 1이면 1분 넘게). outingChance: 외출(구멍으로 나가 광장 들를 곳을 돌다 옴, 광장에서도 깨울 수 있다). 한 난수로 외출 → 산책(strollChance) → 멍.",
     "version 4 (2026-09-27, 사용자 요청, 기획서 v0.12): candidateCount 5 → 3. 후보 팝업이 스크롤 없이 3줄에 맞는다.",
     "version 5 (2026-09-28, 점원 수다, 기획서 v0.17): chatChance(딴짓에 걸렸을 때 수다 확률, 한 난수로 수다 → 외출 → 산책 → 멍. 상대가 없으면 그 몫은 나머지 딴짓 비율대로) · chatDialogues(수다 대화 DialogueTable id). 수다는 가게 안의 가장 가까운 다른 점원을 일하는 중이어도 불러 세우고 마주 보고 대화한다. 「딴짓 중인 점원이 있으면 늘 수다」 규칙 삭제. outingChance 0.3 → 0.225 · strollChance 0.35 → 0.2625(수다 25%만큼 비율 그대로 줄임). chatOffset 0.6 → 1.0(마주 선 두 점원 그림이 겹쳤다).",
-    "version 6 (2026-09-28, 사용자 요청): questionHoldSeconds — 딴짓 점원에 「?」가 뜬 순간(웜뱃이 다가옴) 이 시간 동안 제자리에 서서 웜뱃을 본다(빵집·광장). 걷던 길은 그 뒤 이어 간다."
+    "version 6 (2026-09-28, 사용자 요청): questionHoldSeconds — 딴짓 점원에 「?」가 뜬 순간(웜뱃이 다가옴) 이 시간 동안 제자리에 서서 웜뱃을 본다(빵집·광장). 걷던 길은 그 뒤 이어 간다.",
+    "version 7 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기"
   ],
   "rows": [
     {
@@ -20,7 +21,7 @@
       "wagePeriodSeconds": 60,
       "candidateCount": 3,
       "refreshCost": 50,
-      "skillSkew": 2,
+      "skillSkew": 2, "traitChance": 0.4,
       "wagePerSkill": 1.0,
       "idleSecondsMin": 3,
       "idleSecondsMax": 90,

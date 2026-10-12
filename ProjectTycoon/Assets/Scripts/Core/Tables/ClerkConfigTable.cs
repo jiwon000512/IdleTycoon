@@ -34,6 +34,8 @@ namespace ZooTycoon.Core
         public double RefreshCost { get; set; }
         // 일머리 = 1 + ⌊99 × r^SkillSkew⌋. 클수록 높은 일머리가 드물다
         public double SkillSkew { get; set; }
+        // 설계 59: 후보가 특기를 가질 확률(셋 중 하나는 꼭 갖는다)
+        public double TraitChance { get; set; }
         public double WagePerSkill { get; set; }
         // 한 바퀴 끝날 때마다 확률 (100 − 일머리)/100로 딴짓(멍 때리기), 이 사이 균등 초
         public double IdleSecondsMin { get; set; }

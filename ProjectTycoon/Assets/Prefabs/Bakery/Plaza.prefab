@@ -2168,6 +2168,8 @@ MonoBehaviour:
   - To: restaurant
     Root: {fileID: 6638713756643249055}
     Sign: {fileID: 4270494496625117689}
+  m_wetWall: {fileID: 21300000, guid: 12fc8a1bad0b9804c9714a047b879a2d, type: 3}
+  m_wetWallOpen: {fileID: 21300000, guid: 78d7e7e80c5407d4aa43fe10fae908fa, type: 3}
   m_stairs: {fileID: 4102083107926256713}
   m_wombat: {fileID: 7318591197986811920}
   m_statue: {fileID: 6631985410354446933}

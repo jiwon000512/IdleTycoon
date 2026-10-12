@@ -43,7 +43,8 @@ namespace ZooTycoon.UI
         {
             QuestTable step = m_quests.Current;
 
-            if (step == null)
+            // 설계 59: 숨는 걸음은 카드도 없다
+            if (step == null || m_quests.Hidden)
             {
                 m_card.Hide();
                 return;

@@ -91,7 +91,9 @@ namespace ZooTycoon.Core
                 m_remaining = Bakery.Config.CheckoutSeconds;
             }
 
-            m_remaining -= dt * UpgradeValue(UpgradeLevel) * Bakery.Wallet.Scale(BlessingTable.k_Checkout);
+            // 설계 59 특기: 점원이 계산하면 손 빠름 · 싹싹함이 붙는다
+            bool byClerk = clerk != null && clerk.Working;
+            m_remaining -= dt * UpgradeValue(UpgradeLevel) * Bakery.Wallet.Scale(BlessingTable.k_Checkout) * (byClerk ? clerk.Boost(TraitTable.k_Speed) : 1d);
 
             if (m_remaining <= 0d)
             {
@@ -121,7 +123,8 @@ namespace ZooTycoon.Core
         private void Tip(BakeryVisitor visitor, double price)
         {
             Stars stars = Bakery.Wallet.Stars;
-            double chance = stars.TipChance(Bakery.Id);
+            Clerk clerk = Bakery.ClerkOf(this);
+            double chance = stars.TipChance(Bakery.Id) * (clerk != null && clerk.Working ? clerk.Boost(TraitTable.k_Tip) : 1d);
 
             if (chance <= 0d || Bakery.Random.NextDouble() >= chance)
             {

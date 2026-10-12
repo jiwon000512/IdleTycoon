@@ -12,11 +12,11 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 61)]
+        [TestCase("StringTable", 62)]
         [TestCase("ClerkTable", 4)]
-        [TestCase("ClerkConfigTable", 6)]
+        [TestCase("ClerkConfigTable", 7)]
         [TestCase("BubbleTable", 4)]
-        [TestCase("DialogueTable", 6)]
+        [TestCase("DialogueTable", 7)]
         [TestCase("BreadTable", 4)]
         [TestCase("ActionTable", 26)]
         [TestCase("InteractableTable", 26)]
@@ -41,8 +41,9 @@ namespace ZooTycoon.Tests
         [TestCase("FishingFindTable", 1)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
-        [TestCase("QuestTable", 4)]
-        [TestCase("LetterTable", 1)]
+        [TestCase("QuestTable", 5)]
+        [TestCase("LetterTable", 2)]
+        [TestCase("TraitTable", 1)]
         [TestCase("MissionTable", 1)]
         [TestCase("MissionChestTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)

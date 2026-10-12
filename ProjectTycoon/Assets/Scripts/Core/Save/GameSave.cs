@@ -26,6 +26,7 @@ namespace ZooTycoon.Core
                 Stars = new Dictionary<string, int>(state.Stars.Counts),
                 UntilPayday = mall.Payroll.UntilPayday,
                 QuestId = mall.Quests.Current?.Id,
+                QuestRevealed = mall.Quests.Revealed,
                 Area = mall.Active.Id,
                 Mail = new MailSave { Arrived = mall.Mailbox.Letters.Select(letter => letter.Id).ToList(), Read = mall.Mailbox.Letters.Where(mall.Mailbox.IsRead).Select(letter => letter.Id).ToList() },
                 QuestIndex = mall.Quests.Index,
@@ -70,7 +71,7 @@ namespace ZooTycoon.Core
             }
 
             mall.Bakery.PlaceWombatHome();
-            mall.Quests.Restore(data.QuestId, data.QuestIndex, data.QuestProgress);
+            mall.Quests.Restore(data.QuestId, data.QuestIndex, data.QuestProgress, data.QuestRevealed);
             mall.Mailbox.Restore(data.Mail?.Arrived ?? new List<string>(), data.Mail?.Read ?? new List<string>());
 
             // 설계 59: 새 모양 저장이면 있던 곳으로(옛 저장은 빵집에서)
@@ -129,12 +130,13 @@ namespace ZooTycoon.Core
                     Wage = clerk.Wage,
                     Look = clerk.Look.Id,
                     Product = clerk.Product,
+                    Trait = clerk.Trait?.Id,
                 });
             }
 
             foreach (Candidate candidate in area.WaitingCandidates)
             {
-                save.Candidates.Add(new CandidateSave { Name = candidate.Name, Skill = candidate.Skill, Look = candidate.Look.Id });
+                save.Candidates.Add(new CandidateSave { Name = candidate.Name, Skill = candidate.Skill, Look = candidate.Look.Id, Trait = candidate.Trait?.Id });
             }
 
             switch (area)
@@ -283,13 +285,13 @@ namespace ZooTycoon.Core
 
                 if (thing != null && look != null && area.CanStaff(thing) && area.ClerkOf(thing) == null)
                 {
-                    area.RestoreClerk(new Candidate(c.Name, c.Skill, look), thing, c.Wage, c.Product);
+                    area.RestoreClerk(new Candidate(c.Name, c.Skill, look, Find<TraitTable>(tables, c.Trait)), thing, c.Wage, c.Product);
                 }
             }
 
             area.RestoreCandidates(save.Candidates
                 .Where(c => Find<VisitorTable>(tables, c.Look) != null)
-                .Select(c => new Candidate(c.Name, c.Skill, Find<VisitorTable>(tables, c.Look))));
+                .Select(c => new Candidate(c.Name, c.Skill, Find<VisitorTable>(tables, c.Look), Find<TraitTable>(tables, c.Trait))));
         }
 
         private static List<int[]> CaptureCells(BurrowGrid grid)

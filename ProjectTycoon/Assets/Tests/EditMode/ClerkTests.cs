@@ -506,8 +506,8 @@ namespace ZooTycoon.Tests
         [Test]
         public void Candidate_SkillFollowsSkew_WageFollowsSkill()
         {
-            // 후보마다 (이름, 일머리, 외형) 순으로 난수 3개
-            BakeryArea shop = Create(new SequenceRandom(0d, 0.5, 0d, 0d, 0.9, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d));
+            // 후보마다 (이름, 일머리, 외형, 특기 굴림) 순으로 난수 4개 — 0.9는 특기 없음(traitChance 0.4). 셋 다 없으면 마지막이 특기 하나를 받는다(난수 1개)
+            BakeryArea shop = Create(new SequenceRandom(0d, 0.5, 0d, 0.9, 0d, 0.9, 0d, 0.9, 0d, 0d, 0d, 0.9, 0d, 0d, 0d, 0d, 0d, 0d, 0d));
             IReadOnlyList<Candidate> candidates = shop.Candidates;
 
             Assert.That(candidates[0].Skill, Is.EqualTo(25));
@@ -515,6 +515,7 @@ namespace ZooTycoon.Tests
             Assert.That(candidates[2].Skill, Is.EqualTo(1));
             Assert.That(candidates[0].Name, Is.Not.EqualTo(candidates[1].Name));
             Assert.That(candidates[0].Look.Role, Is.EqualTo(VisitorRole.Clerk));
+            Assert.That(candidates.Count(c => c.Trait != null), Is.EqualTo(1), "셋 중 하나는 꼭 특기");
             double baseWage = m_tables.Get<ClerkTable>(OvenInteractable.k_Id).BaseWage;
             Assert.That(shop.WageFor(candidates[0], shop.Ovens[0]), Is.EqualTo((int)Math.Round(baseWage * (1d + 0.25 * shop.ClerkConfig.WagePerSkill))));
         }

@@ -21,6 +21,8 @@ namespace ZooTycoon.Core
         // 세는 대상(빵 · 작물 · 곳 · 사물 · 구간 id). null이면 아무것이나
         public string Param { get; set; }
         public int Count { get; set; }
+        // 설계 59: 이 조건이 될 때까지 숨는 걸음("queue:3" 빵집 줄 · "ovens:2" 오븐 수 · "plots:4" 간 밭 수). null이면 바로 보인다
+        public string After { get; set; }
         // 알약 아이콘(Resources/ 기준, 확장자 없음)
         public string Icon { get; set; }
         // 알약 글(StringTable id)

@@ -124,7 +124,7 @@ namespace ZooTycoon.Core
         public int WageFor(Candidate candidate, Interactable thing)
         {
             ClerkTable role = Tables.Get<ClerkTable>(thing.Table.Id);
-            return Math.Max(1, (int)Math.Round(role.BaseWage * (1d + candidate.Skill / 100d * m_clerkConfig.WagePerSkill)));
+            return Math.Max(1, (int)Math.Round(role.BaseWage * (1d + candidate.Skill / 100d * m_clerkConfig.WagePerSkill) * Trait.Boost(candidate.Trait, TraitTable.k_Wage)));
         }
 
         public Negotiation Negotiate(Candidate candidate, Interactable thing)
@@ -303,6 +303,15 @@ namespace ZooTycoon.Core
             {
                 m_candidates.Add(NewCandidate());
             }
+
+            // 설계 59: 후보 중 하나는 꼭 특기가 있다
+            IReadOnlyList<TraitTable> traits = Tables.GetAll<TraitTable>();
+
+            if (traits.Count > 0 && m_clerkConfig.TraitChance > 0d && m_candidates.TrueForAll(c => c.Trait == null))
+            {
+                Candidate last = m_candidates[m_candidates.Count - 1];
+                m_candidates[m_candidates.Count - 1] = new Candidate(last.Name, last.Skill, last.Look, Trait.Pick(traits, Random));
+            }
         }
 
         // 이름은 대기 후보와 겹치지 않게, 일머리는 1 + ⌊99 × r^skew⌋, 외형은 clerk 행 중 균등
@@ -328,7 +337,9 @@ namespace ZooTycoon.Core
             string picked = names[Math.Min(names.Count - 1, (int)(Random.NextDouble() * names.Count))];
             int skill = 1 + (int)Math.Floor(99d * Math.Pow(Random.NextDouble(), m_clerkConfig.SkillSkew));
             VisitorTable look = m_clerkLooks[Math.Min(m_clerkLooks.Count - 1, (int)(Random.NextDouble() * m_clerkLooks.Count))];
-            return new Candidate(picked, skill, look);
+            IReadOnlyList<TraitTable> traits = Tables.GetAll<TraitTable>();
+            TraitTable trait = traits.Count > 0 && Random.NextDouble() < m_clerkConfig.TraitChance ? Trait.Pick(traits, Random) : null;
+            return new Candidate(picked, skill, look, trait);
         }
     }
 }

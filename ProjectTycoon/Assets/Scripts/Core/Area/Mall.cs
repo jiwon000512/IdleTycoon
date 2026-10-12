@@ -29,6 +29,8 @@ namespace ZooTycoon.Core
         public DailyBoard Missions { get; }
         public Guide Guide { get; }
         public Mailbox Mailbox { get; }
+        // 설계 59: 점원 단추는 첫 고용 걸음이 보일 때부터(또는 점원이 있으면)
+        public bool ClerksOpen => m_areas.Exists(area => area.Clerks.Count > 0) || Quests.Reached(GoalCounter.k_Hire);
         // 웜뱃이 있는 곳
         public WombatArea Active { get; private set; }
 
@@ -67,7 +69,8 @@ namespace ZooTycoon.Core
             Quests = new QuestLog(this, bakery.Tables, bus, Guide);
             Missions = new DailyBoard(this, bakery.Tables, bus, clock ?? (() => DateTime.Now), () => Quests.Chapter);
             Mailbox = new Mailbox(this, bakery.Tables, bus);
-            plaza.StepId = () => Quests.Current?.Id;
+            // 숨는 걸음은 보일 때부터 소문(리뷰: 줄이 길기 전에 「줄이 너무 길어」가 나왔다)
+            plaza.StepId = () => Quests.Hidden ? null : Quests.Current?.Id;
         }
 
         // 설계 59: 새 게임은 광장에서, 빵집 문은 닫힌 채(밀로 연다)

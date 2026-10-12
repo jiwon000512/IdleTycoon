@@ -39,6 +39,8 @@ namespace ZooTycoon.UI
         private WombatArea m_area;
         private Interactable m_slot;
         private Candidate m_candidate;
+        private bool m_editing;
+        private IDisposable m_quest;
         private bool m_asking;
         // 해고할까 창에 올라 있는 점원
         private Clerk m_firing;
@@ -55,6 +57,8 @@ namespace ZooTycoon.UI
             RefreshShops();
             m_area = m_shops[0];
 
+            m_quest = bus.Subscribe<Events.QuestChanged>(_ => RefreshButton());
+            RefreshButton();
             m_view.OpenClicked += View_OpenClicked;
             m_view.CloseClicked += View_CloseClicked;
             m_view.RowButtonClicked += View_RowButtonClicked;
@@ -83,8 +87,15 @@ namespace ZooTycoon.UI
             };
         }
 
+        // 설계 59: 점원 단추는 편집 중이 아니고 점원 시스템이 열렸을 때(첫 고용 걸음이 보이거나 점원이 있으면)
+        private void RefreshButton()
+        {
+            m_view.SetButtonVisible(!m_editing && m_mall.ClerksOpen);
+        }
+
         public void Dispose()
         {
+            m_quest?.Dispose();
             m_view.OpenClicked -= View_OpenClicked;
             m_view.CloseClicked -= View_CloseClicked;
             m_view.RowButtonClicked -= View_RowButtonClicked;
@@ -106,7 +117,8 @@ namespace ZooTycoon.UI
         // 편집 모드에서는 버튼을 숨기고 팝업을 닫는다
         public void SetEditing(bool editing)
         {
-            m_view.SetButtonVisible(!editing);
+            m_editing = editing;
+            RefreshButton();
 
             if (editing)
             {
@@ -250,7 +262,8 @@ namespace ZooTycoon.UI
                     IconPath = candidate.Look.Sprite,
                     Badge = ClerkBadge.None,
                     Name = candidate.Name,
-                    Slot = null,
+                    // 설계 59: 후보 줄의 자리 알약에 특기 이름(그림 칸은 아트방 아이콘이 오면)
+                    Slot = candidate.Trait != null ? m_tables.Text("trait_" + candidate.Trait.Id) : null,
                     SkillHeader = m_tables.Text("clerk_col_skill"),
                     WageHeader = m_tables.Text("clerk_col_base_wage"),
                     Skill = candidate.Skill,

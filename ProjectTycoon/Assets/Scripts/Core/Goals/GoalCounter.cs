@@ -88,8 +88,11 @@ namespace ZooTycoon.Core
                     return mall.Active.Id == param ? 1 : 0;
                 case k_Place:
                     return mall.Areas.Sum(area => area.Things.Count(thing => thing.Table.Id == param));
+                // 설계 59: param이 역할(ClerkTable id)이면 그 역할 점원 수, 아니면 그 곳의 점원 수
                 case k_Hire:
-                    return mall.Areas.Where(area => param == null || area.Id == param).Sum(area => area.Clerks.Count);
+                    return mall.Bakery.Tables.GetAll<ClerkTable>().Any(role => role.Id == param)
+                        ? mall.Areas.Sum(area => area.Clerks.Count(clerk => clerk.Role.Id == param))
+                        : mall.Areas.Where(area => param == null || area.Id == param).Sum(area => area.Clerks.Count);
                 case k_Unlock:
                     return mall.Bakery.UnlockedBreads.Any(bread => bread.Id == param) || mall.Farm.UnlockedCrops.Any(crop => crop.Id == param) ? 1 : 0;
                 case k_Star:
@@ -108,6 +111,35 @@ namespace ZooTycoon.Core
                 default:
                     return 0;
             }
+        }
+
+        // 설계 59: 숨는 걸음의 조건 "종류:수" — queue 빵집 계산대 줄 · ovens 빵집 오븐 수 · plots 농장 간 밭 수. 모르는 종류는 바로 보인다
+        public static bool Met(string after, Mall mall)
+        {
+            string[] parts = (after ?? "").Split(':');
+
+            if (parts.Length != 2 || !int.TryParse(parts[1], out int need))
+            {
+                return true;
+            }
+
+            switch (parts[0])
+            {
+                case "queue":
+                    return mall.Bakery.Counters.Any(counter => counter.Queue.Count >= need);
+                case "ovens":
+                    return mall.Bakery.Ovens.Count >= need;
+                case "plots":
+                    return mall.Farms.Sum(farm => farm.Plots.Count(plot => plot.IsTilled)) >= need;
+                default:
+                    return true;
+            }
+        }
+
+        public static bool IsAfterKnown(string after)
+        {
+            string[] parts = (after ?? "").Split(':');
+            return parts.Length == 2 && (parts[0] == "queue" || parts[0] == "ovens" || parts[0] == "plots") && int.TryParse(parts[1], out int n) && n >= 1;
         }
 
         // 웜뱃이 그 곳에 들어갈 수 있나(농장 아래층 · 횟집 · 낚시터는 열어야)

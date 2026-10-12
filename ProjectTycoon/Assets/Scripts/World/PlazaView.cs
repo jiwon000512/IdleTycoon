@@ -40,6 +40,9 @@ namespace ZooTycoon.World
         [SerializeField] private Texture2D m_wallFace;
         [Tooltip("설계 44: 곳으로 가는 문 그림(갈 곳 id마다 하나, PlazaConfigTable doors). 원점 = 구멍 밑변 가운데")]
         [SerializeField] private DoorArt[] m_doors;
+        [Tooltip("설계 58 아트방 wet-wall(B 돌 무너짐): 낚시터 문 아치 자리에 닫힘 · 열림 그림(지금 arch와 같은 크기 · 발끝)")]
+        [SerializeField] private Sprite m_wetWall;
+        [SerializeField] private Sprite m_wetWallOpen;
         [Tooltip("지상 계단. 원점 = 띠 밑변 가운데")]
         [SerializeField] private Transform m_stairs;
         [SerializeField] private WombatView m_wombat;
@@ -226,7 +229,16 @@ namespace ZooTycoon.World
                     tag = Instantiate(m_tagPrefab, transform);
                     tag.transform.localPosition = new Vector3(gate.Floor.X, gate.Floor.Y + k_GateTagRise, 0f);
                     m_gateTags[gate] = tag;
-                    Tint(Art(gate.Shop.Id).Root, k_Closed);
+
+                    // 낚시터 문은 어둡게 칠하는 대신 젖은 벽 그림으로 막는다
+                    if (gate.Shop.Id == FishingArea.k_Id && m_wetWall != null)
+                    {
+                        Arch(gate.Shop.Id).sprite = m_wetWall;
+                    }
+                    else
+                    {
+                        Tint(Art(gate.Shop.Id).Root, k_Closed);
+                    }
                 }
 
                 tag.Show(gate.Shop.GateLocked ? m_tables.Format("row_star_needed", gate.Shop.GateStar)
@@ -241,10 +253,21 @@ namespace ZooTycoon.World
                     Destroy(m_gateTags[gate].gameObject);
                     m_gateTags.Remove(gate);
                     Transform door = Art(gate.Shop.Id).Root;
+
+                    if (gate.Shop.Id == FishingArea.k_Id && m_wetWallOpen != null)
+                    {
+                        Arch(gate.Shop.Id).sprite = m_wetWallOpen;
+                    }
+
                     Tint(door, Color.white);
                     StartCoroutine(Fx.Bounce(door));
                 }
             }
+        }
+
+        private SpriteRenderer Arch(string to)
+        {
+            return Art(to).Root.Find("Arch").GetComponent<SpriteRenderer>();
         }
 
         private static void Tint(Transform root, Color color)

@@ -68,6 +68,7 @@ namespace ZooTycoon.Data
             ValidateRestaurant(tables, errors);
             ValidateGoals(tables, errors);
             ValidateLetters(tables, errors);
+            ValidateTraits(tables, errors);
 
             return errors;
         }
@@ -183,6 +184,11 @@ namespace ZooTycoon.Data
                 }
 
                 // 설계 22
+                if (config.TraitChance < 0d || config.TraitChance > 1d)
+                {
+                    errors.Add($"ClerkConfigTable '{config.Id}': traitChance는 0~1이어야 한다.");
+                }
+
                 if (config.StrollRadius <= 0d || config.StrollChance < 0d || config.OutingChance < 0d || config.ChatChance < 0d
                     || config.StrollChance + config.OutingChance + config.ChatChance > 1d || config.ChatOffset <= 0d || config.WakeSkips < 0 || config.QuestionHoldSeconds < 0d)
                 {
@@ -1098,6 +1104,11 @@ namespace ZooTycoon.Data
 
                 chapter = System.Math.Max(chapter, step.Chapter);
 
+                if (step.After != null && !GoalCounter.IsAfterKnown(step.After))
+                {
+                    errors.Add($"QuestTable '{step.Id}': after는 queue:/ovens:/plots:<1 이상>이어야 한다.");
+                }
+
                 if (!GoalCounter.IsKnown(step.Kind) || step.Count < 1 || !texts.Contains(step.Text))
                 {
                     errors.Add($"QuestTable '{step.Id}': kind는 GoalCounter가 아는 것, count ≥ 1, text는 StringTable에 있어야 한다.");
@@ -1197,6 +1208,21 @@ namespace ZooTycoon.Data
                     || letter.Coins < 0d || letter.Item != null && (!items.Contains(letter.Item) || letter.ItemCount < 1))
                 {
                     errors.Add($"LetterTable '{letter.Id}': when은 start:/done:<걸음 id> 또는 area:<곳 id>, from은 sender_<from> 글이 있고, lines는 StringTable에 하나 이상, coins ≥ 0, item은 ItemTable에(itemCount ≥ 1)이어야 한다.");
+                }
+            }
+        }
+
+        // 설계 59 · 8.40: 특기. effect는 speed · tip · idle · wage, value > 0, 이름 글 trait_<id>
+        private static void ValidateTraits(TableSet tables, List<string> errors)
+        {
+            HashSet<string> texts = Ids<StringTable>(tables);
+            string[] effects = { TraitTable.k_Speed, TraitTable.k_Tip, TraitTable.k_Idle, TraitTable.k_Wage };
+
+            foreach (TraitTable trait in tables.GetAll<TraitTable>())
+            {
+                if (!effects.Contains(trait.Effect ?? "") || trait.Value <= 0d || !texts.Contains("trait_" + trait.Id) || string.IsNullOrEmpty(trait.Icon))
+                {
+                    errors.Add($"TraitTable '{trait.Id}': effect는 speed · tip · idle · wage, value > 0, 글 trait_<id> · icon이 있어야 한다.");
                 }
             }
         }

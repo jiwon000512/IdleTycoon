@@ -1,0 +1,14 @@
+{
+  "table": "TraitTable",
+  "version": 1,
+  "notes": [
+    "설계 59 ① 특기: 후보 · 점원의 특기 하나. effect = 어디에 곱하나(speed 맡은 오븐 굽기 · 계산대 계산 속도, tip 그 점원이 계산한 손님의 팁 확률, idle 딴짓 확률, wage 기본 월급), value = 곱. 후보는 ClerkConfigTable traitChance로 갖고 셋 중 하나는 꼭. 이름 · 설명은 StringTable trait_<id> · trait_<id>_desc, icon은 임시(아트방). 값은 밸런스방.",
+    "version 1 (2026-10-12, 설계 59): speed 손이 빠름 ×1.3 · charm 싹싹함 팁 ×1.5 · diligent 부지런함 딴짓 ×0.5 · frugal 알뜰함 월급 ×0.8."
+  ],
+  "rows": [
+    { "id": "speed", "effect": "speed", "value": 1.3, "icon": "Sprites/Quests/bake" },
+    { "id": "charm", "effect": "tip", "value": 1.5, "icon": "Sprites/Quests/serve" },
+    { "id": "diligent", "effect": "idle", "value": 0.5, "icon": "Sprites/Quests/clean" },
+    { "id": "frugal", "effect": "wage", "value": 0.8, "icon": "Sprites/Quests/hire" }
+  ]
+}

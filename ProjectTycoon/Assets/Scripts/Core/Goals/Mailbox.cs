@@ -65,7 +65,8 @@ namespace ZooTycoon.Core
         {
             QuestTable step = m_mall.Quests.Current;
 
-            if (step == null)
+            // 숨는 걸음은 보일 때 편지가 온다
+            if (step == null || m_mall.Quests.Hidden)
             {
                 return;
             }

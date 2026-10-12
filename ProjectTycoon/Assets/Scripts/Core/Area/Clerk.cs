@@ -81,6 +81,8 @@ namespace ZooTycoon.Core
         public ClerkTable Role { get; }
         public string Name { get; }
         public int Skill { get; }
+        // 설계 59: 특기(없으면 null). 효과는 Boost(효과 종류)로 곱한다
+        public TraitTable Trait { get; }
         public int Wage { get; }
         public Worker Worker { get; }
         // 설계 38: 만들 것 id(오븐 점원은 구울 빵, 농장 점원은 심을 작물). 계산 점원은 null
@@ -109,6 +111,7 @@ namespace ZooTycoon.Core
             Role = home.Tables.Get<ClerkTable>(thing.Table.Id);
             Name = candidate.Name;
             Skill = candidate.Skill;
+            Trait = candidate.Trait;
             Wage = wage;
             Worker = new Worker(new Hands((int)home.Tables.Get<ConfigTable>(ConfigTable.k_CarryCapacity).Value), home.Wombat.Worker.Wallet);
             m_config = home.Tables.Get<ClerkConfigTable>(ClerkConfigTable.k_Main);
@@ -139,6 +142,11 @@ namespace ZooTycoon.Core
         }
 
         // 그만둔다: 하던 일을 놓고 구멍으로. 외출 중이면 다음 틱에 그대로 사라진다(광장 그림은 광장이 계단으로 보낸다)
+        public double Boost(string effect)
+        {
+            return ZooTycoon.Core.Trait.Boost(Trait, effect);
+        }
+
         internal void Leave()
         {
             EndChat();
@@ -513,7 +521,8 @@ namespace ZooTycoon.Core
                 return true;
             }
 
-            if (Home.Random.NextDouble() >= (100 - Skill) / 100d)
+            // 설계 59 특기: 부지런하면 딴짓 확률이 준다
+            if (Home.Random.NextDouble() >= (100 - Skill) / 100d * Boost(TraitTable.k_Idle))
             {
                 return true;
             }

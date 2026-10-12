@@ -72,7 +72,8 @@ namespace ZooTycoon.Core
             }
 
             double before = Math.Ceiling(Remaining);
-            double speed = UpgradeValue(UpgradeLevel) * Bakery.Wallet.Scale(BlessingTable.k_Bake);
+            // 설계 59 특기: 맡은 점원이 손이 빠르면 굽기도 빠르다
+            double speed = UpgradeValue(UpgradeLevel) * Bakery.Wallet.Scale(BlessingTable.k_Bake) * (Bakery.ClerkOf(this)?.Boost(TraitTable.k_Speed) ?? 1d);
             Remaining = Math.Max(0d, Remaining - dt * speed);
 
             if (Remaining == 0d)

@@ -118,6 +118,8 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite[] m_dams;
         [SerializeField] private Sprite m_seat;
         [SerializeField] private Sprite[] m_debris;
+        [Tooltip("설계 58 아트방 fall(A 물 커튼): 층 사이 폭포 띠 네 장(32×40, 가로 반복). 없으면 흙빛 띠")]
+        [SerializeField] private Sprite[] m_falls;
         [Tooltip("물속 물고기(<재료 id>_swim, 오른쪽을 봄, 가운데 피벗)")]
         [SerializeField] private Sprite[] m_fishSwim;
         [Tooltip("긴장 게이지(아트방 B 「릴」 16칸, [0] = 0% · [15] = 100%, 피벗 = 릴 가운데)")]
@@ -277,6 +279,17 @@ namespace ZooTycoon.World
 
             float dt = Time.deltaTime;
             m_water.sprite = m_waterFrames[(int)(Time.time / k_WaterFrameSeconds) % m_waterFrames.Length];
+
+            // 폭포 띠는 물결과 같은 박자로 네 장을 돈다
+            if (m_falls != null && m_falls.Length > 0)
+            {
+                Sprite fall = m_falls[(int)(Time.time / k_WaterFrameSeconds) % m_falls.Length];
+
+                foreach (SpriteRenderer cliff in m_cliffArts.Values)
+                {
+                    cliff.sprite = fall;
+                }
+            }
             m_nibbleLeft = Mathf.Max(0f, m_nibbleLeft - dt);
             m_recoilLeft = Mathf.Max(0f, m_recoilLeft - dt);
             FishingPhase phase = m_fishing.Phase;
@@ -603,14 +616,26 @@ namespace ZooTycoon.World
                 // 아래 층이 열린 층: 물 아랫부분이 폭포 띠(지금은 흙빛 띠, 그림은 아트방)
                 bool cliff = m_fishing.Opened.Contains(pair.Key + 1);
 
+                bool drawn = m_falls != null && m_falls.Length > 0;
+
                 if (!m_cliffArts.TryGetValue(pair.Key, out SpriteRenderer art))
                 {
-                    art = NewRenderer(transform, "Cliff", m_square, k_DirtDark, k_WaterOrder + 1);
+                    art = NewRenderer(transform, "Cliff", drawn ? m_falls[0] : m_square, drawn ? Color.white : k_DirtDark, k_WaterOrder + 1);
+                    art.drawMode = drawn ? SpriteDrawMode.Tiled : SpriteDrawMode.Simple;
                     m_cliffArts[pair.Key] = art;
                 }
 
                 art.enabled = cliff;
-                art.transform.localScale = new Vector3(water.XMax - water.XMin, FishingLayout.k_Cliff, 1f);
+
+                if (drawn)
+                {
+                    art.size = new Vector2(water.XMax - water.XMin, FishingLayout.k_Cliff);
+                }
+                else
+                {
+                    art.transform.localScale = new Vector3(water.XMax - water.XMin, FishingLayout.k_Cliff, 1f);
+                }
+
                 art.transform.localPosition = new Vector3(center, water.YMin - FishingLayout.k_Cliff / 2f, 0f);
             }
         }

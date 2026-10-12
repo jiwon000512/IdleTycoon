@@ -1,0 +1,11 @@
+Use your IMAGE GENERATION tool to paint a brand-new image, do NOT write code, do NOT resample, crop or copy the reference files.
+Pixel-art game object for a cozy idle game set in a wombat's underground burrow. In the burrow plaza, one doorway in the earth wall leads to a hidden underground FISHING POND. Before the player opens it, that doorway is a WET WALL: the pond behind it is leaking water through the earth. After the player digs it open, it becomes a tunnel entrance.
+Image 1 (top of the drawing sheet) is the existing doorway ARCH of the game, enlarged so that one art pixel = 6 screen pixels: an earth-colored arch frame with a dark brown 1-art-pixel outline (#342020), a dark tunnel inside and a floor at the bottom. Image 2 is the plaza in the game around this doorway (fish-shaped sign above it).
+Paint TWO versions of this doorway into the two empty grey frames at the bottom of image 1, each exactly the same size and outline as the arch above (120 x 98 art pixels, the bottom edge is the floor line, the outer silhouette stays the same arch shape):
+LEFT frame = CLOSED wet wall, RIGHT frame = OPEN tunnel entrance, as described below.
+Match the arch's big square art pixels exactly (no finer detail), its warm earthy palette and the dark brown outline, seen from the front and slightly above. Water is the game's teal (#3C8A7E, light #6EB6AA, sparkle #CCEADE). Flat colors, no anti-aliasing, no gradients, no dithering, no text, no sign, no characters. Pure white background outside the arch; do NOT draw the grey frame borders.
+STYLE B, "fallen rocks": CLOSED = the arch opening is blocked by a pile of round grey rocks (each rock with its own outline and one small highlight), damp dark moss between them and teal water dripping out between the lowest rocks into a small puddle. OPEN = the rocks are pushed aside into two small piles at the left and right foot of the arch, the dark tunnel is open, and a thin teal stream flows out along the floor between the piles.
+Save the image as wet_b.png in the current working directory and reply with only the path.
+
+참조 -i: raw/wet_wall_template.png(위 지금 아치 한 칸 6px, 아래 빈 틀 둘) · raw/wet_wall_ref_plaza.png(광장 낚시터 문 캡처). Codex CLI, model_reasoning_effort=low. 같은 머리말로 A 진흙 막힘 · C 판자 막이도 뽑았다.
+Codex가 한 칸 2px로 60×49칸을 그려 PPU 40이면 지금 arch와 같은 크기. 2026-10-12 사용자 선택: B(돌 무너짐).

@@ -25,6 +25,8 @@ namespace ZooTycoon.Core
         public string QuestId;
         public int QuestIndex;
         public int QuestProgress;
+        // 설계 59: 숨는 걸음의 조건이 됐나
+        public bool QuestRevealed;
         public MissionsSave Missions;
         // 설계 59: 웜뱃이 있던 곳(없으면 빵집) · 우편함(없으면 옛 저장: 빵집 문 열림 · 편지 없음)
         public string Area;
@@ -110,6 +112,8 @@ namespace ZooTycoon.Core
         public int Wage;
         public string Look;
         public string Product;
+        // 설계 59: 특기(TraitTable id, 없으면 null)
+        public string Trait;
     }
 
     public sealed class CandidateSave
@@ -117,6 +121,7 @@ namespace ZooTycoon.Core
         public string Name;
         public int Skill;
         public string Look;
+        public string Trait;
     }
 
     public sealed class PlotSave

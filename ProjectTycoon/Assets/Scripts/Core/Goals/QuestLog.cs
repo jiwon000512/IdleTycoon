@@ -16,15 +16,21 @@ namespace ZooTycoon.Core
         private readonly IReadOnlyList<QuestTable> m_steps;
         private int m_shownIndex = -1;
         private int m_shownCount = -1;
+        private bool m_shownHidden;
+        // 설계 59: 숨는 걸음(after)의 조건이 됐나(걸음이 바뀌면 다시)
+        private bool m_revealed;
 
         public int Index { get; private set; }
         // 사건 종류의 진행(이 걸음이 시작된 뒤 센 수)
         public int Progress { get; private set; }
         public QuestTable Current => Index < m_steps.Count ? m_steps[Index] : null;
         // 지금 걸음의 진행. 상태 종류는 지금 상태를 읽고, count에서 멈춘다. 할 수 없는 걸음(유물을 다 모은 뒤 뽑기)은 다 된 것(옛 저장이 막히지 않게, 2026-10-09 리뷰)
-        public int Count => Current == null ? 0 : !GoalCounter.IsPossible(Current.Kind, m_mall) ? Current.Count
+        // 설계 59: 조건이 될 때까지 숨는 걸음 — 카드가 안 보이고 세지도 않는다
+        public bool Hidden => Current != null && Current.After != null && !m_revealed;
+        public bool Revealed => m_revealed;
+        public int Count => Current == null || Hidden ? 0 : !GoalCounter.IsPossible(Current.Kind, m_mall) ? Current.Count
             : Math.Min(Current.Count, GoalCounter.IsState(Current.Kind) ? GoalCounter.Current(Current.Kind, Current.Param, m_mall) : Progress);
-        public bool IsDone => Current != null && Count >= Current.Count;
+        public bool IsDone => Current != null && !Hidden && Count >= Current.Count;
         // 오늘의 일 상자 단계 = 지금 걸음의 장(사슬이 끝나면 마지막 장)
         public int Chapter => m_steps.Count == 0 ? 0 : (Current ?? m_steps[m_steps.Count - 1]).Chapter;
 
@@ -43,7 +49,26 @@ namespace ZooTycoon.Core
         // 매 프레임: 상태 종류는 사건 없이도 바뀌니 다시 본다(바뀌었을 때만 알린다)
         public void Tick()
         {
+            if (Hidden && GoalCounter.Met(Current.After, m_mall))
+            {
+                m_revealed = true;
+            }
+
             Refresh();
+        }
+
+        // 설계 59: 그 종류의 걸음에 닿았나(지났거나 지금 보이는 걸음). 점원 단추는 첫 고용 걸음부터
+        public bool Reached(string kind)
+        {
+            for (int i = 0; i < Index && i < m_steps.Count; i++)
+            {
+                if (m_steps[i].Kind == kind)
+                {
+                    return true;
+                }
+            }
+
+            return Current != null && Current.Kind == kind && !Hidden;
         }
 
         // 가기: 지금 걸음의 대상으로. 메뉴가 대상이면 그 버튼을 반짝이고(웜뱃은 그대로, 2026-10-08 사용자), 아니면 길잡이가 가리킨다(데려가지 않음, 2026-10-12 사용자). 갈 곳이 없으면 false
@@ -51,7 +76,7 @@ namespace ZooTycoon.Core
         {
             QuestTable step = Current;
 
-            if (step == null || IsDone)
+            if (step == null || IsDone || Hidden)
             {
                 return false;
             }
@@ -88,6 +113,7 @@ namespace ZooTycoon.Core
 
                 Index++;
                 Progress = 0;
+                m_revealed = false;
             }
             while (Current != null && (GoalCounter.IsState(Current.Kind) || !GoalCounter.IsPossible(Current.Kind, m_mall)) && IsDone);
 
@@ -106,15 +132,17 @@ namespace ZooTycoon.Core
 
             Index++;
             Progress = 0;
+            m_revealed = false;
             Refresh();
         }
 
         // 설계 43: 저장한 걸음 · 진행. 걸음은 id로 찾는다(표 순서가 바뀌어도 그 걸음, 2026-10-09). id가 없거나(옛 저장 · 사슬 끝) 표에서 빠졌으면 행 번호(표가 줄었으면 끝으로)
-        internal void Restore(string id, int index, int progress)
+        internal void Restore(string id, int index, int progress, bool revealed = false)
         {
             int found = m_steps.TakeWhile(step => step.Id != id).Count();
             Index = found < m_steps.Count ? found : Math.Max(0, Math.Min(index, m_steps.Count));
             Progress = Math.Max(0, progress);
+            m_revealed = revealed;
             Refresh();
         }
 
@@ -122,7 +150,7 @@ namespace ZooTycoon.Core
         {
             QuestTable step = Current;
 
-            if (step == null || step.Kind != kind || step.Param != null && step.Param != param || IsDone)
+            if (step == null || Hidden || step.Kind != kind || step.Param != null && step.Param != param || IsDone)
             {
                 return;
             }
@@ -141,13 +169,14 @@ namespace ZooTycoon.Core
                 m_guide.Stop();
             }
 
-            if (Index == m_shownIndex && count == m_shownCount)
+            if (Index == m_shownIndex && count == m_shownCount && Hidden == m_shownHidden)
             {
                 return;
             }
 
             m_shownIndex = Index;
             m_shownCount = count;
+            m_shownHidden = Hidden;
             m_bus.Publish(new Events.QuestChanged(this));
         }
     }
