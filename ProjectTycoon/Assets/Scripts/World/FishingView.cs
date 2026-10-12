@@ -119,6 +119,9 @@ namespace ZooTycoon.World
         [SerializeField] private Sprite m_seat;
         [Tooltip("설계 60: 비버(beaver, 발끝 피벗, 왼쪽을 봄). 없으면 둑 바위를 빌린다")]
         [SerializeField] private Sprite m_beaver;
+        [Tooltip("비버 냠(beaver_eat, 같은 캔버스). 먹이를 주면 k_EatSeconds 동안")]
+        [SerializeField] private Sprite m_beaverEat;
+        private const float k_EatSeconds = 1.2f;
         [SerializeField] private Sprite[] m_debris;
         [Tooltip("설계 58 아트방 fall(A 물 커튼): 층 사이 폭포 띠 네 장(32×40, 가로 반복). 없으면 흙빛 띠")]
         [SerializeField] private Sprite[] m_falls;
@@ -894,11 +897,23 @@ namespace ZooTycoon.World
 
             Splash(ToWorld(e.Beaver.Position), 1);
 
+            if (m_beaverEat != null && m_beaverArts.TryGetValue(e.Beaver, out SpriteRenderer beaver))
+            {
+                StartCoroutine(Eat(beaver));
+            }
+
             if (e.Dam != null && e.PiecesLeft > 0)
             {
                 Splash(ToWorld(e.Dam.Position), 2);
                 StartCoroutine(Rise(m_tables.Format("fishing_debris_left", e.PiecesLeft), ToWorld(e.Dam.Position) + Vector3.up * (k_PopupHeight + 0.5f)));
             }
+        }
+
+        private IEnumerator Eat(SpriteRenderer beaver)
+        {
+            beaver.sprite = m_beaverEat;
+            yield return new WaitForSeconds(k_EatSeconds);
+            beaver.sprite = m_beaver;
         }
 
         // 댐이 무너졌다: 굴 · 물을 다시 칠하고, 열린 아래 층 물에 왼쪽에서 오른쪽으로 물보라가 줄지어 튄다(물이 쏟아져 차오름). 새 물고기 이름 알약
