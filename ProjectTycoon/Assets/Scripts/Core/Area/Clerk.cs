@@ -80,7 +80,11 @@ namespace ZooTycoon.Core
         public Interactable Thing { get; }
         public ClerkTable Role { get; }
         public string Name { get; }
-        public int Skill { get; }
+        public int Skill { get; private set; }
+        // 설계 59 ⓒ: 기분. 부탁을 넘기면 딴짓 확률에 곱한다(1 = 보통)
+        public double Mood { get; private set; } = 1d;
+        // 곳 안의 차례(저장 키용. 이름은 겹칠 수 있다)
+        public int Index => Home.Clerks.TakeWhile(clerk => clerk != this).Count();
         // 설계 59: 특기(없으면 null). 효과는 Boost(효과 종류)로 곱한다
         public TraitTable Trait { get; }
         public int Wage { get; }
@@ -145,6 +149,23 @@ namespace ZooTycoon.Core
         public double Boost(string effect)
         {
             return ZooTycoon.Core.Trait.Boost(Trait, effect);
+        }
+
+        // 설계 59 ⓒ 부탁을 들어줬다: 일머리가 오른다(100까지)
+        internal void Grow(int skill)
+        {
+            Skill = Math.Min(100, Skill + skill);
+        }
+
+        // 부탁을 넘겼다: 딴짓이 는다
+        internal void Sulk(double mood)
+        {
+            Mood *= mood;
+        }
+
+        internal void Restore(double mood)
+        {
+            Mood = mood;
         }
 
         internal void Leave()
@@ -522,7 +543,7 @@ namespace ZooTycoon.Core
             }
 
             // 설계 59 특기: 부지런하면 딴짓 확률이 준다
-            if (Home.Random.NextDouble() >= (100 - Skill) / 100d * Boost(TraitTable.k_Idle))
+            if (Home.Random.NextDouble() >= (100 - Skill) / 100d * Boost(TraitTable.k_Idle) * Mood)
             {
                 return true;
             }

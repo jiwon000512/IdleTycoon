@@ -36,6 +36,11 @@ namespace ZooTycoon.Core
         public double SkillSkew { get; set; }
         // 설계 59: 후보가 특기를 가질 확률(셋 중 하나는 꼭 갖는다)
         public double TraitChance { get; set; }
+        // 설계 59 ⓒ 점원의 부탁: 이 번째 월급부터 부탁 · 들어줄 시간(초) · 들어주면 일머리 + · 넘기면 기분 ×
+        public int RequestAfterPaydays { get; set; }
+        public double RequestSeconds { get; set; }
+        public int RequestSkill { get; set; }
+        public double RequestSulk { get; set; }
         public double WagePerSkill { get; set; }
         // 한 바퀴 끝날 때마다 확률 (100 − 일머리)/100로 딴짓(멍 때리기), 이 사이 균등 초
         public double IdleSecondsMin { get; set; }

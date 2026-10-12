@@ -12,9 +12,9 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 62)]
+        [TestCase("StringTable", 63)]
         [TestCase("ClerkTable", 4)]
-        [TestCase("ClerkConfigTable", 7)]
+        [TestCase("ClerkConfigTable", 8)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 7)]
         [TestCase("BreadTable", 4)]
@@ -42,7 +42,7 @@ namespace ZooTycoon.Tests
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
         [TestCase("QuestTable", 5)]
-        [TestCase("LetterTable", 2)]
+        [TestCase("LetterTable", 3)]
         [TestCase("TraitTable", 1)]
         [TestCase("MissionTable", 1)]
         [TestCase("MissionChestTable", 1)]
@@ -503,6 +503,26 @@ namespace ZooTycoon.Tests
 
             Assert.That(TableValidator.Validate(unknownAction), Is.Not.Empty);
             Assert.That(TableValidator.Validate(zeroRange), Is.Not.Empty);
+        }
+
+        // 설계 59 ⓒ · 8.16 · 8.39: 부탁 숫자(월급 횟수 ≥ 1 · 기분 ≥ 1), 점원 편지 행 r_upgrade 필수, 걸음 편지는 sender 글 필수(clerk 편지는 빼고)
+        [Test]
+        public void Validate_WhenClerkRequestDataInvalid_ReportsError()
+        {
+            TableSet zeroPaydays = TestTables.Load();
+            zeroPaydays.Get<ClerkConfigTable>(ClerkConfigTable.k_Main).RequestAfterPaydays = 0;
+            TableSet cheerSulk = TestTables.Load();
+            cheerSulk.Get<ClerkConfigTable>(ClerkConfigTable.k_Main).RequestSulk = 0.5d;
+            TableSet noRequestLetter = TestTables.Load();
+            noRequestLetter.Get<LetterTable>(ClerkRequests.k_Upgrade).When = "start:q27";
+            TableSet noSender = TestTables.Load();
+            noSender.Get<LetterTable>("l01").From = "clerk";
+
+            Assert.That(TableValidator.Validate(TestTables.Load()), Is.Empty);
+            Assert.That(TableValidator.Validate(zeroPaydays), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(cheerSulk), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noRequestLetter), Is.Not.Empty);
+            Assert.That(TableValidator.Validate(noSender), Is.Not.Empty);
         }
     }
 }

@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 62,
+  "version": 63,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -65,7 +65,8 @@
     "version 59 (2026-10-12): 설계 57 레드닷: 점원 단추 「모자람」 글 clerk_badge_short 삭제(점 안에 수)",
     "version 60 (2026-10-12): 설계 58 층계 웅덩이 낚시터: quest_q18 · q20 · q21 글 바꿈, quest_q26 · 젖은 벽 시트(sheet_wet_wall_* · row_wet_wall*) · 둑 칸 시트(sheet_bank_*) · fishing_find 추가, row_break_rock_effect · sheet_rock_status · sheet_gate 문구 손질",
     "version 61 (2026-10-12): 설계 59 대화로 이어지는 시작 흐름: 편지(sender_* · letter_*) · 손님 소문(say_rumor_*) · 빵집 문 시트(row_open_bakery* · sheet_bakery_gate_*) · tag_open_item · letter_* 카드 글 · quest_q27 · q28",
-    "version 62 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기"
+    "version 62 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기",
+    "version 63 (2026-10-12): 설계 59 ⓒ 점원의 부탁: letter_r_upgrade_*"
   ],
   "rows": [
     {
@@ -1603,6 +1604,14 @@
     {
       "id": "letter_gift_item",
       "ko": "{0} {1}개"
+    },
+    {
+      "id": "letter_r_upgrade_1",
+      "ko": "사장님, {0}입니다. 제 {1} 말인데요, 자꾸 삐걱거려요."
+    },
+    {
+      "id": "letter_r_upgrade_2",
+      "ko": "한 단계만 올려 주시면 더 열심히 하겠습니다!"
     },
     {
       "id": "quest_q31",

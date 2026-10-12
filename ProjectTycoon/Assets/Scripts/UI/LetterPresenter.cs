@@ -21,7 +21,7 @@ namespace ZooTycoon.UI
         private readonly Mailbox m_mailbox;
         private readonly TableSet m_tables;
         private readonly IDisposable[] m_subscriptions;
-        private LetterTable m_showing;
+        private Letter m_showing;
 
         public LetterPresenter(FishingNewsView view, TopBarView topBar, Mailbox mailbox, EventBus bus, TableSet tables)
         {
@@ -37,7 +37,7 @@ namespace ZooTycoon.UI
                 bus.Subscribe<Events.LetterRead>(_ => RefreshTile()),
             };
             RefreshTile();
-            LetterTable unread = m_mailbox.Unread.FirstOrDefault();
+            Letter unread = m_mailbox.Unread.FirstOrDefault();
 
             if (unread != null)
             {
@@ -68,7 +68,7 @@ namespace ZooTycoon.UI
 
         private void TopBar_MailClicked()
         {
-            LetterTable letter = m_mailbox.Unread.FirstOrDefault() ?? m_mailbox.Letters.LastOrDefault();
+            Letter letter = m_mailbox.Unread.FirstOrDefault() ?? m_mailbox.Letters.LastOrDefault();
 
             if (letter != null && !m_view.IsOpen)
             {
@@ -79,7 +79,7 @@ namespace ZooTycoon.UI
         // 확인: 읽은 편지로(동봉을 받는다). 안 읽은 편지가 더 있으면 이어서
         private void View_Confirmed()
         {
-            LetterTable letter = m_showing;
+            Letter letter = m_showing;
             m_showing = null;
 
             if (letter != null)
@@ -88,7 +88,7 @@ namespace ZooTycoon.UI
             }
 
             // 안 읽은 편지가 더 있으면 닫지 않고 이어서(닫히는 동안은 Open이 무시된다)
-            LetterTable next = m_mailbox.Unread.FirstOrDefault();
+            Letter next = m_mailbox.Unread.FirstOrDefault();
 
             if (next != null)
             {
@@ -100,30 +100,33 @@ namespace ZooTycoon.UI
             }
         }
 
-        private void Show(LetterTable letter)
+        private void Show(Letter letter)
         {
             m_showing = letter;
             bool read = m_mailbox.IsRead(letter);
+            LetterTable row = letter.Row;
+            // 점원 편지: 보낸 이는 점원 이름, 글에는 이름 · 사물 이름(kind_<사물>)
+            Clerk clerk = letter.Clerk;
             // ponytail: 동봉은 글 한 줄("코인 100 · 밀 3"). 아이콘 칸은 도장 그림과 함께 아트방 그림이 오면
             List<string> gifts = new List<string>();
 
-            if (letter.Coins > 0d)
+            if (row.Coins > 0d)
             {
-                gifts.Add(m_tables.Format("letter_gift_coins", BigNumberFormatter.Format(letter.Coins)));
+                gifts.Add(m_tables.Format("letter_gift_coins", BigNumberFormatter.Format(row.Coins)));
             }
 
-            if (letter.Item != null && letter.ItemCount > 0)
+            if (row.Item != null && row.ItemCount > 0)
             {
-                gifts.Add(m_tables.Format("letter_gift_item", m_tables.Get<ItemTable>(letter.Item).Name, letter.ItemCount));
+                gifts.Add(m_tables.Format("letter_gift_item", m_tables.Get<ItemTable>(row.Item).Name, row.ItemCount));
             }
 
-            string stamp = UnityEngine.Resources.Load<UnityEngine.Sprite>(k_StampDir + letter.From) != null ? k_StampDir + letter.From : k_StampFallback;
+            string stamp = UnityEngine.Resources.Load<UnityEngine.Sprite>(k_StampDir + row.From) != null ? k_StampDir + row.From : k_StampFallback;
             m_view.Show(new FishingNewsView.Data
             {
                 Masthead = m_tables.Text("letter_masthead"),
-                Title = m_tables.Text("sender_" + letter.From),
+                Title = clerk != null ? clerk.Name : m_tables.Text("sender_" + row.From),
                 Picture = stamp,
-                Line = string.Join("\n", letter.Lines.Select(m_tables.Text)),
+                Line = string.Join("\n", row.Lines.Select(id => clerk != null ? m_tables.Format(id, clerk.Name, m_tables.Text("kind_" + clerk.Thing.Table.Id)) : m_tables.Text(id))),
                 BoxLabel = string.Empty,
                 Rewards = new List<InfoTile.Data>(),
                 Extra = gifts.Count > 0 && !read ? m_tables.Text("letter_box") + " " + string.Join(" · ", gifts) : null,

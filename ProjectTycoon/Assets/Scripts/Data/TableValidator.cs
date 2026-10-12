@@ -189,6 +189,12 @@ namespace ZooTycoon.Data
                     errors.Add($"ClerkConfigTable '{config.Id}': traitChance는 0~1이어야 한다.");
                 }
 
+                // 설계 59 ⓒ
+                if (config.RequestAfterPaydays < 1 || config.RequestSeconds <= 0d || config.RequestSkill < 0 || config.RequestSulk < 1d)
+                {
+                    errors.Add($"ClerkConfigTable '{config.Id}': requestAfterPaydays ≥ 1, requestSeconds > 0, requestSkill ≥ 0, requestSulk ≥ 1이어야 한다.");
+                }
+
                 if (config.StrollRadius <= 0d || config.StrollChance < 0d || config.OutingChance < 0d || config.ChatChance < 0d
                     || config.StrollChance + config.OutingChance + config.ChatChance > 1d || config.ChatOffset <= 0d || config.WakeSkips < 0 || config.QuestionHoldSeconds < 0d)
                 {
@@ -1199,15 +1205,18 @@ namespace ZooTycoon.Data
             HashSet<string> areas = Ids<FarmFloorTable>(tables);
             areas.UnionWith(new[] { BakeryArea.k_Id, PlazaArea.k_Id, FishingArea.k_Id, RestaurantArea.k_Id });
 
+            CheckRequired<LetterTable>(tables, new[] { ClerkRequests.k_Upgrade }, errors);
+
             foreach (LetterTable letter in tables.GetAll<LetterTable>())
             {
                 string[] when = (letter.When ?? "").Split(':');
-                bool whenOk = when.Length == 2 && (when[0] == LetterTable.k_WhenStart || when[0] == LetterTable.k_WhenDone ? steps.Contains(when[1]) : when[0] == LetterTable.k_WhenArea && areas.Contains(when[1]));
+                bool clerk = letter.When == LetterTable.k_WhenClerk;
+                bool whenOk = clerk || when.Length == 2 && (when[0] == LetterTable.k_WhenStart || when[0] == LetterTable.k_WhenDone ? steps.Contains(when[1]) : when[0] == LetterTable.k_WhenArea && areas.Contains(when[1]));
 
-                if (!whenOk || string.IsNullOrEmpty(letter.From) || !texts.Contains("sender_" + letter.From) || letter.Lines == null || letter.Lines.Count == 0 || letter.Lines.Any(line => !texts.Contains(line ?? ""))
+                if (!whenOk || string.IsNullOrEmpty(letter.From) || !clerk && !texts.Contains("sender_" + letter.From) || letter.Lines == null || letter.Lines.Count == 0 || letter.Lines.Any(line => !texts.Contains(line ?? ""))
                     || letter.Coins < 0d || letter.Item != null && (!items.Contains(letter.Item) || letter.ItemCount < 1))
                 {
-                    errors.Add($"LetterTable '{letter.Id}': when은 start:/done:<걸음 id> 또는 area:<곳 id>, from은 sender_<from> 글이 있고, lines는 StringTable에 하나 이상, coins ≥ 0, item은 ItemTable에(itemCount ≥ 1)이어야 한다.");
+                    errors.Add($"LetterTable '{letter.Id}': when은 start:/done:<걸음 id> · area:<곳 id> · clerk, from은 sender_<from> 글이 있고(clerk은 빼고), lines는 StringTable에 하나 이상, coins ≥ 0, item은 ItemTable에(itemCount ≥ 1)이어야 한다.");
                 }
             }
         }

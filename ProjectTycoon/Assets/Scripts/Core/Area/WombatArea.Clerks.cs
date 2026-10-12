@@ -153,9 +153,10 @@ namespace ZooTycoon.Core
         internal IReadOnlyList<Candidate> WaitingCandidates => m_candidates;
 
         // 저장한 점원을 값 없이 들인다(구멍에서 나와 자리로 간다. ClerkHired를 내지 않아 줌인 · 소리 · 이름 말하기가 없다)
-        internal void RestoreClerk(Candidate candidate, Interactable thing, int wage, string product)
+        internal void RestoreClerk(Candidate candidate, Interactable thing, int wage, string product, double mood = 1d)
         {
             Clerk clerk = new Clerk(++m_nextClerkId, candidate, thing, wage, this);
+            clerk.Restore(mood);
 
             if (product != null)
             {

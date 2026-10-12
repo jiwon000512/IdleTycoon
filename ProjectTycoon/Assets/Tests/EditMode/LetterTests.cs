@@ -14,15 +14,15 @@ namespace ZooTycoon.Tests
         {
             TestGame game = new TestGame();
             Mailbox mailbox = game.Mall.Mailbox;
-            LetterTable first = game.Tables.Get<LetterTable>("l01");
-            Assert.That(mailbox.Letters, Is.EqualTo(new[] { first }), "첫 걸음(편지 읽기)이 시작되며 큰이모 편지가 온다");
+            Letter first = mailbox.Letters.Single();
+            Assert.That(first.Row, Is.SameAs(game.Tables.Get<LetterTable>("l01")), "첫 걸음(편지 읽기)이 시작되며 큰이모 편지가 온다");
             Assert.That(mailbox.UnreadCount, Is.EqualTo(1));
             Assert.That(game.Mall.Quests.IsDone, Is.False);
             double coins = game.State.Coins;
 
             Assert.That(mailbox.TryRead(first), Is.True);
 
-            Assert.That(game.State.Coins, Is.EqualTo(coins + first.Coins), "동봉 코인");
+            Assert.That(game.State.Coins, Is.EqualTo(coins + first.Row.Coins), "동봉 코인");
             Assert.That(mailbox.UnreadCount, Is.EqualTo(0));
             Assert.That(game.Mall.Quests.IsDone, Is.True, "읽으면 첫 걸음이 끝난다");
             Assert.That(mailbox.TryRead(first), Is.False, "두 번은 없다");
@@ -47,11 +47,10 @@ namespace ZooTycoon.Tests
             data = GameSave.Capture(game.State, game.Mall);
             data.QuestId = "q01";
             GameSave.Apply(data, game.State, game.Mall, game.Tables);
-            LetterTable bake = game.Tables.Get<LetterTable>("l03");
-            Assert.That(mailbox.Unread, Does.Contain(bake));
+            Letter bake = mailbox.Unread.Single(letter => letter.Id == "l03");
             int wheat = game.State.Count("wheat");
             Assert.That(mailbox.TryRead(bake), Is.True);
-            Assert.That(game.State.Count("wheat"), Is.EqualTo(wheat + bake.ItemCount), "동봉 밀");
+            Assert.That(game.State.Count("wheat"), Is.EqualTo(wheat + bake.Row.ItemCount), "동봉 밀");
         }
 
         // 새 게임: 광장에서 시작, 빵집 문은 닫혀 있고 밀 5개로 연다(광장 문 앞 시트). 열리면 손님을 받는다

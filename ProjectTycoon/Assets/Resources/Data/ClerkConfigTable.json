@@ -1,6 +1,6 @@
 {
   "table": "ClerkConfigTable",
-  "version": 7,
+  "version": 8,
   "notes": [
     "설계 21 점원(2026-09-26): 월급·후보·일머리·협상 숫자 한 행(id main). 전부 시작값.",
     "wagePeriodSeconds: 월급 주기(초). 주기마다 점원마다 지갑에서 빼고, 모자라면 그 점원만 해고. 고용 즉시 첫 월급.",
@@ -13,7 +13,8 @@
     "version 4 (2026-09-27, 사용자 요청, 기획서 v0.12): candidateCount 5 → 3. 후보 팝업이 스크롤 없이 3줄에 맞는다.",
     "version 5 (2026-09-28, 점원 수다, 기획서 v0.17): chatChance(딴짓에 걸렸을 때 수다 확률, 한 난수로 수다 → 외출 → 산책 → 멍. 상대가 없으면 그 몫은 나머지 딴짓 비율대로) · chatDialogues(수다 대화 DialogueTable id). 수다는 가게 안의 가장 가까운 다른 점원을 일하는 중이어도 불러 세우고 마주 보고 대화한다. 「딴짓 중인 점원이 있으면 늘 수다」 규칙 삭제. outingChance 0.3 → 0.225 · strollChance 0.35 → 0.2625(수다 25%만큼 비율 그대로 줄임). chatOffset 0.6 → 1.0(마주 선 두 점원 그림이 겹쳤다).",
     "version 6 (2026-09-28, 사용자 요청): questionHoldSeconds — 딴짓 점원에 「?」가 뜬 순간(웜뱃이 다가옴) 이 시간 동안 제자리에 서서 웜뱃을 본다(빵집·광장). 걷던 길은 그 뒤 이어 간다.",
-    "version 7 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기"
+    "version 7 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기",
+    "version 8 (2026-10-12): 설계 59 ⓒ 점원의 부탁: requestAfterPaydays(이 번째 월급부터 1단계 사물에 붙은 점원이 편지로 부탁) · requestSeconds(들어줄 시간) · requestSkill(들어주면 일머리 +) · requestSulk(넘기면 딴짓 확률 ×, 기분에 누적). 값은 임시(밸런스방)"
   ],
   "rows": [
     {
@@ -22,6 +23,7 @@
       "candidateCount": 3,
       "refreshCost": 50,
       "skillSkew": 2, "traitChance": 0.4,
+      "requestAfterPaydays": 3, "requestSeconds": 180, "requestSkill": 5, "requestSulk": 1.5,
       "wagePerSkill": 1.0,
       "idleSecondsMin": 3,
       "idleSecondsMax": 90,

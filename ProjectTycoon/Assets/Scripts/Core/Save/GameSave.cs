@@ -28,7 +28,8 @@ namespace ZooTycoon.Core
                 QuestId = mall.Quests.Current?.Id,
                 QuestRevealed = mall.Quests.Revealed,
                 Area = mall.Active.Id,
-                Mail = new MailSave { Arrived = mall.Mailbox.Letters.Select(letter => letter.Id).ToList(), Read = mall.Mailbox.Letters.Where(mall.Mailbox.IsRead).Select(letter => letter.Id).ToList() },
+                Mail = new MailSave { Arrived = mall.Mailbox.Letters.Select(letter => letter.Key).ToList(), Read = mall.Mailbox.Letters.Where(mall.Mailbox.IsRead).Select(letter => letter.Key).ToList() },
+                Requests = mall.Requests.Pending.Select(r => new RequestSave { Area = r.Clerk.Home.Id, Clerk = r.Clerk.Index, Kind = r.Kind, Left = r.Left, LevelAt = r.LevelAt }).ToList(),
                 QuestIndex = mall.Quests.Index,
                 QuestProgress = mall.Quests.Progress,
                 Missions = mall.Missions.Day == null ? null : new MissionsSave
@@ -73,6 +74,7 @@ namespace ZooTycoon.Core
             mall.Bakery.PlaceWombatHome();
             mall.Quests.Restore(data.QuestId, data.QuestIndex, data.QuestProgress, data.QuestRevealed);
             mall.Mailbox.Restore(data.Mail?.Arrived ?? new List<string>(), data.Mail?.Read ?? new List<string>());
+            mall.Requests.Restore(data.Requests ?? new List<RequestSave>());
 
             // 설계 59: 새 모양 저장이면 있던 곳으로(옛 저장은 빵집에서)
             if (data.Mail != null)
@@ -131,6 +133,7 @@ namespace ZooTycoon.Core
                     Look = clerk.Look.Id,
                     Product = clerk.Product,
                     Trait = clerk.Trait?.Id,
+                    Mood = clerk.Mood,
                 });
             }
 
@@ -285,7 +288,7 @@ namespace ZooTycoon.Core
 
                 if (thing != null && look != null && area.CanStaff(thing) && area.ClerkOf(thing) == null)
                 {
-                    area.RestoreClerk(new Candidate(c.Name, c.Skill, look, Find<TraitTable>(tables, c.Trait)), thing, c.Wage, c.Product);
+                    area.RestoreClerk(new Candidate(c.Name, c.Skill, look, Find<TraitTable>(tables, c.Trait)), thing, c.Wage, c.Product, c.Mood);
                 }
             }
 

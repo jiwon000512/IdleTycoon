@@ -31,6 +31,17 @@ namespace ZooTycoon.Core
         // 설계 59: 웜뱃이 있던 곳(없으면 빵집) · 우편함(없으면 옛 저장: 빵집 문 열림 · 편지 없음)
         public string Area;
         public MailSave Mail;
+        public List<RequestSave> Requests;
+    }
+
+    // 설계 59 ⓒ: 점원의 부탁(곳 id · 점원 차례 · 종류 · 남은 초 · 부탁 때 단계)
+    public sealed class RequestSave
+    {
+        public string Area;
+        public int Clerk;
+        public string Kind;
+        public double Left;
+        public int LevelAt;
     }
 
     public sealed class MailSave
@@ -114,6 +125,8 @@ namespace ZooTycoon.Core
         public string Product;
         // 설계 59: 특기(TraitTable id, 없으면 null)
         public string Trait;
+        // 설계 59 ⓒ: 기분(옛 저장은 1)
+        public double Mood = 1d;
     }
 
     public sealed class CandidateSave

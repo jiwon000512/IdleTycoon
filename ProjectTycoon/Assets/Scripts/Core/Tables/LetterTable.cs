@@ -11,6 +11,8 @@ namespace ZooTycoon.Core
         public const string k_WhenStart = "start";
         public const string k_WhenDone = "done";
         public const string k_WhenArea = "area";
+        // 설계 59 ⓒ: 점원이 보내는 편지(걸음으로 오지 않고 ClerkRequests가 넣는다. 보낸 이는 점원 이름, lines의 {0} 이름 · {1} 사물)
+        public const string k_WhenClerk = "clerk";
 
         public string When { get; set; }
         public string From { get; set; }
