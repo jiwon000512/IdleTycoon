@@ -32,9 +32,11 @@ namespace ZooTycoon.Core
         public const string k_Open = "open";
         public const string k_Fill = "fill";
         public const string k_Seat = "seat";
+        // 설계 59: 읽은 편지 수
+        public const string k_Letter = "letter";
 
         private static readonly string[] s_events = { k_Bake, k_Stock, k_Sell, k_Till, k_Plant, k_Harvest, k_Dig, k_Clean, k_Wake, k_Bless, k_Draw, k_Evaluate, k_Catch, k_Serve };
-        private static readonly string[] s_states = { k_Visit, k_Place, k_Hire, k_Unlock, k_Star, k_Open, k_Fill, k_Seat };
+        private static readonly string[] s_states = { k_Visit, k_Place, k_Hire, k_Unlock, k_Star, k_Open, k_Fill, k_Seat, k_Letter };
 
         public static bool IsKnown(string kind)
         {
@@ -101,6 +103,8 @@ namespace ZooTycoon.Core
                     return dam != null && mall.Fishing.Opened.Contains(dam.Index) ? 1 : 0;
                 case k_Seat:
                     return mall.Fishing.Seats.Count(seat => seat.Placed);
+                case k_Letter:
+                    return mall.Mailbox?.ReadCount ?? 0;
                 default:
                     return 0;
             }
@@ -138,6 +142,9 @@ namespace ZooTycoon.Core
                     return param == null || rock.Stretch.Id == param;
                 case DamInteractable dam:
                     return param == null || dam.Stretch.Id == param;
+                // 설계 59: 광장 문은 가게마다 하나(빵집 · 횟집 · 낚시터)
+                case ShopGateInteractable gate:
+                    return param == null || gate.Shop.Id == param;
                 case PlotInteractable plot:
                     switch (kind)
                     {

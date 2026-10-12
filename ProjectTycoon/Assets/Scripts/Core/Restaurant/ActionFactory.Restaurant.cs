@@ -127,7 +127,11 @@ namespace ZooTycoon.Core
             {
                 IGated shop = ((ShopGateInteractable)target).Shop;
                 double cost = shop.GateCost;
-                return new[] { new SheetOption(null, shop.GateLocked ? SheetOptionState.Locked : SheetOption.Afford(worker, cost), cost) };
+                // 설계 59: 재료로 여는 문(빵집 = 밀)은 창고 수로
+                SheetOptionState state = shop.GateLocked ? SheetOptionState.Locked
+                    : shop.GateItem != null ? (worker.Wallet.Count(shop.GateItem) >= shop.GateCount ? SheetOptionState.Enabled : SheetOptionState.Poor)
+                    : SheetOption.Afford(worker, cost);
+                return new[] { new SheetOption(null, state, cost) };
             }
 
             public override bool TryChoose(Worker worker, Interactable target, string option)

@@ -167,6 +167,9 @@ namespace ZooTycoon.World
         // 설계 58: 층마다 둑 띠(물 윗선) · 폭포 띠(아래 층이 열린 층의 물 아랫부분) · 바위(그림 + 값 표식) · 댐 · 좌대 · 좌대 손님 그림
         private readonly Dictionary<int, SpriteRenderer> m_bankArts = new Dictionary<int, SpriteRenderer>();
         private readonly Dictionary<int, SpriteRenderer> m_cliffArts = new Dictionary<int, SpriteRenderer>();
+        // 아트방 bank-end(사용자 C 끝 갈대): 둑 띠 양 끝에 갈대(왼쪽 · 오른쪽 뒤집기), 발끝은 물 윗변 모서리에서 k_ReedDrop 아래
+        private readonly Dictionary<int, (SpriteRenderer left, SpriteRenderer right)> m_reedArts = new Dictionary<int, (SpriteRenderer, SpriteRenderer)>();
+        private const float k_ReedDrop = 0.075f;
         private readonly Dictionary<RockInteractable, (SpriteRenderer art, MarkerView tag)> m_rocks = new Dictionary<RockInteractable, (SpriteRenderer, MarkerView)>();
         private readonly Dictionary<DamInteractable, SpriteRenderer> m_damArts = new Dictionary<DamInteractable, SpriteRenderer>();
         private readonly Dictionary<SeatInteractable, SpriteRenderer> m_seatArts = new Dictionary<SeatInteractable, SpriteRenderer>();
@@ -584,6 +587,18 @@ namespace ZooTycoon.World
                     bank.size = new Vector2(water.XMax - water.XMin, m_bank.bounds.size.y);
                     bank.transform.localPosition = new Vector3(center, water.YMax, 0f);
                 }
+
+                if (!m_reedArts.TryGetValue(pair.Key, out (SpriteRenderer left, SpriteRenderer right) reeds))
+                {
+                    reeds = (NewRenderer(transform, "ReedLeft", Prop("bank_reeds"), Color.white, 0), NewRenderer(transform, "ReedRight", Prop("bank_reeds"), Color.white, 0));
+                    reeds.left.spriteSortPoint = SpriteSortPoint.Pivot;
+                    reeds.right.spriteSortPoint = SpriteSortPoint.Pivot;
+                    reeds.right.flipX = true;
+                    m_reedArts[pair.Key] = reeds;
+                }
+
+                reeds.left.transform.localPosition = new Vector3(water.XMin, water.YMax - k_ReedDrop, 0f);
+                reeds.right.transform.localPosition = new Vector3(water.XMax, water.YMax - k_ReedDrop, 0f);
 
                 // 아래 층이 열린 층: 물 아랫부분이 폭포 띠(지금은 흙빛 띠, 그림은 아트방)
                 bool cliff = m_fishing.Opened.Contains(pair.Key + 1);

@@ -15,6 +15,9 @@ namespace ZooTycoon.Core
 
         private readonly PlazaConfigTable m_config;
         private readonly IRandom m_random;
+        // 설계 59 손님 소문: 지금 퀘스트 걸음 id(Mall이 건다). DialogueTable rumor_<걸음 id>가 있으면 광장에 들어온 손님이 확률로 한 줄
+        internal Func<string> StepId { get; set; }
+        private const double k_RumorChance = 0.5;
         private readonly List<PlazaVisitor> m_visitors = new List<PlazaVisitor>();
         private readonly List<DecorationData> m_decor = new List<DecorationData>();
         private readonly List<IPlacedKind> m_shopKinds = new List<IPlacedKind>();
@@ -123,6 +126,23 @@ namespace ZooTycoon.Core
         }
 
         // 들를 곳에서 머무는 초 · ♥를 띄울지
+        // 설계 59: 들어온 손님이 지금 걸음의 소문을 말한다(있으면 · 확률)
+        internal void Rumor(PlazaVisitor visitor)
+        {
+            string step = StepId?.Invoke();
+            DialogueTable rumor = step == null ? null : Tables.GetAll<DialogueTable>().FirstOrDefault(row => row.Id == "rumor_" + step);
+
+            // 소문 행이 없는 걸음에서는 난수를 쓰지 않는다(오프라인 정산 대조가 같은 난수 순서를 전제)
+            if (rumor == null || rumor.Lines.Count == 0 || m_random.NextDouble() >= k_RumorChance)
+            {
+                return;
+            }
+
+            DialogueLineData line = rumor.Lines[0];
+            string text = line.Texts[(int)(m_random.NextDouble() * line.Texts.Count) % line.Texts.Count];
+            Bus.Publish(new Events.DialogueLine(null, DialogueSpeaker.Visitor, visitor, text, rumor.LineSeconds));
+        }
+
         internal double VisitSeconds()
         {
             return m_config.VisitSecondsMin + m_random.NextDouble() * (m_config.VisitSecondsMax - m_config.VisitSecondsMin);

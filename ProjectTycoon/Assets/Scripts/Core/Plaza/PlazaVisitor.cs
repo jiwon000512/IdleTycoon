@@ -141,6 +141,13 @@ namespace ZooTycoon.Core
                 }
 
                 Phase = VisitorPhase.Walking;
+
+                // 설계 59: 계단으로 들어온 손님은 소문 한마디
+                if (Clerk == null && !IsMerchant)
+                {
+                    Plaza.Rumor(this);
+                }
+
                 Next();
                 return true;
             }

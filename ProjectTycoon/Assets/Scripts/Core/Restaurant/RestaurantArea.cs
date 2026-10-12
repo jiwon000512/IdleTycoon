@@ -36,6 +36,8 @@ namespace ZooTycoon.Core
         public double GateCost => Config.OpenCost;
         public int GateStar => Config.OpenStar;
         public bool GateLocked => StarLocked;
+        public string GateItem => null;
+        public int GateCount => 0;
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         public override string Id => k_Id;
 

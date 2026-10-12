@@ -9,6 +9,9 @@ namespace ZooTycoon.Core
         // 빵집 별이 이만큼 있어야 연다(0이면 조건 없음) · 아직 모자란가
         int GateStar { get; }
         bool GateLocked { get; }
+        // 설계 59: 코인 대신 재료로 여는 문(빵집 = 밀). null이면 코인(GateCost)
+        string GateItem { get; }
+        int GateCount { get; }
         bool TryOpenGate(Worker worker);
     }
 }

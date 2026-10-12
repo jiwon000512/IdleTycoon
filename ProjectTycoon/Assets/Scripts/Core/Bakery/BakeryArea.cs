@@ -11,7 +11,7 @@ namespace ZooTycoon.Core
     // 설계 18: 진열대·오븐·계산대는 자유 배치(밑변 가운데 좌표). 사고 옮기고 보관하는 규칙은 WombatArea.Placement. 굴 파기는 칸 그대로.
     // 손님 동선 설계 v0.2: 매 프레임 돌고, 손님(BakeryVisitor)의 목록·비켜 걷기·서는 자리는 BakeryArea.Visitors.cs. 설계 24 · 37 웜뱃 똥은 곳 공용 WombatArea.Poops.cs(손님 땅 둘레만 여기).
     // 설계 11: 손님은 광장에서 Admit으로 들어오고, 웜뱃은 구멍 앞 나가기로 광장에 간다(없는 동안 계산이 멈춘다)
-    public sealed partial class BakeryArea : WombatArea, IShop
+    public sealed partial class BakeryArea : WombatArea, IShop, IGated
     {
         private readonly BakeryConfigTable m_config;
         private readonly ZooState m_state;
@@ -39,8 +39,14 @@ namespace ZooTycoon.Core
         public BreadTable NextBread => Tables.GetAll<BreadTable>().FirstOrDefault(bread => !m_unlocked.Contains(bread));
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         public override string Id => k_Id;
-        // 설계 47: 빵집은 처음부터 열려 있다
-        public bool IsOpen => true;
+        // 설계 47 → 설계 59: 빵집도 광장 문(IGated)이 있다. 새 게임은 닫힌 채 시작해 밀 openCount개로 연다(Mall.StartNew). 테스트 · 옛 저장은 열린 채
+        public bool IsOpen => GateOpen;
+        public bool GateOpen { get; private set; } = true;
+        public double GateCost => 0d;
+        public int GateStar => 0;
+        public bool GateLocked => false;
+        public string GateItem => m_config.OpenItem;
+        public int GateCount => m_config.OpenCount;
         // 설계 25: 오븐이 재료를 꺼내는 창고
         public ZooState Wallet => m_state;
         // 설계 40: 별 평가(입구 칠판에서 부른다)
@@ -313,6 +319,30 @@ namespace ZooTycoon.Core
         {
             RebuildLayout();
             OnLayoutChanged();
+        }
+
+        // 설계 59: 광장 문 앞 시트에서 밀을 내고 연다
+        public bool TryOpenGate(Worker worker)
+        {
+            if (GateOpen || !worker.Wallet.TrySpendItem(m_config.OpenItem, m_config.OpenCount))
+            {
+                return false;
+            }
+
+            GateOpen = true;
+            Bus.Publish(new Events.ShopOpened(this));
+            return true;
+        }
+
+        // 새 게임 · 저장에서 닫힌 문
+        internal void CloseGate()
+        {
+            GateOpen = false;
+        }
+
+        internal void RestoreGate(bool open)
+        {
+            GateOpen = open;
         }
 
         private InteractableTable Row(string interactableId)

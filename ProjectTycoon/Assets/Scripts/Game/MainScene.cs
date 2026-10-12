@@ -32,6 +32,8 @@ namespace ZooTycoon.Game
         private InventoryView m_inventoryView;
         private MissionView m_missionView;
         private IDisposable m_menuPointed;
+        private TopBarView m_topBarView;
+        private LetterPresenter m_letterPresenter;
 
         private void Awake()
         {
@@ -40,6 +42,7 @@ namespace ZooTycoon.Game
 
             UIManager ui = UIManager.Instance;
             TopBarView topBarView = ui.Open<TopBarView>();
+            m_topBarView = topBarView;
             m_hudView = ui.Open<ControlHudView>();
             // 설계 42: 곳 이름 팻말은 HUD와 같은 층(팝업 아래)
             LocationView locationView = ui.Open<LocationView>();
@@ -59,6 +62,8 @@ namespace ZooTycoon.Game
             RelicDrawResultView relicResultView = ui.Open<RelicDrawResultView>();
             // 설계 43: 돌아왔을 때 팝업은 맨 위
             OfflineView offlineView = ui.Open<OfflineView>();
+            // 설계 59: 편지 카드(소식지 틀)는 돌아왔을 때 팝업 아래
+            FishingNewsView letterView = ui.Open<FishingNewsView>();
             WorldManager world = WorldManager.Instance;
 
             m_topBarPresenter = new TopBarPresenter(topBarView, game.State, game.Bus, game.Tables, game.Mall.Plaza.Merchant, game.Mall);
@@ -72,6 +77,7 @@ namespace ZooTycoon.Game
             m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
             m_locationPresenter = new LocationPresenter(locationView, game.Mall, game.Bus, game.Tables);
             m_offlinePresenter = new OfflinePresenter(offlineView, game.Bus, game.Tables);
+            m_letterPresenter = new LetterPresenter(letterView, topBarView, game.Mall.Mailbox, game.Bus, game.Tables);
             // 설계 55: 창고 + 유물 = 가방(마지막에 본 탭). 뽑기 결과 「유물 보기」는 유물 탭
             m_bagPresenter = new BagPresenter(inventoryView, relicsView, m_inventoryPresenter, m_relicsPresenter, game.Tables);
             m_relicPresenter = new RelicCartPresenter(relicView, relicResultView, game.State, game.Bus, game.Tables, () => m_bagPresenter.Show(BagPresenter.k_Relics));
@@ -118,6 +124,7 @@ namespace ZooTycoon.Game
             }
 
             m_topBarPresenter?.Dispose();
+            m_letterPresenter?.Dispose();
             m_hudPresenter?.Dispose();
             if (m_sheetPresenter != null)
             {
@@ -183,6 +190,9 @@ namespace ZooTycoon.Game
                     break;
                 case QuestTable.k_MenuMission:
                     m_missionView.PointButton();
+                    break;
+                case QuestTable.k_MenuMail:
+                    m_topBarView.PointMail();
                     break;
             }
         }

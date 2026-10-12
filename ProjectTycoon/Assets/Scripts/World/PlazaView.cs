@@ -230,6 +230,7 @@ namespace ZooTycoon.World
                 }
 
                 tag.Show(gate.Shop.GateLocked ? m_tables.Format("row_star_needed", gate.Shop.GateStar)
+                    : gate.Shop.GateItem != null ? m_tables.Format("tag_open_item", m_tables.Get<ItemTable>(gate.Shop.GateItem).Name, gate.Shop.GateCount)
                     : m_tables.Format("tag_open_shop", gate.Shop.GateCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
             }
 

@@ -137,6 +137,10 @@ namespace ZooTycoon.UI
                 case ShopGateInteractable gate when gate.Table.Id == ShopGateInteractable.k_WetWall:
                     m_view.SetHeader(m_tables.Text("sheet_wet_wall_title"), m_tables.Text("sheet_wet_wall_status"));
                     break;
+                // 설계 59: 빵집 문(밀로 연다)
+                case ShopGateInteractable gate when gate.Shop is BakeryArea:
+                    m_view.SetHeader(m_tables.Text("sheet_bakery_gate_title"), m_tables.Text("sheet_bakery_gate_status"));
+                    break;
                 case ShopGateInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_gate_title"), m_tables.Text("sheet_gate_status"));
                     break;
@@ -301,13 +305,14 @@ namespace ZooTycoon.UI
                 // 설계 47: 빵집 별이 모자라면 값 자리에 「★n 필요」. 설계 58: 젖은 벽은 같은 줄에 다른 글
                 case ActionTable.k_OpenShop:
                     ShopGateInteractable gate = (ShopGateInteractable)m_target;
-                    string row = gate.Table.Id == ShopGateInteractable.k_WetWall ? "row_wet_wall" : "row_open_shop";
+                    string row = gate.Table.Id == ShopGateInteractable.k_WetWall ? "row_wet_wall" : gate.Shop is BakeryArea ? "row_open_bakery" : "row_open_shop";
                     return new SheetRow
                     {
                         Name = m_tables.Text(row),
                         Effect = m_tables.Text(row + "_effect"),
                         Cost = option.State == SheetOptionState.Locked
                             ? m_tables.Format("row_star_needed", gate.Shop.GateStar)
+                            : gate.Shop.GateItem != null ? m_tables.Format("tag_open_item", m_tables.Get<ItemTable>(gate.Shop.GateItem).Name, gate.Shop.GateCount)
                             : BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };

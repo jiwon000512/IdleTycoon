@@ -166,6 +166,8 @@ namespace ZooTycoon.Game
             BakeryArea bakery = new BakeryArea(State, Tables, random, wombat, Bus);
             Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), new FarmArea(Tables, random, wombat, Bus), Bus, new FishingArea(Tables, random, wombat, Bus),
                 new RestaurantArea(State, Tables, random, wombat, Bus), () => DateTime.Now + m_clockShift);
+            // 설계 59: 새 게임은 광장에서, 빵집 문은 닫힌 채
+            Mall.StartNew();
         }
 
         // 깨진 파일 · 덮다가 실패(표가 바뀌어 맞지 않음)면 새 게임으로 시작하고 파일은 .bad로 남긴다(30초 뒤 덮어써 잃지 않게)

@@ -26,6 +26,8 @@ namespace ZooTycoon.Core
                 Stars = new Dictionary<string, int>(state.Stars.Counts),
                 UntilPayday = mall.Payroll.UntilPayday,
                 QuestId = mall.Quests.Current?.Id,
+                Area = mall.Active.Id,
+                Mail = new MailSave { Arrived = mall.Mailbox.Letters.Select(letter => letter.Id).ToList(), Read = mall.Mailbox.Letters.Where(mall.Mailbox.IsRead).Select(letter => letter.Id).ToList() },
                 QuestIndex = mall.Quests.Index,
                 QuestProgress = mall.Quests.Progress,
                 Missions = mall.Missions.Day == null ? null : new MissionsSave
@@ -47,6 +49,9 @@ namespace ZooTycoon.Core
 
         public static void Apply(SaveData data, ZooState state, Mall mall, TableSet tables)
         {
+            // 설계 59: 새 게임(광장)에 덮어쓸 수도 있으니 먼저 빵집으로(곳 저장은 빵집에 웜뱃이 있다고 전제). 옛 저장은 빵집 문 열림
+            mall.Start(BakeryArea.k_Id);
+            mall.Bakery.RestoreGate(data.Mail == null || data.Areas.FirstOrDefault(a => a.Id == BakeryArea.k_Id)?.Open != false);
             state.Restore(data.Coins, data.Items);
             state.Blessing.Restore(Find<BlessingTable>(tables, data.Blessing), data.BlessingLeft, data.BlessingCooldown);
             state.Relics.Restore(data.Relics.Where(pair => Find<RelicTable>(tables, pair.Key) != null).ToDictionary(pair => pair.Key, pair => pair.Value),
@@ -66,6 +71,13 @@ namespace ZooTycoon.Core
 
             mall.Bakery.PlaceWombatHome();
             mall.Quests.Restore(data.QuestId, data.QuestIndex, data.QuestProgress);
+            mall.Mailbox.Restore(data.Mail?.Arrived ?? new List<string>(), data.Mail?.Read ?? new List<string>());
+
+            // 설계 59: 새 모양 저장이면 있던 곳으로(옛 저장은 빵집에서)
+            if (data.Mail != null)
+            {
+                mall.Start(data.Area ?? BakeryArea.k_Id);
+            }
 
             if (data.Missions != null)
             {
@@ -128,6 +140,7 @@ namespace ZooTycoon.Core
             switch (area)
             {
                 case BakeryArea bakery:
+                    save.Open = bakery.GateOpen;
                     save.Cells = CaptureCells(bakery.Grid);
                     save.Unlocked = bakery.UnlockedBreads.Select(bread => bread.Id).ToList();
                     save.EvaluationCooldown = bakery.Evaluation.Cooldown;

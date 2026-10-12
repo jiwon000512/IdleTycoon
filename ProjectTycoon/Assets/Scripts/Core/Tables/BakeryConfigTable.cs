@@ -8,6 +8,9 @@ namespace ZooTycoon.Core
     {
         public const string k_Bakery = "bakery";
 
+        // 설계 59: 광장 빵집 문을 여는 재료(ItemTable id)와 개수(밀 5)
+        public string OpenItem { get; set; }
+        public int OpenCount { get; set; }
         public int MaxCustomers { get; set; }
         // 손님 동선 설계 v0.2: 빈 진열대 앞 두리번 시간 합계. 다 쓰면 「!!」로 나간다
         public double PatienceSeconds { get; set; }

@@ -48,6 +48,13 @@ namespace ZooTycoon.World
         {
             string text = m_tables.Text(e.TextId);
 
+            // 설계 59: 손님 소문(말하는 이가 광장 손님)
+            if (e.SpeakerObject is PlazaVisitor speaker && m_units.TryGetValue(speaker, out VisitorView who))
+            {
+                who.Say(text, (float)e.Seconds);
+                return;
+            }
+
             if (e.SpeakerObject is Clerk clerk && clerk.Away)
             {
                 foreach (KeyValuePair<PlazaVisitor, VisitorView> pair in m_units)

@@ -84,6 +84,8 @@ namespace ZooTycoon.Core
         public double GateCost => Config.WallCost;
         public int GateStar => 0;
         public bool GateLocked => false;
+        public string GateItem => null;
+        public int GateCount => 0;
 
         protected override BurrowNav WombatNav => Layout.Nav;
         protected override Vector2 Entrance => Layout.HoleFloor;

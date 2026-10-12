@@ -30,13 +30,14 @@ namespace ZooTycoon.Tests
             return rewards;
         }
 
-        // 1: 새 게임 첫 걸음은 식빵 굽기. 굽기를 시작하면 다 되고, 받으면 코인 · 다음 걸음(진행은 처음부터)
+        // 1: 설계 59 — 새 게임 첫 걸음은 편지 읽기. 식빵 굽기 걸음은 굽기를 시작하면 다 되고, 받으면 코인 · 다음 걸음(진행은 처음부터)
         [Test]
         public void Quest_FirstStep_CountsBakeAndClaimAdvances()
         {
             TestGame game = new TestGame();
             QuestLog quests = game.Mall.Quests;
-            Assert.That(quests.Current.Id, Is.EqualTo("q01"));
+            Assert.That(quests.Current.Id, Is.EqualTo("q27"));
+            JumpTo(game, "q01");
             Assert.That(quests.TryClaim(), Is.False);
 
             Assert.That(game.Bakery.Ovens[0].TryStart(game.Tables.Get<BreadTable>("b01")), Is.True);
@@ -72,16 +73,16 @@ namespace ZooTycoon.Tests
             SaveData starred = GameSave.Capture(game.State, game.Mall);
             starred.Stars["bakery"] = 5;
             GameSave.Apply(starred, game.State, game.Mall, game.Tables);
-            JumpTo(game, "q14");
+            JumpTo(game, "q11");
             List<Events.GoalRewarded> rewards = Rewards(game);
-            game.Bus.Publish(new Events.PoopsCleaned(game.Bakery, "manure", 1));
             double coins = game.State.Coins;
 
+            Assert.That(quests.IsDone, Is.True, "별 평가 받기(별 1)는 별 5로 이미 됐다");
             Assert.That(quests.TryClaim(), Is.True);
 
             Assert.That(quests.Current.Id, Is.EqualTo("q16"), "빵집 별 5(q23) · 크루아상 열기(q15)는 이미 됐다");
             Assert.That(rewards.Count, Is.EqualTo(1));
-            Assert.That(rewards[0].Coins, Is.EqualTo(new[] { "q14", "q23", "q15" }.Sum(id => game.Tables.Get<QuestTable>(id).Coins)));
+            Assert.That(rewards[0].Coins, Is.EqualTo(new[] { "q11", "q23", "q15" }.Sum(id => game.Tables.Get<QuestTable>(id).Coins)));
             Assert.That(game.State.Coins, Is.EqualTo(coins + rewards[0].Coins));
         }
 
@@ -135,6 +136,7 @@ namespace ZooTycoon.Tests
         public void Guide_Arrived_WhenPointedThingIsTheTarget()
         {
             TestGame game = new TestGame();
+            JumpTo(game, "q01");
             Mall mall = game.Mall;
             OvenInteractable oven = game.Bakery.Ovens[0];
             Assert.That(mall.Quests.Go(), Is.True);
@@ -212,6 +214,7 @@ namespace ZooTycoon.Tests
         public void Guide_StepDoneStopsGuide()
         {
             TestGame game = new TestGame();
+            JumpTo(game, "q01");
             Mall mall = game.Mall;
             mall.Wombat.Mover.Place(game.Bakery.Layout.HoleFloor);
             Assert.That(mall.Quests.Go(), Is.True);
@@ -388,7 +391,7 @@ namespace ZooTycoon.Tests
             GameSave.Apply(data, game.State, game.Mall, game.Tables);
             game.Mall.Tick(k_Dt);
 
-            Assert.That(game.Mall.Quests.Current.Id, Is.EqualTo("q01"));
+            Assert.That(game.Mall.Quests.Current.Id, Is.EqualTo("q27"));
             Assert.That(game.Mall.Missions.Missions.Count, Is.EqualTo(5));
         }
     }

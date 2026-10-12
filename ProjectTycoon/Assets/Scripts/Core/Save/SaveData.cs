@@ -26,6 +26,15 @@ namespace ZooTycoon.Core
         public int QuestIndex;
         public int QuestProgress;
         public MissionsSave Missions;
+        // 설계 59: 웜뱃이 있던 곳(없으면 빵집) · 우편함(없으면 옛 저장: 빵집 문 열림 · 편지 없음)
+        public string Area;
+        public MailSave Mail;
+    }
+
+    public sealed class MailSave
+    {
+        public List<string> Arrived = new List<string>();
+        public List<string> Read = new List<string>();
     }
 
     // 설계 54: 오늘의 일 — 하루(yyyy-MM-dd) · 미션(표 id · 진행 · 받음) · 하루 점수 · 연 상자

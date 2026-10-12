@@ -37,7 +37,7 @@ namespace ZooTycoon.Data
             ConfigTable.k_AutosaveSeconds, ConfigTable.k_OfflineMaxSeconds, ConfigTable.k_OfflineMinSeconds, ConfigTable.k_OfflineTripSeconds,
             ConfigTable.k_MissionsPerDay, ConfigTable.k_MissionResetHour, ConfigTable.k_MissionSameAreaMax,
         };
-        private static readonly string[] k_Menus = { QuestTable.k_MenuEdit, QuestTable.k_MenuClerk, QuestTable.k_MenuStorage, QuestTable.k_MenuRelic, QuestTable.k_MenuMission };
+        private static readonly string[] k_Menus = { QuestTable.k_MenuEdit, QuestTable.k_MenuClerk, QuestTable.k_MenuStorage, QuestTable.k_MenuRelic, QuestTable.k_MenuMission, QuestTable.k_MenuMail };
 
         public static IReadOnlyList<string> Validate(TableSet tables)
         {
@@ -67,6 +67,7 @@ namespace ZooTycoon.Data
             ValidateFishing(tables, errors);
             ValidateRestaurant(tables, errors);
             ValidateGoals(tables, errors);
+            ValidateLetters(tables, errors);
 
             return errors;
         }
@@ -644,6 +645,15 @@ namespace ZooTycoon.Data
             }
 
             CheckRequired<BakeryConfigTable>(tables, new[] { BakeryConfigTable.k_Bakery }, errors);
+
+            // 설계 59: 광장 빵집 문은 재료로 연다
+            foreach (BakeryConfigTable bakery in tables.GetAll<BakeryConfigTable>())
+            {
+                if (!Ids<ItemTable>(tables).Contains(bakery.OpenItem ?? "") || bakery.OpenCount < 1)
+                {
+                    errors.Add($"BakeryConfigTable '{bakery.Id}': openItem은 ItemTable에 있고 openCount ≥ 1이어야 한다.");
+                }
+            }
         }
 
         // 설계 11
@@ -1165,6 +1175,28 @@ namespace ZooTycoon.Data
                 if (chest.Chapter < 1 || chest.Minutes < 0d || chest.CoinsPerMinute < 0d || chest.Item != null && (!items.Contains(chest.Item) || chest.ItemCount < 1))
                 {
                     errors.Add($"MissionChestTable '{chest.Id}': chapter ≥ 1, minutes · coinsPerMinute ≥ 0, item은 ItemTable에 있고 itemCount ≥ 1이어야 한다.");
+                }
+            }
+        }
+
+        // 설계 59 · 8.39: 편지. when은 start:/done:<걸음 id> 또는 area:<곳 id>, from · lines는 StringTable(sender_<from>, 줄 id)에, item은 ItemTable에
+        private static void ValidateLetters(TableSet tables, List<string> errors)
+        {
+            HashSet<string> texts = Ids<StringTable>(tables);
+            HashSet<string> items = Ids<ItemTable>(tables);
+            HashSet<string> steps = Ids<QuestTable>(tables);
+            HashSet<string> areas = Ids<FarmFloorTable>(tables);
+            areas.UnionWith(new[] { BakeryArea.k_Id, PlazaArea.k_Id, FishingArea.k_Id, RestaurantArea.k_Id });
+
+            foreach (LetterTable letter in tables.GetAll<LetterTable>())
+            {
+                string[] when = (letter.When ?? "").Split(':');
+                bool whenOk = when.Length == 2 && (when[0] == LetterTable.k_WhenStart || when[0] == LetterTable.k_WhenDone ? steps.Contains(when[1]) : when[0] == LetterTable.k_WhenArea && areas.Contains(when[1]));
+
+                if (!whenOk || string.IsNullOrEmpty(letter.From) || !texts.Contains("sender_" + letter.From) || letter.Lines == null || letter.Lines.Count == 0 || letter.Lines.Any(line => !texts.Contains(line ?? ""))
+                    || letter.Coins < 0d || letter.Item != null && (!items.Contains(letter.Item) || letter.ItemCount < 1))
+                {
+                    errors.Add($"LetterTable '{letter.Id}': when은 start:/done:<걸음 id> 또는 area:<곳 id>, from은 sender_<from> 글이 있고, lines는 StringTable에 하나 이상, coins ≥ 0, item은 ItemTable에(itemCount ≥ 1)이어야 한다.");
                 }
             }
         }

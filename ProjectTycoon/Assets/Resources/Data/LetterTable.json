@@ -1,0 +1,18 @@
+{
+  "table": "LetterTable",
+  "version": 1,
+  "notes": [
+    "설계 59 우편함 편지: when이 되면 한 번 온다 — start:<걸음 id>(그 걸음이 시작될 때) · done:<걸음 id>(다 됐을 때) · area:<곳 id>(들어갈 때). from = 보낸 이(StringTable sender_<from> · 도장 Sprites/Letters/<from>, 그림이 올 때까지 임시). lines = StringTable id들(차례로). 읽으면 coins · item을 준다. 받기 때 이미 된 상태 걸음을 건너뛰면 그 걸음의 start 편지는 오지 않는다(의도). 값은 밸런스방.",
+    "version 1 (2026-10-12, 설계 59): 장마다 한 통 — 큰이모(aunt) · 마을 회관(hall). 1 시작 · 2 빵집 열기 · 3 굽기 · 4 넓히기 · 5 광장 · 6 새 맛 · 7 낚시 · 8 횟집."
+  ],
+  "rows": [
+    { "id": "l01", "when": "start:q27", "from": "aunt", "lines": ["letter_l01_1", "letter_l01_2"], "coins": 100, "item": null, "itemCount": 0 },
+    { "id": "l02", "when": "start:q28", "from": "hall", "lines": ["letter_l02_1", "letter_l02_2"], "coins": 0, "item": null, "itemCount": 0 },
+    { "id": "l03", "when": "start:q01", "from": "aunt", "lines": ["letter_l03_1", "letter_l03_2"], "coins": 0, "item": "wheat", "itemCount": 3 },
+    { "id": "l04", "when": "start:q07", "from": "hall", "lines": ["letter_l04_1", "letter_l04_2"], "coins": 200, "item": null, "itemCount": 0 },
+    { "id": "l05", "when": "start:q14", "from": "aunt", "lines": ["letter_l05_1", "letter_l05_2"], "coins": 0, "item": null, "itemCount": 0 },
+    { "id": "l06", "when": "start:q15", "from": "hall", "lines": ["letter_l06_1"], "coins": 0, "item": null, "itemCount": 0 },
+    { "id": "l07", "when": "start:q18", "from": "aunt", "lines": ["letter_l07_1", "letter_l07_2"], "coins": 300, "item": null, "itemCount": 0 },
+    { "id": "l08", "when": "start:q24", "from": "hall", "lines": ["letter_l08_1"], "coins": 0, "item": null, "itemCount": 0 }
+  ]
+}

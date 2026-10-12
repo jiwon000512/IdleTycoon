@@ -61,5 +61,26 @@ namespace ZooTycoon.Core
                 Menu = menu;
             }
         }
+
+        // 설계 59: 우편함에 편지가 왔다 · 읽었다(동봉은 이미 지갑에)
+        public readonly struct LetterArrived
+        {
+            public readonly LetterTable Letter;
+
+            public LetterArrived(LetterTable letter)
+            {
+                Letter = letter;
+            }
+        }
+
+        public readonly struct LetterRead
+        {
+            public readonly LetterTable Letter;
+
+            public LetterRead(LetterTable letter)
+            {
+                Letter = letter;
+            }
+        }
     }
 }

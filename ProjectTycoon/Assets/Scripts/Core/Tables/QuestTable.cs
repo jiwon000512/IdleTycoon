@@ -13,6 +13,8 @@ namespace ZooTycoon.Core
         public const string k_MenuStorage = "storage";
         public const string k_MenuRelic = "relic";
         public const string k_MenuMission = "mission";
+        // 설계 59: 우편함 타일(소식 줄)
+        public const string k_MenuMail = "mail";
 
         public int Chapter { get; set; }
         public string Kind { get; set; }

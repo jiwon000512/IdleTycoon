@@ -54,6 +54,10 @@ namespace ZooTycoon.UI
         [SerializeField] private TMP_Text m_merchantTime;
         [Tooltip("설계 57: 와 있고 아직 좌판을 안 열었으면 레드닷")]
         [SerializeField] private RedDot m_merchantBadge;
+        [Tooltip("설계 59: 우편함 타일(행상 타일 아래, 늘 보임). 레드닷 = 안 읽은 편지 수, 누르면 편지 카드")]
+        [SerializeField] private CanvasGroup m_mail;
+        [SerializeField] private Button m_mailButton;
+        [SerializeField] private RedDot m_mailBadge;
         [Tooltip("설계 49 물때 알약(행상 알약 아래): 물고기 아이콘 · 「물때」 · 「7/10」")]
         [SerializeField] private CanvasGroup m_wave;
         [SerializeField] private TMP_Text m_waveText;
@@ -93,12 +97,14 @@ namespace ZooTycoon.UI
 
         public bool SpentVisible => m_spentLeft > 0f;
         public QuestCard Quest => m_quest;
+        public event Action MailClicked;
 
         private void Awake()
         {
             m_spent.gameObject.SetActive(false);
             m_blessing.gameObject.SetActive(false);
             m_merchant.gameObject.SetActive(false);
+            m_mailButton.onClick.AddListener(() => MailClicked?.Invoke());
             m_wave.gameObject.SetActive(false);
             m_evaluation.gameObject.SetActive(false);
 
@@ -162,6 +168,20 @@ namespace ZooTycoon.UI
         public void SetMerchantSeen()
         {
             m_merchantBadge.Set(false);
+        }
+
+        // 설계 59: 우편함 타일 — 안 읽은 편지 수(0이면 점 없음)
+        public void ShowMail(int unread)
+        {
+            m_mailBadge.Set(unread);
+            m_mail.gameObject.SetActive(true);
+            Stack();
+        }
+
+        // 할 일 「가기」가 우편함을 가리킨다
+        public void PointMail()
+        {
+            StartCoroutine(UiFx.Pulse((RectTransform)m_mail.transform));
         }
 
         // 설계 49: 물때 알약. value가 null이면 값 칸을 숨긴다(대물 물때의 「대물!」), pulse면 톡 튄다
@@ -271,10 +291,18 @@ namespace ZooTycoon.UI
                 y -= rect.sizeDelta.y + k_Gap;
             }
 
-            if (m_merchant.gameObject.activeSelf)
+            bool news = false;
+
+            foreach (CanvasGroup group in new[] { m_merchant, m_mail })
             {
-                RectTransform tile = (RectTransform)m_merchant.transform;
-                y -= k_NewsGap - k_Gap;
+                if (group == null || !group.gameObject.activeSelf)
+                {
+                    continue;
+                }
+
+                RectTransform tile = (RectTransform)group.transform;
+                y -= news ? 0f : k_NewsGap - k_Gap;
+                news = true;
                 tile.anchoredPosition = new Vector2(tile.anchoredPosition.x, y);
                 y -= tile.sizeDelta.y + k_Gap;
             }

@@ -12,7 +12,8 @@ namespace ZooTycoon.Core
 
         public IReadOnlyList<BakeryVisitor> Visitors => m_visitors;
         // 설계 11: 손님은 광장 빵집 문으로 들어온다(도착 타이머는 PlazaArea)
-        public bool CanAdmit => m_visitors.Count < m_config.MaxCustomers;
+        // 설계 59: 닫힌 빵집(광장 문)은 손님을 받지 않는다
+        public bool CanAdmit => IsOpen && m_visitors.Count < m_config.MaxCustomers;
 
         // 광장 빵집 문에서 톡 들어온 손님이 구멍에서 나온다(자리 확인은 CanAdmit으로 부르는 쪽이)
         public void Admit(VisitorTable look)

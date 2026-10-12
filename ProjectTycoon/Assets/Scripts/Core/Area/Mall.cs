@@ -28,6 +28,7 @@ namespace ZooTycoon.Core
         public QuestLog Quests { get; }
         public DailyBoard Missions { get; }
         public Guide Guide { get; }
+        public Mailbox Mailbox { get; }
         // 웜뱃이 있는 곳
         public WombatArea Active { get; private set; }
 
@@ -55,6 +56,7 @@ namespace ZooTycoon.Core
             m_areas.Add(Restaurant);
             plaza.AddVisited(Restaurant);
             plaza.AddGate(Restaurant, ShopGateInteractable.k_Id);
+            plaza.AddGate(bakery, ShopGateInteractable.k_Id);
 
             m_bus = bus;
             Wombat = bakery.Wombat;
@@ -64,6 +66,31 @@ namespace ZooTycoon.Core
             Guide = new Guide(this, bus);
             Quests = new QuestLog(this, bakery.Tables, bus, Guide);
             Missions = new DailyBoard(this, bakery.Tables, bus, clock ?? (() => DateTime.Now), () => Quests.Chapter);
+            Mailbox = new Mailbox(this, bakery.Tables, bus);
+            plaza.StepId = () => Quests.Current?.Id;
+        }
+
+        // 설계 59: 새 게임은 광장에서, 빵집 문은 닫힌 채(밀로 연다)
+        public void StartNew()
+        {
+            Bakery.CloseGate();
+            Start(PlazaArea.k_Id);
+        }
+
+        // 웜뱃을 그 곳 입구에 둔다(새 게임 · 저장에서 돌아올 때)
+        public void Start(string areaId)
+        {
+            WombatArea to = m_areas.Find(area => area.Id == areaId);
+
+            if (to == null || to == Active)
+            {
+                return;
+            }
+
+            Active.Leave();
+            to.Enter();
+            Active = to;
+            m_bus.Publish(new Events.AreaChanged(Active));
         }
 
         // 웜뱃이 어디 있든 곳은 다 돈다
