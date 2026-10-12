@@ -405,10 +405,13 @@ namespace ZooTycoon.Tests
             Run(k_Dt);
             Assert.That(m_farm.Target, Is.SameAs(plot));
             Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_Till));
+            // 설계 56: 값은 행동 단추에(모자라도 보인다, 갈고 나면 0)
+            Assert.That(m_farm.TargetCost, Is.EqualTo(config.TillCost));
 
             Assert.That(m_state.TrySpendCoins(m_state.Coins - config.TillCost + 1d), Is.True);
             Run(k_Dt);
             Assert.That(m_farm.TargetAction, Is.Null);
+            Assert.That(m_farm.TargetCost, Is.EqualTo(config.TillCost));
             Assert.That(m_farm.TryInteract(), Is.False);
             Assert.That(plot.IsTilled, Is.False);
             Assert.That(tilled, Is.Empty);
@@ -420,6 +423,8 @@ namespace ZooTycoon.Tests
             Assert.That(plot.IsTilled, Is.True);
             Assert.That(m_state.Coins, Is.EqualTo(0d));
             Assert.That(tilled.Count, Is.EqualTo(1));
+            Run(k_Dt);
+            Assert.That(m_farm.TargetCost, Is.EqualTo(0d));
 
             Run(k_Dt);
             Assert.That(m_farm.TargetAction.Id, Is.EqualTo(ActionTable.k_OpenPlant));

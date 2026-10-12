@@ -23,5 +23,11 @@ namespace ZooTycoon.Core
         public virtual void Do(Worker worker, Interactable target)
         {
         }
+
+        // 설계 56: 이 행동에 드는 코인(행동 단추 아래 값 알약). 상태로 값이 없으면(갈린 밭 · 못 파는 칸) 0. 모자라도 값은 돌려준다(빨간 값)
+        public virtual double CostOf(Worker worker, Interactable target)
+        {
+            return 0d;
+        }
     }
 }

@@ -140,7 +140,7 @@ namespace ZooTycoon.World
         public void SetEditing(bool editing)
         {
             m_editing = editing;
-            m_dig.Refresh(editing, m_shownTarget);
+            m_dig.Refresh(editing);
             RefreshOutlines();
 
             if (!editing)
@@ -355,7 +355,7 @@ namespace ZooTycoon.World
             if (e.Area == m_shop)
             {
                 Build();
-                m_dig.Refresh(m_editing, m_shownTarget);
+                m_dig.Refresh(m_editing);
                 RefreshOutlines();
             }
         }
@@ -382,7 +382,7 @@ namespace ZooTycoon.World
             }
 
             m_shownTarget = m_shop.Target;
-            m_dig.Refresh(m_editing, m_shownTarget);
+            m_dig.Refresh(m_editing);
 
             if (m_shownTarget != null)
             {

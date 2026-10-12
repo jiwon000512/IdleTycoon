@@ -157,6 +157,13 @@ namespace ZooTycoon.Core
                 return new[] { new SheetOption(null, SheetOption.Afford(worker, cost), cost) };
             }
 
+            // 설계 56: 대상 칸의 파기 값을 행동 단추에(월드 표식 대신). 단추는 지금처럼 한 줄 시트를 연다
+            public override double CostOf(Worker worker, Interactable target)
+            {
+                DigInteractable dig = (DigInteractable)target;
+                return dig.Grid.CanDig(dig.Cell) ? dig.Grid.DigCost : 0d;
+            }
+
             public override bool TryChoose(Worker worker, Interactable target, string option)
             {
                 DigInteractable dig = (DigInteractable)target;

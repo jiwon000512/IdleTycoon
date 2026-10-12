@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using GameKit.UI;
+using TMPro;
 
 namespace ZooTycoon.UI
 {
@@ -20,12 +21,18 @@ namespace ZooTycoon.UI
         [SerializeField] private RectTransform m_interactBreath;
         [SerializeField] private float m_breathScale = 0.06f;
         [SerializeField] private float m_breathSeconds = 1.2f;
+        [Tooltip("설계 56: 단추 아랫변에 걸친 값 알약(CoinPill: 어두운 알약 + 코인 + 금색 값). 값이 없으면 숨김, 모자라면 값이 빨강")]
+        [SerializeField] private GameObject m_cost;
+        [SerializeField] private TMP_Text m_costText;
+        [SerializeField] private Color m_costPoor = new Color32(0xA6, 0x4B, 0x3C, 0xFF);
         [Tooltip("화면 전환 페이드(검은 전체 화면, 평소 알파 0)")]
         [SerializeField] private Image m_fade;
         [SerializeField] private float m_fadeSeconds = 0.3f;
 
         private readonly Dictionary<string, Sprite> m_icons = new Dictionary<string, Sprite>();
         private float m_breathTime;
+        // 값 알약 글자의 원래 색(CoinPill의 금색). 모자라면 m_costPoor
+        private Color m_costInk;
 
         public event Action<System.Numerics.Vector2> JoystickMoved;
         public event Action InteractClicked;
@@ -35,11 +42,18 @@ namespace ZooTycoon.UI
 
         private void Awake()
         {
+            m_costInk = m_costText.color;
             m_interactButton.onClick.AddListener(InteractButton_Clicked);
             m_joystick.Moved += Joystick_Moved;
             PointerRelay relay = m_interactButton.gameObject.AddComponent<PointerRelay>();
             relay.PointerDown += _ => InteractPressed?.Invoke();
             relay.PointerUp += _ => InteractReleased?.Invoke();
+        }
+
+        // 설계 54: 길잡이가 닿으면 행동 단추를 세 번 톡톡(메뉴 단추 가리키기와 같다). 숨쉬기 부모와 다른 Rect라 배율이 곱해질 뿐 겹치지 않는다
+        public void PointInteract()
+        {
+            StartCoroutine(UiFx.Point((RectTransform)m_interactButton.transform));
         }
 
         // 설계 18 편집 모드: 조이스틱·상호작용 버튼을 숨긴다
@@ -49,9 +63,13 @@ namespace ZooTycoon.UI
             m_interactBreath.gameObject.SetActive(!editing);
         }
 
-        // iconPath: Resources/ 기준. null이면 아이콘은 그대로 두고 흐리게만
-        public void SetInteract(string iconPath, bool enabled)
+        // iconPath: Resources/ 기준. null이면 아이콘은 그대로 두고 흐리게만. cost: 값 알약 글(null이면 숨김), poor면 빨강
+        public void SetInteract(string iconPath, bool enabled, string cost, bool poor)
         {
+            m_cost.SetActive(cost != null);
+            m_costText.text = cost;
+            m_costText.color = poor ? m_costPoor : m_costInk;
+
             if (iconPath != null)
             {
                 if (!m_icons.TryGetValue(iconPath, out Sprite sprite))

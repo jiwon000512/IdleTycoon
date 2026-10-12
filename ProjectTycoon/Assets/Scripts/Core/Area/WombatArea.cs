@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using GameKit.Events;
 using GameKit.Tables;
@@ -20,8 +19,6 @@ namespace ZooTycoon.Core
         private readonly List<Interactable> m_inRange = new List<Interactable>();
         private Interactable m_target;
         private Interactable m_lastTarget;
-        // 설계 54: 길잡이가 데려간 사물. 조이스틱을 움직이기 전까지 range 안이면 대상으로 붙잡는다(곁의 흙 칸이 오븐 · 밭을 가로채던 것, 2026-10-09 리뷰)
-        private Interactable m_guided;
         private ActionTable m_lastAction;
 
         public TableSet Tables { get; }
@@ -57,6 +54,31 @@ namespace ZooTycoon.Core
                 }
 
                 return null;
+            }
+        }
+
+        // 설계 56: 대상에 드는 코인(받는 행동 중 값이 있는 첫 것, 모자라도. 굴 칸은 시트를 여는 open_dig 뒤의 dig). 없으면 0 — 행동 단추 아래 값 알약(2026-10-12 사용자 「흰 카드 대신 단추에 소모 재화」)
+        public double TargetCost
+        {
+            get
+            {
+                if (m_target == null)
+                {
+                    return 0d;
+                }
+
+                foreach (string id in m_target.Table.Actions)
+                {
+                    InteractAction action = m_actions[id];
+                    double cost = action.Accepts(m_target) ? action.CostOf(Wombat.Worker, m_target) : 0d;
+
+                    if (cost > 0d)
+                    {
+                        return cost;
+                    }
+                }
+
+                return 0d;
             }
         }
 
@@ -240,21 +262,9 @@ namespace ZooTycoon.Core
         {
         }
 
-        // 설계 54: 길잡이 — 사물 곁까지 웜뱃을 걷게 한다. 놓는 사물은 일하는 자리(없으면 손님 자리), 그 밖은 사물의 GuidePoint 둘레 가장 가까운 걷는 점. 갈 곳이 없으면 false
-        public bool TryGuideTo(Interactable thing)
-        {
-            Vector2? point = thing is IPlaced placed
-                ? Placement.SpotOf(placed, placed.Kind.Spots.Any(spot => spot.Role == SpotRole.Worker) ? SpotRole.Worker : SpotRole.Customer)
-                : thing.GuidePoint(Wombat.Mover.Position);
-
-            if (point == null || !WombatNav.TryNearestFree(point.Value, _ => false, k_UnstuckDistance, out Vector2 stand))
-            {
-                return false;
-            }
-
-            m_guided = thing;
-            return Wombat.Guide(WombatNav, stand, Mover.FacingOf(point.Value - stand));
-        }
+        // 설계 54: 길잡이가 가리키는 사물. range 안이면 대상으로 붙잡는다(곁의 흙 칸이 오븐 · 밭을 가로채던 것, 2026-10-09 리뷰).
+        // 길잡이가 데려가지는 않는다(2026-10-12 사용자 「자동 이동을 다 없애버리자」 — 걷기만, 계산대 · 도마 자리 붙기는 그대로)
+        public Interactable Preferred { get; set; }
 
         // 새 사물이 웜뱃 발밑에 놓이면 가까운 걷는 땅으로 비켜 선다(배치를 다시 만든 뒤)
         protected void Unstick()
@@ -270,11 +280,6 @@ namespace ZooTycoon.Core
         // 조이스틱으로 걸은 뒤 대상을 다시 고른다
         private void TickWombat(double dt)
         {
-            if (!WombatPresent || Wombat.Input != Vector2.Zero)
-            {
-                m_guided = null;
-            }
-
             if (!WombatPresent)
             {
                 return;
@@ -325,9 +330,9 @@ namespace ZooTycoon.Core
                 }
             }
 
-            if (m_guided != null && m_inRange.Contains(m_guided))
+            if (Preferred != null && m_inRange.Contains(Preferred))
             {
-                found = m_guided;
+                found = Preferred;
             }
 
             foreach (Interactable thing in m_inRange)

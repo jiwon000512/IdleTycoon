@@ -299,18 +299,19 @@ namespace ZooTycoon.World
             }
         }
 
-        // 꺼내면(오븐에서) 빵 하나가 오븐 → 손으로 날아온 뒤 층이 늘고, 채우면(진열대에) 맨 위 층 → 진열대로 날아간다
+        // 꺼내면(오븐에서) 빵 하나가 오븐 → 손으로 날아온 뒤 층이 늘고, 채우면(진열대에) 맨 위 층 → 진열대로 날아간다.
+        // 손은 웜뱃 하나를 모든 곳이 나눠 쓰므로 빵집 뷰에 묶인 것(m_view)만 날린다(횟집의 BindHands 뷰가 오븐 사건에 터짐, 2026-10-12 사용자)
         private void Hands_Changed(Interactable at)
         {
             int count = m_hands.Count;
 
-            if (at is OvenInteractable oven && count > m_lastCount)
+            if (at is OvenInteractable oven && count > m_lastCount && m_view != null)
             {
                 StartCoroutine(FlyRoutine(Icon(oven.Bread ?? m_hands.Bread), m_view.OvenBreadPosition(oven), () => m_carry[Mathf.Min(count, m_carry.Length) - 1].transform.position, ShowCarry));
             }
             else
             {
-                if (at is ShelfInteractable shelf && count < m_lastCount)
+                if (at is ShelfInteractable shelf && count < m_lastCount && m_view != null)
                 {
                     Vector3 to = m_view.ShelfIconPosition(shelf);
                     StartCoroutine(FlyRoutine(Icon(shelf.Bread), m_carry[Mathf.Min(m_lastCount, m_carry.Length) - 1].transform.position, () => to, null));

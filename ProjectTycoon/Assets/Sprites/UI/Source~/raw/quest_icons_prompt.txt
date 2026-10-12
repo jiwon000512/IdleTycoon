@@ -1,0 +1,25 @@
+Use your IMAGE GENERATION tool to paint a brand-new image, do NOT write code, do NOT resample, crop or copy the reference file.
+Pixel-art QUEST ICONS for a cozy mobile idle tycoon game: a wombat runs a bakery in an underground burrow, grows wheat on a farm, prays at a stone statue in the plaza, and fishes at a river. Each icon shows the ACTION the player must do next, inside a quest card.
+The attached image is the drawing sheet. The top row shows existing icons of the same game, enlarged so that one art pixel = 12 screen pixels: match their big square art pixels exactly, their 1-art-pixel dark brown outline (#342020), their soft warm muted palette and their single small white highlight. Below are 16 empty grey squares in 4 rows of 4; each square is exactly 24 x 24 art pixels. Paint one icon inside each square, left to right, top to bottom:
+1 BAKE: a small round clay dome oven with orange fire inside and a golden loaf coming out of its mouth.
+2 PUT OUT: a wooden serving tray holding a fresh loaf, set down with two tiny motion lines under it.
+3 CHECKOUT: a small wooden cash register with a gold coin popping out of its drawer.
+4 GO: a wooden signpost with one arrow-shaped board pointing right (no letters).
+5 PLANT: a seed falling into a small hole in a brown dirt mound.
+6 HARVEST: a curved sickle crossed over a tied bundle of golden wheat.
+7 DIG: a pickaxe striking a grey rock with small stone chips flying.
+8 TILL: a hoe resting over three ridges of tilled brown soil.
+9 PLACE: a wooden crate being set down on the floor with a small dust puff at each side.
+10 HIRE: two furry paws shaking hands (a deal), with a tiny heart above.
+11 STAR RATING: a clipboard with a big gold star on it.
+12 PRAY: two furry paws pressed together in prayer with a tiny sparkle above.
+13 DRAW A RELIC: a round grey mystery stone cracking open with mint light shining out of the crack.
+14 CLEAN: a broom sweeping a small brown pile with a few dust specks.
+15 UNLOCK: an open golden padlock with its shackle popped up and a tiny sparkle.
+16 FISH: a bent fishing rod with a small blue fish hooked on the line.
+Each icon fills most of its 24 x 24 square with a 1 art pixel margin, drawn with art pixels exactly as large as the reference pixels (no finer detail), seen from the front and slightly above, never from below. 4 to 9 colors per icon, no anti-aliasing, no gradients, no dithering. Pure white background; do NOT draw the grey square borders; no text, no numbers, no letters.
+ICON STYLE A, "the thing itself": just the objects of each action on the white background, nothing behind them, exactly like the reference icons in the top row (only bigger, 24 x 24). Where the list says paws, draw chubby grey-brown wombat paws with dark claws.
+Save the image as quest_icons_a.png in the current working directory and reply with only the path.
+
+참조 -i: raw/quest_icons_template.png(윗줄 지금 행동 아이콘 다섯을 한 칸 12px로, 아래 24×24칸 빈 틀 4×4). Codex CLI, model_reasoning_effort=low. 같은 머리말로 B 「웜뱃 앞발」(앞발이 들어와 직접 함) · C 「작은 장면」(곳을 말하는 받침)도 뽑았다.
+Codex가 잘게 그려 23~31칸 → 줄이지 않고 그대로, 카드에서 3배(PPU 100/3). 2026-10-12 사용자 선택: A(물건 하나).

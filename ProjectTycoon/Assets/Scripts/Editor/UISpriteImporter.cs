@@ -20,8 +20,11 @@ namespace ZooTycoon.Editor
         const string k_BlessingDir = "Assets/Resources/Sprites/Blessings";
         // 설계 31 · 33: 유물 아이콘(RelicTable icon 경로). 가게에도 걸리므로 월드 한 칸 크기(PPU 40, 한 칸 1px), 피벗 아래 가운데. UI는 비율 유지라 상관없다
         const string k_RelicDir = "Assets/Resources/Sprites/Relics";
+        // 설계 55: 할 일 카드 그림(QuestTable icon 경로). 한 텍셀 3px(23~31칸 그림이 3배로 칸 112×108 안, 아트방 「물건 하나」 2026-10-12)
+        const string k_QuestDir = "Assets/Resources/Sprites/Quests";
         const float k_UiPpu = 25f;
         const float k_WorldPpu = 40f;
+        const float k_QuestPpu = 100f / 3f;
 
         sealed class Slice
         {
@@ -49,6 +52,11 @@ namespace ZooTycoon.Editor
             foreach (string path in Directory.GetFiles(k_RelicDir, "*.png"))
             {
                 Import(path.Replace(Path.DirectorySeparatorChar, '/'), null, k_WorldPpu, SpriteAlignment.BottomCenter);
+            }
+
+            foreach (string path in Directory.GetFiles(k_QuestDir, "*.png"))
+            {
+                Import(path.Replace(Path.DirectorySeparatorChar, '/'), null, k_QuestPpu);
             }
 
             foreach ((string name, SpriteAlignment pivot) in new[] { ("tag_cost", SpriteAlignment.Center), ("bubble", SpriteAlignment.BottomCenter), ("bubble_tail", SpriteAlignment.TopCenter) })

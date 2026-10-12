@@ -80,9 +80,10 @@ namespace ZooTycoon.Game
             m_editView = editView;
             m_clerkView = clerkView;
             m_inventoryView = inventoryView;
-            // 설계 55: 오른쪽 메뉴 줄(위에서부터 행상 · 점원 · 가방 · 오늘의 일). 편집은 행동 단추 위(EditModeView 프리팹)
+            // 설계 55: 오른쪽 메뉴 줄(위에서부터 편집 · 점원 · 가방 · 오늘의 일). 편집은 행동 단추 위에 두었다가 줄로 되돌리고,
+            // 행상은 단추가 아니라 왼쪽 소식 줄(TopBarView)로 옮김(2026-10-12 사용자: 단추와 혼동)
             MenuRail rail = gameObject.AddComponent<MenuRail>();
-            rail.Add(topBarView.MerchantRail);
+            rail.Add(editView.MenuButton);
             rail.Add(clerkView.MenuButton);
             rail.Add(inventoryView.MenuButton);
             rail.Add(m_missionView.MenuButton);

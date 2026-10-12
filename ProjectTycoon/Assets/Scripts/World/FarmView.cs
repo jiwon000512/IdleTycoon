@@ -21,8 +21,7 @@ namespace ZooTycoon.World
         private const int k_CropHalves = 2;
         // 거두기 팝업이 뜨는 높이(거둔 웜뱃 발끝에서 머리 위)
         private const float k_PopupHeight = 1.4f;
-        // 갈기 값 표식(흙 칸마다 늘 보인다 — QA B): 웜뱃이 그 칸에 서기도 하므로 칸 윗변 바로 아래에, 모든 그림 위에
-        private const float k_TillTagDrop = 0.3f;
+        // 값 표식(계단의 아래층 값)은 모든 그림 위에. 갈기 값 표식은 행동 단추로 옮겨 없앴다(설계 56, 2026-10-12 사용자)
         private const int k_TillTagOrder = 1000;
         // 거두는 순간 밭 가운데에서 낟알이 금빛 두 톤으로 튄다(2026-09-30 안 A: 밟고 거두기가 보이게)
         private static readonly Color k_Grain = new Color32(0xE4, 0xA8, 0x3C, 255);
@@ -72,7 +71,6 @@ namespace ZooTycoon.World
         [SerializeField] private WombatView m_wombat;
 
         private readonly Dictionary<PlotInteractable, PlotView> m_plots = new Dictionary<PlotInteractable, PlotView>();
-        private readonly Dictionary<PlotInteractable, MarkerView> m_tillTags = new Dictionary<PlotInteractable, MarkerView>();
         // 밭마다 마지막으로 보인 단계(빈 밭 −1). 오르면 늘어남 연출
         private readonly Dictionary<PlotInteractable, int> m_stages = new Dictionary<PlotInteractable, int>();
         private FarmArea m_farm;
@@ -166,7 +164,7 @@ namespace ZooTycoon.World
         public void SetEditing(bool editing)
         {
             m_editing = editing;
-            m_dig.Refresh(editing, m_shownTarget);
+            m_dig.Refresh(editing);
 
             if (!editing)
             {
@@ -263,7 +261,6 @@ namespace ZooTycoon.World
                 Refresh(plot);
             }
 
-            RefreshTillTags();
             RefreshStair();
         }
 
@@ -337,36 +334,6 @@ namespace ZooTycoon.World
             view.Show(plot.IsTilled, crops, readyMark, !plot.IsEmpty && !plot.IsRipe, plot.IsRipe, plot.IsFertilized, grew);
         }
 
-        // 흙 칸(갈기 전)마다 「갈기 값」 표식을 늘 보인다. 갈면 사라진다
-        private void RefreshTillTags()
-        {
-            CellMetrics cells = m_farm.Layout.Cells;
-            string text = m_tables.Format("tag_till", m_farm.Floor.TillCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
-
-            foreach (PlotInteractable plot in m_farm.Plots)
-            {
-                m_tillTags.TryGetValue(plot, out MarkerView tag);
-
-                if (plot.IsTilled)
-                {
-                    if (tag != null)
-                    {
-                        tag.gameObject.SetActive(false);
-                    }
-
-                    continue;
-                }
-
-                if (tag == null)
-                {
-                    tag = NewTag(ToWorld(cells.CellCenter(plot.Cell) + new System.Numerics.Vector2(0f, cells.CellHeight * 0.5f - k_TillTagDrop)));
-                    m_tillTags[plot] = tag;
-                }
-
-                tag.Show(text);
-            }
-        }
-
         // 심기 · 자람 · 익음은 밭 뷰가 늘어나며 보인다(Refresh). 거름을 섞어 심은 순간은 거름 알갱이도 튄다. 거두기 · 갈기는 각자 연출
         private void Plot_Changed(Interactable thing)
         {
@@ -384,7 +351,7 @@ namespace ZooTycoon.World
             if (e.Area == m_farm)
             {
                 Build();
-                m_dig.Refresh(m_editing, m_shownTarget);
+                m_dig.Refresh(m_editing);
             }
         }
 
@@ -415,8 +382,6 @@ namespace ZooTycoon.World
             {
                 view.Bounce();
             }
-
-            RefreshTillTags();
         }
 
         // 설계 39: 이 층의 계단으로 아래층이 열렸다. 계단 굴을 칠하고 흙덩이가 튄 뒤 내려가는 계단이 톡
@@ -443,7 +408,7 @@ namespace ZooTycoon.World
             }
 
             m_shownTarget = m_farm.Target;
-            m_dig.Refresh(m_editing, m_shownTarget);
+            m_dig.Refresh(m_editing);
 
             switch (m_shownTarget)
             {

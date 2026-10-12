@@ -31,6 +31,11 @@ namespace ZooTycoon.Core
                     plot.Till();
                 }
             }
+
+            public override double CostOf(Worker worker, Interactable target)
+            {
+                return target is PlotInteractable plot && !plot.IsTilled ? plot.Farm.Floor.TillCost : 0d;
+            }
         }
 
         // 설계 39 계단 파기(시트 줄): 계단 자리에서 아래층 openCost를 치르면 아래층이 열린다(FarmArea.TryOpenLower). 굴 파기 시트와 같은 틀

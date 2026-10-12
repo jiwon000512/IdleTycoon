@@ -101,9 +101,9 @@ namespace ZooTycoon.Tests
             Assert.That(game.Mall.Wombat.Guided, Is.False);
         }
 
-        // 2: 「가기」로 빵집 → 광장 → 농장 문 → 빈 밭까지 혼자 걷는다(곳이 바뀌어도 다리를 잇는다)
+        // 2: 「가기」는 빵집 → 광장 문 → 농장 문 → 빈 밭을 차례로 가리킨다(곳이 바뀌면 다음을). 웜뱃은 데려가지 않는다(2026-10-12 사용자)
         [Test]
-        public void Guide_WalksThroughPlazaToFarmPlot()
+        public void Guide_PointsThroughPlazaToFarmPlot()
         {
             TestGame game = new TestGame();
             JumpTo(game, "q05");
@@ -111,43 +111,47 @@ namespace ZooTycoon.Tests
             Assert.That(mall.Active, Is.SameAs(game.Bakery));
 
             Assert.That(mall.Quests.Go(), Is.True);
-            Assert.That(mall.Guide.Walking, Is.True);
+            mall.Tick(k_Dt);
+            Assert.That(mall.Wombat.Guided, Is.False, "걷지 않는다");
+            Assert.That(mall.Guide.Pointed, Is.InstanceOf<PassageInteractable>());
             Assert.That(mall.Guide.Toward, Is.EqualTo(FarmArea.k_Id), "다른 곳이면 화면 끝 이름표");
 
-            HashSet<string> visited = new HashSet<string> { mall.Active.Id };
+            game.Bus.Publish(new Events.Passed(mall.Active, PlazaArea.k_Id));
+            Assert.That(mall.Active, Is.SameAs(mall.Plaza));
+            Assert.That(mall.Guide.Pointed, Is.InstanceOf<PassageInteractable>());
+            Assert.That(mall.Guide.Toward, Is.EqualTo(FarmArea.k_Id));
 
-            for (double t = 0d; t < 60d && (mall.Guide.Walking || mall.Active != mall.Farm); t += k_Dt)
-            {
-                mall.Tick(k_Dt);
-                visited.Add(mall.Active.Id);
-            }
-
-            Assert.That(visited, Does.Contain(PlazaArea.k_Id));
+            game.Bus.Publish(new Events.Passed(mall.Active, FarmArea.k_Id));
             Assert.That(mall.Active, Is.SameAs(mall.Farm));
-            Assert.That(mall.Guide.Walking, Is.False, "도착");
             Assert.That(mall.Guide.Active, Is.True, "화살표는 걸음이 끝날 때까지");
             PlotInteractable plot = mall.Guide.Pointed as PlotInteractable;
             Assert.That(plot, Is.Not.Null);
             Assert.That(plot.IsTilled && plot.IsEmpty, Is.True, "심기 걸음은 빈 밭으로");
-            Assert.That(mall.Farm.IsInRange(plot), Is.True);
             Assert.That(mall.Guide.Toward, Is.Null);
         }
 
-        // 2026-10-09 리뷰: 새 게임 첫 걸음 「가기」로 오븐에 닿으면 행동 버튼의 대상은 오븐(곁의 흙 칸이 가로채지 않는다). 조이스틱을 움직이면 다시 가까운 것
+        // 2026-10-09 리뷰 · 2026-10-12 사용자: 가리키는 오븐 곁에 서면 행동 버튼의 대상은 오븐(곁의 흙 칸이 가로채지 않는다)이고 Arrived — 눌러야 할 행동 단추를 가리킨다. 멀어지면 풀린다
         [Test]
-        public void Guide_Arrival_TargetsTheGuidedThing()
+        public void Guide_Arrived_WhenPointedThingIsTheTarget()
         {
             TestGame game = new TestGame();
             Mall mall = game.Mall;
+            OvenInteractable oven = game.Bakery.Ovens[0];
             Assert.That(mall.Quests.Go(), Is.True);
+            Assert.That(mall.Guide.Pointed, Is.SameAs(oven));
+            Assert.That(mall.Guide.Arrived, Is.False);
 
-            for (double t = 0d; t < 30d && mall.Guide.Walking; t += k_Dt)
-            {
-                mall.Tick(k_Dt);
-            }
+            mall.Wombat.Mover.Place(Placement.SpotOf(oven, SpotRole.Worker));
+            mall.Tick(k_Dt);
 
-            Assert.That(mall.Guide.Walking, Is.False, "도착");
-            Assert.That(game.Bakery.Target, Is.SameAs(game.Bakery.Ovens[0]));
+            Assert.That(game.Bakery.Target, Is.SameAs(oven));
+            Assert.That(mall.Guide.Arrived, Is.True);
+
+            mall.Wombat.Mover.Place(game.Bakery.Layout.HoleFloor);
+            mall.Tick(k_Dt);
+
+            Assert.That(mall.Guide.Arrived, Is.False);
+            Assert.That(mall.Guide.Active, Is.True);
         }
 
         // 2026-10-12 사용자: 「가기」는 점원 없는 사물 먼저(가까운 점원 계산대로 데려가 계산을 못 하던 것)
@@ -170,22 +174,19 @@ namespace ZooTycoon.Tests
             Assert.That(game.Mall.Guide.Pointed, Is.SameAs(shop.Counters[1]));
         }
 
-        // 2026-10-09 리뷰: 「횟집 열기」는 광장의 닫힌 횟집 문 앞까지 걸어간다(전에는 설 점이 없어 광장 입구에서 멈췄다)
+        // 2026-10-09 리뷰: 「횟집 열기」는 광장의 닫힌 횟집 문을 가리킨다
         [Test]
-        public void Guide_ShopGateStep_WalksToTheGate()
+        public void Guide_ShopGateStep_PointsTheGate()
         {
             TestGame game = new TestGame();
             JumpTo(game, "q24");
             Mall mall = game.Mall;
             Assert.That(mall.Quests.Go(), Is.True);
+            game.Bus.Publish(new Events.Passed(mall.Active, PlazaArea.k_Id));
 
-            for (double t = 0d; t < 60d && (mall.Guide.Walking || mall.Active != mall.Plaza); t += k_Dt)
-            {
-                mall.Tick(k_Dt);
-            }
-
+            Assert.That(mall.Active, Is.SameAs(mall.Plaza));
             Assert.That(mall.Guide.Pointed, Is.InstanceOf<ShopGateInteractable>());
-            Assert.That(mall.Plaza.Target, Is.SameAs(mall.Guide.Pointed));
+            Assert.That(mall.Guide.Toward, Is.Null);
         }
 
         // 2026-10-09 리뷰: 「바위 뚫기」(down1)는 그 구간의 바위로 데려간다(같은 거리의 반대쪽 바위가 아니라)
@@ -208,28 +209,24 @@ namespace ZooTycoon.Tests
 
         // 조이스틱을 건드리면 걷기만 멈추고 가리키기는 남는다. 걸음이 다 되면 꺼진다
         [Test]
-        public void Guide_JoystickStopsWalking_StepDoneStopsGuide()
+        public void Guide_StepDoneStopsGuide()
         {
             TestGame game = new TestGame();
             Mall mall = game.Mall;
             mall.Wombat.Mover.Place(game.Bakery.Layout.HoleFloor);
             Assert.That(mall.Quests.Go(), Is.True);
             mall.Tick(k_Dt);
-            Assert.That(mall.Guide.Walking, Is.True);
 
-            mall.Wombat.SetInput(new Vector2(1f, 0f));
-            mall.Tick(k_Dt);
-            mall.Wombat.SetInput(Vector2.Zero);
-            mall.Tick(k_Dt);
-
-            Assert.That(mall.Guide.Walking, Is.False);
             Assert.That(mall.Guide.Active, Is.True);
             Assert.That(mall.Guide.Pointed, Is.InstanceOf<OvenInteractable>());
+            Assert.That(mall.Wombat.Guided, Is.False, "데려가지 않는다");
+            Assert.That(mall.Wombat.Mover.Position, Is.EqualTo(game.Bakery.Layout.HoleFloor));
 
             Assert.That(game.Bakery.Ovens[0].TryStart(game.Tables.Get<BreadTable>("b01")), Is.True);
             mall.Tick(k_Dt);
 
             Assert.That(mall.Guide.Active, Is.False);
+            Assert.That(game.Bakery.Preferred, Is.Null);
         }
 
         // 6: 오늘의 일은 열린 곳에서만 다섯, 같은 곳은 둘까지(횟집이 닫혀 있으면 회 미션은 없다)

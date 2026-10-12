@@ -80,6 +80,9 @@ namespace ZooTycoon.UI
             SetEditing(false);
         }
 
+        // 설계 55: 오른쪽 메뉴 줄에 들어가는 편집 단추(행동 단추 위에 두었다가 되돌림, 2026-10-12 사용자)
+        public RectTransform MenuButton => (RectTransform)m_editButton.transform;
+
         // 패널은 공용 등장·퇴장(UiFx)
         // 설계 54: 할 일 알약의 「가기」가 이 메뉴 버튼을 가리킨다(세 번 톡톡)
         public void PointButton()

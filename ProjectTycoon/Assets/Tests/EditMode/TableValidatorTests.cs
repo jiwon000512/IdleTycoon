@@ -12,7 +12,7 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 57)]
+        [TestCase("StringTable", 58)]
         [TestCase("ClerkTable", 4)]
         [TestCase("ClerkConfigTable", 6)]
         [TestCase("BubbleTable", 4)]
@@ -40,7 +40,7 @@ namespace ZooTycoon.Tests
         [TestCase("FishingStretchTable", 1)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
-        [TestCase("QuestTable", 1)]
+        [TestCase("QuestTable", 2)]
         [TestCase("MissionTable", 1)]
         [TestCase("MissionChestTable", 1)]
         public void Envelope_MatchesFileNameAndVersion(string table, int version)

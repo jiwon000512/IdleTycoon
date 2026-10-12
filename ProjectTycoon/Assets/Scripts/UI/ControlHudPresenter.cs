@@ -14,6 +14,8 @@ namespace ZooTycoon.UI
         private readonly Mall m_mall;
         private readonly IDisposable m_target;
         private readonly IDisposable m_area;
+        private readonly IDisposable m_guide;
+        private readonly IDisposable m_coins;
         private bool m_reelPress;
 
         public event Action<Interactable> SheetRequested;
@@ -28,6 +30,8 @@ namespace ZooTycoon.UI
             m_view.InteractReleased += View_InteractReleased;
             m_target = bus.Subscribe<Events.TargetChanged>(Bus_TargetChanged);
             m_area = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
+            m_guide = bus.Subscribe<Events.GuideChanged>(Bus_GuideChanged);
+            m_coins = bus.Subscribe<Events.CoinsChanged>(_ => Refresh());
             Refresh();
         }
 
@@ -39,13 +43,17 @@ namespace ZooTycoon.UI
             m_view.InteractReleased -= View_InteractReleased;
             m_target.Dispose();
             m_area.Dispose();
+            m_guide.Dispose();
+            m_coins.Dispose();
         }
 
-        // 할 수 있는 행동이 없으면 마지막 아이콘을 흐리게 둔다
+        // 할 수 있는 행동이 없으면 마지막 아이콘을 흐리게 둔다. 설계 56: 값이 드는 대상이면 단추 아래 값 알약(모자라면 빨강)
         private void Refresh()
         {
-            ActionTable action = m_mall.Active.TargetAction;
-            m_view.SetInteract(action?.Icon, action != null);
+            WombatArea area = m_mall.Active;
+            ActionTable action = area.TargetAction;
+            double cost = area.TargetCost;
+            m_view.SetInteract(action?.Icon, action != null, cost > 0d ? BigNumberFormatter.Format(cost) : null, cost > m_mall.Wombat.Worker.Wallet.Coins);
         }
 
         private void View_JoystickMoved(Vector2 value)
@@ -87,6 +95,15 @@ namespace ZooTycoon.UI
             if (e.Area == m_mall.Active)
             {
                 Refresh();
+            }
+        }
+
+        // 설계 54: 길잡이가 사물 곁에 닿으면 눌러야 할 행동 단추를 톡톡 가리킨다(2026-10-12 사용자). 할 수 있는 행동이 없으면(점원이 하는 중) 가리키지 않는다
+        private void Bus_GuideChanged(Events.GuideChanged e)
+        {
+            if (e.Guide.Arrived && m_mall.Active.TargetAction != null)
+            {
+                m_view.PointInteract();
             }
         }
 

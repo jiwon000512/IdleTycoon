@@ -5,8 +5,8 @@ using GameKit.Events;
 namespace ZooTycoon.Core
 {
     // 설계 54: 「가기」 길잡이. 대상(곳 id + 사물 종류)까지 곳 사이 통로(문 · 구멍 · 계단)를 넓이 우선으로 잇고(닫힌 문이면 그 문 앞까지)
-    // 다리마다 웜뱃 시스템 이동(설계 19 Wombat.Guide). 통로 띠에 닿으면 원래처럼 Passed로 곳이 바뀌고(AreaChanged) 다음 다리를 잇는다.
-    // 조이스틱을 건드리면 걷기만 멈추고, 가리키기(화살표)는 걸음이 끝날 때(Stop)까지 남는다
+    // 지금 곳에서 가리킬 것(다음 통로 또는 마지막 사물)을 정한다. 웜뱃은 데려가지 않는다 — 플레이어가 직접 걷는다(2026-10-12 사용자 「자동 이동을 다 없애버리자」).
+    // 통로 띠에 닿으면 Passed로 곳이 바뀌고(AreaChanged) 다음을 가리킨다. 가리키는 사물이 대상이 되면(곁에 닿음) Arrived — HUD가 행동 단추를 가리킨다
     public sealed class Guide
     {
         private readonly Mall m_mall;
@@ -15,9 +15,12 @@ namespace ZooTycoon.Core
         private string m_thing;
         private string m_kind;
         private string m_param;
+        // 가리키는 사물을 대상으로 우선 잡게 한 곳(바뀌거나 멈추면 푼다)
+        private WombatArea m_at;
 
         public bool Active { get; private set; }
-        public bool Walking { get; private set; }
+        // 마지막 사물 곁에 닿았다(그 사물이 대상): 눌러야 할 행동 단추를 가리킨다(2026-10-12 사용자). 멀어지면 풀린다
+        public bool Arrived { get; private set; }
         // 지금 곳에서 가리키는 것: 다른 곳으로 가는 다음 통로 또는 마지막 사물(곳에 들어가기만 하면 되는 걸음은 null)
         public Interactable Pointed { get; private set; }
         // 다음 통로 너머 마지막 곳 id(화면 끝 이름표). 지금 곳이 마지막 곳이면 null
@@ -30,7 +33,7 @@ namespace ZooTycoon.Core
             bus.Subscribe<Events.AreaChanged>(_ => Bus_AreaChanged());
         }
 
-        // 가기: 곳 · 사물 종류(thing이 null이면 곳에 들어가면 끝)로 길을 잡고 걷기 시작한다. kind · param은 그 종류 중 걸음에 맞는 것 고르기. 갈 곳이 없으면 false
+        // 가기: 곳 · 사물 종류(thing이 null이면 곳에 들어가면 끝)로 길을 잡고 가리킨다. kind · param은 그 종류 중 걸음에 맞는 것 고르기. 갈 곳이 없으면 false
         public bool TryStart(string area, string thing, string kind, string param)
         {
             m_area = area;
@@ -39,7 +42,7 @@ namespace ZooTycoon.Core
             m_param = param;
             Active = true;
 
-            if (Plan(true))
+            if (Plan())
             {
                 return true;
             }
@@ -48,7 +51,7 @@ namespace ZooTycoon.Core
             return false;
         }
 
-        // 걸음이 끝나거나 바뀌면 · 편집 모드에 들면 멈춘다. 걷던 웜뱃도 그 자리에 선다(다음 문을 지나가지 않게, 2026-10-09 리뷰)
+        // 걸음이 끝나거나 바뀌면 · 편집 모드에 들면 멈춘다
         public void Stop()
         {
             if (!Active)
@@ -56,19 +59,15 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            if (Walking)
-            {
-                m_mall.Wombat.Stop();
-            }
-
+            Prefer(null);
             Active = false;
-            Walking = false;
+            Arrived = false;
             Pointed = null;
             Toward = null;
             m_bus.Publish(new Events.GuideChanged(this));
         }
 
-        // 매 프레임: 시스템 이동이 끊기면(조이스틱 · 도착) 걷기만 멈춘다. 가리키던 사물이 없어졌으면(치운 똥 등) 다시 고른다
+        // 매 프레임: 가리키던 사물이 없어졌으면(치운 똥 등) 다시 고른다. 마지막 사물이 대상이 되면(곁에 닿음) Arrived
         public void Tick()
         {
             if (!Active)
@@ -78,7 +77,7 @@ namespace ZooTycoon.Core
 
             if (Pointed != null && !Pointed.Area.Things.Contains(Pointed))
             {
-                if (!Plan(Walking))
+                if (!Plan())
                 {
                     Stop();
                 }
@@ -86,23 +85,25 @@ namespace ZooTycoon.Core
                 return;
             }
 
-            if (Walking && !m_mall.Wombat.Guided)
+            bool arrived = Pointed != null && Toward == null && m_mall.Active.Target == Pointed;
+
+            if (arrived != Arrived)
             {
-                Walking = false;
+                Arrived = arrived;
                 m_bus.Publish(new Events.GuideChanged(this));
             }
         }
 
         private void Bus_AreaChanged()
         {
-            if (Active && !Plan(Walking))
+            if (Active && !Plan())
             {
                 Stop();
             }
         }
 
-        // 지금 곳에서 가리킬 것을 정하고, walk면 그리로 걷게 한다
-        private bool Plan(bool walk)
+        // 지금 곳에서 가리킬 것을 정한다
+        private bool Plan()
         {
             WombatArea here = m_mall.Active;
             List<PassageInteractable> route = Route(here, m_area);
@@ -128,9 +129,26 @@ namespace ZooTycoon.Core
                 }
             }
 
-            Walking = walk && Pointed != null && here.TryGuideTo(Pointed);
+            Prefer(here);
+            Arrived = false;
             m_bus.Publish(new Events.GuideChanged(this));
             return true;
+        }
+
+        // 가리키는 사물을 그 곳의 대상으로 우선 잡게(곁의 흙 칸이 가로채지 않게). 앞서 잡아 둔 곳은 푼다
+        private void Prefer(WombatArea area)
+        {
+            if (m_at != null)
+            {
+                m_at.Preferred = null;
+            }
+
+            m_at = area;
+
+            if (area != null)
+            {
+                area.Preferred = Pointed;
+            }
         }
 
         // 그 곳의 그 종류 중 걸음에 알맞은 것(빈 밭 등), 점원 없는 것 먼저(웜뱃이 일할 수 있게, 2026-10-12 사용자), 웜뱃에서 가까운 것

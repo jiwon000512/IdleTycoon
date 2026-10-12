@@ -44,8 +44,6 @@ namespace ZooTycoon.World
         [SerializeField] private RestaurantView m_restaurantPrefab;
         [Tooltip("설계 54 길잡이 화살표(아래를 가리키는 그림, 피벗 = 화살 끝)")]
         [SerializeField] private Sprite m_guideArrow;
-        [Tooltip("설계 54 화면 끝 곳 이름표 바탕(크림 알약)")]
-        [SerializeField] private Sprite m_guideTag;
 
         private readonly Dictionary<WombatArea, IAreaView> m_views = new Dictionary<WombatArea, IAreaView>();
         private BakeryView m_shopView;
@@ -99,7 +97,7 @@ namespace ZooTycoon.World
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
             m_cast = bus.Subscribe<Events.CastThrown>(Bus_CastThrown);
             m_damBroken = bus.Subscribe<Events.DamBroken>(Bus_DamBroken);
-            gameObject.AddComponent<GuideView>().Initialize(mall, bus, tables, area => m_views[area].Origin, m_shopView.PopupPrefab, m_guideArrow, m_guideTag);
+            gameObject.AddComponent<GuideView>().Initialize(mall, bus, tables, area => m_views[area].Origin, m_shopView.PopupPrefab, m_guideArrow);
             FollowWombat();
         }
 

@@ -13,7 +13,8 @@ namespace ZooTycoon.UI
     // 숫자는 공용 코인 캡슐(Prefabs/UI/CoinPill) 안의 금색 글자.
     // 설계 30: 석상 축복이 걸린 동안 코인 아래 축복 알약(아이콘 · 효과 · 남은 시간, 마지막 10초는 깜빡임). 그동안 쓴 코인 표시는 그 아래로 내려간다.
     // 설계 40 · 41: 별 평가 중에는 화면 위 가운데에 평가 카드 하나(별 · 「★7 평가」 · 남은 시간과 줄어드는 막대 · 조건 칸: 아이콘 + 진행/목표, 채우면 초록 체크 · 실망이 상한에 닿으면 빨강). 왼쪽 알약 줄과 따로다.
-    // 설계 31 · 32 · 55: 떠돌이 행상은 오른쪽 메뉴 줄 맨 위 칸에 늘 보인다(얼굴 + 시간 이름표, 와 있으면 「!」, 없으면 회색 얼굴). 왼쪽 알약은 코인 아래로 위에서부터 쌓인다(축복 → 물때)
+    // 설계 31 · 32 · 55: 떠돌이 행상은 왼쪽 소식 줄에 늘 보인다(얼굴 + 시간 이름표, 와 있으면 「!」, 없으면 회색 얼굴. 단추가 아니라 오른쪽 줄에서 옮김, 2026-10-12 사용자).
+    // 왼쪽 알약은 코인 아래로 위에서부터 쌓이고(축복 → 물때), 그 아래 간격을 두고 소식 줄(행상, 뒤에 광고 · 상점)
     // 설계 49: 낚시터에 있는 동안 물때 알약(「물때 7/10」, 대물 물때에는 「대물!」만, 2026-10-06 사용자)
     // 설계 54 · 55: 할 일 카드(QuestCard)는 위 가운데. 위 가운데는 「지금 목표」 자리라 평가 카드가 뜨면 카드는 숨는다(2026-10-08 사용자)
     public sealed class TopBarView : UIView
@@ -26,6 +27,8 @@ namespace ZooTycoon.UI
         private const float k_BlinkMin = 0.45f;
         // 왼쪽 알약끼리 · 평가 카드 밑과 첫 알약 사이(코인 알약과 첫 알약 사이와 같다)
         private const float k_Gap = 8f;
+        // 재화 알약과 소식 줄(행상) 사이: 재화와 섞여 보이지 않게 띄운다(2026-10-12 사용자)
+        private const float k_NewsGap = 32f;
         // 설계 41 조건 칸 하나: 아이콘(아이콘 목록 id 또는 Resources 경로) · 값(진행/목표) · 상태. 매 프레임 읽는다
         public sealed class GoalData
         {
@@ -88,8 +91,6 @@ namespace ZooTycoon.UI
         private float m_pillTop;
 
         public bool SpentVisible => m_spentLeft > 0f;
-        // 설계 55: 오른쪽 메뉴 줄의 행상 칸
-        public RectTransform MerchantRail => (RectTransform)m_merchant.transform;
         public QuestCard Quest => m_quest;
 
         private void Awake()
@@ -147,6 +148,7 @@ namespace ZooTycoon.UI
             m_merchantLeft = remaining;
             m_merchantTime.text = BigNumberFormatter.Clock(remaining());
             m_merchant.gameObject.SetActive(true);
+            Stack();
 
             if (arrived)
             {
@@ -238,7 +240,7 @@ namespace ZooTycoon.UI
             Stack();
         }
 
-        // 켜진 알약을 위에서부터 붙여 놓고, 쓴 코인 표시는 맨 아래 알약 밑으로. 평가 카드가 떠 있으면 그 아래부터
+        // 켜진 알약을 위에서부터 붙여 놓고, 그 아래 간격을 두고 소식 줄(행상 칸. 뒤에 광고 · 상점이 같은 줄에), 쓴 코인 표시는 맨 아래로. 평가 카드가 떠 있으면 그 아래부터
         private void Stack()
         {
             float y = m_pillTop;
@@ -260,6 +262,14 @@ namespace ZooTycoon.UI
                 RectTransform rect = (RectTransform)pill.transform;
                 rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
                 y -= rect.sizeDelta.y + k_Gap;
+            }
+
+            if (m_merchant.gameObject.activeSelf)
+            {
+                RectTransform tile = (RectTransform)m_merchant.transform;
+                y -= k_NewsGap - k_Gap;
+                tile.anchoredPosition = new Vector2(tile.anchoredPosition.x, y);
+                y -= tile.sizeDelta.y + k_Gap;
             }
 
             ((RectTransform)m_spent.transform).anchoredPosition = new Vector2(m_spentRest.x, Mathf.Min(m_spentRest.y, y));

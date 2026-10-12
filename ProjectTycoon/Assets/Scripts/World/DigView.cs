@@ -44,8 +44,8 @@ namespace ZooTycoon.World
             m_digSeconds = digSeconds;
         }
 
-        // 편집 중이면 팔 수 있는 칸 전부, 아니면 대상인 칸만
-        public void Refresh(bool editing, Interactable target)
+        // 편집 중이면 팔 수 있는 칸 전부(어디를 팔지 고르는 지도). 평소 대상 칸의 값은 행동 단추에(설계 56, 2026-10-12 사용자)
+        public void Refresh(bool editing)
         {
             foreach (MarkerView tag in m_tags.Values)
             {
@@ -58,10 +58,6 @@ namespace ZooTycoon.World
                 {
                     Show(cell);
                 }
-            }
-            else if (target is DigInteractable dig && dig.Grid == m_grid)
-            {
-                Show(dig.Cell);
             }
         }
 

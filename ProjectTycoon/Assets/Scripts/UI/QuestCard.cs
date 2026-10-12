@@ -32,6 +32,8 @@ namespace ZooTycoon.UI
         // 움직임은 4px(UI 한 칸) 단위. 폭은 2칸 단위(가운데 기준이라 양 끝이 칸에 맞는다). UI 조각 · 아이콘의 PPU(한 텍셀 4px)
         private const float k_Px = 4f;
         private const float k_UiIconPpu = 25f;
+        // 할 일 그림(Resources/Sprites/Quests, PPU 100/3 = 한 텍셀 3px)은 이보다 작은 PPU
+        private const float k_QuestIconPpu = 50f;
         private const float k_WidthStep = 8f;
         // 캡슐 안 덤 그림이 이보다 크면 반으로(캡슐 높이 56 안에)
         private const float k_ExtraMaxHeight = 48f;
@@ -178,11 +180,11 @@ namespace ZooTycoon.UI
             m_icon.sprite = data.Icon;
             m_icon.enabled = data.Icon != null;
 
-            // 한 칸이 4px가 되게: UI 아이콘(PPU 25)은 4배, 월드 그림(PPU 80)은 2배. 칸을 넘치면 반씩(긴 낚싯대 · 회 접시, 2026-10-12 아트방 시안의 그림 칸 맞춤)
+            // 한 텍셀이 정수 px가 되게: 할 일 그림(PPU 100/3)은 3배, UI 아이콘(PPU 25)은 4배, 월드 그림(PPU 80)은 2배. 칸을 넘치면 반씩(2026-10-12 아트방 「물건 하나」 그림 칸 맞춤)
             if (data.Icon != null)
             {
                 Vector2 slot = ((RectTransform)m_icon.transform.parent).rect.size;
-                float scale = data.Icon.pixelsPerUnit <= k_UiIconPpu ? 4f : 2f;
+                float scale = data.Icon.pixelsPerUnit <= k_UiIconPpu ? 4f : data.Icon.pixelsPerUnit < k_QuestIconPpu ? 3f : 2f;
 
                 while (scale > 1f && (data.Icon.rect.width * scale > slot.x || data.Icon.rect.height * scale > slot.y))
                 {
