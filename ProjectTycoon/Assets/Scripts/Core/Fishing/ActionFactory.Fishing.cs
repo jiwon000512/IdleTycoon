@@ -25,8 +25,7 @@ namespace ZooTycoon.Core
 
             public override void Do(Worker worker, Interactable target)
             {
-                WaterInteractable water = (WaterInteractable)target;
-                water.Fishing.Cast(water);
+                ((WaterInteractable)target).Fishing.Cast();
             }
         }
 
@@ -148,36 +147,6 @@ namespace ZooTycoon.Core
             {
                 SeatInteractable seat = (SeatInteractable)target;
                 return seat.Fishing.TryPlaceSeat(worker, seat);
-            }
-        }
-
-        // 설계 60 비버 먹이(시트 줄): 둑 갉기(물 넓히기) · 댐 헐기. 값은 물고기(재료)라 모자라면 Lacking, 줄 것이 없으면(다 넓힘 · 댐 없음) Max
-        private sealed class Feed : SheetAction
-        {
-            private readonly bool m_dam;
-
-            public Feed(ActionTable table, bool dam) : base(table)
-            {
-                m_dam = dam;
-            }
-
-            public override bool Accepts(Interactable target)
-            {
-                return target is BeaverInteractable;
-            }
-
-            public override IReadOnlyList<SheetOption> Options(Worker worker, Interactable target)
-            {
-                BeaverInteractable beaver = (BeaverInteractable)target;
-                FishingFeedData feed = m_dam ? beaver.NextDamFeed : beaver.NextWiden;
-                SheetOptionState state = feed == null ? SheetOptionState.Max : worker.Wallet.Count(feed.Item) >= feed.Count ? SheetOptionState.Enabled : SheetOptionState.Lacking;
-                return new[] { new SheetOption(null, state, feed?.Count ?? 0) };
-            }
-
-            public override bool TryChoose(Worker worker, Interactable target, string option)
-            {
-                BeaverInteractable beaver = (BeaverInteractable)target;
-                return beaver.Fishing.TryFeed(worker, beaver, m_dam);
             }
         }
     }

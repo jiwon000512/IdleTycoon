@@ -383,7 +383,7 @@ namespace ZooTycoon.Core
             m_shops.Add(shop);
         }
 
-        // 설계 47 · 설계 58: 광장 문이 닫힌 채 시작하는 곳(횟집 · 낚시터). 닫힌 동안 문 통로는 막히고 문 앞에 여는 사물(gateId 행: shop_gate · wet_wall)이 선다
+        // 설계 47 · 설계 59: 광장 문이 닫힌 채 시작하는 곳(횟집 · 빵집). 닫힌 동안 문 통로는 막히고 문 앞에 여는 사물(gateId 행 shop_gate)이 선다
         internal void AddGate(IGated shop, string gateId)
         {
             PlazaDoor door = Layout.DoorTo(shop.Id);

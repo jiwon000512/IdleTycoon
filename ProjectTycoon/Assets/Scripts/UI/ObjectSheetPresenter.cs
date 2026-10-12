@@ -116,10 +116,6 @@ namespace ZooTycoon.UI
                 case CounterInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_counter_title"), m_tables.Format("sheet_counter_status", ((CounterInteractable)m_target).Queue.Count));
                     break;
-                // 설계 60: 비버 = 물 폭 · 아래 댐 조각
-                case BeaverInteractable beaver:
-                    m_view.SetHeader(m_tables.Text("sheet_beaver_title"), m_tables.Format("sheet_beaver_status", beaver.Cols, beaver.Stretch.MaxCols, beaver.Dam?.PiecesLeft ?? 0));
-                    break;
                 case DigInteractable dig:
                     m_view.SetHeader(m_tables.Text("sheet_dig_title"), m_tables.Format("sheet_dig_status", dig.Grid.Cells.Count));
                     break;
@@ -133,9 +129,6 @@ namespace ZooTycoon.UI
                     break;
                 case CuttingBoardInteractable board:
                     m_view.SetHeader(m_tables.Text("sheet_board_title"), m_tables.Format("sheet_board_status", board.Orders.Count));
-                    break;
-                case ShopGateInteractable gate when gate.Table.Id == ShopGateInteractable.k_WetWall:
-                    m_view.SetHeader(m_tables.Text("sheet_wet_wall_title"), m_tables.Text("sheet_wet_wall_status"));
                     break;
                 // 설계 59: 빵집 문(밀로 연다)
                 case ShopGateInteractable gate when gate.Shop is BakeryArea:
@@ -294,21 +287,6 @@ namespace ZooTycoon.UI
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
-                // 설계 60: 비버 먹이 줄 둘. 값은 물고기 이름 + 수(줄 것이 없으면 비움)
-                case ActionTable.k_FeedWiden:
-                case ActionTable.k_FeedDam:
-                {
-                    BeaverInteractable beaver = (BeaverInteractable)m_target;
-                    FishingFeedData feed = actionId == ActionTable.k_FeedWiden ? beaver.NextWiden : beaver.NextDamFeed;
-                    string key = actionId == ActionTable.k_FeedWiden ? "row_feed_widen" : "row_feed_dam";
-                    return new SheetRow
-                    {
-                        Name = m_tables.Text(key),
-                        Effect = m_tables.Text(key + (feed != null ? "_effect" : actionId == ActionTable.k_FeedDam && beaver.Dam == null ? "_none" : "_done")),
-                        Cost = feed == null ? string.Empty : m_tables.Format("tag_open_item", m_tables.Get<ItemTable>(feed.Item).Name, feed.Count),
-                        State = RowState(option.State),
-                    };
-                }
                 case ActionTable.k_PlaceSeat:
                     return new SheetRow
                     {
@@ -320,7 +298,7 @@ namespace ZooTycoon.UI
                 // 설계 47: 빵집 별이 모자라면 값 자리에 「★n 필요」. 설계 58: 젖은 벽은 같은 줄에 다른 글
                 case ActionTable.k_OpenShop:
                     ShopGateInteractable gate = (ShopGateInteractable)m_target;
-                    string row = gate.Table.Id == ShopGateInteractable.k_WetWall ? "row_wet_wall" : gate.Shop is BakeryArea ? "row_open_bakery" : "row_open_shop";
+                    string row = gate.Shop is BakeryArea ? "row_open_bakery" : "row_open_shop";
                     return new SheetRow
                     {
                         Name = m_tables.Text(row),

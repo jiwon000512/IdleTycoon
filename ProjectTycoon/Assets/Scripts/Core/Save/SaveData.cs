@@ -92,10 +92,8 @@ namespace ZooTycoon.Core
     public sealed class FishingSave
     {
         public Dictionary<string, FishRecord> Log = new Dictionary<string, FishRecord>();
-        // 설계 58: 젖은 벽을 팠나 · 열린 층 · 층별 물 열 [층, 열] · 댐에서 뺀 조각 [층, 수] · 놓은 좌대 [층, 번호]
-        public bool Open;
         public List<int> Opened = new List<int>();
-        public List<int[]> Water = new List<int[]>();
+        public List<int> Flooded = new List<int>();
         public List<int[]> Pulled = new List<int[]>();
         public List<int[]> Seats = new List<int[]>();
     }

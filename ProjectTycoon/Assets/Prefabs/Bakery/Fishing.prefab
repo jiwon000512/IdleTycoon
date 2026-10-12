@@ -654,11 +654,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: b62a0ca90dfd2ba40a4bd1689bceecee, type: 3}
   - {fileID: 21300000, guid: 52fed168336d4ef4592704d11a7a2665, type: 3}
   - {fileID: 21300000, guid: ef7055b0a54d42144b4c470626dc308c, type: 3}
-  - {fileID: 21300000, guid: df5ff6fd507a8b047a6493999542100b, type: 3}
-  - {fileID: 21300000, guid: 4b35897c74829624d8af937ff67a61e2, type: 3}
   m_seat: {fileID: 21300000, guid: 4bb6aff7fd1dddd4d84ec7ed8e8bc43c, type: 3}
-  m_beaver: {fileID: 21300000, guid: a9e5dcabfb7c1bf44ac5780e545c1fd9, type: 3}
-  m_beaverEat: {fileID: 21300000, guid: 0b9ae9dd09a05fb44b3bb39b3776c0a1, type: 3}
   m_debris:
   - {fileID: 21300000, guid: da92847c32a804e4282422fc120fec41, type: 3}
   - {fileID: 21300000, guid: 3030b7f2792a5744e917393aa54682f9, type: 3}

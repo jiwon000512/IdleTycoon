@@ -67,7 +67,7 @@
     "version 61 (2026-10-12): 설계 59 대화로 이어지는 시작 흐름: 편지(sender_* · letter_*) · 손님 소문(say_rumor_*) · 빵집 문 시트(row_open_bakery* · sheet_bakery_gate_*) · tag_open_item · letter_* 카드 글 · quest_q27 · q28",
     "version 62 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기",
     "version 63 (2026-10-12): 설계 59 ⓒ 점원의 부탁: letter_r_upgrade_*",
-    "version 64 (2026-10-12): 설계 60 비버 댐 낚시터: sheet_bank_* → sheet_beaver_* · row_feed_widen_* · row_feed_dam_* · quest_q26 · q20"
+    "version 64 (2026-10-12): 설계 58 · 60 낚시터 되돌림(사용자): 젖은 벽 · 둑 칸 · 발견 글 삭제"
   ],
   "rows": [
     {
@@ -1412,7 +1412,7 @@
     },
     {
       "id": "quest_q20",
-      "ko": "댐 헐기"
+      "ko": "댐 허물기"
     },
     {
       "id": "quest_q21",
@@ -1433,66 +1433,6 @@
     {
       "id": "quest_q25",
       "ko": "회 내기"
-    },
-    {
-      "id": "quest_q26",
-      "ko": "비버에게 주기"
-    },
-    {
-      "id": "sheet_wet_wall_title",
-      "ko": "젖은 벽"
-    },
-    {
-      "id": "sheet_wet_wall_status",
-      "ko": "뒤에 물이 있다"
-    },
-    {
-      "id": "row_wet_wall",
-      "ko": "젖은 벽 파기"
-    },
-    {
-      "id": "row_wet_wall_effect",
-      "ko": "굴 속 웅덩이가 열린다"
-    },
-    {
-      "id": "sheet_beaver_title",
-      "ko": "비버"
-    },
-    {
-      "id": "sheet_beaver_status",
-      "ko": "물 {0}/{1}칸 · 댐 조각 {2}"
-    },
-    {
-      "id": "row_feed_widen",
-      "ko": "둑 갉기"
-    },
-    {
-      "id": "row_feed_widen_effect",
-      "ko": "물이 한 칸 넓어진다"
-    },
-    {
-      "id": "row_feed_widen_done",
-      "ko": "물을 다 넓혔다"
-    },
-    {
-      "id": "row_feed_dam",
-      "ko": "댐 헐기"
-    },
-    {
-      "id": "row_feed_dam_effect",
-      "ko": "조각이 하나 빠진다"
-    },
-    {
-      "id": "row_feed_dam_done",
-      "ko": "물을 다 넓히면 열린다"
-    },
-    {
-      "id": "row_feed_dam_none",
-      "ko": "헐 댐이 없다"
-    },
-    {
-      "id": "fishing_find",
-      "ko": "{0} 발견!"
     },
     {
       "id": "quest_q27",

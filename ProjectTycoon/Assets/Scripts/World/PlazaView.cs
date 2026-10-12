@@ -40,9 +40,6 @@ namespace ZooTycoon.World
         [SerializeField] private Texture2D m_wallFace;
         [Tooltip("설계 44: 곳으로 가는 문 그림(갈 곳 id마다 하나, PlazaConfigTable doors). 원점 = 구멍 밑변 가운데")]
         [SerializeField] private DoorArt[] m_doors;
-        [Tooltip("설계 58 아트방 wet-wall(B 돌 무너짐): 낚시터 문 아치 자리에 닫힘 · 열림 그림(지금 arch와 같은 크기 · 발끝)")]
-        [SerializeField] private Sprite m_wetWall;
-        [SerializeField] private Sprite m_wetWallOpen;
         [Tooltip("설계 59 아트방 bakery-closed(사용자 A 판자 덧댐): 닫힌 빵집 문 아치. 없으면 어둡게 칠한다")]
         [SerializeField] private Sprite m_bakeryClosed;
         private Sprite m_bakeryArch;
@@ -233,12 +230,8 @@ namespace ZooTycoon.World
                     tag.transform.localPosition = new Vector3(gate.Floor.X, gate.Floor.Y + k_GateTagRise, 0f);
                     m_gateTags[gate] = tag;
 
-                    // 낚시터 문은 어둡게 칠하는 대신 젖은 벽 그림으로, 빵집 문은 판자 덧댄 그림으로 막는다
-                    if (gate.Shop.Id == FishingArea.k_Id && m_wetWall != null)
-                    {
-                        Arch(gate.Shop.Id).sprite = m_wetWall;
-                    }
-                    else if (gate.Shop.Id == BakeryArea.k_Id && m_bakeryClosed != null)
+                    // 빵집 문은 어둡게 칠하는 대신 판자 덧댄 그림으로 막는다
+                    if (gate.Shop.Id == BakeryArea.k_Id && m_bakeryClosed != null)
                     {
                         m_bakeryArch = Arch(gate.Shop.Id).sprite;
                         Arch(gate.Shop.Id).sprite = m_bakeryClosed;
@@ -262,11 +255,7 @@ namespace ZooTycoon.World
                     m_gateTags.Remove(gate);
                     Transform door = Art(gate.Shop.Id).Root;
 
-                    if (gate.Shop.Id == FishingArea.k_Id && m_wetWallOpen != null)
-                    {
-                        Arch(gate.Shop.Id).sprite = m_wetWallOpen;
-                    }
-                    else if (gate.Shop.Id == BakeryArea.k_Id && m_bakeryArch != null)
+                    if (gate.Shop.Id == BakeryArea.k_Id && m_bakeryArch != null)
                     {
                         Arch(gate.Shop.Id).sprite = m_bakeryArch;
                     }

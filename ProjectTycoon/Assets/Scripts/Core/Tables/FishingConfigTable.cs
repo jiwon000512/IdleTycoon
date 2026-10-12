@@ -2,15 +2,17 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 52 우물 낚시 · 설계 53 넓히기 · 설계 58 층계 웅덩이 · 데이터-테이블-규칙 8.28: 낚시터 숫자(FishingConfigTable.json 행, id main). 좌표는 낚시터 원점(집 층 둑 줄 윗변 가운데) 기준 유닛, y 위
+    // 설계 52 우물 낚시 · 설계 53 넓히기 · 데이터-테이블-규칙 8.28: 낚시터(굴 속 강가) 숫자(FishingConfigTable.json 행, id main). 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class FishingConfigTable : Table<string>
     {
         public const string k_Main = "main";
 
-        // 설계 58: 층마다 물 줄 수(둑 줄 하나 아래). 층은 FishingStretchTable. 광장 젖은 벽을 파는(낚시터를 여는) 값
-        public int WaterRows { get; set; }
-        public double WallCost { get; set; }
+        // 설계 53: 구간 하나의 칸 열 수(한 화면 폭) · 줄 수(입구 줄 포함). 구간은 FishingStretchTable
+        public int StretchCols { get; set; }
+        public int Rows { get; set; }
+        // 강(물 위 · 아래 선 y, 유닛): 방 아래쪽을 가로지른다(가로는 물이 찬 구간까지). 물은 걸을 수 없고 웜뱃은 둑에서 물 쪽을 보고 던진다
+        public FishingWaterData Water { get; set; }
         // 입질: 던진 뒤 물기까지 초(사이에서 난수) · 그 전 가짜 입질 최대 횟수 · 물고 나서 낚아챌 수 있는 초
         public double BiteWaitMin { get; set; }
         public double BiteWaitMax { get; set; }
@@ -45,6 +47,13 @@ namespace ZooTycoon.Core
         public string Sprite { get; set; }
         public double X { get; set; }
         public double Y { get; set; }
+    }
+
+    // 물 아래 선(y0) · 위 선 = 둑 선(y1)
+    public sealed class FishingWaterData
+    {
+        public double Y0 { get; set; }
+        public double Y1 { get; set; }
     }
 
     public sealed class FishingRodData

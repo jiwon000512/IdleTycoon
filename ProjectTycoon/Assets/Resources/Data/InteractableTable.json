@@ -1,6 +1,6 @@
 {
   "table": "InteractableTable",
-  "version": 27,
+  "version": 25,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
     "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상. 통로(exit·door)는 바닥선에서 0.25 이상 올라간 띠(코드 PassageInteractable.k_Enter) 안에서 가로 거리만 잰다 — 거리만으로 넘어간다(2026-09-26).",
@@ -29,9 +29,7 @@
     "version 22 (2026-10-06, 설계 47 수조 횟집): tank(수조, 채우기 auto · 용량 업그레이드, 앞에 손님 자리) · cutting_board(둥근 도마, 뒤 worker 자리 · 뜨기 속도 업그레이드) · dining_table(작은 탁자, 좌우 customer 자리 = 앉는 자리 · 접시 놓기 auto) · shop_gate(닫힌 가게 문 앞, 돋보기 → 횟집 열기 시트). 값은 시작값. 같은 날 tank에 take_fish, cutting_board에 place_fish(웜뱃이 수조에서 물고기를 꺼내 도마에 놓는다).",
     "version 23 (2026-10-06, 설계 49 물때 디펜스): fishing_hut에서 stage_up 삭제(행동 open · hut_upgrade).",
     "version 24 (2026-10-07, 설계 52 우물 낚시 1회차): 디펜스 사물 넷(stake · stream_end · stream_bank · fishing_hut) 삭제, water(강: 물 전체가 사물 하나, 물가 0.9 안에서 던지기 · 낚아채기 · 감기) 추가. 점원 자리는 2회차(알바)에.",
-    "version 25 (2026-10-07): 설계 53 낚시터 넓히기 — rock(열린 낚시터 끝 바위벽, 뚫기 시트) · dam(물속 잔해 댐, 끌어내기 · 잔해 줄다리기 동안 감기, 물보다 먼저 대상) · seat(좌대 자리, 놓기 시트).",
-    "version 26 (2026-10-12): 설계 58 층계 웅덩이 낚시터: wet_wall(광장 낚시터 문 앞 젖은 벽, shop_gate와 같은 행동 · 그림만 다름) · bank(물 옆 둑 칸, 굴 흙 칸과 같은 행동 — 파면 물이 한 열 넓어진다) 추가.",
-    "version 27 (2026-10-12): 설계 60 비버 댐 낚시터: bank(둑 칸) 삭제 → beaver(열린 층마다 물 오른쪽 둑, open · feed_widen · feed_dam)"
+    "version 25 (2026-10-07): 설계 53 낚시터 넓히기 — rock(열린 낚시터 끝 바위벽, 뚫기 시트) · dam(물속 잔해 댐, 끌어내기 · 잔해 줄다리기 동안 감기, 물보다 먼저 대상) · seat(좌대 자리, 놓기 시트)."
   ],
   "rows": [
     {
@@ -325,18 +323,6 @@
       "id": "seat",
       "range": 0.6,
       "actions": ["open", "place_seat"],
-      "upgrade": null
-    },
-    {
-      "id": "wet_wall",
-      "range": 1.0,
-      "actions": ["open", "open_shop"],
-      "upgrade": null
-    },
-    {
-      "id": "beaver",
-      "range": 1.0,
-      "actions": ["open", "feed_widen", "feed_dam"],
       "upgrade": null
     }
   ]

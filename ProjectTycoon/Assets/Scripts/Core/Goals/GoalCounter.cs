@@ -174,9 +174,6 @@ namespace ZooTycoon.Core
                     return param == null || rock.Stretch.Id == param;
                 case DamInteractable dam:
                     return param == null || dam.Stretch.Id == param;
-                // 설계 60: 넓히기 걸음은 아직 넓힐 수 있는 비버, 아래 층 걸음은 그 층 댐이 아래에 있는 비버
-                case BeaverInteractable beaver:
-                    return kind == k_Fill ? beaver.Dam != null && (param == null || beaver.Dam.Stretch.Id == param) : kind != k_Dig || beaver.CanWiden;
                 // 설계 59: 광장 문은 가게마다 하나(빵집 · 횟집 · 낚시터)
                 case ShopGateInteractable gate:
                     return param == null || gate.Shop.Id == param;

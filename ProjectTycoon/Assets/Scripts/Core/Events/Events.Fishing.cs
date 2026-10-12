@@ -88,7 +88,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 53 → 58: 바위를 뚫어 위 층이 열렸다
+        // 설계 53: 바위를 뚫어 구간 땅이 열렸다(강바닥은 마름)
         public readonly struct StretchOpened
         {
             public readonly FishingArea Fishing;
@@ -102,22 +102,6 @@ namespace ZooTycoon.Core
         }
 
         // 설계 53: 댐 잔해 한 조각을 끌어냈다(코인은 이미 지갑에). 남은 조각은 Dam.PiecesLeft
-        public readonly struct BeaverFed
-        {
-            public readonly FishingArea Fishing;
-            public readonly BeaverInteractable Beaver;
-            public readonly DamInteractable Dam;
-            public readonly int PiecesLeft;
-
-            public BeaverFed(FishingArea fishing, BeaverInteractable beaver, DamInteractable dam, int piecesLeft)
-            {
-                Fishing = fishing;
-                Beaver = beaver;
-                Dam = dam;
-                PiecesLeft = piecesLeft;
-            }
-        }
-
         public readonly struct DebrisPulled
         {
             public readonly FishingArea Fishing;
@@ -132,26 +116,7 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 58: 둑 칸을 파 그 층 물이 한 열(Col) 넓어졌다. 물속 발견이 있으면 Find(재료는 이미 창고에, 코인이면 Coins)
-        public readonly struct WaterWidened
-        {
-            public readonly FishingArea Fishing;
-            public readonly int Stretch;
-            public readonly int Col;
-            public readonly FishingFindTable Find;
-            public readonly double Coins;
-
-            public WaterWidened(FishingArea fishing, int stretch, int col, FishingFindTable find, double coins)
-            {
-                Fishing = fishing;
-                Stretch = stretch;
-                Col = col;
-                Find = find;
-                Coins = coins;
-            }
-        }
-
-        // 설계 53 → 58: 댐이 무너져 아래 층이 열렸다(새 물고기)
+        // 설계 53: 댐이 무너져 그 구간에 물이 찼다(새 물고기)
         public readonly struct DamBroken
         {
             public readonly FishingArea Fishing;
