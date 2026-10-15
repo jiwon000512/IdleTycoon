@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 66,
+  "version": 67,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -69,7 +69,8 @@
     "version 63 (2026-10-12): 설계 59 ⓒ 점원의 부탁: letter_r_upgrade_*",
     "version 64 (2026-10-12): 설계 58 · 60 낚시터 되돌림(사용자): 젖은 벽 · 둑 칸 · 발견 글 삭제",
     "version 65 (2026-10-14, 설계 61 지하 호수의 섬들): 바위 · 잔해 글 삭제(sheet_rock_* · row_break_rock* · tag_rock · fishing_debris_left · fishing_flooded) → 다리 시트(sheet_bridge_* · row_place_bridge* · tag_bridge) · 섬에 닿음(fishing_reached) · 섬 이름(island_<id>), quest_q20 · q21 글 바꿈",
-    "version 66 (2026-10-14, 설계 62): kind_mailbox 「우체통」"
+    "version 66 (2026-10-14, 설계 62): kind_mailbox 「우체통」",
+    "version 67 (2026-10-15, 설계 63): kind_mailbox 삭제(우체통 사물 없음)"
   ],
   "rows": [
     {
@@ -1331,10 +1332,6 @@
     {
       "id": "fishing_reached",
       "ko": "{0}에 닿았다!"
-    },
-    {
-      "id": "kind_mailbox",
-      "ko": "우체통"
     },
     {
       "id": "island_reed_island",

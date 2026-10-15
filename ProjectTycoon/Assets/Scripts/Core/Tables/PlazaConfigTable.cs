@@ -24,9 +24,6 @@ namespace ZooTycoon.Core
         // 설계 29: 웜뱃 석상 자리(분수 자리, 밑변 가운데). 설계 30: 빈 뒤 다시 빌 때까지 쉬는 초
         public double StatueX { get; set; }
         public double StatueY { get; set; }
-        // 설계 62: 우체통 자리(계단 옆, 밑변 가운데)
-        public double MailboxX { get; set; }
-        public double MailboxY { get; set; }
         public double BlessingCooldown { get; set; }
         // 설계 31: 뽑을 때 내는 재료와 개수 · 칸 수
         public string RelicItem { get; set; }

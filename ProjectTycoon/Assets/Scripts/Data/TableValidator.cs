@@ -17,7 +17,7 @@ namespace ZooTycoon.Data
         {
             ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id,
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
-            PlotInteractable.k_Id, StatueInteractable.k_Id, MailboxInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id, StairInteractable.k_Id,
+            PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id, StairInteractable.k_Id,
             WaterInteractable.k_Id,
             TankInteractable.k_Id, CuttingBoardInteractable.k_Id, DiningTableInteractable.k_Id, ShopGateInteractable.k_Id,
         };
@@ -699,11 +699,6 @@ namespace ZooTycoon.Data
                     errors.Add($"PlazaConfigTable '{plaza.Id}': doors는 칸 안(0 ~ cols−1) · 서로 다른 칸 · 서로 다른 곳이고 bakery · restaurant 문이 있어야 한다.");
                 }
 
-                // 설계 62: 우체통은 석상과 겹치지 않는다
-                if (System.Math.Abs(plaza.MailboxX - plaza.StatueX) < 1.5d && System.Math.Abs(plaza.MailboxY - plaza.StatueY) < 1.5d)
-                {
-                    errors.Add($"PlazaConfigTable '{plaza.Id}': mailboxX · Y는 석상 자리에서 1.5 이상 떨어져야 한다.");
-                }
             }
 
             CheckRequired<PlazaConfigTable>(tables, new[] { PlazaConfigTable.k_Main }, errors);

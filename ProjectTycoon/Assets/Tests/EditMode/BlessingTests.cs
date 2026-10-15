@@ -222,27 +222,5 @@ namespace ZooTycoon.Tests
             Assert.That(statue.TryPray(), Is.True);
             Assert.That(Blessing.Active, Is.Not.Null);
         }
-        // 설계 62: 우체통은 계단 옆 표 자리에 서서 길을 막고, 곁에 가면 읽기 버튼이 MailboxTapped를 낸다. 안 읽은 편지가 있으면 깃발(HasMail)
-        [Test]
-        public void PlazaMailbox_StandsFixed_FlagFollowsUnread_AndOpensWithButton()
-        {
-            MailboxInteractable mailbox = m_plaza.MailboxThing;
-            Assert.That(mailbox.Position, Is.EqualTo(new Vector2((float)Config.MailboxX, (float)Config.MailboxY)));
-            Assert.That(m_plaza.CanPlace(m_tables.GetAll<DecorationTable>()[0].Id, mailbox.Position), Is.Not.EqualTo(PlacementCheck.Ok));
-            Assert.That(mailbox.HasMail, Is.True, "새 게임은 큰이모 편지가 와 있다");
-
-            int tapped = 0;
-            m_bus.Subscribe<Events.MailboxTapped>(e => tapped += e.Mailbox == mailbox ? 1 : 0);
-            m_bus.Publish(new Events.Passed(m_shop, PlazaArea.k_Id));
-            m_wombat.Mover.Place(mailbox.Position + new Vector2(0f, -0.7f));
-            Run(k_Dt);
-
-            Assert.That(m_plaza.TargetAction.Id, Is.EqualTo(ActionTable.k_ReadMail));
-            Assert.That(m_plaza.TryInteract(), Is.True);
-            Assert.That(tapped, Is.EqualTo(1));
-
-            m_mall.Mailbox.TryRead(m_mall.Mailbox.Unread.First());
-            Assert.That(mailbox.HasMail, Is.False);
-        }
     }
 }

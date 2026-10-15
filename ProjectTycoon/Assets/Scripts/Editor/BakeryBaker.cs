@@ -173,14 +173,6 @@ namespace ZooTycoon.Editor
             Import(k_PlazaDir + "sign.png", center);
             Import(k_PlazaDir + "stairs.png", bottom);
             Import(k_PlazaDir + "statue.png", bottom);
-            // 설계 62: 우체통(깃발 내림 · 올림). 그림이 오기 전엔 UI 봉투 아이콘을 빌린다
-            foreach (string name in new[] { "mailbox.png", "mailbox_up.png" })
-            {
-                if (System.IO.File.Exists(k_PlazaDir + name))
-                {
-                    Import(k_PlazaDir + name, bottom);
-                }
-            }
 
             foreach (string path in System.IO.Directory.GetFiles(k_DecorDir, "*.png"))
             {
@@ -716,10 +708,6 @@ namespace ZooTycoon.Editor
             // 설계 29: 웜뱃 석상(분수 자리, 발끝으로 깊이 정렬). 크기는 그림 칸 수로(2026-09-30 처음의 1.5배, 스케일 1)
             SpriteRenderer statue = Renderer(root.transform, "Statue", AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "statue.png"), Vector3.zero, 0);
             statue.spriteSortPoint = SpriteSortPoint.Pivot;
-            Sprite mailboxDown = AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "mailbox.png") ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/icon_mail.png");
-            Sprite mailboxUp = AssetDatabase.LoadAssetAtPath<Sprite>(k_PlazaDir + "mailbox_up.png");
-            SpriteRenderer mailbox = Renderer(root.transform, "Mailbox", mailboxDown, Vector3.zero, 0);
-            mailbox.spriteSortPoint = SpriteSortPoint.Pivot;
 
             PlazaView view = root.AddComponent<PlazaView>();
             Set(view, "m_burrow", burrow);
@@ -740,9 +728,6 @@ namespace ZooTycoon.Editor
             Set(view, "m_stairs", stairs.transform);
             Set(view, "m_wombat", wombat);
             Set(view, "m_statue", statue.transform);
-            Set(view, "m_mailbox", mailbox);
-            Set(view, "m_mailboxDown", mailboxDown);
-            Set(view, "m_mailboxUp", mailboxUp);
             Set(view, "m_popupPrefab", AssetDatabase.LoadAssetAtPath<CoinPopup>(k_CoinPrefabPath));
             // 설계 37: 똥은 빵집과 같은 그림
             Set(view, "m_poopPrefab", poop);

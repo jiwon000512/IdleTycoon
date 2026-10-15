@@ -77,7 +77,7 @@ namespace ZooTycoon.Game
             m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
             m_locationPresenter = new LocationPresenter(locationView, game.Mall, game.Bus, game.Tables);
             m_offlinePresenter = new OfflinePresenter(offlineView, game.Bus, game.Tables);
-            m_letterPresenter = new LetterPresenter(letterView, topBarView, game.Mall, game.Bus, game.Tables);
+            m_letterPresenter = new LetterPresenter(letterView, topBarView, game.Mall.Mailbox, game.Bus, game.Tables);
             // 설계 55: 창고 + 유물 = 가방(마지막에 본 탭). 뽑기 결과 「유물 보기」는 유물 탭
             m_bagPresenter = new BagPresenter(inventoryView, relicsView, m_inventoryPresenter, m_relicsPresenter, game.Tables);
             m_relicPresenter = new RelicCartPresenter(relicView, relicResultView, game.State, game.Bus, game.Tables, () => m_bagPresenter.Show(BagPresenter.k_Relics));
@@ -86,13 +86,14 @@ namespace ZooTycoon.Game
             m_editView = editView;
             m_clerkView = clerkView;
             m_inventoryView = inventoryView;
-            // 설계 55: 오른쪽 메뉴 줄(위에서부터 편집 · 점원 · 가방 · 오늘의 일). 편집은 행동 단추 위에 두었다가 줄로 되돌리고,
+            // 설계 55 · 63: 오른쪽 메뉴 줄(위에서부터 편집 · 점원 · 가방 · 오늘의 일 · 편지). 편집은 행동 단추 위에 두었다가 줄로 되돌리고,
             // 행상은 단추가 아니라 왼쪽 소식 줄(TopBarView)로 옮김(2026-10-12 사용자: 단추와 혼동)
             MenuRail rail = gameObject.AddComponent<MenuRail>();
             rail.Add(editView.MenuButton);
             rail.Add(clerkView.MenuButton);
             rail.Add(inventoryView.MenuButton);
             rail.Add(m_missionView.MenuButton);
+            rail.Add(topBarView.MailButton);
             m_menuPointed = game.Bus.Subscribe<Events.MenuPointed>(Bus_MenuPointed);
             m_hudPresenter.SheetRequested += Hud_SheetRequested;
             m_editPresenter.SheetRequested += Hud_SheetRequested;

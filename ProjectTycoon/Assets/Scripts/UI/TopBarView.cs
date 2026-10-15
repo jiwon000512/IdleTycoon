@@ -55,10 +55,12 @@ namespace ZooTycoon.UI
         [SerializeField] private TMP_Text m_merchantTime;
         [Tooltip("설계 57: 와 있고 아직 좌판을 안 열었으면 레드닷")]
         [SerializeField] private RedDot m_merchantBadge;
-        [Tooltip("설계 59: 우편함 타일(행상 타일 아래, 늘 보임). 레드닷 = 안 읽은 편지 수, 누르면 편지 카드")]
+        [Tooltip("설계 59 · 63: 편지 단추(오른쪽 메뉴 줄 맨 아래, MainScene이 MenuRail에 넣는다). 레드닷 = 안 읽은 편지 수, 누르면 편지 카드")]
         [SerializeField] private CanvasGroup m_mail;
         [SerializeField] private Button m_mailButton;
         [SerializeField] private RedDot m_mailBadge;
+        [Tooltip("설계 63: 안 읽은 편지가 있는 동안 단추 뒤에서 숨쉬는 금빛 테")]
+        [SerializeField] private Image m_mailGlow;
         [Tooltip("설계 49 물때 알약(행상 알약 아래): 물고기 아이콘 · 「물때」 · 「7/10」")]
         [SerializeField] private CanvasGroup m_wave;
         [SerializeField] private TMP_Text m_waveText;
@@ -95,8 +97,11 @@ namespace ZooTycoon.UI
         private double m_evaluationTotal;
         private IReadOnlyList<GoalData> m_goalData;
         private float m_pillTop;
-        // 설계 62: 안 읽은 편지 되풀이 톡 · 봉투 날아오기(초 · 옆으로 휘는 폭 · 기울기)
+        // 설계 62 · 63: 안 읽은 편지 되풀이 톡 · 빛 테 숨쉬기(주기 · 알파) · 봉투 날아오기(초 · 옆으로 휘는 폭 · 기울기)
         private const float k_MailNagSeconds = 10f;
+        private const float k_MailGlowSeconds = 1.2f;
+        private const float k_MailGlowMin = 0.25f;
+        private const float k_MailGlowMax = 0.9f;
         private const float k_MailFlightSeconds = 0.6f;
         private const float k_MailFlightArc = 40f;
         private const float k_MailFlightTilt = 12f;
@@ -104,6 +109,8 @@ namespace ZooTycoon.UI
 
         public bool SpentVisible => m_spentLeft > 0f;
         public QuestCard Quest => m_quest;
+        // 설계 63: 메뉴 줄에 넣을 편지 단추
+        public RectTransform MailButton => (RectTransform)m_mail.transform;
         public event Action MailClicked;
 
         private void Awake()
@@ -112,6 +119,7 @@ namespace ZooTycoon.UI
             m_blessing.gameObject.SetActive(false);
             m_merchant.gameObject.SetActive(false);
             m_mailButton.onClick.AddListener(() => MailClicked?.Invoke());
+            m_mailGlow.gameObject.SetActive(false);
             m_wave.gameObject.SetActive(false);
             m_evaluation.gameObject.SetActive(false);
 
@@ -177,12 +185,11 @@ namespace ZooTycoon.UI
             m_merchantBadge.Set(false);
         }
 
-        // 설계 59: 우편함 타일 — 안 읽은 편지 수(0이면 점 없음)
+        // 설계 59: 편지 단추 — 안 읽은 편지 수(0이면 점 없음)
         public void ShowMail(int unread)
         {
             m_mailBadge.Set(unread);
             m_mail.gameObject.SetActive(true);
-            Stack();
         }
 
         // 할 일 「가기」가 우편함을 가리킨다
@@ -191,7 +198,7 @@ namespace ZooTycoon.UI
             StartCoroutine(UiFx.Pulse((RectTransform)m_mail.transform));
         }
 
-        // 설계 62: 안 읽은 편지가 있는 동안 k_MailNagSeconds마다 타일이 톡(사용자 「알림이 왔는지 알기 힘듦」)
+        // 설계 62 · 63: 안 읽은 편지가 있는 동안 단추 뒤 금빛 테가 숨쉬고 k_MailNagSeconds마다 단추가 톡(사용자 「알림이 왔는지 알기 힘듦」)
         public void SetMailNag(bool on)
         {
             if (m_mailNag != null)
@@ -199,6 +206,8 @@ namespace ZooTycoon.UI
                 StopCoroutine(m_mailNag);
                 m_mailNag = null;
             }
+
+            m_mailGlow.gameObject.SetActive(on);
 
             if (on && isActiveAndEnabled)
             {
@@ -208,14 +217,27 @@ namespace ZooTycoon.UI
 
         private IEnumerator MailNag()
         {
+            float nag = 0f;
+
             while (true)
             {
-                yield return new WaitForSecondsRealtime(k_MailNagSeconds);
-                yield return UiFx.Pulse((RectTransform)m_mail.transform);
+                float k = (Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / k_MailGlowSeconds) + 1f) * 0.5f;
+                Color color = m_mailGlow.color;
+                color.a = Mathf.Lerp(k_MailGlowMin, k_MailGlowMax, k);
+                m_mailGlow.color = color;
+                nag += Time.unscaledDeltaTime;
+
+                if (nag >= k_MailNagSeconds)
+                {
+                    nag = 0f;
+                    yield return UiFx.Pulse((RectTransform)m_mail.transform);
+                }
+
+                yield return null;
             }
         }
 
-        // 설계 62: 편지가 왔다 — 타일 그림 복사본이 화면 위 가운데에서 타일로 날아와 꽂히고 톡
+        // 설계 62 · 63: 편지가 왔다 — 단추 그림 복사본이 화면 위 가운데에서 단추로 날아와 꽂히고 톡
         public void FlyMailIn()
         {
             if (!isActiveAndEnabled)
@@ -242,19 +264,27 @@ namespace ZooTycoon.UI
                 dot.gameObject.SetActive(false);
             }
 
+            Transform glow = copy.transform.Find(m_mailGlow.name);
+
+            if (glow != null)
+            {
+                glow.gameObject.SetActive(false);
+            }
+
             RectTransform flyer = (RectTransform)copy.transform;
             flyer.SetAsLastSibling();
             RectTransform canvas = (RectTransform)GetComponentInParent<Canvas>().rootCanvas.transform;
             Vector3 top = canvas.TransformPoint(new Vector3(0f, canvas.rect.yMax, 0f));
             Vector3 from = tile.parent.InverseTransformPoint(top) + Vector3.up * tile.rect.height;
-            from.x = tile.localPosition.x + k_MailFlightArc;
+            // 설계 63: 단추가 오른쪽 메뉴 줄에 있어 왼쪽으로 휜다
+            from.x = tile.localPosition.x - k_MailFlightArc;
             Vector3 to = tile.localPosition;
 
             for (float t = 0f; t < k_MailFlightSeconds; t += Time.unscaledDeltaTime)
             {
                 float k = t / k_MailFlightSeconds;
                 float ease = 1f - (1f - k) * (1f - k);
-                flyer.localPosition = Vector3.Lerp(from, to, ease) + Vector3.right * (Mathf.Sin(k * Mathf.PI) * k_MailFlightArc);
+                flyer.localPosition = Vector3.Lerp(from, to, ease) - Vector3.right * (Mathf.Sin(k * Mathf.PI) * k_MailFlightArc);
                 flyer.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(k * Mathf.PI * 2f) * k_MailFlightTilt);
                 yield return null;
             }
@@ -372,7 +402,7 @@ namespace ZooTycoon.UI
 
             bool news = false;
 
-            foreach (CanvasGroup group in new[] { m_merchant, m_mail })
+            foreach (CanvasGroup group in new[] { m_merchant })
             {
                 if (group == null || !group.gameObject.activeSelf)
                 {
