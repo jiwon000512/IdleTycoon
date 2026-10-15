@@ -8,7 +8,7 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "ProjectTycoon", "Assets", "Resources", "Data")
-EARN = ("bakery", "tips", "restaurant", "seats", "debris")
+EARN = ("bakery", "tips", "restaurant", "seats", "crate")
 
 
 def q(xs, p):

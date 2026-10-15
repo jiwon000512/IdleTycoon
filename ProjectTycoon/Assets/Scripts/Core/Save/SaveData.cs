@@ -88,13 +88,11 @@ namespace ZooTycoon.Core
 
 
     // 설계 52 우물 낚시: 낚시터는 어종 기록(걸린 물고기 · 던진 줄 · 좌대 손님은 저장하지 않는다). 옛 저장의 단계 · 말뚝 · 업그레이드 칸은 읽지 않는다.
-    // 설계 53: 열린 구간 · 물이 찬 구간(index), 댐에서 뺀 조각 [구간, 수], 놓은 좌대 [구간, 번호]
+    // 설계 61: 닿은 섬(index), 놓은 좌대 [섬, 번호]. 설계 53의 Opened · Flooded · Pulled는 읽지 않는다
     public sealed class FishingSave
     {
         public Dictionary<string, FishRecord> Log = new Dictionary<string, FishRecord>();
-        public List<int> Opened = new List<int>();
-        public List<int> Flooded = new List<int>();
-        public List<int[]> Pulled = new List<int[]>();
+        public List<int> Reached = new List<int>();
         public List<int[]> Seats = new List<int[]>();
     }
 

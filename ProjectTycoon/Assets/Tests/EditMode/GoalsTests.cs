@@ -191,9 +191,9 @@ namespace ZooTycoon.Tests
             Assert.That(mall.Guide.Toward, Is.Null);
         }
 
-        // 2026-10-09 리뷰: 「바위 뚫기」(down1)는 그 구간의 바위로 데려간다(같은 거리의 반대쪽 바위가 아니라)
+        // 2026-10-09 리뷰 · 설계 61: 「다리 놓기」(rock_island)는 그 걸음의 섬으로 가는 다리 자리를 가리킨다
         [Test]
-        public void Guide_RockStep_PointsTheStepsStretch()
+        public void Guide_BridgeStep_PointsTheStepsIsland()
         {
             TestGame game = new TestGame();
             JumpTo(game, "q20");
@@ -204,9 +204,9 @@ namespace ZooTycoon.Tests
 
             Assert.That(mall.Quests.Go(), Is.True);
 
-            RockInteractable rock = mall.Guide.Pointed as RockInteractable;
-            Assert.That(rock, Is.Not.Null);
-            Assert.That(rock.Stretch.Id, Is.EqualTo(step.Param));
+            BridgeInteractable bridge = mall.Guide.Pointed as BridgeInteractable;
+            Assert.That(bridge, Is.Not.Null);
+            Assert.That(bridge.Island.Id, Is.EqualTo(step.Param));
         }
 
         // 조이스틱을 건드리면 걷기만 멈추고 가리키기는 남는다. 걸음이 다 되면 꺼진다

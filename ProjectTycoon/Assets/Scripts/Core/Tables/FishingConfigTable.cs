@@ -2,17 +2,16 @@ using GameKit.Tables;
 
 namespace ZooTycoon.Core
 {
-    // 설계 52 우물 낚시 · 설계 53 넓히기 · 데이터-테이블-규칙 8.28: 낚시터(굴 속 강가) 숫자(FishingConfigTable.json 행, id main). 좌표는 낚시터 원점(첫 줄 윗변 가운데) 기준 유닛, y 위
+    // 설계 52 강가 낚시 · 설계 61 지하 호수의 섬들 · 데이터-테이블-규칙 8.28: 낚시터 숫자(FishingConfigTable.json 행, id main). 좌표는 낚시터 원점(구멍 위 가운데) 기준 유닛, y 위
     // 규칙 예외: Newtonsoft 역직렬화에 setter가 필요하다.
     public sealed class FishingConfigTable : Table<string>
     {
         public const string k_Main = "main";
 
-        // 설계 53: 구간 하나의 칸 열 수(한 화면 폭) · 줄 수(입구 줄 포함). 구간은 FishingStretchTable
-        public int StretchCols { get; set; }
-        public int Rows { get; set; }
-        // 강(물 위 · 아래 선 y, 유닛): 방 아래쪽을 가로지른다(가로는 물이 찬 구간까지). 물은 걸을 수 없고 웜뱃은 둑에서 물 쪽을 보고 던진다
-        public FishingWaterData Water { get; set; }
+        // 설계 61 호수: 보이는 섬 뭍 둘레에 이만큼 더 판 칸이 굴(물)이 된다 · 던지면 물가에서 물 안쪽으로 닿는 최대 거리 · 찌는 그 깊이의 이 비율에 뜬다
+        public double LakeMargin { get; set; }
+        public double CastReach { get; set; }
+        public double BobberIn { get; set; }
         // 입질: 던진 뒤 물기까지 초(사이에서 난수) · 그 전 가짜 입질 최대 횟수 · 물고 나서 낚아챌 수 있는 초
         public double BiteWaitMin { get; set; }
         public double BiteWaitMax { get; set; }
@@ -29,31 +28,25 @@ namespace ZooTycoon.Core
         public FishingRodData Rod { get; set; }
         // 낚은 뒤 웜뱃이 물고기를 들고 만세하는 초
         public double LandSeconds { get; set; }
-        // 설계 53 댐 잔해: 조각 하나의 무게(물고기 kg처럼 거리 = 무게 × distancePerKg) · 쉬는 초(물고기보다 길다, 가끔 「걸림」 = 달리기) · 끌어낼 때마다 나오는 코인
-        public double DebrisWeight { get; set; }
-        public double DebrisRestSeconds { get; set; }
-        public double DebrisCoins { get; set; }
-        // 설계 53 좌대 손님: 좌대가 둑 선에서 뒤로 물러난 거리 · 앉아 낚는 초(사이 난수) · 한 마리 낚는 간격
+        // 설계 61 그림자(event shadow 섬): 나타나는 간격 초 · 보이는 초 · 헤엄 속도(유닛/초) · 찌가 이 거리 안이면 명물이 문다 · 뭍 아랫변 아래 헤엄치는 깊이(lakeMargin 안)
+        public double ShadowEvery { get; set; }
+        public double ShadowSeconds { get; set; }
+        public double ShadowSpeed { get; set; }
+        public double ShadowReach { get; set; }
+        public double ShadowDepth { get; set; }
+        // 설계 61 상자(event crate 섬): 떠내려오는 간격 초 · 머무는 초 · 떠내려가는 속도(유닛/초) · 뭍 아랫변 아래 떠 있는 깊이(lakeMargin 안) · 끌어내는 무게(거리 = 무게 × distancePerKg) · 쉬는 초(사이 runSeconds 「걸림」) · 끌어내면 코인
+        public double CrateEvery { get; set; }
+        public double CrateSeconds { get; set; }
+        public double CrateSpeed { get; set; }
+        public double CrateDepth { get; set; }
+        public double CrateWeight { get; set; }
+        public double CrateRestSeconds { get; set; }
+        public double CrateCoins { get; set; }
+        // 설계 53 좌대 손님: 좌대가 뭍 아랫변에서 뒤로 물러난 거리 · 앉아 낚는 초(사이 난수) · 한 마리 낚는 간격
         public double SeatBack { get; set; }
         public double CustomerSecondsMin { get; set; }
         public double CustomerSecondsMax { get; set; }
         public double CustomerCatchEvery { get; set; }
-        // 둑 소품(아트방 bank_<이름>, 발끝 피벗): 그림 이름과 발끝 자리. 길을 막지 않는 장식
-        public FishingDecorData[] Decor { get; set; } = new FishingDecorData[0];
-    }
-
-    public sealed class FishingDecorData
-    {
-        public string Sprite { get; set; }
-        public double X { get; set; }
-        public double Y { get; set; }
-    }
-
-    // 물 아래 선(y0) · 위 선 = 둑 선(y1)
-    public sealed class FishingWaterData
-    {
-        public double Y0 { get; set; }
-        public double Y1 { get; set; }
     }
 
     public sealed class FishingRodData

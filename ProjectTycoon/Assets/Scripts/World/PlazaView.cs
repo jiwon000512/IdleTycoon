@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -48,6 +49,10 @@ namespace ZooTycoon.World
         [SerializeField] private WombatView m_wombat;
         [Tooltip("설계 29: 웜뱃 석상(자리는 Core 석상 기준점)")]
         [SerializeField] private Transform m_statue;
+        [Tooltip("설계 62: 우체통(자리는 Core 우체통 기준점). 깃발 올림 그림이 없으면 같은 그림")]
+        [SerializeField] private SpriteRenderer m_mailbox;
+        [SerializeField] private Sprite m_mailboxDown;
+        [SerializeField] private Sprite m_mailboxUp;
         [Tooltip("설계 37: 거름 국자 코인 · 거름 「+N」 팝업(빵집과 같은 프리팹)")]
         [SerializeField] private CoinPopup m_popupPrefab;
         [Tooltip("설계 37: 웜뱃 똥 그림(빵집과 같은 프리팹 · 프레임)")]
@@ -78,6 +83,13 @@ namespace ZooTycoon.World
         private bool m_editing;
         private IPlaced m_held;
         private IDisposable[] m_subscriptions;
+        // 설계 62: 봉투 떨어지기(초 · 출발 높이 · 꽂히는 높이 · 좌우 흔들림 · 기울기 · 봉투 크기)
+        private const float k_MailDropSeconds = 0.7f;
+        private const float k_MailDropFrom = 6f;
+        private const float k_MailDropHeight = 0.9f;
+        private const float k_MailDropSway = 0.4f;
+        private const float k_MailDropTilt = 15f;
+        private const float k_MailDropScale = 0.5f;
         private PoopViews m_poopViews;
         private Sprite m_square;
         private float m_glow;
@@ -120,6 +132,8 @@ namespace ZooTycoon.World
             SetSign(plaza.Wombat.Worker.Wallet.Stars.Count(BakeryArea.k_Id));
             m_ghost = GhostView.Create(transform);
             m_statue.localPosition = new Vector3(plaza.Statue.Position.X, plaza.Statue.Position.Y, 0f);
+            m_mailbox.transform.localPosition = new Vector3(plaza.MailboxThing.Position.X, plaza.MailboxThing.Position.Y, 0f);
+            RefreshMailbox();
             m_poopViews = new PoopViews(this, plaza, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, p => transform.position + new Vector3(p.X, p.Y, 0f));
             Build();
 
@@ -130,7 +144,39 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged),
                 bus.Subscribe<Events.StarsChanged>(Bus_StarsChanged),
+                bus.Subscribe<Events.LetterArrived>(_ => StartCoroutine(MailFlight())),
+                bus.Subscribe<Events.LetterRead>(_ => RefreshMailbox()),
             };
+        }
+
+        // 설계 62: 안 읽은 편지가 있으면 깃발 올림
+        private void RefreshMailbox()
+        {
+            m_mailbox.sprite = m_plaza.MailboxThing.HasMail && m_mailboxUp != null ? m_mailboxUp : m_mailboxDown;
+        }
+
+        // 설계 62: 편지가 왔다 — 봉투가 위에서 우체통으로 떨어져 꽂히고 통이 튄다
+        private IEnumerator MailFlight()
+        {
+            Vector3 to = m_mailbox.transform.localPosition + Vector3.up * k_MailDropHeight;
+            Vector3 from = to + Vector3.up * k_MailDropFrom;
+            SpriteRenderer envelope = new GameObject("MailFlight").AddComponent<SpriteRenderer>();
+            envelope.transform.SetParent(transform, false);
+            envelope.sprite = m_mailboxDown;
+            envelope.sortingOrder = m_mailbox.sortingOrder + 1;
+            envelope.transform.localScale = Vector3.one * k_MailDropScale;
+
+            for (float t = 0f; t < k_MailDropSeconds; t += Time.deltaTime)
+            {
+                float k = t / k_MailDropSeconds;
+                envelope.transform.localPosition = Vector3.Lerp(from, to, k * k) + Vector3.right * (Mathf.Sin(k * Mathf.PI) * k_MailDropSway);
+                envelope.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(k * Mathf.PI * 2f) * k_MailDropTilt);
+                yield return null;
+            }
+
+            Destroy(envelope.gameObject);
+            RefreshMailbox();
+            yield return Fx.Bounce(m_mailbox.transform);
         }
 
         // 설계 40: 빵집 간판에 별 수(「빵집 ★7」, 0이면 이름만). 별 색 단계 그림은 아트방
@@ -351,6 +397,11 @@ namespace ZooTycoon.World
             if (e.Area == m_plaza && m_plaza.Target is StatueInteractable)
             {
                 StartCoroutine(Fx.Bounce(m_statue));
+            }
+
+            if (e.Area == m_plaza && m_plaza.Target is MailboxInteractable)
+            {
+                StartCoroutine(Fx.Bounce(m_mailbox.transform));
             }
 
             if (e.Area == m_plaza && m_plaza.Target is PoopInteractable poop)

@@ -77,7 +77,7 @@ namespace ZooTycoon.Game
             m_relicsPresenter = new RelicPresenter(relicsView, game.State, game.Bus, game.Tables);
             m_locationPresenter = new LocationPresenter(locationView, game.Mall, game.Bus, game.Tables);
             m_offlinePresenter = new OfflinePresenter(offlineView, game.Bus, game.Tables);
-            m_letterPresenter = new LetterPresenter(letterView, topBarView, game.Mall.Mailbox, game.Bus, game.Tables);
+            m_letterPresenter = new LetterPresenter(letterView, topBarView, game.Mall, game.Bus, game.Tables);
             // 설계 55: 창고 + 유물 = 가방(마지막에 본 탭). 뽑기 결과 「유물 보기」는 유물 탭
             m_bagPresenter = new BagPresenter(inventoryView, relicsView, m_inventoryPresenter, m_relicsPresenter, game.Tables);
             m_relicPresenter = new RelicCartPresenter(relicView, relicResultView, game.State, game.Bus, game.Tables, () => m_bagPresenter.Show(BagPresenter.k_Relics));

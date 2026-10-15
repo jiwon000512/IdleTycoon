@@ -73,6 +73,17 @@ namespace ZooTycoon.Core
             }
         }
 
+        // 설계 62: 광장 우체통 앞에서 읽기 버튼을 눌렀다(UI가 편지 카드를 연다)
+        public readonly struct MailboxTapped
+        {
+            public readonly MailboxInteractable Mailbox;
+
+            public MailboxTapped(MailboxInteractable mailbox)
+            {
+                Mailbox = mailbox;
+            }
+        }
+
         public readonly struct LetterRead
         {
             public readonly Letter Letter;

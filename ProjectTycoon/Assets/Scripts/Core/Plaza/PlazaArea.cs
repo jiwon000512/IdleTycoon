@@ -65,8 +65,10 @@ namespace ZooTycoon.Core
         }
         protected override BurrowShape.Result Shape => Layout.Shape;
         // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt)
-        protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue);
+        protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue).Append(MailboxThing);
         public StatueInteractable Statue { get; }
+        // 설계 62: 계단 옆 우체통(길을 막는 고정 사물, 깃발은 편지함의 안 읽은 편지)
+        public MailboxInteractable MailboxThing { get; }
         // 설계 31 · 34: 떠돌이 행상(일정 · 걷는 그림)과 그 행상에게 말 거는 사물
         public RelicMerchant Merchant { get; }
         public MerchantInteractable MerchantThing { get; }
@@ -92,6 +94,8 @@ namespace ZooTycoon.Core
 
             Statue = new StatueInteractable(tables.Get<InteractableTable>(StatueInteractable.k_Id), this, new Vector2((float)m_config.StatueX, (float)m_config.StatueY), random);
             Placed.Add(Statue);
+            MailboxThing = new MailboxInteractable(tables.Get<InteractableTable>(MailboxInteractable.k_Id), this, new Vector2((float)m_config.MailboxX, (float)m_config.MailboxY));
+            Placed.Add(MailboxThing);
             Merchant = new RelicMerchant(this, tables);
             MerchantThing = new MerchantInteractable(tables.Get<InteractableTable>(MerchantInteractable.k_Id), this, random, Merchant);
             Placed.Add(MerchantThing);

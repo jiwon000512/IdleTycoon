@@ -54,7 +54,7 @@ namespace ZooTycoon.World
         private IDisposable m_areaChanged;
         private IDisposable m_clerkHired;
         private IDisposable m_cast;
-        private IDisposable m_damBroken;
+        private IDisposable m_islandReached;
 
         public FrameCache Frames { get; } = new FrameCache();
 
@@ -96,7 +96,7 @@ namespace ZooTycoon.World
             m_areaChanged = bus.Subscribe<Events.AreaChanged>(Bus_AreaChanged);
             m_clerkHired = bus.Subscribe<Events.ClerkHired>(Bus_ClerkHired);
             m_cast = bus.Subscribe<Events.CastThrown>(Bus_CastThrown);
-            m_damBroken = bus.Subscribe<Events.DamBroken>(Bus_DamBroken);
+            m_islandReached = bus.Subscribe<Events.IslandReached>(Bus_IslandReached);
             gameObject.AddComponent<GuideView>().Initialize(mall, bus, tables, area => m_views[area].Origin, m_shopView.PopupPrefab, m_guideArrow);
             FollowWombat();
         }
@@ -177,7 +177,7 @@ namespace ZooTycoon.World
             m_areaChanged?.Dispose();
             m_clerkHired?.Dispose();
             m_cast?.Dispose();
-            m_damBroken?.Dispose();
+            m_islandReached?.Dispose();
 
             base.OnDestroy();
         }
@@ -213,15 +213,16 @@ namespace ZooTycoon.World
                 () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero);
         }
 
-        // 설계 53: 댐이 무너지면 물이 차오르는 구간을 잠깐 비춘다(배율 그대로, 조이스틱을 움직이면 바로 돌아온다)
-        private void Bus_DamBroken(Events.DamBroken e)
+        // 설계 61: 다리를 놓아 섬에 닿으면 그 섬을 잠깐 비춘다(배율 그대로, 조이스틱을 움직이면 바로 돌아온다)
+        private void Bus_IslandReached(Events.IslandReached e)
         {
             if (m_mall.Active != e.Fishing)
             {
                 return;
             }
 
-            Vector3 at = m_fishingView.Origin + new Vector3(e.Fishing.Layout.CenterOf(e.Stretch), e.Fishing.Layout.BankY - 2f, 0f);
+            NavRect land = e.Fishing.Layout.LandOf(e.Island);
+            Vector3 at = m_fishingView.Origin + new Vector3((land.XMin + land.XMax) / 2f, (land.YMin + land.YMax) / 2f, 0f);
             m_camera.Spot(() => at, k_FloodSpotSeconds, () => m_mall.Wombat.Input != System.Numerics.Vector2.Zero, 1f);
         }
 

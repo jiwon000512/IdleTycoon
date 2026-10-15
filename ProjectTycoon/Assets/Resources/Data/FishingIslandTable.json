@@ -1,40 +1,64 @@
 {
-  "table": "FishingStretchTable",
+  "table": "FishingIslandTable",
   "version": 1,
   "notes": [
-    "설계 53 낚시터 넓히기: 낚시터 구간. 구간 = 굴 칸 FishingConfigTable stretchCols열(한 화면 폭) × rows줄. index 0이 처음 낚시터(구멍 · 둑 소품이 있는 곳), 음수는 왼쪽(상류) · 양수는 오른쪽(하류). 전부 시작값이며 플레이로 튠한다.",
-    "열기: 안쪽 구간이 열려 있으면 경계 둑 끝 바위를 rockCost 코인으로 뚫어 그 구간 땅이 열린다(강바닥은 마름). 안쪽 구간에 물이 차 있으면 경계 물속 잔해 댐 조각 damPieces개를 줄다리기로 끌어내 다 빼면 물이 찬다. index 0은 처음부터 열림 · 물 참(rockCost · damPieces 0).",
-    "fish: 물이 찬 이 구간에서 던지면 무는 물고기(FishTable id)와 chance 비중. 좌대 손님이 낚는 물고기(보이기만)도 여기서.",
-    "seats: 좌대 자리(구간 가운데에서 dx, 둑 선 위 FishingConfigTable seatBack)와 놓는 값. 물이 찬 구간에만 생긴다. 놓은 좌대마다 광장 손님 한 명이 앉아 낚는다. pay: 그 손님이 한 마리 낚을 때마다 내는 코인(석상 값 축복 곱).",
-    "version 1 (2026-10-07, 설계 53): 처음 낚시터 + 하류 1(바위 2,500 · 댐 3 · 붕어 · 메기) + 상류 1(바위 15,000 · 댐 5 · 메기). 사용자 「양쪽으로 이어지게 · 지금 + 새 구간 둘」."
+    "설계 61 지하 호수의 섬들: 낚시터 섬. 좌표는 낚시터 원점(구멍 위 가운데) 기준 유닛, y 위(굴 칸 3.375 × 2.4, 입구 줄 2.0). index 0이 처음 뭍(구멍 아래), 1부터 차례로 다리를 놓아 닿는다. 닿은 섬의 다음 섬은 보이기만 한다(칸이 파여 뭍이 그려지지만 걷지 못한다). 전부 시작값이며 플레이로 튠한다(값은 밸런스방).",
+    "land: 뭍(걷는 네모) x0 y0 x1 y1(0번은 입구 줄에 잘린다). bridge: 앞 섬에서 이 섬으로 건너는 다리 네모(양쪽 뭍과 0.3씩 겹친다, 길찾기 여유) · cost 코인 · fish 다리 위에서 던지면 무는 물고기(없으면 섬 것). fish: 섬에서 던지면 무는 물고기(FishTable id)와 chance 비중.",
+    "seats: 좌대 자리(뭍 가운데에서 dx, 뭍 아랫변 위 FishingConfigTable seatBack)와 놓는 값. 놓은 좌대마다 광장 손님 한 명이 앉아 낚는다. pay: 그 손님이 한 마리 낚을 때마다 내는 코인(석상 값 축복 곱).",
+    "event: 볼 것. shadow = 명물(boss, FishTable id) 그림자가 뭍 아래 물을 오가고 찌가 shadowReach 안이면 바로 문다. crate = 상자가 떠내려와 끌어내면 코인(FishingConfigTable crate*). decor: 둑 소품(Sprites/World/Fishing/bank_* · water_*, 발끝 피벗) 자리. 길을 막지 않는 장식.",
+    "version 1 (2026-10-14, 설계 61): FishingStretchTable(설계 53 가로 구간)을 대체. 갈대섬(처음 2칸) → 바위섬(다리 2,500 · 그림자 왕메기) → 유목섬(다리 8,000 · 상자). 사용자 「전제 C · 곳 셋 · 한쪽으로만」.",
+    "2026-10-14 밸런스방(설계 61 값 시안 B 「손맛 우선」, 사용자 선택): pay 15 · 25 · 40 → 10 · 16 · 24, 좌대 2,000 · 4,000 · 8,000 · 16,000 → 1,500 · 3,000 · 6,000 · 12,000, 바위섬 메기 2 → 3, 유목섬 붕어 2 → 1 · 메기 2 → 3. 다리 값은 그대로. 좌대 다섯이 371/분(점원 셋 순수입 급), 다리 1은 첫 접속 55분 · 다리 2는 첫날 밤"
   ],
   "rows": [
     {
-      "id": "home",
+      "id": "reed_island",
       "index": 0,
-      "rockCost": 0,
-      "damPieces": 0,
+      "land": { "x0": -3.375, "y0": -5.6, "x1": 3.375, "y1": 0.0 },
+      "bridge": null,
       "fish": [{ "id": "crucian", "chance": 3 }, { "id": "minnow", "chance": 5 }],
-      "seats": [{ "dx": -4.6, "cost": 500 }, { "dx": 4.6, "cost": 1000 }],
-      "pay": 15
+      "seats": [{ "dx": -1.6, "cost": 500 }],
+      "pay": 10,
+      "event": null,
+      "boss": null,
+      "decor": [
+        { "sprite": "bank_reeds", "x": -2.7, "y": -5.35 },
+        { "sprite": "bank_pebbles", "x": 0.9, "y": -5.35 },
+        { "sprite": "bank_bucket", "x": 2.4, "y": -5.35 },
+        { "sprite": "water_lily", "x": -4.6, "y": -7.4 },
+        { "sprite": "water_rock", "x": 5.4, "y": -8.2 }
+      ]
     },
     {
-      "id": "down1",
+      "id": "rock_island",
       "index": 1,
-      "rockCost": 2500,
-      "damPieces": 3,
-      "fish": [{ "id": "crucian", "chance": 3 }, { "id": "catfish", "chance": 2 }],
-      "seats": [{ "dx": -3.4, "cost": 2000 }, { "dx": 3.4, "cost": 4000 }],
-      "pay": 25
+      "land": { "x0": 1.5, "y0": -10.4, "x1": 7.5, "y1": -7.6 },
+      "bridge": { "x0": 2.2, "y0": -7.9, "x1": 3.4, "y1": -5.3, "cost": 2500, "fish": [{ "id": "crucian", "chance": 1 }, { "id": "catfish", "chance": 2 }] },
+      "fish": [{ "id": "catfish", "chance": 3 }, { "id": "crucian", "chance": 2 }],
+      "seats": [{ "dx": -1.8, "cost": 1500 }, { "dx": 1.8, "cost": 3000 }],
+      "pay": 16,
+      "event": "shadow",
+      "boss": "king_catfish",
+      "decor": [
+        { "sprite": "bank_rock", "x": 4.4, "y": -10.15 },
+        { "sprite": "bank_pebbles", "x": 5.5, "y": -10.15 },
+        { "sprite": "water_rock", "x": -0.6, "y": -12.6 }
+      ]
     },
     {
-      "id": "up1",
-      "index": -1,
-      "rockCost": 15000,
-      "damPieces": 5,
-      "fish": [{ "id": "catfish", "chance": 1 }],
-      "seats": [{ "dx": -3.4, "cost": 8000 }, { "dx": 3.4, "cost": 16000 }],
-      "pay": 40
+      "id": "drift_island",
+      "index": 2,
+      "land": { "x0": 11.0, "y0": -11.6, "x1": 17.0, "y1": -8.8 },
+      "bridge": { "x0": 7.2, "y0": -10.0, "x1": 11.3, "y1": -8.8, "cost": 8000, "fish": [{ "id": "catfish", "chance": 3 }] },
+      "fish": [{ "id": "crucian", "chance": 1 }, { "id": "catfish", "chance": 3 }],
+      "seats": [{ "dx": -1.8, "cost": 6000 }, { "dx": 1.8, "cost": 12000 }],
+      "pay": 24,
+      "event": "crate",
+      "boss": null,
+      "decor": [
+        { "sprite": "bank_driftwood", "x": 13.6, "y": -11.35 },
+        { "sprite": "bank_reeds", "x": 14.5, "y": -11.35 },
+        { "sprite": "water_lily", "x": 16.6, "y": -13.2 }
+      ]
     }
   ]
 }

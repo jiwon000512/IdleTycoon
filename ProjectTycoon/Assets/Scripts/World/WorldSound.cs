@@ -30,6 +30,8 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.BakeryVisitorPaid>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pay)),
                 bus.Subscribe<Events.BakeryVisitorPicked>(_ => PlayIn(m_mall.Bakery, SoundTable.k_Pick)),
                 bus.Subscribe<Events.ThingChanged>(Bus_ThingChanged),
+                // 설계 62: 편지가 우체통에 꽂히는 소리(빌림)
+                bus.Subscribe<Events.LetterArrived>(_ => PlayIn(m_mall.Plaza, SoundTable.k_Put)),
                 // 설계 47: 횟집(칼질 cut은 RestaurantView, 다 떠서 손에 dish, 문 열기 shop_open — 아트방. 담기 · 놓기 put, 꺼내기 pick, 값 pay는 빵집 소리)
                 // 설계 52 우물 낚시(소리는 그림이 올 때까지 빌린다, 털썩은 WombatView): 던지기 put · 가짜 입질 draw_tap_0 · 물었다 rod_star · 달리기 whirl · 낚음 fish_catch · 끊김 · 놓침 fish_escape
                 bus.Subscribe<Events.CastThrown>(e => PlayIn(e.Fishing, SoundTable.k_Put)),
@@ -38,9 +40,9 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.RunChanged>(e => { if (e.Running) { PlayIn(e.Fishing, SoundTable.k_Whirl); } }),
                 bus.Subscribe<Events.FishLanded>(e => PlayIn(e.Fishing, SoundTable.k_FishCatch)),
                 bus.Subscribe<Events.FishingEnded>(e => { if (e.Reason != FishingEnd.Retrieved) { PlayIn(e.Fishing, SoundTable.k_FishEscape); } }),
-                bus.Subscribe<Events.StretchOpened>(e => PlayIn(e.Fishing, SoundTable.k_Dig)),
-                bus.Subscribe<Events.DebrisPulled>(e => PlayIn(e.Fishing, SoundTable.k_Put)),
-                bus.Subscribe<Events.DamBroken>(e => PlayIn(e.Fishing, SoundTable.k_BossAppear)),
+                bus.Subscribe<Events.IslandReached>(e => PlayIn(e.Fishing, SoundTable.k_Dig)),
+                bus.Subscribe<Events.CratePulled>(e => PlayIn(e.Fishing, SoundTable.k_Put)),
+                bus.Subscribe<Events.ShadowShown>(e => PlayIn(e.Fishing, SoundTable.k_BossAppear)),
                 bus.Subscribe<Events.SeatPlaced>(e => PlayIn(e.Fishing, SoundTable.k_Place)),
                 bus.Subscribe<Events.FishingVisitorCaught>(e => PlayIn(e.Visitor.Fishing, SoundTable.k_Pay)),
                 bus.Subscribe<Events.TankFilled>(e => PlayIn(e.Tank.Area, SoundTable.k_Put)),

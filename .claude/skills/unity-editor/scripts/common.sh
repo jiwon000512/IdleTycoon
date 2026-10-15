@@ -25,7 +25,8 @@ lock_get() {
   owner=; what=; since=$(date +%s); age=0
   [ -d "$LOCK" ] || return 1
   [ -f "$LOCK/info" ] && . "$LOCK/info"
-  age=$(( $(date +%s) - $(stat -c %Y "$LOCK/info" 2>/dev/null || stat -c %Y "$LOCK") ))
+  # 잠금 폴더가 지워지는 순간 stat이 빈 값을 주면 산술 오류로 죽는다(아트방 2026-10-14) → 지금 시각으로
+  age=$(( $(date +%s) - $(stat -c %Y "$LOCK/info" 2>/dev/null || stat -c %Y "$LOCK" 2>/dev/null || date +%s) ))
 }
 lock_say() { echo "$([ "$owner" = "$ME" ] && echo 이 방 || echo 다른 방)이 $what 중($(( ($(date +%s) - since) / 60 ))분째)"; }
 lock_stale() {

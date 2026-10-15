@@ -1,11 +1,12 @@
 {
   "table": "FishTable",
-  "version": 2,
+  "version": 3,
   "notes": [
     "설계 44 물고기. 떼 물고기는 spawn 비중으로 고르고 sizes[작은 · 보통 · 큰] 중 chance 비중으로 크기를 골라 min~max 무게(× 단계 배수). 무게 = 감아야 할 양. 낚으면 item 재료가 창고로.",
     "speed: 물길을 따라 헤엄치는 속도(유닛/초).",
     "version 1 (2026-10-05, 설계 44): 처음 만듦.",
-    "version 2 (2026-10-05, 설계 46): 대물 삭제 — boss_carp 행과 boss 칸."
+    "version 2 (2026-10-05, 설계 46): 대물 삭제 — boss_carp 행과 boss 칸.",
+    "version 3 (2026-10-14, 설계 61): 명물 왕메기 king_catfish 행(바위섬 그림자, 9~14kg 한 단계, 재료 fish_king_catfish). spawn · speed는 읽지 않는 옛 칸"
   ],
   "rows": [
     {
@@ -74,6 +75,19 @@
           "min": 8.0,
           "max": 12.0,
           "chance": 0.1
+        }
+      ]
+    },
+    {
+      "id": "king_catfish",
+      "item": "fish_king_catfish",
+      "spawn": 0,
+      "speed": 0.6,
+      "sizes": [
+        {
+          "min": 9.0,
+          "max": 14.0,
+          "chance": 1.0
         }
       ]
     }

@@ -30,13 +30,12 @@ namespace ZooTycoon.Core
         public const string k_Unlock = "unlock";
         public const string k_Star = "star";
         public const string k_Open = "open";
-        public const string k_Fill = "fill";
         public const string k_Seat = "seat";
         // 설계 59: 읽은 편지 수
         public const string k_Letter = "letter";
 
         private static readonly string[] s_events = { k_Bake, k_Stock, k_Sell, k_Till, k_Plant, k_Harvest, k_Dig, k_Clean, k_Wake, k_Bless, k_Draw, k_Evaluate, k_Catch, k_Serve };
-        private static readonly string[] s_states = { k_Visit, k_Place, k_Hire, k_Unlock, k_Star, k_Open, k_Fill, k_Seat, k_Letter };
+        private static readonly string[] s_states = { k_Visit, k_Place, k_Hire, k_Unlock, k_Star, k_Open, k_Seat, k_Letter };
 
         public static bool IsKnown(string kind)
         {
@@ -97,13 +96,10 @@ namespace ZooTycoon.Core
                     return mall.Bakery.UnlockedBreads.Any(bread => bread.Id == param) || mall.Farm.UnlockedCrops.Any(crop => crop.Id == param) ? 1 : 0;
                 case k_Star:
                     return mall.Bakery.Wallet.Stars.Count(param);
+                // 설계 61: param이 낚시터 섬 id면 그 섬에 닿았나
                 case k_Open:
-                    FishingStretchTable rock = Stretch(param, mall);
-                    return (rock != null ? mall.Fishing.Opened.Contains(rock.Index) : IsAreaOpen(param, mall)) ? 1 : 0;
-                // 설계 58: 댐을 허물면 그 층이 열린다(물이 따로 차지 않는다)
-                case k_Fill:
-                    FishingStretchTable dam = Stretch(param, mall);
-                    return dam != null && mall.Fishing.Opened.Contains(dam.Index) ? 1 : 0;
+                    FishingIslandTable island = Island(param, mall);
+                    return (island != null ? mall.Fishing.Reached.Contains(island.Index) : IsAreaOpen(param, mall)) ? 1 : 0;
                 case k_Seat:
                     return mall.Fishing.Seats.Count(seat => seat.Placed);
                 case k_Letter:
@@ -165,15 +161,13 @@ namespace ZooTycoon.Core
         }
 
         // 「가기」가 데려갈 사물로 알맞나: 갈기는 안 간 밭, 심기 · 작물 열기는 빈 밭(밭 시트), 거두기는 심은 밭,
-        // 바위 · 댐은 그 걸음의 구간(param) 것(2026-10-09 리뷰: 「바위 뚫기」가 반대쪽 바위로 데려갔다)
+        // 다리 자리는 그 걸음의 섬(param) 것(2026-10-09 리뷰: 「바위 뚫기」가 반대쪽 바위로 데려갔다)
         public static bool Suits(string kind, string param, Interactable thing)
         {
             switch (thing)
             {
-                case RockInteractable rock:
-                    return param == null || rock.Stretch.Id == param;
-                case DamInteractable dam:
-                    return param == null || dam.Stretch.Id == param;
+                case BridgeInteractable bridge:
+                    return param == null || bridge.Island.Id == param;
                 // 설계 59: 광장 문은 가게마다 하나(빵집 · 횟집 · 낚시터)
                 case ShopGateInteractable gate:
                     return param == null || gate.Shop.Id == param;
@@ -195,9 +189,9 @@ namespace ZooTycoon.Core
             }
         }
 
-        private static FishingStretchTable Stretch(string id, Mall mall)
+        private static FishingIslandTable Island(string id, Mall mall)
         {
-            return mall.Bakery.Tables.GetAll<FishingStretchTable>().FirstOrDefault(stretch => stretch.Id == id);
+            return mall.Bakery.Tables.GetAll<FishingIslandTable>().FirstOrDefault(island => island.Id == id);
         }
     }
 }

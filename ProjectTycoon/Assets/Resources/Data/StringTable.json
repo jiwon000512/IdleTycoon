@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 64,
+  "version": 66,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -67,7 +67,9 @@
     "version 61 (2026-10-12): 설계 59 대화로 이어지는 시작 흐름: 편지(sender_* · letter_*) · 손님 소문(say_rumor_*) · 빵집 문 시트(row_open_bakery* · sheet_bakery_gate_*) · tag_open_item · letter_* 카드 글 · quest_q27 · q28",
     "version 62 (2026-10-12): 설계 59 ⓑ 손이 모자랄 때 + 특기",
     "version 63 (2026-10-12): 설계 59 ⓒ 점원의 부탁: letter_r_upgrade_*",
-    "version 64 (2026-10-12): 설계 58 · 60 낚시터 되돌림(사용자): 젖은 벽 · 둑 칸 · 발견 글 삭제"
+    "version 64 (2026-10-12): 설계 58 · 60 낚시터 되돌림(사용자): 젖은 벽 · 둑 칸 · 발견 글 삭제",
+    "version 65 (2026-10-14, 설계 61 지하 호수의 섬들): 바위 · 잔해 글 삭제(sheet_rock_* · row_break_rock* · tag_rock · fishing_debris_left · fishing_flooded) → 다리 시트(sheet_bridge_* · row_place_bridge* · tag_bridge) · 섬에 닿음(fishing_reached) · 섬 이름(island_<id>), quest_q20 · q21 글 바꿈",
+    "version 66 (2026-10-14, 설계 62): kind_mailbox 「우체통」"
   ],
   "rows": [
     {
@@ -1287,24 +1289,24 @@
       "ko": "놓쳤다…"
     },
     {
-      "id": "sheet_rock_title",
-      "ko": "바위벽"
+      "id": "sheet_bridge_title",
+      "ko": "다리 자리"
     },
     {
-      "id": "sheet_rock_status",
-      "ko": "뚫으면 위 웅덩이"
+      "id": "sheet_bridge_status",
+      "ko": "놓으면 저 섬으로 건너간다"
     },
     {
-      "id": "row_break_rock",
-      "ko": "바위 뚫기"
+      "id": "row_place_bridge",
+      "ko": "다리 놓기"
     },
     {
-      "id": "row_break_rock_effect",
-      "ko": "위 웅덩이가 열린다"
+      "id": "row_place_bridge_effect",
+      "ko": "{0}에 닿는다"
     },
     {
-      "id": "tag_rock",
-      "ko": "뚫기 {0}"
+      "id": "tag_bridge",
+      "ko": "다리 {0}"
     },
     {
       "id": "sheet_seat_title",
@@ -1327,12 +1329,24 @@
       "ko": "좌대 {0}"
     },
     {
-      "id": "fishing_debris_left",
-      "ko": "남은 잔해 {0}"
+      "id": "fishing_reached",
+      "ko": "{0}에 닿았다!"
     },
     {
-      "id": "fishing_flooded",
-      "ko": "물이 찼다! {0}"
+      "id": "kind_mailbox",
+      "ko": "우체통"
+    },
+    {
+      "id": "island_reed_island",
+      "ko": "갈대섬"
+    },
+    {
+      "id": "island_rock_island",
+      "ko": "바위섬"
+    },
+    {
+      "id": "island_drift_island",
+      "ko": "유목섬"
     },
     {
       "id": "quest_q01",
@@ -1412,11 +1426,11 @@
     },
     {
       "id": "quest_q20",
-      "ko": "댐 허물기"
+      "ko": "바위섬에 다리 놓기"
     },
     {
       "id": "quest_q21",
-      "ko": "바위 뚫기"
+      "ko": "그림자를 보고 던져 왕메기 잡기"
     },
     {
       "id": "quest_q22",

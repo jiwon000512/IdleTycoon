@@ -1,6 +1,6 @@
 {
   "table": "InteractableTable",
-  "version": 25,
+  "version": 27,
   "notes": [
     "설계 09 v0.4 → 설계 13: 웜뱃이 다루는 사물 종류. id는 사물 클래스의 k_Id와 같다(OvenInteractable 등). 기준점은 코드: 진열대·오븐 밑변, 계산대 뒤 웜뱃 자리, 빈 자리 표지, 팔 수 있는 흙 칸 사각형, 구멍·문 아래 바닥.",
     "range: 웜뱃이 기준점에서 이 거리(유닛) 안이면 그 사물의 행동을 할 수 있다. 가장 가까운 사물이 버튼 대상. 통로(exit·door)는 바닥선에서 0.25 이상 올라간 띠(코드 PassageInteractable.k_Enter) 안에서 가로 거리만 잰다 — 거리만으로 넘어간다(2026-09-26).",
@@ -29,7 +29,9 @@
     "version 22 (2026-10-06, 설계 47 수조 횟집): tank(수조, 채우기 auto · 용량 업그레이드, 앞에 손님 자리) · cutting_board(둥근 도마, 뒤 worker 자리 · 뜨기 속도 업그레이드) · dining_table(작은 탁자, 좌우 customer 자리 = 앉는 자리 · 접시 놓기 auto) · shop_gate(닫힌 가게 문 앞, 돋보기 → 횟집 열기 시트). 값은 시작값. 같은 날 tank에 take_fish, cutting_board에 place_fish(웜뱃이 수조에서 물고기를 꺼내 도마에 놓는다).",
     "version 23 (2026-10-06, 설계 49 물때 디펜스): fishing_hut에서 stage_up 삭제(행동 open · hut_upgrade).",
     "version 24 (2026-10-07, 설계 52 우물 낚시 1회차): 디펜스 사물 넷(stake · stream_end · stream_bank · fishing_hut) 삭제, water(강: 물 전체가 사물 하나, 물가 0.9 안에서 던지기 · 낚아채기 · 감기) 추가. 점원 자리는 2회차(알바)에.",
-    "version 25 (2026-10-07): 설계 53 낚시터 넓히기 — rock(열린 낚시터 끝 바위벽, 뚫기 시트) · dam(물속 잔해 댐, 끌어내기 · 잔해 줄다리기 동안 감기, 물보다 먼저 대상) · seat(좌대 자리, 놓기 시트)."
+    "version 25 (2026-10-07): 설계 53 낚시터 넓히기 — rock(열린 낚시터 끝 바위벽, 뚫기 시트) · dam(물속 잔해 댐, 끌어내기 · 잔해 줄다리기 동안 감기, 물보다 먼저 대상) · seat(좌대 자리, 놓기 시트).",
+    "version 26 (2026-10-14, 설계 61 지하 호수의 섬들): rock(바위) · dam(댐) 삭제 → bridge(다리 자리, 다리 네모 곁 0.6 · open → place_bridge 시트) · crate(떠내려온 상자, 뭍 아랫변까지 세운 네모 1.2 · pull_debris · reel)",
+    "version 27 (2026-10-14, 설계 62 우편함 알림): mailbox(광장 우체통, 길을 막는 고정 사물 · read_mail 버튼)"
   ],
   "rows": [
     {
@@ -228,6 +230,15 @@
       ]
     },
     {
+      "id": "mailbox",
+      "range": 1.0,
+      "actions": ["read_mail"],
+      "upgrade": null,
+      "halfWidth": 0.35,
+      "depth": 0.3,
+      "spots": []
+    },
+    {
       "id": "merchant",
       "range": 1.0,
       "actions": [
@@ -308,14 +319,14 @@
       "upgrade": null
     },
     {
-      "id": "rock",
-      "range": 0.5,
-      "actions": ["open_dig", "break_rock"],
+      "id": "bridge",
+      "range": 0.6,
+      "actions": ["open", "place_bridge"],
       "upgrade": null
     },
     {
-      "id": "dam",
-      "range": 1.0,
+      "id": "crate",
+      "range": 1.2,
       "actions": ["pull_debris", "reel"],
       "upgrade": null
     },

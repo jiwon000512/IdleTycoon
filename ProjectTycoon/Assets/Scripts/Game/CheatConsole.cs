@@ -56,12 +56,13 @@ namespace ZooTycoon.Game
             Add("횟집", new[] { Opt("열기(무료, 별이 모자라면 평가 통과)", OpenRestaurant) });
             // 설계 52: 던진 줄을 지금 물게 한다(입질을 안 기다리고 줄다리기 시험)
             Add("낚시터", new[] { Opt("지금 물게", BiteNow) });
-            // 설계 53 넓히기
+            // 설계 61 섬들
             Add("낚시터 넓히기", new[]
             {
-                Opt("바위 뚫기(무료)", () => Mall.Fishing.OpenNextFree() ? "다음 구간 땅이 열렸다" : "뚫을 바위가 없다"),
-                Opt("댐 허물기", () => Mall.Fishing.BreakDamNow() ? "물이 찼다" : "허물 댐이 없다"),
+                Opt("다리 놓기(무료)", () => Mall.Fishing.ReachNextFree() ? "다음 섬에 닿았다" : "놓을 다리가 없다"),
                 Opt("좌대 놓기(무료)", () => Mall.Fishing.PlaceSeatFree() ? "좌대를 놓았다" : "놓을 좌대 자리가 없다"),
+                Opt("그림자 지금", () => Mall.Fishing.ShowShadowNow() ? "그림자가 나온다" : "그림자 섬에 닿지 않았다"),
+                Opt("상자 지금", () => Mall.Fishing.SpawnCrateNow() ? "상자가 떠내려온다" : "상자 섬에 닿지 않았다"),
                 Opt("손님 부르기", CallFishingCustomer),
             });
             // 설계 54: 퀘스트 · 오늘의 일

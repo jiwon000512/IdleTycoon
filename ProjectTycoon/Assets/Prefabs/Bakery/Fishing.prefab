@@ -641,6 +641,7 @@ MonoBehaviour:
   - {fileID: 2800000, guid: fe0044dda960b9849965e1ba4c2e22e0, type: 3}
   m_streamFace: {fileID: 2800000, guid: dd1107fb60d98ac418a11cb31c603548, type: 3}
   m_bank: {fileID: 21300000, guid: 1a4955373a3cddb45b5f2d11e9f9ef2e, type: 3}
+  m_bankStrips: []
   m_props:
   - {fileID: 21300000, guid: 8d8cd98d6aa3de047b32b4ea0aba91ec, type: 3}
   - {fileID: 21300000, guid: 4d8cfd79b775ece459b269342a0c7597, type: 3}
@@ -649,20 +650,13 @@ MonoBehaviour:
   - {fileID: 21300000, guid: fa1bec6dd48dde847aea90f50407f66c, type: 3}
   - {fileID: 21300000, guid: bbf35618d30b8cb4282975bdfe64d383, type: 3}
   - {fileID: 21300000, guid: df0231f378a3d9b49b8de41999f77505, type: 3}
-  m_rockWall: {fileID: 21300000, guid: c1b22801c52b9094e9075aad83e119ff, type: 3}
-  m_dams:
-  - {fileID: 21300000, guid: b62a0ca90dfd2ba40a4bd1689bceecee, type: 3}
-  - {fileID: 21300000, guid: 52fed168336d4ef4592704d11a7a2665, type: 3}
-  - {fileID: 21300000, guid: ef7055b0a54d42144b4c470626dc308c, type: 3}
+  m_bridge: {fileID: 21300000, guid: 709d390408386ff49abd9309955b876c, type: 3}
+  m_bridgeSide: {fileID: 21300000, guid: b6772d95e83e45348a43d8376b35b7c8, type: 3}
   m_seat: {fileID: 21300000, guid: 4bb6aff7fd1dddd4d84ec7ed8e8bc43c, type: 3}
+  m_crate: {fileID: 21300000, guid: 301dc43ac8a853a4bb5ab177b3be04eb, type: 3}
   m_debris:
   - {fileID: 21300000, guid: da92847c32a804e4282422fc120fec41, type: 3}
   - {fileID: 21300000, guid: 3030b7f2792a5744e917393aa54682f9, type: 3}
-  m_falls:
-  - {fileID: 21300000, guid: 1c7bb4442b827234d9f6a576a258209b, type: 3}
-  - {fileID: 21300000, guid: 6fe6111383760b64ea8469195f5def6b, type: 3}
-  - {fileID: 21300000, guid: fffd2f974b80e5344a6ecf0cf0640c70, type: 3}
-  - {fileID: 21300000, guid: 78f38f75c04a90d419addf8d2e33996d, type: 3}
   m_fishSwim:
   - {fileID: 21300000, guid: b53a26b567f0bb441af2e6be39ec787a, type: 3}
   - {fileID: 21300000, guid: c65de0d930724aa4cb44df5097cfcdcd, type: 3}

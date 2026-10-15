@@ -77,7 +77,8 @@ namespace ZooTycoon.Core
 
         public float Step => m_step;
 
-        public BurrowNav(BurrowShape.Result shape, IReadOnlyList<NavRect> blocked)
+        // 설계 61: allowed가 있으면 걷는 땅은 그 네모들(합집합) 안이기도 해야 한다(낚시터 섬 뭍 · 다리 — 그 밖의 굴 바닥은 물)
+        public BurrowNav(BurrowShape.Result shape, IReadOnlyList<NavRect> blocked, IReadOnlyList<NavRect> allowed = null)
         {
             float pixelsPerUnit = BurrowShape.k_PixelsPerUnit;
             float clearance = k_Clearance;
@@ -99,7 +100,7 @@ namespace ZooTycoon.Core
                 for (int i = 0; i < m_width; i++)
                 {
                     Vector2 p = NodePosition(i, j);
-                    m_walkable[j * m_width + i] = OnFloor(shape, pixelsPerUnit, p, clearance) && !IsBlocked(blocked, p, clearance);
+                    m_walkable[j * m_width + i] = OnFloor(shape, pixelsPerUnit, p, clearance) && !IsBlocked(blocked, p, clearance) && (allowed == null || OnAllowed(allowed, p, clearance));
                 }
             }
 
@@ -476,6 +477,33 @@ namespace ZooTycoon.Core
             int x = (int)Math.Floor(p.X * ppu) - shape.OriginX;
             int y = (int)Math.Floor(-p.Y * ppu) - shape.OriginY;
             return x >= 0 && y >= 0 && x < shape.Width && y < shape.Height && shape.IsFloor(x, y);
+        }
+
+        // 가운데와 둘레 8점이 모두 어느 allowed 네모 안인가(네모가 겹치거나 맞닿은 곳도 이어진다)
+        private static bool OnAllowed(IReadOnlyList<NavRect> allowed, Vector2 p, float clearance)
+        {
+            for (int k = -1; k < 8; k++)
+            {
+                double angle = k * Math.PI / 4d;
+                Vector2 q = k < 0 ? p : p + new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * clearance;
+                bool inside = false;
+
+                foreach (NavRect rect in allowed)
+                {
+                    if (q.X >= rect.XMin && q.X <= rect.XMax && q.Y >= rect.YMin && q.Y <= rect.YMax)
+                    {
+                        inside = true;
+                        break;
+                    }
+                }
+
+                if (!inside)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static bool IsBlocked(IReadOnlyList<NavRect> blocked, Vector2 p, float clearance)

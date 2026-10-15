@@ -137,9 +137,9 @@ namespace ZooTycoon.UI
                 case ShopGateInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_gate_title"), m_tables.Text("sheet_gate_status"));
                     break;
-                // 설계 53: 낚시터 끝 바위 · 좌대 자리
-                case RockInteractable _:
-                    m_view.SetHeader(m_tables.Text("sheet_rock_title"), m_tables.Text("sheet_rock_status"));
+                // 설계 61: 낚시터 다리 자리 · 좌대 자리
+                case BridgeInteractable _:
+                    m_view.SetHeader(m_tables.Text("sheet_bridge_title"), m_tables.Text("sheet_bridge_status"));
                     break;
                 case SeatInteractable _:
                     m_view.SetHeader(m_tables.Text("sheet_seat_title"), m_tables.Text("sheet_seat_status"));
@@ -279,11 +279,11 @@ namespace ZooTycoon.UI
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
-                case ActionTable.k_BreakRock:
+                case ActionTable.k_PlaceBridge:
                     return new SheetRow
                     {
-                        Name = m_tables.Text("row_break_rock"),
-                        Effect = m_tables.Text("row_break_rock_effect"),
+                        Name = m_tables.Text("row_place_bridge"),
+                        Effect = m_tables.Format("row_place_bridge_effect", m_tables.Text("island_" + ((BridgeInteractable)m_target).Island.Id)),
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };
@@ -291,7 +291,7 @@ namespace ZooTycoon.UI
                     return new SheetRow
                     {
                         Name = m_tables.Text("row_place_seat"),
-                        Effect = m_tables.Format("row_place_seat_effect", ((SeatInteractable)m_target).Stretch.Pay.ToString("0", CultureInfo.InvariantCulture)),
+                        Effect = m_tables.Format("row_place_seat_effect", ((SeatInteractable)m_target).Island.Pay.ToString("0", CultureInfo.InvariantCulture)),
                         Cost = BigNumberFormatter.Format(option.Cost),
                         State = RowState(option.State),
                     };

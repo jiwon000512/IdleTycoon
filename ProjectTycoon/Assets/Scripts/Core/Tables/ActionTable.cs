@@ -33,7 +33,7 @@ namespace ZooTycoon.Core
         public const string k_Strike = "strike";
         public const string k_Reel = "reel";
         // 설계 53 낚시터 넓히기: 바위 뚫기(시트) · 댐 잔해 끌어내기(버튼) · 좌대 놓기(시트)
-        public const string k_BreakRock = "break_rock";
+        public const string k_PlaceBridge = "place_bridge";
         public const string k_PullDebris = "pull_debris";
         public const string k_PlaceSeat = "place_seat";
         // 설계 22: 딴짓 중인 점원 깨우기
@@ -50,6 +50,8 @@ namespace ZooTycoon.Core
         public const string k_Statue = "statue";
         // 설계 34: 광장 행상에게 말 걸기(버튼, 인사 뒤 뽑기 팝업)
         public const string k_Talk = "talk";
+        // 설계 62: 우체통 편지 읽기
+        public const string k_ReadMail = "read_mail";
         // 설계 44 · 46: 낚시터 말뚝(대 사기 시트 열기 · 대 사기 칩 · 열기 · 월척 털썩)과 물가(엉덩이 쿵), 미끼 노점(업그레이드 줄)
         // 설계 45: 낚시터 막다른 끝 앞에서 물길 한 칸 더 파기
         // 설계 47 횟집: 수조 채우기 · 탁자에 접시 놓기(auto) · 광장 문 앞 횟집 열기(시트)

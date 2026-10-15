@@ -51,7 +51,8 @@ namespace Balance
             BakeryArea b = Bakery;
             BreadTable bread = b.NextBread;
 
-            if (bread != null)
+            // 설계 59: 빵집 문이 닫혀 있으면(새 게임) 빵집 것은 사지 않는다
+            if (bread != null && b.GateOpen)
             {
                 yield return new Goal
                 {
@@ -66,7 +67,7 @@ namespace Balance
                 };
             }
 
-            foreach (string kind in new[] { ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id })
+            foreach (string kind in new[] { ShelfInteractable.k_Id, OvenInteractable.k_Id, CounterInteractable.k_Id }.Where(_ => b.GateOpen))
             {
                 if (!b.IsMaxed(kind) && !b.IsCapped(kind))
                 {
@@ -102,7 +103,7 @@ namespace Balance
             }
 
             // 점원은 알약이 「점원 뽑기」를 알려 준 뒤부터
-            foreach (WombatArea area in new WombatArea[] { b }.Concat(m_sim.Mall.Farms.Where(f => f.IsOpen)).Where(_ => Knows(GoalCounter.k_Hire, null)))
+            foreach (WombatArea area in new WombatArea[] { b }.Concat(m_sim.Mall.Farms.Where(f => f.IsOpen)).Where(_ => Knows(GoalCounter.k_Hire, null)).Where(area => area != b || b.GateOpen))
             {
                 foreach (Interactable slot in area.ClerkSlots.Where(s => area.CanStaff(s) && area.ClerkOf(s) == null))
                 {
@@ -120,19 +121,14 @@ namespace Balance
                 yield break;
             }
 
-            foreach (DamInteractable dam in f.Things.OfType<DamInteractable>())
+            foreach (BridgeInteractable bridge in f.Things.OfType<BridgeInteractable>())
             {
-                yield return new Goal { Name = $"댐 {dam.Stretch.Id}", Cost = 0d, Buy = () => Dam(dam) };
-            }
-
-            foreach (RockInteractable rock in f.Things.OfType<RockInteractable>())
-            {
-                yield return new Goal { Name = $"바위 {rock.Stretch.Id}", Cost = rock.Stretch.RockCost, Buy = () => Rock(rock) };
+                yield return new Goal { Name = $"다리 {bridge.Island.Id}", Cost = bridge.Island.Bridge.Cost, Buy = () => Bridge(bridge) };
             }
 
             foreach (SeatInteractable seat in f.Seats.Where(s => !s.Placed))
             {
-                yield return new Goal { Name = $"좌대 {seat.Stretch.Id}", Cost = seat.Row.Cost, Buy = () => Seat(seat) };
+                yield return new Goal { Name = $"좌대 {seat.Island.Id}", Cost = seat.Row.Cost, Buy = () => Seat(seat) };
             }
 
             RestaurantArea r = m_sim.Restaurant;
@@ -417,7 +413,8 @@ namespace Balance
             }
         }
 
-        private IEnumerable<int> Rock(RockInteractable rock)
+        // 다리 놓기(설계 61): 앞 섬 뭍에서 다리 네모에 닿는 자리에 서서 시트 줄을 누른다
+        private IEnumerable<int> Bridge(BridgeInteractable bridge)
         {
             FishingArea f = m_sim.Fishing;
 
@@ -426,10 +423,11 @@ namespace Balance
                 yield return 0;
             }
 
-            int side = rock.Side;
-            Vector2 stand = f.Layout.Nav.Snap(new Vector2(f.Layout.InnerEdge(rock.Stretch.Index) - side * 0.5f, f.Layout.BankY + 0.4f));
+            NavRect land = f.Layout.LandOf(bridge.Island.Index - 1);
+            Vector2 center = bridge.Position;
+            Vector2 stand = new Vector2(Math.Clamp(center.X, land.XMin + 0.3f, land.XMax - 0.3f), Math.Clamp(center.Y, land.YMin + 0.3f, land.YMax - 0.3f));
 
-            foreach (int _ in m_sim.Walk(f.Layout.Nav, stand))
+            foreach (int _ in m_sim.Walk(f.Layout.Nav, f.Layout.Nav.Snap(stand)))
             {
                 yield return 0;
             }
@@ -439,50 +437,29 @@ namespace Balance
                 yield return 0;
             }
 
-            f.TryChoose(ActionTable.k_BreakRock, rock, null);
+            f.TryChoose(ActionTable.k_PlaceBridge, bridge, null);
         }
 
-        private IEnumerable<int> Dam(DamInteractable dam)
+        // 명물(설계 61): 그림자 섬 둑 가운데에서 평소처럼 낚다가 그림자가 보이면 찌가 닿을 때 던진다. 한 번 나타나는 간격 + 보이는 시간만큼
+        private IEnumerable<int> CatchBoss()
         {
             FishingArea f = m_sim.Fishing;
+            FishingIslandTable island = f.EventIsland(FishingIslandTable.k_EventShadow);
 
             foreach (int _ in m_sim.GoTo(FishingArea.k_Id))
             {
                 yield return 0;
             }
 
-            int side = Math.Sign(dam.Stretch.Index);
-            Vector2 stand = f.Layout.Nav.Snap(new Vector2(f.Layout.InnerEdge(dam.Stretch.Index) - side * 0.4f, f.Layout.BankY + 0.4f));
-
-            foreach (int _ in m_sim.Walk(f.Layout.Nav, stand))
+            foreach (int _ in m_sim.ToBank(island.Index))
             {
                 yield return 0;
             }
 
-            double runChanged = 0d;
-            bool lastRunning = false;
-
-            for (double t = 0d; t < 180d && f.Things.Contains(dam); t += Sim.Dt)
+            foreach (int _ in m_sim.Fish(f.Config.ShadowEvery + f.Config.ShadowSeconds + 30d, boss: true))
             {
-                if (f.Phase == FishingPhase.Idle && !m_sim.Wombat.Busy && f.TargetAction?.Id == ActionTable.k_PullDebris)
-                {
-                    f.TryInteract();
-                }
-                else if (f.Phase == FishingPhase.Tug)
-                {
-                    if (f.Running != lastRunning)
-                    {
-                        lastRunning = f.Running;
-                        runChanged = m_sim.Time;
-                    }
-
-                    m_sim.Wombat.SetHolding(m_sim.Time - runChanged >= 0.2 ? !f.Running : f.Running);
-                }
-
                 yield return 0;
             }
-
-            m_sim.Wombat.SetHolding(false);
         }
 
         private IEnumerable<int> Seat(SeatInteractable seat)
@@ -509,12 +486,30 @@ namespace Balance
 
         private IEnumerable<int> OpenRestaurant()
         {
+            return OpenGate(m_sim.Restaurant);
+        }
+
+        // 편지 읽기(설계 59): 온 편지를 다 읽는다(동봉 코인 · 재료가 들어온다)
+        private IEnumerable<int> ReadMail()
+        {
+            foreach (Letter letter in m_sim.Mall.Mailbox.Unread.ToList())
+            {
+                m_sim.Mall.Mailbox.TryRead(letter);
+                m_sim.Add("letters", 1);
+            }
+
+            return m_sim.Wait(Sim.Tap);
+        }
+
+        // 광장 문 열기(설계 59): 그 가게 문 앞 사물에서 시트 줄을 누른다(빵집은 밀, 횟집은 코인)
+        private IEnumerable<int> OpenGate(IGated shop)
+        {
             foreach (int _ in m_sim.GoTo(PlazaArea.k_Id))
             {
                 yield return 0;
             }
 
-            ShopGateInteractable gate = m_sim.Plaza.Gates.FirstOrDefault();
+            ShopGateInteractable gate = m_sim.Plaza.Gates.FirstOrDefault(g => g.Shop == shop);
 
             if (gate == null)
             {
@@ -552,6 +547,17 @@ namespace Balance
         {
             BakeryArea b = Bakery;
             Crops();
+
+            // 설계 59: 빵집 문이 닫혀 있으면(새 게임) 농장 일만
+            if (!b.GateOpen)
+            {
+                foreach (int _ in FarmTrip())
+                {
+                    yield return 0;
+                }
+
+                yield break;
+            }
 
             // 1. 든 빵부터 내려놓는다
             if (Worker.Hands.Count > 0 && m_sim.FillTarget(Worker.Hands.Bread) != null)
@@ -694,7 +700,7 @@ namespace Balance
 
             if (Order >= 2)
             {
-                MoveBefore(chain, "좌대 놓기", "바위 뚫기");
+                MoveBefore(chain, "좌대 놓기", "다리 놓기");
             }
 
             return chain;
@@ -766,10 +772,9 @@ namespace Balance
                     Act = () => AtOven(() => b.TryChoose(ActionTable.k_Bake, b.Ovens[0], b.NextBread.Id)) },
                 new Step { Chapter = "낚시", Name = "낚시터 가기", Done = () => p.Seen.Contains("fishing"), Act = () => m_sim.GoTo(FishingArea.k_Id) },
                 new Step { Chapter = "낚시", Name = "물고기 낚기", Done = () => p.Seen.Contains("fish"), Act = () => FishOne() },
-                new Step { Chapter = "낚시", Name = "바위 뚫기", Done = () => f.Opened.Count >= 2,
-                    Ready = () => afford(f.Things.OfType<RockInteractable>().Min(rk => rk.Stretch.RockCost)),
-                    Need = () => "코인", Cost = () => f.Things.OfType<RockInteractable>().Min(rk => rk.Stretch.RockCost), Act = () => Rock(f.Things.OfType<RockInteractable>().OrderBy(rk => rk.Stretch.RockCost).First()) },
-                new Step { Chapter = "낚시", Name = "댐 허물기", Done = () => f.Flooded.Count >= 2, Act = () => Dam(f.Things.OfType<DamInteractable>().First()) },
+                new Step { Chapter = "낚시", Name = "다리 놓기", Done = () => f.Reached.Count >= 2,
+                    Ready = () => afford(f.Things.OfType<BridgeInteractable>().Min(br => br.Island.Bridge.Cost)),
+                    Need = () => "코인", Cost = () => f.Things.OfType<BridgeInteractable>().Min(br => br.Island.Bridge.Cost), Act = () => Bridge(f.Things.OfType<BridgeInteractable>().OrderBy(br => br.Island.Bridge.Cost).First()) },
                 new Step { Chapter = "낚시", Name = "좌대 놓기", Done = () => f.Seats.Any(s => s.Placed),
                     Ready = () => afford(f.Seats.Where(s => !s.Placed).Min(s => s.Row.Cost)), Need = () => "코인", Cost = () => f.Seats.Where(s => !s.Placed).Min(s => s.Row.Cost),
                     Act = () => Seat(f.Seats.Where(s => !s.Placed).OrderBy(s => s.Row.Cost).First()) },
@@ -990,6 +995,12 @@ namespace Balance
                 case GoalCounter.k_Visit:
                     step.Act = () => m_sim.GoTo(q.Param);
                     break;
+                // 설계 59: 편지가 오면 읽는다(카드가 뜨면 누르는 손)
+                case GoalCounter.k_Letter:
+                    step.Ready = () => m_sim.Mall.Mailbox.Unread.Any();
+                    step.Need = () => "편지";
+                    step.Act = ReadMail;
+                    break;
                 case GoalCounter.k_Plant:
                     step.Ready = () => farm.Plots.Any(pl => pl.IsTilled);
                     step.Need = () => "밭";
@@ -1020,10 +1031,30 @@ namespace Balance
                     step.Act = () => Place(b, b.Grid, b.Layout.Cells, q.Param);
                     break;
                 case GoalCounter.k_Hire:
-                    step.Ready = () => afford(b.ClerkConfig.RefreshCost + 60d);
+                    // 설계 59: param은 역할(counter · oven · barn). 그 역할의 빈자리에 뽑는다
+                    (WombatArea area, Interactable slot) hireAt()
+                    {
+                        if (q.Param == BarnInteractable.k_Id)
+                        {
+                            return (farm, farm.Barn);
+                        }
+
+                        if (q.Param == OvenInteractable.k_Id)
+                        {
+                            return (b, b.Ovens.FirstOrDefault(o => b.ClerkOf(o) == null) ?? b.Ovens[0]);
+                        }
+
+                        return (b, b.Counters.FirstOrDefault(c => b.ClerkOf(c) == null) ?? b.Counter);
+                    }
+
+                    step.Ready = () => hireAt().area.ClerkOf(hireAt().slot) == null && afford(b.ClerkConfig.RefreshCost + 60d);
                     step.Need = () => coins(b.ClerkConfig.RefreshCost + 60d);
                     step.Cost = () => b.ClerkConfig.RefreshCost + 60d;
-                    step.Act = () => Hire(b, b.Counter);
+                    step.Act = () =>
+                    {
+                        (WombatArea area, Interactable slot) at = hireAt();
+                        return Hire(at.area, at.slot);
+                    };
                     break;
                 case GoalCounter.k_Star:
                 case GoalCounter.k_Evaluate:
@@ -1075,32 +1106,39 @@ namespace Balance
 
                     break;
                 case GoalCounter.k_Catch:
-                    step.Act = FishOne;
-                    break;
-                case GoalCounter.k_Open:
-                    RockInteractable rock() => f.Things.OfType<RockInteractable>().FirstOrDefault(rk => rk.Stretch.Id == q.Param);
-
-                    if (q.Param == r.Id)
+                    if (q.Param == null)
                     {
-                        step.Ready = () => !r.StarLocked && afford(r.Config.OpenCost);
-                        step.Need = () => r.StarLocked ? "빵집 ★5" : coins(r.Config.OpenCost);
-                        step.Cost = () => r.Config.OpenCost;
-                        step.Act = OpenRestaurant;
+                        step.Act = FishOne;
                     }
                     else
                     {
-                        step.Ready = () => rock() != null && afford(rock().Stretch.RockCost);
-                        step.Need = () => coins(rock()?.Stretch.RockCost ?? 0d);
-                        step.Cost = () => rock()?.Stretch.RockCost ?? 0d;
-                        step.Act = () => Rock(rock());
+                        // 명물(설계 61): 그림자 섬에 닿아 있어야 한다
+                        step.Ready = () => f.EventIsland(FishingIslandTable.k_EventShadow)?.Boss == q.Param;
+                        step.Need = () => "그림자 섬";
+                        step.Act = CatchBoss;
                     }
 
                     break;
-                case GoalCounter.k_Fill:
-                    DamInteractable dam() => f.Things.OfType<DamInteractable>().FirstOrDefault(d => d.Stretch.Id == q.Param);
-                    step.Ready = () => dam() != null;
-                    step.Need = () => "댐";
-                    step.Act = () => Dam(dam());
+                case GoalCounter.k_Open:
+                    BridgeInteractable bridge() => f.Things.OfType<BridgeInteractable>().FirstOrDefault(br => br.Island.Id == q.Param);
+                    IGated gated = m_sim.Mall.Areas.FirstOrDefault(a => a.Id == q.Param) as IGated;
+
+                    // 설계 59: 광장 문(빵집 = 밀 5 · 횟집 = 빵집 ★5 + 코인)
+                    if (gated != null)
+                    {
+                        step.Ready = () => !gated.GateLocked && (gated.GateItem != null ? State.Count(gated.GateItem) >= gated.GateCount : afford(gated.GateCost));
+                        step.Need = () => gated.GateLocked ? "빵집 ★5" : gated.GateItem ?? coins(gated.GateCost);
+                        step.Cost = () => gated.GateItem != null ? 0d : gated.GateCost;
+                        step.Act = () => OpenGate(gated);
+                    }
+                    else
+                    {
+                        step.Ready = () => bridge() != null && afford(bridge().Island.Bridge.Cost);
+                        step.Need = () => bridge() == null ? "앞 다리" : coins(bridge().Island.Bridge.Cost);
+                        step.Cost = () => bridge()?.Island.Bridge.Cost ?? 0d;
+                        step.Act = () => Bridge(bridge());
+                    }
+
                     break;
                 case GoalCounter.k_Seat:
                     step.Ready = () => f.Seats.Any(s => !s.Placed) && afford(f.Seats.Where(s => !s.Placed).Min(s => s.Row.Cost));
@@ -1169,7 +1207,7 @@ namespace Balance
         // 기다리는 동안 버는 일: 밀이 모자라면 농장, 아니면 빵집 일 하나
         private IEnumerable<int> Earn()
         {
-            return m_sim.Farm.ClerkOf(m_sim.Farm.Barn) == null && NeedsFarm() ? FarmTrip() : BakeryWork();
+            return !Bakery.GateOpen || m_sim.Farm.ClerkOf(m_sim.Farm.Barn) == null && NeedsFarm() ? FarmTrip() : BakeryWork();
         }
 
         private IEnumerable<int> Stroll()
@@ -1521,10 +1559,11 @@ namespace Balance
             m_sim.Focus = null;
         }
 
+        // 닿은 섬 중 가장 먼 섬 둑에서 낚는다(값이 좋은 물고기 · 상자)
         private IEnumerable<int> Fishing(double seconds)
         {
             FishingArea f = m_sim.Fishing;
-            int stretch = f.Flooded.OrderBy(s => Math.Abs(s)).Last();
+            int island = f.Reached.Max();
             double start = m_sim.Time;
 
             foreach (int _ in m_sim.GoTo(FishingArea.k_Id))
@@ -1532,7 +1571,7 @@ namespace Balance
                 yield return 0;
             }
 
-            foreach (int _ in m_sim.ToBank(stretch))
+            foreach (int _ in m_sim.ToBank(island))
             {
                 yield return 0;
             }
@@ -1608,6 +1647,12 @@ namespace Balance
             {
                 Sim sim = new Sim(seed * 1000 + index, edit, s_day1.AddMinutes(start));
                 OfflineReport offline = null;
+
+                // 설계 59: 새 게임은 광장에서 빵집 문이 닫힌 채(퀘스트를 따르는 손만. 보통 플레이 손은 옛 흐름대로 빵집부터)
+                if (save == null && quests)
+                {
+                    sim.Mall.StartNew();
+                }
 
                 if (save != null)
                 {
@@ -1726,6 +1771,14 @@ namespace Balance
 
                     if (quests)
                     {
+                        // 설계 59: 온 편지는 카드가 뜨는 대로 읽는다(동봉 코인은 letterCoins)
+                        foreach (Letter letter in sim.Mall.Mailbox.Unread.ToList())
+                        {
+                            double had = sim.State.Coins;
+                            sim.Mall.Mailbox.TryRead(letter);
+                            sim.Add("letterCoins", sim.State.Coins - had);
+                        }
+
                         double before = sim.State.Coins;
 
                         for (int i = 0; i < board.Missions.Count; i++)
@@ -1749,7 +1802,7 @@ namespace Balance
 
                     player.NextGoal(out Player.Goal next);
                     coinsLine.Add(new { min = Math.Round(start + online / 60d, 1), coins = Math.Round(sim.State.Coins), next = next?.Name, nextCost = next == null ? 0d : Math.Round(next.Cost), stars = sim.State.Stars.Count(BakeryArea.k_Id), gems = sim.State.Count("gem"), wheat = sim.State.Count("wheat"), berry = sim.State.Count("strawberry"), fish = sim.State.Count("fish_minnow") + sim.State.Count("fish_crucian") + sim.State.Count("fish_catfish"), clerks = sim.Mall.Payroll.Clerks.Count(),
-                        earned = Math.Round(sim["bakery"] + sim["tips"] + sim["restaurant"] + sim["seats"] + sim["debris"]), wages = Math.Round(sim["wages"]), quest = Math.Round(sim["questCoins"]), chest = Math.Round(sim["chestCoins"]), chapter = sim.Mall.Quests.Chapter, step = sim.Mall.Quests.Index });
+                        earned = Math.Round(sim["bakery"] + sim["tips"] + sim["restaurant"] + sim["seats"] + sim["crate"]), wages = Math.Round(sim["wages"]), quest = Math.Round(sim["questCoins"]), chest = Math.Round(sim["chestCoins"]), chapter = sim.Mall.Quests.Chapter, step = sim.Mall.Quests.Index });
                 }
 
                 sessions.Add(new

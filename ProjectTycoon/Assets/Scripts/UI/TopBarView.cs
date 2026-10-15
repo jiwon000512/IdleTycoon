@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -94,6 +95,12 @@ namespace ZooTycoon.UI
         private double m_evaluationTotal;
         private IReadOnlyList<GoalData> m_goalData;
         private float m_pillTop;
+        // 설계 62: 안 읽은 편지 되풀이 톡 · 봉투 날아오기(초 · 옆으로 휘는 폭 · 기울기)
+        private const float k_MailNagSeconds = 10f;
+        private const float k_MailFlightSeconds = 0.6f;
+        private const float k_MailFlightArc = 40f;
+        private const float k_MailFlightTilt = 12f;
+        private Coroutine m_mailNag;
 
         public bool SpentVisible => m_spentLeft > 0f;
         public QuestCard Quest => m_quest;
@@ -182,6 +189,78 @@ namespace ZooTycoon.UI
         public void PointMail()
         {
             StartCoroutine(UiFx.Pulse((RectTransform)m_mail.transform));
+        }
+
+        // 설계 62: 안 읽은 편지가 있는 동안 k_MailNagSeconds마다 타일이 톡(사용자 「알림이 왔는지 알기 힘듦」)
+        public void SetMailNag(bool on)
+        {
+            if (m_mailNag != null)
+            {
+                StopCoroutine(m_mailNag);
+                m_mailNag = null;
+            }
+
+            if (on && isActiveAndEnabled)
+            {
+                m_mailNag = StartCoroutine(MailNag());
+            }
+        }
+
+        private IEnumerator MailNag()
+        {
+            while (true)
+            {
+                yield return new WaitForSecondsRealtime(k_MailNagSeconds);
+                yield return UiFx.Pulse((RectTransform)m_mail.transform);
+            }
+        }
+
+        // 설계 62: 편지가 왔다 — 타일 그림 복사본이 화면 위 가운데에서 타일로 날아와 꽂히고 톡
+        public void FlyMailIn()
+        {
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
+            StartCoroutine(MailFlight());
+        }
+
+        private IEnumerator MailFlight()
+        {
+            RectTransform tile = (RectTransform)m_mail.transform;
+            GameObject copy = Instantiate(m_mail.gameObject, tile.parent);
+            copy.name = "MailFlight";
+
+            foreach (Button button in copy.GetComponentsInChildren<Button>(true))
+            {
+                button.enabled = false;
+            }
+
+            foreach (RedDot dot in copy.GetComponentsInChildren<RedDot>(true))
+            {
+                dot.gameObject.SetActive(false);
+            }
+
+            RectTransform flyer = (RectTransform)copy.transform;
+            flyer.SetAsLastSibling();
+            RectTransform canvas = (RectTransform)GetComponentInParent<Canvas>().rootCanvas.transform;
+            Vector3 top = canvas.TransformPoint(new Vector3(0f, canvas.rect.yMax, 0f));
+            Vector3 from = tile.parent.InverseTransformPoint(top) + Vector3.up * tile.rect.height;
+            from.x = tile.localPosition.x + k_MailFlightArc;
+            Vector3 to = tile.localPosition;
+
+            for (float t = 0f; t < k_MailFlightSeconds; t += Time.unscaledDeltaTime)
+            {
+                float k = t / k_MailFlightSeconds;
+                float ease = 1f - (1f - k) * (1f - k);
+                flyer.localPosition = Vector3.Lerp(from, to, ease) + Vector3.right * (Mathf.Sin(k * Mathf.PI) * k_MailFlightArc);
+                flyer.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(k * Mathf.PI * 2f) * k_MailFlightTilt);
+                yield return null;
+            }
+
+            Destroy(copy);
+            yield return UiFx.Pulse(tile);
         }
 
         // 설계 49: 물때 알약. value가 null이면 값 칸을 숨긴다(대물 물때의 「대물!」), pulse면 톡 튄다

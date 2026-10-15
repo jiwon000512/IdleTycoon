@@ -88,44 +88,56 @@ namespace ZooTycoon.Core
             }
         }
 
-        // 설계 53: 바위를 뚫어 구간 땅이 열렸다(강바닥은 마름)
-        public readonly struct StretchOpened
+        // 설계 61: 다리를 놓아 그 섬에 닿았다(걷는 땅 · 좌대 · 물고기, 다음 섬이 보인다)
+        public readonly struct IslandReached
         {
             public readonly FishingArea Fishing;
-            public readonly int Stretch;
+            public readonly int Island;
 
-            public StretchOpened(FishingArea fishing, int stretch)
+            public IslandReached(FishingArea fishing, int island)
             {
                 Fishing = fishing;
-                Stretch = stretch;
+                Island = island;
             }
         }
 
-        // 설계 53: 댐 잔해 한 조각을 끌어냈다(코인은 이미 지갑에). 남은 조각은 Dam.PiecesLeft
-        public readonly struct DebrisPulled
+        // 설계 61: 명물 그림자가 그 섬 아래 물에 나타났다(사라짐은 화면이 매 프레임 ShadowVisible로 읽는다)
+        public readonly struct ShadowShown
         {
             public readonly FishingArea Fishing;
-            public readonly DamInteractable Dam;
+            public readonly FishingIslandTable Island;
+
+            public ShadowShown(FishingArea fishing, FishingIslandTable island)
+            {
+                Fishing = fishing;
+                Island = island;
+            }
+        }
+
+        // 설계 61: 상자가 떠내려왔다 · 끌어냈다(코인은 이미 지갑에)
+        public readonly struct CrateDrifted
+        {
+            public readonly FishingArea Fishing;
+            public readonly CrateInteractable Crate;
+
+            public CrateDrifted(FishingArea fishing, CrateInteractable crate)
+            {
+                Fishing = fishing;
+                Crate = crate;
+            }
+        }
+
+        public readonly struct CratePulled
+        {
+            public readonly FishingArea Fishing;
+            public readonly CrateInteractable Crate;
             public readonly double Coins;
 
-            public DebrisPulled(FishingArea fishing, DamInteractable dam, double coins)
+            public CratePulled(FishingArea fishing, CrateInteractable crate, double coins)
             {
                 Fishing = fishing;
-                Dam = dam;
+                Crate = crate;
                 Coins = coins;
-            }
-        }
-
-        // 설계 53: 댐이 무너져 그 구간에 물이 찼다(새 물고기)
-        public readonly struct DamBroken
-        {
-            public readonly FishingArea Fishing;
-            public readonly int Stretch;
-
-            public DamBroken(FishingArea fishing, int stretch)
-            {
-                Fishing = fishing;
-                Stretch = stretch;
             }
         }
 

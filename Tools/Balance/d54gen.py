@@ -47,11 +47,11 @@ def cost_of(step):
                 if r["id"] == param:
                     return r["unlockCost"]
     if kind == "seat":
-        return rows("FishingStretchTable")[0]["seats"][0]["cost"]
+        return rows("FishingIslandTable")[0]["seats"][0]["cost"]
     if kind == "open":
-        for r in rows("FishingStretchTable"):
+        for r in rows("FishingIslandTable"):
             if r["id"] == param:
-                return r["rockCost"]
+                return r["bridge"]["cost"]
         return next(r for r in rows("RestaurantConfigTable") if r["id"] == param)["openCost"]
     return 0
 

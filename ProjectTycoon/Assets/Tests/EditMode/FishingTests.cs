@@ -73,10 +73,10 @@ namespace ZooTycoon.Tests
             }
         }
 
-        // 둑 위(물 바로 위)에 선다
+        // 갈대섬 뭍 아랫변(물 바로 위)에 선다
         private void AtWater()
         {
-            m_mall.Wombat.Mover.Place(new Vector2(0f, m_fishing.Water.Rect.YMax + 0.4f));
+            m_mall.Wombat.Mover.Place(new Vector2(0f, m_fishing.Layout.LandOf(0).YMin + 0.4f));
             Run(k_Dt);
             Assert.That(m_fishing.Target, Is.SameAs(m_fishing.Water), "물가가 대상");
         }
@@ -315,119 +315,272 @@ namespace ZooTycoon.Tests
             Assert.That(m_fishing.Phase, Is.EqualTo(FishingPhase.Idle), "던진 줄은 저장하지 않는다");
         }
 
-        // ---------- 설계 53 낚시터 넓히기 ----------
+        // ---------- 설계 61 지하 호수의 섬들 ----------
 
-        private FishingStretchTable Stretch(int index)
+        private FishingIslandTable Island(int index)
         {
-            return m_tables.GetAll<FishingStretchTable>().First(stretch => stretch.Index == index);
+            return m_tables.GetAll<FishingIslandTable>().First(island => island.Index == index);
         }
 
-        // 그 구간 쪽 바위 앞(둑 끝 벽 안쪽)에 서서 바위 시트의 뚫기 줄을 고른다
-        private void BreakRock(int stretch)
+        private static Vector2 Center(NavRect rect)
         {
-            float edge = m_fishing.Layout.InnerEdge(stretch);
-            m_mall.Wombat.Mover.Place(new Vector2(edge - Math.Sign(stretch) * 0.5f, m_fishing.Layout.BankY + 0.4f));
+            return new Vector2((rect.XMin + rect.XMax) / 2f, (rect.YMin + rect.YMax) / 2f);
+        }
+
+        // 앞 섬 뭍에서 다리 자리 곁에 서서 다리 시트의 놓기 줄을 고른다
+        private void PlaceBridge(int island)
+        {
+            NavRect bridge = m_fishing.Layout.BridgeOf(island);
+            NavRect from = m_fishing.Layout.LandOf(island - 1);
+            Vector2 center = Center(bridge);
+            m_mall.Wombat.Mover.Place(new Vector2(Math.Clamp(center.X, from.XMin + 0.4f, from.XMax - 0.4f), Math.Clamp(center.Y, from.YMin + 0.4f, from.YMax - 0.4f)));
             Run(k_Dt);
-            RockInteractable rock = m_fishing.Target as RockInteractable;
-            Assert.That(rock, Is.Not.Null, "바위가 대상");
-            Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_OpenDig), "버튼은 시트 열기");
-            Assert.That(m_fishing.TryChoose(ActionTable.k_BreakRock, rock, null), Is.True, "뚫기");
+            BridgeInteractable target = m_fishing.Target as BridgeInteractable;
+            Assert.That(target, Is.Not.Null, "다리 자리가 대상");
+            Assert.That(target.Island.Index, Is.EqualTo(island));
+            Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_Open), "버튼은 시트 열기");
+            Assert.That(m_fishing.TryChoose(ActionTable.k_PlaceBridge, target, null), Is.True, "다리 놓기");
             Run(m_mall.Wombat.DigSeconds + k_Dt);
         }
 
-        [Test]
-        public void BreakRock_OpensLand_RiverbedStaysDryUntilTheDam()
+        private void HookAt(Vector2 at, out Fish hooked)
         {
-            Create();
-            double coins = m_state.Coins;
-            BreakRock(1);
-            Assert.That(m_state.Coins, Is.EqualTo(coins - Stretch(1).RockCost), "바위 값");
-            Assert.That(m_fishing.Opened, Does.Contain(1));
-            float center = m_fishing.Layout.CenterOf(1);
-            float bank = m_fishing.Layout.BankY;
-            Assert.That(m_fishing.Layout.Nav.IsWalkable(new Vector2(center, bank + 1f)), Is.True, "새 둑을 걷는다");
-            Assert.That(m_fishing.Layout.Nav.IsWalkable(new Vector2(center, bank - 2f)), Is.False, "마른 강바닥은 못 걷는다");
-            Assert.That(m_fishing.Water.Rect.XMax, Is.EqualTo(m_fishing.Layout.RightOf(0)), "물은 아직 첫 구간까지");
-            Assert.That(m_fishing.Things.OfType<DamInteractable>().Count(), Is.EqualTo(1), "경계에 댐");
-            Assert.That(m_fishing.Seats.Any(s => s.Stretch.Index == 1), Is.False, "마른 구간에는 좌대 자리가 없다");
+            Fish got = null;
+            IDisposable sub = m_bus.Subscribe<Events.Hooked>(e => got = e.Fish);
+            m_mall.Wombat.Mover.Place(at);
+            Run(k_Dt);
+            Assert.That(m_fishing.Target, Is.SameAs(m_fishing.Water), "물가가 대상");
+            Press(ActionTable.k_Cast);
+            Run(BiteWait + k_Dt);
+            Press(ActionTable.k_Strike);
+            sub.Dispose();
+            hooked = got;
         }
 
-        // 댐 앞 둑에서 끌어내기 버튼 → 잔해와 줄다리기(쉴 때만 감기) → 조각을 다 빼면 그 구간에 물이 찬다
+        // 처음엔 갈대섬 + 보이기만 하는 바위섬. 다리를 놓으면 값이 빠지고 바위섬 · 다리를 걷고 유목섬이 보인다
         [Test]
-        public void Dam_PullingEveryPiece_FloodsTheStretch()
+        public void Bridge_Placed_ReachesIsland_AndRevealsNext()
         {
             Create();
-            BreakRock(1);
-            int broken = 0;
-            int pulled = 0;
-            m_bus.Subscribe<Events.DamBroken>(_ => broken++);
-            m_bus.Subscribe<Events.DebrisPulled>(_ => pulled++);
-            m_mall.Wombat.Mover.Place(new Vector2(m_fishing.Layout.InnerEdge(1) + 0.4f, m_fishing.Layout.BankY + 0.4f));
+            Assert.That(m_fishing.Reached, Is.EquivalentTo(new[] { 0 }));
+            Assert.That(m_fishing.Visible, Is.EquivalentTo(new[] { 0, 1 }), "처음엔 갈대섬 + 보이는 바위섬");
+            Vector2 rock = Center(m_fishing.Layout.LandOf(1));
+            Assert.That(m_fishing.Layout.Nav.IsWalkable(rock), Is.False, "닿기 전엔 못 걷는다");
+            Assert.That(GoalCounter.Current(GoalCounter.k_Open, "rock_island", m_mall), Is.EqualTo(0), "퀘스트: 아직 안 닿음");
+            Assert.That(m_fishing.Seats.All(seat => seat.Island.Index == 0), Is.True, "좌대 자리는 닿은 섬에만");
             double coins = m_state.Coins;
+            int reached = 0;
+            m_bus.Subscribe<Events.IslandReached>(e => reached = e.Island);
 
-            for (int i = 0; i < Stretch(1).DamPieces; i++)
+            PlaceBridge(1);
+
+            Assert.That(reached, Is.EqualTo(1));
+            Assert.That(m_state.Coins, Is.EqualTo(coins - Island(1).Bridge.Cost), "다리 값");
+            Assert.That(m_fishing.Reached, Is.EquivalentTo(new[] { 0, 1 }));
+            Assert.That(m_fishing.Visible, Is.EquivalentTo(new[] { 0, 1, 2 }), "유목섬이 보인다");
+            Assert.That(m_fishing.Layout.Nav.IsWalkable(rock), Is.True, "바위섬을 걷는다");
+            Assert.That(m_fishing.Layout.Nav.IsWalkable(Center(m_fishing.Layout.BridgeOf(1))), Is.True, "다리를 걷는다");
+            Assert.That(m_fishing.Layout.Nav.IsWalkable(Center(m_fishing.Layout.LandOf(2))), Is.False, "유목섬은 보이기만");
+            Assert.That(m_fishing.Layout.Nav.FindPath(m_fishing.Layout.HoleFloor, rock), Is.Not.Empty, "구멍에서 바위섬까지 길");
+            Assert.That(m_fishing.Things.OfType<BridgeInteractable>().Single().Island.Index, Is.EqualTo(2), "다음 다리 자리");
+            Assert.That(m_fishing.Seats.Count(seat => seat.Island.Index == 1), Is.EqualTo(Island(1).Seats.Length), "닿은 섬에 좌대 자리");
+            Assert.That(GoalCounter.Current(GoalCounter.k_Open, "rock_island", m_mall), Is.EqualTo(1), "퀘스트: 닿았다");
+        }
+
+        // 선 땅에 따라 어종 표가 바뀐다: 바위섬 뭍에서는 섬 물고기(메기 2 · 붕어 2 → 난수 0.3은 첫째), 다리 위에서는 다리 물고기(붕어 1 · 메기 2 → 첫째)
+        [Test]
+        public void Cast_OnIslandOrBridge_HooksThatPlacesFish()
+        {
+            Create();
+            PlaceBridge(1);
+            NavRect land = m_fishing.Layout.LandOf(1);
+            HookAt(new Vector2((land.XMin + land.XMax) / 2f, land.YMin + 0.4f), out Fish onIsland);
+            Assert.That(onIsland.Kind.Id, Is.EqualTo(Island(1).Fish[0].Id));
+            Tug(false);
+            Run(Config.LandSeconds + k_Dt);
+
+            HookAt(Center(m_fishing.Layout.BridgeOf(1)), out Fish onBridge);
+            Assert.That(onBridge.Kind.Id, Is.EqualTo(Island(1).Bridge.Fish[0].Id));
+            Assert.That(onBridge.Kind.Id, Is.Not.EqualTo(onIsland.Kind.Id));
+        }
+
+        // 그림자: shadowEvery 뒤 바위섬 아래 물에 나타나 오가고, 그 위 둑에서 던지면 그림자가 들어가며 명물이 입질 없이 바로 문다. 낚으면 왕메기 재료
+        [Test]
+        public void Shadow_Shows_ThenCastNearIt_HooksTheBoss()
+        {
+            Create();
+            PlaceBridge(1);
+            bool shown = false;
+            m_bus.Subscribe<Events.ShadowShown>(_ => shown = true);
+            Run(Config.ShadowEvery + k_Dt);
+            Assert.That(shown, Is.True);
+            Assert.That(m_fishing.ShadowVisible, Is.True);
+            NavRect land = m_fishing.Layout.LandOf(1);
+            Assert.That(m_fishing.ShadowPosition.Y, Is.LessThan(land.YMin), "뭍 아래 물");
+            float x = m_fishing.ShadowPosition.X;
+            Run(1d);
+            Assert.That(m_fishing.ShadowPosition.X, Is.Not.EqualTo(x), "헤엄친다");
+
+            for (double t = 0d; t < Config.ShadowSeconds && Math.Abs(m_fishing.ShadowPosition.X - (land.XMin + land.XMax) / 2f) > 0.3f; t += k_Dt)
             {
-                Run(0.5);
-                Assert.That(m_fishing.Target, Is.InstanceOf<DamInteractable>(), "댐이 물보다 먼저 대상");
-                Press(ActionTable.k_PullDebris);
-                Assert.That(m_fishing.Debris, Is.Not.Null, "잔해에 줄을 걸었다");
-                Run(k_Dt);
-                Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_Reel), "잔해 줄다리기 동안 버튼은 감기");
-                Tug(false);
-                Assert.That(pulled, Is.EqualTo(i + 1), "한 조각");
+                m_mall.Tick(k_Dt);
             }
 
-            Assert.That(broken, Is.EqualTo(1), "댐이 무너졌다");
-            Assert.That(m_fishing.Flooded, Does.Contain(1));
-            Assert.That(m_fishing.Water.Rect.XMax, Is.EqualTo(m_fishing.Layout.RightOf(1)), "물이 찼다");
-            Assert.That(m_state.Coins, Is.EqualTo(coins + Stretch(1).DamPieces * Config.DebrisCoins), "조각마다 코인");
-            Assert.That(m_fishing.Things.OfType<DamInteractable>(), Is.Empty);
-            Assert.That(m_fishing.Seats.Count(s => s.Stretch.Index == 1), Is.EqualTo(Stretch(1).Seats.Length), "물이 차면 좌대 자리");
-            Assert.That(m_state.Count(k_Item), Is.EqualTo(TestTables.k_PlentyItems), "잔해는 재료가 아니다");
+            Fish hooked = null;
+            m_bus.Subscribe<Events.Hooked>(e => hooked = e.Fish);
+            m_mall.Wombat.Mover.Place(new Vector2(m_fishing.ShadowPosition.X, land.YMin + 0.4f));
+            Run(k_Dt);
+            Press(ActionTable.k_Cast);
+            Assert.That(m_fishing.ShadowVisible, Is.False, "그림자가 찌로 들어갔다");
+            Run(Config.BiteWaitMin + k_Dt);
+            Assert.That(m_fishing.Phase, Is.EqualTo(FishingPhase.Bite), "입질 없이 바로 문다");
+            Press(ActionTable.k_Strike);
+            Assert.That(hooked.Kind.Id, Is.EqualTo(Island(1).Boss));
+            int before = m_state.Count(hooked.Kind.Item);
+            Tug(false, 180d);
+            Assert.That(m_fishing.Phase, Is.EqualTo(FishingPhase.Idle), "낚았다");
+            Assert.That(m_state.Count(hooked.Kind.Item), Is.EqualTo(before + 1), "왕메기 재료");
         }
 
-        // 잔해에 줄을 건 채 조이스틱을 움직이면 줄을 놓고 바로 걷는다(조각은 그대로)
+        // 그림자가 보여도 멀리서 던지면 보통 물고기가 걸리고 그림자는 남는다
         [Test]
-        public void Joystick_WhilePullingDebris_LetsGo()
+        public void Shadow_CastFarFromIt_HooksNormalFish_AndShadowStays()
         {
             Create();
-            BreakRock(1);
+            PlaceBridge(1);
+            Assert.That(m_fishing.ShowShadowNow(), Is.True);
+            Run(k_Dt);
+            Assert.That(m_fishing.ShadowVisible, Is.True);
+            NavRect shore = m_fishing.Layout.LandOf(0);
+            HookAt(new Vector2(-2f, shore.YMin + 0.4f), out Fish hooked);
+            Assert.That(hooked.Kind.Id, Is.Not.EqualTo(Island(1).Boss), "갈대섬 물고기");
+            Assert.That(m_fishing.ShadowVisible, Is.True, "그림자는 그대로");
+        }
+
+        // 상자는 crateSeconds가 지나면 사라지고, 끄는 동안은 떠내려가지도 사라지지도 않는다
+        [Test]
+        public void Crate_FadesAfterSeconds_AndWaitsWhilePulled()
+        {
+            Create();
+            PlaceBridge(1);
+            PlaceBridge(2);
+            Assert.That(m_fishing.SpawnCrateNow(), Is.True);
+            Run(k_Dt);
+            Assert.That(m_fishing.Crate, Is.Not.Null);
+            Run(Config.CrateSeconds + k_Dt);
+            Assert.That(m_fishing.Crate, Is.Null, "머무는 초가 지나면 사라진다");
+
+            Assert.That(m_fishing.SpawnCrateNow(), Is.True);
+            Run(k_Dt);
+            CrateInteractable crate = m_fishing.Crate;
+            NavRect land = m_fishing.Layout.LandOf(2);
+            m_mall.Wombat.Mover.Place(new Vector2(land.XMax - 0.4f, land.YMin + 0.4f));
+            Run(k_Dt);
+            Press(ActionTable.k_PullDebris);
+            Vector2 at = crate.Position;
+            double left = crate.Left;
+            Run(2d);
+            Assert.That(crate.Position, Is.EqualTo(at), "끄는 동안 멈춘다");
+            Assert.That(crate.Left, Is.EqualTo(left), "끄는 동안 시간이 안 간다");
+            Assert.That(m_fishing.Crate, Is.SameAs(crate));
+        }
+
+        // 줄이 나가 있으면 상자가 둑 앞을 지나도 물이 대상이라 낚아채기 · 감기 단추가 남는다(리뷰 2026-10-14). 빈 줄이면 다시 상자가 먼저
+        [Test]
+        public void Crate_WhileLineIsOut_DoesNotStealTheTarget()
+        {
+            Create();
+            PlaceBridge(1);
+            PlaceBridge(2);
+            NavRect land = m_fishing.Layout.LandOf(2);
+            m_mall.Wombat.Mover.Place(new Vector2(land.XMax - 0.4f, land.YMin + 0.4f));
+            Run(k_Dt);
+            Press(ActionTable.k_Cast);
+            Assert.That(m_fishing.SpawnCrateNow(), Is.True);
+            Run(k_Dt);
+            CrateInteractable crate = m_fishing.Crate;
+            Assert.That(crate.DistanceTo(m_mall.Wombat.Mover.Position), Is.LessThanOrEqualTo((float)crate.Table.Range), "상자가 범위 안");
+            Assert.That(m_fishing.Target, Is.SameAs(m_fishing.Water), "줄이 나가 있으면 물이 대상");
+            Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_Strike));
+            Run(BiteWait + k_Dt);
+            Press(ActionTable.k_Strike);
+            Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_Reel));
+            Tug(false);
+            Run(Config.LandSeconds + k_Dt);
+            // 그동안 상자는 왼쪽으로 떠내려갔다: 그 위 둑으로 따라가면 빈 줄이라 다시 상자가 먼저
+            m_mall.Wombat.Mover.Place(new Vector2(Math.Clamp(crate.Position.X, land.XMin + 0.4f, land.XMax - 0.4f), land.YMin + 0.4f));
+            Run(k_Dt);
+            Assert.That(m_fishing.Target, Is.SameAs(crate), "빈 줄이면 다시 상자가 먼저");
+            Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_PullDebris));
+        }
+
+        // 상자: crateEvery 뒤 유목섬 오른쪽 아래에 떠내려와 왼쪽으로 가고, 둑에서 끌어내기(물보다 먼저 대상) → 줄다리기 → 코인, 상자는 사라진다
+        [Test]
+        public void Crate_Drifts_PullingItPaysCoins()
+        {
+            Create();
+            PlaceBridge(1);
+            PlaceBridge(2);
+            Run(Config.CrateEvery + k_Dt);
+            CrateInteractable crate = m_fishing.Crate;
+            Assert.That(crate, Is.Not.Null, "상자가 떠내려왔다");
+            Assert.That(m_fishing.Things, Does.Contain(crate));
+            NavRect land = m_fishing.Layout.LandOf(2);
+            float x = crate.Position.X;
+            Run(1d);
+            Assert.That(crate.Position.X, Is.LessThan(x), "왼쪽으로 떠내려간다");
+
+            for (double t = 0d; t < Config.CrateSeconds && crate.Position.X > land.XMax - 0.6f; t += k_Dt)
+            {
+                m_mall.Tick(k_Dt);
+            }
+
+            m_mall.Wombat.Mover.Place(new Vector2(crate.Position.X, land.YMin + 0.4f));
+            Run(k_Dt);
+            Assert.That(m_fishing.Target, Is.SameAs(crate), "상자가 물보다 먼저 대상");
+            double coins = m_state.Coins;
+            int pulled = 0;
+            m_bus.Subscribe<Events.CratePulled>(_ => pulled++);
+            Press(ActionTable.k_PullDebris);
+            Assert.That(m_fishing.Pulling, Is.SameAs(crate), "상자에 줄을 걸었다");
+            Run(k_Dt);
+            Assert.That(m_fishing.TargetAction?.Id, Is.EqualTo(ActionTable.k_Reel), "상자 줄다리기 동안 버튼은 감기");
+            Tug(false);
+            Assert.That(pulled, Is.EqualTo(1));
+            Assert.That(m_state.Coins, Is.EqualTo(coins + Config.CrateCoins), "상자 코인");
+            Assert.That(m_fishing.Crate, Is.Null, "상자는 사라진다");
+            Assert.That(m_fishing.Things.OfType<CrateInteractable>(), Is.Empty);
+            Assert.That(m_state.Count(k_Item), Is.EqualTo(TestTables.k_PlentyItems), "상자는 재료가 아니다");
+        }
+
+        // 상자에 줄을 건 채 조이스틱을 움직이면 줄을 놓고 바로 걷는다(상자는 그대로)
+        [Test]
+        public void Joystick_WhilePullingCrate_LetsGo()
+        {
+            Create();
+            PlaceBridge(1);
+            PlaceBridge(2);
+            Assert.That(m_fishing.SpawnCrateNow(), Is.True);
+            Run(k_Dt);
+            CrateInteractable crate = m_fishing.Crate;
+            NavRect land = m_fishing.Layout.LandOf(2);
             FishingEnd? ended = null;
             m_bus.Subscribe<Events.FishingEnded>(e => ended = e.Reason);
-            m_mall.Wombat.Mover.Place(new Vector2(m_fishing.Layout.InnerEdge(1) - 0.4f, m_fishing.Layout.BankY + 0.4f));
-            Run(0.5);
+            m_mall.Wombat.Mover.Place(new Vector2(land.XMax - 0.4f, land.YMin + 0.4f));
+            Run(k_Dt);
+            Assert.That(m_fishing.Target, Is.SameAs(crate));
             Press(ActionTable.k_PullDebris);
             Run(k_Dt);
             Assert.That(m_fishing.Phase, Is.EqualTo(FishingPhase.Tug));
             m_mall.Wombat.SetInput(new Vector2(-1f, 0f));
             Run(k_Dt);
             Assert.That(ended, Is.EqualTo(FishingEnd.Retrieved));
-            Assert.That(m_fishing.Phase, Is.EqualTo(FishingPhase.Idle));
-            Assert.That(m_fishing.Debris, Is.Null);
+            Assert.That(m_fishing.Pulling, Is.Null);
+            Assert.That(m_fishing.Crate, Is.SameAs(crate), "상자는 그대로");
             Vector2 at = m_mall.Wombat.Mover.Position;
             Run(k_Dt);
             m_mall.Wombat.SetInput(Vector2.Zero);
             Assert.That(m_mall.Wombat.Mover.Position, Is.Not.EqualTo(at), "놓은 즉시 걷는다");
-            Assert.That(m_fishing.PulledFrom(1), Is.EqualTo(0), "조각은 그대로");
-        }
-
-        // 물이 찬 구간에서 던지면 그 구간 물고기만(상류 1은 메기만) · 무게는 그 크기 범위
-        [Test]
-        public void Cast_InAFloodedStretch_HooksThatStretchsFish()
-        {
-            Create();
-            BreakRock(-1);
-            Assert.That(m_fishing.BreakDamNow(), Is.True);
-            Fish hooked = null;
-            m_bus.Subscribe<Events.Hooked>(e => hooked = e.Fish);
-            m_mall.Wombat.Mover.Place(new Vector2(m_fishing.Layout.CenterOf(-1), m_fishing.Layout.BankY + 0.4f));
-            Run(k_Dt);
-            Press(ActionTable.k_Cast);
-            Run(BiteWait + k_Dt);
-            Press(ActionTable.k_Strike);
-            Assert.That(hooked.Kind.Id, Is.EqualTo("catfish"));
-            FishSizeData small = hooked.Kind.Sizes[0];
-            Assert.That(hooked.Weight, Is.InRange(small.Min, small.Max));
         }
 
         // 좌대를 놓으면 낚시터가 손님을 받는 가게가 되고, 손님은 좌대에 앉아 간격마다 한 마리(코인) 낚고 나가 광장으로
@@ -435,7 +588,7 @@ namespace ZooTycoon.Tests
         public void Seat_Placed_CustomerSitsFishesPaysAndLeaves()
         {
             Create();
-            SeatInteractable seat = m_fishing.Seats.First(s => s.Stretch.Index == 0);
+            SeatInteractable seat = m_fishing.Seats.First(s => s.Island.Index == 0);
             m_mall.Wombat.Mover.Place(seat.Position);
             Run(k_Dt);
             Assert.That(m_fishing.Target, Is.SameAs(seat), "좌대 자리가 대상");
@@ -445,7 +598,7 @@ namespace ZooTycoon.Tests
             Assert.That(m_state.Coins, Is.EqualTo(coins - seat.Row.Cost));
             Assert.That(m_fishing.IsOpen, Is.True, "손님을 받는다");
             Assert.That(m_plaza.Shops, Does.Contain(m_fishing), "광장이 손님을 보내는 가게");
-            m_mall.Wombat.Mover.Place(new Vector2(0f, m_fishing.Layout.BankY + 3f));
+            m_mall.Wombat.Mover.Place(new Vector2(2.5f, -3f));
 
             m_fishing.Admit(m_tables.GetAll<VisitorTable>().First(v => v.Role == VisitorRole.Customer));
             FishingVisitor visitor = m_fishing.Visitors.Single();
@@ -496,31 +649,51 @@ namespace ZooTycoon.Tests
             double seconds = Config.CustomerSecondsMin + 0.3 * (Config.CustomerSecondsMax - Config.CustomerSecondsMin);
             int expected = (int)Math.Floor(seconds / Config.CustomerCatchEvery);
             Assert.That(caught, Is.EqualTo(expected), "간격마다 한 마리");
-            Assert.That(paid, Is.EqualTo(expected * seat.Stretch.Pay));
+            Assert.That(paid, Is.EqualTo(expected * seat.Island.Pay));
             Assert.That(m_state.Count(k_Item), Is.EqualTo(TestTables.k_PlentyItems), "손님 물고기는 창고에 안 든다");
         }
 
-        // 저장: 열린 구간 · 뺀 잔해 · 놓은 좌대가 남는다(물이 안 찬 구간은 마른 채)
+        // 바위섬 좌대 손님은 다리를 건너가 앉는다
         [Test]
-        public void Save_KeepsStretchesDebrisAndSeats()
+        public void Seat_OnIsland_CustomerCrossesTheBridge()
         {
             Create();
-            BreakRock(1);
-            m_mall.Wombat.Mover.Place(new Vector2(m_fishing.Layout.InnerEdge(1) + 0.4f, m_fishing.Layout.BankY + 0.4f));
-            Run(0.5);
-            Press(ActionTable.k_PullDebris);
-            Tug(false);
-            Assert.That(m_fishing.PulledFrom(1), Is.EqualTo(1));
+            PlaceBridge(1);
+            SeatInteractable seat = m_fishing.Seats.First(s => s.Island.Index == 1);
+            m_mall.Wombat.Mover.Place(seat.Position);
+            Run(k_Dt);
+            Assert.That(m_fishing.TryChoose(ActionTable.k_PlaceSeat, seat, null), Is.True, "바위섬 좌대 놓기");
+            m_mall.Wombat.Mover.Place(new Vector2(2.5f, -3f));
+            m_fishing.Admit(m_tables.GetAll<VisitorTable>().First(v => v.Role == VisitorRole.Customer));
+            FishingVisitor visitor = m_fishing.Visitors.Single();
+            Assert.That(visitor.Seat, Is.SameAs(seat));
+
+            for (double t = 0d; t < 40d && !visitor.Seated; t += k_Dt)
+            {
+                m_mall.Tick(k_Dt);
+            }
+
+            Assert.That(visitor.Angry, Is.False, "길이 있다");
+            Assert.That(visitor.Seated, Is.True, "다리를 건너 바위섬 좌대에 앉았다");
+            Assert.That(visitor.Position, Is.EqualTo(seat.Position));
+        }
+
+        // 저장: 닿은 섬 · 놓은 좌대가 남는다(보이는 섬 · 다음 다리 자리는 닿은 섬에서 다시 나온다)
+        [Test]
+        public void Save_KeepsReachedIslandsAndSeats()
+        {
+            Create();
+            PlaceBridge(1);
             Assert.That(m_fishing.PlaceSeatFree(), Is.True);
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(GameSave.Capture(m_state, m_mall));
             Create();
             GameSave.Apply(Newtonsoft.Json.JsonConvert.DeserializeObject<SaveData>(json), m_state, m_mall, m_tables);
-            Assert.That(m_fishing.Opened, Is.EquivalentTo(new[] { 0, 1 }));
-            Assert.That(m_fishing.Flooded, Is.EquivalentTo(new[] { 0 }));
-            Assert.That(m_fishing.PulledFrom(1), Is.EqualTo(1));
+            Assert.That(m_fishing.Reached, Is.EquivalentTo(new[] { 0, 1 }));
+            Assert.That(m_fishing.Visible, Is.EquivalentTo(new[] { 0, 1, 2 }));
             Assert.That(m_fishing.Seats.Count(s => s.Placed), Is.EqualTo(1));
             Assert.That(m_fishing.IsOpen, Is.True);
-            Assert.That(m_fishing.Things.OfType<DamInteractable>().Single().PiecesLeft, Is.EqualTo(Stretch(1).DamPieces - 1));
+            Assert.That(m_fishing.Things.OfType<BridgeInteractable>().Single().Island.Index, Is.EqualTo(2));
+            Assert.That(m_fishing.Layout.Nav.IsWalkable(Center(m_fishing.Layout.LandOf(1))), Is.True);
         }
     }
 }

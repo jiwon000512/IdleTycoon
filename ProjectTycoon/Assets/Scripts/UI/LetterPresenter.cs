@@ -8,7 +8,8 @@ using ZooTycoon.Core;
 namespace ZooTycoon.UI
 {
     // 설계 59: 편지 카드. 편지가 오면 소식지 틀(FishingNewsView)에 보낸 이 · 글 · 동봉을 띄우고, 확인하면 읽은 편지가 된다(동봉은 Core가 준다).
-    // 우편함 타일(소식 줄)은 안 읽은 수를 레드닷으로, 톡하면 안 읽은 첫 편지 또는 마지막 편지를 다시 보여 준다
+    // 우편함 타일(소식 줄)은 안 읽은 수를 레드닷으로, 톡하면 안 읽은 첫 편지 또는 마지막 편지를 다시 보여 준다.
+    // 설계 62: 광장 우체통 앞 읽기 버튼(MailboxTapped)도 같은 카드. 편지가 오면 봉투가 타일로 날아오고(광장에 있으면 월드 우체통이 받는다), 안 읽은 동안 10초마다 타일이 톡
     public sealed class LetterPresenter : IDisposable
     {
         private const float k_OpenDelay = 0.4f;
@@ -19,15 +20,17 @@ namespace ZooTycoon.UI
         private readonly FishingNewsView m_view;
         private readonly TopBarView m_topBar;
         private readonly Mailbox m_mailbox;
+        private readonly Mall m_mall;
         private readonly TableSet m_tables;
         private readonly IDisposable[] m_subscriptions;
         private Letter m_showing;
 
-        public LetterPresenter(FishingNewsView view, TopBarView topBar, Mailbox mailbox, EventBus bus, TableSet tables)
+        public LetterPresenter(FishingNewsView view, TopBarView topBar, Mall mall, EventBus bus, TableSet tables)
         {
             m_view = view;
             m_topBar = topBar;
-            m_mailbox = mailbox;
+            m_mall = mall;
+            m_mailbox = mall.Mailbox;
             m_tables = tables;
             m_view.Confirmed += View_Confirmed;
             m_topBar.MailClicked += TopBar_MailClicked;
@@ -35,14 +38,10 @@ namespace ZooTycoon.UI
             {
                 bus.Subscribe<Events.LetterArrived>(Bus_LetterArrived),
                 bus.Subscribe<Events.LetterRead>(_ => RefreshTile()),
+                bus.Subscribe<Events.MailboxTapped>(_ => TopBar_MailClicked()),
             };
+            // 설계 62: 시작할 때도 카드를 띄우지 않는다. 안 읽은 편지는 타일 톡 · 우체통 깃발이 알린다
             RefreshTile();
-            Letter unread = m_mailbox.Unread.FirstOrDefault();
-
-            if (unread != null)
-            {
-                Show(unread);
-            }
         }
 
         public void Dispose()
@@ -56,13 +55,14 @@ namespace ZooTycoon.UI
             }
         }
 
+        // 편지가 왔다: 봉투가 타일로 날아온다(광장이면 월드 우체통이 받으니 타일은 조용히). 카드는 바로 열지 않고 우체통 · 타일에서 읽는다(설계 62)
         private void Bus_LetterArrived(Events.LetterArrived e)
         {
             RefreshTile();
 
-            if (!m_view.IsOpen)
+            if (!(m_mall.Active is PlazaArea))
             {
-                Show(e.Letter);
+                m_topBar.FlyMailIn();
             }
         }
 
@@ -103,6 +103,7 @@ namespace ZooTycoon.UI
         private void Show(Letter letter)
         {
             m_showing = letter;
+            m_topBar.SetMailNag(false);
             bool read = m_mailbox.IsRead(letter);
             LetterTable row = letter.Row;
             // 점원 편지: 보낸 이는 점원 이름, 글에는 이름 · 사물 이름(kind_<사물>)
@@ -138,6 +139,7 @@ namespace ZooTycoon.UI
         private void RefreshTile()
         {
             m_topBar.ShowMail(m_mailbox.UnreadCount);
+            m_topBar.SetMailNag(m_mailbox.UnreadCount > 0 && m_showing == null);
         }
     }
 }

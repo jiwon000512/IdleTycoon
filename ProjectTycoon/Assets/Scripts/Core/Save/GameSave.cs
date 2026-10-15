@@ -180,10 +180,8 @@ namespace ZooTycoon.Core
                     save.Fishing = new FishingSave
                     {
                         Log = new Dictionary<string, FishRecord>(fishing.Log),
-                        Opened = fishing.Opened.ToList(),
-                        Flooded = fishing.Flooded.ToList(),
-                        Pulled = fishing.Opened.Where(s => fishing.PulledFrom(s) > 0).Select(s => new[] { s, fishing.PulledFrom(s) }).ToList(),
-                        Seats = fishing.Seats.Where(seat => seat.Placed).Select(seat => new[] { seat.Stretch.Index, seat.Index }).ToList(),
+                        Reached = fishing.Reached.ToList(),
+                        Seats = fishing.Seats.Where(seat => seat.Placed).Select(seat => new[] { seat.Island.Index, seat.Index }).ToList(),
                     };
                     break;
             }
@@ -246,7 +244,7 @@ namespace ZooTycoon.Core
                     break;
                 case FishingArea fishing when save.Fishing != null:
                     fishing.Restore(save.Fishing.Log.Where(pair => Find<FishTable>(tables, pair.Key) != null).ToDictionary(pair => pair.Key, pair => pair.Value));
-                    fishing.RestoreStretches(save.Fishing.Opened, save.Fishing.Flooded, save.Fishing.Pulled, save.Fishing.Seats);
+                    fishing.RestoreIslands(save.Fishing.Reached, save.Fishing.Seats);
                     break;
             }
 

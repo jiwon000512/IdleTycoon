@@ -21,15 +21,50 @@ namespace ZooTycoon.World
             new Color32(52, 32, 32, 255),
         };
 
+        // 재료 텍스처의 픽셀(메인 스레드에서 읽어 두면 Pixels는 다른 스레드에서 돌 수 있다)
+        public readonly struct Textures
+        {
+            public readonly Color32[] Floor;
+            public readonly Color32[] Wall;
+            public readonly Color32[] Face;
+            public readonly int Tile;
+            public readonly int FaceWidth;
+            public readonly int FaceHeight;
+
+            public Textures(Texture2D floorTile, Texture2D wallTile, Texture2D wallFace)
+            {
+                Floor = floorTile.GetPixels32();
+                Wall = wallTile.GetPixels32();
+                Face = wallFace.GetPixels32();
+                Tile = floorTile.width;
+                FaceWidth = wallFace.width;
+                FaceHeight = wallFace.height;
+            }
+        }
+
         public static Sprite Paint(BurrowShape.Result shape, Texture2D floorTile, Texture2D wallTile, Texture2D wallFace)
+        {
+            return ToSprite(Pixels(shape, new Textures(floorTile, wallTile, wallFace)), shape.Width, shape.Height);
+        }
+
+        public static Sprite ToSprite(Color32[] pixels, int w, int h)
+        {
+            Texture2D texture = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            return Sprite.Create(texture, new Rect(0f, 0f, w, h), new Vector2(0f, 1f), BurrowShape.k_PixelsPerUnit, 0, SpriteMeshType.FullRect);
+        }
+
+        // 굴 그림 픽셀(Unity API 없음 — 낚시터는 섬을 열 때 다른 스레드에서 계산한다, 2026-10-14 사용자 「섬 열 때 멈칫」)
+        public static Color32[] Pixels(BurrowShape.Result shape, Textures t)
         {
             int w = shape.Width;
             int h = shape.Height;
             bool[,] mask = shape.Mask;
-            Color32[] floor = floorTile.GetPixels32();
-            Color32[] wall = wallTile.GetPixels32();
-            Color32[] face = wallFace.GetPixels32();
-            int tile = floorTile.width;
+            Color32[] floor = t.Floor;
+            Color32[] wall = t.Wall;
+            Color32[] face = t.Face;
+            int tile = t.Tile;
             int[,] ledge = LedgeDistance(mask);
             Color32[] pixels = new Color32[w * h];
 
@@ -41,7 +76,7 @@ namespace ZooTycoon.World
                     int gy = Mod(shape.OriginY + y, tile);
                     int row = shape.WallRow[x, y];
                     Color32 color = mask[x, y] && row > 0
-                        ? face[(wallFace.height - row) * wallFace.width + Mod(shape.OriginX + x, wallFace.width)]
+                        ? face[(t.FaceHeight - row) * t.FaceWidth + Mod(shape.OriginX + x, t.FaceWidth)]
                         : (mask[x, y] ? floor : wall)[(tile - 1 - gy) * tile + gx];
 
                     if (ledge[x, y] > 0)
@@ -53,10 +88,7 @@ namespace ZooTycoon.World
                 }
             }
 
-            Texture2D texture = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-            texture.SetPixels32(pixels);
-            texture.Apply(false, true);
-            return Sprite.Create(texture, new Rect(0f, 0f, w, h), new Vector2(0f, 1f), BurrowShape.k_PixelsPerUnit, 0, SpriteMeshType.FullRect);
+            return pixels;
         }
 
         // 방 밖 칸의 방까지 8방향 거리(1 ~ 턱 두께), 방 안·먼 곳은 0. 한 겹씩 넓힌다

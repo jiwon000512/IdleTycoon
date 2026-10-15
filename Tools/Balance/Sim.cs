@@ -70,7 +70,7 @@ namespace Balance
             Bus.Subscribe<Events.EvaluationEnded>(e => Add(e.Passed ? "evalPass" : "evalFail", 1));
             Bus.Subscribe<Events.FishLanded>(e => { Add("fish", 1); Add("fish:" + e.Fish.Kind.Item, 1); });
             Bus.Subscribe<Events.FishingEnded>(e => Add("fishEnd:" + e.Reason, 1));
-            Bus.Subscribe<Events.DebrisPulled>(e => Add("debris", e.Coins));
+            Bus.Subscribe<Events.CratePulled>(e => Add("crate", e.Coins));
             Bus.Subscribe<Events.FishingVisitorCaught>(e => Add("seats", e.Coins));
             Bus.Subscribe<Events.RestaurantVisitorPaid>(e => { Add("restaurant", e.Coins); Add("dishes", 1); });
             Bus.Subscribe<Events.RestaurantVisitorLeft>(e => Add(e.Visitor.Angry ? "restaurantAngry" : "restaurantLeft", 1));
@@ -650,14 +650,16 @@ namespace Balance
 
         // ---------- 낚시 손 ----------
 
-        // 선 자리에서 던지기 → 물면 reaction초 뒤 낚아채기 → 줄다리기(쉴 때만 감기, 쉼 · 달림이 바뀌면 reelLag초 늦게 따름). seconds 동안
-        public IEnumerable<int> Fish(double seconds, double reaction = 0.3, double reelLag = 0.2)
+        // 선 자리에서 던지기 → 물면 reaction초 뒤 낚아채기 → 줄다리기(쉴 때만 감기, 쉼 · 달림이 바뀌면 reelLag초 늦게 따름). seconds 동안.
+        // 설계 61: 상자가 대상이면 끌어낸다(둑에 선 사람은 떠내려오는 상자를 잡는다). boss면 그림자가 보이는 동안은 찌가 닿는 자리에서만 던지고(안 닿으면 기다림), 기다리던 줄은 거둬 다시 던진다
+        public IEnumerable<int> Fish(double seconds, double reaction = 0.3, double reelLag = 0.2, bool boss = false)
         {
             FishingArea f = Fishing;
             double end = Time + seconds;
             double biteSeen = -1d;
             double runChanged = 0d;
             bool lastRunning = false;
+            bool shadowNear() => f.ShadowVisible && Vector2.Distance(f.BobberPoint(), f.ShadowPosition) <= (float)f.Config.ShadowReach * 0.9f;
 
             while (Time < end || f.Phase == FishingPhase.Tug)
             {
@@ -666,12 +668,24 @@ namespace Balance
                     case FishingPhase.Idle:
                         Wombat.SetHolding(false);
 
-                        if (Time < end && !Wombat.Busy && f.TargetAction?.Id == ActionTable.k_Cast)
+                        if (Time < end && !Wombat.Busy)
+                        {
+                            string action = f.TargetAction?.Id;
+
+                            if (action == ActionTable.k_PullDebris || action == ActionTable.k_Cast && !(boss && f.ShadowVisible && !shadowNear()))
+                            {
+                                f.TryInteract();
+                            }
+                        }
+
+                        biteSeen = -1d;
+                        break;
+                    case FishingPhase.Waiting:
+                        if (boss && shadowNear() && f.TargetAction?.Id == ActionTable.k_Strike)
                         {
                             f.TryInteract();
                         }
 
-                        biteSeen = -1d;
                         break;
                     case FishingPhase.Bite:
                         if (biteSeen < 0d)
@@ -812,11 +826,20 @@ namespace Balance
             }
         }
 
-        // 둑 위 그 구간 가운데에 선다(물가 0.4 위)
-        public IEnumerable<int> ToBank(int stretch)
+        // 그 섬 뭍 아랫변 가운데에 선다(물가 0.4 위). 섬에 닿아 있어야 한다
+        public IEnumerable<int> ToBank(int island)
         {
             FishingLayout layout = Fishing.Layout;
-            return Walk(layout.Nav, layout.Nav.Snap(new Vector2(layout.CenterOf(stretch), layout.BankY + 0.4f)));
+            NavRect land = layout.LandOf(island);
+            return Walk(layout.Nav, layout.Nav.Snap(new Vector2((land.XMin + land.XMax) / 2f, land.YMin + 0.4f)));
+        }
+
+        // 그 섬으로 놓은 다리 가운데에 선다(다리 밑 물고기)
+        public IEnumerable<int> ToBridge(int island)
+        {
+            FishingLayout layout = Fishing.Layout;
+            NavRect bridge = layout.BridgeOf(island);
+            return Walk(layout.Nav, layout.Nav.Snap(new Vector2((bridge.XMin + bridge.XMax) / 2f, (bridge.YMin + bridge.YMax) / 2f)));
         }
     }
 }

@@ -49,7 +49,7 @@ def summarize(runs):
         for r in runs:
             ss = [s for s in r["sessions"] if s["day"] == d]
             c = lambda s, k: s["counts"].get(k, 0)
-            online = sum(c(s, "bakery") + c(s, "tips") + c(s, "restaurant") + c(s, "seats") + c(s, "debris") - c(s, "wages") for s in ss)
+            online = sum(c(s, "bakery") + c(s, "tips") + c(s, "restaurant") + c(s, "seats") + c(s, "crate") - c(s, "wages") for s in ss)
             off = sum(s["offlineCoins"] for s in ss)
             rows.append((online, off, sum(c(s, "questCoins") for s in ss), sum(c(s, "chestCoins") for s in ss), ss[-1]["points"]))
         days.append({"day": d, "online": round(statistics.median(x[0] for x in rows)), "offline": round(statistics.median(x[1] for x in rows)),

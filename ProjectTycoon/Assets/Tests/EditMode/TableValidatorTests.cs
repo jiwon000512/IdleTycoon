@@ -12,22 +12,22 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 64)]
+        [TestCase("StringTable", 66)]
         [TestCase("ClerkTable", 4)]
         [TestCase("ClerkConfigTable", 8)]
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 7)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 26)]
-        [TestCase("InteractableTable", 25)]
+        [TestCase("ActionTable", 28)]
+        [TestCase("InteractableTable", 27)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 19)]
         [TestCase("BgmTable", 2)]
         [TestCase("ConfigTable", 7)]
         [TestCase("BakeryConfigTable", 10)]
-        [TestCase("PlazaConfigTable", 8)]
+        [TestCase("PlazaConfigTable", 9)]
         [TestCase("PlazaDecorTable", 1)]
-        [TestCase("ItemTable", 8)]
+        [TestCase("ItemTable", 9)]
         [TestCase("CropTable", 4)]
         [TestCase("FarmConfigTable", 7)]
         [TestCase("FarmFloorTable", 2)]
@@ -35,12 +35,12 @@ namespace ZooTycoon.Tests
         [TestCase("StarMilestoneTable", 1)]
         [TestCase("BlessingTable", 1)]
         [TestCase("RelicTable", 2)]
-        [TestCase("FishingConfigTable", 10)]
-        [TestCase("FishTable", 2)]
-        [TestCase("FishingStretchTable", 1)]
+        [TestCase("FishingConfigTable", 11)]
+        [TestCase("FishTable", 3)]
+        [TestCase("FishingIslandTable", 1)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
-        [TestCase("QuestTable", 6)]
+        [TestCase("QuestTable", 7)]
         [TestCase("LetterTable", 3)]
         [TestCase("TraitTable", 1)]
         [TestCase("MissionTable", 1)]
@@ -109,18 +109,21 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 52 강가 낚시: 물은 y0 < y1 · 입질 시간은 min ≤ max · 줄 힘 · 긴장 오름 > 0. 설계 53: 잔해 무게 > 0 · 손님 초 min ≤ max
+        // 설계 52 강가 낚시: 입질 시간은 min ≤ max · 줄 힘 · 긴장 오름 > 0. 설계 61: 던지는 거리 > 0 · 찌 비율 ≤ 1 · 상자 무게 > 0 · 그림자 간격 > 0 · 손님 초 min ≤ max
         [Test]
         public void Validate_WhenWellConfigBroken_ReportsError()
         {
             System.Action<FishingConfigTable>[] breaks =
             {
-                c => c.Water.Y1 = c.Water.Y0,
+                c => c.CastReach = 0d,
+                c => c.BobberIn = 2d,
                 c => c.BiteWaitMax = c.BiteWaitMin - 1d,
                 c => c.Rod.Line = 0d,
                 c => c.TensionRise = 0d,
-                c => c.DebrisWeight = 0d,
-                c => c.StretchCols = 3,
+                c => c.CrateWeight = 0d,
+                c => c.ShadowEvery = 0d,
+                c => c.LakeMargin = 1d,
+                c => c.SeatBack = 10d,
                 c => c.CustomerSecondsMax = c.CustomerSecondsMin - 1d,
             };
 
@@ -132,16 +135,18 @@ namespace ZooTycoon.Tests
             }
         }
 
-        // 설계 53 구간 표: index 0이 있고 이어짐 · 물고기는 FishTable에 · 0이 아닌 구간은 댐 조각 ≥ 1
+        // 설계 61 섬 표: index 0부터 이어짐 · 물고기 · 명물은 FishTable에 · 0이 아닌 섬은 다리가 있고 앞 섬 뭍과 겹침 · 좌대는 뭍 안 · 섬 이름 글이 StringTable에
         [Test]
-        public void Validate_WhenStretchBroken_ReportsError()
+        public void Validate_WhenIslandBroken_ReportsError()
         {
             System.Action<TableSet>[] breaks =
             {
-                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 0).Index = 5,
-                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).Index = 3,
-                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).Fish[0].Id = "no_such_fish",
-                t => t.GetAll<FishingStretchTable>().First(s => s.Index == 1).DamPieces = 0,
+                t => t.GetAll<FishingIslandTable>().First(s => s.Index == 0).Index = 5,
+                t => t.GetAll<FishingIslandTable>().First(s => s.Index == 1).Fish[0].Id = "no_such_fish",
+                t => t.GetAll<FishingIslandTable>().First(s => s.Index == 1).Bridge = null,
+                t => t.GetAll<FishingIslandTable>().First(s => s.Index == 1).Bridge.X0 = 20d,
+                t => t.GetAll<FishingIslandTable>().First(s => s.Index == 1).Boss = "no_such_fish",
+                t => t.GetAll<FishingIslandTable>().First(s => s.Index == 1).Seats[0].Dx = 50d,
             };
 
             foreach (System.Action<TableSet> broken in breaks)
@@ -150,6 +155,8 @@ namespace ZooTycoon.Tests
                 broken(tables);
                 Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
             }
+
+            Assert.That(TableValidator.Validate(TestTables.LoadWithout("StringTable", "island_rock_island")), Is.Not.Empty, "섬 이름 글");
         }
 
         // 설계 54: 퀘스트 · 오늘의 일 · 상자 표

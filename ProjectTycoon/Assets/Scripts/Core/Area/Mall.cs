@@ -69,6 +69,7 @@ namespace ZooTycoon.Core
             Quests = new QuestLog(this, bakery.Tables, bus, Guide);
             Missions = new DailyBoard(this, bakery.Tables, bus, clock ?? (() => DateTime.Now), () => Quests.Chapter);
             Mailbox = new Mailbox(this, bakery.Tables, bus);
+            plaza.MailboxThing.Bind(Mailbox);
             Requests = new ClerkRequests(this, bakery.Tables, bus);
             // 숨는 걸음은 보일 때부터 소문(리뷰: 줄이 길기 전에 「줄이 너무 길어」가 나왔다)
             plaza.StepId = () => Quests.Hidden ? null : Quests.Current?.Id;

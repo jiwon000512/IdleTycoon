@@ -12,7 +12,7 @@ SESSION_MIN = {s['index']: s['minutes'] for s in week['sessions']}
 
 def category(name):
     for key, cat in [('점원', '점원'), ('새 후보', '점원'), ('빵 ', '빵 · 작물'), ('작물', '빵 · 작물'), ('농장', '농장'), ('farm', '농장'),
-                     ('좌대', '낚시터'), ('바위', '낚시터'), ('댐', '낚시터'), ('횟집', '횟집'), ('수조', '횟집'), ('뜨기', '횟집'),
+                     ('좌대', '낚시터'), ('다리', '낚시터'), ('횟집', '횟집'), ('수조', '횟집'), ('뜨기', '횟집'),
                      ('빵집', '빵집 사물'), ('bakery 굴', '빵집 사물'), ('restaurant 굴', '횟집'), ('진열대', '빵집 업그레이드'),
                      ('굽기', '빵집 업그레이드'), ('계산', '빵집 업그레이드')]:
         if key in name:
@@ -62,7 +62,7 @@ for p in buys:
     spend[category(p['name'])] = spend.get(category(p['name']), 0) + p['cost']
 
 # 3) 코인 흐름(씨앗 1, 한 주): 들어온 곳 · 나간 곳
-inflow = {'빵집 손맛 · 점원(접속 중)': 0, '팁': 0, '좌대 손님': 0, '횟집': 0, '댐 잔해': 0, '오프라인 정산(판 돈)': 0}
+inflow = {'빵집 손맛 · 점원(접속 중)': 0, '팁': 0, '좌대 손님': 0, '횟집': 0, '상자': 0, '오프라인 정산(판 돈)': 0}
 outflow = {'월급(접속 중)': 0, '월급(오프라인)': 0}
 gems_in = {'수확 덤(접속 중)': 0, '수확 덤(오프라인)': 0, '별 평가 보상': 0}
 day_rows = {}
@@ -72,7 +72,7 @@ for s in week['sessions']:
     inflow['팁'] += c.get('tips', 0)
     inflow['좌대 손님'] += c.get('seats', 0)
     inflow['횟집'] += c.get('restaurant', 0)
-    inflow['댐 잔해'] += c.get('debris', 0)
+    inflow['상자'] += c.get('crate', 0)
     inflow['오프라인 정산(판 돈)'] += s['offlineSales']
     outflow['월급(접속 중)'] += c.get('wages', 0)
     outflow['월급(오프라인)'] += s['offlineWages']
@@ -82,7 +82,7 @@ for s in week['sessions']:
     day = s['day']
     r = day_rows.setdefault(day, {'day': day, 'onlineMin': 0, 'online': 0, 'wages': 0, 'offline': 0, 'seats': 0, 'bakery': 0, 'restaurant': 0})
     r['onlineMin'] += s['minutes']
-    r['online'] += c.get('bakery', 0) + c.get('tips', 0) + c.get('seats', 0) + c.get('restaurant', 0) + c.get('debris', 0)
+    r['online'] += c.get('bakery', 0) + c.get('tips', 0) + c.get('seats', 0) + c.get('restaurant', 0) + c.get('crate', 0)
     r['wages'] += c.get('wages', 0)
     r['offline'] += s['offlineCoins']
     r['seats'] += c.get('seats', 0)
@@ -113,7 +113,7 @@ for c in week['coins']:
 per_session = []
 for s in week['sessions']:
     c = s['counts']
-    earned = c.get('bakery', 0) + c.get('tips', 0) + c.get('seats', 0) + c.get('restaurant', 0) + c.get('debris', 0)
+    earned = c.get('bakery', 0) + c.get('tips', 0) + c.get('seats', 0) + c.get('restaurant', 0) + c.get('crate', 0)
     end = [x for x in week['coins'] if s['startMin'] < x['min'] <= s['startMin'] + s['minutes'] + 0.01]
     per_session.append({'index': s['index'], 'day': s['day'], 'start': s['startMin'], 'buys': sum(1 for p in buys if p['session'] == s['index']),
                         'netPerMin': round((earned - c.get('wages', 0)) / s['minutes']), 'offline': s['offlineCoins'],

@@ -57,6 +57,9 @@ namespace Balance
                 return;
             }
 
+            // 측정 명령에도 시안 JSON을 줄 수 있다(fish · seats: 세 번째 인자)
+            Measure.Edit = args.Length > 2 ? Proposal.Load(args[2]) : null;
+
             foreach (KeyValuePair<string, Func<object>> job in s_jobs.Where(j => cmd == "all" || cmd == j.Key))
             {
                 Stopwatch watch = Stopwatch.StartNew();
@@ -132,6 +135,60 @@ namespace Balance
                 {
                     tables.Get<ConfigTable>(kv.Name).Value = kv.Value.Value<double>();
                 }
+
+                // 설계 61 낚시터 시안(2026-10-14 밸런스방): "islands": { id: { "bridge": 값, "seats": [값 ...], "pay": 값, "fish": { 어종: 비중 }, "bridgeFish": { 어종: 비중 } } },
+                // "fishing": { 칸 이름(JSON 그대로): 값 }, "fishSizes": { 어종: [[min, max, chance] ...] }
+                foreach (FishingIslandTable island in tables.GetAll<FishingIslandTable>())
+                {
+                    JToken v = p?["islands"]?[island.Id];
+
+                    if (v == null)
+                    {
+                        continue;
+                    }
+
+                    if (v["bridge"] != null && island.Bridge != null)
+                    {
+                        island.Bridge.Cost = v["bridge"].Value<double>();
+                    }
+
+                    if (v["seats"] is JArray seats)
+                    {
+                        for (int i = 0; i < seats.Count && i < island.Seats.Length; i++)
+                        {
+                            island.Seats[i].Cost = seats[i].Value<double>();
+                        }
+                    }
+
+                    if (v["pay"] != null)
+                    {
+                        island.Pay = v["pay"].Value<double>();
+                    }
+
+                    if (v["fish"] is JObject fish)
+                    {
+                        island.Fish = fish.Properties().Select(kv => new FishingFishData { Id = kv.Name, Chance = kv.Value.Value<double>() }).ToArray();
+                    }
+
+                    if (v["bridgeFish"] is JObject bridgeFish && island.Bridge != null)
+                    {
+                        island.Bridge.Fish = bridgeFish.Properties().Select(kv => new FishingFishData { Id = kv.Name, Chance = kv.Value.Value<double>() }).ToArray();
+                    }
+                }
+
+                FishingConfigTable fishing = tables.Get<FishingConfigTable>(FishingConfigTable.k_Main);
+
+                foreach (JProperty kv in (p?["fishing"] as JObject)?.Properties() ?? Enumerable.Empty<JProperty>())
+                {
+                    System.Reflection.PropertyInfo prop = typeof(FishingConfigTable).GetProperty(char.ToUpperInvariant(kv.Name[0]) + kv.Name.Substring(1));
+                    prop.SetValue(fishing, Convert.ChangeType(kv.Value.Value<double>(), prop.PropertyType));
+                }
+
+                foreach (JProperty kv in (p?["fishSizes"] as JObject)?.Properties() ?? Enumerable.Empty<JProperty>())
+                {
+                    tables.Get<FishTable>(kv.Name).Sizes = ((JArray)kv.Value)
+                        .Select(size => new FishSizeData { Min = size[0].Value<double>(), Max = size[1].Value<double>(), Chance = size[2].Value<double>() }).ToArray();
+                }
             };
         }
     }
@@ -169,6 +226,8 @@ namespace Balance
     internal static class Measure
     {
         private const int k_Seeds = 3;
+        // 시안 JSON(Proposal)을 덮은 표로 재는 측정(fish · seats)
+        public static Action<GameKit.Tables.TableSet> Edit;
 
         private static double PerMin(Sim sim, string key, double seconds)
         {
@@ -478,20 +537,24 @@ namespace Balance
         }
 
         // 손 낚시(반응 0.3초 · 감기 바꿈 0.2초 늦게): 구간 처음 · 하류 1 · 상류 1에서 20분 → 분당 마리 · 어종 · 놓침 · 끊김. 잔해 한 조각 초
+        // 손 낚시(설계 61): 섬 셋 뭍 가운데 · 다리 둘 위에서 20분씩(씨앗 셋) → 분당 마리 수(어종별) · 횟집 값으로 친 분당 코인 · 놓침 · 끊김.
+        // 명물: 바위섬에서 그림자를 불러 찌가 닿을 때 던져 낚기까지 초(걸림 → 낚음). 상자: 유목섬에서 상자를 불러 끌어내기까지 초
         public static object Fish()
         {
             List<object> rows = new List<object>();
             const double seconds = 1200d;
+            Sim probe = new Sim(1, Edit);
+            Dictionary<string, double> price = probe.Tables.GetAll<DishTable>().ToDictionary(d => d.Fish, d => d.Price);
 
-            foreach (int stretch in new[] { 0, 1, -1 })
+            foreach ((int island, bool bridge) in new[] { (0, false), (1, false), (1, true), (2, false), (2, true) })
             {
                 Dictionary<string, double> sum = new Dictionary<string, double>();
 
                 for (int seed = 1; seed <= k_Seeds; seed++)
                 {
-                    Sim sim = new Sim(seed);
-                    OpenTo(sim, stretch);
-                    sim.Brain(FishBrain(sim, stretch, seconds));
+                    Sim sim = new Sim(seed, Edit);
+                    OpenTo(sim, island);
+                    sim.Brain(FishBrain(sim, island, bridge, seconds));
                     sim.Run(seconds + 120d);
 
                     foreach (KeyValuePair<string, double> pair in sim.Counts)
@@ -500,48 +563,66 @@ namespace Balance
                     }
                 }
 
+                double value = price.Sum(p => Get(sum, "fish:" + p.Key) * p.Value);
                 rows.Add(new
                 {
-                    stretch,
+                    island,
+                    bridge,
                     fishPerMin = Math.Round(Get(sum, "fish") / seconds * 60d, 2),
                     minnow = Math.Round(Get(sum, "fish:fish_minnow") / seconds * 60d, 2),
                     crucian = Math.Round(Get(sum, "fish:fish_crucian") / seconds * 60d, 2),
                     catfish = Math.Round(Get(sum, "fish:fish_catfish") / seconds * 60d, 2),
+                    king = Math.Round(Get(sum, "fish:fish_king_catfish") / seconds * 60d, 2),
+                    dishValuePerMin = Math.Round(value / seconds * 60d, 1),
+                    cratePerMin = Math.Round(Get(sum, "crate") / seconds * 60d, 1),
                     missedPerMin = Math.Round(Get(sum, "fishEnd:Missed") / seconds * 60d, 2),
                     snappedPerMin = Math.Round(Get(sum, "fishEnd:Snapped") / seconds * 60d, 2),
                 });
             }
 
-            // 잔해: 하류 1 바위만 뚫고 댐 앞 둑에서 조각을 다 끌어낸다
-            Sim debris = new Sim(1);
-            debris.Fishing.OpenNextFree();
-            double start = 0d;
-            debris.Brain(DebrisBrain(debris, () => start = debris.Time));
-            debris.Run(600d, () => debris.Fishing.Flooded.Contains(1));
-            rows.Add(new { debrisPieces = debris["debris"] / debris.Tables.Get<FishingConfigTable>(FishingConfigTable.k_Main).DebrisCoins, seconds = Math.Round(debris.Time - start, 1) });
+            // 명물(씨앗 셋): 걸림 → 낚음 초와 무게
+            for (int seed = 1; seed <= k_Seeds; seed++)
+            {
+                Sim sim = new Sim(seed, Edit);
+                OpenTo(sim, 1);
+                double hooked = -1d, landed = -1d, weight = 0d;
+                string boss = sim.Fishing.EventIsland(FishingIslandTable.k_EventShadow).Boss;
+                sim.Bus.Subscribe<Events.Hooked>(e => { if (e.Fish?.Kind.Id == boss) { hooked = sim.Time; weight = e.Fish.Weight; } });
+                sim.Bus.Subscribe<Events.FishLanded>(e => { if (e.Fish.Kind.Id == boss) landed = sim.Time; });
+                sim.Brain(BossBrain(sim));
+                sim.Run(600d, () => landed >= 0d);
+                rows.Add(new { boss, seed, weight = Math.Round(weight, 1), tugSeconds = landed < 0d ? -1d : Math.Round(landed - hooked, 1) });
+            }
+
+            // 상자: 걸림 → 끌어냄 초 · 코인
+            Sim crate = new Sim(1, Edit);
+            OpenTo(crate, 2);
+            double crateHooked = -1d, cratePulled = -1d, crateCoins = 0d;
+            crate.Bus.Subscribe<Events.Hooked>(e => { if (e.Fish == null) crateHooked = crate.Time; });
+            crate.Bus.Subscribe<Events.CratePulled>(e => { cratePulled = crate.Time; crateCoins = e.Coins; });
+            crate.Brain(CrateBrain(crate));
+            crate.Run(300d, () => cratePulled >= 0d);
+            rows.Add(new { crateCoins, crateSeconds = cratePulled < 0d ? -1d : Math.Round(cratePulled - crateHooked, 1) });
             return rows;
         }
 
-        // 구간까지 바위를 값 없이 뚫고 댐을 허문다(측정용)
-        private static void OpenTo(Sim sim, int stretch)
+        // 그 섬까지 다리를 값 없이 놓는다(측정용)
+        private static void OpenTo(Sim sim, int island)
         {
-            while (!sim.Fishing.Flooded.Contains(stretch))
+            while (!sim.Fishing.Reached.Contains(island))
             {
-                if (!sim.Fishing.BreakDamNow())
-                {
-                    sim.Fishing.OpenNextFree();
-                }
+                sim.Fishing.ReachNextFree();
             }
         }
 
-        private static IEnumerable<int> FishBrain(Sim sim, int stretch, double seconds)
+        private static IEnumerable<int> FishBrain(Sim sim, int island, bool bridge, double seconds)
         {
             foreach (int _ in sim.GoTo(FishingArea.k_Id))
             {
                 yield return 0;
             }
 
-            foreach (int _ in sim.ToBank(stretch))
+            foreach (int _ in bridge ? sim.ToBridge(island) : sim.ToBank(island))
             {
                 yield return 0;
             }
@@ -560,62 +641,63 @@ namespace Balance
             }
         }
 
-        private static IEnumerable<int> DebrisBrain(Sim sim, Action started)
+        private static IEnumerable<int> BossBrain(Sim sim)
         {
-            FishingArea f = sim.Fishing;
-
             foreach (int _ in sim.GoTo(FishingArea.k_Id))
             {
                 yield return 0;
             }
 
-            foreach (int _ in sim.Walk(f.Layout.Nav, f.Layout.Nav.Snap(new Vector2(f.Layout.InnerEdge(1) + 0.4f, f.Layout.BankY + 0.4f))))
+            foreach (int _ in sim.ToBank(1))
             {
                 yield return 0;
             }
 
-            started();
-            double runChanged = 0d;
-            bool lastRunning = false;
+            sim.Fishing.ShowShadowNow();
 
-            while (true)
+            foreach (int _ in sim.Fish(600d, boss: true))
             {
-                if (f.Phase == FishingPhase.Idle && !sim.Wombat.Busy && f.TargetAction?.Id == ActionTable.k_PullDebris)
-                {
-                    f.TryInteract();
-                }
-                else if (f.Phase == FishingPhase.Tug)
-                {
-                    if (f.Running != lastRunning)
-                    {
-                        lastRunning = f.Running;
-                        runChanged = sim.Time;
-                    }
-
-                    sim.Wombat.SetHolding(sim.Time - runChanged >= 0.2 ? !f.Running : f.Running);
-                }
-
                 yield return 0;
             }
         }
 
-        // 좌대 손님: 좌대 1 · 2 · 4 · 6개(처음 → 하류 → 상류, 물은 값 없이 채움). 빵집은 일머리 100 점원(광장 흐름이 막히지 않게), 웜뱃은 농장에
+        private static IEnumerable<int> CrateBrain(Sim sim)
+        {
+            foreach (int _ in sim.GoTo(FishingArea.k_Id))
+            {
+                yield return 0;
+            }
+
+            foreach (int _ in sim.ToBank(2))
+            {
+                yield return 0;
+            }
+
+            sim.Fishing.SpawnCrateNow();
+
+            foreach (int _ in sim.Fish(300d))
+            {
+                yield return 0;
+            }
+        }
+
+        // 좌대 손님: 좌대 1 · 2 · 3 · 5개(갈대섬 → 바위섬 둘 → 유목섬 둘, 다리는 값 없이). 빵집은 일머리 100 점원(광장 흐름이 막히지 않게), 웜뱃은 농장에
         public static object Seats()
         {
             List<object> rows = new List<object>();
             const double seconds = 1200d;
 
-            foreach (int seats in new[] { 1, 2, 4, 6 })
+            foreach (int seats in new[] { 1, 2, 3, 5 })
             {
                 double coins = 0d, served = 0d;
 
                 for (int seed = 1; seed <= k_Seeds; seed++)
                 {
-                    Sim sim = new Sim(seed, Sim.LiftCaps);
+                    Sim sim = new Sim(seed, t => { Sim.LiftCaps(t); Edit?.Invoke(t); });
                     Stage.All[0].Apply(sim);
                     sim.Plenty("wheat");
                     sim.StaffBakery(100);
-                    OpenTo(sim, seats > 4 ? -1 : seats > 2 ? 1 : 0);
+                    OpenTo(sim, seats > 3 ? 2 : seats > 1 ? 1 : 0);
 
                     for (int i = 0; i < seats; i++)
                     {
@@ -657,7 +739,7 @@ namespace Balance
                         sim.StaffBakery(100);
                         sim.AddStars(5);
                         sim.State.AddCoins(sim.Restaurant.Config.OpenCost);
-                        sim.Restaurant.TryOpen(sim.Wombat.Worker);
+                        sim.Restaurant.TryOpenGate(sim.Wombat.Worker);
                         sim.State.AddItem("fish_minnow", 5000);
                         sim.State.AddItem("fish_crucian", 3000);
 
@@ -741,7 +823,7 @@ namespace Balance
                     {
                         sim.AddStars(5);
                         sim.State.AddCoins(sim.Restaurant.Config.OpenCost);
-                        sim.Restaurant.TryOpen(sim.Wombat.Worker);
+                        sim.Restaurant.TryOpenGate(sim.Wombat.Worker);
                     }
 
                     sim.Run(60d);

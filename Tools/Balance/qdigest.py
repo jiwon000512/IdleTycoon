@@ -74,7 +74,7 @@ def summarize(runs):
         rows = [run["sessions"][i] for run in runs if i < len(run["sessions"])]
         def net(s):
             c = s["counts"]
-            return (c.get("bakery", 0) + c.get("tips", 0) + c.get("restaurant", 0) + c.get("seats", 0) + c.get("debris", 0) - c.get("wages", 0)) / s["minutes"]
+            return (c.get("bakery", 0) + c.get("tips", 0) + c.get("restaurant", 0) + c.get("seats", 0) + c.get("crate", 0) - c.get("wages", 0)) / s["minutes"]
         sess.append({
             "i": i, "day": rows[0]["day"], "start": rows[0]["startMin"],
             "chapter": med([s["chapter"] for s in rows]),
@@ -92,7 +92,7 @@ def summarize(runs):
         for run in runs:
             ss = [s for s in run["sessions"] if s["day"] == d]
             c = lambda s, k: s["counts"].get(k, 0)
-            online = sum(c(s, "bakery") + c(s, "tips") + c(s, "restaurant") + c(s, "seats") + c(s, "debris") - c(s, "wages") for s in ss)
+            online = sum(c(s, "bakery") + c(s, "tips") + c(s, "restaurant") + c(s, "seats") + c(s, "crate") - c(s, "wages") for s in ss)
             per.append({
                 "online": online, "offline": sum(s["offlineCoins"] for s in ss),
                 "quest": sum(c(s, "questCoins") for s in ss), "chest": sum(c(s, "chestCoins") for s in ss),
