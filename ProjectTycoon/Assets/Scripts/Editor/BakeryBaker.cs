@@ -713,6 +713,10 @@ namespace ZooTycoon.Editor
             Set(view, "m_burrow", burrow);
             Set(view, "m_digTagPrefab", digTag);
             SetBurrowTextures(view);
+            // 설계 65 냇물: 낚시터의 물결 · 흙 면 · 댐 그림(큰 것부터)을 다시 쓴다
+            SetArray(view, "m_waterTiles", WaterTiles.Select(tile => AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + tile + ".png")).ToArray());
+            Set(view, "m_streamFace", AssetDatabase.LoadAssetAtPath<Texture2D>(k_FishingDir + "stream_face.png"));
+            SetArray(view, "m_damSprites", new[] { "dam_3", "dam_2", "dam_1" }.Select(name => AssetDatabase.LoadAssetAtPath<Sprite>(k_FishingDir + name + ".png")).ToArray());
             SerializedObject so = new SerializedObject(view);
             SerializedProperty doorArts = so.FindProperty("m_doors");
             doorArts.arraySize = doors.Count;

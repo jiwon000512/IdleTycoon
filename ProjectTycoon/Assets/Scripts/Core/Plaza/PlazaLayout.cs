@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using GameKit.Tables;
 
@@ -14,8 +15,11 @@ namespace ZooTycoon.Core
         private const float k_DoorInsideRise = 1f / BurrowShape.k_PixelsPerUnit;
         // 석상 · 행상 자리는 주머니 칸 밑변에서 이만큼 안쪽(밑변 선은 걷는 땅 밖)
         private const float k_PocketInset = 0.4f;
+        // 설계 65: 샘은 계단 밑 내려앉는 곳에서 이만큼 아래
+        private const float k_SpringDrop = 0.5f;
 
         private readonly List<PlazaSpot> m_spots = new List<PlazaSpot>();
+        private readonly PlazaConfigTable m_config;
 
         public CellMetrics Cells { get; }
         public BurrowShape.Result Shape { get; private set; }
@@ -30,6 +34,9 @@ namespace ZooTycoon.Core
         // 설계 29 · 34 · 64: 석상 자리 · 행상 좌판 자리(그 주머니 칸 밑변 가운데에서 k_PocketInset 위)
         public Vector2 StatueBase { get; }
         public Vector2 MerchantStall { get; }
+        // 설계 65 냇물 마을: 굴길 칸이 다 파인 줄 수(입구 줄부터 이어서) · 굴길 가운데 냇물(샘 ~ 그 줄들의 끝). 얕아서 걷는 땅 그대로다
+        public int ShaftRows { get; private set; }
+        public NavRect Stream { get; private set; }
         // 굴 그림이 차지하는 네모(유닛). 카메라 범위
         public NavRect Bounds
         {
@@ -44,6 +51,7 @@ namespace ZooTycoon.Core
         public PlazaLayout(TableSet tables, PlazaConfigTable config, IReadOnlyCollection<Cell> cells)
         {
             Cells = new CellMetrics(tables);
+            m_config = config;
             float entranceWall = -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit;
             List<PlazaDoor> doors = new List<PlazaDoor>();
 
@@ -91,6 +99,17 @@ namespace ZooTycoon.Core
         public void Rebuild(IReadOnlyCollection<Cell> cells, IEnumerable<IPlaced> decor)
         {
             Shape = Cells.Build(cells);
+            int first = -m_config.ShaftCols / 2;
+            int rows = 0;
+
+            while (rows < m_config.Rows && Enumerable.Range(first, m_config.ShaftCols).All(col => cells.Contains(new Cell(col, rows))))
+            {
+                rows++;
+            }
+
+            ShaftRows = rows;
+            float half = (float)m_config.StreamWidth / 2f;
+            Stream = new NavRect(-half, -Cells.RowTop(rows), half, StairsFloor.Y - k_SpringDrop);
             List<NavRect> blocked = new List<NavRect>();
 
             foreach (IPlaced placed in decor)

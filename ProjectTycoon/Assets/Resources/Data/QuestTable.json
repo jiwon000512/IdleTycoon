@@ -15,7 +15,7 @@
     "version 6 (2026-10-12): 설계 58 · 60 낚시터 되돌림(사용자): q18 낚시터 가기(visit) · q26 삭제 · q20 바위 뚫기(open down1) · q21 댐 허물기(fill down1)",
     "version 7 (2026-10-14, 설계 61 지하 호수의 섬들): q20 바위섬 다리 놓기(open rock_island · thing bridge) · q21 왕메기 잡기(catch king_catfish · thing water). kind fill 삭제",
     "version 8 (2026-10-15, 설계 64 가지 굴 광장): 광장 파기 걸음 q32(밭 자리 1칸) · q33(빵집까지 3칸) · q34(물소리까지 5칸) · q35(횟집 자리 3칸) · q36(마당 4칸, 7장 q25 뒤). 석상 · 행상 · 똥(q12 · q13 · q14)은 7장 q36 뒤로, q37 장식 놓기(place bench_log · menu edit)가 마지막. 4장은 별 걸음만 남는다. 1장 = 마당 · 밭, 7장 = 횟집 · 마당 꾸미기",
-    "version 9 (2026-11-22, 설계 64 판정): 광장 주머니 파기 걸음 q32~q35의 param = 그 주머니(PlazaConfigTable pockets의 to, 석상 · 행상은 use). param이 있으면 그 주머니까지 판 만큼 세고(상태) 길잡이도 그 길의 칸을 가리킨다. count = 앞 걸음 뒤 가장 짧은 길(밭 1 · 빵집 2 · 낚시터 3 · 횟집 3). param 없는 파기(q36 · q07)는 그 곳에서 판 칸만"
+    "version 9 (2026-11-22, 설계 64 판정): 광장 주머니 파기 걸음 q32~q35의 param = 그 주머니(PlazaConfigTable pockets의 to, 석상 · 행상은 use). param이 있으면 그 주머니까지 판 만큼 세고(상태) 길잡이도 그 길의 칸을 가리킨다. count = 앞 걸음 뒤 남은 손질 수(밭 1 · 빵집 2 · 낚시터 3 · 횟집 2 — 설계 65부터 굴길 한 줄은 둑 하나라 횟집은 3 → 2, 값만). param 없는 파기(q36 · q07)는 그 곳에서 판 칸만"
   ],
   "rows": [
     {
@@ -455,7 +455,7 @@
       "chapter": 7,
       "kind": "dig",
       "param": "restaurant",
-      "count": 3,
+      "count": 2,
       "after": null,
       "icon": "Sprites/Quests/dig",
       "text": "quest_q35",

@@ -88,5 +88,16 @@ namespace ZooTycoon.Core
                 Prayed = prayed;
             }
         }
+
+        // 설계 65: 둑을 한 번 쳤다(Dam.Left가 0이면 터졌다 — 칸이 열리는 Dug는 바로 뒤에 온다)
+        public readonly struct DamStruck
+        {
+            public readonly DamInteractable Dam;
+
+            public DamStruck(DamInteractable dam)
+            {
+                Dam = dam;
+            }
+        }
     }
 }

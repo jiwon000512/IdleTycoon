@@ -15,7 +15,7 @@ namespace ZooTycoon.Core
             ActionTable.k_Wake, ActionTable.k_Clean, ActionTable.k_OpenPlant, ActionTable.k_Plant, ActionTable.k_Harvest, ActionTable.k_Till, ActionTable.k_Statue,
             ActionTable.k_Talk, ActionTable.k_DigFloor, ActionTable.k_Evaluate,
             ActionTable.k_Cast, ActionTable.k_Strike, ActionTable.k_Reel, ActionTable.k_FillTank, ActionTable.k_ServeDish, ActionTable.k_OpenShop, ActionTable.k_TakeFish, ActionTable.k_PlaceFish,
-            ActionTable.k_PlaceBridge, ActionTable.k_PullDebris, ActionTable.k_PlaceSeat,
+            ActionTable.k_PlaceBridge, ActionTable.k_PullDebris, ActionTable.k_PlaceSeat, ActionTable.k_BreakDam,
         };
 
         public static InteractAction Create(ActionTable table)
@@ -48,6 +48,7 @@ namespace ZooTycoon.Core
                 case ActionTable.k_PlaceBridge: return new PlaceBridge(table);
                 case ActionTable.k_PullDebris: return new PullDebris(table);
                 case ActionTable.k_PlaceSeat: return new PlaceSeat(table);
+                case ActionTable.k_BreakDam: return new BreakDam(table);
                 case ActionTable.k_FillTank: return new FillTank(table);
                 case ActionTable.k_ServeDish: return new ServeDish(table);
                 case ActionTable.k_OpenShop: return new OpenShop(table);

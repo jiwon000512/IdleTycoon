@@ -19,14 +19,14 @@ namespace ZooTycoon.Tests
         [TestCase("BubbleTable", 4)]
         [TestCase("DialogueTable", 7)]
         [TestCase("BreadTable", 4)]
-        [TestCase("ActionTable", 29)]
-        [TestCase("InteractableTable", 28)]
+        [TestCase("ActionTable", 30)]
+        [TestCase("InteractableTable", 29)]
         [TestCase("DecorationTable", 4)]
         [TestCase("SoundTable", 19)]
         [TestCase("BgmTable", 2)]
         [TestCase("ConfigTable", 7)]
         [TestCase("BakeryConfigTable", 10)]
-        [TestCase("PlazaConfigTable", 11)]
+        [TestCase("PlazaConfigTable", 12)]
         [TestCase("PlazaDecorTable", 2)]
         [TestCase("ItemTable", 9)]
         [TestCase("CropTable", 4)]
@@ -211,6 +211,19 @@ namespace ZooTycoon.Tests
             plaza.Pockets = plaza.Pockets.Append(new PlazaPocketData { Col = col, Row = row, Use = use, To = to, After = after }).ToArray();
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        // 설계 65 냇물 · 둑
+        [Test]
+        public void Validate_WhenPlazaStreamBad_ReportsError()
+        {
+            TableSet noHits = TestTables.Load();
+            noHits.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).DamHits = 0;
+            Assert.That(TableValidator.Validate(noHits), Is.Not.Empty);
+
+            TableSet noWidth = TestTables.Load();
+            noWidth.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).StreamWidth = 0d;
+            Assert.That(TableValidator.Validate(noWidth), Is.Not.Empty);
         }
 
         [Test]

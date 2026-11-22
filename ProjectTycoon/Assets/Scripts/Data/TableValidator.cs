@@ -19,7 +19,7 @@ namespace ZooTycoon.Data
             DigInteractable.k_Id, PassageInteractable.k_Exit, PassageInteractable.k_Door, ClerkInteractable.k_Id, PoopInteractable.k_Id,
             PlotInteractable.k_Id, StatueInteractable.k_Id, MerchantInteractable.k_Id, BarnInteractable.k_Id, StairInteractable.k_Id,
             WaterInteractable.k_Id,
-            TankInteractable.k_Id, CuttingBoardInteractable.k_Id, DiningTableInteractable.k_Id, ShopGateInteractable.k_Id,
+            TankInteractable.k_Id, CuttingBoardInteractable.k_Id, DiningTableInteractable.k_Id, ShopGateInteractable.k_Id, DamInteractable.k_Id,
         };
         // 설계 22: 코드가 부르는 말풍선·대화
         private static readonly string[] k_BubbleIds =
@@ -681,6 +681,11 @@ namespace ZooTycoon.Data
                 if (plaza.DigBaseCost < 0d || plaza.DigCostGrowth < 1d)
                 {
                     errors.Add($"PlazaConfigTable '{plaza.Id}': digBaseCost는 0 이상, digCostGrowth는 1 이상이어야 한다.");
+                }
+
+                if (plaza.StreamWidth <= 0d || plaza.DamHits < 1)
+                {
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': streamWidth는 0보다 크고 damHits는 1 이상이어야 한다.");
                 }
 
                 if (plaza.VisitSecondsMin < 0d || plaza.VisitSecondsMax < plaza.VisitSecondsMin || plaza.VisitsMin < 0 || plaza.VisitsMax < plaza.VisitsMin)

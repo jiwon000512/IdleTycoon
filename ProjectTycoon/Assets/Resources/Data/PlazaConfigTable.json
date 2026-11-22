@@ -1,6 +1,6 @@
 {
   "table": "PlazaConfigTable",
-  "version": 11,
+  "version": 12,
   "notes": [
     "설계 11 굴 밖 광장 숫자. id = 광장(지금 main 하나). 손님은 광장 지상 계단으로 온다(arrivalSeconds).",
     "cols·rows: 칸 수(빵집과 같은 칸, 가로 가운데 정렬). visitSecondsMin~Max: 들를 곳에서 머무는 초. visitsMin~Max: 빵집 가기 전 들르는 곳 수.",
@@ -15,10 +15,11 @@
     "version 8 (2026-10-06, 설계 47 수조 횟집): doors에 restaurant(오른쪽 끝 칸 3) — 닫힌 동안 문 앞 표식에서 연다. 손님은 연 가게를 번갈아 가서(간격 = arrivalSeconds ÷ 연 가게 수) maxVisitors 10 → 14.",
     "version 9 (2026-10-14, 설계 62 우편함 알림): 우체통 자리 mailboxX · mailboxY(계단 왼쪽 −3.4 · −3.4, 임시)",
     "version 10 (2026-10-15, 설계 63 편지 단추): 우체통을 지워 mailboxX · mailboxY 삭제",
-    "version 11 (2026-10-15, 설계 64 가지 굴 광장): 광장도 파는 굴. cols · rows · doors · statueX · Y · merchantX · Y를 지우고 shaftCols(굴길 폭 2) · rows(줄 상한 7, 0 = 입구 줄) · startRows(처음 판 줄 2) · digBaseCost · digCostGrowth(임시 30 · 1.25, 밸런스방) · decorAfter(장식 편집이 열리는 가게 restaurant) · pockets(굴길 옆 주머니 칸: col · row · use door/statue/merchant · to 곳 id · after 가게 id). 문 주머니 바로 위 칸에는 주머니를 두지 않는다(뒷벽 띠)"
+    "version 11 (2026-10-15, 설계 64 가지 굴 광장): 광장도 파는 굴. cols · rows · doors · statueX · Y · merchantX · Y를 지우고 shaftCols(굴길 폭 2) · rows(줄 상한 7, 0 = 입구 줄) · startRows(처음 판 줄 2) · digBaseCost · digCostGrowth(임시 30 · 1.25, 밸런스방) · decorAfter(장식 편집이 열리는 가게 restaurant) · pockets(굴길 옆 주머니 칸: col · row · use door/statue/merchant · to 곳 id · after 가게 id). 문 주머니 바로 위 칸에는 주머니를 두지 않는다(뒷벽 띠)",
+    "version 12 (2026-11-22, 설계 65 냇물 마을 첫 슬라이스): streamWidth(굴길 가운데 냇물 폭 1.35, 얕아서 걸어 건넌다) · damHits(둑을 치는 횟수 3, 손맛용 임시). 굴길의 다음 줄은 흙 칸 대신 둑 하나로 막혀 있고 터지면 그 줄 굴길 칸이 한 번에 열린다(주머니는 그대로 흙 파기)"
   ],
   "rows": [
-    {"id": "main", "shaftCols": 2, "rows": 7, "startRows": 2, "digBaseCost": 30, "digCostGrowth": 1.25, "decorAfter": "restaurant", "arrivalSeconds": 4, "maxVisitors": 14, "visitSecondsMin": 2, "visitSecondsMax": 4.5, "visitsMin": 1, "visitsMax": 2, "browseChance": 0.3, "emoteChance": 0.4, "blessingCooldown": 600, "relicItem": "gem", "relicCost": 5, "relicSlots": 3, "merchantFirst": 60, "merchantEvery": 900, "merchantStay": 180, "merchantLook": "v06", "pockets": [
+    {"id": "main", "shaftCols": 2, "rows": 7, "startRows": 2, "streamWidth": 1.35, "damHits": 3, "digBaseCost": 30, "digCostGrowth": 1.25, "decorAfter": "restaurant", "arrivalSeconds": 4, "maxVisitors": 14, "visitSecondsMin": 2, "visitSecondsMax": 4.5, "visitsMin": 1, "visitsMax": 2, "browseChance": 0.3, "emoteChance": 0.4, "blessingCooldown": 600, "relicItem": "gem", "relicCost": 5, "relicSlots": 3, "merchantFirst": 60, "merchantEvery": 900, "merchantStay": 180, "merchantLook": "v06", "pockets": [
       {"col": 1, "row": 1, "use": "door", "to": "farm", "after": null},
       {"col": -2, "row": 2, "use": "door", "to": "bakery", "after": null},
       {"col": 1, "row": 3, "use": "statue", "to": null, "after": "restaurant"},

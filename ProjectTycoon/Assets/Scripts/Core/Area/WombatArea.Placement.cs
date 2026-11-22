@@ -25,6 +25,9 @@ namespace ZooTycoon.Core
         // 놓인 것이 바뀌었다: 걷는 땅·자리를 다시 만들고 LayoutChanged
         protected abstract void OnPlacementChanged();
 
+        // 설계 65: 사물을 놓을 수 없는 땅(광장 냇물)
+        protected virtual IEnumerable<NavRect> NoPlace => Array.Empty<NavRect>();
+
         protected virtual bool CanRemove(IPlaced thing)
         {
             return true;
@@ -267,6 +270,14 @@ namespace ZooTycoon.Core
             if (!Placement.OnFloor(Shape, rect))
             {
                 return PlacementCheck.OutsideFloor;
+            }
+
+            foreach (NavRect no in NoPlace)
+            {
+                if (no.Intersects(rect))
+                {
+                    return PlacementCheck.Overlaps;
+                }
             }
 
             foreach (Vector2 door in Doors)

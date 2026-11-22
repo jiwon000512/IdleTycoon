@@ -45,6 +45,8 @@ namespace ZooTycoon.Core
 
         public PlazaLayout Layout { get; }
         public BurrowGrid Grid { get; }
+        // 설계 65: 굴길의 다음 줄을 막은 둑(다 팠으면 null)
+        public DamInteractable Dam { get; private set; }
         public BakeryArea Bakery { get; }
         public IReadOnlyList<PlazaVisitor> Visitors => m_visitors;
         public IReadOnlyList<IShop> Shops => m_shops;
@@ -158,9 +160,7 @@ namespace ZooTycoon.Core
         // 설계 64: 팔 수 있는 칸 = 굴길 열 · 주머니 칸(after 가게가 열렸을 때)
         private bool Allowed(Cell cell)
         {
-            int first = -m_config.ShaftCols / 2;
-
-            if (cell.Col >= first && cell.Col < first + m_config.ShaftCols)
+            if (InShaft(cell))
             {
                 return true;
             }
@@ -169,71 +169,41 @@ namespace ZooTycoon.Core
             return pocket != null && ShopOpen(pocket.After);
         }
 
-        // 설계 64 튜토리얼 파기 걸음: 그 주머니(문 갈 곳 id 또는 statue · merchant)까지 더 팔 칸 수. 팠으면 0, 아직 못 파는 주머니면 int.MaxValue
+        // 설계 64 · 65 튜토리얼 파기 걸음: 그 주머니(문 갈 곳 id 또는 statue · merchant)까지 남은 손질 수 = 터야 할 둑 + 주머니 한 칸.
+        // 굴길은 둑으로 위에서부터 한 줄씩만 열린다. 팠으면 0, 아직 못 파는 주머니(after 가게가 닫힘)면 int.MaxValue
         public int DigsTo(string pocket)
         {
-            Dictionary<Cell, int> left = DigsLeft(pocket, out Cell target);
+            Cell target = PocketCell(pocket);
 
             if (Grid.Contains(target))
             {
                 return 0;
             }
 
-            int best = int.MaxValue;
-
-            foreach (Cell cell in Grid.Frontier())
+            if (!Allowed(target))
             {
-                if (left.TryGetValue(cell, out int n) && n < best)
-                {
-                    best = n;
-                }
+                return int.MaxValue;
             }
 
-            return best;
+            return Grid.CanDig(target) ? 1 : target.Row - Layout.ShaftRows + 2;
         }
 
-        // 그 칸을 파면 주머니에 한 칸 가까워지나(길잡이가 가리킬 칸)
+        // 그 흙 칸을 파면 그 주머니가 열리나(길잡이가 가리킬 칸): 주머니 칸 자신이고 지금 팔 수 있을 때
         public bool OnWayTo(string pocket, Cell cell)
         {
-            return DigsLeft(pocket, out _).TryGetValue(cell, out int n) && n == DigsTo(pocket);
+            return cell.Equals(PocketCell(pocket)) && Grid.CanDig(cell);
         }
 
-        // 안 판 칸마다 거기서 주머니까지 팔 칸 수(그 칸 · 주머니 포함). 주머니에서 거꾸로 넓혀 간다
-        private Dictionary<Cell, int> DigsLeft(string pocket, out Cell target)
+        // 둑을 터야 그 주머니에 가까워지나(길잡이가 가리킬 둑)
+        public bool DamOnWayTo(string pocket)
         {
-            target = m_config.Pockets.First(p => (p.To ?? p.Use) == pocket).Cell;
-            Dictionary<Cell, int> left = new Dictionary<Cell, int>();
-
-            if (!Diggable(target))
-            {
-                return left;
-            }
-
-            Queue<Cell> queue = new Queue<Cell>();
-            left[target] = 1;
-            queue.Enqueue(target);
-
-            while (queue.Count > 0)
-            {
-                Cell cell = queue.Dequeue();
-
-                foreach (Cell next in new[] { cell.Offset(1, 0), cell.Offset(-1, 0), cell.Offset(0, 1), cell.Offset(0, -1) })
-                {
-                    if (!left.ContainsKey(next) && Diggable(next))
-                    {
-                        left[next] = left[cell] + 1;
-                        queue.Enqueue(next);
-                    }
-                }
-            }
-
-            return left;
+            int left = DigsTo(pocket);
+            return Dam != null && left > 1 && left != int.MaxValue;
         }
 
-        // 아직 안 판, 언젠가 팔 수 있는 칸
-        private bool Diggable(Cell cell)
+        private Cell PocketCell(string pocket)
         {
-            return cell.Row > BurrowGrid.k_EntranceRow && Grid.Bounds.Contains(cell) && Allowed(cell) && !Grid.Contains(cell);
+            return m_config.Pockets.First(p => (p.To ?? p.Use) == pocket).Cell;
         }
 
         // 그 가게(IShop id)가 열렸나. null이면 조건 없음
@@ -257,17 +227,66 @@ namespace ZooTycoon.Core
             Bus.Publish(new Events.LayoutChanged(this));
         }
 
+        // 굴길 칸은 둑으로만 연다(편집 모드의 흙 탭으로는 주머니만)
         public override DigInteractable DigAt(Vector2 p)
         {
-            return m_digs.At(p);
+            DigInteractable dig = m_digs.At(p);
+            return dig != null && InShaft(dig.Cell) ? null : dig;
         }
 
-        // 파기 사물은 목록 끝에(문 · 표식 뒤)
+        // 굴길 열의 칸인가(둑으로만 열린다)
+        public bool InShaft(Cell cell)
+        {
+            int first = -m_config.ShaftCols / 2;
+            return cell.Col >= first && cell.Col < first + m_config.ShaftCols;
+        }
+
+        // 파기 사물은 목록 끝에(문 · 표식 뒤). 설계 65: 굴길 칸은 흙 칸 대신 줄마다 둑 하나
         private void SyncDigs()
         {
-            Placed.RemoveAll(thing => thing is DigInteractable);
+            Placed.RemoveAll(thing => thing is DigInteractable || thing is DamInteractable);
             m_digs.Sync();
-            Placed.AddRange(m_digs.Things);
+            Placed.AddRange(m_digs.Things.Where(dig => !InShaft(dig.Cell)));
+            int row = Layout.ShaftRows;
+
+            if (row >= m_config.Rows)
+            {
+                Dam = null;
+                return;
+            }
+
+            if (Dam == null || Dam.Row != row)
+            {
+                Dam = NewDam(row, 0);
+            }
+
+            Placed.Add(Dam);
+        }
+
+        private DamInteractable NewDam(int row, int hits)
+        {
+            int first = -m_config.ShaftCols / 2;
+            Cell[] cells = Enumerable.Range(first, m_config.ShaftCols).Select(col => new Cell(col, row)).ToArray();
+            return new DamInteractable(Tables.Get<InteractableTable>(DamInteractable.k_Id), this, Grid, row, cells, Layout.Stream, m_config.DamHits, hits);
+        }
+
+        // 저장 복원: 치던 둑의 횟수(터질 만큼은 아니게)
+        internal void RestoreDam(int hits)
+        {
+            if (Dam != null && hits > 0)
+            {
+                Placed.Remove(Dam);
+                Dam = NewDam(Dam.Row, Math.Min(hits, m_config.DamHits - 1));
+                Placed.Add(Dam);
+            }
+        }
+
+        // 설계 65: 냇물 위에는 장식을 못 놓고 똥도 안 생긴다
+        protected override IEnumerable<NavRect> NoPlace => new[] { Layout.Stream };
+
+        protected override bool CanPoopAt(Vector2 at)
+        {
+            return !Layout.Stream.Contains(at, 0f);
         }
 
         // 설계 64: 칸을 팠다 — 굴 · 땅 다시, 석상 · 행상 주머니면 그 사물이 선다
@@ -288,6 +307,7 @@ namespace ZooTycoon.Core
                 Placed.Add(MerchantThing);
             }
 
+            Layout.Rebuild(Grid.Cells, PlacedThings);
             SyncDigs();
             OnPlacementChanged();
         }

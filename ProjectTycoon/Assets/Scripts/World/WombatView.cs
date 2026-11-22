@@ -325,6 +325,9 @@ namespace ZooTycoon.World
 
         // 굴을 팠다(빵집 · 농장 칸): 지금 보는 방향으로 퍼 던지기를 바로 한 번, 웜뱃이 서 있는 시간(Wombat.DigSeconds)에 맞춰. 흙을 던지기까지 남은 초를 돌려준다
         // 웜뱃은 판 칸 쪽으로 돌아서므로 그 방향 숨쉬기를 먼저 깔아 둔다(Update가 방향이 바뀌었다고 다시 Play해 끼워 넣기를 지우지 않게, 끝나면 그 숨쉬기로)
+        // 파기 그림에서 흙을 던지는 때(초). 그림을 다시 틀지 않고 때만 묻는다(설계 65 둑이 터질 때)
+        public float DigThrowSeconds => m_digThrowFrame * (float)m_area.Wombat.DigSeconds / DigSheet().Length;
+
         public float Dig()
         {
             Sprite[] frames = DigSheet();

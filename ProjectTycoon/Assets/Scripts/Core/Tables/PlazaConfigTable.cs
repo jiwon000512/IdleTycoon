@@ -15,6 +15,9 @@ namespace ZooTycoon.Core
         public int StartRows { get; set; }
         public double DigBaseCost { get; set; }
         public double DigCostGrowth { get; set; }
+        // 설계 65 냇물 마을: 굴길 가운데 냇물 폭(유닛) · 둑을 치는 횟수
+        public double StreamWidth { get; set; }
+        public int DamHits { get; set; }
         // 장식 편집은 이 가게(IShop id)가 열린 뒤. null이면 처음부터
         public string DecorAfter { get; set; }
         // 굴길 옆 주머니 칸(문 · 석상 · 행상 자리)

@@ -2532,6 +2532,16 @@ MonoBehaviour:
     Root: {fileID: 6638713756643249055}
     Sign: {fileID: 5350605067787532695}
   m_bakeryClosed: {fileID: 0}
+  m_waterTiles:
+  - {fileID: 2800000, guid: 126da0b3280700c4daf2e4126333c2c9, type: 3}
+  - {fileID: 2800000, guid: 6ccf1745414358546b1526b77272d1f7, type: 3}
+  - {fileID: 2800000, guid: 71d3b79d457b5e64ab7fd34c6f7b1e04, type: 3}
+  - {fileID: 2800000, guid: fe0044dda960b9849965e1ba4c2e22e0, type: 3}
+  m_streamFace: {fileID: 2800000, guid: dd1107fb60d98ac418a11cb31c603548, type: 3}
+  m_damSprites:
+  - {fileID: 21300000, guid: ef7055b0a54d42144b4c470626dc308c, type: 3}
+  - {fileID: 21300000, guid: 52fed168336d4ef4592704d11a7a2665, type: 3}
+  - {fileID: 21300000, guid: b62a0ca90dfd2ba40a4bd1689bceecee, type: 3}
   m_digTagPrefab: {fileID: 2695013931679785543, guid: 97aa13a92e14cdf42beedaa907855fa1, type: 3}
   m_digSeconds: 0.6
   m_stairs: {fileID: 4102083107926256713}

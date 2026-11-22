@@ -30,11 +30,14 @@ namespace ZooTycoon.World
         private readonly Func<Cell, Vector3> m_cellCenter;
         private readonly Vector2 m_cellSize;
         private readonly float m_digSeconds;
+        // 값 표식을 띄울 칸(null이면 팔 수 있는 칸 전부). 광장 굴길 칸은 둑으로만 열려 표식이 없다(설계 65)
+        private readonly Func<Cell, bool> m_tagged;
         private readonly Dictionary<Cell, MarkerView> m_tags = new Dictionary<Cell, MarkerView>();
         private Sprite m_white;
 
-        public DigView(MonoBehaviour host, MarkerView tagPrefab, TableSet tables, BurrowGrid grid, Func<Cell, Vector3> cellCenter, Vector2 cellSize, float digSeconds)
+        public DigView(MonoBehaviour host, MarkerView tagPrefab, TableSet tables, BurrowGrid grid, Func<Cell, Vector3> cellCenter, Vector2 cellSize, float digSeconds, Func<Cell, bool> tagged = null)
         {
+            m_tagged = tagged;
             m_host = host;
             m_tagPrefab = tagPrefab;
             m_tables = tables;
@@ -56,7 +59,10 @@ namespace ZooTycoon.World
             {
                 foreach (Cell cell in m_grid.Frontier())
                 {
-                    Show(cell);
+                    if (m_tagged == null || m_tagged(cell))
+                    {
+                        Show(cell);
+                    }
                 }
             }
         }

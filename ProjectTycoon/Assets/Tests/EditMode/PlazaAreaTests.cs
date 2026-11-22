@@ -40,7 +40,7 @@ namespace ZooTycoon.Tests
         private void Furnish()
         {
             m_shop.Wallet.AddCoins(100000d);
-            Assert.That(m_plaza.TryBuy("bench_log", new Vector2(0f, -6.2f)), Is.True);
+            Assert.That(m_plaza.TryBuy("bench_log", new Vector2(2f, -6.2f)), Is.True);
             Assert.That(m_plaza.TryBuy("plant_pot", new Vector2(-2.2f, -8.6f)), Is.True);
         }
 

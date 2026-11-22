@@ -36,6 +36,8 @@ namespace ZooTycoon.Core
         public const string k_PlaceBridge = "place_bridge";
         public const string k_PullDebris = "pull_debris";
         public const string k_PlaceSeat = "place_seat";
+        // 설계 65: 광장 둑 치기
+        public const string k_BreakDam = "break_dam";
         // 설계 22: 딴짓 중인 점원 깨우기
         public const string k_Wake = "wake";
         // 설계 24: 똥 치우기

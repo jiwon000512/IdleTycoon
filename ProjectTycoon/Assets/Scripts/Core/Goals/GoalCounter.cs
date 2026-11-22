@@ -166,7 +166,7 @@ namespace ZooTycoon.Core
             if (kind == k_Dig && area != null)
             {
                 WombatArea at = mall.Areas.FirstOrDefault(a => a.Id == area);
-                return at == null || at.Things.Any(thing => thing is DigInteractable);
+                return at == null || at.Things.Any(thing => thing is DigInteractable || thing is DamInteractable);
             }
 
             return kind != k_Draw || !mall.Bakery.Wallet.Relics.Complete;
@@ -183,6 +183,9 @@ namespace ZooTycoon.Core
                 // 설계 64: 주머니 파기 걸음은 그 주머니로 가는 칸만 가리킨다
                 case DigInteractable dig when kind == k_Dig && param != null:
                     return dig.Area is PlazaArea plaza && plaza.OnWayTo(param, dig.Cell);
+                // 설계 65: 굴길 줄은 둑을 터야 열린다
+                case DamInteractable dam:
+                    return kind == k_Dig && (param == null || ((PlazaArea)dam.Area).DamOnWayTo(param));
                 // 설계 59: 광장 문은 가게마다 하나(빵집 · 횟집 · 낚시터)
                 case ShopGateInteractable gate:
                     return param == null || gate.Shop.Id == param;

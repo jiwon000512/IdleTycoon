@@ -83,6 +83,8 @@ namespace ZooTycoon.Core
         public bool Open;
         public List<PlotSave> Plots = new List<PlotSave>();
         public double MerchantUntil;
+        // 설계 65: 광장 둑을 친 횟수(첫 타에 값을 냈으니 남긴다)
+        public int DamHits;
         public FishingSave Fishing;
     }
 

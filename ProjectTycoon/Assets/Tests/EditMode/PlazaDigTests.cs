@@ -54,7 +54,9 @@ namespace ZooTycoon.Tests
 
             Assert.That(plaza.Grid.Cells.Count, Is.EqualTo(config.ShaftCols * config.StartRows));
             Assert.That(plaza.Grid.Frontier().ToList(), Is.EquivalentTo(new[] { new Cell(-1, 2), new Cell(0, 2), farm.Cell }));
-            Assert.That(plaza.Things.OfType<DigInteractable>().Count(), Is.EqualTo(3));
+            Assert.That(plaza.Things.OfType<DigInteractable>().Select(dig => dig.Cell), Is.EqualTo(new[] { farm.Cell }), "굴길 줄은 흙 칸이 아니라 둑(설계 65)");
+            Assert.That(plaza.Dam.Row, Is.EqualTo(config.StartRows));
+            Assert.That(plaza.Things, Has.Member(plaza.Dam));
             Assert.That(plaza.Layout.Nav.IsWalkable(plaza.BakeryDoor.Floor), Is.False, "빵집 문은 주머니를 파야 닿는다");
             Assert.That(plaza.Layout.Nav.IsWalkable(plaza.Layout.StairsFloor), Is.True);
             Assert.That(plaza.Things, Has.No.Member(plaza.Statue));
@@ -151,7 +153,7 @@ namespace ZooTycoon.Tests
             game.State.AddCoins(100000d);
 
             Assert.That(GoalCounter.Current(GoalCounter.k_Place, "bench_log", game.Mall), Is.EqualTo(0));
-            Assert.That(game.Mall.Plaza.TryBuy("bench_log", new Vector2(0f, -6.2f)), Is.True);
+            Assert.That(game.Mall.Plaza.TryBuy("bench_log", new Vector2(2f, -6.2f)), Is.True);
             Assert.That(GoalCounter.Current(GoalCounter.k_Place, "bench_log", game.Mall), Is.EqualTo(1));
         }
 
@@ -232,21 +234,183 @@ namespace ZooTycoon.Tests
             PlazaArea plaza = game.Mall.Plaza;
             QuestLog quests = game.Mall.Quests;
             Assert.That(quests.Current.Id, Is.EqualTo("q33"));
-            Assert.That(plaza.DigsTo(BakeryArea.k_Id), Is.EqualTo(quests.Current.Count), "걸음 수 = 가장 짧은 길");
+            Assert.That(plaza.DigsTo(BakeryArea.k_Id), Is.EqualTo(quests.Current.Count), "걸음 수 = 남은 손질 수(둑 + 주머니)");
 
-            DigInteractable side = plaza.Things.OfType<DigInteractable>().First(dig => dig.Cell.Equals(new Cell(0, 2)));
-            DigInteractable toward = plaza.Things.OfType<DigInteractable>().First(dig => dig.Cell.Equals(new Cell(-1, 2)));
-            Assert.That(GoalCounter.Suits(GoalCounter.k_Dig, BakeryArea.k_Id, side), Is.False);
-            Assert.That(GoalCounter.Suits(GoalCounter.k_Dig, BakeryArea.k_Id, toward), Is.True);
+            DigInteractable farmCell = plaza.Things.OfType<DigInteractable>().Single();
+            Assert.That(GoalCounter.Suits(GoalCounter.k_Dig, BakeryArea.k_Id, farmCell), Is.False, "밭 주머니는 빵집 가는 길이 아니다");
+            Assert.That(GoalCounter.Suits(GoalCounter.k_Dig, BakeryArea.k_Id, plaza.Dam), Is.True, "둑을 터야 빵집 주머니에 닿는다(설계 65)");
 
-            plaza.Grid.Dig(side.Cell);
+            plaza.Grid.Dig(farmCell.Cell);
             game.Mall.Farm.Grid.Dig(game.Mall.Farm.Grid.Frontier().First());
-            Assert.That(quests.Count, Is.EqualTo(0), "옆 칸 · 농장 칸은 안 센다");
+            Assert.That(quests.Count, Is.EqualTo(0), "밭 주머니 · 농장 칸은 안 센다");
 
-            plaza.Grid.Dig(toward.Cell);
-            Assert.That(quests.Count, Is.EqualTo(1));
+            Burst(plaza);
+            Assert.That(quests.Count, Is.EqualTo(1), "둑 하나 = 한 걸음");
             plaza.Grid.Dig(Pocket(game, PlazaPocketData.k_Door, BakeryArea.k_Id).Cell);
             Assert.That(quests.IsDone, Is.True);
+        }
+
+        // 둑이 터진 것처럼 그 줄의 굴길 칸을 모두 판다(값 · 횟수 없이)
+        private static void Burst(PlazaArea plaza)
+        {
+            foreach (Cell cell in plaza.Dam.Cells.ToArray())
+            {
+                if (!plaza.Grid.Contains(cell))
+                {
+                    plaza.Grid.Dig(cell);
+                }
+            }
+        }
+
+        // 주머니 파기 걸음 넷의 수 = 그때 남은 손질 수(둑 + 주머니). 표나 주머니 자리를 고치면 여기서 걸린다(설계 65 리뷰: q35가 3이라 1/3로 시작했다)
+        [Test]
+        public void PocketDigSteps_CountsMatchActionsLeft()
+        {
+            TestGame game = new TestGame(openPlaza: false);
+            PlazaArea plaza = game.Mall.Plaza;
+
+            foreach (string id in new[] { "q32", "q33", "q34", "q35" })
+            {
+                QuestTable step = game.Tables.Get<QuestTable>(id);
+                PlazaPocketData pocket = Config(game).Pockets.First(p => (p.To ?? p.Use) == step.Param);
+                Assert.That(plaza.DigsTo(step.Param), Is.EqualTo(step.Count), id);
+
+                while (!plaza.Grid.CanDig(pocket.Cell))
+                {
+                    Assert.That(plaza.DamOnWayTo(step.Param), Is.True, id);
+                    Assert.That(plaza.OnWayTo(step.Param, pocket.Cell), Is.False, id);
+                    Burst(plaza);
+                }
+
+                Assert.That(plaza.DamOnWayTo(step.Param), Is.False, id);
+                Assert.That(plaza.OnWayTo(step.Param, pocket.Cell), Is.True, id);
+                plaza.Grid.Dig(pocket.Cell);
+                Assert.That(plaza.DigsTo(step.Param), Is.EqualTo(0), id);
+            }
+        }
+
+        // 설계 64 때의 저장(굴길 줄을 반만 판 것)에서도 둑을 가리키고, 남은 손질 수는 터야 할 둑 + 주머니(설계 65 리뷰)
+        [Test]
+        public void HalfDugRows_FromOldSaves_StillCountDams()
+        {
+            TestGame game = new TestGame(openPlaza: false);
+            PlazaArea plaza = game.Mall.Plaza;
+
+            for (int row = 2; row <= 4; row++)
+            {
+                plaza.Grid.Dig(new Cell(-1, row));
+            }
+
+            Assert.That(plaza.Dam.Row, Is.EqualTo(2), "둑은 다 안 판 첫 줄에");
+            Assert.That(plaza.DigsTo(RestaurantArea.k_Id), Is.EqualTo(5), "둑 넷(줄 2~5) + 주머니");
+            Assert.That(plaza.DamOnWayTo(RestaurantArea.k_Id), Is.True);
+            Assert.That(plaza.DigsTo(FishingArea.k_Id), Is.EqualTo(1), "왼쪽 주머니는 바로 팔 수 있다");
+            Assert.That(plaza.DamOnWayTo(FishingArea.k_Id), Is.False);
+
+            Burst(plaza);
+            Assert.That(plaza.Grid.Contains(new Cell(0, 2)), Is.True, "터지면 남은 칸만 열린다");
+            Assert.That(plaza.Dam.Row, Is.EqualTo(3));
+            Assert.That(plaza.DigsTo(RestaurantArea.k_Id), Is.EqualTo(4));
+        }
+
+        private static void StandAtDam(TestGame game)
+        {
+            PlazaArea plaza = game.Mall.Plaza;
+            game.Mall.Wombat.Mover.Place(plaza.Dam.Position + new Vector2(0f, 0.3f));
+            game.Mall.Tick(k_Dt);
+        }
+
+        // 파는 동작이 끝날 때까지 흘린다
+        private static void Rest(TestGame game)
+        {
+            for (int i = 0; i < 100 && game.Mall.Wombat.Busy; i++)
+            {
+                game.Mall.Tick(k_Dt);
+            }
+        }
+
+        // 설계 65 냇물 마을: 둑을 damHits번 치면 그 줄 굴길 칸이 한 번에 열리고 냇물이 그 줄 끝까지 내려간다. 값은 첫 타에 한 번
+        [Test]
+        public void Dam_BreaksAfterHits_OpensTheRow_AndStreamFollows()
+        {
+            TestGame game = new TestGame(openPlaza: false);
+            PlazaArea plaza = game.Mall.Plaza;
+            PlazaConfigTable config = Config(game);
+            game.State.AddCoins(10000d);
+            game.Mall.StartNew();
+            int row = plaza.Dam.Row;
+            double cost = plaza.Grid.DigCost;
+            double coins = game.State.Coins;
+            Assert.That(plaza.Layout.Stream.YMin, Is.EqualTo(-plaza.Layout.Cells.RowTop(row)).Within(1e-4f), "냇물은 판 줄 끝까지");
+            Assert.That(plaza.Dam.Position.Y, Is.EqualTo(plaza.Layout.Stream.YMin).Within(1e-4f));
+            StandAtDam(game);
+            Assert.That(plaza.Target, Is.SameAs(plaza.Dam));
+
+            for (int hit = 1; hit < config.DamHits; hit++)
+            {
+                Assert.That(plaza.TryInteract(), Is.True);
+                Assert.That(plaza.TryInteract(), Is.False, "파는 동작 중에는 못 친다");
+                Rest(game);
+                Assert.That(plaza.Dam.Hits, Is.EqualTo(hit));
+                Assert.That(plaza.Grid.Contains(new Cell(0, row)), Is.False);
+            }
+
+            Assert.That(game.State.Coins, Is.EqualTo(coins - cost), "값은 첫 타에 한 번");
+            Assert.That(plaza.TryInteract(), Is.True);
+            Assert.That(plaza.Grid.Contains(new Cell(-1, row)) && plaza.Grid.Contains(new Cell(0, row)), Is.True, "그 줄 굴길 칸이 한 번에");
+            Assert.That(game.State.Coins, Is.EqualTo(coins - cost));
+            Assert.That(plaza.Layout.Stream.YMin, Is.EqualTo(-plaza.Layout.Cells.RowTop(row + 1)).Within(1e-4f), "물이 한 줄 내려갔다");
+            Assert.That(plaza.Dam.Row, Is.EqualTo(row + 1));
+            Assert.That(plaza.Dam.Hits, Is.EqualTo(0));
+        }
+
+        // 코인이 모자라면 첫 타를 못 친다. 굴길 칸은 편집 모드의 흙 탭으로 못 판다
+        [Test]
+        public void Dam_NeedsCoins_AndShaftCellsAreNotDugByHand()
+        {
+            TestGame game = new TestGame(openPlaza: false);
+            PlazaArea plaza = game.Mall.Plaza;
+            game.Mall.StartNew();
+            game.State.TrySpendCoins(game.State.Coins);
+            StandAtDam(game);
+
+            Assert.That(plaza.Target, Is.SameAs(plaza.Dam));
+            Assert.That(plaza.TryInteract(), Is.False);
+            Assert.That(plaza.Dam.Hits, Is.EqualTo(0));
+            Assert.That(plaza.DigAt(plaza.Layout.Cells.CellCenter(new Cell(0, plaza.Dam.Row))), Is.Null);
+            Assert.That(plaza.DigAt(plaza.Layout.Cells.CellCenter(Pocket(game, PlazaPocketData.k_Door, FarmArea.k_Id).Cell)), Is.Not.Null);
+        }
+
+        // 치던 둑은 저장에 남는다(값을 이미 냈다)
+        [Test]
+        public void Save_KeepsDamHits()
+        {
+            TestGame game = new TestGame(openPlaza: false);
+            game.State.AddCoins(10000d);
+            game.Mall.StartNew();
+            StandAtDam(game);
+            Assert.That(game.Mall.Plaza.TryInteract(), Is.True);
+            string json = JsonConvert.SerializeObject(GameSave.Capture(game.State, game.Mall));
+
+            TestGame loaded = new TestGame(openPlaza: false);
+            GameSave.Apply(JsonConvert.DeserializeObject<SaveData>(json), loaded.State, loaded.Mall, loaded.Tables);
+
+            Assert.That(loaded.Mall.Plaza.Dam.Hits, Is.EqualTo(1));
+            Assert.That(loaded.Mall.Plaza.Dam.Cost, Is.EqualTo(0d));
+            Assert.That(loaded.Mall.Plaza.Things, Has.Member(loaded.Mall.Plaza.Dam));
+        }
+
+        // 냇물 위에는 똥이 안 생긴다(둑 옆 땅에는 생긴다)
+        [Test]
+        public void Stream_TakesNoPoop()
+        {
+            TestGame game = new TestGame(openPlaza: false);
+            PlazaArea plaza = game.Mall.Plaza;
+            NavRect stream = plaza.Layout.Stream;
+            float y = (stream.YMin + stream.YMax) / 2f;
+
+            Assert.That(plaza.TryDropPoop(new Vector2(0f, y)), Is.False);
+            Assert.That(plaza.TryDropPoop(new Vector2(stream.XMax + 1f, y)), Is.True);
         }
 
         // param 없는 파기 걸음(마당)도 그 곳에서 판 칸만

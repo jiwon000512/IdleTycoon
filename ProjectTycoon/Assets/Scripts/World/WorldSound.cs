@@ -53,6 +53,7 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.RestaurantVisitorPaid>(e => PlayIn(e.Visitor.Restaurant, SoundTable.k_Pay)),
                 bus.Subscribe<Events.ShopOpened>(_ => Play(SoundTable.k_ShopOpen)),
                 bus.Subscribe<Events.Dug>(Bus_Dug),
+                bus.Subscribe<Events.DamStruck>(Bus_DamStruck),
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.Upgraded>(e => PlayIn(e.Area, SoundTable.k_Upgrade)),
                 bus.Subscribe<Events.ClerkHired>(_ => Play(SoundTable.k_ClerkHired)),
@@ -159,7 +160,14 @@ namespace ZooTycoon.World
         private void Bus_Dug(Events.Dug e)
         {
             m_dugFrame = Time.frameCount;
-            PlayIn((WombatArea)m_mall.Farms.FirstOrDefault(farm => farm.Grid == e.Grid) ?? m_mall.Bakery, SoundTable.k_Dig);
+            // 설계 64 · 65: 광장 칸도 판다(전엔 빵집 소리로 들어가 광장에서는 안 났다)
+            PlayIn((WombatArea)m_mall.Farms.FirstOrDefault(farm => farm.Grid == e.Grid) ?? (m_mall.Plaza.Grid == e.Grid ? m_mall.Plaza : (WombatArea)m_mall.Bakery), SoundTable.k_Dig);
+        }
+
+        // 설계 65: 둑을 칠 때마다 파기 소리, 터지는 타는 쿵
+        private void Bus_DamStruck(Events.DamStruck e)
+        {
+            PlayIn(e.Dam.Area, e.Dam.Left <= 0 ? SoundTable.k_Thump : SoundTable.k_Dig);
         }
 
         // 설계 39: 계단 파기도 파기 소리(배치가 바뀐 소리는 빼고)

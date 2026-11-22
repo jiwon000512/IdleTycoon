@@ -162,11 +162,12 @@ namespace ZooTycoon.Tests
             m_state.AddCoins(10000d);
             int before = m_plaza.Decor.Count;
             int spotsBefore = m_plaza.Layout.Spots.Count;
-            Vector2 at = new Vector2(0f, -4.6f);
+            Vector2 at = new Vector2(1.5f, -4.6f);
 
             Assert.That(m_plaza.ShopKinds.Count, Is.EqualTo(m_tables.GetAll<DecorationTable>().Count));
             Assert.That(m_plaza.CanPlace("bench_log", m_plaza.Layout.StatueBase), Is.EqualTo(PlacementCheck.Overlaps), "석상 위");
             Assert.That(m_plaza.CanPlace("bench_log", new Vector2(9f, -4.6f)), Is.EqualTo(PlacementCheck.OutsideFloor));
+            Assert.That(m_plaza.CanPlace("bench_log", new Vector2(0f, -4.6f)), Is.EqualTo(PlacementCheck.Overlaps), "냇물 위(설계 65)");
             Assert.That(m_plaza.TryBuy("bench_log", at), Is.True);
             Assert.That(m_plaza.Decor.Count, Is.EqualTo(before + 1));
             Assert.That(m_plaza.Layout.Spots.Count, Is.EqualTo(spotsBefore + 2));

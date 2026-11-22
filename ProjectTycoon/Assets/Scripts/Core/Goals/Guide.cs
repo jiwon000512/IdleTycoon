@@ -154,7 +154,7 @@ namespace ZooTycoon.Core
         // 그 곳의 그 종류 중 걸음에 알맞은 것(빈 밭 등), 점원 없는 것 먼저(웜뱃이 일할 수 있게, 2026-10-12 사용자), 웜뱃에서 가까운 것
         private Interactable Pick(WombatArea area)
         {
-            return area.Things.Where(thing => thing.Table.Id == m_thing && GoalCounter.Suits(m_kind, m_param, thing))
+            return area.Things.Where(thing => (thing.Table.Id == m_thing || m_thing == DigInteractable.k_Id && thing is DamInteractable) && GoalCounter.Suits(m_kind, m_param, thing))
                 .OrderBy(thing => area.ClerkOf(thing) != null)
                 .ThenBy(thing => thing.DistanceTo(m_mall.Wombat.Mover.Position)).FirstOrDefault();
         }

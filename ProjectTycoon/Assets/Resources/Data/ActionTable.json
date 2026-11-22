@@ -1,6 +1,6 @@
 {
   "table": "ActionTable",
-  "version": 29,
+  "version": 30,
   "notes": [
     "설계 09 v0.4 → 설계 13 v0.5: 웜뱃이 사물에서 하는 행동. 하는 일은 행동 클래스(ActionFactory 안 중첩 클래스, id로 만든다), 이 표는 어떻게 하는지(mode)와 버튼 아이콘. 어느 사물에서 되는지는 InteractableTable.json actions.",
     "mode: auto = 사물 range 안에 있으면 매 프레임 할 수 있을 때 바로 · manual = 상호작용 버튼(지금 할 수 있는 첫 manual 행동) · sheet = 시트의 한 줄(줄을 누르면 산다). take_out은 2026-09-23 사용자 요청(「다 구운 빵을 눌러서 받는 것도 스트레스」)으로 auto.",
@@ -34,7 +34,8 @@
     "version 26 (2026-10-07): 설계 53 낚시터 넓히기 — break_rock(바위 뚫기 시트 줄) · pull_debris(댐 잔해 끌어내기 버튼, 감기 아이콘) · place_seat(좌대 놓기 시트 줄).",
     "version 27 (2026-10-14, 설계 61): break_rock(바위 뚫기 시트 줄) → place_bridge(다리 놓기 시트 줄). pull_debris는 상자 끌어내기로 그대로",
     "version 28 (2026-10-14, 설계 62): read_mail(우체통 편지 읽기 버튼, 아이콘은 말 걸기 그림을 빌림 — 아트방)",
-    "version 29 (2026-10-15, 설계 63 편지 단추): 우체통을 지워 read_mail 삭제(편지는 오른쪽 메뉴 줄 단추)"
+    "version 29 (2026-10-15, 설계 63 편지 단추): 우체통을 지워 read_mail 삭제(편지는 오른쪽 메뉴 줄 단추)",
+    "version 30 (2026-11-22, 설계 65 냇물 마을 첫 슬라이스): break_dam(manual, 아이콘은 삽 Actions/dig를 빌린다) — 광장 굴길의 둑(dam) 앞 단추. 누를 때마다 둑을 한 번 치고(첫 타에 파기 값), PlazaConfigTable damHits번째에 둑이 터져 그 줄 굴길 칸이 열린다. 시트 없음"
   ],
   "rows": [
     {
@@ -191,6 +192,11 @@
       "id": "place_seat",
       "mode": "sheet",
       "icon": null
+    },
+    {
+      "id": "break_dam",
+      "mode": "manual",
+      "icon": "Sprites/Actions/dig"
     }
   ]
 }

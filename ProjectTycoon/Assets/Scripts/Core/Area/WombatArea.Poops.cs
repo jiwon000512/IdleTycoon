@@ -25,10 +25,16 @@ namespace ZooTycoon.Core
         // 손님이 걸어 들어가지 않는 똥 둘레(막힘의 세기)
         public float PoopAvoidRadius { get; private set; }
 
+        // 설계 65: 똥이 생길 수 없는 자리(광장 냇물)
+        protected virtual bool CanPoopAt(Vector2 at)
+        {
+            return true;
+        }
+
         // 그 자리에 똥 하나. 바닥에 poopMax개거나 다른 똥 poopGap 안이면 false
         public bool TryDropPoop(Vector2 at)
         {
-            if (m_poops.Count >= m_poopMax)
+            if (m_poops.Count >= m_poopMax || !CanPoopAt(at))
             {
                 return false;
             }
