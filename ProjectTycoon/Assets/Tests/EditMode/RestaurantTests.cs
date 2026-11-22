@@ -54,6 +54,7 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, new SequenceRandom(new double[4000]), wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 40000).ToArray()), wombat, m_bus);
+            m_plaza.DigAll();
             m_restaurant = new RestaurantArea(m_state, m_tables, new FixedRandom(0.3), wombat, m_bus);
             m_mall = new Mall(m_shop, m_plaza, new FarmArea(m_tables, new FixedRandom(0.99), wombat, m_bus), m_bus, null, m_restaurant);
         }
@@ -216,7 +217,8 @@ namespace ZooTycoon.Tests
             Assert.That(paid, Is.EqualTo(Math.Round(m_tables.Get<DishTable>("dish_minnow").Price * m_state.Scale(BlessingTable.k_Price))).Within(1e-6));
             Assert.That(paid, Is.GreaterThan(m_tables.Get<DishTable>("dish_minnow").Price));
             Assert.That(m_state.Coins - coins, Is.EqualTo(paid).Within(1e-6));
-            Assert.That(RunUntil(() => m_restaurant.Visitors.Count == 0, 20d), Is.True, "구멍으로 나간다");
+            // 설계 64: 시작 장식이 없어 광장 손님이 바로 횟집에 들어오므로 이 손님만 본다
+            Assert.That(RunUntil(() => !m_restaurant.Visitors.Contains(visitor), 20d), Is.True, "구멍으로 나간다");
             Assert.That(visitor.Angry, Is.False);
         }
 

@@ -1,6 +1,6 @@
 {
   "table": "StringTable",
-  "version": 67,
+  "version": 68,
   "notes": [
     "화면에 보이는 모든 문자열. 데이터-테이블-규칙 8.5.",
     "{0}, {1}은 string.Format 인자 순서. 숫자 서식은 호출부(BigNumberFormatter, N0)가 만든다.",
@@ -70,7 +70,8 @@
     "version 64 (2026-10-12): 설계 58 · 60 낚시터 되돌림(사용자): 젖은 벽 · 둑 칸 · 발견 글 삭제",
     "version 65 (2026-10-14, 설계 61 지하 호수의 섬들): 바위 · 잔해 글 삭제(sheet_rock_* · row_break_rock* · tag_rock · fishing_debris_left · fishing_flooded) → 다리 시트(sheet_bridge_* · row_place_bridge* · tag_bridge) · 섬에 닿음(fishing_reached) · 섬 이름(island_<id>), quest_q20 · q21 글 바꿈",
     "version 66 (2026-10-14, 설계 62): kind_mailbox 「우체통」",
-    "version 67 (2026-10-15, 설계 63): kind_mailbox 삭제(우체통 사물 없음)"
+    "version 67 (2026-10-15, 설계 63): kind_mailbox 삭제(우체통 사물 없음)",
+    "version 68 (2026-10-15, 설계 64 가지 굴 광장): quest_q32~q37 · letter_l12_1 · 2 추가, quest_q18 「낚시터 가기」, letter_l01_1 · l07_2 · 소문 글을 굴길 파기로"
   ],
   "rows": [
     {
@@ -1415,7 +1416,7 @@
     },
     {
       "id": "quest_q18",
-      "ko": "젖은 벽 파기"
+      "ko": "낚시터 가기"
     },
     {
       "id": "quest_q19",
@@ -1463,7 +1464,7 @@
     },
     {
       "id": "letter_l01_1",
-      "ko": "조카야, 굴을 물려받았다지? 광장 옆에 작은 밭이 있단다."
+      "ko": "조카야, 굴을 물려받았다지? 마당 오른쪽 흙벽 뒤에 작은 밭이 있단다."
     },
     {
       "id": "letter_l01_2",
@@ -1511,7 +1512,7 @@
     },
     {
       "id": "letter_l07_2",
-      "ko": "광장 오른쪽 젖은 벽을 파 보렴. 낚시 밑천을 보탠다."
+      "ko": "굴길을 더 파 내려가 보렴. 낚시 밑천을 보탠다."
     },
     {
       "id": "letter_l08_1",
@@ -1531,7 +1532,7 @@
     },
     {
       "id": "say_rumor_q17_2",
-      "ko": "젖은 벽 뒤에 뭐가 있을까?"
+      "ko": "굴 밑에서 물소리가 난대."
     },
     {
       "id": "say_rumor_q21_1",
@@ -1740,6 +1741,38 @@
     {
       "id": "quest_count",
       "ko": "{0}/{1}"
+    },
+    {
+      "id": "quest_q32",
+      "ko": "밭 자리 파기"
+    },
+    {
+      "id": "quest_q33",
+      "ko": "빵집까지 파기"
+    },
+    {
+      "id": "quest_q34",
+      "ko": "물소리 나는 데까지 파기"
+    },
+    {
+      "id": "quest_q35",
+      "ko": "횟집 자리 파기"
+    },
+    {
+      "id": "quest_q36",
+      "ko": "마당 파기"
+    },
+    {
+      "id": "quest_q37",
+      "ko": "통나무 의자 놓기"
+    },
+    {
+      "id": "letter_l12_1",
+      "ko": "횟집까지 열다니 대단합니다. 손님이 쉴 곳도 있으면 좋겠군요."
+    },
+    {
+      "id": "letter_l12_2",
+      "ko": "마당을 더 파고 장식을 놓아 보세요. 석상과 행상도 자리를 잡을 겁니다."
     }
   ]
 }

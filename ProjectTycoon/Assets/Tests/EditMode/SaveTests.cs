@@ -35,7 +35,7 @@ namespace ZooTycoon.Tests
         public BakeryArea Bakery => Mall.Bakery;
 
         // clock: 설계 54 오늘의 일 시계(없으면 기기 시각)
-        public TestGame(TableSet tables = null, int seed = 1, Func<DateTime> clock = null)
+        public TestGame(TableSet tables = null, int seed = 1, Func<DateTime> clock = null, bool openPlaza = true)
         {
             Tables = tables ?? TestTables.Load();
             Bus = new EventBus();
@@ -44,6 +44,12 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(Tables, State);
             BakeryArea bakery = new BakeryArea(State, Tables, random, wombat, Bus);
             Mall = new Mall(bakery, new PlazaArea(Tables, bakery, random, wombat, Bus), new FarmArea(Tables, random, wombat, Bus), Bus, clock: clock);
+
+            // 설계 64: 광장 모양과 상관없는 테스트는 굴길 · 주머니를 다 파 둔다
+            if (openPlaza)
+            {
+                Mall.Plaza.DigAll();
+            }
         }
 
         public VisitorTable ClerkLook => Tables.GetAll<VisitorTable>().First(look => look.Role == VisitorRole.Clerk);

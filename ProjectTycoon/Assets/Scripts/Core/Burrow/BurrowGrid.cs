@@ -17,18 +17,22 @@ namespace ZooTycoon.Core
         private readonly double m_digCostGrowth;
         private readonly int m_startCount;
         private readonly EventBus m_bus;
+        // 설계 64: 곳이 더 거르는 칸(광장: 굴길 열 · 열린 주머니). null이면 범위 안 전부
+        private readonly Func<Cell, bool> m_allowed;
         private readonly HashSet<Cell> m_cells = new HashSet<Cell>();
 
         public IReadOnlyCollection<Cell> Cells => m_cells;
         public CellBounds Bounds { get; }
-        public double DigCost => m_digBaseCost * Math.Pow(m_digCostGrowth, m_cells.Count - m_startCount);
+        // 코인은 정수로(2026-10-28 플레이: 광장 30 × 1.25ⁿ이 소수로 보였다)
+        public double DigCost => Math.Round(m_digBaseCost * Math.Pow(m_digCostGrowth, m_cells.Count - m_startCount));
 
-        public BurrowGrid(IEnumerable<Cell> start, double digBaseCost, double digCostGrowth, CellBounds bounds, EventBus bus)
+        public BurrowGrid(IEnumerable<Cell> start, double digBaseCost, double digCostGrowth, CellBounds bounds, EventBus bus, Func<Cell, bool> allowed = null)
         {
             m_digBaseCost = digBaseCost;
             m_digCostGrowth = digCostGrowth;
             Bounds = bounds;
             m_bus = bus;
+            m_allowed = allowed;
 
             foreach (Cell cell in start)
             {
@@ -59,7 +63,7 @@ namespace ZooTycoon.Core
 
         public bool CanDig(Cell cell)
         {
-            if (cell.Row <= k_EntranceRow || m_cells.Contains(cell) || !Bounds.Contains(cell))
+            if (cell.Row <= k_EntranceRow || m_cells.Contains(cell) || !Bounds.Contains(cell) || m_allowed != null && !m_allowed(cell))
             {
                 return false;
             }

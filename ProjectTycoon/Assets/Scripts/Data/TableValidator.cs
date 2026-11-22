@@ -673,14 +673,19 @@ namespace ZooTycoon.Data
         {
             foreach (PlazaConfigTable plaza in tables.GetAll<PlazaConfigTable>())
             {
-                if (plaza.Cols < 2 || plaza.Rows < 2 || plaza.ArrivalSeconds <= 0d || plaza.MaxVisitors < 1)
+                if (plaza.ShaftCols < 2 || plaza.Rows < 2 || plaza.StartRows < 1 || plaza.StartRows > plaza.Rows || plaza.ArrivalSeconds <= 0d || plaza.MaxVisitors < 1)
                 {
-                    errors.Add($"PlazaConfigTable '{plaza.Id}': cols·rows는 2 이상, arrivalSeconds는 0보다, maxVisitors는 1 이상이어야 한다.");
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': shaftCols · rows는 2 이상, startRows는 1 ~ rows, arrivalSeconds는 0보다, maxVisitors는 1 이상이어야 한다.");
+                }
+
+                if (plaza.DigBaseCost < 0d || plaza.DigCostGrowth < 1d)
+                {
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': digBaseCost는 0 이상, digCostGrowth는 1 이상이어야 한다.");
                 }
 
                 if (plaza.VisitSecondsMin < 0d || plaza.VisitSecondsMax < plaza.VisitSecondsMin || plaza.VisitsMin < 0 || plaza.VisitsMax < plaza.VisitsMin)
                 {
-                    errors.Add($"PlazaConfigTable '{plaza.Id}': visitSecondsMin·visitsMin은 0 이상, Max는 Min 이상이어야 한다.");
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': visitSeconds·visits 범위가 뒤집혔다.");
                 }
 
                 if (plaza.BrowseChance < 0d || plaza.BrowseChance > 1d || plaza.EmoteChance < 0d || plaza.EmoteChance > 1d)
@@ -688,17 +693,33 @@ namespace ZooTycoon.Data
                     errors.Add($"PlazaConfigTable '{plaza.Id}': browseChance·emoteChance는 0~1이어야 한다.");
                 }
 
-                // 설계 44: 뒷벽 문은 칸 안 · 서로 다른 칸 · 서로 다른 곳이고, 손님이 드나드는 빵집 문이 있다
-                PlazaDoorData[] doors = plaza.Doors ?? new PlazaDoorData[0];
+                // 설계 64: 주머니는 굴길 바깥 바로 옆 열 · 줄 1 ~ rows−1 · 서로 다른 칸, 문은 to가 서로 다르고 bakery · restaurant 문이 있다, 석상 · 행상 자리는 하나씩,
+                // after · decorAfter는 가게 id. 문 주머니 바로 위 칸에는 주머니를 두지 않는다(뒷벽 띠가 사라져 문이 뜬다)
+                string[] shopIds = { BakeryArea.k_Id, FishingArea.k_Id, RestaurantArea.k_Id };
+                string[] uses = { PlazaPocketData.k_Door, PlazaPocketData.k_Statue, PlazaPocketData.k_Merchant };
+                PlazaPocketData[] pockets = plaza.Pockets ?? new PlazaPocketData[0];
+                int firstCol = -plaza.ShaftCols / 2;
+                PlazaPocketData[] doors = pockets.Where(p => p.Use == PlazaPocketData.k_Door).ToArray();
 
-                if (doors.Any(d => string.IsNullOrEmpty(d.To) || d.Col < 0 || d.Col >= plaza.Cols)
-                    || doors.Select(d => d.Col).Distinct().Count() != doors.Length
+                if (pockets.Any(p => p.Col != firstCol - 1 && p.Col != firstCol + plaza.ShaftCols || p.Row < 1 || p.Row >= plaza.Rows || !uses.Contains(p.Use)
+                        || (p.Use == PlazaPocketData.k_Door ? string.IsNullOrEmpty(p.To) : p.To != null) || p.After != null && !shopIds.Contains(p.After))
+                    || pockets.Select(p => (p.Col, p.Row)).Distinct().Count() != pockets.Length
                     || doors.Select(d => d.To).Distinct().Count() != doors.Length
-                    || doors.All(d => d.To != BakeryArea.k_Id) || doors.All(d => d.To != RestaurantArea.k_Id))
+                    || doors.All(d => d.To != BakeryArea.k_Id) || doors.All(d => d.To != RestaurantArea.k_Id)
+                    || pockets.Count(p => p.Use == PlazaPocketData.k_Statue) != 1 || pockets.Count(p => p.Use == PlazaPocketData.k_Merchant) != 1)
                 {
-                    errors.Add($"PlazaConfigTable '{plaza.Id}': doors는 칸 안(0 ~ cols−1) · 서로 다른 칸 · 서로 다른 곳이고 bakery · restaurant 문이 있어야 한다.");
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': pockets는 굴길 옆 열 · 줄 1 ~ rows−1 · 서로 다른 칸, use는 door(to 필요) · statue · merchant 하나씩, 문은 서로 다른 곳이고 bakery · restaurant가 있어야 하며 after는 가게 id여야 한다.");
                 }
 
+                if (doors.Any(d => pockets.Any(p => p.Col == d.Col && p.Row == d.Row - 1)))
+                {
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': 문 주머니 바로 위 칸에는 주머니를 둘 수 없다(뒷벽 띠가 없어진다).");
+                }
+
+                if (plaza.DecorAfter != null && !shopIds.Contains(plaza.DecorAfter))
+                {
+                    errors.Add($"PlazaConfigTable '{plaza.Id}': decorAfter는 가게 id여야 한다.");
+                }
             }
 
             CheckRequired<PlazaConfigTable>(tables, new[] { PlazaConfigTable.k_Main }, errors);
@@ -1155,6 +1176,13 @@ namespace ZooTycoon.Data
                 if (step.Coins < 0d || step.Item != null && (!items.Contains(step.Item) || step.ItemCount < 1))
                 {
                     errors.Add($"QuestTable '{step.Id}': coins ≥ 0, item은 ItemTable에 있고 itemCount ≥ 1이어야 한다.");
+                }
+
+                // 설계 64: param이 있는 파기 걸음은 광장 주머니(to 또는 use)
+                if (step.Kind == GoalCounter.k_Dig && step.Param != null && (step.Area != PlazaArea.k_Id
+                    || !tables.GetAll<PlazaConfigTable>().SelectMany(plaza => plaza.Pockets ?? new PlazaPocketData[0]).Any(pocket => (pocket.To ?? pocket.Use) == step.Param)))
+                {
+                    errors.Add($"QuestTable '{step.Id}': param이 있는 dig는 area plaza이고 param은 PlazaConfigTable pockets의 to(없으면 use)여야 한다.");
                 }
             }
 

@@ -71,6 +71,7 @@ namespace ZooTycoon.World
             PlazaView plazaView = Instantiate(m_plazaPrefab, k_PlazaOrigin, Quaternion.identity, transform);
             plazaView.GetComponent<PlazaVisitorSpawner>().Initialize(mall.Plaza, plazaView, bus, tables, Frames);
             plazaView.Bind(mall.Plaza, bus, Frames, tables);
+            plazaView.Expanded += View_Expanded;
             m_views[mall.Bakery] = m_shopView;
             m_views[mall.Plaza] = plazaView;
 
@@ -157,6 +158,7 @@ namespace ZooTycoon.World
             if (m_shopView != null)
             {
                 m_shopView.Expanded -= View_Expanded;
+                ((PlazaView)m_views[m_mall.Plaza]).Expanded -= View_Expanded;
             }
 
             foreach (FarmView farmView in m_farmViews)

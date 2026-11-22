@@ -22,8 +22,7 @@ namespace ZooTycoon.Core
             m_random = random;
             Merchant = merchant;
             m_hello = plaza.Tables.Get<DialogueTable>(DialogueTable.k_MerchantHello);
-            PlazaConfigTable config = plaza.Tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
-            m_stall = new Vector2((float)config.MerchantX, (float)config.MerchantY);
+            m_stall = plaza.Layout.MerchantStall;
         }
 
         public override float DistanceTo(Vector2 p)

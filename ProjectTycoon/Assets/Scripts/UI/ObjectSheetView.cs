@@ -49,6 +49,8 @@ namespace ZooTycoon.UI
         public string Name;
         public string Effect;
         public string Cost;
+        // 값 그림(재료 아이콘 경로). null이면 코인(2026-10-28 플레이: 빵집 문 밀 값에 코인 그림)
+        public string CostIcon;
         public SheetRowState State;
     }
 
@@ -89,6 +91,7 @@ namespace ZooTycoon.UI
         private float m_hiddenY;
         // 칩 큰 아이콘의 윗변 자리(프리팹 값)
         private float m_iconTop;
+        private Sprite m_coin;
 
         public event Action<int> ChipClicked;
         public event Action<int> RowClicked;
@@ -103,6 +106,7 @@ namespace ZooTycoon.UI
             m_chipTemplate.gameObject.SetActive(false);
             m_rowTemplate.gameObject.SetActive(false);
             m_iconTop = ((RectTransform)m_chipTemplate.transform.Find("Icon")).anchoredPosition.y;
+            m_coin = m_rowTemplate.transform.Find("Price/Coin").GetComponent<Image>().sprite;
         }
 
         public void SetHeader(string title, string status)
@@ -159,6 +163,7 @@ namespace ZooTycoon.UI
                 button.transform.Find("Effect").GetComponent<TMP_Text>().text = row.Effect;
                 TMP_Text cost = button.transform.Find("Price/Cost").GetComponent<TMP_Text>();
                 cost.text = row.Cost;
+                button.transform.Find("Price/Coin").GetComponent<Image>().sprite = row.CostIcon == null ? m_coin : Resources.Load<Sprite>(row.CostIcon);
                 // 설계 44: 값이 없는 줄(대물 뱃속 3택 1)은 코인 칸을 숨긴다
                 button.transform.Find("Price").gameObject.SetActive(!string.IsNullOrEmpty(row.Cost));
                 cost.color = row.State == SheetRowState.Enabled ? k_CostOk : row.State == SheetRowState.Poor ? k_CostPoor : k_CostMuted;

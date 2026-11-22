@@ -31,8 +31,17 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(m_tables, state);
             m_shop = new BakeryArea(state, m_tables, new SequenceRandom(new double[2000]), wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), wombat, m_bus);
+            m_plaza.DigAll();
             m_farm = new FarmArea(m_tables, new SequenceRandom(new double[100]), wombat, m_bus);
             m_mall = new Mall(m_shop, m_plaza, m_farm, m_bus);
+        }
+
+        // 설계 64: 시작 장식이 없다. 들를 곳이 필요한 테스트는 굴길 줄 2 · 3에 의자 · 화분을 놓는다(손님 자리 넷)
+        private void Furnish()
+        {
+            m_shop.Wallet.AddCoins(100000d);
+            Assert.That(m_plaza.TryBuy("bench_log", new Vector2(0f, -6.2f)), Is.True);
+            Assert.That(m_plaza.TryBuy("plant_pot", new Vector2(-2.2f, -8.6f)), Is.True);
         }
 
         private void Run(double seconds)
@@ -147,6 +156,7 @@ namespace ZooTycoon.Tests
         public void Visitor_VisitsSpotsThenEntersShop_WithSameLook()
         {
             Create();
+            Furnish();
             // 빵집 문으로 먼저 들어간 광장 손님(들를 곳 자리에 따라 첫 손님이 아닐 수 있다 — 설계 29 뒤 첫 손님은 먼 구석부터 들른다)
             PlazaVisitor entered = null;
             m_bus.Subscribe<Events.PlazaVisitorLeft>(e => entered ??= e.Visitor);
@@ -204,8 +214,9 @@ namespace ZooTycoon.Tests
             Assert.That(layout.Nav.IsWalkable(layout.DoorTo(BakeryArea.k_Id).Floor), Is.True);
             Assert.That(layout.Nav.IsWalkable(layout.StairsFloor), Is.True);
             Assert.That(m_plaza.Decor.Count, Is.EqualTo(m_tables.GetAll<PlazaDecorTable>().Count));
-            // 벽에 붙은 화분의 벽 쪽 자리만 빠진다
-            Assert.That(layout.Spots.Count, Is.GreaterThanOrEqualTo(12));
+            Furnish();
+            // 놓은 장식의 손님 자리는 모두 걷는 땅(벽에 붙은 자리만 빠진다)
+            Assert.That(layout.Spots.Count, Is.GreaterThanOrEqualTo(3));
             Assert.That(layout.Spots.All(s => layout.Nav.IsWalkable(s.Position)), Is.True);
         }
 

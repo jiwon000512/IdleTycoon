@@ -170,6 +170,7 @@ namespace ZooTycoon.Core
 
                     break;
                 case PlazaArea plaza:
+                    save.Cells = CaptureCells(plaza.Grid);
                     save.MerchantUntil = plaza.Merchant.UntilNext;
                     break;
                 case RestaurantArea restaurant:
@@ -232,6 +233,7 @@ namespace ZooTycoon.Core
 
                     break;
                 case PlazaArea plaza:
+                    DigCells(plaza.Grid, save.Cells);
                     plaza.Merchant.Restore(save.MerchantUntil);
                     break;
                 case RestaurantArea restaurant:

@@ -26,6 +26,7 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, new SequenceRandom(new double[100]), wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 100).ToArray()), wombat, m_bus);
+            m_plaza.DigAll();
         }
 
         // 시작 배치(2026-10-02 아트방 도면 C)는 표 자리이고, 사물마다 배치 검사(벽 안·겹침·작업 자리·닿음)를 통과한다. 웜뱃은 계산대 뒤에서 시작
@@ -164,7 +165,7 @@ namespace ZooTycoon.Tests
             Vector2 at = new Vector2(0f, -4.6f);
 
             Assert.That(m_plaza.ShopKinds.Count, Is.EqualTo(m_tables.GetAll<DecorationTable>().Count));
-            Assert.That(m_plaza.CanPlace("bench_log", new Vector2(0f, -8.2f)), Is.EqualTo(PlacementCheck.Overlaps), "분수 위");
+            Assert.That(m_plaza.CanPlace("bench_log", m_plaza.Layout.StatueBase), Is.EqualTo(PlacementCheck.Overlaps), "석상 위");
             Assert.That(m_plaza.CanPlace("bench_log", new Vector2(9f, -4.6f)), Is.EqualTo(PlacementCheck.OutsideFloor));
             Assert.That(m_plaza.TryBuy("bench_log", at), Is.True);
             Assert.That(m_plaza.Decor.Count, Is.EqualTo(before + 1));

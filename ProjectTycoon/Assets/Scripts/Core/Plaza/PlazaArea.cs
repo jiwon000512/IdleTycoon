@@ -9,6 +9,8 @@ namespace ZooTycoon.Core
 {
     // 설계 11 3장 · 설계 13 · 리뷰 R2 · 설계 18: 광장. 지상 계단으로 손님이 오고(도착 타이머), 빵집에서 나간 손님은 문에서 다시 나온다.
     // 손님 한 명의 할 일은 PlazaVisitor, 여기는 손님 목록과 들를 곳 자리표. 사물은 곳으로 가는 문(설계 25 · 44, 들어가기). 장식은 자유 배치(WombatArea.Placement)
+    // 설계 64 가지 굴: 광장도 빵집처럼 판다(BurrowGrid · DigSet). 굴길 열은 아래로, 주머니 칸(PlazaConfigTable pockets)은 정해진 자리만.
+    // 문은 주머니 뒷벽이라 주머니를 파야 닿고, 석상 · 행상은 그 주머니를 판 뒤에만 사물이 된다. 장식 편집은 decorAfter 가게가 열린 뒤
     public sealed class PlazaArea : WombatArea
     {
         public const string k_Id = "plaza";
@@ -34,8 +36,15 @@ namespace ZooTycoon.Core
         private readonly List<IShop> m_shops = new List<IShop>();
         private readonly List<ShopGateInteractable> m_gates = new List<ShopGateInteractable>();
         private int m_nextShop;
+        // 설계 64: 파기 사물과 석상 · 행상 주머니 칸
+        private readonly DigSet m_digs;
+        private readonly Cell m_statueCell;
+        private readonly Cell m_merchantCell;
+        // 마지막으로 본 연 가게 수(바뀌면 after 주머니가 열리거나 장식 편집이 열린다). 첫 틱에도 한 번 맞춘다(저장 복원 뒤)
+        private int m_openShops = -1;
 
         public PlazaLayout Layout { get; }
+        public BurrowGrid Grid { get; }
         public BakeryArea Bakery { get; }
         public IReadOnlyList<PlazaVisitor> Visitors => m_visitors;
         public IReadOnlyList<IShop> Shops => m_shops;
@@ -44,18 +53,23 @@ namespace ZooTycoon.Core
         public IReadOnlyList<DecorationData> Decor => m_decor;
         public override IReadOnlyList<IPlacedKind> ShopKinds => m_shopKinds;
         public override string Id => k_Id;
+        // 설계 64: 석상 · 행상 주머니를 팠나, 장식 편집이 열렸나(decorAfter 가게)
+        public bool StatueOpen => Grid.Contains(m_statueCell);
+        public bool MerchantOpen => Grid.Contains(m_merchantCell);
+        public override bool Editable => ShopOpen(m_config.DecorAfter);
 
         protected override BurrowNav WombatNav => Layout.WombatNav;
         // 손님이 드나드는 빵집 문
         public PlazaDoor BakeryDoor => Layout.DoorTo(BakeryArea.k_Id);
-        protected override Vector2 Entrance => BakeryDoor.Floor;
+        // 설계 64: 새 게임 · 저장에서 돌아올 때는 계단 밑에 선다(문은 주머니를 파야 닿는다)
+        protected override Vector2 Entrance => Layout.StairsFloor;
         protected override IEnumerable<Vector2> Doors => Layout.Doors.Select(door => door.Floor);
 
         // 행상 자리도 웜뱃이 곁에 서 있다고 영영 기다리지 않는다(설계 34)
         internal override bool IsPassage(Vector2 p)
         {
             return Layout.Doors.Any(door => Vector2.DistanceSquared(p, door.Floor) < 1e-4f) || Vector2.DistanceSquared(p, Layout.StairsFloor) < 1e-4f
-                || Vector2.DistanceSquared(p, new Vector2((float)m_config.MerchantX, (float)m_config.MerchantY)) < 1e-4f;
+                || Vector2.DistanceSquared(p, Layout.MerchantStall) < 1e-4f;
         }
 
         // 설계 25 · 44: 온 곳의 문 앞에 선다
@@ -64,10 +78,9 @@ namespace ZooTycoon.Core
             return from == null ? Entrance : DoorOf(from).Floor;
         }
         protected override BurrowShape.Result Shape => Layout.Shape;
-        // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt)
-        protected override IEnumerable<IPlaced> PlacedThings => m_decor.Cast<IPlaced>().Append(Statue);
+        // 설계 29: 석상도 길을 막고 겹침 판정에 들지만, 값이 없는 종류라 편집에서 집지 않는다(WombatArea.ThingAt). 주머니를 파기 전엔 없는 것
+        protected override IEnumerable<IPlaced> PlacedThings => StatueOpen ? m_decor.Cast<IPlaced>().Append(Statue) : m_decor;
         public StatueInteractable Statue { get; }
-        // 설계 62: 계단 옆 우체통(길을 막는 고정 사물, 깃발은 편지함의 안 읽은 편지)
         // 설계 31 · 34: 떠돌이 행상(일정 · 걷는 그림)과 그 행상에게 말 거는 사물
         public RelicMerchant Merchant { get; }
         public MerchantInteractable MerchantThing { get; }
@@ -77,25 +90,39 @@ namespace ZooTycoon.Core
         private double ArrivalSeconds => m_config.ArrivalSeconds / Wombat.Worker.Wallet.Scale(BlessingTable.k_Visitors)
             / (Bakery.Evaluation.Running ? Bakery.Evaluation.Config.Rush : 1d) / Math.Max(1, m_shops.Count(shop => shop.IsOpen));
 
-        // 첫 손님은 첫 틱에 온다. 웜뱃은 빵집에서 시작한다. 시작 장식은 PlazaDecorTable
+        // 첫 손님은 첫 틱에 온다. 시작 장식은 PlazaDecorTable. 시작 굴은 굴길 startRows줄
         public PlazaArea(TableSet tables, BakeryArea bakery, IRandom random, Wombat wombat, EventBus bus) : base(tables, random, wombat, bus)
         {
             m_config = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
             m_random = random;
             Bakery = bakery;
             m_shops.Add(bakery);
-            Layout = new PlazaLayout(tables);
+            Grid = new BurrowGrid(BurrowGrid.Columns(m_config.ShaftCols, m_config.StartRows), m_config.DigBaseCost, m_config.DigCostGrowth,
+                new CellBounds(m_config.ShaftCols + 2, m_config.Rows), bus, Allowed);
+            Layout = new PlazaLayout(tables, m_config, Grid.Cells);
+            m_digs = new DigSet(tables.Get<InteractableTable>(DigInteractable.k_Id), Grid, Layout.Cells.CellRect, this);
+
+            foreach (PlazaPocketData pocket in m_config.Pockets)
+            {
+                switch (pocket.Use)
+                {
+                    case PlazaPocketData.k_Statue:
+                        m_statueCell = pocket.Cell;
+                        break;
+                    case PlazaPocketData.k_Merchant:
+                        m_merchantCell = pocket.Cell;
+                        break;
+                }
+            }
 
             foreach (PlazaDoor door in Layout.Doors)
             {
                 Placed.Add(new PassageInteractable(tables.Get<InteractableTable>(PassageInteractable.k_Door), this, door.Floor, door.To));
             }
 
-            Statue = new StatueInteractable(tables.Get<InteractableTable>(StatueInteractable.k_Id), this, new Vector2((float)m_config.StatueX, (float)m_config.StatueY), random);
-            Placed.Add(Statue);
+            Statue = new StatueInteractable(tables.Get<InteractableTable>(StatueInteractable.k_Id), this, Layout.StatueBase, random);
             Merchant = new RelicMerchant(this, tables);
             MerchantThing = new MerchantInteractable(tables.Get<InteractableTable>(MerchantInteractable.k_Id), this, random, Merchant);
-            Placed.Add(MerchantThing);
             m_arrivalElapsed = m_config.ArrivalSeconds;
             m_questionRange = (float)tables.Get<InteractableTable>(ClerkInteractable.k_Id).Range;
             bus.Subscribe<Events.BakeryVisitorLeft>(Bus_BakeryVisitorLeft);
@@ -104,6 +131,7 @@ namespace ZooTycoon.Core
             bus.Subscribe<Events.ClerkWentOut>(Bus_ClerkWentOut);
             bus.Subscribe<Events.ClerkReturning>(Bus_ClerkReturning);
             bus.Subscribe<Events.ClerkFired>(Bus_ClerkFired);
+            bus.Subscribe<Events.Dug>(Bus_Dug);
 
             foreach (DecorationTable row in tables.GetAll<DecorationTable>())
             {
@@ -123,7 +151,145 @@ namespace ZooTycoon.Core
                 m_decor.Add(new DecorationData(tables.Get<DecorationTable>(placed.Decoration), new Vector2((float)placed.X, (float)placed.Y)));
             }
 
-            Layout.Rebuild(PlacedThings);
+            SyncDigs();
+            Layout.Rebuild(Grid.Cells, PlacedThings);
+        }
+
+        // 설계 64: 팔 수 있는 칸 = 굴길 열 · 주머니 칸(after 가게가 열렸을 때)
+        private bool Allowed(Cell cell)
+        {
+            int first = -m_config.ShaftCols / 2;
+
+            if (cell.Col >= first && cell.Col < first + m_config.ShaftCols)
+            {
+                return true;
+            }
+
+            PlazaPocketData pocket = m_config.Pockets.FirstOrDefault(p => p.Col == cell.Col && p.Row == cell.Row);
+            return pocket != null && ShopOpen(pocket.After);
+        }
+
+        // 설계 64 튜토리얼 파기 걸음: 그 주머니(문 갈 곳 id 또는 statue · merchant)까지 더 팔 칸 수. 팠으면 0, 아직 못 파는 주머니면 int.MaxValue
+        public int DigsTo(string pocket)
+        {
+            Dictionary<Cell, int> left = DigsLeft(pocket, out Cell target);
+
+            if (Grid.Contains(target))
+            {
+                return 0;
+            }
+
+            int best = int.MaxValue;
+
+            foreach (Cell cell in Grid.Frontier())
+            {
+                if (left.TryGetValue(cell, out int n) && n < best)
+                {
+                    best = n;
+                }
+            }
+
+            return best;
+        }
+
+        // 그 칸을 파면 주머니에 한 칸 가까워지나(길잡이가 가리킬 칸)
+        public bool OnWayTo(string pocket, Cell cell)
+        {
+            return DigsLeft(pocket, out _).TryGetValue(cell, out int n) && n == DigsTo(pocket);
+        }
+
+        // 안 판 칸마다 거기서 주머니까지 팔 칸 수(그 칸 · 주머니 포함). 주머니에서 거꾸로 넓혀 간다
+        private Dictionary<Cell, int> DigsLeft(string pocket, out Cell target)
+        {
+            target = m_config.Pockets.First(p => (p.To ?? p.Use) == pocket).Cell;
+            Dictionary<Cell, int> left = new Dictionary<Cell, int>();
+
+            if (!Diggable(target))
+            {
+                return left;
+            }
+
+            Queue<Cell> queue = new Queue<Cell>();
+            left[target] = 1;
+            queue.Enqueue(target);
+
+            while (queue.Count > 0)
+            {
+                Cell cell = queue.Dequeue();
+
+                foreach (Cell next in new[] { cell.Offset(1, 0), cell.Offset(-1, 0), cell.Offset(0, 1), cell.Offset(0, -1) })
+                {
+                    if (!left.ContainsKey(next) && Diggable(next))
+                    {
+                        left[next] = left[cell] + 1;
+                        queue.Enqueue(next);
+                    }
+                }
+            }
+
+            return left;
+        }
+
+        // 아직 안 판, 언젠가 팔 수 있는 칸
+        private bool Diggable(Cell cell)
+        {
+            return cell.Row > BurrowGrid.k_EntranceRow && Grid.Bounds.Contains(cell) && Allowed(cell) && !Grid.Contains(cell);
+        }
+
+        // 그 가게(IShop id)가 열렸나. null이면 조건 없음
+        private bool ShopOpen(string shopId)
+        {
+            return shopId == null || m_shops.Any(shop => shop.Id == shopId && shop.IsOpen);
+        }
+
+        // 설계 64: 가게가 열리면(횟집 문 · 저장 복원) 주머니 프론티어 · 장식 편집이 바뀐다 — 파기 사물을 다시 맞추고 LayoutChanged로 알린다
+        private void SyncOpenShops()
+        {
+            int open = m_shops.Count(shop => shop.IsOpen);
+
+            if (open == m_openShops)
+            {
+                return;
+            }
+
+            m_openShops = open;
+            SyncDigs();
+            Bus.Publish(new Events.LayoutChanged(this));
+        }
+
+        public override DigInteractable DigAt(Vector2 p)
+        {
+            return m_digs.At(p);
+        }
+
+        // 파기 사물은 목록 끝에(문 · 표식 뒤)
+        private void SyncDigs()
+        {
+            Placed.RemoveAll(thing => thing is DigInteractable);
+            m_digs.Sync();
+            Placed.AddRange(m_digs.Things);
+        }
+
+        // 설계 64: 칸을 팠다 — 굴 · 땅 다시, 석상 · 행상 주머니면 그 사물이 선다
+        private void Bus_Dug(Events.Dug e)
+        {
+            if (e.Grid != Grid)
+            {
+                return;
+            }
+
+            if (e.Cell.Equals(m_statueCell))
+            {
+                Placed.Add(Statue);
+            }
+
+            if (e.Cell.Equals(m_merchantCell))
+            {
+                Placed.Add(MerchantThing);
+            }
+
+            SyncDigs();
+            OnPlacementChanged();
         }
 
         // 들를 곳에서 머무는 초 · ♥를 띄울지
@@ -186,21 +352,25 @@ namespace ZooTycoon.Core
             m_takenSpots.Remove(index);
         }
 
-        // 매 프레임(웜뱃 다음). 순서: 도착 → 손님 → 외출 점원 말풍선 → 행상
+        // 매 프레임(웜뱃 다음). 순서: 도착 → 손님 → 외출 점원 말풍선 → 행상(좌판 주머니를 판 뒤부터)
         protected override void TickArea(double dt)
         {
             SyncGates();
+            SyncOpenShops();
             TickArrival(dt);
             TickVisitors(dt);
             TickClerkFigures();
-            Merchant.Tick(dt);
+
+            if (MerchantOpen)
+            {
+                Merchant.Tick(dt);
+            }
         }
 
-        // 설계 31 · 34: 행상이 계단에서 톡 나와 좌판 자리(merchantX · Y)로 걷는다
+        // 설계 31 · 34: 행상이 계단에서 톡 나와 좌판 자리(행상 주머니)로 걷는다
         internal PlazaVisitor SpawnMerchant(VisitorTable look)
         {
-            Vector2 stall = new Vector2((float)m_config.MerchantX, (float)m_config.MerchantY);
-            PlazaVisitor merchant = new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, 0, false, null, stall);
+            PlazaVisitor merchant = new PlazaVisitor(++m_nextVisitorId, look, this, Layout.StairsInside, Layout.StairsFloor, 0, false, null, Layout.MerchantStall);
             Spawn(merchant);
             return merchant;
         }
@@ -317,7 +487,7 @@ namespace ZooTycoon.Core
         // 들를 곳 번호가 바뀌므로 손님은 들르던 곳을 놓고 다음으로, 걷던 손님은 새 땅에서 길을 다시 찾는다. 새 사물이 웜뱃 발밑이면 비켜 선다
         protected override void OnPlacementChanged()
         {
-            Layout.Rebuild(PlacedThings);
+            Layout.Rebuild(Grid.Cells, PlacedThings);
             ClearBuriedPoops();
             SyncPoops();
             m_takenSpots.Clear();

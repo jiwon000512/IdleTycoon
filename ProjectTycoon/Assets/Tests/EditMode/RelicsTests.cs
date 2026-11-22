@@ -45,6 +45,7 @@ namespace ZooTycoon.Tests
             m_wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, new SequenceRandom(new double[2000]), m_wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), m_wombat, m_bus);
+            m_plaza.DigAll();
             m_farm = new FarmArea(m_tables, new SequenceRandom(Enumerable.Repeat(0.99, 200).ToArray()), m_wombat, m_bus);
             m_mall = new Mall(m_shop, m_plaza, m_farm, m_bus);
         }
@@ -272,7 +273,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Merchant_WhileAway_CannotBeTalkedTo()
         {
-            Vector2 stall = new Vector2((float)Config.MerchantX, (float)Config.MerchantY);
+            Vector2 stall = m_plaza.Layout.MerchantStall;
             m_bus.Publish(new Events.Passed(m_shop, PlazaArea.k_Id));
             m_wombat.Mover.Place(stall + new Vector2(0f, -0.5f));
             m_mall.Tick(k_Dt);
@@ -295,7 +296,7 @@ namespace ZooTycoon.Tests
                 c.MerchantEvery = 60d;
             });
             MerchantInteractable merchant = m_plaza.MerchantThing;
-            Vector2 stall = new Vector2((float)Config.MerchantX, (float)Config.MerchantY);
+            Vector2 stall = m_plaza.Layout.MerchantStall;
             List<MerchantPhase> phases = new List<MerchantPhase>();
             m_bus.Subscribe<Events.MerchantChanged>(e => phases.Add(e.Merchant.Phase));
             List<string> said = new List<string>();

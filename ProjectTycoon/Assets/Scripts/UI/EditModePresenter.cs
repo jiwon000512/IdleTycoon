@@ -57,7 +57,11 @@ namespace ZooTycoon.UI
             m_subscriptions = new[]
             {
                 bus.Subscribe<Events.CoinsChanged>(_ => RefreshCards()),
-                bus.Subscribe<Events.LayoutChanged>(_ => RefreshCards()),
+                bus.Subscribe<Events.LayoutChanged>(_ =>
+                {
+                    RefreshCards();
+                    m_view.SetEditable(Area.Editable);
+                }),
                 bus.Subscribe<Events.StarsChanged>(_ => RefreshCards()),
                 bus.Subscribe<Events.AreaChanged>(_ =>
                 {

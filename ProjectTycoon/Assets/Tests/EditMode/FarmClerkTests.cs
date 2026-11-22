@@ -53,6 +53,7 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, random, wombat, m_bus);
             PlazaArea plaza = new PlazaArea(m_tables, m_shop, random, wombat, m_bus);
+            plaza.DigAll();
             m_farm = new FarmArea(m_tables, random, wombat, m_bus);
             m_mall = new Mall(m_shop, plaza, m_farm, m_bus);
         }

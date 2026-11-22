@@ -711,6 +711,7 @@ namespace ZooTycoon.Editor
 
             PlazaView view = root.AddComponent<PlazaView>();
             Set(view, "m_burrow", burrow);
+            Set(view, "m_digTagPrefab", digTag);
             SetBurrowTextures(view);
             SerializedObject so = new SerializedObject(view);
             SerializedProperty doorArts = so.FindProperty("m_doors");

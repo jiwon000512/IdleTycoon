@@ -44,6 +44,9 @@ namespace ZooTycoon.World
         [Tooltip("설계 59 아트방 bakery-closed(사용자 A 판자 덧댐): 닫힌 빵집 문 아치. 없으면 어둡게 칠한다")]
         [SerializeField] private Sprite m_bakeryClosed;
         private Sprite m_bakeryArch;
+        [Tooltip("설계 64: 파기 표식(빵집 · 농장과 같은 것) · 새 칸이 밝아지는 초")]
+        [SerializeField] private MarkerView m_digTagPrefab;
+        [SerializeField] private float m_digSeconds = 0.6f;
         [Tooltip("지상 계단. 원점 = 띠 밑변 가운데")]
         [SerializeField] private Transform m_stairs;
         [SerializeField] private WombatView m_wombat;
@@ -81,21 +84,25 @@ namespace ZooTycoon.World
         private IDisposable[] m_subscriptions;
         // 설계 62: 봉투 떨어지기(초 · 출발 높이 · 꽂히는 높이 · 좌우 흔들림 · 기울기 · 봉투 크기)
         private PoopViews m_poopViews;
+        private DigView m_dig;
         private Sprite m_square;
         private float m_glow;
+
+        // 설계 64: 굴을 팠다(카메라 경계를 다시 잰다)
+        public event Action Expanded;
 
         public Vector3 Origin => transform.position;
         public Transform Wombat => m_wombat.transform;
         public WombatView WombatView => m_wombat;
 
-        // 광장 둘레 + 좌·우·아래 흙 한 칸. 위는 첫 줄 윗변
+        // 굴 그림 둘레 + 흙 한 칸(설계 64: 판 칸이 늘면 넓어진다)
         public Rect Bounds
         {
             get
             {
-                PlazaLayout layout = m_plaza.Layout;
+                NavRect b = m_plaza.Layout.Bounds;
                 Vector3 origin = transform.position;
-                return new Rect(origin.x - layout.Width * 0.5f - 1f, origin.y - layout.Height - 1f, layout.Width + 2f, layout.Height + 1f);
+                return new Rect(origin.x + b.XMin - 1f, origin.y + b.YMin - 1f, b.XMax - b.XMin + 2f, b.YMax - b.YMin + 2f);
             }
         }
 
@@ -104,24 +111,29 @@ namespace ZooTycoon.World
             m_plaza = plaza;
             m_frames = frames;
             PlazaLayout layout = plaza.Layout;
-            BurrowShape.Result shape = layout.Shape;
-            m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
-            m_burrow.transform.localPosition = new Vector3(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit, 0f);
+            CellMetrics cells = layout.Cells;
+            m_dig = new DigView(this, m_digTagPrefab, tables, plaza.Grid, cell => transform.position + new Vector3(cells.CellCenter(cell).X, cells.CellCenter(cell).Y, 0f),
+                new Vector2(cells.CellWidth, cells.CellHeight), m_digSeconds);
+            Repaint();
 
             float wallBottom = -BurrowShape.k_EntranceFloorTop / BurrowShape.k_PixelsPerUnit;
             m_stairs.localPosition = new Vector3(layout.StairsFloor.X, wallBottom, 0f);
             m_tables = tables;
 
+            // 설계 64: 문 그림은 그 주머니 뒷벽 띠 밑변에
             foreach (PlazaDoor door in layout.Doors)
             {
                 DoorArt art = Art(door.To);
-                art.Root.localPosition = new Vector3(door.Floor.X, wallBottom, 0f);
+                art.Root.localPosition = new Vector3(door.Floor.X, door.WallBottom, 0f);
                 art.Sign.text = tables.Text(k_SignPrefix + door.To);
             }
+
+            ShowDoors();
 
             SetSign(plaza.Wombat.Worker.Wallet.Stars.Count(BakeryArea.k_Id));
             m_ghost = GhostView.Create(transform);
             m_statue.localPosition = new Vector3(plaza.Statue.Position.X, plaza.Statue.Position.Y, 0f);
+            m_statue.gameObject.SetActive(plaza.StatueOpen);
             m_poopViews = new PoopViews(this, plaza, bus, m_poopPrefab, m_poopFrames, m_poopFrameRate, m_popupPrefab, tables, frames, p => transform.position + new Vector3(p.X, p.Y, 0f));
             Build();
 
@@ -132,7 +144,47 @@ namespace ZooTycoon.World
                 bus.Subscribe<Events.LayoutChanged>(Bus_LayoutChanged),
                 bus.Subscribe<Events.BlessingChanged>(Bus_BlessingChanged),
                 bus.Subscribe<Events.StarsChanged>(Bus_StarsChanged),
+                bus.Subscribe<Events.Dug>(Bus_Dug),
             };
+        }
+
+        // 굴 모양은 Core가 계산해 둔 마스크(걷는 땅과 같은 것)를 칠한다
+        private void Repaint()
+        {
+            BurrowShape.Result shape = m_plaza.Layout.Shape;
+            Sprite old = m_burrow.sprite;
+            m_burrow.sprite = BurrowPainter.Paint(shape, m_floorTile, m_wallTile, m_wallFace);
+            m_burrow.transform.localPosition = new Vector3(shape.OriginX / BurrowShape.k_PixelsPerUnit, -shape.OriginY / BurrowShape.k_PixelsPerUnit, 0f);
+
+            if (old != null)
+            {
+                Destroy(old.texture);
+                Destroy(old);
+            }
+        }
+
+        // 설계 64: 굴 파기 연출 — 다시 칠하고 새 칸이 흙빛에서 밝아진다. 석상 주머니면 석상이 보인다
+        private void Bus_Dug(Events.Dug e)
+        {
+            if (e.Grid != m_plaza.Grid)
+            {
+                return;
+            }
+
+            Repaint();
+            m_dig.Play(e.Cell, m_wombat.Dig());
+            m_statue.gameObject.SetActive(m_plaza.StatueOpen);
+            ShowDoors();
+            Expanded?.Invoke();
+        }
+
+        // 설계 64: 문 그림은 그 주머니를 판 뒤에만(2026-10-28 플레이: 안 판 주머니 문이 보였다)
+        private void ShowDoors()
+        {
+            foreach (PlazaDoor door in m_plaza.Layout.Doors)
+            {
+                Art(door.To).Root.gameObject.SetActive(m_plaza.Grid.Contains(door.Cell));
+            }
         }
 
         // 설계 40: 빵집 간판에 별 수(「빵집 ★7」, 0이면 이름만). 별 색 단계 그림은 아트방
@@ -171,6 +223,7 @@ namespace ZooTycoon.World
         {
             m_editing = editing;
             RefreshOutlines();
+            m_dig.Refresh(editing);
 
             if (!editing)
             {
@@ -247,6 +300,7 @@ namespace ZooTycoon.World
                 tag.Show(gate.Shop.GateLocked ? m_tables.Format("row_star_needed", gate.Shop.GateStar)
                     : gate.Shop.GateItem != null ? m_tables.Format("tag_open_item", m_tables.Get<ItemTable>(gate.Shop.GateItem).Name, gate.Shop.GateCount)
                     : m_tables.Format("tag_open_shop", gate.Shop.GateCost.ToString("0", System.Globalization.CultureInfo.InvariantCulture)));
+                tag.gameObject.SetActive(m_plaza.Grid.Contains(m_plaza.Layout.DoorTo(gate.Shop.Id).Cell));
             }
 
             foreach (ShopGateInteractable gate in new List<ShopGateInteractable>(m_gateTags.Keys))
@@ -335,6 +389,7 @@ namespace ZooTycoon.World
             {
                 Build();
                 RefreshOutlines();
+                m_dig.Refresh(m_editing);
             }
         }
 
@@ -358,6 +413,11 @@ namespace ZooTycoon.World
             if (e.Area == m_plaza && m_plaza.Target is PoopInteractable poop)
             {
                 m_poopViews.Bounce(poop);
+            }
+
+            if (e.Area == m_plaza && m_plaza.Target is DigInteractable dig)
+            {
+                m_dig.Bounce(dig.Cell);
             }
         }
 

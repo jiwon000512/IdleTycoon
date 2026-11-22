@@ -28,8 +28,8 @@ namespace ZooTycoon.Core
         // 설계 59: 조건이 될 때까지 숨는 걸음 — 카드가 안 보이고 세지도 않는다
         public bool Hidden => Current != null && Current.After != null && !m_revealed;
         public bool Revealed => m_revealed;
-        public int Count => Current == null || Hidden ? 0 : !GoalCounter.IsPossible(Current.Kind, m_mall) ? Current.Count
-            : Math.Min(Current.Count, GoalCounter.IsState(Current.Kind) ? GoalCounter.Current(Current.Kind, Current.Param, m_mall) : Progress);
+        public int Count => Current == null || Hidden ? 0 : !GoalCounter.IsPossible(Current.Kind, m_mall, Current.Area) ? Current.Count
+            : Math.Min(Current.Count, GoalCounter.IsState(Current.Kind, Current.Param) ? GoalCounter.Current(Current.Kind, Current.Param, m_mall, Current.Count) : Progress);
         public bool IsDone => Current != null && !Hidden && Count >= Current.Count;
         // 오늘의 일 상자 단계 = 지금 걸음의 장(사슬이 끝나면 마지막 장)
         public int Chapter => m_steps.Count == 0 ? 0 : (Current ?? m_steps[m_steps.Count - 1]).Chapter;
@@ -115,7 +115,7 @@ namespace ZooTycoon.Core
                 Progress = 0;
                 m_revealed = false;
             }
-            while (Current != null && (GoalCounter.IsState(Current.Kind) || !GoalCounter.IsPossible(Current.Kind, m_mall)) && IsDone);
+            while (Current != null && (GoalCounter.IsState(Current.Kind, Current.Param) || !GoalCounter.IsPossible(Current.Kind, m_mall, Current.Area)) && IsDone);
 
             Rewards.Grant(m_mall.Bakery.Wallet, m_bus, coins, items);
             Refresh();
@@ -150,7 +150,9 @@ namespace ZooTycoon.Core
         {
             QuestTable step = Current;
 
-            if (step == null || Hidden || step.Kind != kind || step.Param != null && step.Param != param || IsDone)
+            // 파기는 그 곳에서 판 칸만(웜뱃이 판다, 2026-10-28 플레이: 다른 곳을 파도 셌다)
+            if (step == null || Hidden || step.Kind != kind || step.Param != null && step.Param != param || IsDone
+                || kind == GoalCounter.k_Dig && step.Area != null && m_mall.Active.Id != step.Area)
             {
                 return;
             }

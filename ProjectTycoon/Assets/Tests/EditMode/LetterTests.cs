@@ -12,7 +12,8 @@ namespace ZooTycoon.Tests
         [Test]
         public void NewGame_FirstLetterArrives_ReadingItFinishesTheFirstStep()
         {
-            TestGame game = new TestGame();
+            // 설계 64: 광장이 작은 마당이어야 다음 걸음(밭 자리 파기)에 팔 칸이 있다(다 판 광장이면 그 걸음은 바로 된 것으로 넘어간다)
+            TestGame game = new TestGame(openPlaza: false);
             Mailbox mailbox = game.Mall.Mailbox;
             Letter first = mailbox.Letters.Single();
             Assert.That(first.Row, Is.SameAs(game.Tables.Get<LetterTable>("l01")), "첫 걸음(편지 읽기)이 시작되며 큰이모 편지가 온다");
@@ -27,7 +28,7 @@ namespace ZooTycoon.Tests
             Assert.That(game.Mall.Quests.IsDone, Is.True, "읽으면 첫 걸음이 끝난다");
             Assert.That(mailbox.TryRead(first), Is.False, "두 번은 없다");
             Assert.That(game.Mall.Quests.TryClaim(), Is.True);
-            Assert.That(game.Mall.Quests.Current.Id, Is.EqualTo("q04"));
+            Assert.That(game.Mall.Quests.Current.Id, Is.EqualTo("q32"), "설계 64: 편지 다음은 밭 자리 파기");
         }
 
         // 빵집 열기 걸음이 시작되면 마을 회관 편지, 굽기 걸음이 시작되면 밀 셋이 든 편지

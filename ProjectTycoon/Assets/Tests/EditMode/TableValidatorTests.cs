@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using GameKit.Tables;
 using ZooTycoon.Core;
@@ -12,7 +13,7 @@ namespace ZooTycoon.Tests
     public sealed class TableValidatorTests
     {
         [TestCase("VisitorTable", 16)]
-        [TestCase("StringTable", 67)]
+        [TestCase("StringTable", 68)]
         [TestCase("ClerkTable", 4)]
         [TestCase("ClerkConfigTable", 8)]
         [TestCase("BubbleTable", 4)]
@@ -25,8 +26,8 @@ namespace ZooTycoon.Tests
         [TestCase("BgmTable", 2)]
         [TestCase("ConfigTable", 7)]
         [TestCase("BakeryConfigTable", 10)]
-        [TestCase("PlazaConfigTable", 10)]
-        [TestCase("PlazaDecorTable", 1)]
+        [TestCase("PlazaConfigTable", 11)]
+        [TestCase("PlazaDecorTable", 2)]
         [TestCase("ItemTable", 9)]
         [TestCase("CropTable", 4)]
         [TestCase("FarmConfigTable", 7)]
@@ -40,8 +41,8 @@ namespace ZooTycoon.Tests
         [TestCase("FishingIslandTable", 1)]
         [TestCase("DishTable", 1)]
         [TestCase("RestaurantConfigTable", 1)]
-        [TestCase("QuestTable", 7)]
-        [TestCase("LetterTable", 3)]
+        [TestCase("QuestTable", 9)]
+        [TestCase("LetterTable", 4)]
         [TestCase("TraitTable", 1)]
         [TestCase("MissionTable", 1)]
         [TestCase("MissionChestTable", 1)]
@@ -170,6 +171,7 @@ namespace ZooTycoon.Tests
                 t => t.Get<QuestTable>("q01").Area = "no_such_area",
                 t => t.Get<QuestTable>("q09").Area = BakeryArea.k_Id,
                 t => t.Get<QuestTable>("q01").Text = "no_such_text",
+                t => t.Get<QuestTable>("q32").Param = "no_such_pocket",
                 t => t.Get<MissionTable>("m_sell").Kind = GoalCounter.k_Star,
                 t => t.Get<MissionTable>("m_sell").Needs = "sell:",
                 t => t.Get<MissionChestTable>("c2_1").Points = 10,
@@ -194,15 +196,28 @@ namespace ZooTycoon.Tests
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
 
-        // 설계 44: 광장 문은 칸 안 · 겹치지 않음 · 빵집 문이 있다
-        [TestCase(4, "fishing")]
-        [TestCase(2, "fishing")]
-        [TestCase(0, "bakery")]
-        public void Validate_WhenPlazaDoorBad_ReportsError(int col, string to)
+        // 설계 64: 주머니는 굴길 옆 열 · 줄 1 ~ rows−1 · 서로 다른 칸, 문은 서로 다른 곳 · bakery 있음, 석상 하나, after는 가게 id, 문 위 칸에 주머니 없음
+        [TestCase(0, 2, "door", "fishing2", null)]
+        [TestCase(1, 0, "door", "fishing2", null)]
+        [TestCase(1, 1, "door", "fishing2", null)]
+        [TestCase(-2, 3, "door", "bakery", null)]
+        [TestCase(-2, 5, "statue", null, null)]
+        [TestCase(-2, 5, "door", "fishing2", "nowhere")]
+        [TestCase(-2, 3, "merchant", null, "restaurant")]
+        public void Validate_WhenPlazaPocketBad_ReportsError(int col, int row, string use, string to, string after)
         {
             TableSet tables = TestTables.Load();
             PlazaConfigTable plaza = tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main);
-            plaza.Doors = plaza.Doors.Append(new PlazaDoorData { To = to, Col = col }).ToArray();
+            plaza.Pockets = plaza.Pockets.Append(new PlazaPocketData { Col = col, Row = row, Use = use, To = to, After = after }).ToArray();
+
+            Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
+        }
+
+        [Test]
+        public void Validate_WhenPlazaDecorAfterUnknown_ReportsError()
+        {
+            TableSet tables = TestTables.Load();
+            tables.Get<PlazaConfigTable>(PlazaConfigTable.k_Main).DecorAfter = "nowhere";
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }
@@ -486,8 +501,7 @@ namespace ZooTycoon.Tests
         [Test]
         public void Validate_WhenPlacedDecorUnknown_ReportsError()
         {
-            TableSet tables = TestTables.Load();
-            tables.GetAll<PlazaDecorTable>()[0].Decoration = "statue";
+            TableSet tables = TestTables.Load("PlazaDecorTable", rows => rows.Add(JObject.Parse("{\"id\": 1, \"decoration\": \"statue\", \"x\": 0, \"y\": -3}")));
 
             Assert.That(TableValidator.Validate(tables), Is.Not.Empty);
         }

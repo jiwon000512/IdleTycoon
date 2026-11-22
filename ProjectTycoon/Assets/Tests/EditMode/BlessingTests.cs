@@ -36,6 +36,7 @@ namespace ZooTycoon.Tests
             m_wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, new SequenceRandom(new double[2000]), m_wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), m_wombat, m_bus);
+            m_plaza.DigAll();
             m_farm = new FarmArea(m_tables, new SequenceRandom(Enumerable.Repeat(0.99, 200).ToArray()), m_wombat, m_bus);
             m_mall = new Mall(m_shop, m_plaza, m_farm, m_bus);
         }
@@ -206,7 +207,7 @@ namespace ZooTycoon.Tests
         public void PlazaStatue_StandsFixed_AndOpensWithButton()
         {
             StatueInteractable statue = m_plaza.Statue;
-            Assert.That(statue.Position, Is.EqualTo(new Vector2((float)Config.StatueX, (float)Config.StatueY)));
+            Assert.That(statue.Position, Is.EqualTo(m_plaza.Layout.StatueBase));
             Assert.That(m_plaza.ThingAt(statue.Position + new Vector2(0f, 0.3f)), Is.Null);
             Assert.That(m_plaza.CanPlace(m_tables.GetAll<DecorationTable>()[0].Id, statue.Position), Is.Not.EqualTo(PlacementCheck.Ok));
 

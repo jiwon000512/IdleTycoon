@@ -43,6 +43,7 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, new SequenceRandom(new double[2000]), wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 4000).ToArray()), wombat, m_bus);
+            m_plaza.DigAll();
             m_farm = new FarmArea(m_tables, new SequenceRandom(Enumerable.Repeat(roll, 200).ToArray()), wombat, m_bus);
             m_mall = new Mall(m_shop, m_plaza, m_farm, m_bus);
         }
@@ -594,15 +595,16 @@ namespace ZooTycoon.Tests
         {
             Create();
             PlazaLayout layout = m_plaza.Layout;
+            // 설계 64: 빵집 주머니 문 앞에서 굴길 쪽으로(주머니 아래는 흙)
             Vector2 from = layout.DoorTo(BakeryArea.k_Id).Floor + new Vector2(0f, -0.8f);
-            Vector2 to = from + new Vector2(0f, -2.4f);
+            Vector2 to = from + new Vector2(3.4f, 0f);
             Assert.That(layout.WombatNav.IsWalkable(to), Is.True);
 
-            Assert.That(m_plaza.TryDropPoop(from + new Vector2(0f, -1.2f)), Is.True);
+            Assert.That(m_plaza.TryDropPoop(from + new Vector2(1.7f, 0f)), Is.True);
             Assert.That(m_plaza.Things, Does.Contain(m_plaza.Poops[0]));
             float wombat = PathLength(from, layout.WombatNav.FindPath(from, to));
             float visitor = PathLength(from, layout.Nav.FindPath(from, to));
-            Assert.That(wombat, Is.LessThan(2.7f));
+            Assert.That(wombat, Is.LessThan(3.7f));
             Assert.That(visitor, Is.GreaterThan(wombat + 0.1f));
         }
 

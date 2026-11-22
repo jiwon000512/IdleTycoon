@@ -81,7 +81,7 @@ namespace ZooTycoon.Tests
 
             Assert.That(grid.Cells.Count, Is.EqualTo(2 + 4 * 3));
             Assert.That(grid.CanDig(new Cell(0, 4)), Is.False);
-            Assert.That(grid.DigCost, Is.EqualTo(100d * System.Math.Pow(1.3d, 10)).Within(1e-6));
+            Assert.That(grid.DigCost, Is.EqualTo(System.Math.Round(100d * System.Math.Pow(1.3d, 10))));
         }
     }
 }

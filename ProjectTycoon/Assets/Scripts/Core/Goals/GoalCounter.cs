@@ -42,9 +42,10 @@ namespace ZooTycoon.Core
             return s_events.Contains(kind) || s_states.Contains(kind);
         }
 
-        public static bool IsState(string kind)
+        // 설계 64: param이 있는 파기 걸음(광장 주머니)은 그 주머니까지 판 만큼이라 상태로 센다
+        public static bool IsState(string kind, string param = null)
         {
-            return s_states.Contains(kind);
+            return s_states.Contains(kind) || kind == k_Dig && param != null;
         }
 
         // 사건 종류를 세기 시작한다: 사건이 나면 counted(종류, 대상 id 또는 null, 개수)
@@ -78,15 +79,18 @@ namespace ZooTycoon.Core
             bus.Subscribe<Events.DishServed>(_ => counted(k_Serve, null, 1));
         }
 
-        // 상태 종류의 지금 값(사건 종류는 0)
-        public static int Current(string kind, string param, Mall mall)
+        // 상태 종류의 지금 값(사건 종류는 0). count = 걸음 수(주머니 파기는 count에서 남은 칸을 뺀다)
+        public static int Current(string kind, string param, Mall mall, int count = 0)
         {
             switch (kind)
             {
+                case k_Dig:
+                    return param == null ? 0 : count - Math.Min(count, mall.Plaza.DigsTo(param));
                 case k_Visit:
                     return mall.Active.Id == param ? 1 : 0;
+                // 설계 64: 광장 장식은 사물 목록이 아니라 장식 목록(q37 장식 놓기)
                 case k_Place:
-                    return mall.Areas.Sum(area => area.Things.Count(thing => thing.Table.Id == param));
+                    return mall.Areas.Sum(area => area.Things.Count(thing => thing.Table.Id == param)) + mall.Plaza.Decor.Count(decor => decor.Table.Id == param);
                 // 설계 59: param이 역할(ClerkTable id)이면 그 역할 점원 수, 아니면 그 곳의 점원 수
                 case k_Hire:
                     return mall.Bakery.Tables.GetAll<ClerkTable>().Any(role => role.Id == param)
@@ -126,7 +130,8 @@ namespace ZooTycoon.Core
                 case "ovens":
                     return mall.Bakery.Ovens.Count >= need;
                 case "plots":
-                    return mall.Farms.Sum(farm => farm.Plots.Count(plot => plot.IsTilled)) >= need;
+                    // 닫힌 아래층의 시작 밭은 안 센다(2026-10-28 플레이: 1층 밭 셋에 「농장 점원」이 보였다)
+                    return mall.Farms.Where(farm => farm.IsOpen).Sum(farm => farm.Plots.Count(plot => plot.IsTilled)) >= need;
                 default:
                     return true;
             }
@@ -155,8 +160,15 @@ namespace ZooTycoon.Core
         }
 
         // 할 수 있는 일인가(오늘의 일로 내나 · 퀘스트 걸음을 다 된 것으로 넘기나): 유물을 다 모았으면 뽑기는 못 한다
-        public static bool IsPossible(string kind, Mall mall)
+        // 설계 64: 파기 걸음은 그 곳(area)에 팔 칸이 남아 있어야 한다. 먼저 다 파서 없으면 바로 된 것으로(「마당 파기」가 남은 칸보다 많아 막히던 것, 2026-10-28 플레이)
+        public static bool IsPossible(string kind, Mall mall, string area = null)
         {
+            if (kind == k_Dig && area != null)
+            {
+                WombatArea at = mall.Areas.FirstOrDefault(a => a.Id == area);
+                return at == null || at.Things.Any(thing => thing is DigInteractable);
+            }
+
             return kind != k_Draw || !mall.Bakery.Wallet.Relics.Complete;
         }
 
@@ -168,6 +180,9 @@ namespace ZooTycoon.Core
             {
                 case BridgeInteractable bridge:
                     return param == null || bridge.Island.Id == param;
+                // 설계 64: 주머니 파기 걸음은 그 주머니로 가는 칸만 가리킨다
+                case DigInteractable dig when kind == k_Dig && param != null:
+                    return dig.Area is PlazaArea plaza && plaza.OnWayTo(param, dig.Cell);
                 // 설계 59: 광장 문은 가게마다 하나(빵집 · 횟집 · 낚시터)
                 case ShopGateInteractable gate:
                     return param == null || gate.Shop.Id == param;

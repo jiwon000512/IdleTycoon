@@ -305,8 +305,9 @@ namespace ZooTycoon.UI
                         Effect = m_tables.Text(row + "_effect"),
                         Cost = option.State == SheetOptionState.Locked
                             ? m_tables.Format("row_star_needed", gate.Shop.GateStar)
-                            : gate.Shop.GateItem != null ? m_tables.Format("tag_open_item", m_tables.Get<ItemTable>(gate.Shop.GateItem).Name, gate.Shop.GateCount)
+                            : gate.Shop.GateItem != null ? gate.Shop.GateCount.ToString(CultureInfo.InvariantCulture)
                             : BigNumberFormatter.Format(option.Cost),
+                        CostIcon = option.State != SheetOptionState.Locked && gate.Shop.GateItem != null ? m_tables.Get<ItemTable>(gate.Shop.GateItem).Icon : null,
                         State = RowState(option.State),
                     };
                 default:

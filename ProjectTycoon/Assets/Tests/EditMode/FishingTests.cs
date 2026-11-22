@@ -58,6 +58,7 @@ namespace ZooTycoon.Tests
             Wombat wombat = new Wombat(m_tables, m_state);
             m_shop = new BakeryArea(m_state, m_tables, new SequenceRandom(new double[4000]), wombat, m_bus);
             m_plaza = new PlazaArea(m_tables, m_shop, new SequenceRandom(Enumerable.Repeat(0.5, 40000).ToArray()), wombat, m_bus);
+            m_plaza.DigAll();
             m_fishing = new FishingArea(m_tables, new FixedRandom(roll), wombat, m_bus);
             m_mall = new Mall(m_shop, m_plaza, new FarmArea(m_tables, new FixedRandom(0.99), wombat, m_bus), m_bus, m_fishing);
             m_bus.Publish(new Events.Passed(m_shop, PlazaArea.k_Id));
